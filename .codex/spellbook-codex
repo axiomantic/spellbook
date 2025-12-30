@@ -1,0 +1,261 @@
+#!/usr/bin/env node
+
+/**
+ * Spellbook Codex CLI
+ *
+ * Command-line interface for loading spellbook skills in Codex.
+ * Provides skill discovery, validation, and content loading.
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { resolveSkillPath, stripFrontmatter, findSkillsInDir } from '../lib/skills-core.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const VERSION = '1.0.0';
+
+// Skill directories
+const SPELLBOOK_DIR = path.join(process.env.HOME, 'Development', 'spellbook', 'skills');
+const PERSONAL_DIR = path.join(process.env.HOME, '.codex', 'skills');
+const SUPERPOWERS_DIR = path.join(process.env.HOME, '.claude', 'skills');
+
+/**
+ * Validate skill name format.
+ * Only alphanumeric, dash, underscore allowed. Max 100 chars.
+ *
+ * @param {string} skillName - Skill name to validate
+ * @returns {boolean} - True if valid
+ */
+function validateSkillName(skillName) {
+    if (!skillName || typeof skillName !== 'string') {
+        return false;
+    }
+
+    if (skillName.length > 100) {
+        return false;
+    }
+
+    // Allow namespace prefix (spellbook:, personal:, superpowers:)
+    const withoutNamespace = skillName.replace(/^(spellbook|personal|superpowers):/, '');
+
+    // Only alphanumeric, dash, underscore
+    const validPattern = /^[a-zA-Z0-9_-]+$/;
+    return validPattern.test(withoutNamespace);
+}
+
+/**
+ * Use (load) a specific skill by name.
+ * Resolves skill path, validates, and outputs content.
+ *
+ * @param {string} skillName - Name of skill to load
+ */
+function useSkill(skillName) {
+    if (!validateSkillName(skillName)) {
+        console.error(`Error: Invalid skill name "${skillName}"`);
+        console.error('Skill names must be alphanumeric with dashes/underscores only (max 100 chars)');
+        process.exit(1);
+    }
+
+    const resolved = resolveSkillPath(skillName, SPELLBOOK_DIR, PERSONAL_DIR, SUPERPOWERS_DIR);
+
+    if (!resolved) {
+        console.error(`Error: Skill "${skillName}" not found`);
+        console.error('\nSearched in:');
+        console.error(`  - Personal: ${PERSONAL_DIR}`);
+        console.error(`  - Spellbook: ${SPELLBOOK_DIR}`);
+        console.error(`  - Superpowers: ${SUPERPOWERS_DIR}`);
+        console.error('\nUse "list-skills" to see available skills');
+        process.exit(1);
+    }
+
+    try {
+        const content = fs.readFileSync(resolved.skillFile, 'utf8');
+        const cleanContent = stripFrontmatter(content);
+
+        // Output metadata comment followed by content
+        console.log(`<!-- Loaded from: ${resolved.sourceType} -->`);
+        console.log(`<!-- Skill path: ${resolved.skillPath} -->`);
+        console.log('');
+        console.log(cleanContent);
+
+        process.exit(0);
+    } catch (error) {
+        console.error(`Error reading skill file: ${error.message}`);
+        process.exit(1);
+    }
+}
+
+/**
+ * List all available skills across all sources.
+ */
+function listSkills() {
+    const allSkills = [];
+
+    // Gather skills from all sources
+    if (fs.existsSync(PERSONAL_DIR)) {
+        const personal = findSkillsInDir(PERSONAL_DIR, 'personal');
+        allSkills.push(...personal);
+    }
+
+    if (fs.existsSync(SPELLBOOK_DIR)) {
+        const spellbook = findSkillsInDir(SPELLBOOK_DIR, 'spellbook');
+        allSkills.push(...spellbook);
+    }
+
+    if (fs.existsSync(SUPERPOWERS_DIR)) {
+        const superpowers = findSkillsInDir(SUPERPOWERS_DIR, 'superpowers');
+        allSkills.push(...superpowers);
+    }
+
+    if (allSkills.length === 0) {
+        console.log('No skills found in any source directory');
+        process.exit(0);
+    }
+
+    // Group by source type
+    const grouped = {
+        personal: [],
+        spellbook: [],
+        superpowers: []
+    };
+
+    for (const skill of allSkills) {
+        grouped[skill.sourceType].push(skill);
+    }
+
+    // Display grouped results
+    console.log('Available Spellbook Skills\n');
+
+    if (grouped.personal.length > 0) {
+        console.log('Personal Skills:');
+        for (const skill of grouped.personal) {
+            console.log(`  ${skill.name}`);
+            if (skill.description) {
+                console.log(`    ${skill.description}`);
+            }
+        }
+        console.log('');
+    }
+
+    if (grouped.spellbook.length > 0) {
+        console.log('Spellbook Skills:');
+        for (const skill of grouped.spellbook) {
+            console.log(`  ${skill.name}`);
+            if (skill.description) {
+                console.log(`    ${skill.description}`);
+            }
+        }
+        console.log('');
+    }
+
+    if (grouped.superpowers.length > 0) {
+        console.log('Superpowers Skills:');
+        for (const skill of grouped.superpowers) {
+            console.log(`  ${skill.name}`);
+            if (skill.description) {
+                console.log(`    ${skill.description}`);
+            }
+        }
+        console.log('');
+    }
+
+    console.log(`Total: ${allSkills.length} skills`);
+    process.exit(0);
+}
+
+/**
+ * Show help message.
+ */
+function showHelp() {
+    console.log(`Spellbook Codex CLI v${VERSION}
+
+Usage:
+  spellbook-codex use-skill <skill-name>
+  spellbook-codex list-skills
+  spellbook-codex --help
+  spellbook-codex --version
+
+Commands:
+  use-skill <name>   Load a skill by name (outputs markdown content)
+  list-skills        List all available skills from all sources
+
+Options:
+  --help             Show this help message
+  --version          Show version information
+
+Skill Resolution:
+  Skills are resolved in priority order:
+  1. Personal skills (~/.codex/skills/)
+  2. Spellbook skills (~/Development/spellbook/skills/)
+  3. Superpowers skills (~/.claude/skills/)
+
+  Use namespace prefixes to force a specific source:
+    spellbook:skill-name
+    personal:skill-name
+    superpowers:skill-name
+
+Examples:
+  spellbook-codex use-skill systematic-debugging
+  spellbook-codex use-skill spellbook:test-driven-development
+  spellbook-codex list-skills
+`);
+    process.exit(0);
+}
+
+/**
+ * Show version information.
+ */
+function showVersion() {
+    console.log(`Spellbook Codex CLI v${VERSION}`);
+    process.exit(0);
+}
+
+/**
+ * Main entry point.
+ */
+function main() {
+    const args = process.argv.slice(2);
+
+    if (args.length === 0) {
+        console.error('Error: No command specified');
+        console.error('Run "spellbook-codex --help" for usage information');
+        process.exit(2);
+    }
+
+    const command = args[0];
+
+    switch (command) {
+        case 'use-skill':
+            if (args.length < 2) {
+                console.error('Error: use-skill requires a skill name');
+                console.error('Usage: spellbook-codex use-skill <skill-name>');
+                process.exit(2);
+            }
+            useSkill(args[1]);
+            break;
+
+        case 'list-skills':
+            listSkills();
+            break;
+
+        case '--help':
+        case '-h':
+            showHelp();
+            break;
+
+        case '--version':
+        case '-v':
+            showVersion();
+            break;
+
+        default:
+            console.error(`Error: Unknown command "${command}"`);
+            console.error('Run "spellbook-codex --help" for usage information');
+            process.exit(2);
+    }
+}
+
+main();
