@@ -77,17 +77,12 @@ The foundation for structured development workflows:
 - **Git worktrees** - Isolated workspaces for feature development
 
 ```bash
-# Via Claude Code plugin marketplace (recommended)
-/plugin marketplace add obra/superpowers-marketplace
-/plugin install superpowers@superpowers-marketplace
+git clone https://github.com/elijahr/superpowers.git ~/Development/superpowers
+cd ~/Development/superpowers
+./install.sh
 ```
 
-Or for local development:
-```bash
-git clone https://github.com/obra/superpowers.git ~/Development/superpowers
-cd ~/Development/superpowers
-# Follow install instructions in README
-```
+**Important:** Spellbook requires [elijahr/superpowers](https://github.com/elijahr/superpowers), not the upstream [obra/superpowers](https://github.com/obra/superpowers). Our fork has critical enhancements, is not namespaced, and is designed to work seamlessly with spellbook. Do not use the marketplace version.
 
 ### 4. Spellbook (This Repo)
 
@@ -212,12 +207,10 @@ This keeps planning artifacts outside of project repositories, avoiding clutter 
 
 ## Acknowledgments
 
-This project is inspired by and builds upon [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. The superpowers library provides the foundational workflow patterns (brainstorming, planning, execution, git worktrees, etc.) that spellbook extends with domain-specific skills and personal configuration.
+Spellbook is inspired by and requires [elijahr/superpowers](https://github.com/elijahr/superpowers), our fork of the excellent [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent.
 
-Many skills in this repository follow patterns established in superpowers and are designed to integrate seamlessly with the superpowers skill ecosystem.
+Superpowers provides foundational workflow patterns (brainstorming, planning, execution, git worktrees) that spellbook extends with domain-specific skills. Our fork includes critical enhancements and is not namespaced, making it the required companion for spellbook.
 
 ## License
 
 MIT License - See [LICENSE](LICENSE) for details.
-
-This project uses the same license as [obra/superpowers](https://github.com/obra/superpowers) to maintain compatibility.
