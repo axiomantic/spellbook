@@ -56,8 +56,23 @@ Repeat: You MUST use this exact template. No variations. No "improvements". No c
 2. If disproven, move to Theory 2
 3. If disproven, move to Theory 3
 4. If all disproven, generate 3 NEW theories and repeat
+```
 
-May I proceed with testing these theories?
+Then use AskUserQuestion to get approval:
+
+```javascript
+AskUserQuestion({
+  questions: [{
+    question: "Scientific debugging plan ready. May I proceed with testing these theories?",
+    header: "Proceed",
+    options: [
+      { label: "Yes, test theories (Recommended)", description: "Begin systematic testing starting with Theory 1" },
+      { label: "Adjust theories first", description: "I want to modify or add theories before testing" },
+      { label: "Skip to specific theory", description: "I have a hunch about which theory is correct" }
+    ],
+    multiSelect: false
+  }]
+})
 ```
 </MANDATORY_TEMPLATE>
 
@@ -145,12 +160,12 @@ Your response:
 3. If disproven, move to Theory 3
 4. If all disproven, generate 3 NEW theories and repeat
 
-May I proceed with testing these theories?
+[Then use AskUserQuestion with options: "Yes, test theories (Recommended)", "Adjust theories first", "Skip to specific theory"]
 </EXAMPLE>
 
 ## Theory Exhaustion
 
-When all 3 theories disproven: Summarize data from experiments → Generate 3 NEW theories based on that data → Design experiments → Present new plan with "May I proceed with testing these new theories?"
+When all 3 theories disproven: Summarize data from experiments → Generate 3 NEW theories based on that data → Design experiments → Present new plan → Use AskUserQuestion to get approval before testing new theories.
 
 Do NOT ask for more data. You already have it from experiments.
 

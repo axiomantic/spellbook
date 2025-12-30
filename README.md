@@ -146,3 +146,15 @@ Design documents and implementation plans are stored in a centralized location:
 ```
 
 This keeps planning artifacts outside of project repositories, avoiding clutter and git noise.
+
+## Acknowledgments
+
+This project is inspired by and builds upon [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. The superpowers library provides the foundational workflow patterns (brainstorming, planning, execution, git worktrees, etc.) that spellbook extends with domain-specific skills and personal configuration.
+
+Many skills in this repository follow patterns established in superpowers and are designed to integrate seamlessly with the superpowers skill ecosystem.
+
+## License
+
+MIT License - See [LICENSE](LICENSE) for details.
+
+This project uses the same license as [obra/superpowers](https://github.com/obra/superpowers) to maintain compatibility.

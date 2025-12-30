@@ -69,14 +69,22 @@ End-to-end feature implementation orchestrator. Achieves success through rigorou
 
 ```
 Phase 0: Configuration Wizard (interactive with user)
+  ├─ 0.1: Escape hatch detection
+  ├─ 0.2: Core feature clarification (lightweight)
+  └─ 0.3: Workflow preferences
     ↓
 Phase 1: Research (subagent explores codebase, web, MCP servers, user-provided resources)
     ↓
-Phase 2: Design
-  ├─ Create design doc (subagent invokes superpowers:brainstorming)
+Phase 1.5: Informed Discovery (ORCHESTRATOR - user interaction)
+  ├─ Generate questions from research findings
+  ├─ Conduct discovery wizard (AskUserQuestion)
+  └─ Synthesize comprehensive design context
+    ↓
+Phase 2: Design (subagents run in SYNTHESIS MODE - no questions)
+  ├─ Create design doc (subagent invokes brainstorming with full context)
   ├─ Review design (subagent invokes design-doc-reviewer)
   ├─ Present review → User approval gate (if interactive mode)
-  └─ Fix design doc (subagent invokes superpowers:executing-plans)
+  └─ Fix design doc (subagent invokes executing-plans)
     ↓
 Phase 3: Implementation Planning
   ├─ Create impl plan (subagent invokes superpowers:writing-plans)
@@ -120,16 +128,15 @@ If escape hatch detected, confirm with user:
 I'll use that and skip to [Phase 3/Phase 4]. Is that correct?"
 ```
 
-### 0.2 Clarify the Feature
+### 0.2 Clarify the Feature (Lightweight)
 
-<RULE>Ask clarifying questions about what the user wants. One question at a time. Prefer multiple choice when possible using AskUserQuestion.</RULE>
+<RULE>Collect only the CORE essence. Detailed discovery happens in Phase 1.5 after research informs what questions to ask.</RULE>
 
-Understand:
-- What is the feature's core purpose?
-- What are the success criteria?
-- Are there specific constraints or requirements?
-- Are there any resources, links, or documentation to review?
-- Which parts of the codebase are relevant?
+Ask via AskUserQuestion:
+- What is the feature's core purpose? (1-2 sentences)
+- Are there any resources, links, or docs to review during research?
+
+Store answers in `SESSION_CONTEXT.feature_essence`.
 
 ### 0.3 Collect Workflow Preferences
 
@@ -190,9 +197,9 @@ Options:
   Description: Stop after implementation, you handle PR manually
 ```
 
-### 0.4 Store Preferences
+### 0.4 Store Preferences and Initialize Context
 
-<RULE>Store all collected preferences in working memory. Reference them consistently throughout the session.</RULE>
+<RULE>Store all collected preferences and initialize context containers. Reference them consistently throughout the session.</RULE>
 
 ```
 SESSION_PREFERENCES = {
@@ -204,8 +211,17 @@ SESSION_PREFERENCES = {
     escape_hatch: null | { type: "design_doc" | "impl_plan", path: string }
 }
 
+SESSION_CONTEXT = {
+    feature_essence: {},       # Filled in Phase 0.2
+    research_findings: {},     # Filled in Phase 1
+    design_context: {}         # Filled in Phase 1.5 - THE KEY CONTEXT FOR SUBAGENTS
+}
+
 # IMPORTANT: If worktree == "per_parallel_track", automatically set parallelization = "maximize"
 # Parallel worktrees only make sense with parallel execution
+
+# IMPORTANT: SESSION_CONTEXT.design_context is passed to ALL subagents after Phase 1.5
+# This enables synthesis mode - subagents have full context and don't ask questions
 ```
 
 ---
@@ -253,12 +269,97 @@ Task (general-purpose):
     - Recommended approach (high-level)
 ```
 
-### 1.2 Present Research Summary
+### 1.2 Store Research Findings
 
 After research subagent returns:
-1. Present a brief summary to the user
-2. Highlight any surprising findings or constraints discovered
-3. If in interactive mode, ask if the user wants to add context before proceeding
+1. Store findings in `SESSION_CONTEXT.research_findings`
+2. Extract key decision points discovered (patterns, constraints, alternatives)
+3. Proceed immediately to Phase 1.5
+
+---
+
+## Phase 1.5: Informed Discovery
+
+<CRITICAL>
+This phase runs in the ORCHESTRATOR (not a subagent) so user interaction is natural.
+It uses research findings to ask TARGETED questions before design begins.
+After this phase, subagents have ALL context needed for autonomous execution.
+</CRITICAL>
+
+### 1.5.1 Generate Discovery Questions
+
+Based on research findings, identify questions in these categories:
+
+| Category | Question Type | Example |
+|----------|--------------|---------|
+| **Architectural choices** | Patterns found vs. alternatives | "Research found 2 patterns: X (used in auth) and Y (used in payments). Which fits better?" |
+| **Scope boundaries** | What's in/out | "Should this include [capability found in similar features]?" |
+| **Integration points** | How it connects | "This needs to integrate with [system found]. Any preferences on the interface?" |
+| **Constraints discovered** | Limitations found | "Research found [constraint]. How should we handle it?" |
+| **Success criteria** | Measurable outcomes | "What does 'working' look like? Performance targets?" |
+
+### 1.5.2 Conduct Discovery Wizard
+
+<RULE>Use AskUserQuestion with multiple choice options derived from research. Batch related questions (max 4 per call).</RULE>
+
+**Structure the wizard as:**
+
+```markdown
+## Discovery Wizard (Research-Informed)
+
+Based on my research, I have [N] questions to finalize the design direction.
+
+### Question Set 1: Architecture & Approach
+[2-4 questions about high-level choices]
+
+### Question Set 2: Scope & Boundaries
+[2-4 questions about what's included]
+
+### Question Set 3: Integration & Constraints
+[2-4 questions about how it fits]
+
+### Question Set 4: Success Criteria
+[1-2 questions about measurable outcomes]
+```
+
+### 1.5.3 Synthesize Discovery Context
+
+After wizard completes, create comprehensive context document:
+
+```markdown
+## SESSION_CONTEXT.design_context
+
+### Feature Essence
+[From Phase 0.2]
+
+### Research Findings Summary
+[Key findings from Phase 1]
+
+### Architectural Decisions
+- Decision: [choice made]
+- Rationale: [why, based on research + user input]
+
+### Scope Boundaries
+- Included: [list]
+- Explicitly excluded: [list]
+- Future consideration: [list]
+
+### Integration Requirements
+- Systems: [list with interface notes]
+- Constraints: [list with handling approach]
+
+### Success Criteria
+- [Measurable criterion 1]
+- [Measurable criterion 2]
+
+### Codebase Patterns to Follow
+[From research - specific files/patterns to match]
+```
+
+<RULE>
+This context document is passed to ALL subsequent subagents.
+With this context, skills operate in SYNTHESIS MODE - no questions, just execution.
+</RULE>
 
 ---
 
@@ -270,28 +371,39 @@ Skip this phase ONLY if escape hatch "using design doc \<path\>" was detected an
 
 ### 2.1 Create Design Document
 
-<RULE>Subagent MUST invoke superpowers:brainstorming using the Skill tool.</RULE>
+<RULE>Subagent MUST invoke brainstorming using the Skill tool in SYNTHESIS MODE.</RULE>
 
 ```
 Task (general-purpose):
   description: "Design [feature name]"
   prompt: |
-    First, invoke the superpowers:brainstorming skill using the Skill tool.
-    Then follow its complete workflow to design this feature.
+    First, invoke the brainstorming skill using the Skill tool.
 
-    ## Context for the Skill
+    IMPORTANT: This is SYNTHESIS MODE - all discovery is complete.
+    DO NOT ask questions. Use the comprehensive context below to produce the design.
 
-    Feature to design: [Insert feature description]
+    ## Autonomous Mode Context
 
-    Research findings: [Insert complete research summary from Phase 1]
+    **Mode:** AUTONOMOUS - Proceed without asking questions
+    **Protocol:** See docs/autonomous-mode-protocol.md
+    **Circuit breakers:** Only pause for security-critical decisions or contradictory requirements
 
-    User's autonomous mode: [autonomous/interactive/mostly_autonomous]
-    - If autonomous: make reasonable decisions without asking
-    - If interactive: ask clarifying questions as needed
+    ## Pre-Collected Discovery Context
 
-    Save design doc to: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    [Insert complete SESSION_CONTEXT.design_context from Phase 1.5]
 
-    Commit the design document when done.
+    ## Task
+
+    Using the brainstorming skill in synthesis mode:
+    1. Skip the "Understanding the idea" phase - context is complete
+    2. Skip the "Exploring approaches" questions - decisions are made
+    3. Go directly to "Presenting the design" - write the full design
+    4. Do NOT ask "does this look right so far" - proceed through all sections
+    5. Save to: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    6. Commit the design document when done
+
+    If you encounter a circuit breaker condition (security-critical, contradictory requirements),
+    stop and report using the Circuit Breaker Format from the protocol.
 ```
 
 ### 2.2 Review Design Document
@@ -983,6 +1095,13 @@ Subagent prompts provide CONTEXT for the skill, not duplicated instructions.
 - Not using user-provided links
 - Shallow research that misses relevant patterns
 
+### Phase 1.5 Anti-Patterns
+- Skipping informed discovery and going straight to design
+- Not using research findings to inform questions
+- Asking questions that research already answered
+- Dispatching design subagent without comprehensive design_context
+- Letting subagents ask questions instead of front-loading discovery
+
 ### Phase 2 Anti-Patterns
 - Skipping design review
 - Proceeding past review without user approval (in interactive mode)
@@ -1033,7 +1152,13 @@ Verify the orchestrator has:
 ### Phase 1
 - [ ] Dispatched research subagent
 - [ ] Research covered codebase, web, MCP servers, user links
-- [ ] Presented research summary
+- [ ] Stored research findings in SESSION_CONTEXT.research_findings
+
+### Phase 1.5
+- [ ] Generated discovery questions from research findings
+- [ ] Conducted discovery wizard using AskUserQuestion
+- [ ] Created comprehensive SESSION_CONTEXT.design_context
+- [ ] Design context includes: architectural decisions, scope boundaries, integration requirements, success criteria
 
 ### Phase 2 (if not skipped)
 - [ ] Subagent invoked superpowers:brainstorming
