@@ -150,6 +150,60 @@ install_claude_md() {
     fi
 }
 
+setup_claude_code_bootstrap() {
+    print_step "Setting up Claude Code bootstrap..."
+
+    local bootstrap_file="$SCRIPT_DIR/.claude-plugin/bootstrap.md"
+
+    if [ ! -f "$bootstrap_file" ]; then
+        print_warning "Claude Code bootstrap.md not found"
+        return
+    fi
+
+    print_success "Claude Code bootstrap ready at .claude-plugin/bootstrap.md"
+}
+
+setup_codex_integration() {
+    print_step "Setting up Codex integration..."
+
+    local codex_dir="$HOME/.codex"
+    local spellbook_link="$codex_dir/spellbook"
+
+    if [ ! -d "$codex_dir" ]; then
+        print_info "Codex config directory not found (skipping)"
+        return
+    fi
+
+    # Create symlink to spellbook root for easy access from Codex
+    if [ -L "$spellbook_link" ]; then
+        rm -f "$spellbook_link"
+    fi
+
+    ln -s "$SCRIPT_DIR" "$spellbook_link"
+    print_success "Created Codex symlink at ~/.codex/spellbook"
+
+    # Verify CLI script exists and is executable
+    local cli_script="$SCRIPT_DIR/.codex/spellbook-codex"
+    if [ -f "$cli_script" ] && [ -x "$cli_script" ]; then
+        print_success "Codex CLI script ready and executable"
+    else
+        print_warning "Codex CLI script not found or not executable"
+    fi
+}
+
+setup_opencode_integration() {
+    print_step "Setting up OpenCode integration..."
+
+    # Check if OpenCode plugin exists (placeholder for future implementation)
+    local opencode_plugin="$SCRIPT_DIR/.opencode-plugin"
+
+    if [ -d "$opencode_plugin" ]; then
+        print_success "OpenCode plugin directory found"
+    else
+        print_info "OpenCode plugin not yet implemented (skipping)"
+    fi
+}
+
 print_completion() {
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
@@ -177,6 +231,9 @@ main() {
     install_commands
     install_agents
     install_claude_md
+    setup_claude_code_bootstrap
+    setup_codex_integration
+    setup_opencode_integration
     print_completion
 }
 
