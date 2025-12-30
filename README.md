@@ -1,5 +1,7 @@
 # Spellbook
 
+[![Tests](https://github.com/elijahr/spellbook/workflows/Test%20Spellbook/badge.svg)](https://github.com/elijahr/spellbook/actions)
+
 Personal AI assistant skills, commands, and configuration for Claude Code and other AI coding assistants.
 
 ## What's Included
@@ -7,6 +9,32 @@ Personal AI assistant skills, commands, and configuration for Claude Code and ot
 - **Skills** - Specialized workflows that trigger automatically based on context (async patterns, debugging, code review, feature implementation, etc.)
 - **Commands** - Slash commands for quick actions (`/compact`, `/move-project`, etc.)
 - **CLAUDE.md** - Personal preferences and behavioral configuration
+
+## Platform Compatibility
+
+Spellbook works across multiple AI coding platforms:
+
+| Platform | Bootstrap Location | Auto-Load | Notes |
+|----------|-------------------|-----------|-------|
+| **Claude Code** | `~/.claude/` | Yes | Primary platform, full feature support |
+| **OpenCode** | `~/.opencode/` | Yes | Compatible via shared structure |
+| **Codex** | `.codex/spellbook-bootstrap.md` | Manual | Project-level bootstrap documentation |
+
+### Platform-Specific Setup
+
+**Claude Code / OpenCode**: Skills, commands, and CLAUDE.md are automatically loaded from `~/.claude/` or `~/.opencode/` directories. The installer creates symlinks to keep your configuration in sync.
+
+**Codex**: Uses project-level bootstrap documentation. Copy `.codex/spellbook-bootstrap.md` to your project's `.codex/` directory and invoke the `spellbook-codex` script in your Codex session to load skills and configuration.
+
+## Autonomous Mode
+
+Some skills like `implement-feature` are designed for autonomous operation with minimal interruptions. To enable this mode in Claude Code:
+
+```bash
+claude --dangerously-skip-permissions
+```
+
+This allows the skill to execute multi-step workflows (git operations, file changes, test runs) without constant approval prompts. Use with caution and review changes before pushing.
 
 ## Recommended Setup
 
@@ -76,19 +104,19 @@ cd ~/Development/spellbook
 
 ## Skills Included
 
-| Skill | Purpose |
-|-------|---------|
-| `async-await-patterns` | Enforce proper async/await patterns in JS/TS code |
-| `design-doc-reviewer` | Review design documents before implementation planning |
-| `factchecker` | Verify claims and statements with evidence |
-| `green-mirage-audit` | Audit test suites to ensure tests actually test what they claim |
-| `implement-feature` | End-to-end feature implementation orchestrator |
-| `implementation-plan-reviewer` | Review implementation plans for completeness |
-| `instruction-engineering` | Prompt engineering patterns and techniques |
-| `nim-pr-guide` | Guide for contributing PRs to the Nim language |
-| `scientific-debugging` | Hypothesis-driven debugging methodology |
-| `smart-merge` | Intelligent merge conflict resolution |
-| `subagent-prompting` | Patterns for effective subagent prompts |
+| Skill | Purpose | Platform | Auto-Triggers |
+|-------|---------|----------|---------------|
+| `async-await-patterns` | Enforce proper async/await patterns in JS/TS code | All | Writing async code |
+| `design-doc-reviewer` | Review design documents before implementation planning | All | Reviewing design docs |
+| `factchecker` | Verify claims and statements with evidence | All | Manual invocation |
+| `green-mirage-audit` | Audit test suites to ensure tests actually test what they claim | All | Test review requests |
+| `implement-feature` | End-to-end feature implementation orchestrator | All | Feature requests |
+| `implementation-plan-reviewer` | Review implementation plans for completeness | All | Plan review |
+| `instruction-engineering` | Prompt engineering patterns and techniques | All | Prompt work |
+| `nim-pr-guide` | Guide for contributing PRs to the Nim language | All | Nim PR creation |
+| `scientific-debugging` | Hypothesis-driven debugging methodology | All | Bug investigation |
+| `smart-merge` | Intelligent merge conflict resolution | All | Merge conflicts |
+| `subagent-prompting` | Patterns for effective subagent prompts | All | Subagent creation |
 
 ## Commands Included
 
@@ -137,7 +165,42 @@ spellbook/
 └── README.md         # This file
 ```
 
-## Centralized Plans Directory
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run linter
+npm run lint
+```
+
+### Test Structure
+
+- `tests/helpers.sh` - Bash testing utilities
+- `tests/unit/` - Vitest unit tests for skills
+- `tests/integration/` - Integration tests for workflows
+
+## Architecture
+
+### Multi-Platform Bootstrap
+
+Spellbook uses a multi-layer bootstrap approach to work across different AI coding platforms:
+
+1. **Claude Code / OpenCode**: Skills and commands are auto-loaded from `~/.claude/` or `~/.opencode/` via symlinks created by `install.sh`. The `CLAUDE.md` configuration is also symlinked to provide consistent behavior.
+
+2. **Codex**: Project-level bootstrap uses `.codex/spellbook-bootstrap.md` which documents all skills and their trigger conditions. The `spellbook-codex` script can be invoked in Codex sessions to load this documentation.
+
+3. **Version Tracking**: The `.version` file and `RELEASE-NOTES.md` track releases and changes across platforms.
+
+4. **CI/CD**: GitHub Actions run tests and linting on all platforms to ensure compatibility.
+
+### Centralized Plans Directory
 
 Design documents and implementation plans are stored in a centralized location:
 
