@@ -1,0 +1,23 @@
+{
+  "default": true,
+  "MD003": { "style": "atx" },
+  "MD007": { "indent": 2 },
+  "MD013": {
+    "line_length": 120,
+    "code_blocks": false,
+    "tables": false
+  },
+  "MD024": { "siblings_only": true },
+  "MD025": { "front_matter_title": "" },
+  "MD033": {
+    "allowed_elements": [
+      "SKILL_BOOTSTRAP",
+      "EXTREMELY_IMPORTANT",
+      "br",
+      "details",
+      "summary"
+    ]
+  },
+  "MD034": false,
+  "MD041": false
+}
