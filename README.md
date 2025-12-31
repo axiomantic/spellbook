@@ -1,6 +1,6 @@
 # Spellbook
 
-[![Tests](https://github.com/elijahr/spellbook/workflows/Test%20Spellbook/badge.svg)](https://github.com/elijahr/spellbook/actions)
+[![Tests](https://github.com/axiomantic/spellbook/workflows/Test%20Spellbook/badge.svg)](https://github.com/axiomantic/spellbook/actions)
 
 Personal AI assistant skills, commands, and configuration for Claude Code and other AI coding assistants.
 
@@ -130,7 +130,7 @@ Your personal skills and configuration, extending superpowers with:
 - Personal CLAUDE.md preferences
 
 ```bash
-git clone https://github.com/elijahr/spellbook.git ~/Development/spellbook
+git clone https://github.com/axiomantic/spellbook.git ~/Development/spellbook
 cd ~/Development/spellbook
 ./install.sh
 ```

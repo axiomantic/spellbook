@@ -1,0 +1,10 @@
+# Generated artifacts
+.claude-flow/
+.swarm/
+logs/
+
+# OS files
+.DS_Store
+
+# Node modules (if any)
+node_modules/
