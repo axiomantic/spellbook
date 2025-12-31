@@ -17,7 +17,8 @@ failed_tests=0
 # Function to run a test script
 run_test() {
   local test_script="$1"
-  local test_name=$(basename "$test_script" .sh)
+  local test_name
+  test_name=$(basename "$test_script" .sh)
 
   echo "Running $test_name..."
   if "$test_script"; then
