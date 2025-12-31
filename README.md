@@ -936,7 +936,7 @@ When to stay in main context:
 
 ### nim-pr-guide
 
-**What it does:** Proactive guide for contributing to the Nim language repository. Monitors branch size, analyzes commits for split potential, and formats PRs for fast merging based on analysis of 154 merged PRs by Nim's core maintainer (maintainer).
+**What it does:** Proactive guide for contributing to the Nim language repository. Monitors branch size, analyzes commits for split potential, and formats PRs for fast merging based on analysis of 154 merged PRs by core maintainers.
 
 **When to use:**
 - Automatically activates when working in `~/Development/Nim`
@@ -984,7 +984,7 @@ Or:
 fix COMPONENT: What was wrong and how it's fixed
 ```
 
-**What Maintainers prioritize about** (based on 154 PR analysis):
+**What maintainers prioritize** (based on 154 PR analysis):
 1. Correctness over cleverness
 2. Tests as proof
 3. Small, focused changes
