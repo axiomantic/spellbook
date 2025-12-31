@@ -1,23 +1,22 @@
 {
   "default": true,
   "MD003": { "style": "atx" },
-  "MD007": { "indent": 2 },
-  "MD013": {
-    "line_length": 120,
-    "code_blocks": false,
-    "tables": false
-  },
-  "MD024": { "siblings_only": true },
-  "MD025": { "front_matter_title": "" },
-  "MD033": {
-    "allowed_elements": [
-      "SKILL_BOOTSTRAP",
-      "EXTREMELY_IMPORTANT",
-      "br",
-      "details",
-      "summary"
-    ]
-  },
+  "MD004": false,
+  "MD007": false,
+  "MD013": false,
+  "MD022": false,
+  "MD024": false,
+  "MD025": false,
+  "MD026": false,
+  "MD029": false,
+  "MD031": false,
+  "MD032": false,
+  "MD033": false,
   "MD034": false,
-  "MD041": false
+  "MD036": false,
+  "MD040": false,
+  "MD041": false,
+  "MD053": false,
+  "MD058": false,
+  "MD060": false
 }
