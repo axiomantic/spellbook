@@ -150,6 +150,56 @@ install_claude_md() {
     fi
 }
 
+install_docs() {
+    print_step "Installing docs..."
+
+    local source="$SCRIPT_DIR/docs"
+    local target="$CLAUDE_CONFIG_DIR/docs"
+
+    if [ -d "$source" ]; then
+        # Remove existing (file, dir, or symlink)
+        rm -rf "$target"
+
+        # Create symlink
+        ln -s "$source" "$target"
+        print_success "Installed docs directory"
+    else
+        print_info "No docs directory found in spellbook"
+    fi
+}
+
+validate_doc_references() {
+    print_step "Validating doc references in skills..."
+
+    local broken_count=0
+    local checked_count=0
+
+    for skill_dir in "$SCRIPT_DIR/skills"/*/; do
+        if [ -f "$skill_dir/SKILL.md" ]; then
+            # Extract doc references (docs/*.md patterns)
+            while IFS= read -r doc_ref; do
+                if [ -n "$doc_ref" ]; then
+                    checked_count=$((checked_count + 1))
+                    # Check if the referenced doc exists relative to spellbook root
+                    if [ ! -f "$SCRIPT_DIR/$doc_ref" ]; then
+                        local skill_name=$(basename "$skill_dir")
+                        print_warning "Broken reference in $skill_name: $doc_ref"
+                        broken_count=$((broken_count + 1))
+                    fi
+                fi
+            done < <(grep -oE 'docs/[a-zA-Z0-9_-]+\.md' "$skill_dir/SKILL.md" 2>/dev/null | sort -u)
+        fi
+    done
+
+    if [ $checked_count -eq 0 ]; then
+        print_info "No doc references found in skills"
+    elif [ $broken_count -eq 0 ]; then
+        print_success "All $checked_count doc references valid"
+    else
+        print_warning "$broken_count of $checked_count doc references are broken"
+    fi
+}
+
 setup_claude_code_bootstrap() {
     print_step "Setting up Claude Code bootstrap..."
 
@@ -231,6 +281,8 @@ main() {
     install_commands
     install_agents
     install_claude_md
+    install_docs
+    validate_doc_references
     setup_claude_code_bootstrap
     setup_codex_integration
     setup_opencode_integration

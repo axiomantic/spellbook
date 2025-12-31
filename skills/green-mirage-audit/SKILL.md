@@ -39,6 +39,8 @@ Now proceed with this systematic checklist.
 
 ## Phase 1: Inventory
 
+<!-- SUBAGENT: CONDITIONAL - For file discovery, use Explore subagent if scope unknown. For 5+ test files, consider dispatching parallel audit subagents per file (each returns findings for its file). For small scope, stay in main context. -->
+
 Before auditing, create a complete inventory:
 
 ```

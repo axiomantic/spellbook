@@ -189,6 +189,8 @@ Flag any numbers, limits, or thresholds without justification:
 
 ## Phase 4: Interface Behavior Verification
 
+<!-- SUBAGENT: YES for interface verification - Dispatch subagent to read interface source/docs for each unverified claim. Returns verified behavior vs claimed behavior. Saves main context from deep code dives. -->
+
 <CRITICAL>
 INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
 

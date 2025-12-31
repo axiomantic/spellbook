@@ -60,6 +60,39 @@ If you encounter pre-existing issues, do NOT skip them. FULL STOP. Ask if I want
 
 <RULE>Run only ONE test command at a time. Wait for completion before running another. Parallel test commands overwhelm the system.</RULE>
 
+## Subagent Decision Heuristics
+
+<RULE>Use subagents to reduce orchestrator context when the subagent cost (instructions + work + output) is less than keeping all intermediate steps in main context.</RULE>
+
+### Use Subagent (Explore or Task) When:
+| Scenario | Why Subagent Wins |
+|----------|-------------------|
+| Codebase exploration with uncertain scope | Subagent reads N files, returns summary paragraph |
+| Research phase before implementation | Subagent gathers patterns/approaches, returns synthesis |
+| Parallel independent investigations | 3 subagents = 3x parallelism, you pay 3x instruction cost but save time |
+| Self-contained verification (code review, spec compliance) | Fresh eyes, returns verdict + issues only |
+| Deep dives you won't reference again | 10 files read for one answer = waste if kept in main context |
+| GitHub/external API work | Fetching PR comments, repo analysis - subagent handles pagination/synthesis |
+
+### Stay in Main Context When:
+| Scenario | Why Main Context Wins |
+|----------|----------------------|
+| Targeted single-file lookup | Subagent overhead exceeds the read |
+| Iterative work with user feedback | Context must persist across exchanges |
+| Sequential dependent phases (TDD RED-GREEN-REFACTOR) | Accumulated evidence/state required |
+| Already-loaded context | Passing to subagent duplicates it |
+| Safety-critical git operations | Need full conversation context for safety |
+| Merge conflict resolution | 3-way context accumulation required |
+
+### Quick Decision:
+```
+IF searching unknown scope → Explore subagent
+IF reading 3+ files for single question → subagent
+IF parallel independent tasks → multiple subagents
+IF user interaction needed during task → main context
+IF building on established context → main context
+```
+
 ## Worktrees
 
 When working in a worktree: NEVER make changes to the main repo's files or git state without explicit confirmation. The inverse is also true.

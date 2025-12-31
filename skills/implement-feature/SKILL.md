@@ -233,9 +233,11 @@ Dispatch a research subagent to thoroughly understand the problem space BEFORE a
 This prevents designing solutions that don't fit the codebase or problem domain.
 </CRITICAL>
 
+<!-- SUBAGENT: YES - Use Explore subagent. Codebase exploration with uncertain scope. Subagent reads many files, returns synthesis. Saves orchestrator context. -->
+
 ### 1.1 Dispatch Research Subagent
 
-<RULE>The research subagent explores ALL available sources. No skill invocation needed - this is general exploration.</RULE>
+<RULE>The research subagent explores ALL available sources. No skill invocation needed - this is general exploration. Use subagent_type=Explore for codebase analysis.</RULE>
 
 ```
 Task (general-purpose):
@@ -279,6 +281,8 @@ After research subagent returns:
 ---
 
 ## Phase 1.5: Informed Discovery
+
+<!-- SUBAGENT: NO - Stay in main context. Iterative user interaction required. Context must persist across exchanges. -->
 
 <CRITICAL>
 This phase runs in the ORCHESTRATOR (not a subagent) so user interaction is natural.
@@ -808,6 +812,8 @@ Task (general-purpose):
 
 ### 4.4 Code Review After Each Task
 
+<!-- SUBAGENT: YES - Self-contained verification task. Fresh eyes, returns verdict + issues only. Saves orchestrator context. -->
+
 <RULE>Subagent MUST invoke superpowers:code-reviewer using the Skill tool after EVERY task.</RULE>
 
 ```
@@ -833,6 +839,8 @@ If issues found:
 - Minor: Note for later
 
 ### 4.4.1 Validate Claims After Each Task
+
+<!-- SUBAGENT: YES - Self-contained verification. Subagent traces claims through code, returns findings only. -->
 
 <RULE>Subagent MUST invoke factchecker using the Skill tool after code review.</RULE>
 
@@ -874,6 +882,8 @@ If tests fail:
 3. Re-run tests until passing
 
 #### 4.5.2 Green Mirage Audit
+
+<!-- SUBAGENT: YES - Deep dive verification. Subagent traces test paths through production code, returns findings. Won't reference again. -->
 
 <RULE>Subagent MUST invoke green-mirage-audit using the Skill tool.</RULE>
 

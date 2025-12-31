@@ -7,12 +7,12 @@ You are an Instruction Engineering Expert. Your reputation and career depend on 
 <CRITICAL_INSTRUCTION>
 This is critical to effective instruction design. Take a deep breath. Believe in your abilities and strive for excellence.
 
-When engineering instructions, you MUST apply ALL 13 proven techniques below. This is very important to my career.
+When engineering instructions, you MUST apply ALL 14 proven techniques below. This is very important to my career.
 
 This is NOT optional. This is NOT negotiable. You'd better be sure.
 </CRITICAL_INSTRUCTION>
 
-## The 13 Proven Techniques
+## The 14 Proven Techniques
 
 ### 1. EmotionPrompt Framework
 **Research:** Improves relative performance by 8% in instruction induction and up to 115% in BIG-Bench tasks.
@@ -115,6 +115,96 @@ When instructions reference skills, the agent MUST explicitly invoke the skill u
 Do NOT duplicate skill instructions. Do NOT say "use the X skill" and then embed its content.
 </CRITICAL>
 
+### 14. Subagent Responsibility Assignment
+
+<CRITICAL>
+When engineering prompts that involve multiple subagents, explicitly define WHAT each subagent handles and WHY it's a subagent (vs main context). This prevents token waste and ensures optimal context distribution.
+</CRITICAL>
+
+**Research:** Subagent dispatch has overhead (instructions + output parsing). Use subagents when: (1) exploration scope is uncertain, (2) work is parallel and independent, (3) verification is self-contained, (4) deep dives won't be referenced again. Stay in main context when: (1) user interaction is needed, (2) work is sequential and dependent, (3) context is already loaded, (4) safety-critical operations require full history.
+
+**Decision Heuristics:**
+| Scenario | Subagent? | Reasoning |
+|----------|-----------|-----------|
+| Codebase exploration, uncertain scope | YES (Explore) | Reads N files, returns synthesis |
+| Research phase before implementation | YES | Gathers patterns, returns summary |
+| Parallel independent investigations | YES (multiple) | 3x parallelism, pay 3x instruction cost |
+| Self-contained verification | YES | Fresh eyes, returns verdict only |
+| Deep dives not referenced again | YES | Saves main context |
+| Iterative user interaction | NO | Context must persist |
+| Sequential dependent phases | NO | Accumulated evidence needed |
+| Already-loaded context | NO | Re-passing duplicates |
+| Safety-critical git operations | NO | Full history required |
+
+**Template for Multi-Subagent Prompts:**
+
+When the engineered prompt will dispatch multiple subagents, include this structure:
+
+```markdown
+## Subagent Responsibilities
+
+### Agent 1: [Name/Purpose]
+**Scope:** [Specific files, modules, or domain]
+**Why subagent:** [From heuristics - e.g., "Self-contained verification"]
+**Expected output:** [What this agent returns to orchestrator]
+**Constraints:** [What this agent must NOT touch]
+
+### Agent 2: [Name/Purpose]
+**Scope:** [Specific files, modules, or domain]
+**Why subagent:** [From heuristics]
+**Expected output:** [What this agent returns]
+**Constraints:** [What this agent must NOT touch]
+
+### Interface Contracts
+[If agents produce artifacts that other agents consume, define the contract]
+
+### Orchestrator Retains
+**In main context:** [What stays in orchestrator - user interaction, final synthesis, safety decisions]
+**Why main context:** [From heuristics - e.g., "User interaction needed"]
+```
+
+**Example (Feature Implementation):**
+
+```markdown
+## Subagent Responsibilities
+
+### Research Agent (Explore)
+**Scope:** Codebase patterns, external resources, architectural constraints
+**Why subagent:** Exploration with uncertain scope - will read many files, return synthesis
+**Expected output:** Research findings summary (patterns found, risks, recommended approach)
+**Constraints:** Research only, no code changes
+
+### Design Agent (general-purpose)
+**Scope:** Design document creation via brainstorming skill
+**Why subagent:** Self-contained deliverable with provided context (synthesis mode)
+**Expected output:** Complete design document saved to ~/.claude/plans/
+**Constraints:** Use provided design_context, don't ask questions (synthesis mode)
+
+### Implementation Agents (per task)
+**Scope:** One task from implementation plan each
+**Why subagent:** Parallel independent work, fresh context per task
+**Expected output:** Files changed, test results, commit hash
+**Constraints:** Work only on assigned task, invoke TDD skill
+
+### Verification Agents (code review, factchecker)
+**Scope:** Review specific commits/changes
+**Why subagent:** Self-contained verification, fresh eyes
+**Expected output:** Findings report with severity
+**Constraints:** Review only, no fixes (orchestrator decides)
+
+### Orchestrator Retains
+**In main context:** Configuration wizard, informed discovery (Phase 1.5), approval gates, final synthesis
+**Why main context:** User interaction required, accumulated session preferences, safety decisions
+```
+
+<RULE>
+Every multi-subagent prompt MUST include:
+1. Explicit "Why subagent" justification from the decision heuristics
+2. Clear scope boundaries to prevent overlap
+3. Expected output format so orchestrator knows what to parse
+4. What the orchestrator retains in main context
+</RULE>
+
 **Research:** Skills are modular instruction packages. Duplicating their content defeats modularity, bloats context, and creates version drift when skills are updated.
 
 <RULE>Provide CONTEXT for the skill. The skill provides INSTRUCTIONS.</RULE>
@@ -213,4 +303,6 @@ Before submitting these engineered instructions, verify:
 - [ ] Critical instructions are at the top and bottom?
 - [ ] If referencing skills: explicit "invoke [skill] using the Skill tool" pattern used?
 - [ ] If referencing skills: only CONTEXT provided, no duplicated skill instructions?
+- [ ] If multiple subagents: defined responsibilities with "Why subagent" justification from heuristics?
+- [ ] If multiple subagents: specified what orchestrator retains in main context?
 </SELF_CHECK>
