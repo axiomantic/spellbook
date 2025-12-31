@@ -4,11 +4,49 @@
 
 Personal AI assistant skills, commands, and configuration for Claude Code and other AI coding assistants.
 
-## What's Included
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- **[Commands](#commands)** - Slash commands for quick actions
-- **[Skills](#skills)** - Specialized workflows that trigger automatically based on context
-- **CLAUDE.md** - Personal preferences and behavioral configuration
+- [Platform Compatibility](#platform-compatibility)
+  - [Platform-Specific Setup](#platform-specific-setup)
+- [Autonomous Mode](#autonomous-mode)
+- [Recommended Setup](#recommended-setup)
+  - [1. Claude Code Proxy (Custom Compact Behavior)](#1-claude-code-proxy-custom-compact-behavior)
+  - [2. Heads Up Claude (Statusline)](#2-heads-up-claude-statusline)
+  - [3. Superpowers (Core Workflows)](#3-superpowers-core-workflows)
+  - [4. Spellbook (This Repo)](#4-spellbook-this-repo)
+- [Commands](#commands)
+  - [/compact](#compact)
+  - [/address-pr-feedback](#address-pr-feedback)
+  - [/move-project](#move-project)
+  - [/green-mirage-audit](#green-mirage-audit)
+- [Skills](#skills)
+  - [async-await-patterns](#async-await-patterns)
+  - [design-doc-reviewer](#design-doc-reviewer)
+  - [factchecker](#factchecker)
+  - [find-dead-code](#find-dead-code)
+  - [green-mirage-audit](#green-mirage-audit)
+  - [implement-feature](#implement-feature)
+  - [implementation-plan-reviewer](#implementation-plan-reviewer)
+  - [instruction-engineering](#instruction-engineering)
+  - [nim-pr-guide](#nim-pr-guide)
+  - [scientific-debugging](#scientific-debugging)
+  - [smart-merge](#smart-merge)
+  - [subagent-prompting](#subagent-prompting)
+- [Manual Installation](#manual-installation)
+- [Directory Structure](#directory-structure)
+- [Path Resolution in Skills](#path-resolution-in-skills)
+- [Development](#development)
+  - [Git Hooks](#git-hooks)
+  - [Running Tests](#running-tests)
+  - [Test Structure](#test-structure)
+- [Architecture](#architecture)
+  - [Multi-Platform Bootstrap](#multi-platform-bootstrap)
+  - [Centralized Plans Directory](#centralized-plans-directory)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Platform Compatibility
 
@@ -105,12 +143,11 @@ Slash commands for quick actions. These can be invoked with `/command-name` in C
 
 ### /compact
 
-**What it does:** Provides a custom compaction prompt for Claude Code session history. When you run `/compact`, this command is executed to create a shift-change briefing that preserves all important context including organizational structure, subagent hierarchy, decisions made, and pending work.
+**What it does:** Provides a custom compaction prompt for Claude Code session history. Creates a shift-change briefing that preserves all important context including organizational structure, subagent hierarchy, decisions made, and pending work.
 
 **When to use:**
 - When your session context is getting large and you need to compact/summarize
-- Works with [claude-code-proxy](https://github.com/elijahr/claude-code-proxy) to override default `/compact` behavior
-- Typically triggered automatically by Claude Code when context gets large, or manually via `/compact`
+- When you want more detailed context preservation than the built-in compact
 
 **What makes it special:**
 - Preserves organizational structure (main agent vs subagents)
@@ -121,7 +158,9 @@ Slash commands for quick actions. These can be invoked with `/command-name` in C
 - Identifies planning documents and their role in the workflow
 
 **Important notes:**
-- Requires claude-code-proxy installation to override default Claude Code compact behavior
+- This command does **NOT** override the built-in Claude Code `/compact` command by default
+- To use this custom compact instead of the built-in, you must run Claude through [claude-code-proxy](https://github.com/elijahr/claude-code-proxy) in passthru mode
+- Without the proxy, `/compact` triggers Claude's built-in compaction, and this file is ignored
 - Creates extremely detailed shift-change briefings for seamless session continuation
 - Always asks "Can a fresh instance say 'continue' and know exactly what to do?"
 
@@ -1341,6 +1380,14 @@ Resolves via:              ../../docs/autonomous-mode-protocol.md
 **Belt and suspenders:** The installer also symlinks `docs/` directly to `~/.claude/docs/` for redundancy, so both resolution paths work.
 
 ## Development
+
+### Git Hooks
+
+Install git hooks for development (auto-generates README TOC on commit):
+
+```bash
+./scripts/install-hooks.sh
+```
 
 ### Running Tests
 
