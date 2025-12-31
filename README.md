@@ -20,6 +20,7 @@ Personal AI assistant skills, commands, and configuration for Claude Code and ot
   - [/address-pr-feedback](#address-pr-feedback)
   - [/move-project](#move-project)
   - [/green-mirage-audit](#green-mirage-audit)
+  - [/simplify](#simplify)
 - [Skills](#skills)
   - [async-await-patterns](#async-await-patterns)
   - [design-doc-reviewer](#design-doc-reviewer)
@@ -54,13 +55,13 @@ Spellbook works across multiple AI coding platforms:
 
 | Platform | Bootstrap Location | Auto-Load | Notes |
 |----------|-------------------|-----------|-------|
-| **Claude Code** | `~/.claude/` | Yes | Primary platform, full feature support |
+| **Claude Code** | `$CLAUDE_CONFIG_DIR` (default: `~/.claude/`) | Yes | Primary platform, full feature support |
 | **OpenCode** | `~/.opencode/` | Yes | Compatible via shared structure |
 | **Codex** | `.codex/spellbook-bootstrap.md` | Manual | Project-level bootstrap documentation |
 
 ### Platform-Specific Setup
 
-**Claude Code / OpenCode**: Skills, commands, and CLAUDE.md are automatically loaded from `~/.claude/` or `~/.opencode/` directories. The installer creates symlinks to keep your configuration in sync.
+**Claude Code / OpenCode**: Skills, commands, and CLAUDE.md are automatically loaded from `$CLAUDE_CONFIG_DIR` (defaults to `~/.claude/`) or `~/.opencode/` directories. The installer creates symlinks to keep your configuration in sync. Set the `CLAUDE_CONFIG_DIR` environment variable to use a custom location.
 
 **Codex**: Uses project-level bootstrap documentation. Copy `.codex/spellbook-bootstrap.md` to your project's `.codex/` directory and invoke the `spellbook-codex` script in your Codex session to load skills and configuration.
 
@@ -215,7 +216,7 @@ Slash commands for quick actions. These can be invoked with `/command-name` in C
 - Can detect and analyze whether local branch is ahead/behind remote
 - Uses GraphQL API for comprehensive comment thread data
 - Supports resuming from previous run if interrupted
-- All actions logged to `~/.claude/logs/review-pr-comments-<timestamp>.log`
+- All actions logged to `$CLAUDE_CONFIG_DIR/logs/review-pr-comments-<timestamp>.log`
 
 **Gotchas:**
 - Requires `gh` CLI to be installed and authenticated
@@ -253,7 +254,7 @@ Slash commands for quick actions. These can be invoked with `/command-name` in C
 3. **Detection**: Finds all Claude Code references (encoded paths, history entries)
 4. **Preview**: Shows what will be updated (projects directory, history.jsonl entries, filesystem)
 5. **Confirmation**: Asks for your approval before making ANY changes
-6. **Backup**: Creates `~/.claude/history.jsonl.backup` before modifying
+6. **Backup**: Creates `$CLAUDE_CONFIG_DIR/history.jsonl.backup` before modifying
 7. **Update sequence**: Updates in exact order (history.jsonl → projects dir → filesystem) to minimize risk
 8. **Verification**: Confirms all changes succeeded
 
@@ -309,6 +310,79 @@ Slash commands for quick actions. These can be invoked with `/command-name` in C
 - Thoroughness over speed - audit takes time but is comprehensive
 - Green test suites mean nothing if they don't catch failures
 - Every assertion must CONSUME and VALIDATE outputs
+
+---
+
+### /simplify
+
+**What it does:** Systematically reduces cognitive complexity in changed code through semantics-preserving transformations. Analyzes functions, identifies simplification opportunities (guard clauses, boolean logic, modern idioms), and applies verified changes.
+
+**When to use:**
+- After writing code to reduce complexity
+- During code review to suggest improvements
+- When refactoring complex functions
+- Any time you want to improve code readability
+
+**Parameters:**
+```
+/simplify [target] [options]
+```
+
+- `target`: Optional. File path, directory, or omit for branch changeset (default)
+- `--staged`: Only analyze staged changes
+- `--function=<name>`: Target specific function (requires file path)
+- `--repo`: Entire repository (prompts for confirmation)
+- `--base=<branch>`: Override base branch for diff
+- `--allow-uncovered`: Include functions with no test coverage
+- `--dry-run`: Report only, no changes
+- `--auto`: Automated mode (batch preview and apply)
+- `--wizard`: Wizard mode (step through each change)
+- `--min-complexity=<N>`: Only simplify functions with score >= N (default: 5)
+- `--json`: Output report as JSON
+- `--save-report=<path>`: Save report to file
+
+**Example usage:**
+```
+/simplify                                    # Simplify branch changeset
+/simplify src/handlers/auth.py --wizard      # Specific file, step-by-step
+/simplify --staged --auto --dry-run          # Preview staged changes
+/simplify src/ --min-complexity=10           # Directory, high-complexity only
+```
+
+**Simplification categories:**
+- **Control flow**: Guard clauses, nesting reduction, if-else chain optimization
+- **Boolean logic**: De Morgan's law, double negation removal, redundant comparisons
+- **Declarative pipelines**: List comprehensions, filter-map idioms
+- **Modern idioms**: Optional chaining (TS), context managers (Python), RAII (C++)
+- **Dead code**: Unreachable code, unused variables
+
+**Supported languages:**
+- Python, TypeScript, JavaScript, Nim, C, C++ (with language-specific idioms)
+- All other languages (generic simplifications only)
+
+**Multi-gate verification:**
+Every transformation is verified before application:
+1. Parse check (syntax valid)
+2. Type check (if applicable)
+3. Test run (affected tests must pass)
+4. Complexity delta (must actually reduce complexity)
+
+**Git integration:**
+After applying changes, offers commit strategies:
+- Atomic per file (one commit per file with detailed message)
+- Single batch commit (all changes in one commit)
+- No commit (leave as unstaged changes)
+
+**Important notes:**
+- NEVER commits without explicit user approval
+- NEVER applies changes that fail verification
+- Skips functions without test coverage by default
+- Primary metric is Cognitive Complexity (not Cyclomatic)
+
+**Gotchas:**
+- Requires git repository for default changeset mode
+- Functions with 0% test coverage are skipped unless `--allow-uncovered`
+- Complex transformations may have higher risk (flagged in report)
 
 ---
 
@@ -762,7 +836,7 @@ If `worktree == "per_parallel_track"`:
 - Subagent prompts provide CONTEXT, skills provide INSTRUCTIONS
 - Quality gates are NOT optional
 - Session preferences stored and referenced consistently
-- Documents saved to `~/.claude/plans/<project-dir-name>/`
+- Documents saved to `$CLAUDE_CONFIG_DIR/plans/<project-dir-name>/`
 
 **Gotchas:**
 - Skip to user approval if questions arise during autonomous mode
@@ -1312,18 +1386,20 @@ Persona triggers:
 If you prefer manual setup:
 
 ```bash
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+
 # Create symlinks for skills
 for skill in ~/Development/spellbook/skills/*/; do
-  ln -sf "$skill" ~/.claude/skills/
+  ln -sf "$skill" "$CLAUDE_CONFIG_DIR/skills/"
 done
 
 # Create symlinks for commands
 for cmd in ~/Development/spellbook/commands/*.md; do
-  ln -sf "$cmd" ~/.claude/commands/
+  ln -sf "$cmd" "$CLAUDE_CONFIG_DIR/commands/"
 done
 
 # Symlink CLAUDE.md
-ln -sf ~/Development/spellbook/CLAUDE.md ~/.claude/CLAUDE.md
+ln -sf ~/Development/spellbook/CLAUDE.md "$CLAUDE_CONFIG_DIR/CLAUDE.md"
 ```
 
 ## Directory Structure
@@ -1359,10 +1435,10 @@ Resolves via:              ../../docs/autonomous-mode-protocol.md
 **How it works:**
 
 1. Skills are symlinked as **directories** (not individual files):
-   - `~/.claude/skills/implement-feature/` → `<spellbook>/skills/implement-feature/`
+   - `$CLAUDE_CONFIG_DIR/skills/implement-feature/` → `<spellbook>/skills/implement-feature/`
 
 2. When a skill references `docs/foo.md`, the path resolves relative to the skill's location:
-   - From `~/.claude/skills/implement-feature/SKILL.md`
+   - From `$CLAUDE_CONFIG_DIR/skills/implement-feature/SKILL.md`
    - `../../docs/` traverses up through the symlink
    - Lands at `<spellbook>/docs/`
 
@@ -1370,14 +1446,14 @@ Resolves via:              ../../docs/autonomous-mode-protocol.md
 
 **Visual resolution:**
 ```
-~/.claude/skills/implement-feature/SKILL.md
+$CLAUDE_CONFIG_DIR/skills/implement-feature/SKILL.md
     ↓ (symlink traversal)
 <spellbook>/skills/implement-feature/SKILL.md
     ↓ (../../docs/ from here)
 <spellbook>/docs/autonomous-mode-protocol.md ✓
 ```
 
-**Belt and suspenders:** The installer also symlinks `docs/` directly to `~/.claude/docs/` for redundancy, so both resolution paths work.
+**Belt and suspenders:** The installer also symlinks `docs/` directly to `$CLAUDE_CONFIG_DIR/docs/` for redundancy, so both resolution paths work.
 
 ## Development
 
@@ -1414,7 +1490,7 @@ npm run lint
 
 Spellbook uses a multi-layer bootstrap approach to work across different AI coding platforms:
 
-1. **Claude Code / OpenCode**: Skills and commands are auto-loaded from `~/.claude/` or `~/.opencode/` via symlinks created by `install.sh`. The `CLAUDE.md` configuration is also symlinked to provide consistent behavior.
+1. **Claude Code / OpenCode**: Skills and commands are auto-loaded from `$CLAUDE_CONFIG_DIR` (defaults to `~/.claude/`) or `~/.opencode/` via symlinks created by `install.sh`. The `CLAUDE.md` configuration is also symlinked to provide consistent behavior. The `CLAUDE_CONFIG_DIR` environment variable can override the default location.
 
 2. **Codex**: Project-level bootstrap uses `.codex/spellbook-bootstrap.md` which documents all skills and their trigger conditions. The `spellbook-codex` script can be invoked in Codex sessions to load this documentation.
 
@@ -1427,10 +1503,10 @@ Spellbook uses a multi-layer bootstrap approach to work across different AI codi
 Design documents and implementation plans are stored in a centralized location:
 
 ```
-~/.claude/plans/<project-dir-name>/YYYY-MM-DD-<plan-name>.md
+$CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-<plan-name>.md
 ```
 
-This keeps planning artifacts outside of project repositories, avoiding clutter and git noise.
+This keeps planning artifacts outside of project repositories, avoiding clutter and git noise. By default, this is `~/.claude/plans/`, but can be customized via the `CLAUDE_CONFIG_DIR` environment variable.
 
 ## Acknowledgments
 
