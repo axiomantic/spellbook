@@ -135,4 +135,68 @@ python3 "$CLAUDE_CONFIG_DIR/scripts/distill-session.py" split-by-char-limit {ses
 
 Store chunk boundaries: `[(start_1, end_1), (start_2, end_2), ...]`
 
+### Phase 2: Parallel Summarization
+
+**Step 1: Extract chunks**
+
+For each chunk boundary `(start, end)`, extract content:
+
+```bash
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+python3 "$CLAUDE_CONFIG_DIR/scripts/distill-session.py" extract-chunk {session_file} \
+  --start-line {start} \
+  --end-line {end}
+```
+
+Store each chunk's JSON content.
+
+**Step 2: Craft chunk summarization prompts**
+
+For each chunk N (1-indexed):
+
+```
+You are summarizing a portion of a Claude Code conversation.
+
+This is chunk {N} of {total_chunks}.
+
+Your job: Extract key information from this chunk following this structure:
+
+1. What was the user trying to accomplish?
+2. What approach was taken?
+3. What decisions were made and why?
+4. What files were created/modified?
+5. What errors occurred and how were they resolved?
+6. What work remains incomplete?
+
+Be thorough but concise. Another AI will synthesize your summary with others.
+
+---
+
+CONVERSATION CHUNK:
+
+{chunk_content}
+```
+
+**Step 3: Spawn parallel subagents**
+
+Use Task tool to spawn N subagents in parallel (ONE message with ALL Task calls):
+
+```
+Task("Chunk 1 Summarizer", "{prompt_for_chunk_1}", "researcher")
+Task("Chunk 2 Summarizer", "{prompt_for_chunk_2}", "researcher")
+Task("Chunk 3 Summarizer", "{prompt_for_chunk_3}", "researcher")
+...
+```
+
+**Step 4: Collect summaries**
+
+Wait for all Task outputs. Store as:
+- Summary 1 (chunk 1)
+- Summary 2 (chunk 2)
+- ...
+
+If any subagent fails: Retry once. If still fails, report partial results and warn user.
+
+**Partial Results Policy:** If <= 20% of chunks fail summarization, proceed with synthesis using available summaries and mark missing chunks. If > 20% fail, abort and report error.
+
 </PHASES>
