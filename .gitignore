@@ -8,3 +8,9 @@ logs/
 
 # Node modules (if any)
 node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+.coverage
+.pytest_cache/
