@@ -318,3 +318,52 @@ Original session preserved at: {session_file}
 ```
 
 </PHASES>
+
+---
+
+## Error Handling
+
+| Scenario | Response |
+|----------|----------|
+| No sessions found | Exit: "No sessions found for this project" |
+| Session file unreadable | Skip session in listing, or abort if selected |
+| Chunk summarization fails | Retry once, then apply partial results policy (20% threshold) |
+| Synthesis fails | Output raw chunk summaries as fallback |
+| Output directory not writable | Report error with path and suggest manual creation |
+| Python script not found | Exit: "Helper script not found at {path}. Run install.sh to set up." |
+| Single chunk exceeds context window | Truncate to 300k chars, add warning: "[TRUNCATED: chunk too large]" |
+| > 20% chunks fail | Abort with error listing failed chunk ranges |
+
+**Rollback Strategy:**
+- Original session file is never modified
+- Partial output files are kept (not deleted on error) for debugging
+- Provide actionable error messages with file paths
+
+**Risk Mitigation:**
+- **Context Window Exceeded:** If a single message within a chunk exceeds context limits, truncate the message at 300k characters and add "[TRUNCATED: message too large for context window]" marker
+- **Partial Results:** Mark missing chunks as "[CHUNK N FAILED - SUMMARIZATION ERROR]" in synthesis input
+- **Minimum Viable Summary:** If <= 20% of chunks fail, proceed with partial synthesis; if > 20% fail, abort and recommend manual intervention
+
+---
+
+## When Tests Fail
+
+If any test fails during implementation, invoke the `systematic-debugging` skill to diagnose the issue:
+
+1. Run: `systematic-debugging` with test failure output
+2. Follow the skill's hypothesis-driven workflow
+3. Fix the root cause (not just symptoms)
+4. Re-run tests to verify fix
+5. Document the issue and resolution in commit message
+
+---
+
+## Notes
+
+- Uses `~/.claude/scripts/distill-session.py` for all I/O operations
+- Summaries generated via Task tool subagents (standard Claude Code behavior)
+- Original session file is NEVER modified
+- Output follows compact.md format exactly
+- Character limit of 300k per chunk (~75k tokens) leaves safety buffer
+- Chronological order is critical for synthesis quality
+- AskUserQuestion tool format follows standard Claude Code tool interface
