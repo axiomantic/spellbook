@@ -53,6 +53,111 @@ def find_last_compact_boundary(messages: List[Dict[str, Any]]) -> Optional[int]:
     return None
 
 
+def list_sessions_with_samples(project_dir: str, limit: int = 5) -> List[Dict[str, Any]]:
+    """
+    List recent sessions with metadata and content samples.
+
+    Returns: [{
+        'slug': str,
+        'path': str,
+        'created': str,           # ISO timestamp
+        'last_activity': str,     # ISO timestamp
+        'message_count': int,
+        'char_count': int,
+        'compact_count': int,
+        'last_compact_line': int | None,
+
+        # Content samples for AI interpretation
+        'first_user_message': str,      # First 500 chars
+        'last_compact_summary': str | None,  # Full text if exists
+        'recent_messages': list[str],   # Last 5 messages, each truncated to 500 chars
+    }]
+
+    Sorted by last_activity descending (most recent first).
+    """
+    if not os.path.isdir(project_dir):
+        raise FileNotFoundError(f"Project directory not found: {project_dir}")
+
+    sessions = []
+
+    for jsonl_file in glob.glob(f"{project_dir}/*.jsonl"):
+        try:
+            messages = load_jsonl(jsonl_file)
+            if not messages:
+                continue
+
+            # Extract metadata
+            slug = None
+            first_timestamp = None
+            last_timestamp = None
+
+            for msg in messages:
+                if msg.get('slug'):
+                    slug = msg['slug']
+                if msg.get('timestamp'):
+                    if first_timestamp is None:
+                        first_timestamp = msg['timestamp']
+                    last_timestamp = msg['timestamp']
+
+            # Calculate statistics
+            total_chars = sum(len(json.dumps(msg)) for msg in messages)
+
+            # Count compact boundaries
+            compact_count = sum(
+                1 for msg in messages
+                if msg.get('type') == 'system' and msg.get('subtype') == 'compact_boundary'
+            )
+
+            last_compact_line = find_last_compact_boundary(messages)
+
+            # Extract first user message
+            first_user_msg = None
+            for msg in messages:
+                if msg.get('type') == 'user':
+                    content = msg.get('message', {}).get('content', '')
+                    first_user_msg = content[:500]
+                    break
+
+            # Extract last compact summary if exists
+            last_compact_summary = None
+            if last_compact_line is not None and last_compact_line + 1 < len(messages):
+                next_msg = messages[last_compact_line + 1]
+                if next_msg.get('isCompactSummary'):
+                    last_compact_summary = next_msg.get('message', {}).get('content', '')
+
+            # Extract recent messages (last 5)
+            recent_messages = []
+            for msg in messages[-5:]:
+                if msg.get('type') in ['user', 'assistant']:
+                    content = msg.get('message', {}).get('content', '')
+                    if isinstance(content, list):
+                        content = json.dumps(content)
+                    recent_messages.append(str(content)[:500])
+
+            sessions.append({
+                'slug': slug,
+                'path': jsonl_file,
+                'created': first_timestamp,
+                'last_activity': last_timestamp,
+                'message_count': len(messages),
+                'char_count': total_chars,
+                'compact_count': compact_count,
+                'last_compact_line': last_compact_line,
+                'first_user_message': first_user_msg,
+                'last_compact_summary': last_compact_summary,
+                'recent_messages': recent_messages
+            })
+        except Exception:
+            # Skip files that can't be parsed
+            continue
+
+    # Sort by last activity (most recent first)
+    sessions.sort(key=lambda x: x.get('last_activity') or '', reverse=True)
+
+    # Limit results
+    return sessions[:limit]
+
+
 def split_by_char_limit(session_path: str, start_line: int, char_limit: int) -> List[tuple]:
     """
     Calculate chunk boundaries that fit within char_limit.
@@ -106,3 +211,29 @@ def extract_chunk(session_path: str, start_line: int, end_line: int) -> str:
 
     chunk = messages[start_line:end_line]
     return json.dumps(chunk, indent=2)
+
+
+def get_content_after_line(session_path: str, start_line: int) -> str:
+    """
+    Extract all message content after a given line number.
+    Returns JSON array of messages.
+    """
+    messages = load_jsonl(session_path)
+
+    if start_line < 0 or start_line >= len(messages):
+        raise ValueError(f"Invalid start_line: {start_line} (total messages: {len(messages)})")
+
+    # Extract messages after start_line (start_line is 0-indexed)
+    # start_line + 1 because we want content AFTER that line
+    content = messages[start_line + 1:]
+
+    return json.dumps(content, indent=2)
+
+
+def get_content_from_start(session_path: str) -> str:
+    """
+    Extract all message content from session start.
+    Returns JSON array of messages.
+    """
+    messages = load_jsonl(session_path)
+    return json.dumps(messages, indent=2)
