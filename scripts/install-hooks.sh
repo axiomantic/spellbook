@@ -44,7 +44,7 @@ if [ -n "$STAGED_MD" ]; then
 
     # Check if markdownlint is available
     if command -v npx &> /dev/null; then
-        # Run markdownlint with fix flag, allow it to fail gracefully
+        # Run markdownlint with fix flag, allow failure without blocking commit
         if [ -f "$REPO_ROOT/.markdownlint.json" ]; then
             echo "$STAGED_MD" | xargs npx markdownlint-cli@latest --fix --config "$REPO_ROOT/.markdownlint.json" 2>/dev/null || true
         else
