@@ -96,4 +96,43 @@ Store selected session path for Phase 1.
 
 If no sessions found: Exit with "No sessions found in this project."
 
+### Phase 1: Analyze & Chunk
+
+**Step 1: Get last compact summary (Summary 0)**
+
+```bash
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+python3 "$CLAUDE_CONFIG_DIR/scripts/distill-session.py" get-last-compact {session_file}
+```
+
+Store result. If `null`, start from line 0. If exists, start from `line_number + 2` (skip boundary and summary).
+
+**Step 2: Get content after last compact (or from start)**
+
+If last compact exists:
+
+```bash
+python3 "$CLAUDE_CONFIG_DIR/scripts/distill-session.py" get-content-after {session_file} --start-line {last_compact_line + 1}
+```
+
+Otherwise:
+
+```bash
+python3 "$CLAUDE_CONFIG_DIR/scripts/distill-session.py" get-content-from-start {session_file}
+```
+
+**Step 3: Calculate character count**
+
+Count characters in the JSON output. If < 300,000 chars, skip chunking (use single subagent).
+
+**Step 4: Calculate chunks (if needed)**
+
+```bash
+python3 "$CLAUDE_CONFIG_DIR/scripts/distill-session.py" split-by-char-limit {session_file} \
+  --start-line {start_line} \
+  --char-limit 300000
+```
+
+Store chunk boundaries: `[(start_1, end_1), (start_2, end_2), ...]`
+
 </PHASES>
