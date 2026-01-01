@@ -51,3 +51,58 @@ def find_last_compact_boundary(messages: List[Dict[str, Any]]) -> Optional[int]:
         if msg.get('type') == 'system' and msg.get('subtype') == 'compact_boundary':
             return i
     return None
+
+
+def split_by_char_limit(session_path: str, start_line: int, char_limit: int) -> List[tuple]:
+    """
+    Calculate chunk boundaries that fit within char_limit.
+
+    Returns: [(start_line, end_line), ...]
+
+    Always splits at message boundaries (never mid-message).
+    """
+    messages = load_jsonl(session_path)
+
+    if start_line < 0 or start_line >= len(messages):
+        raise ValueError(f"Invalid start_line: {start_line}")
+
+    if char_limit <= 0:
+        raise ValueError(f"Invalid char_limit: {char_limit}")
+
+    chunks = []
+    current_chunk_start = start_line
+    current_chunk_chars = 0
+
+    for i in range(start_line, len(messages)):
+        msg = messages[i]
+        msg_chars = len(json.dumps(msg))
+
+        # If adding this message would exceed limit, close current chunk
+        if current_chunk_chars + msg_chars > char_limit and current_chunk_chars > 0:
+            chunks.append((current_chunk_start, i))
+            current_chunk_start = i
+            current_chunk_chars = 0
+
+        current_chunk_chars += msg_chars
+
+    # Add final chunk if there are remaining messages
+    if current_chunk_start < len(messages):
+        chunks.append((current_chunk_start, len(messages)))
+
+    return chunks
+
+
+def extract_chunk(session_path: str, start_line: int, end_line: int) -> str:
+    """
+    Extract messages from start_line to end_line.
+    Returns JSON array of messages.
+    """
+    messages = load_jsonl(session_path)
+
+    if start_line < 0 or end_line > len(messages) or start_line >= end_line:
+        raise ValueError(
+            f"Invalid range: start={start_line}, end={end_line}, total={len(messages)}"
+        )
+
+    chunk = messages[start_line:end_line]
+    return json.dumps(chunk, indent=2)
