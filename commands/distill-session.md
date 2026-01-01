@@ -199,4 +199,78 @@ If any subagent fails: Retry once. If still fails, report partial results and wa
 
 **Partial Results Policy:** If <= 20% of chunks fail summarization, proceed with synthesis using available summaries and mark missing chunks. If > 20% fail, abort and report error.
 
+### Phase 3: Synthesis
+
+**Step 1: Read compact.md format**
+
+```bash
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+cat "$CLAUDE_CONFIG_DIR/commands/compact.md"
+```
+
+Store the template content.
+
+**Step 2: Assemble ordered summaries**
+
+Create ordered list:
+1. Summary 0 (last compact summary, if exists)
+2. Summary 1 (first chunk)
+3. Summary 2 (second chunk)
+4. ...
+
+**Step 3: Craft synthesis prompt**
+
+```
+You are synthesizing multiple conversation summaries into one unified summary.
+
+You will receive {N} summaries in CHRONOLOGICAL ORDER:
+- Summary 0 (if present) covers the earliest part of the conversation
+- Summary 1 covers the next part
+- ...and so on
+
+Your job: Combine these into ONE coherent summary following the compact.md format below.
+
+CRITICAL RULES:
+1. Preserve chronological flow - early context informs later work
+2. Deduplicate redundant information
+3. Preserve ALL pending work items from the most recent summary
+4. Preserve ALL user corrections and behavioral guidance
+5. The continuation protocol should reflect the FINAL state
+
+---
+
+COMPACT.MD FORMAT TO FOLLOW:
+
+{compact_md_content}
+
+---
+
+SUMMARIES TO SYNTHESIZE (in chronological order):
+
+Summary 0 (Prior Compact):
+{summary_0_or_none}
+
+Summary 1:
+{summary_1}
+
+Summary 2:
+{summary_2}
+
+...
+```
+
+**Step 4: Spawn synthesis subagent**
+
+```
+Task("Synthesis Agent", "{synthesis_prompt}", "researcher")
+```
+
+**Step 5: Collect final summary**
+
+Store the synthesized output.
+
+If synthesis fails: Fall back to outputting raw chunk summaries with warning.
+
+**Note on Missing Chunks:** When partial results are used (from Phase 2), missing chunks are marked in synthesis input as "[CHUNK N FAILED - SUMMARIZATION ERROR]".
+
 </PHASES>
