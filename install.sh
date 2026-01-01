@@ -52,6 +52,7 @@ create_directories() {
 
     mkdir -p "$CLAUDE_CONFIG_DIR/skills"
     mkdir -p "$CLAUDE_CONFIG_DIR/commands"
+    mkdir -p "$CLAUDE_CONFIG_DIR/scripts"
     mkdir -p "$CLAUDE_CONFIG_DIR/agents"
     mkdir -p "$CLAUDE_CONFIG_DIR/plans"
 
@@ -98,6 +99,31 @@ install_commands() {
     done
 
     print_success "Installed $count commands"
+}
+
+install_scripts() {
+    print_step "Installing scripts..."
+
+    local count=0
+    for script_file in "$SCRIPT_DIR/scripts"/*.py "$SCRIPT_DIR/scripts"/*.sh; do
+        if [ -f "$script_file" ]; then
+            local script_name=$(basename "$script_file")
+            local target="$CLAUDE_CONFIG_DIR/scripts/$script_name"
+
+            # Remove existing
+            rm -f "$target"
+
+            # Create symlink
+            ln -s "$script_file" "$target"
+            count=$((count + 1))
+        fi
+    done
+
+    if [ $count -gt 0 ]; then
+        print_success "Installed $count scripts"
+    else
+        print_info "No scripts to install"
+    fi
 }
 
 install_agents() {
@@ -279,6 +305,7 @@ main() {
     create_directories
     install_skills
     install_commands
+    install_scripts
     install_agents
     install_claude_md
     install_docs
