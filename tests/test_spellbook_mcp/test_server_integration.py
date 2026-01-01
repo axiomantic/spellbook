@@ -41,15 +41,21 @@ def test_find_session_integration(tmp_path, monkeypatch):
     # Test search by slug (use .fn to access underlying function)
     result = server.find_session.fn(name="auth", limit=10)
     assert len(result) == 2
+    # Verify correct sessions matched (both contain "auth")
+    slugs = {r['slug'] for r in result}
+    assert slugs == {'auth-flow', 'api-design'}
 
     # Test search by custom title only
     result = server.find_session.fn(name="Authentication API", limit=10)
     assert len(result) == 1
+    assert result[0]['slug'] == 'api-design'
     assert result[0]['custom_title'] == "Authentication API"
 
     # Test empty search (returns all)
     result = server.find_session.fn(name="", limit=10)
     assert len(result) == 2
+    slugs = {r['slug'] for r in result}
+    assert slugs == {'auth-flow', 'api-design'}
 
 
 def test_split_session_integration(tmp_path):
@@ -72,12 +78,23 @@ def test_split_session_integration(tmp_path):
         char_limit=500
     )
 
-    assert len(result) > 1
+    # Verify we got multiple chunks
+    assert len(result) > 1, "Should produce multiple chunks"
 
-    for chunk in result:
-        assert isinstance(chunk, list)
-        assert len(chunk) == 2
-        assert chunk[0] < chunk[1]
+    # Verify first chunk starts at start_line
+    assert result[0][0] == 0, "First chunk must start at 0"
+
+    # Verify last chunk ends at total message count
+    assert result[-1][1] == 10, "Last chunk must end at message count"
+
+    # Verify chunks are contiguous
+    for i in range(len(result) - 1):
+        assert result[i][1] == result[i + 1][0], \
+            f"Gap between chunk {i} and {i + 1}"
+
+    # Verify each chunk boundary is valid
+    for start, end in result:
+        assert 0 <= start < end <= 10, f"Invalid chunk [{start}, {end}]"
 
 
 def test_list_sessions_integration(tmp_path, monkeypatch):

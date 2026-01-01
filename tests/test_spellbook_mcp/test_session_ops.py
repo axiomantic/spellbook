@@ -264,13 +264,15 @@ def test_list_sessions_with_samples(tmp_path):
     result = list_sessions_with_samples(str(tmp_path), limit=5)
 
     assert len(result) == 1
-    assert result[0]['slug'] == 'fuzzy-bear'
-    assert result[0]['custom_title'] == 'Test Session'
-    assert result[0]['message_count'] == 3
-    assert result[0]['first_user_message'] == 'First user message'
-    assert 'path' in result[0]
-    assert 'created' in result[0]
-    assert 'last_activity' in result[0]
+    session = result[0]
+    assert session['slug'] == 'fuzzy-bear'
+    assert session['custom_title'] == 'Test Session'
+    assert session['message_count'] == 3
+    assert session['first_user_message'] == 'First user message'
+    # Verify values, not just existence
+    assert session['path'] == str(session1)
+    assert session['created'] == '2026-01-01T10:00:00Z'
+    assert session['last_activity'] == '2026-01-01T10:00:05Z'
 
 
 def test_list_sessions_with_samples_limit(tmp_path):
@@ -290,6 +292,8 @@ def test_list_sessions_with_samples_limit(tmp_path):
 
     result = list_sessions_with_samples(str(tmp_path), limit=3)
     assert len(result) == 3
+    # Verify correct sessions returned (most recent by timestamp)
+    assert [r['slug'] for r in result] == ['session-4', 'session-3', 'session-2']
 
 
 def test_list_sessions_with_samples_empty_dir(tmp_path):

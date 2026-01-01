@@ -14,22 +14,33 @@ This reduces session discovery from 10+ LLM tool calls to a single MCP invocatio
 
 ## Installation
 
-### 1. Install Python Dependencies
+### Quick Install (via spellbook installer)
+
+Run from the spellbook root:
 
 ```bash
-cd spellbook_mcp
-pip install -r requirements.txt
+./install.sh
 ```
 
-### 2. Add to Claude Code
+This will install Python dependencies and register the MCP server with Claude Code.
+
+### Manual Installation
+
+#### 1. Install Python Dependencies
 
 ```bash
-claude mcp add spellbook python /path/to/spellbook/spellbook_mcp/server.py
+pip install -r spellbook_mcp/requirements.txt
+```
+
+#### 2. Add to Claude Code
+
+```bash
+claude mcp add spellbook -- python /path/to/spellbook/spellbook_mcp/server.py
 ```
 
 Replace `/path/to/spellbook` with the absolute path to your spellbook repository.
 
-### 3. Verify Installation
+#### 3. Verify Installation
 
 ```bash
 claude mcp list
@@ -83,12 +94,24 @@ No manual configuration required.
 ### Running Tests
 
 ```bash
-# Run all tests
+# From spellbook root directory
 pytest tests/test_spellbook_mcp/ -v
 
 # Run specific test file
 pytest tests/test_spellbook_mcp/test_server_integration.py -v
+
+# Run with coverage
+pytest tests/test_spellbook_mcp/ -v --cov=spellbook_mcp
 ```
+
+### Test Quality
+
+Tests are audited for green mirage patterns. All assertions verify actual values, not just existence. Key invariants verified:
+
+- **load_jsonl**: Full object comparison, not field spot-checks
+- **split_session**: Chunk contiguity, boundary correctness, coverage
+- **list_sessions**: Exact field values including timestamps and paths
+- **find_session**: Correct sessions matched, not just counts
 
 ### Project Structure
 
@@ -97,8 +120,13 @@ spellbook_mcp/
 ├── server.py           # FastMCP server with tool registrations
 ├── session_ops.py      # Session loading, metadata, chunking
 ├── path_utils.py       # Path encoding and project resolution
-├── requirements.txt    # Python dependencies
+├── requirements.txt    # Python dependencies (fastmcp)
 └── README.md           # This file
+
+tests/test_spellbook_mcp/
+├── test_path_utils.py        # Path encoding tests
+├── test_session_ops.py       # Session operations tests (20 tests)
+└── test_server_integration.py # End-to-end tool tests
 ```
 
 ## Troubleshooting

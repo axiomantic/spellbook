@@ -361,6 +361,57 @@ setup_opencode_integration() {
     fi
 }
 
+install_mcp_server() {
+    print_step "Setting up MCP server..."
+
+    local mcp_dir="$SCRIPT_DIR/spellbook_mcp"
+    local server_file="$mcp_dir/server.py"
+    local requirements_file="$mcp_dir/requirements.txt"
+
+    # Check if MCP server exists
+    if [ ! -f "$server_file" ]; then
+        print_info "MCP server not found (skipping)"
+        return
+    fi
+
+    # Install Python dependencies
+    if [ -f "$requirements_file" ]; then
+        print_step "Installing MCP server dependencies..."
+        if command -v pip3 &> /dev/null; then
+            pip3 install -q -r "$requirements_file" 2>/dev/null
+            print_success "MCP dependencies installed"
+        elif command -v pip &> /dev/null; then
+            pip install -q -r "$requirements_file" 2>/dev/null
+            print_success "MCP dependencies installed"
+        else
+            print_warning "pip not found, skipping MCP dependencies"
+            print_info "Run: pip install -r $requirements_file"
+        fi
+    fi
+
+    # Register with Claude Code if available
+    if command -v claude &> /dev/null; then
+        print_step "Registering MCP server with Claude Code..."
+
+        # Check if already registered
+        if claude mcp list 2>/dev/null | grep -q "spellbook"; then
+            print_info "MCP server already registered, updating..."
+            claude mcp remove spellbook 2>/dev/null || true
+        fi
+
+        # Add the MCP server
+        if claude mcp add spellbook -- python "$server_file" 2>/dev/null; then
+            print_success "MCP server registered with Claude Code"
+        else
+            print_warning "Failed to register MCP server automatically"
+            print_info "Run manually: claude mcp add spellbook -- python $server_file"
+        fi
+    else
+        print_info "Claude CLI not found, skipping MCP registration"
+        print_info "Run manually: claude mcp add spellbook -- python $server_file"
+    fi
+}
+
 print_completion() {
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
@@ -395,6 +446,7 @@ main() {
     setup_claude_code_bootstrap
     setup_codex_integration
     setup_opencode_integration
+    install_mcp_server
     print_completion
 }
 
