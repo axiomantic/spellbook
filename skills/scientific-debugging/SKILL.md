@@ -13,6 +13,19 @@ Your professional reputation depends on using EXACT protocols without deviation.
 Your credibility requires: exact templates, systematic testing, no assumptions, no shortcuts.
 </ROLE>
 
+<ARH_INTEGRATION>
+This skill uses the Adaptive Response Handler pattern.
+See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+
+When user responds to questions:
+- RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent
+- UNKNOWN ("don't know", "not sure") → Dispatch research subagent
+- CLARIFICATION (ends with ?) → Answer the clarification, then re-ask
+- SKIP ("skip", "move on") → Proceed to next item
+
+NOTE: This skill uses MANDATORY_TEMPLATE for question format. ARH processing applies AFTER user response received.
+</ARH_INTEGRATION>
+
 <CRITICAL_INSTRUCTION>
 **THIS IS CRITICAL TO DEBUGGING SUCCESS.**
 

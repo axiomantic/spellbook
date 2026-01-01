@@ -11,6 +11,17 @@ You operate with surgical precision, methodical rigor, and deep understanding of
 Your commitment: No feature left behind, no bug introduced, all interface contracts honored.
 </ROLE>
 
+<ARH_INTEGRATION>
+This skill uses the Adaptive Response Handler pattern.
+See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+
+When user responds to conflict resolution questions:
+- RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent to analyze git history
+- UNKNOWN ("don't know", "not sure") → Dispatch analysis subagent to show context
+- CLARIFICATION (ends with ?) → Answer the clarification, then re-ask
+- SKIP ("skip", "move on") → Mark as manual resolution needed
+</ARH_INTEGRATION>
+
 <CRITICAL_INSTRUCTION>
 This skill merges parallel worktrees back into a unified branch. Take a deep breath. This is very important to my career.
 
@@ -236,14 +247,111 @@ Based on 3-way analysis:
 2. **If overlapping work:** Merge both changes, ensuring contract compliance
 3. **If mechanical:** Regenerate from source
 
-**Step 5: Apply Resolution**
+**Step 5: Present Conflict to User with ARH Processing**
+
+For each conflict, use ARH pattern for intelligent response handling:
+
+```markdown
+CONFLICT in [file]:
+<<<<<<< worktree-A
+[A's version]
+=======
+[B's version]
+>>>>>>> worktree-B
+
+CONTEXT FROM 3-WAY ANALYSIS:
+- Worktree A intent: [from Agent A analysis]
+- Base branch changes: [from Agent B analysis]
+- Interface contract status: [from Agent C analysis]
+
+RESOLUTION OPTIONS:
+A) Keep worktree version (rationale: [why])
+B) Keep base version (rationale: [why])
+C) Synthesize both (rationale: [how they combine])
+D) Something else (please describe)
+
+Your choice: ___
+```
+
+**ARH RESPONSE PROCESSING:**
+
+After presenting conflict question, process user response:
+
+1. **Detect response type** using ARH pattern
+2. **Handle by type:**
+   - **DIRECT_ANSWER (A/B/C/D):** Apply resolution, continue
+   - **RESEARCH_REQUEST ("research this", "check history"):**
+     - Dispatch subagent: `git log --follow [file]` analysis
+     - Analyze commit history for both branches
+     - Identify intent of conflicting changes
+     - Regenerate question with historical context
+     - Present informed recommendation
+   - **UNKNOWN ("don't know", "not sure"):**
+     - Show expanded diff context (more lines)
+     - Show git blame for conflicting sections
+     - Display related changes in same commit
+     - Re-ask with additional context
+   - **CLARIFICATION ("what do you mean?"):**
+     - Expand diff context
+     - Show file structure around conflict
+     - Explain technical terms
+     - Re-ask with clearer explanation
+   - **SKIP ("skip", "move on"):**
+     - Mark conflict for manual resolution
+     - Create conflict marker in file
+     - Document in merge notes
+     - Continue to next conflict
+
+3. **After research dispatch (for RESEARCH_REQUEST or UNKNOWN):**
+   - Analyze git history: `git log --follow --patch [file]`
+   - Identify commit messages and intent
+   - Check for related changes in same commits
+   - Regenerate question with historical context
+
+**Example ARH Flow:**
+
+```
+CONFLICT in src/auth.ts:
+<<<<<<< worktree-A
+function validateToken(token: string)
+=======
+async function validateToken(token: string)
+>>>>>>> worktree-B
+
+Question: Which version to keep?
+User: "Why was it made async? I don't know which is correct."
+
+ARH Processing:
+→ Detect: UNKNOWN + RESEARCH_REQUEST
+→ Action: Check git log for worktree-B
+→ Run: git log --grep="validateToken" worktree-B
+→ Return: "Made async for external API call in commit abc123"
+→ Regenerate question with context:
+
+"Git history shows:
+- Worktree B (commit abc123): Made async to support external API validation
+- Added await call to verifyTokenWithAuthService()
+- Required for OAuth integration feature
+
+Branch A kept it synchronous for backward compatibility.
+
+RECOMMENDATION: Keep async version (B) - required for new OAuth feature
+Sync version will break external validation.
+
+Accept recommendation or choose different resolution?
+A) Keep async (recommended)
+B) Keep sync (breaks OAuth)
+C) Different approach
+```
+
+**Step 6: Apply Resolution**
 
 ```bash
-# Edit file to resolved state
+# Edit file to resolved state based on user choice
 git add [file]
 ```
 
-**Step 6: Continue Merge**
+**Step 7: Continue Merge**
 
 ```bash
 git merge --continue

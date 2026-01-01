@@ -194,6 +194,87 @@ install_docs() {
     fi
 }
 
+install_patterns() {
+    print_step "Setting up shared patterns..."
+
+    local patterns_dir="$SCRIPT_DIR/patterns"
+    local claude_patterns_dir="$CLAUDE_CONFIG_DIR/patterns"
+
+    # Verify SCRIPT_DIR is set
+    if [ -z "$SCRIPT_DIR" ]; then
+        print_error "SCRIPT_DIR not set. Cannot create patterns directory."
+        exit 1
+    fi
+
+    # Create patterns directory if it doesn't exist
+    if ! mkdir -p "$patterns_dir"; then
+        print_error "Failed to create patterns directory: $patterns_dir"
+        print_error "Check permissions and try again."
+        exit 1
+    fi
+
+    # Create .claude directory if it doesn't exist
+    if ! mkdir -p "$CLAUDE_CONFIG_DIR"; then
+        print_error "Failed to create .claude directory: $CLAUDE_CONFIG_DIR"
+        print_error "Check permissions and try again."
+        exit 1
+    fi
+
+    # Handle existing patterns location (including broken symlinks)
+    if [ -L "$claude_patterns_dir" ]; then
+        # Symlink exists - check if it's broken or points to wrong location
+        if [ ! -e "$claude_patterns_dir" ]; then
+            print_warning "Broken symlink detected at $claude_patterns_dir"
+            print_info "Removing broken symlink and recreating..."
+            rm "$claude_patterns_dir"
+        else
+            # Symlink is valid - verify it points to correct location
+            local current_target
+            current_target=$(readlink "$claude_patterns_dir")
+            if [ "$current_target" != "$patterns_dir" ]; then
+                print_warning "Existing symlink points to different location"
+                print_info "  Current: $current_target"
+                print_info "  Expected: $patterns_dir"
+                print_info "Removing old symlink and recreating..."
+                rm "$claude_patterns_dir"
+            else
+                print_success "Patterns symlink already exists and is correct"
+            fi
+        fi
+    fi
+
+    # Create symlink if it doesn't exist (or was just removed)
+    if [ ! -L "$claude_patterns_dir" ]; then
+        # Check for non-symlink obstruction
+        if [ -e "$claude_patterns_dir" ]; then
+            print_warning "$claude_patterns_dir exists but is not a symlink"
+            print_error "Backup existing directory and re-run install.sh"
+            print_error "  mv $claude_patterns_dir ${claude_patterns_dir}.backup"
+            exit 1
+        fi
+
+        # Create new symlink
+        if ! ln -s "$patterns_dir" "$claude_patterns_dir"; then
+            print_error "Failed to create symlink"
+            print_error "  Source: $patterns_dir"
+            print_error "  Target: $claude_patterns_dir"
+            exit 1
+        fi
+
+        print_success "Created symlink: $claude_patterns_dir -> $patterns_dir"
+    fi
+
+    # Verify adaptive-response-handler.md exists (REQUIRED)
+    if [ ! -f "$patterns_dir/adaptive-response-handler.md" ]; then
+        print_error "adaptive-response-handler.md not found in patterns/"
+        print_error "  Expected: $patterns_dir/adaptive-response-handler.md"
+        print_error "This file is REQUIRED for implement-feature and other skills."
+        exit 1
+    fi
+
+    print_success "adaptive-response-handler.md found"
+}
+
 validate_doc_references() {
     print_step "Validating doc references in skills..."
 
@@ -309,6 +390,7 @@ main() {
     install_agents
     install_claude_md
     install_docs
+    install_patterns
     validate_doc_references
     setup_claude_code_bootstrap
     setup_codex_integration

@@ -247,6 +247,86 @@ Continuation of #PREVIOUS_PR_NUMBER
 This is part X of Y in the COMPONENT refactoring series.
 ```
 
+### For Feature PRs (New Capabilities)
+
+Use this format for PRs that introduce new functionality, especially those in a series:
+
+```markdown
+# PR Title: Brief description of feature
+
+**Base:** `devel` (or parent branch if in series)
+**Branch:** `feature/branch-name`
+
+---
+
+Brief 1-2 sentence overview of what this PR introduces.
+
+## Summary
+
+1. **Capability 1**: Brief description
+2. **Capability 2**: Brief description
+3. **Feature detection**: Use `defined(nimHasFeatureName)` to check for this feature
+
+## Example
+
+\`\`\`nim
+# Minimal working example demonstrating the feature
+type
+  Example[T] {.pragma: expression.} = object
+
+static:
+  doAssert condition  # Proves it works
+\`\`\`
+
+## Use Cases
+
+### Use Case Title
+
+Brief description of the problem this solves.
+
+\`\`\`nim
+# Before: the workaround
+# After: the clean solution
+\`\`\`
+
+## Implementation
+
+**Component** (`file.nim`):
+- Change description 1
+- Change description 2
+
+**Another Component** (`other.nim`):
+- Change description
+
+## Tests
+
+- `tests/path/to/test.nim` - Description of what's tested
+
+## Dependencies
+
+- Requires PRX (`branch-name`) for infrastructure  *(if part of series)*
+
+## Prior Art *(optional)*
+
+Reference related PRs/issues if this is an alternative approach.
+```
+
+### For PR Series
+
+When submitting related PRs as a series, include a summary table:
+
+```markdown
+## Series Summary
+
+| PR | Branch | Focus | Lines (net) |
+|----|--------|-------|-------------|
+| PR1 | `feature/first` | Infrastructure + X | +441 |
+| PR2 | `feature/second` | Y functionality | +172 |
+| PR3 | `feature/third` | Z functionality | +300 |
+
+Together these PRs enable [combined capability description].
+```
+
 ---
 
 ## Pre-Submission Checklist

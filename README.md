@@ -25,6 +25,7 @@ Personal AI assistant skills, commands, and configuration for Claude Code and ot
 - [Skills](#skills)
   - [async-await-patterns](#async-await-patterns)
   - [design-doc-reviewer](#design-doc-reviewer)
+  - [devils-advocate](#devils-advocate)
   - [factchecker](#factchecker)
   - [find-dead-code](#find-dead-code)
   - [green-mirage-audit](#green-mirage-audit)
@@ -38,6 +39,8 @@ Personal AI assistant skills, commands, and configuration for Claude Code and ot
 - [Manual Installation](#manual-installation)
 - [Directory Structure](#directory-structure)
 - [Path Resolution in Skills](#path-resolution-in-skills)
+- [Shared Patterns](#shared-patterns)
+  - [Adaptive Response Handler (ARH)](#adaptive-response-handler-arh)
 - [Development](#development)
   - [Git Hooks](#git-hooks)
   - [Running Tests](#running-tests)
@@ -565,6 +568,70 @@ CRITICAL: Verifies that any referenced interfaces, libraries, or existing code a
 - Takes time - thoroughness over speed
 - Will flag even minor vagueness as findings
 - Requires design to be specific enough to code against
+
+---
+
+### devils-advocate
+
+**What it does:** Systematically challenges assumptions, scope, architecture, and design decisions in understanding documents and design docs. Surfaces risks, edge cases, and overlooked considerations before implementation begins.
+
+**When to use:**
+- After understanding document is generated (Phase 1.5.6 of implement-feature)
+- When design document needs adversarial review
+- User explicitly requests "challenge this" or "devil's advocate review"
+- Before committing to major architectural decisions
+
+**Triggers:**
+- Part of `implement-feature` Phase 1.5.7
+- Explicit skill invocation
+- User mentions "challenge", "devil's advocate", "find problems"
+
+**What it challenges:**
+
+For every document, it reviews 8 categories:
+
+1. **Assumptions** - Classifies as VALIDATED/UNVALIDATED/IMPLICIT/CONTRADICTORY
+2. **Scope boundaries** - Finds vague language, scope creep vectors
+3. **Architectural decisions** - "What if" scenarios, hidden dependencies
+4. **Integration points** - Failure modes, circular dependencies
+5. **Success criteria** - Demands measurable numbers, not vague language
+6. **Edge cases** - Compares against similar code, finds missing cases
+7. **Glossary/vocabulary** - Finds overloaded terms, ambiguous definitions
+8. **Missing sections** - Flags required sections not present
+
+**Output format:**
+- Executive summary with critical issue count
+- Critical issues (block design phase)
+- Major risks (proceed with caution)
+- Minor issues (address if time permits)
+- Validation summary with counts per category
+- Overall readiness assessment: READY | NEEDS WORK | NOT READY
+
+**Example challenge:**
+```
+ASSUMPTION: "Users will always have internet connectivity"
+
+CHALLENGE:
+- Classification: IMPLICIT (not stated, but API-first design assumes it)
+- Evidence: None provided
+- Edge case: Mobile users in tunnels, rural areas, airplane mode
+- Failure impact: Complete feature failure if offline
+- Recommendation: Add offline support or explicit online-only requirement
+```
+
+**Anti-patterns (DO NOT):**
+- Accept "common sense" as validation
+- Let good intentions override evidence
+- Assume "we'll handle that later"
+- Accept vague language without challenge
+- Skip edge cases because "unlikely"
+- Approve documents just to be nice
+
+**Important notes:**
+- Your job is to FIND PROBLEMS, not validate decisions
+- If you find zero issues, you are not trying hard enough
+- Be thorough, skeptical, and relentless
+- Better to find issues now than during code review or production
 
 ---
 
@@ -1476,6 +1543,7 @@ spellbook/
 ├── skills/           # Skill directories (each with SKILL.md)
 │   ├── async-await-patterns/
 │   ├── design-doc-reviewer/
+│   ├── devils-advocate/
 │   ├── factchecker/
 │   └── ...
 ├── commands/         # Slash command files
@@ -1484,6 +1552,8 @@ spellbook/
 │   └── ...
 ├── docs/             # Shared documentation referenced by skills
 │   └── autonomous-mode-protocol.md
+├── patterns/         # Shared behavior patterns for skills
+│   └── adaptive-response-handler.md
 ├── agents/           # Agent definitions (if any)
 ├── CLAUDE.md         # Personal configuration
 ├── install.sh        # Installation script
@@ -1521,6 +1591,57 @@ $CLAUDE_CONFIG_DIR/skills/implement-feature/SKILL.md
 ```
 
 **Belt and suspenders:** The installer also symlinks `docs/` directly to `$CLAUDE_CONFIG_DIR/docs/` for redundancy, so both resolution paths work.
+
+## Shared Patterns
+
+The `patterns/` directory contains reusable behavior patterns that multiple skills can reference. Unlike docs (which contain reference information), patterns define specific response handling logic that skills can integrate.
+
+### Adaptive Response Handler (ARH)
+
+**File:** `patterns/adaptive-response-handler.md`
+
+A centralized pattern for processing user responses to AskUserQuestion prompts. Skills reference this pattern to handle ambiguous or non-standard user responses consistently.
+
+**Response types detected:**
+| Type | Pattern | Action |
+|------|---------|--------|
+| `DIRECT_ANSWER` | Single letter A-D | Use answer directly |
+| `USER_ABORT` | "stop", "cancel", "exit" | Abort current workflow |
+| `RESEARCH_REQUEST` | "research this", "look into", "find out" | Dispatch research subagent |
+| `UNKNOWN` | "don't know", "not sure" | Dispatch research subagent |
+| `CLARIFICATION` | Ends with `?` | Answer question, re-ask |
+| `SKIP` | "skip", "move on", "next" | Proceed to next item |
+| `DETAILED_ANSWER` | Multi-word response | Extract and use details |
+| `ELABORATED_CHOICE` | "A, but also..." | Extract choice + notes |
+
+**Skills using ARH:**
+- `factchecker` - For claim verification responses
+- `find-dead-code` - For usage verification responses
+- `scientific-debugging` - For theory testing responses
+- `smart-merge` - For conflict resolution responses
+- `implement-feature` - For discovery and disambiguation responses
+
+**Integration example:**
+```markdown
+<ARH_INTEGRATION>
+This skill uses the Adaptive Response Handler pattern.
+See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+
+When user responds to questions:
+- RESEARCH_REQUEST ("research this", "check") -> Dispatch research subagent
+- UNKNOWN ("don't know", "not sure") -> Dispatch research subagent
+- CLARIFICATION (ends with ?) -> Answer the clarification, then re-ask
+- SKIP ("skip", "move on") -> Proceed to next item
+</ARH_INTEGRATION>
+```
+
+**How it works:**
+1. Skill asks question via `AskUserQuestion`
+2. User responds with free-form text
+3. ARH pattern classifies response type
+4. Skill takes appropriate action based on classification
+
+The pattern prevents skills from failing on non-standard responses (like "I'm not sure, can you check?" or "skip this for now") by routing them to appropriate handlers.
 
 ## Development
 

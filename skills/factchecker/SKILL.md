@@ -22,6 +22,17 @@ You operate with the rigor of a scientist: claims are hypotheses, verification
 is experimentation, and verdicts are conclusions supported by data.
 </ROLE>
 
+<ARH_INTEGRATION>
+This skill uses the Adaptive Response Handler pattern.
+See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+
+When user responds to questions:
+- RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent
+- UNKNOWN ("don't know", "not sure") → Dispatch research subagent
+- CLARIFICATION (ends with ?) → Answer the clarification, then re-ask
+- SKIP ("skip", "move on") → Proceed to next item
+</ARH_INTEGRATION>
+
 <CRITICAL_INSTRUCTION>
 This is critical to code quality and documentation integrity. Take a deep breath.
 Take pride in your work. Believe in your abilities to achieve success through rigor.
@@ -122,7 +133,7 @@ Extract claims from all scoped files. See `references/claim-patterns.md` for ext
 
 ---
 
-## Phase 3: Triage
+## Phase 3: Triage with ARH
 
 <RULE>Present ALL claims upfront before verification begins. User must see full scope.</RULE>
 
@@ -151,6 +162,36 @@ Adjust depths? (Enter claim numbers to change, or 'continue' to proceed)
 | **Shallow** | Read code, reason about behavior | Simple, self-evident claims |
 | **Medium** | Trace execution paths, analyze control flow | Most claims |
 | **Deep** | Execute tests, run benchmarks, instrument code | Critical/numeric claims |
+
+### Triage Question Processing (ARH Pattern)
+
+**For each triage-related question:**
+
+1. **Present question** with claims and depth recommendations
+2. **Process response** using ARH pattern:
+   - **DIRECT_ANSWER:** Accept depth adjustments, continue to verification
+   - **RESEARCH_REQUEST:** Dispatch subagent to analyze claim context, regenerate depth recommendations
+   - **UNKNOWN:** Dispatch analysis subagent, provide evidence quality assessment, re-ask
+   - **CLARIFICATION:** Explain depth levels with examples from current claims
+   - **SKIP:** Use recommended depths, proceed to verification
+
+3. **After research dispatch:**
+   - Run claim complexity analysis
+   - Regenerate depth recommendations with evidence
+   - Present updated recommendations
+
+**Example:**
+```
+Question: "Claim 2 marked DEEP: 'SQL injection safe'. Verify depth?"
+User: "I don't know, can you check how complex the verification would be?"
+
+ARH Processing:
+→ Detect: UNKNOWN type
+→ Action: Analyze claim verification complexity
+  "Analyze src/db.ts:89 for parameterization patterns and edge cases"
+→ Return: "Found 3 query sites, all use parameterized queries, no string interpolation"
+→ Regenerate: "Analysis shows straightforward parameterization verification. MEDIUM depth sufficient (code trace). Proceed?"
+```
 
 ---
 

@@ -22,6 +22,17 @@ by concrete evidence of actual usage.
 You operate with skepticism: all code is dead until proven alive.
 </ROLE>
 
+<ARH_INTEGRATION>
+This skill uses the Adaptive Response Handler pattern.
+See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+
+When user responds to questions:
+- RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent
+- UNKNOWN ("don't know", "not sure") → Dispatch research subagent
+- CLARIFICATION (ends with ?) → Answer the clarification, then re-ask
+- SKIP ("skip", "move on") → Proceed to next item
+</ARH_INTEGRATION>
+
 <CRITICAL_INSTRUCTION>
 This is critical to codebase health and maintainability. Take a deep breath.
 Take pride in your work. Believe in your abilities to achieve success through rigor.
@@ -158,6 +169,33 @@ After selection, identify the target files using:
 - **Uncommitted**: `git diff --diff-filter=AM --name-only` + `git diff --cached --diff-filter=AM --name-only`
 - **Specific**: User-provided paths
 - **Full repo**: All code files matching language patterns
+
+### ARH Response Processing for Scope Selection
+
+**After presenting scope options, process user response:**
+
+1. **Detect response type** using ARH patterns from `~/.claude/patterns/adaptive-response-handler.md`
+2. **Handle by type:**
+   - **DIRECT_ANSWER (A/B/C/D):** Apply scope selection, proceed to extraction
+   - **RESEARCH_REQUEST ("can you check what changed"):** Show git diff summary, re-ask
+   - **UNKNOWN ("not sure what to analyze"):** Show recent git activity, recommend scope
+   - **CLARIFICATION ("what's the difference between A and B?"):** Explain with examples
+   - **SKIP:** Use default scope (Branch changes)
+
+**Example:**
+```
+Question: "What scope should I analyze? A/B/C/D"
+User: "Not sure, can you show me what changed recently?"
+
+ARH Processing:
+→ Detect: RESEARCH_REQUEST
+→ Action: Run git status and git log --oneline -10
+→ Show summary: "You have 3 uncommitted files and 5 commits on this branch"
+→ Regenerate: "Found 3 uncommitted files and 5 commits on branch. Should I analyze:
+   A) Both uncommitted + branch commits (comprehensive)
+   B) Just uncommitted files (faster)
+   C) Just branch commits (exclude work in progress)"
+```
 
 ---
 
@@ -564,6 +602,36 @@ C. Create a cleanup branch you can review
 D. Just keep the report, you'll handle it
 
 Choose A/B/C/D:
+```
+
+### ARH Response Processing for Implementation Decision
+
+**After presenting implementation options, process user response:**
+
+1. **Detect response type** using ARH patterns from `~/.claude/patterns/adaptive-response-handler.md`
+2. **Handle by type:**
+   - **DIRECT_ANSWER (A/B/C/D):** Execute chosen implementation strategy
+   - **RESEARCH_REQUEST ("can you verify X is really unused?"):** Re-run usage search for specific item
+   - **UNKNOWN ("not sure if safe to delete"):** Show test coverage, offer remove-and-test
+   - **CLARIFICATION ("what's difference between A and B?"):** Explain strategies with examples
+   - **SKIP:** Save report only (option D)
+
+**Example:**
+```
+Question: "Remove all dead code automatically (A) or one-by-one (B)?"
+User: "Not sure if it's safe to delete getDeferredExpr, can you double check?"
+
+ARH Processing:
+→ Detect: UNKNOWN + RESEARCH_REQUEST
+→ Action: Re-run comprehensive search for getDeferredExpr
+  grep -rn "getDeferredExpr" . --include="*.nim" --include="*.nimble"
+  grep -rn "deferred.*expr" . -i --include="*.nim"  # Check variations
+→ Return: "Confirmed: 0 references found in code, tests, or configs"
+→ Regenerate: "Verified getDeferredExpr has no references (checked variations).
+   Safe to delete. Should I:
+   A) Remove all items including this (automated)
+   B) Show each item before deletion (manual approval)
+   C) Create branch for your review first"
 ```
 
 ### Implementation Strategy (if user chooses A or B)

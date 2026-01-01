@@ -226,144 +226,971 @@ SESSION_CONTEXT = {
 
 ---
 
-## Phase 1: Research
+## Phase 1: Research & Ambiguity Detection
 
 <CRITICAL>
-Dispatch a research subagent to thoroughly understand the problem space BEFORE any design work.
-This prevents designing solutions that don't fit the codebase or problem domain.
+Systematically explore codebase and surface unknowns BEFORE design work.
+All research findings must achieve 100% quality score to proceed.
 </CRITICAL>
 
-<!-- SUBAGENT: YES - Use Explore subagent. Codebase exploration with uncertain scope. Subagent reads many files, returns synthesis. Saves orchestrator context. -->
+<!-- SUBAGENT: YES - Use Explore/Task subagent. Codebase exploration with uncertain scope. -->
 
-### 1.1 Dispatch Research Subagent
+### 1.1 Research Strategy Planning
 
-<RULE>The research subagent explores ALL available sources. No skill invocation needed - this is general exploration. Use subagent_type=Explore for codebase analysis.</RULE>
+**INPUT:** User feature request
+**OUTPUT:** Research strategy with specific questions
 
+**Process:**
+1. Analyze feature request for technical domains
+2. Generate codebase questions:
+   - Which files/modules handle similar features?
+   - What patterns exist for this type of work?
+   - What integration points are relevant?
+   - What edge cases have been handled before?
+3. Identify knowledge gaps explicitly
+4. Create research dispatch instructions
+
+**Example Questions:**
 ```
-Task (general-purpose):
-  description: "Research [feature name]"
-  prompt: |
-    Research the following feature request to deeply understand the problem space.
+Feature: "Add JWT authentication for mobile API"
 
-    ## Feature Request
-    [Insert feature description from wizard]
-
-    ## User-Provided Resources
-    [Insert any links, docs, or references the user mentioned]
-
-    ## Research Scope
-
-    Explore ALL of these sources:
-
-    1. **Codebase Exploration** - Search for similar features, patterns, dependencies
-    2. **Web Research** - Best practices, libraries, common pitfalls
-    3. **User-Provided Resources** - Visit and analyze any links provided
-    4. **MCP Servers and Tools** - Use gh CLI, available MCP servers for context
-    5. **Architectural Analysis** - Constraints, security, scalability considerations
-
-    ## Required Output
-
-    Return a structured research summary:
-    - Existing codebase patterns found (with file paths)
-    - Relevant external resources/libraries
-    - Architectural considerations
-    - Risks and constraints identified
-    - Recommended approach (high-level)
+Generated Questions:
+1. Where is authentication currently handled in the codebase?
+2. Are there existing JWT implementations we can reference?
+3. What mobile API endpoints exist that will need auth?
+4. How are other features securing API access?
+5. What session management patterns exist?
 ```
 
-### 1.2 Store Research Findings
+### 1.2 Execute Structured Research (Subagent)
 
-After research subagent returns:
-1. Store findings in `SESSION_CONTEXT.research_findings`
-2. Extract key decision points discovered (patterns, constraints, alternatives)
-3. Proceed immediately to Phase 1.5
+**SUBAGENT DISPATCH:** YES
+**REASON:** Exploration with uncertain scope. Subagent reads N files, returns synthesis.
+
+**Dispatch Instructions:**
+```
+Task(
+  "Research Agent - Codebase Patterns",
+  `You are a research agent. Your job is to answer these specific questions about
+the codebase. For each question:
+
+1. Search systematically (Glob + Grep patterns)
+2. Read relevant files
+3. Extract patterns, conventions, precedents
+4. FLAG any ambiguities or conflicting patterns
+5. EXPLICITLY state 'UNKNOWN' if evidence is insufficient
+
+CRITICAL: Mark confidence level for each answer:
+- HIGH: Direct evidence found (specific file references)
+- MEDIUM: Inferred from related code
+- LOW: Educated guess based on conventions
+- UNKNOWN: No evidence found
+
+QUESTIONS TO ANSWER:
+[Insert questions from Phase 1.1]
+
+RETURN FORMAT (strict JSON):
+{
+  "findings": [
+    {
+      "question": "...",
+      "answer": "...",
+      "confidence": "HIGH|MEDIUM|LOW|UNKNOWN",
+      "evidence": ["file:line", ...],
+      "ambiguities": ["..."]
+    }
+  ],
+  "patterns_discovered": [
+    {
+      "name": "...",
+      "files": ["..."],
+      "description": "..."
+    }
+  ],
+  "unknowns": ["..."]
+}`,
+  "researcher"
+)
+```
+
+**ERROR HANDLING:**
+- If subagent fails: Retry once with same instructions
+- If second failure: Return findings with all items marked UNKNOWN
+- Note: "Research failed after 2 attempts: [error]"
+- Do NOT block progress - user chooses to proceed or retry
+
+**TIMEOUT:** 120 seconds per subagent
+
+### 1.3 Ambiguity Extraction
+
+**INPUT:** Research findings from subagent
+**OUTPUT:** Categorized ambiguities
+
+**Process:**
+1. Extract all MEDIUM/LOW/UNKNOWN confidence items
+2. Extract all flagged ambiguities from findings
+3. Categorize by type:
+   - **Technical:** How it works (e.g., "Two auth patterns found - which to use?")
+   - **Scope:** What to include (e.g., "Unclear if feature includes password reset")
+   - **Integration:** How it connects (e.g., "Multiple integration points - which is primary?")
+   - **Terminology:** What terms mean (e.g., "'Session' used inconsistently")
+4. Prioritize by impact on design (HIGH/MEDIUM/LOW)
+
+**Example Output:**
+```
+Categorized Ambiguities:
+
+TECHNICAL (HIGH impact):
+- Ambiguity: Two authentication patterns found (JWT in 8 files, OAuth in 5 files)
+  Source: Research finding #3 (MEDIUM confidence)
+  Impact: Determines entire auth architecture
+
+SCOPE (MEDIUM impact):
+- Ambiguity: Similar features handle password reset, unclear if in scope
+  Source: Research finding #7 (LOW confidence)
+  Impact: Affects feature completeness
+
+INTEGRATION (HIGH impact):
+- Ambiguity: Three possible integration points found (event emitter, direct calls, message queue)
+  Source: Research finding #5 (MEDIUM confidence)
+  Impact: Determines coupling and testability
+```
+
+### 1.4 Research Quality Score
+
+**SCORING FORMULAS:**
+
+1. **COVERAGE SCORE:**
+   - Numerator: Count of findings with confidence = "HIGH"
+   - Denominator: Total count of research questions
+   - Formula: `(HIGH_count / total_questions) * 100`
+   - Edge case: If total_questions = 0, score = 100
+
+2. **AMBIGUITY RESOLUTION SCORE:**
+   - Numerator: Count of ambiguities with category + impact assigned
+   - Denominator: Total count of ambiguities detected
+   - Formula: `(categorized_count / total_ambiguities) * 100`
+   - Edge case: If total_ambiguities = 0, score = 100
+
+3. **EVIDENCE QUALITY SCORE:**
+   - Numerator: Count of findings with non-empty evidence array
+   - Denominator: Count of findings with confidence != "UNKNOWN"
+   - Formula: `(findings_with_evidence / answerable_findings) * 100`
+   - Edge case: If all UNKNOWN, score = 0
+
+4. **UNKNOWN DETECTION SCORE:**
+   - Numerator: Count of explicitly flagged unknowns
+   - Denominator: Count of findings with UNKNOWN or LOW confidence
+   - Formula: `(flagged_unknowns / (UNKNOWN_count + LOW_count)) * 100`
+   - Edge case: If no UNKNOWN/LOW, score = 100
+
+**OVERALL SCORE:**
+- Aggregation: `MIN(Coverage, Ambiguity Resolution, Evidence Quality, Unknown Detection)`
+- Rationale: Weakest link determines quality (all must be 100%)
+
+**DISPLAY FORMAT:**
+```
+Research Quality Score: [X]%
+
+Breakdown:
+✓/✗ Coverage: [X]% ([N]/[M] questions with HIGH confidence)
+✓/✗ Ambiguity Resolution: [X]% ([N]/[M] ambiguities categorized)
+✓/✗ Evidence Quality: [X]% ([N]/[M] findings have file references)
+✓/✗ Unknown Detection: [X]% ([N]/[M] unknowns explicitly flagged)
+
+Overall: [X]% (minimum of all criteria)
+```
+
+**GATE BEHAVIOR:**
+
+IF SCORE < 100%:
+- BLOCK progress
+- Display score breakdown
+- Offer options:
+  ```
+  Research Quality Score: [X]% - Below threshold
+
+  OPTIONS:
+  A) Continue anyway (bypass gate, accept risk)
+  B) Iterate: Add more research questions and re-dispatch
+  C) Skip ambiguous areas (reduce scope, remove low-confidence items)
+
+  Your choice: ___
+  ```
+
+IF SCORE = 100%:
+- Display: "✓ Research Quality Score: 100% - All criteria met"
+- Proceed immediately to Phase 1.5
+
+**ITERATION LOGIC (for choice B):**
+1. Analyze gaps: Which criteria < 100%?
+2. Generate targeted questions based on gaps
+3. Re-dispatch research subagent
+4. Re-calculate scores
+5. Loop until 100% or user chooses A/C
 
 ---
 
-## Phase 1.5: Informed Discovery
+---
 
-<!-- SUBAGENT: NO - Stay in main context. Iterative user interaction required. Context must persist across exchanges. -->
+## Phase 1.5: Informed Discovery & Validation
+
+<!-- SUBAGENT: NO - Main context required for user interaction loop -->
 
 <CRITICAL>
-This phase runs in the ORCHESTRATOR (not a subagent) so user interaction is natural.
-It uses research findings to ask TARGETED questions before design begins.
-After this phase, subagents have ALL context needed for autonomous execution.
+Use research findings to generate informed questions. Apply Adaptive Response
+Handler pattern for intelligent response processing. All discovery must achieve
+100% completeness score before proceeding to design.
 </CRITICAL>
 
-### 1.5.1 Generate Discovery Questions
+**Reference:** See `~/.claude/patterns/adaptive-response-handler.md` for ARH pattern
 
-Based on research findings, identify questions in these categories:
+### 1.5.0 Disambiguation Session
 
-| Category | Question Type | Example |
-|----------|--------------|---------|
-| **Architectural choices** | Patterns found vs. alternatives | "Research found 2 patterns: X (used in auth) and Y (used in payments). Which fits better?" |
-| **Scope boundaries** | What's in/out | "Should this include [capability found in similar features]?" |
-| **Integration points** | How it connects | "This needs to integrate with [system found]. Any preferences on the interface?" |
-| **Constraints discovered** | Limitations found | "Research found [constraint]. How should we handle it?" |
-| **Success criteria** | Measurable outcomes | "What does 'working' look like? Performance targets?" |
+**PURPOSE:** Resolve all ambiguities BEFORE generating discovery questions
 
-### 1.5.2 Conduct Discovery Wizard
+**MANDATORY_TEMPLATE (enforced):**
 
-<RULE>Use AskUserQuestion with multiple choice options derived from research. Batch related questions (max 4 per call).</RULE>
+For each ambiguity from Phase 1.3, present using this exact structure:
 
-**Structure the wizard as:**
+```
+AMBIGUITY: [description from Phase 1.3]
 
+CONTEXT FROM RESEARCH:
+[Relevant research findings with evidence]
+
+IMPACT ON DESIGN:
+[Why this matters / what breaks if we guess wrong]
+
+PLEASE CLARIFY:
+A) [Specific interpretation 1]
+B) [Specific interpretation 2]
+C) [Specific interpretation 3]
+D) Something else (please describe)
+
+Your choice: ___
+```
+
+**PROCESSING (ARH Pattern):**
+
+1. **Detect response type** using ARH patterns from `~/.claude/patterns/adaptive-response-handler.md`
+2. **Handle by type:**
+   - **DIRECT_ANSWER (A-D):** Update disambiguation_results, continue
+   - **RESEARCH_REQUEST ("research this"):** Dispatch subagent, regenerate ALL disambiguation questions
+   - **UNKNOWN ("I don't know"):** Dispatch research subagent, rephrase question with findings
+   - **CLARIFICATION ("what do you mean"):** Rephrase with more context, re-ask
+   - **SKIP ("skip"):** Mark as out-of-scope, document in explicit_exclusions
+   - **USER_ABORT ("stop"):** Save state, exit cleanly
+
+3. **After research dispatch:**
+   - Wait for subagent results
+   - Regenerate ALL disambiguation questions with new context
+   - Present updated questions to user
+
+4. **Continue until:** All ambiguities have disambiguation_results entries
+
+**Example Flow:**
+```
+Question: "Research found JWT (8 files) and OAuth (5 files). Which should we use?"
+User: "What's the difference? I don't know which is better."
+
+ARH Processing:
+→ Detect: UNKNOWN type
+→ Action: Dispatch research subagent
+  "Research: Compare JWT vs OAuth in our codebase
+   Context: User unsure of differences
+   Return: Pros/cons of each pattern"
+→ Subagent returns comparison
+→ Regenerate question:
+  "Research shows:
+   - JWT: Stateless, used in API endpoints (src/api/*), mobile-friendly
+   - OAuth: Third-party integration (src/integrations/*), complex setup
+
+   For mobile API auth, which fits better?
+   A) JWT (stateless, mobile-friendly)
+   B) OAuth (third-party logins)
+   C) Something else"
+→ User: "A - JWT makes sense"
+→ Update disambiguation_results
+```
+
+### 1.5.1 Generate Deep Discovery Questions
+
+**INPUT:** Research findings + Disambiguation results
+**OUTPUT:** 7-category question set
+
+**GENERATION RULES:**
+1. Use research findings to make questions specific (not generic)
+2. Reference concrete codebase patterns in questions
+3. Include assumption checks in every category
+4. Generate 3-5 questions per category
+
+**7 CATEGORIES:**
+
+**1. Architecture & Approach**
+- How should [feature] integrate with [discovered pattern]?
+- Should we follow [pattern A from file X] or [pattern B from file Y]?
+- ASSUMPTION CHECK: Does [discovered constraint] apply here?
+
+**2. Scope & Boundaries**
+- Research shows [N] similar features. Should this match their scope?
+- Explicit exclusions: What should this NOT do?
+- MVP definition: What's the minimum for success?
+- ASSUMPTION CHECK: Are we building for [discovered use case]?
+
+**3. Integration & Constraints**
+- Research found [integration points]. Which are relevant?
+- Interface verification: Should we match [discovered interface]?
+- ASSUMPTION CHECK: Must this work with [discovered dependency]?
+
+**4. Failure Modes & Edge Cases**
+- Research shows [N] edge cases in similar code. Which apply?
+- What happens if [dependency] fails?
+- How should we handle [boundary condition]?
+- ASSUMPTION CHECK: Can we ignore [edge case] found in research?
+
+**5. Success Criteria & Observability**
+- Measurable thresholds: What numbers define success?
+- How will we know this works in production?
+- What metrics should we track?
+- ASSUMPTION CHECK: Is [performance target] realistic?
+
+**6. Vocabulary & Definitions**
+- Research uses terms [X, Y, Z]. What do they mean in this context?
+- Are [term A] and [term B] synonyms here?
+- Build glossary incrementally
+
+**7. Assumption Audit**
+- I assume [X] based on [research finding]. Correct?
+- I assume [Y] because [pattern]. Confirm?
+- Explicit validation of ALL research-based assumptions
+
+**Example Questions (Architecture category):**
+```
+Feature: "Add JWT authentication for mobile API"
+
+After research found JWT in 8 files and OAuth in 5 files,
+and user clarified JWT is preferred:
+
+1. Research shows JWT implementation in src/api/auth.ts using jose library.
+   Should we follow this pattern or use a different JWT library?
+   A) Use jose (consistent with existing code)
+   B) Use jsonwebtoken (more popular)
+   C) Different library (specify)
+
+2. Existing JWT implementations store tokens in Redis (src/cache/tokens.ts).
+   Should we use the same storage approach?
+   A) Yes - use existing Redis token cache
+   B) No - use database storage
+   C) No - use stateless approach (no storage)
+
+3. ASSUMPTION CHECK: I assume mobile clients will store JWT in secure storage
+   and send via Authorization header. Is this correct?
+   A) Yes, that's the plan
+   B) Partially - clarify the approach
+   C) No, different method
+```
+
+### 1.5.2 Conduct Discovery Wizard (with ARH)
+
+**PROCESS:**
+1. Present questions one category at a time (7 iterations)
+2. Use ARH pattern for response processing
+3. Update design_context object after each answer
+4. Allow iteration within categories
+
+**Structure:**
 ```markdown
 ## Discovery Wizard (Research-Informed)
 
-Based on my research, I have [N] questions to finalize the design direction.
+Based on research findings and disambiguation, I have questions in 7 categories.
 
-### Question Set 1: Architecture & Approach
-[2-4 questions about high-level choices]
+### Category 1/7: Architecture & Approach
 
-### Question Set 2: Scope & Boundaries
-[2-4 questions about what's included]
+[Present 3-5 questions]
 
-### Question Set 3: Integration & Constraints
-[2-4 questions about how it fits]
+[Wait for responses, process with ARH]
 
-### Question Set 4: Success Criteria
-[1-2 questions about measurable outcomes]
+### Category 2/7: Scope & Boundaries
+
+[Present 3-5 questions]
+
+[etc...]
 ```
 
-### 1.5.3 Synthesize Discovery Context
+**ARH INTEGRATION:**
 
-After wizard completes, create comprehensive context document:
+For each user response:
+
+1. **Detect type** using ARH regex patterns
+2. **Handle by type:**
+   - **DIRECT_ANSWER:** Update design_context, continue
+   - **RESEARCH_REQUEST:** Dispatch subagent, regenerate questions in current category
+   - **UNKNOWN:** Dispatch subagent, rephrase with findings
+   - **CLARIFICATION:** Rephrase with more context
+   - **SKIP:** Mark as out-of-scope
+   - **OPEN_ENDED:** Parse intent, confirm interpretation
+
+3. **After research dispatch:**
+   - Regenerate ALL questions in current category
+   - New research may improve question quality
+   - Present updated questions to user
+
+4. **Progress tracking:**
+   - Show: "[Category N/7]: X/Y questions answered"
+   - No iteration limit - user controls when to proceed
+
+### 1.5.3 Build Glossary
+
+**PROCESS:**
+1. Extract domain terms from discovery answers (during wizard)
+2. Build glossary incrementally
+3. After wizard completes, show full glossary
+4. Ask user ONCE about persistence
+
+**GLOSSARY FORMAT:**
+```json
+{
+  "term": {
+    "definition": "...",
+    "source": "user | research | codebase",
+    "context": "feature-specific | project-wide",
+    "aliases": [...]
+  }
+}
+```
+
+**PERSISTENCE (ask ONCE for entire glossary):**
+
+```
+I've built a glossary with [N] terms:
+
+[Show glossary preview]
+
+Would you like to:
+A) Keep it in this session only
+B) Persist to project CLAUDE.md (all team members benefit)
+
+Your choice: ___
+```
+
+**IF B SELECTED - Append to CLAUDE.md:**
+
+**Location:** End of CLAUDE.md file (after all existing content)
+
+**Format:**
+```markdown
+
+---
+
+## Feature Glossary: [Feature Name]
+
+**Generated:** [ISO 8601 timestamp]
+**Feature:** [feature_essence from design_context]
+
+### Terms
+
+**[term 1]**
+- **Definition:** [definition]
+- **Source:** [user | research | codebase]
+- **Context:** [feature-specific | project-wide]
+- **Aliases:** [alias1, alias2, ...]
+
+**[term 2]**
+[...]
+
+---
+```
+
+**Write Operation:**
+1. Read current CLAUDE.md content
+2. Append formatted glossary (as above)
+3. Write back to CLAUDE.md
+4. Verify write succeeded
+
+**ERROR HANDLING:**
+- If write fails: Fallback to `~/.claude/glossary-[feature-slug].md`
+- Show location: "Glossary saved to: [path]"
+- Suggest: "Manually append to CLAUDE.md when ready"
+
+**COLLISION HANDLING:**
+- If term exists in CLAUDE.md: Check for duplicate feature glossary
+- If same feature: Skip, warn "Glossary already exists"
+- If different feature: Append as new section
+
+### 1.5.4 Synthesize Context Document
+
+**PURPOSE:** Create comprehensive design_context object from all prior phases
+
+**DATA TRANSFORMATION (from design doc Appendix A - lines 2006-2131):**
+
+Build design_context object with these fields:
+
+```typescript
+interface DesignContext {
+  feature_essence: string;  // From user request
+
+  research_findings: {
+    patterns: [...],  // From research subagent
+    integration_points: [...],
+    constraints: [...],
+    precedents: [...]
+  };
+
+  disambiguation_results: {
+    [ambiguity]: {clarification, source, confidence}
+  };
+
+  discovery_answers: {
+    architecture: {chosen_approach, rationale, alternatives, validated_assumptions},
+    scope: {in_scope, out_of_scope, mvp_definition, boundary_conditions},
+    integration: {integration_points, dependencies, interfaces},
+    failure_modes: {edge_cases, failure_scenarios},
+    success_criteria: {metrics, observability},
+    vocabulary: {...},
+    assumptions: {validated: [...]}
+  };
+
+  glossary: {
+    [term]: {definition, source, context, aliases}
+  };
+
+  validated_assumptions: string[];
+  explicit_exclusions: string[];
+  mvp_definition: string;
+  success_metrics: [{name, threshold}];
+
+  quality_scores: {
+    research_quality: number,
+    completeness: number,
+    overall_confidence: number
+  };
+}
+```
+
+**Validation:**
+- No null values allowed (except devils_advocate_critique which is optional)
+- No "TBD" or "unknown" strings
+- All arrays with content or explicit "N/A"
+
+### 1.5.5 Apply Completeness Checklist
+
+**11 VALIDATION FUNCTIONS:**
+
+```typescript
+// FUNCTION 1: Research quality validated
+function research_quality_validated() {
+  return quality_scores.research_quality === 100 || override_flag === true;
+}
+
+// FUNCTION 2: Ambiguities resolved
+function ambiguities_resolved() {
+  const allAmbiguities = categorized_ambiguities;
+  return allAmbiguities.every(amb =>
+    disambiguation_results.hasOwnProperty(amb.description)
+  );
+}
+
+// FUNCTION 3: Architecture chosen
+function architecture_chosen() {
+  return discovery_answers.architecture.chosen_approach !== null &&
+         discovery_answers.architecture.rationale !== null;
+}
+
+// FUNCTION 4: Scope defined
+function scope_defined() {
+  return discovery_answers.scope.in_scope.length > 0 &&
+         discovery_answers.scope.out_of_scope.length > 0;
+}
+
+// FUNCTION 5: MVP stated
+function mvp_stated() {
+  return mvp_definition !== null && mvp_definition.length > 10;
+}
+
+// FUNCTION 6: Integration verified
+function integration_verified() {
+  const points = discovery_answers.integration.integration_points;
+  return points.length > 0 && points.every(p => p.validated === true);
+}
+
+// FUNCTION 7: Failure modes identified
+function failure_modes_identified() {
+  return discovery_answers.failure_modes.edge_cases.length > 0 ||
+         discovery_answers.failure_modes.failure_scenarios.length > 0;
+}
+
+// FUNCTION 8: Success criteria measurable
+function success_criteria_measurable() {
+  const metrics = discovery_answers.success_criteria.metrics;
+  return metrics.length > 0 && metrics.every(m => m.threshold !== null);
+}
+
+// FUNCTION 9: Glossary complete
+function glossary_complete() {
+  const uniqueTermsInAnswers = extractUniqueTerms(discovery_answers);
+  return Object.keys(glossary).length >= uniqueTermsInAnswers.length ||
+         user_said_no_glossary_needed === true;
+}
+
+// FUNCTION 10: Assumptions validated
+function assumptions_validated() {
+  const validated = discovery_answers.assumptions.validated;
+  return validated.length > 0 && validated.every(a => a.confidence !== null);
+}
+
+// FUNCTION 11: No TBD items
+function no_tbd_items() {
+  const contextJSON = JSON.stringify(design_context);
+  const forbiddenTerms = [
+    /\bTBD\b/i,
+    /\bto be determined\b/i,
+    /\bfigure out later\b/i,
+    /\bwe'll decide\b/i,
+    /\bunknown\b/i  // except in confidence fields
+  ];
+
+  // Filter out confidence field occurrences
+  const filtered = contextJSON.replace(/"confidence":\s*"[^"]*"/g, '');
+
+  return !forbiddenTerms.some(regex => regex.test(filtered));
+}
+```
+
+**VALIDATION STATE DATA STRUCTURE:**
+
+```typescript
+interface ValidationState {
+  results: {
+    research_quality_validated: boolean;
+    ambiguities_resolved: boolean;
+    architecture_chosen: boolean;
+    scope_defined: boolean;
+    mvp_stated: boolean;
+    integration_verified: boolean;
+    failure_modes_identified: boolean;
+    success_criteria_measurable: boolean;
+    glossary_complete: boolean;
+    assumptions_validated: boolean;
+    no_tbd_items: boolean;
+  };
+
+  failures: {
+    [functionName: string]: {
+      reason: string;
+      remediation: string;
+      category: string;  // Maps to discovery category
+    };
+  };
+
+  score: number;  // (checked_count / 11) * 100
+}
+```
+
+**SCORE CALCULATION:**
+```typescript
+const checked_count = Object.values(validation_results).filter(v => v === true).length;
+const completeness_score = (checked_count / 11) * 100;
+```
+
+**DISPLAY FORMAT:**
+```
+Completeness Checklist:
+
+[✓/✗] All research questions answered with HIGH confidence
+[✓/✗] All ambiguities disambiguated
+[✓/✗] Architecture approach explicitly chosen and validated
+[✓/✗] Scope boundaries defined with explicit exclusions
+[✓/✗] MVP definition stated
+[✓/✗] Integration points verified against codebase
+[✓/✗] Failure modes and edge cases identified
+[✓/✗] Success criteria defined with measurable thresholds
+[✓/✗] Glossary complete for all domain terms
+[✓/✗] All assumptions validated with user
+[✓/✗] No "we'll figure it out later" items remain
+
+Completeness Score: [X]% ([N]/11 items complete)
+```
+
+**GATE BEHAVIOR:**
+
+IF completeness_score < 100:
+- BLOCK progress
+- Highlight unchecked items
+- Offer options:
+  ```
+  Completeness Score: [X]% - Below threshold
+
+  OPTIONS:
+  A) Return to discovery wizard for missing items (specify which)
+  B) Return to research for new questions
+  C) Proceed anyway (bypass gate, accept risk)
+
+  Your choice: ___
+  ```
+
+IF completeness_score == 100:
+- Display: "✓ Completeness Score: 100% - All items validated"
+- Proceed to Phase 1.5.6
+
+**ITERATION LOGIC:**
+- Map failed validation to discovery category
+- Re-run specific categories only
+- Re-validate checklist after updates
+- Loop until 100% or user chooses C
+
+### 1.5.6 Understanding Document Validation Gate
+
+**FILE PATH:**
+- Base: `$CLAUDE_CONFIG_DIR/understanding-docs/` (defaults to `~/.claude/understanding-docs/`)
+- Format: `understanding-[feature-slug]-[timestamp].md`
+
+**SLUG GENERATION:**
+1. Take feature_essence
+2. Lowercase, replace spaces with hyphens
+3. Remove special chars (keep a-z, 0-9, hyphens)
+4. Truncate to 50 chars
+5. Remove trailing hyphens
+
+**TIMESTAMP:** ISO 8601 compact (YYYYMMDD-HHMMSS)
+
+**DIRECTORY CREATION:**
+1. Check if directory exists
+2. If not: `mkdir -p $CLAUDE_CONFIG_DIR/understanding-docs/`
+3. If fails: Fallback to `/tmp/understanding-[slug]-[timestamp].md`
+
+**GENERATE UNDERSTANDING DOCUMENT:**
 
 ```markdown
-## SESSION_CONTEXT.design_context
+# Understanding Document: [Feature Name]
 
-### Feature Essence
-[From Phase 0.2]
+## Feature Essence
+[1-2 sentence summary]
 
-### Research Findings Summary
-[Key findings from Phase 1]
+## Research Summary
+- Patterns discovered: [...]
+- Integration points: [...]
+- Constraints identified: [...]
 
-### Architectural Decisions
-- Decision: [choice made]
-- Rationale: [why, based on research + user input]
+## Architectural Approach
+[Chosen approach with rationale]
+Alternatives considered: [...]
 
-### Scope Boundaries
-- Included: [list]
-- Explicitly excluded: [list]
-- Future consideration: [list]
+## Scope Definition
+IN SCOPE:
+- [...]
 
-### Integration Requirements
-- Systems: [list with interface notes]
-- Constraints: [list with handling approach]
+EXPLICITLY OUT OF SCOPE:
+- [...]
 
-### Success Criteria
-- [Measurable criterion 1]
-- [Measurable criterion 2]
+MVP DEFINITION:
+[Minimum viable implementation]
 
-### Codebase Patterns to Follow
-[From research - specific files/patterns to match]
+## Integration Plan
+- Integrates with: [...]
+- Follows patterns: [...]
+- Interfaces: [...]
+
+## Failure Modes & Edge Cases
+- [...]
+
+## Success Criteria
+- Metric 1: [threshold]
+- Metric 2: [threshold]
+
+## Glossary
+[Full glossary from Phase 1.5.3]
+
+## Validated Assumptions
+- [assumption]: [validation]
+
+## Completeness Score
+Research Quality: [X]%
+Discovery Completeness: [X]%
+Overall Confidence: [X]%
+
+---
+
+## design_context Serialization
+
+**For downstream subagents:**
+
+[If design_context < 50KB]
+Pass via JSON in prompt
+
+[If design_context >= 50KB]
+Write to: /tmp/design-context-[slug]-[timestamp].json
+Pass file path in prompt
 ```
 
-<RULE>
-This context document is passed to ALL subsequent subagents.
-With this context, skills operate in SYNTHESIS MODE - no questions, just execution.
-</RULE>
+**FILE WRITE:**
+1. Generate markdown content
+2. Write to file path
+3. Verify write (read back first 100 chars)
+4. If fails: Show inline, don't block
+5. Store path in design_context.understanding_document_path
+
+**VALIDATION GATE:**
+
+Present to user:
+```
+I've synthesized our research and discovery into the Understanding Document above.
+
+The complete design_context object has been validated and is ready for downstream phases.
+
+Please review the Understanding Document and:
+A) Approve (proceed to Devil's Advocate review)
+B) Request changes (specify what to revise)
+C) Return to discovery (need more information)
+
+Your choice: ___
+```
+
+**BLOCK design phase until user approves (A).**
+
+---
+
+## Phase 1.6: Devil's Advocate Review
+
+<!-- SUBAGENT: YES - Use Skill tool. Separate skill invocation for fresh perspective. -->
+
+<CRITICAL>
+Challenge Understanding Document with adversarial thinking to surface hidden
+assumptions and gaps before proceeding to design. This is a MANDATORY quality
+gate unless explicitly configured otherwise.
+</CRITICAL>
+
+### 1.6.1 Check Devil's Advocate Availability
+
+**Verify skill exists:**
+
+```bash
+test -f ~/.claude/skills/devils-advocate/SKILL.md
+```
+
+**IF SKILL MISSING:**
+```
+ERROR: devils-advocate skill not found
+
+The Devil's Advocate review is REQUIRED for quality assurance.
+
+OPTIONS:
+A) Install skill (run install.sh or create manually)
+B) Skip review for this session (not recommended)
+C) Manual review (I'll present Understanding Document for your critique)
+
+Your choice: ___
+```
+
+**Handle user choice:**
+- **A:** Exit with instructions: "Run install.sh then restart"
+- **B:** Set skip_devils_advocate flag, proceed to Phase 2
+- **C:** Present Understanding Document, collect manual critique, proceed
+
+### 1.6.2 Prepare Understanding Document for Review
+
+**Determine invocation method:**
+
+```typescript
+const understandingDocSize = understandingDocContent.length;
+
+if (understandingDocSize < 10 * 1024) { // < 10KB
+  // Inline content (primary method)
+  invocationMethod = "inline";
+} else {
+  // File path (fallback for large docs)
+  invocationMethod = "file";
+  tempFilePath = `/tmp/understanding-doc-${featureSlug}-${timestamp}.md`;
+  writeFile(tempFilePath, understandingDocContent);
+}
+```
+
+### 1.6.3 Invoke Devil's Advocate Skill
+
+**Primary (inline content):**
+
+```
+Invoke devils-advocate skill using Skill tool, then provide Understanding Document below:
+
+[Insert full Understanding Document from Phase 1.5.6]
+```
+
+**Fallback (file path):**
+
+```
+Skill("devils-advocate", args: "--understanding-doc /tmp/understanding-doc-[slug]-[timestamp].md")
+```
+
+**Wait for critique:** Skill returns structured critique with 5 categories
+
+### 1.6.4 Present Critique to User
+
+**Display full critique** from devils-advocate skill
+
+**Format:**
+```markdown
+## Devil's Advocate Critique
+
+[Full critique output from skill]
+
+---
+
+This critique identifies potential gaps and risks in our understanding.
+
+Please review and choose next steps:
+A) Address critical issues (return to discovery for specific gaps)
+B) Document as known limitations (add to Understanding Document)
+C) Revise scope to avoid risky areas (return to scope questions)
+D) Proceed to design (accept identified risks)
+
+Your choice: ___
+```
+
+### 1.6.5 Process User Decision
+
+**Handle by choice:**
+
+**A) Address issues:**
+1. Identify which critique categories need work:
+   - Missing Edge Cases -> Return to Phase 1.5.1 (Failure Modes category)
+   - Implicit Assumptions -> Return to Phase 1.5.1 (Assumption Audit category)
+   - Integration Risks -> Return to Phase 1.5.1 (Integration category)
+   - Scope Gaps -> Return to Phase 1.5.1 (Scope category)
+   - Oversimplifications -> Return to specific category based on context
+2. Pass critique context to discovery regeneration
+3. After updated discovery, regenerate Understanding Document
+4. Re-run Devil's Advocate (optional, ask user)
+
+**B) Document limitations:**
+1. Update Understanding Document with new section:
+   ```markdown
+   ## Known Limitations (from Devil's Advocate)
+
+   [List critique items accepted as limitations]
+   ```
+2. Re-save Understanding Document
+3. Proceed to Phase 2
+
+**C) Revise scope:**
+1. Return to Phase 1.5.1 (Scope & Boundaries category)
+2. Pass critique context
+3. Regenerate scope questions to avoid risky areas
+4. After updated scope, regenerate Understanding Document
+5. Re-run Devil's Advocate to verify
+
+**D) Proceed:**
+1. Set devils_advocate_reviewed flag
+2. Optionally add critique to design_context:
+   ```typescript
+   design_context.devils_advocate_critique = {
+     missing_edge_cases: [...],
+     implicit_assumptions: [...],
+     integration_risks: [...],
+     scope_gaps: [...],
+     oversimplifications: [...]
+   };
+   ```
+3. Proceed to Phase 2 (Design)
 
 ---
 
