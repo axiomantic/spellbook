@@ -157,3 +157,43 @@ def test_extract_chunk(tmp_path):
     assert len(result_data) == 2
     assert result_data[0]['message']['content'] == 'Second'
     assert result_data[1]['message']['content'] == 'Third'
+
+
+def test_list_sessions_with_samples(tmp_path):
+    """Test listing sessions with metadata and samples."""
+    import distill_session
+
+    # Create mock session file
+    session_dir = tmp_path / "project"
+    session_dir.mkdir()
+    session_file = session_dir / "test-session.jsonl"
+
+    messages = [
+        {
+            "uuid": "msg-1",
+            "type": "user",
+            "message": {"role": "user", "content": "First user message with sample content"},
+            "timestamp": "2025-01-01T10:00:00Z",
+            "sessionId": "sess-1",
+            "slug": "test-session"
+        },
+        {
+            "uuid": "msg-2",
+            "type": "assistant",
+            "message": {"role": "assistant", "content": "Response"},
+            "timestamp": "2025-01-01T10:01:00Z",
+            "sessionId": "sess-1"
+        }
+    ]
+
+    with open(session_file, 'w') as f:
+        for msg in messages:
+            f.write(json.dumps(msg) + '\n')
+
+    result = distill_session.list_sessions_with_samples(str(session_dir), limit=5)
+
+    assert len(result) == 1
+    assert result[0]['slug'] == 'test-session'
+    assert result[0]['message_count'] == 2
+    assert result[0]['first_user_message'] is not None
+    assert 'First user message' in result[0]['first_user_message']

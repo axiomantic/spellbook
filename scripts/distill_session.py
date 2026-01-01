@@ -53,6 +53,41 @@ def find_last_compact_boundary(messages: List[Dict[str, Any]]) -> Optional[int]:
     return None
 
 
+def get_last_compact_summary(session_path: str) -> Optional[Dict[str, Any]]:
+    """
+    Find the most recent compact summary in a session.
+
+    Returns: {
+        'line_number': int,      # Line of compact_boundary
+        'summary_content': str,  # The actual summary text
+        'timestamp': str,        # When compact happened
+    }
+    Or None if no compact exists.
+    """
+    messages = load_jsonl(session_path)
+
+    last_boundary_idx = find_last_compact_boundary(messages)
+
+    if last_boundary_idx is None:
+        return None
+
+    # Get the boundary message
+    boundary_msg = messages[last_boundary_idx]
+
+    # Find the summary message (should be next)
+    summary_content = None
+    if last_boundary_idx + 1 < len(messages):
+        summary_msg = messages[last_boundary_idx + 1]
+        if summary_msg.get('isCompactSummary'):
+            summary_content = summary_msg.get('message', {}).get('content', '')
+
+    return {
+        'line_number': last_boundary_idx,
+        'summary_content': summary_content or '',
+        'timestamp': boundary_msg.get('timestamp', '')
+    }
+
+
 def list_sessions_with_samples(project_dir: str, limit: int = 5) -> List[Dict[str, Any]]:
     """
     List recent sessions with metadata and content samples.
