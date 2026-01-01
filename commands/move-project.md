@@ -110,17 +110,7 @@ DEST_ENCODED=$(echo "<dest>" | sed 's|/|-|g')
 ### Check for Claude session data
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-
-# Check if projects directory exists
-ls -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" 2>/dev/null
-
-# Count history.jsonl entries
-grep -c '"project":"<original>"' "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0"
-
-# Also check with escaped slashes (JSON format)
-ORIGINAL_ESCAPED=$(echo "<original>" | sed 's|/|\\/|g')
-grep -c "\"project\":\"$ORIGINAL_ESCAPED\"" "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && ls -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" 2>/dev/null && grep -c '"project":"<original>"' "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0" && ORIGINAL_ESCAPED=$(echo "<original>" | sed 's|/|\\/|g') && grep -c "\"project\":\"$ORIGINAL_ESCAPED\"" "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0"
 ```
 
 ### Show preview
@@ -161,24 +151,13 @@ Execute in this exact order to minimize risk:
 ### 7a. Update history.jsonl
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-
-# Backup first
-cp "$CLAUDE_CONFIG_DIR/history.jsonl" "$CLAUDE_CONFIG_DIR/history.jsonl.backup"
-
-# Update project paths (handle JSON escaping)
-sed -i '' 's|"project":"<original>"|"project":"<dest>"|g' "$CLAUDE_CONFIG_DIR/history.jsonl"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && cp "$CLAUDE_CONFIG_DIR/history.jsonl" "$CLAUDE_CONFIG_DIR/history.jsonl.backup" && sed -i '' 's|"project":"<original>"|"project":"<dest>"|g' "$CLAUDE_CONFIG_DIR/history.jsonl"
 ```
 
 ### 7b. Rename projects directory
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-
-# Only if the encoded directory exists
-if [ -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" ]; then
-  mv "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED"
-fi
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && if [ -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" ]; then mv "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED"; fi
 ```
 
 ### 7c. Rename filesystem directory
@@ -190,16 +169,7 @@ mv "<original>" "<dest>"
 ## Step 8: Verify and Report
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-
-# Verify new location exists
-[ -d "<dest>" ] && echo "FS_OK" || echo "FS_FAIL"
-
-# Verify projects directory renamed
-[ -d "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED" ] && echo "PROJECTS_OK" || echo "PROJECTS_SKIP"
-
-# Verify history.jsonl updated
-grep -c '"project":"<dest>"' "$CLAUDE_CONFIG_DIR/history.jsonl"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && [ -d "<dest>" ] && echo "FS_OK" || echo "FS_FAIL" && [ -d "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED" ] && echo "PROJECTS_OK" || echo "PROJECTS_SKIP" && grep -c '"project":"<dest>"' "$CLAUDE_CONFIG_DIR/history.jsonl"
 ```
 
 ### Success report

@@ -1520,20 +1520,7 @@ Persona triggers:
 If you prefer manual setup:
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-
-# Create symlinks for skills
-for skill in ~/Development/spellbook/skills/*/; do
-  ln -sf "$skill" "$CLAUDE_CONFIG_DIR/skills/"
-done
-
-# Create symlinks for commands
-for cmd in ~/Development/spellbook/commands/*.md; do
-  ln -sf "$cmd" "$CLAUDE_CONFIG_DIR/commands/"
-done
-
-# Symlink CLAUDE.md
-ln -sf ~/Development/spellbook/CLAUDE.md "$CLAUDE_CONFIG_DIR/CLAUDE.md"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && for skill in ~/Development/spellbook/skills/*/; do ln -sf "$skill" "$CLAUDE_CONFIG_DIR/skills/"; done && for cmd in ~/Development/spellbook/commands/*.md; do ln -sf "$cmd" "$CLAUDE_CONFIG_DIR/commands/"; done && ln -sf ~/Development/spellbook/CLAUDE.md "$CLAUDE_CONFIG_DIR/CLAUDE.md"
 ```
 
 ## Directory Structure

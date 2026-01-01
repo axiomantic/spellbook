@@ -100,8 +100,7 @@ project_dir = os.path.join(claude_config_dir, 'projects', encoded)
 ```
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$project_dir" --limit 5
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$project_dir" --limit 5
 ```
 
 **Step 2: Generate holistic descriptions**
@@ -156,8 +155,7 @@ If no sessions found: Exit with "No sessions found in this project."
 **Step 1: Get last compact summary (Summary 0)**
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" get-last-compact {session_file}
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" get-last-compact {session_file}
 ```
 
 Store result. If `null`, start from line 0. If exists, start from `line_number + 2` (skip boundary and summary).
@@ -197,10 +195,7 @@ Store chunk boundaries: `[(start_1, end_1), (start_2, end_2), ...]`
 For each chunk boundary `(start, end)`, extract content:
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" extract-chunk {session_file} \
-  --start-line {start} \
-  --end-line {end}
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" extract-chunk {session_file} --start-line {start} --end-line {end}
 ```
 
 Store each chunk's JSON content.
@@ -472,8 +467,7 @@ Skill('implement-feature', '--resume Phase4.Task10')
 **Step 1: Read compact.md format**
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-cat "$CLAUDE_CONFIG_DIR/commands/compact.md"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && cat "$CLAUDE_CONFIG_DIR/commands/compact.md"
 ```
 
 Store the template content.
