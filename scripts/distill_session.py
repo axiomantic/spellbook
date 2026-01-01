@@ -272,3 +272,83 @@ def get_content_from_start(session_path: str) -> str:
     """
     messages = load_jsonl(session_path)
     return json.dumps(messages, indent=2)
+
+
+def main():
+    """Main entry point with command dispatcher."""
+    parser = argparse.ArgumentParser(
+        description='Distill session helper for Claude Code sessions',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
+    subparsers.required = True
+
+    # list-sessions
+    list_cmd = subparsers.add_parser('list-sessions', help='List sessions with samples')
+    list_cmd.add_argument('project_dir', help='Project directory path')
+    list_cmd.add_argument('--limit', type=int, default=5, help='Max sessions to return')
+
+    # get-last-compact
+    compact_cmd = subparsers.add_parser('get-last-compact', help='Get last compact summary')
+    compact_cmd.add_argument('session_file', help='Session file path')
+
+    # get-content-after
+    after_cmd = subparsers.add_parser('get-content-after', help='Get content after line')
+    after_cmd.add_argument('session_file', help='Session file path')
+    after_cmd.add_argument('--start-line', type=int, required=True, help='Start line number')
+
+    # get-content-from-start
+    start_cmd = subparsers.add_parser('get-content-from-start', help='Get all content')
+    start_cmd.add_argument('session_file', help='Session file path')
+
+    # split-by-char-limit
+    split_cmd = subparsers.add_parser('split-by-char-limit', help='Calculate chunk boundaries')
+    split_cmd.add_argument('session_file', help='Session file path')
+    split_cmd.add_argument('--start-line', type=int, required=True, help='Start line')
+    split_cmd.add_argument('--char-limit', type=int, required=True, help='Character limit per chunk')
+
+    # extract-chunk
+    extract_cmd = subparsers.add_parser('extract-chunk', help='Extract chunk by range')
+    extract_cmd.add_argument('session_file', help='Session file path')
+    extract_cmd.add_argument('--start-line', type=int, required=True, help='Start line')
+    extract_cmd.add_argument('--end-line', type=int, required=True, help='End line')
+
+    args = parser.parse_args()
+
+    # Dispatch to command handler
+    try:
+        if args.command == 'list-sessions':
+            result = list_sessions_with_samples(args.project_dir, args.limit)
+            print(json.dumps(result, indent=2))
+        elif args.command == 'get-last-compact':
+            result = get_last_compact_summary(args.session_file)
+            print(json.dumps(result, indent=2))
+        elif args.command == 'get-content-after':
+            result = get_content_after_line(args.session_file, args.start_line)
+            print(result)
+        elif args.command == 'get-content-from-start':
+            result = get_content_from_start(args.session_file)
+            print(result)
+        elif args.command == 'split-by-char-limit':
+            result = split_by_char_limit(args.session_file, args.start_line, args.char_limit)
+            print(json.dumps(result, indent=2))
+        elif args.command == 'extract-chunk':
+            result = extract_chunk(args.session_file, args.start_line, args.end_line)
+            print(result)
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(2)
+    except json.JSONDecodeError as e:
+        print(f"Parse error: {e}", file=sys.stderr)
+        sys.exit(3)
+    except ValueError as e:
+        print(f"Validation error: {e}", file=sys.stderr)
+        sys.exit(4)
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
