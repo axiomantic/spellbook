@@ -273,4 +273,48 @@ If synthesis fails: Fall back to outputting raw chunk summaries with warning.
 
 **Note on Missing Chunks:** When partial results are used (from Phase 2), missing chunks are marked in synthesis input as "[CHUNK N FAILED - SUMMARIZATION ERROR]".
 
+### Phase 4: Output
+
+**Step 1: Generate output path**
+
+```python
+import os
+from datetime import datetime
+
+cwd = os.getcwd()
+project_encoded = cwd.replace('/', '-').lstrip('-')
+claude_config_dir = os.environ.get('CLAUDE_CONFIG_DIR') or os.path.expanduser('~/.claude')
+distilled_dir = os.path.join(claude_config_dir, 'distilled', project_encoded)
+
+# Create directory if needed
+os.makedirs(distilled_dir, exist_ok=True)
+
+# Generate filename
+timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+slug = selected_session['slug'] or 'session'
+filename = f"{slug}-{timestamp}.md"
+output_path = os.path.join(distilled_dir, filename)
+```
+
+**Step 2: Write summary to file**
+
+```python
+with open(output_path, 'w', encoding='utf-8') as f:
+    f.write(final_summary)
+```
+
+**Step 3: Report completion**
+
+```
+Distillation complete!
+
+Summary saved to: {output_path}
+
+To continue work in a new session:
+1. Start new Claude Code session
+2. Type: "continue work from {output_path}"
+
+Original session preserved at: {session_file}
+```
+
 </PHASES>
