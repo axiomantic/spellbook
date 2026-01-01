@@ -17,6 +17,7 @@ Personal AI assistant skills, commands, and configuration for Claude Code and ot
   - [4. Spellbook (This Repo)](#4-spellbook-this-repo)
 - [Commands](#commands)
   - [/compact](#compact)
+  - [/distill-session](#distill-session)
   - [/address-pr-feedback](#address-pr-feedback)
   - [/move-project](#move-project)
   - [/green-mirage-audit](#green-mirage-audit)
@@ -164,6 +165,72 @@ Slash commands for quick actions. These can be invoked with `/command-name` in C
 - Without the proxy, `/compact` triggers Claude's built-in compaction, and this file is ignored
 - Creates extremely detailed shift-change briefings for seamless session continuation
 - Always asks "Can a fresh instance say 'continue' and know exactly what to do?"
+
+---
+
+### /distill-session
+
+**What it does:** Extracts knowledge from oversized Claude Code sessions into a standalone summary document when sessions are too large to compact.
+
+**When to use:**
+- Session too large to compact (context window exceeded)
+- Need to preserve knowledge but start fresh
+- `/compact` fails or is stuck
+
+**How it works:**
+1. Discovers sessions in current project with AI-generated descriptions
+2. Chunks content to fit in context window (300k chars per chunk)
+3. Summarizes chunks in parallel via subagents
+4. Synthesizes into unified summary following compact.md format
+5. Outputs markdown file ready for new session continuation
+
+**Stuck session detection:**
+A session is likely stuck if ANY of these conditions are true:
+- "Prompt is too long" error in recent messages
+- Failed compact (no subsequent compact boundary after `/compact` command)
+- API error at end of session
+- Manual rename with error hint (slug contains: `error`, `stuck`, `fail`, `compact`)
+- Large session (> 2MB) without recent compact
+
+**Output location:**
+```
+$CLAUDE_CONFIG_DIR/distilled/{project}/{slug}-{timestamp}.md
+```
+
+**Workflow:**
+- **Phase 0: Session Discovery** - Lists recent sessions with holistic descriptions
+- **Phase 1: Analyze & Chunk** - Determines if chunking needed, splits by 300k char limit
+- **Phase 2: Parallel Summarization** - Spawns subagents for each chunk
+- **Phase 3: Synthesis** - Combines summaries chronologically following compact.md format
+- **Phase 4: Output** - Writes to distilled directory with continuation instructions
+
+**Workflow continuity preservation:**
+The distilled summary preserves:
+- Active skills/commands that were in use (e.g., `/simplify`, `/implement-feature`)
+- Subagent responsibilities, IDs, and assigned skills/commands
+- Workflow pattern (parallel swarm, sequential delegation, etc.)
+- Continuation protocol instructs new session to resume using same skills/patterns
+
+**Important notes:**
+- Original session file is NEVER modified
+- Handles sessions of any size via intelligent chunking
+- Uses 300k char limit per chunk (~75k tokens) for safety
+- Falls back to partial results if <= 20% of chunks fail
+- Supersedes the old `/repair-session` command
+
+**Example usage:**
+```
+User: "/distill-session"
+Assistant: [Lists recent sessions with descriptions]
+User: [Selects stuck session]
+Assistant: [Summarizes and outputs to ~/.claude/distilled/{project}/{slug}-{timestamp}.md]
+```
+
+**To continue work:**
+```
+1. Start new Claude Code session
+2. Type: "continue work from ~/.claude/distilled/{project}/{slug}-{timestamp}.md"
+```
 
 ---
 

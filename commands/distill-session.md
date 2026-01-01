@@ -27,6 +27,58 @@ Extract knowledge from oversized Claude Code sessions into a standalone summary 
 
 ---
 
+## File Structure Reference
+
+Claude Code stores session data in a specific structure:
+
+```
+~/.claude/                          # CLAUDE_CONFIG_DIR (default ~/.claude)
+├── projects/                       # All project session data
+│   └── {encoded-cwd}/              # One directory per project
+│       └── {session-uuid}.jsonl    # Session files (JSONL format)
+├── distilled/                      # Distilled session output
+│   └── {encoded-cwd}/              # Mirrors projects structure
+│       └── {slug}-{timestamp}.md   # Distilled summaries
+└── scripts/
+    └── distill_session.py          # Helper script for this command
+```
+
+**Path Encoding:**
+- Working directory is encoded by replacing `/` with `-` and stripping the leading `-`
+- Example: `/Users/alice/Development/my-project` becomes `Users-alice-Development-my-project`
+
+**Session File Format:**
+- JSONL (JSON Lines): one JSON object per line
+- Each line is a message with fields: `uuid`, `parentUuid`, `type`, `message`, `timestamp`, `slug`, etc.
+- `slug` field contains session name (e.g., `fancy-nibbling-sketch`)
+- `type: "system", subtype: "compact_boundary"` marks compact points
+- `isCompactSummary: true` marks compact summary messages
+
+---
+
+## Identifying Stuck Sessions
+
+A session is likely stuck if ANY of these conditions are true:
+
+| Indicator | How to Detect |
+|-----------|---------------|
+| "Prompt is too long" error | Search tail for `"Prompt is too long"` in assistant messages |
+| Failed compact | `/compact` command in tail WITHOUT subsequent `compact_boundary` |
+| API error at end | `"isApiErrorMessage": true` in last few messages |
+| Manual rename with error hint | Slug or custom title contains: `error`, `stuck`, `fail`, `compact` |
+| Large session without recent compact | Size > 2MB AND no `compact_boundary` in last 500 messages |
+
+**Quick detection command:**
+```bash
+# Find sessions with "Prompt is too long" errors
+grep -l "Prompt is too long" ~/.claude/projects/{encoded-cwd}/*.jsonl
+
+# Find large sessions (likely need distillation)
+ls -lhS ~/.claude/projects/{encoded-cwd}/*.jsonl | head -10
+```
+
+---
+
 ## Implementation
 
 <PHASES>
@@ -35,10 +87,13 @@ Extract knowledge from oversized Claude Code sessions into a standalone summary 
 
 **Step 1: Get project directory and list sessions**
 
+The project directory maps the current working directory to an encoded path:
+
 ```python
 import os
 
 cwd = os.getcwd()
+# Encode: /Users/alice/project → Users-alice-project
 encoded = cwd.replace('/', '-').lstrip('-')
 claude_config_dir = os.environ.get('CLAUDE_CONFIG_DIR') or os.path.expanduser('~/.claude')
 project_dir = os.path.join(claude_config_dir, 'projects', encoded)
@@ -168,6 +223,21 @@ Your job: Extract key information from this chunk following this structure:
 5. What errors occurred and how were they resolved?
 6. What work remains incomplete?
 
+CRITICAL - PRESERVE WORKFLOW CONTINUITY:
+7. What SKILLS or COMMANDS were being used? (e.g., /simplify, /implement-feature, /commit)
+8. What SUBAGENTS were spawned, and what were their:
+   - Agent IDs (if visible)
+   - Assigned tasks/responsibilities
+   - Skills/commands they were given
+   - Status (running, completed, blocked)
+9. What WORKFLOW PATTERN was in use?
+   - Single-threaded (main agent doing everything)
+   - Sequential delegation (one subagent at a time)
+   - Parallel swarm (multiple subagents on discrete tasks)
+   - Hierarchical (subagents spawning sub-subagents)
+
+This information is VITAL for session continuation. Without it, the workflow cannot be resumed correctly.
+
 Be thorough but concise. Another AI will synthesize your summary with others.
 
 ---
@@ -236,6 +306,17 @@ CRITICAL RULES:
 3. Preserve ALL pending work items from the most recent summary
 4. Preserve ALL user corrections and behavioral guidance
 5. The continuation protocol should reflect the FINAL state
+
+VITAL - WORKFLOW CONTINUITY (without this, the session CANNOT be resumed correctly):
+6. Preserve ALL active skills/commands that were in use (e.g., /simplify, /implement-feature)
+7. Preserve ALL subagent responsibilities, IDs, and the skills/commands given to them
+8. Preserve the WORKFLOW PATTERN (parallel swarm, sequential delegation, etc.)
+9. The continuation protocol MUST instruct the new session to:
+   - Resume using the SAME skills/commands
+   - Check on or replace active subagents with SAME personas and skills
+   - Continue the SAME workflow pattern, not start fresh
+
+NOTE: Skills and commands (e.g., /implement-feature, /simplify, /execute-plan) are often THE SOURCE of workflow patterns. They define how work is organized, what subagents get spawned, and how tasks are delegated. If a skill was active, the new session MUST re-invoke that skill to restore the workflow - not try to manually recreate it. If a command was active, the new session must re-invoke that command with appropriate instructions for resuming the work. This applies to the main agent as well as any subagents.
 
 ---
 
@@ -358,6 +439,32 @@ If any test fails during implementation, invoke the `systematic-debugging` skill
 
 ---
 
+## Multi-Project Usage
+
+To distill sessions from projects OTHER than the current working directory:
+
+1. **Find the encoded project path:**
+   ```bash
+   # List all projects with sessions
+   ls ~/.claude/projects/
+
+   # Example output:
+   # -Users-alice-Development-my-project
+   # -Users-alice-Development-other-project
+   ```
+
+2. **Provide the project path explicitly:**
+   When asked which session to distill, you can specify sessions from any project by providing the full path.
+
+3. **Parallel distillation of multiple projects:**
+   To distill stuck sessions from multiple projects simultaneously, spawn parallel Task agents:
+   ```
+   Task("Distill project-a", "Distill session at ~/.claude/projects/-Users-.../abc.jsonl", "general-purpose")
+   Task("Distill project-b", "Distill session at ~/.claude/projects/-Users-.../xyz.jsonl", "general-purpose")
+   ```
+
+---
+
 ## Notes
 
 - Uses `~/.claude/scripts/distill_session.py` for all I/O operations
@@ -367,3 +474,4 @@ If any test fails during implementation, invoke the `systematic-debugging` skill
 - Character limit of 300k per chunk (~75k tokens) leaves safety buffer
 - Chronological order is critical for synthesis quality
 - AskUserQuestion tool format follows standard Claude Code tool interface
+- Distill-session supersedes the old repair-session command (which has been removed)
