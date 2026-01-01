@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-readme-completeness
+        name: Check README completeness
+        entry: python3 scripts/check-readme-completeness.py
+        language: system
+        pass_filenames: false
+        always_run: true
