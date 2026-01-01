@@ -20,7 +20,8 @@ const VERSION = '1.0.0';
 // Skill directories
 const SPELLBOOK_DIR = path.join(process.env.HOME, 'Development', 'spellbook', 'skills');
 const PERSONAL_DIR = path.join(process.env.HOME, '.codex', 'skills');
-const SUPERPOWERS_DIR = path.join(process.env.HOME, '.claude', 'skills');
+const CLAUDE_CONFIG_DIR = process.env.CLAUDE_CONFIG_DIR || path.join(process.env.HOME, '.claude');
+const SUPERPOWERS_DIR = path.join(CLAUDE_CONFIG_DIR, 'skills');
 
 /**
  * Validate skill name format.
@@ -190,7 +191,7 @@ Skill Resolution:
   Skills are resolved in priority order:
   1. Personal skills (~/.codex/skills/)
   2. Spellbook skills (~/Development/spellbook/skills/)
-  3. Superpowers skills (~/.claude/skills/)
+  3. Superpowers skills ($CLAUDE_CONFIG_DIR/skills/)
 
   Use namespace prefixes to force a specific source:
     spellbook:skill-name

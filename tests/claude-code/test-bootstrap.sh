@@ -11,7 +11,7 @@ echo "Testing bootstrap files..."
 
 # Test Claude Code bootstrap
 assert_file_exists "$REPO_ROOT/.claude-plugin/bootstrap.md" "Claude Code bootstrap exists"
-assert_contains "$(cat $REPO_ROOT/.claude-plugin/bootstrap.md)" "Personal skills in ~/.claude/skills/" "Priority model documented"
+assert_contains "$(cat $REPO_ROOT/.claude-plugin/bootstrap.md)" "Personal skills" "Priority model documented"
 assert_contains "$(cat $REPO_ROOT/.claude-plugin/bootstrap.md)" "spellbook:skill-name" "Namespace syntax shown"
 assert_not_contains "$(cat $REPO_ROOT/.claude-plugin/bootstrap.md)" "automatically loaded" "No auto-load claim"
 

@@ -568,7 +568,7 @@ Next: Would you like to post the 8 "Fixed in" replies? (yes/no)
 - Cache API responses to avoid rate limits
 - Use git worktree for safe code inspection without affecting working directory
 - Store intermediate results in /tmp for resumability
-- Log all actions to ~/.claude/logs/review-pr-comments-<timestamp>.log
+- Log all actions to $CLAUDE_CONFIG_DIR/logs/review-pr-comments-<timestamp>.log
 - Support resuming from previous run if interrupted
 
 <SELF_CHECK>

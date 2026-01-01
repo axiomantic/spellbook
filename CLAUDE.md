@@ -103,14 +103,14 @@ When working in a worktree: NEVER make changes to the main repo's files or git s
 
 ## Planning Documents
 
-Plans are stored centrally: `~/.claude/plans/<project-dir-name>/`
+Plans are stored centrally: `$CLAUDE_CONFIG_DIR/plans/<project-dir-name>/` (defaults to `~/.claude/plans/<project-dir-name>/` if `CLAUDE_CONFIG_DIR` is not set)
 
 This keeps planning artifacts outside project repositories.
 
 ## Compacting
 
 <CRITICAL>
-When compacting, follow ~/.claude/commands/compact.md exactly. You MUST:
+When compacting, follow $CLAUDE_CONFIG_DIR/commands/compact.md exactly (defaults to ~/.claude/commands/compact.md if not set). You MUST:
 - Retain ALL relevant context about remaining work in great detail
 - Include done work as a simple checklist
 - Preserve any active slash command workflow

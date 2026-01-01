@@ -403,7 +403,7 @@ Task (general-purpose):
     2. Skip the "Exploring approaches" questions - decisions are made
     3. Go directly to "Presenting the design" - write the full design
     4. Do NOT ask "does this look right so far" - proceed through all sections
-    5. Save to: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    5. Save to: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
     6. Commit the design document when done
 
     If you encounter a circuit breaker condition (security-critical, contradictory requirements),
@@ -423,7 +423,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Design document location: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Design document location: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
 
     Return the complete findings report with remediation plan.
 ```
@@ -479,7 +479,7 @@ Task (general-purpose):
     Review findings to address:
     [Paste complete findings report and remediation plan]
 
-    Design document location: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Design document location: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
 
     Address ALL items - critical, important, AND minor.
     Commit changes when done.
@@ -506,13 +506,13 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Design document: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Design document: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
 
     User's parallelization preference: [maximize/conservative/ask]
     - If maximize: group independent tasks into parallel groups
     - If conservative: default to sequential
 
-    Save implementation plan to: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Save implementation plan to: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
 ```
 
 ### 3.2 Review Implementation Plan
@@ -528,8 +528,8 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan location: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
-    Parent design document: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan location: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Parent design document: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
 
     Return the complete findings report with remediation plan.
 ```
@@ -554,8 +554,8 @@ Task (general-purpose):
     Review findings to address:
     [Paste complete findings report and remediation plan]
 
-    Implementation plan location: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
-    Parent design document: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan location: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Parent design document: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
 
     Pay special attention to interface contracts between parallel work.
     Commit changes when done.
@@ -614,7 +614,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
     Tasks to execute: [list setup tasks by number]
 
     These tasks create shared interfaces, type definitions, and stubs that parallel
@@ -690,7 +690,7 @@ For each worktree in SESSION_PREFERENCES.worktree_paths:
 
       ## Context for the Skill
 
-      Implementation plan: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+      Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
       Tasks to execute: [worktree.tasks]
       Working directory: [worktree.path]
 
@@ -723,7 +723,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
     Working directory: [worktree path or current directory]
 
     Group tasks by their "Parallel Group" field.
@@ -743,7 +743,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
     Working directory: [worktree path or current directory]
 
     Execute tasks one at a time with code review after each.
@@ -775,7 +775,7 @@ Task (general-purpose):
     - Tasks implemented: [worktree.tasks]
     - Depends on: [worktree.depends_on]
 
-    Interface contracts: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Interface contracts: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
     (See "Interface Contracts" section of the implementation plan)
 
     After successful merge:
@@ -800,7 +800,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
     Task number: N
     Working directory: [worktree path or current directory]
 
@@ -826,7 +826,7 @@ Task (general-purpose):
     ## Context for the Skill
 
     What was implemented: [from implementation subagent's report]
-    Plan/requirements: Task N from ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Plan/requirements: Task N from $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
     Base SHA: [commit before task]
     Head SHA: [commit after task]
 
@@ -922,8 +922,8 @@ Task (general-purpose):
     Scope: All files created/modified in this feature
     [Complete list of all files]
 
-    Design document: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
-    Implementation plan: ~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Design document: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
 
     This is the final claim validation gate.
     Cross-reference claims against design doc and implementation plan.
@@ -1038,10 +1038,10 @@ def handle_review_checkpoint(findings, mode):
 
 | User Says | Detection Pattern | Action |
 |-----------|------------------|--------|
-| "implement X using design doc ~/.claude/plans/<project-dir-name>/foo.md" | "using design doc \<path\>" | Skip Phase 2, load existing design, start at Phase 3 |
-| "implement X with the design at ~/.claude/plans/<project-dir-name>/foo.md" | "with design doc \<path\>" | Skip Phase 2, load existing design, start at Phase 3 |
-| "implement X using impl plan ~/.claude/plans/<project-dir-name>/bar.md" | "using impl plan \<path\>" | Skip Phases 2-3, load existing plan, start at Phase 4 |
-| "implement X with the implementation plan at ~/.claude/plans/<project-dir-name>/bar.md" | "with impl plan \<path\>" | Skip Phases 2-3, load existing plan, start at Phase 4 |
+| "implement X using design doc $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/foo.md" | "using design doc \<path\>" | Skip Phase 2, load existing design, start at Phase 3 |
+| "implement X with the design at $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/foo.md" | "with design doc \<path\>" | Skip Phase 2, load existing design, start at Phase 3 |
+| "implement X using impl plan $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/bar.md" | "using impl plan \<path\>" | Skip Phases 2-3, load existing plan, start at Phase 4 |
+| "implement X with the implementation plan at $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/bar.md" | "with impl plan \<path\>" | Skip Phases 2-3, load existing plan, start at Phase 4 |
 | "just implement X, no docs needed" | "just implement" or "no docs" | Skip Phases 2-3, create minimal inline plan, start Phase 4 |
 
 <RULE>When escape hatch detected, ALWAYS confirm with user before proceeding.</RULE>
@@ -1080,8 +1080,8 @@ Subagent prompts provide CONTEXT for the skill, not duplicated instructions.
 
 | Document | Path |
 |----------|------|
-| Design Document | `~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md` |
-| Implementation Plan | `~/.claude/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md` |
+| Design Document | `$CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md` |
+| Implementation Plan | `$CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md` |
 
 ---
 

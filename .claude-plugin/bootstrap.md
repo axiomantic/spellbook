@@ -10,9 +10,11 @@ Spellbook is a centralized skills repository that provides specialized workflows
 
 When multiple skills are available with the same name, they are resolved in this priority order:
 
-1. **Personal skills** (`~/.claude/skills/`) - highest priority
+1. **Personal skills** (`$CLAUDE_CONFIG_DIR/skills/` or `~/.claude/skills/` by default) - highest priority
 2. **Spellbook skills** (`<spellbook-repo>/skills/`) - middle priority
 3. **Superpowers skills** (built-in platform skills) - lowest priority
+
+Note: The `CLAUDE_CONFIG_DIR` environment variable can override the default `~/.claude` location.
 
 This ensures personal customizations always override shared skills, and shared skills override defaults.
 

@@ -110,15 +110,17 @@ DEST_ENCODED=$(echo "<dest>" | sed 's|/|-|g')
 ### Check for Claude session data
 
 ```bash
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+
 # Check if projects directory exists
-ls -d ~/.claude/projects/"$ORIGINAL_ENCODED" 2>/dev/null
+ls -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" 2>/dev/null
 
 # Count history.jsonl entries
-grep -c '"project":"<original>"' ~/.claude/history.jsonl 2>/dev/null || echo "0"
+grep -c '"project":"<original>"' "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0"
 
 # Also check with escaped slashes (JSON format)
 ORIGINAL_ESCAPED=$(echo "<original>" | sed 's|/|\\/|g')
-grep -c "\"project\":\"$ORIGINAL_ESCAPED\"" ~/.claude/history.jsonl 2>/dev/null || echo "0"
+grep -c "\"project\":\"$ORIGINAL_ESCAPED\"" "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0"
 ```
 
 ### Show preview
@@ -126,10 +128,10 @@ grep -c "\"project\":\"$ORIGINAL_ESCAPED\"" ~/.claude/history.jsonl 2>/dev/null 
 ```
 Found Claude Code references to update:
 
-~/.claude/projects/<original-encoded>/
+$CLAUDE_CONFIG_DIR/projects/<original-encoded>/
   - Contains <count> session files
 
-~/.claude/history.jsonl
+$CLAUDE_CONFIG_DIR/history.jsonl
   - <count> entries referencing <original>
 
 Filesystem:
@@ -159,19 +161,23 @@ Execute in this exact order to minimize risk:
 ### 7a. Update history.jsonl
 
 ```bash
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+
 # Backup first
-cp ~/.claude/history.jsonl ~/.claude/history.jsonl.backup
+cp "$CLAUDE_CONFIG_DIR/history.jsonl" "$CLAUDE_CONFIG_DIR/history.jsonl.backup"
 
 # Update project paths (handle JSON escaping)
-sed -i '' 's|"project":"<original>"|"project":"<dest>"|g' ~/.claude/history.jsonl
+sed -i '' 's|"project":"<original>"|"project":"<dest>"|g' "$CLAUDE_CONFIG_DIR/history.jsonl"
 ```
 
 ### 7b. Rename projects directory
 
 ```bash
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+
 # Only if the encoded directory exists
-if [ -d ~/.claude/projects/"$ORIGINAL_ENCODED" ]; then
-  mv ~/.claude/projects/"$ORIGINAL_ENCODED" ~/.claude/projects/"$DEST_ENCODED"
+if [ -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" ]; then
+  mv "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED"
 fi
 ```
 
@@ -184,14 +190,16 @@ mv "<original>" "<dest>"
 ## Step 8: Verify and Report
 
 ```bash
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+
 # Verify new location exists
 [ -d "<dest>" ] && echo "FS_OK" || echo "FS_FAIL"
 
 # Verify projects directory renamed
-[ -d ~/.claude/projects/"$DEST_ENCODED" ] && echo "PROJECTS_OK" || echo "PROJECTS_SKIP"
+[ -d "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED" ] && echo "PROJECTS_OK" || echo "PROJECTS_SKIP"
 
 # Verify history.jsonl updated
-grep -c '"project":"<dest>"' ~/.claude/history.jsonl
+grep -c '"project":"<dest>"' "$CLAUDE_CONFIG_DIR/history.jsonl"
 ```
 
 ### Success report
@@ -203,10 +211,10 @@ Filesystem:
   <original> → <dest>
 
 Claude Code:
-  ~/.claude/projects/<dest-encoded>/ (renamed)
-  ~/.claude/history.jsonl (<count> entries updated)
+  $CLAUDE_CONFIG_DIR/projects/<dest-encoded>/ (renamed)
+  $CLAUDE_CONFIG_DIR/history.jsonl (<count> entries updated)
 
-Backup created at: ~/.claude/history.jsonl.backup
+Backup created at: $CLAUDE_CONFIG_DIR/history.jsonl.backup
 
 To use the project in its new location:
   cd <dest> && claude
