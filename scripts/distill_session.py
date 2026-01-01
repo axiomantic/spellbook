@@ -12,7 +12,6 @@ import argparse
 import os
 import glob
 from typing import Dict, List, Any, Optional
-from datetime import datetime
 
 __version__ = '1.0.0'
 

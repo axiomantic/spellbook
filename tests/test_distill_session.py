@@ -197,3 +197,32 @@ def test_list_sessions_with_samples(tmp_path):
     assert result[0]['message_count'] == 2
     assert result[0]['first_user_message'] is not None
     assert 'First user message' in result[0]['first_user_message']
+
+
+def test_split_by_char_limit(tmp_path):
+    """Test chunking by character limit."""
+    import distill_session
+
+    session_file = tmp_path / "session.jsonl"
+
+    # Create messages with known sizes
+    messages = []
+    for i in range(10):
+        msg = {
+            "uuid": f"msg-{i}",
+            "type": "user",
+            "message": {"content": "x" * 50000}  # ~50k chars each
+        }
+        messages.append(msg)
+
+    with open(session_file, 'w') as f:
+        for msg in messages:
+            f.write(json.dumps(msg) + '\n')
+
+    # Split with 300k char limit (should get ~6 messages per chunk)
+    result = distill_session.split_by_char_limit(str(session_file), start_line=0, char_limit=300000)
+
+    assert len(result) > 1  # Should have multiple chunks
+    for start, end in result:
+        chunk_size = end - start
+        assert chunk_size > 0
