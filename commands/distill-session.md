@@ -236,6 +236,21 @@ CRITICAL - PRESERVE WORKFLOW CONTINUITY:
    - Parallel swarm (multiple subagents on discrete tasks)
    - Hierarchical (subagents spawning sub-subagents)
 
+ADDITIONAL EXTRACTION:
+10. What FILES were created/modified in this chunk?
+    - List file paths
+    - Note what was added/changed
+
+11. What VERIFICATION would confirm this work is complete?
+    - What grep patterns would find expected content?
+    - What files should exist?
+    - What structure should be present?
+
+12. If skills were active, what was their EXACT POSITION?
+    - Phase number
+    - Step/task number
+    - What's the next action in the skill workflow?
+
 This information is VITAL for session continuation. Without it, the workflow cannot be resumed correctly.
 
 Be thorough but concise. Another AI will synthesize your summary with others.
@@ -268,6 +283,189 @@ Wait for all Task outputs. Store as:
 If any subagent fails: Retry once. If still fails, report partial results and warn user.
 
 **Partial Results Policy:** If <= 20% of chunks fail summarization, proceed with synthesis using available summaries and mark missing chunks. If > 20% fail, abort and report error.
+
+### Phase 2.5: Capture Artifact State
+
+This phase reads actual file state to verify what was accomplished (not just what the conversation claimed).
+
+**Step 1: Identify files modified in session**
+
+Extract file paths from the chunk summaries:
+- Build list of all files mentioned in summaries as created/modified
+- Deduplicate the list
+- Store as: `modified_files = [path1, path2, ...]`
+
+**Step 2: Read current file state**
+
+For each file in `modified_files`:
+
+```bash
+# Check if file exists
+test -f {file_path} && echo "EXISTS" || echo "MISSING"
+
+# If exists, read it
+cat {file_path}
+```
+
+Capture for each file:
+- **Exists**: true/false
+- **Key structural markers**:
+  - For .md files: Section headers (grep '^###')
+  - For code files: Function/class names (language-specific)
+- **Line count**: `wc -l {file_path}`
+- **Hash or sample**: First 500 chars or sha256sum
+
+Output structure:
+```
+File: /path/to/file.md
+Status: EXISTS | MISSING
+Lines: 331
+Structure:
+  - ### 1.1 Header
+  - ### 1.2 Header
+  - ### 1.6 Another Header
+Sample: [first 500 chars]
+```
+
+**Step 3: Compare to plan expectations**
+
+If implementation plan document is referenced in summaries:
+- Read the plan using Read tool
+- Extract expected structure per task from plan
+- Compare actual file state to expected:
+  - Expected section headers vs actual headers
+  - Expected file paths vs actual existence
+  - Expected line counts vs actual counts
+
+Flag discrepancies:
+- `MISMATCH`: File exists but structure differs from plan
+- `INCOMPLETE`: File missing sections expected by plan
+- `MISSING`: File doesn't exist but plan expected it
+- `OK`: File matches plan expectations
+
+**Output**: Store artifact state table for inclusion in synthesis (Section 1.12 of compact.md format)
+
+### Phase 2.6: Extract Verification Criteria
+
+This phase generates concrete verification commands (not vague instructions).
+
+**Step 1: Find planning documents**
+
+Search chunk summaries for references to:
+- Design documents
+- Implementation plans
+- Specification files
+
+If found, read those documents using Read tool.
+
+**Step 2: Extract Definition of Done per task**
+
+For each incomplete/in-progress task identified in summaries:
+- Extract the expected deliverables from plan
+- Extract any verification commands mentioned in plan
+- Extract structural requirements (section names, line counts, file existence)
+
+**Step 3: Generate verification commands**
+
+Create runnable bash commands to verify each criterion:
+
+Examples:
+```bash
+# Verify section count in markdown
+grep -c "^### 1.6" /path/to/SKILL.md  # Expected: 5
+
+# Verify file exists
+test -f skills/devils-advocate/SKILL.md && echo "OK" || echo "MISSING"
+
+# Verify line count
+wc -l patterns/adaptive-response-handler.md  # Expected: ~331
+
+# Verify function exists in code
+grep -q "function validateInput" src/validator.js && echo "OK" || echo "MISSING"
+
+# Verify test coverage
+npm test -- --coverage | grep "All files" | awk '{print $10}'  # Expected: >90%
+```
+
+For each verification command, include:
+- The command itself (copy-pasteable)
+- Expected output
+- What it verifies
+
+**Output**: Verification checklist for inclusion in synthesis (Section 1.13 of compact.md format)
+
+### Phase 2.7: Generate Skill Resume Commands
+
+This phase creates explicit skill invocation commands (not vague descriptions).
+
+**Step 1: Identify active skill stack**
+
+From chunk summaries, extract:
+- All Skill() invocations that were active when session ended
+- Their phase/position (e.g., "Phase 4, Task 10")
+- Parent-child relationships (e.g., "implement-feature → subagent-driven-development")
+- Current status (running, waiting, blocked)
+
+**Step 2: Generate resume commands**
+
+For each active skill, create resumption command:
+
+**If skill supports --resume or position args:**
+```
+Skill('implement-feature', '--resume Phase4.Task10')
+```
+
+**If skill doesn't support resume:**
+Generate context block to pass:
+```
+Skill('custom-workflow', `
+RESUME CONTEXT:
+- Completed phases: Phase 1 (requirements), Phase 2 (design), Phase 3 (scaffolding)
+- Current position: Phase 4, Task 10 - implementing error handling
+- Skip these steps: [1-9 already complete]
+- Resume from: Step 10 - add try-catch blocks to all API calls
+- Key decisions already made:
+  * Using Express.js for REST API
+  * PostgreSQL for database
+  * JWT for authentication
+  * Don't re-ask about these
+`)
+```
+
+**Step 3: Generate skill re-entry protocol**
+
+Create template showing exact invocation:
+
+```markdown
+## Skill Resume Protocol
+
+### Main Workflow Skill
+**Skill**: implement-feature
+**Position**: Phase 4, Task 10
+**Resume Command**:
+\`\`\`
+Skill('implement-feature', '--resume Phase4.Task10')
+\`\`\`
+
+**Context to provide if skill doesn't support --resume**:
+- Completed: Phases 1-3, Tasks 1-9
+- Current: Phase 4, Task 10
+- Skip: Requirements gathering, design, scaffolding
+- Resume: Error handling implementation
+
+### Active Subagent Skills
+**Subagent 1**: Backend Developer
+**Skill**: subagent-driven-development
+**Task**: Implement REST API endpoints
+**Status**: 80% complete (auth done, CRUD pending)
+
+**Subagent 2**: Test Engineer
+**Skill**: test-driven-development
+**Task**: Write integration tests
+**Status**: Blocked (waiting for API completion)
+```
+
+**Output**: Store skill resume commands for Section 1.15 and re-entry protocol for Section 1.27 of compact.md format.
 
 ### Phase 3: Synthesis
 
@@ -317,6 +515,39 @@ VITAL - WORKFLOW CONTINUITY (without this, the session CANNOT be resumed correct
    - Continue the SAME workflow pattern, not start fresh
 
 NOTE: Skills and commands (e.g., /implement-feature, /simplify, /execute-plan) are often THE SOURCE of workflow patterns. They define how work is organized, what subagents get spawned, and how tasks are delegated. If a skill was active, the new session MUST re-invoke that skill to restore the workflow - not try to manually recreate it. If a command was active, the new session must re-invoke that command with appropriate instructions for resuming the work. This applies to the main agent as well as any subagents.
+
+CRITICAL REQUIREMENTS FOR OUTPUT:
+
+1. Section 1.15 MUST contain explicit Skill() invocation commands
+   - NOT "continue the workflow" or "resume the pattern"
+   - YES "Skill('implement-feature', '--resume Phase4.Task10')"
+   - If skill doesn't support resume, include full context block
+
+2. Section 1.12 MUST contain actual file state from Phase 2.5
+   - Read files during distillation, don't trust conversation claims
+   - Compare to plan expectations
+   - Flag any discrepancies (MISMATCH, INCOMPLETE, MISSING)
+
+3. Section 1.13 MUST contain runnable verification commands
+   - grep patterns with expected output
+   - file existence checks
+   - structural validations
+   - Each command should be copy-pasteable
+
+4. Section 2 MUST use imperative language
+   - NOT "you were doing X" or "the session was using Y"
+   - YES "DO X: [exact command]" and "INVOKE: Skill(...)"
+
+5. Anti-patterns section (Step 0.5) MUST explicitly forbid:
+   - Ad-hoc implementation when skills should be used
+   - Skipping verification before marking complete
+   - Building on unverified subagent work
+   - Direct file editing when subagents should do it
+
+6. Workflow restoration test (Step 1.5) MUST verify:
+   - Orchestrating skill is active (not manual work)
+   - Subagents are being spawned per workflow
+   - Position is correct (not starting over)
 
 ---
 
