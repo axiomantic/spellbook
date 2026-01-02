@@ -34,6 +34,7 @@ Before starting, internalize these failure modes:
 | **Skipping plan doc search** | 90% of broken compacts miss this | This is NON-NEGOTIABLE |
 | **"Continue the workflow"** | Useless without exact position | Write Skill('name', '--resume Phase3.Task7') |
 | **Missing verification** | Can't confirm completion | Every task needs a runnable check command |
+
 </ANTI_PATTERNS>
 
 Use instruction-engineering principles throughout: clear personas, emotional stakes, explicit behavioral constraints, and structured formatting. The boot prompt you generate will be used to spawn a fresh Claude instance with zero prior context—it is their ONLY lifeline.
