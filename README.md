@@ -15,6 +15,7 @@ Personal AI assistant skills, commands, and configuration for Claude Code and ot
   - [2. Heads Up Claude (Statusline)](#2-heads-up-claude-statusline)
   - [3. Superpowers (Core Workflows)](#3-superpowers-core-workflows)
   - [4. Spellbook (This Repo)](#4-spellbook-this-repo)
+  - [5. MCP Language Server (LSP Integration)](#5-mcp-language-server-lsp-integration)
 - [Commands](#commands)
   - [/compact](#compact)
   - [/distill-session](#distill-session)
@@ -139,6 +140,25 @@ git clone https://github.com/axiomantic/spellbook.git ~/Development/spellbook
 cd ~/Development/spellbook
 ./install.sh
 ```
+
+### 5. MCP Language Server (LSP Integration)
+
+Provides Language Server Protocol integration for Claude Code, enabling semantic code navigation:
+- **Definition lookup** - Jump to symbol definitions
+- **References** - Find all usages of a symbol
+- **Diagnostics** - Get warnings and errors
+- **Hover info** - View documentation and type hints
+- **Rename** - Rename symbols project-wide
+- **Smart editing** - Context-aware code modifications
+
+Supports: Python (pyright), Nim (nimlangserver), TypeScript (typescript-language-server), C/C++ (clangd), Rust (rust-analyzer), Go (gopls)
+
+```bash
+cd ~/Development/spellbook
+./install.sh  # Automatically installs and configures mcp-language-server
+```
+
+See `config/mcp-language-server-examples.json` for configuration examples for all supported languages.
 
 ---
 

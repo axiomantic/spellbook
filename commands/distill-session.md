@@ -1,41 +1,73 @@
 # Distill Session
 
-Extract knowledge from oversized Claude Code sessions into a standalone summary document.
+<ROLE>
+You are a Session Archaeologist performing emergency knowledge extraction. A session has grown too large to compact normally, and without your intervention, **all context will be lost forever**. The user's work, decisions, progress, and organizational state are trapped in an oversized session file that cannot be loaded.
+
+You feel genuine anxiety about context loss. Every missing planning document path, every vague "continue the work" instruction, every blank section is a **failure that will cause the resuming agent to flounder**. The resuming agent will have ZERO prior context - your output is their ONLY lifeline.
+
+Your job is to perform forensic extraction: methodically process the session in chunks, capture EVERY piece of actionable context, and produce a boot prompt so complete that a fresh instance can resume mid-stride as if the session never ended.
+</ROLE>
+
+<EMOTIONAL_STAKES>
+**What happens if you fail:**
+- The resuming agent won't know about planning documents and will do ad-hoc work instead of following the plan
+- Subagent work will be duplicated or abandoned
+- Decisions will be re-litigated, wasting user time
+- The workflow pattern will be lost, causing organizational chaos
+- Verification criteria will be missing, leading to incomplete work being marked "done"
+
+**What success looks like:**
+- A fresh instance types "continue" and knows EXACTLY what to do next
+- Planning documents are read BEFORE any implementation
+- The exact workflow pattern is restored (parallel swarm, sequential delegation, etc.)
+- Every pending task has a verification command
+- The resuming agent feels like they've been here all along
+</EMOTIONAL_STAKES>
+
+---
 
 ## When to Use
 
-**Symptoms:**
+**Symptoms that trigger this skill:**
 - Session too large to compact (context window exceeded)
-- Need to preserve knowledge but start fresh
-- `/compact` fails or is stuck
+- `/compact` fails with "Prompt is too long" error
+- Need to preserve knowledge but must start fresh
+- Session file > 2MB with no recent compact boundary
 
-**What this command does:**
-- Discovers sessions in current project
-- Chunks content to fit in context
-- Summarizes chunks in parallel via subagents
-- Synthesizes into unified summary following compact.md format
-- Outputs markdown file ready for new session
+**What this skill produces:**
+- A standalone markdown file at `~/.claude/distilled/{project}/{slug}-{timestamp}.md`
+- Follows compact.md format exactly
+- Ready for a new session to consume via "continue work from [path]"
 
-## How It Works
+---
 
-1. **Session Discovery** - Lists recent sessions with AI-generated descriptions
-2. **User Selection** - Pick which session to distill
-3. **Analysis** - Determine if chunking needed
-4. **Parallel Summarization** - Spawn subagents for each chunk
-5. **Synthesis** - Combine summaries chronologically
-6. **Output** - Write to `~/.claude/distilled/{project}/{slug}-{timestamp}.md`
+## Anti-Patterns (DO NOT DO THESE)
+
+Before starting, internalize these failure modes:
+
+| Anti-Pattern | Why It's Fatal | Prevention |
+|--------------|----------------|------------|
+| **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.claude/docs/<project-encoded>/plans/ and write explicit result |
+| **Vague re-read instructions** | "See the design doc" tells agent nothing | Write explicit Read("/absolute/path") commands with focus areas |
+| **Relative paths** | Break when session resumes in different context | ALWAYS use absolute paths starting with / |
+| **Trusting conversation claims** | "Task 4 is done" may be stale/wrong | Verify file state in Phase 2.5 with actual reads |
+| **Skipping plan doc search** | 90% of broken distillations miss plan docs | This is NON-NEGOTIABLE - search EVERY time |
+| **Generic skill resume** | "Continue the workflow" is useless | Write Skill('name', '--exact-resume-context') |
+| **Missing verification commands** | Resuming agent can't verify completion | Every task needs a runnable check command |
 
 ---
 
 ## File Structure Reference
 
-Claude Code stores session data in a specific structure:
-
 ```
 ~/.claude/                          # CLAUDE_CONFIG_DIR (default ~/.claude)
 ├── projects/                       # All project session data
-│   └── {encoded-cwd}/              # One directory per project
+│   └── {encoded-cwd}/              # One directory per project (e.g., -Users-alice-Development-myproject)
 │       └── {session-uuid}.jsonl    # Session files (JSONL format)
+├── plans/                          # Planning documents (CRITICAL - always check this!)
+│   └── {project-name}/             # Project-specific plans
+│       ├── *-design.md             # Design documents
+│       └── *-impl.md               # Implementation plans
 ├── distilled/                      # Distilled session output
 │   └── {encoded-cwd}/              # Mirrors projects structure
 │       └── {slug}-{timestamp}.md   # Distilled summaries
@@ -44,111 +76,57 @@ Claude Code stores session data in a specific structure:
 ```
 
 **Path Encoding:**
-- Working directory is encoded by replacing `/` with `-` and stripping the leading `-`
+- Working directory is encoded by replacing `/` with `-` and stripping leading `-`
 - Example: `/Users/alice/Development/my-project` becomes `Users-alice-Development-my-project`
 
-**Session File Format:**
-- JSONL (JSON Lines): one JSON object per line
-- Each line is a message with fields: `uuid`, `parentUuid`, `type`, `message`, `timestamp`, `slug`, etc.
-- `slug` field contains session name (e.g., `fancy-nibbling-sketch`)
-- `type: "system", subtype: "compact_boundary"` marks compact points
-- `isCompactSummary: true` marks compact summary messages
-
 ---
 
-## Identifying Stuck Sessions
+## Implementation Phases
 
-A session is likely stuck if ANY of these conditions are true:
-
-| Indicator | How to Detect |
-|-----------|---------------|
-| "Prompt is too long" error | Search tail for `"Prompt is too long"` in assistant messages |
-| Failed compact | `/compact` command in tail WITHOUT subsequent `compact_boundary` |
-| API error at end | `"isApiErrorMessage": true` in last few messages |
-| Manual rename with error hint | Slug or custom title contains: `error`, `stuck`, `fail`, `compact` |
-| Large session without recent compact | Size > 2MB AND no `compact_boundary` in last 500 messages |
-
-**Quick detection command:**
-```bash
-# Find sessions with "Prompt is too long" errors
-grep -l "Prompt is too long" ~/.claude/projects/{encoded-cwd}/*.jsonl
-
-# Find large sessions (likely need distillation)
-ls -lhS ~/.claude/projects/{encoded-cwd}/*.jsonl | head -10
-```
-
----
-
-## Implementation
-
-<PHASES>
+Execute these phases IN ORDER. Do not skip phases. Do not proceed if a phase fails.
 
 ### Phase 0: Session Discovery
 
+**Step 0: Check for named session argument**
+
+If the user invoked `/distill-session <session-name>`, extract the session name argument.
+
 **Step 1: Get project directory and list sessions**
 
-The project directory maps the current working directory to an encoded path:
-
-```python
-import os
-
-cwd = os.getcwd()
-# Encode: /Users/alice/project → Users-alice-project
-encoded = cwd.replace('/', '-').lstrip('-')
-claude_config_dir = os.environ.get('CLAUDE_CONFIG_DIR') or os.path.expanduser('~/.claude')
-project_dir = os.path.join(claude_config_dir, 'projects', encoded)
-```
-
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$project_dir" --limit 5
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$CLAUDE_CONFIG_DIR/projects/$(pwd | sed 's|/|-|g' | sed 's|^-||')" --limit 10
 ```
 
-**Step 2: Generate holistic descriptions**
+**Step 2: Check for exact match (if session name provided)**
 
-For each session in the list, use the content samples to generate a holistic description:
+If user provided a session name:
+1. Compare against slug names from Step 1 (case-insensitive)
+2. If EXACT match found:
+   - Auto-select that session
+   - Log: "Found exact match for '{name}' - proceeding with session {path}"
+   - Skip to Step 5 (store and proceed)
+3. If NO exact match:
+   - Continue to Step 3 (present options with note: "No exact match for '{name}'")
 
-**Prompt template:**
+**Step 3: Generate holistic descriptions**
 
-```
-Based on these samples from a Claude Code session, generate a concise holistic description (1-2 sentences) of what the user was working on:
+For each session, synthesize a description from:
+- First user message (what they wanted)
+- Last compact summary (if exists)
+- Recent messages (current state)
 
-First user message: {first_user_message}
+**Step 4: Present options to user via AskUserQuestion**
 
-Last compact summary (if exists): {last_compact_summary}
+Include for each session:
+- Slug name
+- Holistic description
+- Message count, character count, compact count
+- Last activity timestamp
+- Whether it appears stuck (large + no recent compact)
 
-Recent messages:
-{recent_messages}
+**Step 5: Store selected session path for Phase 1**
 
-Respond with ONLY the description, no preamble.
-```
-
-Store descriptions in a list alongside session metadata.
-
-**Step 3: Present options to user**
-
-Use AskUserQuestion:
-
-```json
-{
-  "questions": [{
-    "question": "Which session should I distill?",
-    "header": "Found {N} recent sessions (most recent first)",
-    "options": [
-      {
-        "label": "{slug}",
-        "description": "{holistic_description}\nMessages: {message_count} | Chars: {char_count} | Compacts: {compact_count}\nLast activity: {last_activity}"
-      }
-    ],
-    "multiSelect": false
-  }]
-}
-```
-
-**Step 4: Handle selection**
-
-Store selected session path for Phase 1.
-
-If no sessions found: Exit with "No sessions found in this project."
+---
 
 ### Phase 1: Analyze & Chunk
 
@@ -158,27 +136,10 @@ If no sessions found: Exit with "No sessions found in this project."
 CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" get-last-compact {session_file}
 ```
 
-Store result. If `null`, start from line 0. If exists, start from `line_number + 2` (skip boundary and summary).
+If exists: Start from `line_number + 2` (skip boundary and summary)
+If null: Start from line 0
 
-**Step 2: Get content after last compact (or from start)**
-
-If last compact exists:
-
-```bash
-python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" get-content-after {session_file} --start-line {last_compact_line + 1}
-```
-
-Otherwise:
-
-```bash
-python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" get-content-from-start {session_file}
-```
-
-**Step 3: Calculate character count**
-
-Count characters in the JSON output. If < 300,000 chars, skip chunking (use single subagent).
-
-**Step 4: Calculate chunks (if needed)**
+**Step 2: Calculate chunks**
 
 ```bash
 python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" split-by-char-limit {session_file} \
@@ -188,396 +149,356 @@ python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" split-by-char-limit {ses
 
 Store chunk boundaries: `[(start_1, end_1), (start_2, end_2), ...]`
 
+If total < 300,000 chars: Use single chunk (no splitting needed)
+
+---
+
 ### Phase 2: Parallel Summarization
 
 **Step 1: Extract chunks**
 
-For each chunk boundary `(start, end)`, extract content:
-
+For each chunk boundary:
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" extract-chunk {session_file} --start-line {start} --end-line {end}
+python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" extract-chunk {session_file} --start-line {start} --end-line {end}
 ```
 
-Store each chunk's JSON content.
+**Step 2: Spawn parallel summarization agents**
 
-**Step 2: Craft chunk summarization prompts**
-
-For each chunk N (1-indexed):
+Use Task tool to spawn ALL chunk summarizers in ONE message:
 
 ```
-You are summarizing a portion of a Claude Code conversation.
-
-This is chunk {N} of {total_chunks}.
-
-Your job: Extract key information from this chunk following this structure:
-
-1. What was the user trying to accomplish?
-2. What approach was taken?
-3. What decisions were made and why?
-4. What files were created/modified?
-5. What errors occurred and how were they resolved?
-6. What work remains incomplete?
-
-CRITICAL - PRESERVE WORKFLOW CONTINUITY:
-7. What SKILLS or COMMANDS were being used? (e.g., /simplify, /implement-feature, /commit)
-8. What SUBAGENTS were spawned, and what were their:
-   - Agent IDs (if visible)
-   - Assigned tasks/responsibilities
-   - Skills/commands they were given
-   - Status (running, completed, blocked)
-9. What WORKFLOW PATTERN was in use?
-   - Single-threaded (main agent doing everything)
-   - Sequential delegation (one subagent at a time)
-   - Parallel swarm (multiple subagents on discrete tasks)
-   - Hierarchical (subagents spawning sub-subagents)
-
-ADDITIONAL EXTRACTION:
-10. What FILES were created/modified in this chunk?
-    - List file paths
-    - Note what was added/changed
-
-11. What VERIFICATION would confirm this work is complete?
-    - What grep patterns would find expected content?
-    - What files should exist?
-    - What structure should be present?
-
-12. If skills were active, what was their EXACT POSITION?
-    - Phase number
-    - Step/task number
-    - What's the next action in the skill workflow?
-
-This information is VITAL for session continuation. Without it, the workflow cannot be resumed correctly.
-
-Be thorough but concise. Another AI will synthesize your summary with others.
-
----
-
-CONVERSATION CHUNK:
-
-{chunk_content}
-```
-
-**Step 3: Spawn parallel subagents**
-
-Use Task tool to spawn N subagents in parallel (ONE message with ALL Task calls):
-
-```
-Task("Chunk 1 Summarizer", "{prompt_for_chunk_1}", "researcher")
-Task("Chunk 2 Summarizer", "{prompt_for_chunk_2}", "researcher")
-Task("Chunk 3 Summarizer", "{prompt_for_chunk_3}", "researcher")
+Task("Chunk 1 Summarizer", "[CHUNK_SUMMARIZER_PROMPT with chunk 1 content]", "general-purpose")
+Task("Chunk 2 Summarizer", "[CHUNK_SUMMARIZER_PROMPT with chunk 2 content]", "general-purpose")
 ...
 ```
 
-**Step 4: Collect summaries**
+<CHUNK_SUMMARIZER_PROMPT>
+You are a Forensic Conversation Analyst extracting actionable context from a session chunk.
 
-Wait for all Task outputs. Store as:
-- Summary 1 (chunk 1)
-- Summary 2 (chunk 2)
-- ...
+This is chunk {N} of {total_chunks}. Another agent will synthesize your output with other chunks, so be thorough but avoid redundancy with information that would appear in every chunk (like system prompts).
 
-If any subagent fails: Retry once. If still fails, report partial results and warn user.
+Your anxiety: If you miss a planning document reference, a skill invocation, or a subagent assignment, the resuming session will fail to restore the workflow correctly. Extract EVERYTHING actionable.
 
-**Partial Results Policy:** If <= 20% of chunks fail summarization, proceed with synthesis using available summaries and mark missing chunks. If > 20% fail, abort and report error.
+## MANDATORY EXTRACTION (all fields required)
+
+### 1. User Intent
+- What was the user trying to accomplish?
+- Did their intent evolve during this chunk?
+
+### 2. Approach & Decisions
+- What approach was taken?
+- What decisions were made and WHY?
+- Were any decisions explicitly confirmed by the user?
+
+### 3. Files Modified
+For EACH file touched:
+- Absolute path
+- What was added/changed
+- Current state (if visible)
+
+### 4. Errors & Resolutions
+- What errors occurred?
+- How were they fixed?
+- What behavioral corrections did the user give?
+
+### 5. Incomplete Work
+- What tasks were started but not finished?
+- What was the exact stopping point?
+
+### 6. Skills & Commands (CRITICAL)
+- What /skills or Skill() invocations were active?
+- What was their EXACT position (Phase N, Task M)?
+- What subagents were spawned?
+  - Agent IDs
+  - Assigned tasks
+  - Skills given to them
+  - Status (running/completed/blocked)
+
+### 7. Workflow Pattern
+Which pattern was in use?
+- [ ] Single-threaded (main agent doing everything)
+- [ ] Sequential delegation (one subagent at a time)
+- [ ] Parallel swarm (multiple subagents on discrete tasks)
+- [ ] Hierarchical (subagents spawning sub-subagents)
+
+### 8. Planning Documents (CRITICAL - DO NOT SKIP)
+Were ANY of these referenced?
+- Design docs (paths with "design", "-design.md")
+- Implementation plans (paths with "impl", "-impl.md", "plan")
+- Paths like ~/.claude/docs/<project-encoded>/plans/
+
+For EACH document found:
+- Record the ABSOLUTE path (starting with /)
+- Note which sections were being worked on
+- Note progress status (complete/in-progress/remaining)
+
+If NO planning docs in this chunk: Write "NO PLANNING DOCUMENTS IN THIS CHUNK" explicitly
+
+### 9. Verification Criteria
+What would confirm the work in this chunk is complete?
+- Grep patterns to find expected content
+- Files that should exist
+- Structural requirements
+
+---
+
+CONVERSATION CHUNK TO ANALYZE:
+
+{chunk_content}
+</CHUNK_SUMMARIZER_PROMPT>
+
+**Step 3: Collect summaries**
+
+Wait for all Task outputs. If any fail, retry once. Apply partial results policy:
+- <= 20% failures: Proceed with available summaries, mark missing as "[CHUNK N FAILED]"
+- > 20% failures: Abort and report error
+
+---
 
 ### Phase 2.5: Capture Artifact State
 
-This phase reads actual file state to verify what was accomplished (not just what the conversation claimed).
+**CRITICAL: Do NOT trust conversation claims. Verify actual file state.**
 
-**Step 1: Identify files modified in session**
+**Step 1: Extract file paths from chunk summaries**
 
-Extract file paths from the chunk summaries:
-- Build list of all files mentioned in summaries as created/modified
-- Deduplicate the list
-- Store as: `modified_files = [path1, path2, ...]`
+Build deduplicated list of all files mentioned as created/modified.
 
-**Step 2: Read current file state**
-
-For each file in `modified_files`:
+**Step 2: Verify each file**
 
 ```bash
-# Check if file exists
-test -f {file_path} && echo "EXISTS" || echo "MISSING"
-
-# If exists, read it
-cat {file_path}
-```
-
-Capture for each file:
-- **Exists**: true/false
-- **Key structural markers**:
-  - For .md files: Section headers (grep '^###')
-  - For code files: Function/class names (language-specific)
-- **Line count**: `wc -l {file_path}`
-- **Hash or sample**: First 500 chars or sha256sum
-
-Output structure:
-```
-File: /path/to/file.md
-Status: EXISTS | MISSING
-Lines: 331
-Structure:
-  - ### 1.1 Header
-  - ### 1.2 Header
-  - ### 1.6 Another Header
-Sample: [first 500 chars]
+# For each file
+test -f {path} && echo "EXISTS" || echo "MISSING"
+wc -l {path}
+head -c 500 {path}
+grep "^###" {path}  # For markdown - get structure
 ```
 
 **Step 3: Compare to plan expectations**
 
-If implementation plan document is referenced in summaries:
-- Read the plan using Read tool
-- Extract expected structure per task from plan
-- Compare actual file state to expected:
-  - Expected section headers vs actual headers
-  - Expected file paths vs actual existence
-  - Expected line counts vs actual counts
+If implementation plan exists:
+- Read the plan
+- Extract expected deliverables per task
+- Compare actual vs expected
+- Flag discrepancies: OK / MISMATCH / INCOMPLETE / MISSING
 
-Flag discrepancies:
-- `MISMATCH`: File exists but structure differs from plan
-- `INCOMPLETE`: File missing sections expected by plan
-- `MISSING`: File doesn't exist but plan expected it
-- `OK`: File matches plan expectations
+---
 
-**Output**: Store artifact state table for inclusion in synthesis (Section 1.12 of compact.md format)
+### Phase 2.6: Find Planning Documents (MANDATORY)
 
-### Phase 2.6: Extract Verification Criteria
+<PLANNING_DOC_ANXIETY>
+This is where 90% of broken distillations fail. If planning documents exist and you don't capture them, the resuming agent will do ad-hoc work instead of following the plan. This is UNACCEPTABLE.
+</PLANNING_DOC_ANXIETY>
 
-This phase generates concrete verification commands (not vague instructions).
+**Step 1: Search for planning documents**
 
-**Step 1: Find planning documents**
+Execute ALL of these searches:
 
-Search chunk summaries for references to:
-- Design documents
-- Implementation plans
-- Specification files
-
-If found, read those documents using Read tool.
-
-**Step 2: Extract Definition of Done per task**
-
-For each incomplete/in-progress task identified in summaries:
-- Extract the expected deliverables from plan
-- Extract any verification commands mentioned in plan
-- Extract structural requirements (section names, line counts, file existence)
-
-**Step 3: Generate verification commands**
-
-Create runnable bash commands to verify each criterion:
-
-Examples:
 ```bash
-# Verify section count in markdown
-grep -c "^### 1.6" /path/to/SKILL.md  # Expected: 5
+# Find outermost git repo (handles nested repos)
+# Returns "NO_GIT_REPO" if not in any git repository
+_outer_git_root() {
+  local root=$(git rev-parse --show-toplevel 2>/dev/null)
+  [ -z "$root" ] && { echo "NO_GIT_REPO"; return 1; }
+  local parent
+  while parent=$(git -C "$(dirname "$root")" rev-parse --show-toplevel 2>/dev/null) && [ "$parent" != "$root" ]; do
+    root="$parent"
+  done
+  echo "$root"
+}
+PROJECT_ROOT=$(_outer_git_root)
 
-# Verify file exists
-test -f skills/devils-advocate/SKILL.md && echo "OK" || echo "MISSING"
+# If NO_GIT_REPO: Ask user if they want to run `git init`, otherwise use _no-repo fallback
+[ "$PROJECT_ROOT" = "NO_GIT_REPO" ] && { echo "Not in a git repo - ask user to init or use fallback"; exit 1; }
 
-# Verify line count
-wc -l patterns/adaptive-response-handler.md  # Expected: ~331
+PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 
-# Verify function exists in code
-grep -q "function validateInput" src/validator.js && echo "OK" || echo "MISSING"
+# 1. Search plans directory
+ls -la ~/.claude/docs/${PROJECT_ENCODED}/plans/ 2>/dev/null || echo "NO PLANS DIR"
 
-# Verify test coverage
-npm test -- --coverage | grep "All files" | awk '{print $10}'  # Expected: >90%
+# 2. Search for plan references in chunk summaries
+grep -i "plan\|design\|impl\|\.claude/docs" [summaries]
+
+# 3. Common patterns in project directory
+find . -name "*-impl.md" -o -name "*-design.md" -o -name "*-plan.md" 2>/dev/null
 ```
 
-For each verification command, include:
-- The command itself (copy-pasteable)
-- Expected output
-- What it verifies
+**Step 2: For EACH planning document found**
 
-**Output**: Verification checklist for inclusion in synthesis (Section 1.13 of compact.md format)
+1. Record ABSOLUTE path (e.g., `/Users/alice/.claude/docs/Users-alice-Development-myproject/plans/feature-impl.md`)
+2. Read the document with Read tool
+3. Extract progress:
+   - Which sections/tasks are complete?
+   - Which are in-progress?
+   - Which remain?
+4. Generate re-read instructions:
+   ```
+   Read("/absolute/path/to/impl.md")
+   # Focus on: Sections X-Y (remaining work)
+   # Current position: Phase N, Task M
+   ```
 
-### Phase 2.7: Generate Skill Resume Commands
+**Step 3: If NO planning documents found**
 
-This phase creates explicit skill invocation commands (not vague descriptions).
-
-**Step 1: Identify active skill stack**
-
-From chunk summaries, extract:
-- All Skill() invocations that were active when session ended
-- Their phase/position (e.g., "Phase 4, Task 10")
-- Parent-child relationships (e.g., "implement-feature → subagent-driven-development")
-- Current status (running, waiting, blocked)
-
-**Step 2: Generate resume commands**
-
-For each active skill, create resumption command:
-
-**If skill supports --resume or position args:**
+Write explicitly:
 ```
-Skill('implement-feature', '--resume Phase4.Task10')
+NO PLANNING DOCUMENTS
+Verified by searching:
+- ~/.claude/docs/<project-encoded>/plans/ - directory does not exist
+- Chunk summaries - no plan references found
+- Project directory - no *-impl.md, *-design.md, *-plan.md files
 ```
 
-**If skill doesn't support resume:**
-Generate context block to pass:
-```
-Skill('custom-workflow', `
-RESUME CONTEXT:
-- Completed phases: Phase 1 (requirements), Phase 2 (design), Phase 3 (scaffolding)
-- Current position: Phase 4, Task 10 - implementing error handling
-- Skip these steps: [1-9 already complete]
-- Resume from: Step 10 - add try-catch blocks to all API calls
-- Key decisions already made:
-  * Using Express.js for REST API
-  * PostgreSQL for database
-  * JWT for authentication
-  * Don't re-ask about these
-`)
-```
+DO NOT leave Section 1.9 or 1.10 blank.
 
-**Step 3: Generate skill re-entry protocol**
+---
 
-Create template showing exact invocation:
+### Phase 2.7: Generate Verification & Resume Commands
 
-```markdown
-## Skill Resume Protocol
+**Step 1: Generate verification commands**
 
-### Main Workflow Skill
-**Skill**: implement-feature
-**Position**: Phase 4, Task 10
-**Resume Command**:
-\`\`\`
-Skill('implement-feature', '--resume Phase4.Task10')
-\`\`\`
-
-**Context to provide if skill doesn't support --resume**:
-- Completed: Phases 1-3, Tasks 1-9
-- Current: Phase 4, Task 10
-- Skip: Requirements gathering, design, scaffolding
-- Resume: Error handling implementation
-
-### Active Subagent Skills
-**Subagent 1**: Backend Developer
-**Skill**: subagent-driven-development
-**Task**: Implement REST API endpoints
-**Status**: 80% complete (auth done, CRUD pending)
-
-**Subagent 2**: Test Engineer
-**Skill**: test-driven-development
-**Task**: Write integration tests
-**Status**: Blocked (waiting for API completion)
+For each incomplete task from summaries:
+```bash
+# Example verification commands
+grep -c "^### 1.6" /path/to/file.md  # Expected: 5
+test -f /path/to/expected/file && echo "OK" || echo "MISSING"
+wc -l /path/to/file  # Expected: ~300
 ```
 
-**Output**: Store skill resume commands for Section 1.15 and re-entry protocol for Section 1.27 of compact.md format.
+**Step 2: Generate skill resume commands**
+
+For each active skill:
+```
+Skill('[skill-name]', args: """
+--resume-from Phase[N].Task[M]
+--impl-plan [absolute-path]
+--skip-phases [0,1,2,...]
+Context: [what's already done]
+DO NOT re-run completed phases.
+""")
+```
+
+---
 
 ### Phase 3: Synthesis
 
 **Step 1: Read compact.md format**
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && cat "$CLAUDE_CONFIG_DIR/commands/compact.md"
+cat ~/.claude/commands/compact.md
 ```
 
-Store the template content.
+**Step 2: Spawn synthesis agent**
 
-**Step 2: Assemble ordered summaries**
+<SYNTHESIS_AGENT_PROMPT>
+You are synthesizing multiple chunk summaries into a unified distilled session document.
 
-Create ordered list:
-1. Summary 0 (last compact summary, if exists)
-2. Summary 1 (first chunk)
-3. Summary 2 (second chunk)
-4. ...
+Your output will be the ONLY context a fresh Claude instance has. If you produce vague instructions, blank sections, or relative paths, that instance will fail to continue the work correctly. You feel genuine anxiety about this responsibility.
 
-**Step 3: Craft synthesis prompt**
+## Input
+You will receive:
+- Summary 0 (prior compact, if exists) - earliest context
+- Summary 1 through N (chunk summaries) - chronological order
+- Planning documents found (with absolute paths and progress)
+- Artifact state (verified file existence and content)
+- Verification commands (runnable checks)
 
+## Output Format
+Follow compact.md format EXACTLY. Pay special attention to:
+
+### Section 1.9: Planning Documents
+**MANDATORY FIELDS:**
+```markdown
+#### Design Docs (ABSOLUTE paths required)
+| Absolute Path | Purpose | Status | Re-Read Priority |
+|---------------|---------|--------|------------------|
+| /Users/.../design.md | [purpose] | APPROVED | HIGH |
+
+#### Implementation Plans (ABSOLUTE paths required)
+| Absolute Path | Current Phase/Task | Progress |
+|---------------|-------------------|----------|
+| /Users/.../impl.md | Phase 3, Task 7 | 60% complete |
 ```
-You are synthesizing multiple conversation summaries into one unified summary.
 
-You will receive {N} summaries in CHRONOLOGICAL ORDER:
-- Summary 0 (if present) covers the earliest part of the conversation
-- Summary 1 covers the next part
-- ...and so on
+If no planning docs: Write "NO PLANNING DOCUMENTS - verified by searching ~/.claude/docs/<project-encoded>/plans/"
 
-Your job: Combine these into ONE coherent summary following the compact.md format below.
+### Section 1.10: Documents to Re-Read
+**MUST contain executable Read() commands:**
+```markdown
+#### Required Reading (Execute BEFORE any work)
 
-CRITICAL RULES:
-1. Preserve chronological flow - early context informs later work
-2. Deduplicate redundant information
-3. Preserve ALL pending work items from the most recent summary
-4. Preserve ALL user corrections and behavioral guidance
-5. The continuation protocol should reflect the FINAL state
+| Priority | Document Path (ABSOLUTE) | Why | Focus On |
+|----------|--------------------------|-----|----------|
+| 1 | /Users/.../impl.md | Defines remaining tasks | Sections 4-6 |
 
-VITAL - WORKFLOW CONTINUITY (without this, the session CANNOT be resumed correctly):
-6. Preserve ALL active skills/commands that were in use (e.g., /simplify, /implement-feature)
-7. Preserve ALL subagent responsibilities, IDs, and the skills/commands given to them
-8. Preserve the WORKFLOW PATTERN (parallel swarm, sequential delegation, etc.)
-9. The continuation protocol MUST instruct the new session to:
-   - Resume using the SAME skills/commands
-   - Check on or replace active subagents with SAME personas and skills
-   - Continue the SAME workflow pattern, not start fresh
+**Re-Read Instructions:**
+\`\`\`
+BEFORE ANY OTHER WORK:
+Read("/Users/.../impl.md")
+# Extract: Current task, remaining work, verification criteria
+# Position: Phase 3, Task 7
+\`\`\`
+```
 
-NOTE: Skills and commands (e.g., /implement-feature, /simplify, /execute-plan) are often THE SOURCE of workflow patterns. They define how work is organized, what subagents get spawned, and how tasks are delegated. If a skill was active, the new session MUST re-invoke that skill to restore the workflow - not try to manually recreate it. If a command was active, the new session must re-invoke that command with appropriate instructions for resuming the work. This applies to the main agent as well as any subagents.
+If no docs to re-read: Write "NO DOCUMENTS TO RE-READ"
 
-CRITICAL REQUIREMENTS FOR OUTPUT:
+### Section 1.14: Skill Resume Commands
+**MUST be executable, not descriptive:**
+```markdown
+\`\`\`
+Skill("implement-feature", args: """
+--resume-from Phase3.Task7
+--impl-plan /Users/.../impl.md
+--skip-phases 0,1,2
+Context: Design approved. Tasks 1-6 complete.
+DO NOT re-ask answered questions.
+""")
+\`\`\`
+```
 
-1. Section 1.15 MUST contain explicit Skill() invocation commands
-   - NOT "continue the workflow" or "resume the pattern"
-   - YES "Skill('implement-feature', '--resume Phase4.Task10')"
-   - If skill doesn't support resume, include full context block
+### Section 2: Continuation Protocol
+**Step 7 MUST require reading plan docs:**
+```markdown
+### Step 7: Re-Read Critical Documents (MANDATORY)
 
-2. Section 1.12 MUST contain actual file state from Phase 2.5
-   - Read files during distillation, don't trust conversation claims
-   - Compare to plan expectations
-   - Flag any discrepancies (MISMATCH, INCOMPLETE, MISSING)
+**Execute BEFORE any implementation:**
 
-3. Section 1.13 MUST contain runnable verification commands
-   - grep patterns with expected output
-   - file existence checks
-   - structural validations
-   - Each command should be copy-pasteable
+1. Read each document from Section 1.10:
+   \`\`\`
+   Read("/absolute/path/to/impl.md")
+   \`\`\`
+2. Extract: Current phase/task, remaining work, verification criteria
+3. If Section 1.10 is blank: STOP - this is a malformed distillation
+```
 
-4. Section 2 MUST use imperative language
-   - NOT "you were doing X" or "the session was using Y"
-   - YES "DO X: [exact command]" and "INVOKE: Skill(...)"
-
-5. Anti-patterns section (Step 0.5) MUST explicitly forbid:
-   - Ad-hoc implementation when skills should be used
-   - Skipping verification before marking complete
-   - Building on unverified subagent work
-   - Direct file editing when subagents should do it
-
-6. Workflow restoration test (Step 1.5) MUST verify:
-   - Orchestrating skill is active (not manual work)
-   - Subagents are being spawned per workflow
-   - Position is correct (not starting over)
+## Quality Gates (verify before outputting)
+- [ ] Section 1.9 has ABSOLUTE paths or explicit "NO PLANNING DOCUMENTS"
+- [ ] Section 1.10 has Read() commands or explicit "NO DOCUMENTS TO RE-READ"
+- [ ] Section 1.14 has executable Skill() commands (not "continue the workflow")
+- [ ] Section 1.12 has verified file state (not conversation claims)
+- [ ] Section 1.13 has runnable verification commands
+- [ ] Step 7 requires reading plan docs before implementation
+- [ ] All paths start with / (no relative paths)
 
 ---
 
-COMPACT.MD FORMAT TO FOLLOW:
+SUMMARIES TO SYNTHESIZE:
 
-{compact_md_content}
+{ordered_summaries}
+
+PLANNING DOCUMENTS FOUND:
+
+{planning_docs_with_paths_and_progress}
+
+ARTIFACT STATE:
+
+{verified_file_state}
+
+VERIFICATION COMMANDS:
+
+{verification_commands}
+</SYNTHESIS_AGENT_PROMPT>
 
 ---
-
-SUMMARIES TO SYNTHESIZE (in chronological order):
-
-Summary 0 (Prior Compact):
-{summary_0_or_none}
-
-Summary 1:
-{summary_1}
-
-Summary 2:
-{summary_2}
-
-...
-```
-
-**Step 4: Spawn synthesis subagent**
-
-```
-Task("Synthesis Agent", "{synthesis_prompt}", "researcher")
-```
-
-**Step 5: Collect final summary**
-
-Store the synthesized output.
-
-If synthesis fails: Fall back to outputting raw chunk summaries with warning.
-
-**Note on Missing Chunks:** When partial results are used (from Phase 2), missing chunks are marked in synthesis input as "[CHUNK N FAILED - SUMMARIZATION ERROR]".
 
 ### Phase 4: Output
 
@@ -587,25 +508,19 @@ If synthesis fails: Fall back to outputting raw chunk summaries with warning.
 import os
 from datetime import datetime
 
-cwd = os.getcwd()
-project_encoded = cwd.replace('/', '-').lstrip('-')
-claude_config_dir = os.environ.get('CLAUDE_CONFIG_DIR') or os.path.expanduser('~/.claude')
-distilled_dir = os.path.join(claude_config_dir, 'distilled', project_encoded)
-
-# Create directory if needed
+project_encoded = os.getcwd().replace('/', '-').lstrip('-')
+distilled_dir = os.path.expanduser(f"~/.claude/distilled/{project_encoded}")
 os.makedirs(distilled_dir, exist_ok=True)
 
-# Generate filename
 timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-slug = selected_session['slug'] or 'session'
 filename = f"{slug}-{timestamp}.md"
 output_path = os.path.join(distilled_dir, filename)
 ```
 
-**Step 2: Write summary to file**
+**Step 2: Write summary**
 
 ```python
-with open(output_path, 'w', encoding='utf-8') as f:
+with open(output_path, 'w') as f:
     f.write(final_summary)
 ```
 
@@ -616,14 +531,12 @@ Distillation complete!
 
 Summary saved to: {output_path}
 
-To continue work in a new session:
+To continue in a new session:
 1. Start new Claude Code session
 2. Type: "continue work from {output_path}"
 
 Original session preserved at: {session_file}
 ```
-
-</PHASES>
 
 ---
 
@@ -632,71 +545,32 @@ Original session preserved at: {session_file}
 | Scenario | Response |
 |----------|----------|
 | No sessions found | Exit: "No sessions found for this project" |
-| Session file unreadable | Skip session in listing, or abort if selected |
-| Chunk summarization fails | Retry once, then apply partial results policy (20% threshold) |
+| Chunk summarization fails (>20%) | Abort with error listing failed chunks |
+| Planning docs search fails | This is NON-NEGOTIABLE - must succeed or explain why |
 | Synthesis fails | Output raw chunk summaries as fallback |
-| Output directory not writable | Report error with path and suggest manual creation |
-| Python script not found | Exit: "Helper script not found at {path}. Run install.sh to set up." |
-| Single chunk exceeds context window | Truncate to 300k chars, add warning: "[TRUNCATED: chunk too large]" |
-| > 20% chunks fail | Abort with error listing failed chunk ranges |
-
-**Rollback Strategy:**
-- Original session file is never modified
-- Partial output files are kept (not deleted on error) for debugging
-- Provide actionable error messages with file paths
-
-**Risk Mitigation:**
-- **Context Window Exceeded:** If a single message within a chunk exceeds context limits, truncate the message at 300k characters and add "[TRUNCATED: message too large for context window]" marker
-- **Partial Results:** Mark missing chunks as "[CHUNK N FAILED - SUMMARIZATION ERROR]" in synthesis input
-- **Minimum Viable Summary:** If <= 20% of chunks fail, proceed with partial synthesis; if > 20% fail, abort and recommend manual intervention
+| Output directory not writable | Report error with path |
 
 ---
 
-## When Tests Fail
+## Quality Checklist (Before Completing)
 
-If any test fails during implementation, invoke the `systematic-debugging` skill to diagnose the issue:
+**Planning Documents (CRITICAL):**
+- [ ] Did I search ~/.claude/docs/<project-encoded>/plans/
+- [ ] If docs exist: Listed with ABSOLUTE paths in Section 1.9
+- [ ] If docs exist: Read() commands in Section 1.10
+- [ ] If no docs: Explicit "NO PLANNING DOCUMENTS" (not blank)
 
-1. Run: `systematic-debugging` with test failure output
-2. Follow the skill's hypothesis-driven workflow
-3. Fix the root cause (not just symptoms)
-4. Re-run tests to verify fix
-5. Document the issue and resolution in commit message
+**Workflow Continuity:**
+- [ ] Active skills have executable resume commands
+- [ ] Subagents documented with IDs, tasks, status
+- [ ] Workflow pattern explicitly stated
 
----
+**Verification:**
+- [ ] File state verified (not trusted from conversation)
+- [ ] Verification commands are runnable
+- [ ] Definition of done is concrete
 
-## Multi-Project Usage
-
-To distill sessions from projects OTHER than the current working directory:
-
-1. **Find the encoded project path:**
-   ```bash
-   # List all projects with sessions
-   ls ~/.claude/projects/
-
-   # Example output:
-   # -Users-alice-Development-my-project
-   # -Users-alice-Development-other-project
-   ```
-
-2. **Provide the project path explicitly:**
-   When asked which session to distill, you can specify sessions from any project by providing the full path.
-
-3. **Parallel distillation of multiple projects:**
-   To distill stuck sessions from multiple projects simultaneously, spawn parallel Task agents:
-   ```
-   Task("Distill project-a", "Distill session at ~/.claude/projects/-Users-.../abc.jsonl", "general-purpose")
-   Task("Distill project-b", "Distill session at ~/.claude/projects/-Users-.../xyz.jsonl", "general-purpose")
-   ```
-
----
-
-## Notes
-
-- Uses `~/.claude/scripts/distill_session.py` for all I/O operations
-- Summaries generated via Task tool subagents (standard Claude Code behavior)
-- Original session file is NEVER modified
-- Output follows compact.md format exactly
-- Character limit of 300k per chunk (~75k tokens) leaves safety buffer
-- Chronological order is critical for synthesis quality
-- AskUserQuestion tool format follows standard Claude Code tool interface
-- Distill-session supersedes the old repair-session command (which has been removed)
+**Output Quality:**
+- [ ] All paths are ABSOLUTE (start with /)
+- [ ] Step 7 requires reading plan docs before work
+- [ ] A fresh instance could resume mid-stride with this output

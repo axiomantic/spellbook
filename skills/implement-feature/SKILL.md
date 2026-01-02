@@ -122,11 +122,46 @@ All preferences are collected upfront to enable fully autonomous mode. If the us
 | "using impl plan \<path\>" or "with impl plan \<path\>" | Skip Phases 2-3, load existing plan, start at Phase 4 |
 | "just implement, no docs" or "quick implementation" | Skip Phases 2-3, create minimal inline plan, start Phase 4 |
 
-If escape hatch detected, confirm with user:
+If escape hatch detected, ask via AskUserQuestion:
+
+```markdown
+## Existing Document Detected
+
+I see you have an existing [design doc/impl plan] at <path>.
+
+Header: "Document handling"
+Question: "How should I handle this existing document?"
+
+Options:
+- Review first (Recommended)
+  Description: Run the reviewer skill on this document before proceeding, addressing any findings
+- Treat as ready
+  Description: Accept this document as-is and proceed directly to [Phase 3/Phase 4]
 ```
-"I see you have an existing [design doc/impl plan] at <path>.
-I'll use that and skip to [Phase 3/Phase 4]. Is that correct?"
-```
+
+**Handle by choice:**
+
+**Review first (design doc):**
+1. Skip Phase 2.1 (Create Design Document)
+2. Load the existing design doc
+3. Jump to Phase 2.2 (Review Design Document)
+4. Continue normal flow from there (review → approval gate → fix → Phase 3)
+
+**Review first (impl plan):**
+1. Skip Phases 2.1-3.1 (assumes design is complete)
+2. Load the existing impl plan
+3. Jump to Phase 3.2 (Review Implementation Plan)
+4. Continue normal flow from there (review → approval gate → fix → Phase 4)
+
+**Treat as ready (design doc):**
+1. Load the existing design doc
+2. Skip entire Phase 2 (no creation, no review, no fixes)
+3. Start at Phase 3
+
+**Treat as ready (impl plan):**
+1. Load the existing impl plan
+2. Skip Phases 2-3 entirely
+3. Start at Phase 4
 
 ### 0.2 Clarify the Feature (Lightweight)
 
@@ -208,7 +243,11 @@ SESSION_PREFERENCES = {
     worktree: "single" | "per_parallel_track" | "none",
     worktree_paths: [],  # Filled during Phase 4.1 if per_parallel_track
     post_impl: "offer_options" | "auto_pr" | "stop",
-    escape_hatch: null | { type: "design_doc" | "impl_plan", path: string }
+    escape_hatch: null | {
+        type: "design_doc" | "impl_plan",
+        path: string,
+        handling: "review_first" | "treat_as_ready"  # User's choice from 0.1
+    }
 }
 
 SESSION_CONTEXT = {
@@ -942,10 +981,32 @@ IF completeness_score == 100:
 ### 1.5.6 Understanding Document Validation Gate
 
 **FILE PATH:**
-- Base: `$CLAUDE_CONFIG_DIR/understanding-docs/` (defaults to `~/.claude/understanding-docs/`)
+- Base: `$CLAUDE_CONFIG_DIR/docs/<project-encoded>/understanding/` (defaults to `~/.claude/docs/<project-encoded>/understanding/`)
 - Format: `understanding-[feature-slug]-[timestamp].md`
 
-**SLUG GENERATION:**
+**PROJECT ENCODED PATH GENERATION:**
+```bash
+# Find outermost git repo (handles nested repos like submodules/vendor)
+# Returns "NO_GIT_REPO" if not in any git repository
+_outer_git_root() {
+  local root=$(git rev-parse --show-toplevel 2>/dev/null)
+  [ -z "$root" ] && { echo "NO_GIT_REPO"; return 1; }
+  local parent
+  while parent=$(git -C "$(dirname "$root")" rev-parse --show-toplevel 2>/dev/null) && [ "$parent" != "$root" ]; do
+    root="$parent"
+  done
+  echo "$root"
+}
+PROJECT_ROOT=$(_outer_git_root)
+```
+
+**If `PROJECT_ROOT` is "NO_GIT_REPO":** Ask user if they want to run `git init`. If no, use fallback: `~/.claude/docs/_no-repo/$(basename "$PWD")/understanding/`
+
+```bash
+PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
+```
+
+**FEATURE SLUG GENERATION:**
 1. Take feature_essence
 2. Lowercase, replace spaces with hyphens
 3. Remove special chars (keep a-z, 0-9, hyphens)
@@ -956,7 +1017,7 @@ IF completeness_score == 100:
 
 **DIRECTORY CREATION:**
 1. Check if directory exists
-2. If not: `mkdir -p $CLAUDE_CONFIG_DIR/understanding-docs/`
+2. If not: `mkdir -p $CLAUDE_CONFIG_DIR/docs/${PROJECT_ENCODED}/understanding/`
 3. If fails: Fallback to `/tmp/understanding-[slug]-[timestamp].md`
 
 **GENERATE UNDERSTANDING DOCUMENT:**
@@ -1197,7 +1258,12 @@ Your choice: ___
 ## Phase 2: Design
 
 <CRITICAL>
-Skip this phase ONLY if escape hatch "using design doc \<path\>" was detected and confirmed.
+Phase behavior depends on escape hatch handling:
+
+- **No escape hatch:** Run full Phase 2 (create → review → fix)
+- **Design doc with "review first":** Skip 2.1 (creation), start at 2.2 (review)
+- **Design doc with "treat as ready":** Skip entire Phase 2, proceed to Phase 3
+- **Impl plan escape hatch:** Skip entire Phase 2 (design assumed complete)
 </CRITICAL>
 
 ### 2.1 Create Design Document
@@ -1230,7 +1296,7 @@ Task (general-purpose):
     2. Skip the "Exploring approaches" questions - decisions are made
     3. Go directly to "Presenting the design" - write the full design
     4. Do NOT ask "does this look right so far" - proceed through all sections
-    5. Save to: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    5. Save to: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
     6. Commit the design document when done
 
     If you encounter a circuit breaker condition (security-critical, contradictory requirements),
@@ -1250,7 +1316,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Design document location: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Design document location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     Return the complete findings report with remediation plan.
 ```
@@ -1306,7 +1372,7 @@ Task (general-purpose):
     Review findings to address:
     [Paste complete findings report and remediation plan]
 
-    Design document location: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Design document location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     Address ALL items - critical, important, AND minor.
     Commit changes when done.
@@ -1317,7 +1383,11 @@ Task (general-purpose):
 ## Phase 3: Implementation Planning
 
 <CRITICAL>
-Skip this phase ONLY if escape hatch "using impl plan \<path\>" was detected and confirmed.
+Phase behavior depends on escape hatch handling:
+
+- **No escape hatch:** Run full Phase 3 (create → review → fix)
+- **Impl plan with "review first":** Skip 3.1 (creation), start at 3.2 (review)
+- **Impl plan with "treat as ready":** Skip entire Phase 3, proceed to Phase 4
 </CRITICAL>
 
 ### 3.1 Create Implementation Plan
@@ -1333,13 +1403,13 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Design document: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     User's parallelization preference: [maximize/conservative/ask]
     - If maximize: group independent tasks into parallel groups
     - If conservative: default to sequential
 
-    Save implementation plan to: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Save implementation plan to: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
 ```
 
 ### 3.2 Review Implementation Plan
@@ -1355,8 +1425,8 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan location: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
-    Parent design document: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Parent design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     Return the complete findings report with remediation plan.
 ```
@@ -1381,8 +1451,8 @@ Task (general-purpose):
     Review findings to address:
     [Paste complete findings report and remediation plan]
 
-    Implementation plan location: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
-    Parent design document: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Parent design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     Pay special attention to interface contracts between parallel work.
     Commit changes when done.
@@ -1441,7 +1511,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Tasks to execute: [list setup tasks by number]
 
     These tasks create shared interfaces, type definitions, and stubs that parallel
@@ -1517,7 +1587,7 @@ For each worktree in SESSION_PREFERENCES.worktree_paths:
 
       ## Context for the Skill
 
-      Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+      Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
       Tasks to execute: [worktree.tasks]
       Working directory: [worktree.path]
 
@@ -1550,7 +1620,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Working directory: [worktree path or current directory]
 
     Group tasks by their "Parallel Group" field.
@@ -1570,7 +1640,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Working directory: [worktree path or current directory]
 
     Execute tasks one at a time with code review after each.
@@ -1602,7 +1672,7 @@ Task (general-purpose):
     - Tasks implemented: [worktree.tasks]
     - Depends on: [worktree.depends_on]
 
-    Interface contracts: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Interface contracts: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     (See "Interface Contracts" section of the implementation plan)
 
     After successful merge:
@@ -1627,7 +1697,7 @@ Task (general-purpose):
 
     ## Context for the Skill
 
-    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Task number: N
     Working directory: [worktree path or current directory]
 
@@ -1653,7 +1723,7 @@ Task (general-purpose):
     ## Context for the Skill
 
     What was implemented: [from implementation subagent's report]
-    Plan/requirements: Task N from $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Plan/requirements: Task N from $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Base SHA: [commit before task]
     Head SHA: [commit after task]
 
@@ -1749,8 +1819,8 @@ Task (general-purpose):
     Scope: All files created/modified in this feature
     [Complete list of all files]
 
-    Design document: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md
-    Implementation plan: $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md
+    Design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
 
     This is the final claim validation gate.
     Cross-reference claims against design doc and implementation plan.
@@ -1865,13 +1935,16 @@ def handle_review_checkpoint(findings, mode):
 
 | User Says | Detection Pattern | Action |
 |-----------|------------------|--------|
-| "implement X using design doc $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/foo.md" | "using design doc \<path\>" | Skip Phase 2, load existing design, start at Phase 3 |
-| "implement X with the design at $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/foo.md" | "with design doc \<path\>" | Skip Phase 2, load existing design, start at Phase 3 |
-| "implement X using impl plan $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/bar.md" | "using impl plan \<path\>" | Skip Phases 2-3, load existing plan, start at Phase 4 |
-| "implement X with the implementation plan at $CLAUDE_CONFIG_DIR/plans/<project-dir-name>/bar.md" | "with impl plan \<path\>" | Skip Phases 2-3, load existing plan, start at Phase 4 |
+| "implement X using design doc ..." | "using design doc \<path\>" | Ask: review first OR treat as ready |
+| "implement X with the design at ..." | "with design doc \<path\>" | Ask: review first OR treat as ready |
+| "implement X using impl plan ..." | "using impl plan \<path\>" | Ask: review first OR treat as ready |
+| "implement X with the implementation plan at ..." | "with impl plan \<path\>" | Ask: review first OR treat as ready |
 | "just implement X, no docs needed" | "just implement" or "no docs" | Skip Phases 2-3, create minimal inline plan, start Phase 4 |
 
-<RULE>When escape hatch detected, ALWAYS confirm with user before proceeding.</RULE>
+<RULE>When escape hatch detected with existing doc, ALWAYS ask user whether to review or treat as ready.</RULE>
+
+**Review first:** Jump to the review phase for that doc type, then continue normal flow.
+**Treat as ready:** Skip directly past the doc's creation and review phases.
 
 ---
 
@@ -1907,8 +1980,8 @@ Subagent prompts provide CONTEXT for the skill, not duplicated instructions.
 
 | Document | Path |
 |----------|------|
-| Design Document | `$CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-design.md` |
-| Implementation Plan | `$CLAUDE_CONFIG_DIR/plans/<project-dir-name>/YYYY-MM-DD-[feature-slug]-impl.md` |
+| Design Document | `$CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md` |
+| Implementation Plan | `$CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md` |
 
 ---
 

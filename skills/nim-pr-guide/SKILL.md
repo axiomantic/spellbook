@@ -375,6 +375,107 @@ Based on comment analysis of 154 merged PRs:
 
 ---
 
+## Dependent PR Chains
+
+When work naturally divides into multiple dependent PRs, the Nim project has implicit patterns based on contributor experience.
+
+### The Problem with PR Chains
+
+GitHub does not natively support stacked/dependent PRs. Each subsequent PR in a chain contains all changes from preceding PRs until those are merged. This creates:
+- Difficult-to-review diffs (reviewers see accumulated changes)
+- Risk of wasted effort (if base PR is rejected, all descendants die)
+- Merge conflict complexity when base PRs change during review
+
+### Recommended Approach: Sequential Submission
+
+<RULE>Wait for each PR to merge before submitting the next in a dependency chain.</RULE>
+
+**Why this works:**
+- Each PR reviewed in isolation with clean diff
+- No wasted effort on downstream PRs if base needs changes
+- Clear review scope for maintainers
+- Avoids confusing "depends on PR #X" gymnastics
+
+**Proven pattern (from contributor experience):**
+```
+PR1: "System cleanup, part 1" → merged
+PR2: "System cleanup, part 2" → submitted AFTER PR1 merged
+```
+
+Contributors who waited between submissions had higher merge success rates than those who submitted chains simultaneously.
+
+### When Sequential Isn't Possible
+
+If you must have work visible before base merges (e.g., showing direction, getting early feedback):
+
+**Option A: Draft PR with explicit dependency**
+```markdown
+## ⚠️ Draft - Depends on #XXXX
+
+This PR builds on #XXXX and should not be reviewed until that merges.
+Once #XXXX merges, I will rebase and mark ready for review.
+
+[Rest of description showing intended changes]
+```
+
+**Option B: Combine into single PR (if truly tightly coupled)**
+- If changes genuinely cannot be separated meaningfully
+- Use clear commit structure within the single PR
+- Accept longer review time for larger scope
+
+### How to Communicate Dependencies
+
+If submitting before base merges, include in PR description:
+
+```markdown
+## Dependencies
+
+- Requires #XXXX (feature/branch-name) to merge first
+
+## Changes Specific to This PR
+
+[List ONLY what this PR adds beyond the dependency]
+```
+
+### What NOT to Do
+
+<FORBIDDEN>
+### Dependency Chain Anti-Patterns
+
+1. **Submitting full chain simultaneously** - Creates review confusion, wastes effort if base rejected
+2. **Expecting reviewers to check out your branch** - They review the GitHub diff
+3. **Hiding dependencies** - Always explicitly state "depends on #X"
+4. **Reducing scope instead of proper splitting** - When asked to split, create genuinely independent PRs, don't just remove features from existing PR
+5. **Creating continuation PRs before base is accepted** - Wait for at least soft approval
+</FORBIDDEN>
+
+### Decision Framework for Dependencies
+
+```
+IF work is truly interdependent (A required for B to compile):
+  → Submit A first, wait for merge, then submit B
+
+IF work is conceptually related but independently valuable:
+  → Submit as separate PRs targeting devel, not as chain
+
+IF you want early feedback on full direction:
+  → Submit base PR as ready, subsequent as Draft with explicit dependency note
+
+IF base PR faces resistance:
+  → Do NOT submit dependent PRs until base is accepted
+  → Consider the chain dead if base is rejected
+```
+
+### Series Naming
+
+For related work that will be submitted sequentially:
+
+- Use clear part numbers: "Feature X, part 1", "Feature X, part 2"
+- Reference prior PRs: "Continuation of #XXXX"
+- Each part should compile and pass tests independently
+
+---
+
 ## Common Pitfalls
 
 <FORBIDDEN>
@@ -388,6 +489,7 @@ Based on comment analysis of 154 merged PRs:
 6. **Breaking changes without RFC** - Won't be merged
 7. **Missing tests** - Will be requested, delays merge
 8. **Generic titles** - "Patch 24922" tells reviewer nothing
+9. **Submitting dependent PRs before base merges** - Risk of wasted effort
 </FORBIDDEN>
 
 ---
@@ -404,6 +506,8 @@ Based on comment analysis of 154 merged PRs:
 | No issue in branch name | "No issue reference detected. Ensure you have an issue to reference in PR title." |
 | Staged changes touch different modules than existing | "Staged changes touch {modules} but branch work is in {other_modules}. Consider separate branch." |
 | Commit message lacks issue ref | "Commit message should reference issue: 'fixes #ISSUE; description'" |
+| Branch based on unmerged feature branch | "This branch is based on {base_branch} which has not merged. Wait for that PR to merge before submitting this one." |
+| Multiple PRs in flight with dependencies | "You have unmerged PRs that this work depends on. Sequential submission is recommended." |
 
 ---
 

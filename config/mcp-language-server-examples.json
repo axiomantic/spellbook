@@ -1,0 +1,181 @@
+{
+  "description": "MCP Language Server configuration examples for Claude Code",
+  "note": "Replace /path/to/project with your actual project path. Add one configuration per project to your Claude MCP config.",
+
+  "examples": {
+    "python_pyright": {
+      "description": "Python projects using pyright language server",
+      "installation": "npm install -g pyright",
+      "config": {
+        "mcpServers": {
+          "language-server-python": {
+            "command": "mcp-language-server",
+            "args": [
+              "--workspace",
+              "/path/to/your/python-project",
+              "--lsp",
+              "pyright-langserver",
+              "--",
+              "--stdio"
+            ],
+            "env": {}
+          }
+        }
+      }
+    },
+
+    "nim_nimlangserver": {
+      "description": "Nim projects using nimlangserver",
+      "installation": "nimble install nimlangserver",
+      "config": {
+        "mcpServers": {
+          "language-server-nim": {
+            "command": "mcp-language-server",
+            "args": [
+              "--workspace",
+              "/path/to/your/nim-project",
+              "--lsp",
+              "nimlangserver",
+              "--",
+              "--stdio"
+            ],
+            "env": {}
+          }
+        }
+      }
+    },
+
+    "typescript_ts_server": {
+      "description": "TypeScript/JavaScript projects using typescript-language-server",
+      "installation": "npm install -g typescript typescript-language-server",
+      "config": {
+        "mcpServers": {
+          "language-server-typescript": {
+            "command": "mcp-language-server",
+            "args": [
+              "--workspace",
+              "/path/to/your/typescript-project",
+              "--lsp",
+              "typescript-language-server",
+              "--",
+              "--stdio"
+            ],
+            "env": {}
+          }
+        }
+      }
+    },
+
+    "cpp_clangd": {
+      "description": "C/C++ projects using clangd",
+      "installation_macos": "brew install llvm",
+      "installation_linux": "apt install clangd (or pacman -S clang)",
+      "config": {
+        "mcpServers": {
+          "language-server-cpp": {
+            "command": "mcp-language-server",
+            "args": [
+              "--workspace",
+              "/path/to/your/cpp-project",
+              "--lsp",
+              "clangd",
+              "--",
+              "--compile-commands-dir=/path/to/your/cpp-project/build"
+            ],
+            "env": {}
+          }
+        }
+      },
+      "notes": [
+        "Requires compile_commands.json in your build directory",
+        "Generate with: cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+      ]
+    },
+
+    "rust_rust_analyzer": {
+      "description": "Rust projects using rust-analyzer",
+      "installation": "rustup component add rust-analyzer",
+      "config": {
+        "mcpServers": {
+          "language-server-rust": {
+            "command": "mcp-language-server",
+            "args": [
+              "--workspace",
+              "/path/to/your/rust-project",
+              "--lsp",
+              "rust-analyzer"
+            ],
+            "env": {}
+          }
+        }
+      }
+    },
+
+    "go_gopls": {
+      "description": "Go projects using gopls",
+      "installation": "go install golang.org/x/tools/gopls@latest",
+      "config": {
+        "mcpServers": {
+          "language-server-go": {
+            "command": "mcp-language-server",
+            "args": [
+              "--workspace",
+              "/path/to/your/go-project",
+              "--lsp",
+              "gopls"
+            ],
+            "env": {
+              "PATH": "/opt/homebrew/bin:/Users/you/go/bin",
+              "GOPATH": "/users/you/go",
+              "GOCACHE": "/users/you/Library/Caches/go-build",
+              "GOMODCACHE": "/Users/you/go/pkg/mod"
+            }
+          }
+        }
+      },
+      "notes": [
+        "Update PATH to include go and gopls: echo $(which go):$(which gopls)",
+        "GOPATH, GOCACHE, GOMODCACHE may differ on your machine"
+      ]
+    }
+  },
+
+  "multi_project_setup": {
+    "description": "Configure multiple projects simultaneously",
+    "example": {
+      "mcpServers": {
+        "language-server-myapp": {
+          "command": "mcp-language-server",
+          "args": ["--workspace", "/path/to/myapp", "--lsp", "gopls"]
+        },
+        "language-server-myscript": {
+          "command": "mcp-language-server",
+          "args": ["--workspace", "/path/to/myscript", "--lsp", "pyright-langserver", "--", "--stdio"]
+        },
+        "language-server-mylib": {
+          "command": "mcp-language-server",
+          "args": ["--workspace", "/path/to/mylib", "--lsp", "rust-analyzer"]
+        }
+      }
+    }
+  },
+
+  "tools_provided": {
+    "definition": "Jump to symbol definition",
+    "references": "Find all usages of a symbol",
+    "diagnostics": "Get warnings and errors for a file",
+    "hover": "View documentation and type hints",
+    "rename_symbol": "Rename symbol project-wide",
+    "edit_file": "Context-aware code modifications"
+  },
+
+  "installation_summary": {
+    "python": "npm install -g pyright",
+    "nim": "nimble install nimlangserver",
+    "typescript": "npm install -g typescript typescript-language-server",
+    "cpp_macos": "brew install llvm",
+    "cpp_linux": "apt install clangd (or pacman -S clang)",
+    "rust": "rustup component add rust-analyzer",
+    "go": "go install golang.org/x/tools/gopls@latest"
+  }
+}

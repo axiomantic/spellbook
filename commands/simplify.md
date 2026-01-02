@@ -730,9 +730,32 @@ Options:
 
 ### 5.5 Save Report
 
-**Default location:** `/tmp/simplify-report-<timestamp>.md`
+**Default location:** `${CLAUDE_CONFIG_DIR:-~/.claude}/docs/<project-encoded>/reports/simplify-report-<YYYY-MM-DD>.md`
 
-**Custom location:** Use --save-report=<path> flag
+Generate project encoded path:
+```bash
+# Find outermost git repo (handles nested repos)
+# Returns "NO_GIT_REPO" if not in any git repository
+_outer_git_root() {
+  local root=$(git rev-parse --show-toplevel 2>/dev/null)
+  [ -z "$root" ] && { echo "NO_GIT_REPO"; return 1; }
+  local parent
+  while parent=$(git -C "$(dirname "$root")" rev-parse --show-toplevel 2>/dev/null) && [ "$parent" != "$root" ]; do
+    root="$parent"
+  done
+  echo "$root"
+}
+PROJECT_ROOT=$(_outer_git_root)
+
+# If NO_GIT_REPO: Ask user if they want to run `git init`, otherwise use _no-repo fallback
+[ "$PROJECT_ROOT" = "NO_GIT_REPO" ] && { echo "Not in a git repo - ask user to init or use fallback"; exit 1; }
+
+PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
+```
+
+Create directory if needed: `mkdir -p "${CLAUDE_CONFIG_DIR:-~/.claude}/docs/${PROJECT_ENCODED}/reports"`
+
+**Custom location:** Use --save-report=<path> flag to override
 
 **JSON output:** If --json flag, save as JSON:
 

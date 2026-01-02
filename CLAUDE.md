@@ -101,11 +101,101 @@ When working in a worktree: NEVER make changes to the main repo's files or git s
 
 **Python:** Prefer top-level imports. Only use function-level imports for known, encountered circular import issues.
 
-## Planning Documents
+## Generated Artifacts Location
 
-Plans are stored centrally: `$CLAUDE_CONFIG_DIR/plans/<project-dir-name>/` (defaults to `~/.claude/plans/<project-dir-name>/` if `CLAUDE_CONFIG_DIR` is not set)
+<CRITICAL>
+ALL generated documents, reports, plans, and artifacts MUST be stored outside project directories.
+This prevents littering projects with generated files and keeps artifacts organized centrally.
+</CRITICAL>
 
-This keeps planning artifacts outside project repositories.
+### Standard Directory Structure
+
+```
+${CLAUDE_CONFIG_DIR:-~/.claude}/
+├── docs/<project-encoded>/        # All generated docs for a project
+│   ├── plans/                     # Design docs and implementation plans
+│   │   ├── YYYY-MM-DD-feature-design.md
+│   │   └── YYYY-MM-DD-feature-impl.md
+│   ├── audits/                    # Test audits, code reviews, etc.
+│   │   └── green-mirage-audit-YYYY-MM-DD-HHMMSS.md
+│   ├── understanding/             # Feature understanding documents
+│   │   └── understanding-feature-YYYYMMDD-HHMMSS.md
+│   └── reports/                   # Analysis reports, summaries
+│       └── simplify-report-YYYY-MM-DD.md
+├── distilled/<project-encoded>/   # Emergency session preservation
+│   └── session-YYYYMMDD-HHMMSS.md
+└── logs/                          # Operation logs
+    └── review-pr-comments-YYYYMMDD.log
+```
+
+### Project Encoded Path Generation
+
+```bash
+# Find outermost git repo (handles nested repos like submodules/vendor)
+# Returns "NO_GIT_REPO" if not in any git repository
+_outer_git_root() {
+  local root=$(git rev-parse --show-toplevel 2>/dev/null)
+  if [ -z "$root" ]; then
+    echo "NO_GIT_REPO"
+    return 1
+  fi
+  local parent
+  while parent=$(git -C "$(dirname "$root")" rev-parse --show-toplevel 2>/dev/null) && [ "$parent" != "$root" ]; do
+    root="$parent"
+  done
+  echo "$root"
+}
+PROJECT_ROOT=$(_outer_git_root)
+```
+
+**If `PROJECT_ROOT` is "NO_GIT_REPO":**
+
+Use AskUserQuestion to ask:
+> "This directory is not inside a git repository. Would you like me to initialize one?"
+
+- **If yes**: Run `git init` at the current directory, then re-run `_outer_git_root()`
+- **If no**: Use a temp-based fallback path: `${CLAUDE_CONFIG_DIR:-~/.claude}/docs/_no-repo/$(basename "$PWD")/`
+
+**Otherwise, encode the path:**
+```bash
+PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
+# Result: "Users-alice-Development-myproject"
+```
+
+### NEVER Write To:
+- `<project>/docs/` - Project docs dir is for project documentation, not generated artifacts
+- `<project>/plans/` - Same
+- `<project>/reports/` - Same
+- `<project>/*.md` (except CLAUDE.md updates when explicitly requested)
+
+## Project-Specific CLAUDE.md
+
+### Fallback Lookup
+
+If a project does NOT have a `CLAUDE.md` in its root directory, check for:
+`${CLAUDE_CONFIG_DIR:-~/.claude}/docs/<project-encoded>/CLAUDE.md`
+
+This allows project-specific instructions without modifying the project itself.
+
+### Open Source Project Handling
+
+<RULE>
+For open source projects with multiple contributors, NEVER add instructions to `<project>/CLAUDE.md`.
+Instead, write to `${CLAUDE_CONFIG_DIR:-~/.claude}/docs/<project-encoded>/CLAUDE.md`.
+</RULE>
+
+**Detection:** A project is considered open source/multi-contributor if ANY of:
+- Has an `upstream` git remote
+- Git history shows more than one author (`git shortlog -sn | wc -l > 1`)
+- Has a CONTRIBUTING.md file
+- Is a fork (origin URL differs from user's typical pattern)
+
+**Rationale:** Your personal Claude instructions should not pollute shared repositories.
+
+When user asks to "add X to CLAUDE.md" for such a project:
+1. Detect if open source/multi-contributor
+2. If yes: Write to `~/.claude/docs/<project-encoded>/CLAUDE.md` instead
+3. Inform user: "This appears to be a shared repository. I've added the instructions to ~/.claude/docs/<project-encoded>/CLAUDE.md to avoid modifying the project."
 
 ## Compacting
 

@@ -412,6 +412,147 @@ install_mcp_server() {
     fi
 }
 
+install_mcp_language_server() {
+    print_step "Setting up MCP Language Server..."
+
+    local mcp_lsp_dir="$SCRIPT_DIR/mcp-language-server"
+
+    # Clone repository if not present
+    if [ ! -d "$mcp_lsp_dir" ]; then
+        print_step "Cloning mcp-language-server repository..."
+        if command -v git &> /dev/null; then
+            git clone https://github.com/elijahr/mcp-language-server.git "$mcp_lsp_dir" 2>/dev/null
+            if [ $? -eq 0 ]; then
+                print_success "Repository cloned"
+            else
+                print_warning "Failed to clone repository"
+                print_info "Run manually: git clone git@github.com:elijahr/mcp-language-server.git $mcp_lsp_dir"
+                return
+            fi
+        else
+            print_warning "git not found, skipping clone"
+            print_info "Run manually: git clone git@github.com:elijahr/mcp-language-server.git $mcp_lsp_dir"
+            return
+        fi
+    else
+        print_info "mcp-language-server directory already exists"
+    fi
+
+    # Build the Go binary
+    if command -v go &> /dev/null; then
+        print_step "Building mcp-language-server..."
+        cd "$mcp_lsp_dir"
+        if go build -o mcp-language-server 2>/dev/null; then
+            print_success "Built mcp-language-server binary"
+        else
+            print_warning "Failed to build mcp-language-server"
+            print_info "Run manually: cd $mcp_lsp_dir && go build"
+        fi
+        cd "$SCRIPT_DIR"
+    else
+        print_warning "Go not found, skipping build"
+        print_info "Install Go from https://golang.org/doc/install"
+        print_info "Then run: cd $mcp_lsp_dir && go build"
+        return
+    fi
+
+    # Detect platform for language server installation
+    local platform=""
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        platform="macos"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        platform="linux"
+    else
+        print_warning "Unsupported platform: $OSTYPE"
+        print_info "Manually install language servers for your platform"
+        return
+    fi
+
+    # Install language servers
+    print_step "Installing language servers..."
+
+    # Python (pyright)
+    if command -v npm &> /dev/null; then
+        if ! command -v pyright-langserver &> /dev/null; then
+            print_step "  Installing pyright..."
+            npm install -g pyright 2>/dev/null && print_success "  pyright installed"
+        else
+            print_info "  pyright already installed"
+        fi
+    fi
+
+    # Nim (nimlangserver)
+    if command -v nimble &> /dev/null; then
+        if ! command -v nimlangserver &> /dev/null; then
+            print_step "  Installing nimlangserver..."
+            nimble install -y nimlangserver 2>/dev/null && print_success "  nimlangserver installed"
+        else
+            print_info "  nimlangserver already installed"
+        fi
+    fi
+
+    # TypeScript
+    if command -v npm &> /dev/null; then
+        if ! command -v typescript-language-server &> /dev/null; then
+            print_step "  Installing typescript-language-server..."
+            npm install -g typescript typescript-language-server 2>/dev/null && print_success "  typescript-language-server installed"
+        else
+            print_info "  typescript-language-server already installed"
+        fi
+    fi
+
+    # C/C++ (clangd)
+    if [ "$platform" = "macos" ]; then
+        if command -v brew &> /dev/null; then
+            if ! command -v clangd &> /dev/null; then
+                print_step "  Installing clangd..."
+                brew install llvm 2>/dev/null && print_success "  clangd installed"
+            else
+                print_info "  clangd already installed"
+            fi
+        fi
+    elif [ "$platform" = "linux" ]; then
+        if command -v apt-get &> /dev/null; then
+            if ! command -v clangd &> /dev/null; then
+                print_step "  Installing clangd..."
+                sudo apt-get install -y clangd 2>/dev/null && print_success "  clangd installed"
+            else
+                print_info "  clangd already installed"
+            fi
+        elif command -v pacman &> /dev/null; then
+            if ! command -v clangd &> /dev/null; then
+                print_step "  Installing clangd..."
+                sudo pacman -S --noconfirm clang 2>/dev/null && print_success "  clangd installed"
+            else
+                print_info "  clangd already installed"
+            fi
+        fi
+    fi
+
+    # Rust (rust-analyzer)
+    if command -v rustup &> /dev/null; then
+        if ! command -v rust-analyzer &> /dev/null; then
+            print_step "  Installing rust-analyzer..."
+            rustup component add rust-analyzer 2>/dev/null && print_success "  rust-analyzer installed"
+        else
+            print_info "  rust-analyzer already installed"
+        fi
+    fi
+
+    # Go (gopls)
+    if command -v go &> /dev/null; then
+        if ! command -v gopls &> /dev/null; then
+            print_step "  Installing gopls..."
+            go install golang.org/x/tools/gopls@latest 2>/dev/null && print_success "  gopls installed"
+        else
+            print_info "  gopls already installed"
+        fi
+    fi
+
+    print_success "Language server setup complete"
+    print_info "See config/mcp-language-server-examples.json for configuration examples"
+}
+
 print_completion() {
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
@@ -447,6 +588,7 @@ main() {
     setup_codex_integration
     setup_opencode_integration
     install_mcp_server
+    install_mcp_language_server
     print_completion
 }
 
