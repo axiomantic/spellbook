@@ -119,22 +119,13 @@ Example:
 - [ ] integration-worktree → base-branch
 ```
 
-**Step 3: Create TodoWrite Checklist**
+**Step 3: Create Task Checklist (`write_todos` or `TodoWrite`)**
 
-<RULE>ALWAYS create a TodoWrite checklist before starting merge operations.</RULE>
+<RULE>ALWAYS create a checklist using the task tracking tool (`write_todos` or `TodoWrite`) before starting merge operations.</RULE>
 
-```
-TodoWrite:
-- [ ] Analyze merge order and dependencies
-- [ ] Merge Round 1 worktrees
-- [ ] Run tests after Round 1
-- [ ] Merge Round 2 worktrees
-- [ ] Run tests after Round 2
-- [ ] Merge Round N worktrees
-- [ ] Run tests after Round N
-- [ ] Final verification
-- [ ] Cleanup worktrees
-```
+Task Tracking Tool:
+[ ] Merge Worktree 1
+[ ] Run Tests
 
 ---
 
@@ -372,7 +363,7 @@ pytest  # or appropriate test command
 **Step 2: Invoke Green Mirage Audit**
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   prompt: |
     First, invoke the green-mirage-audit skill using the Skill tool.
     Audit all test files created/modified across the parallel implementation.
@@ -381,7 +372,7 @@ Task (general-purpose):
 **Step 3: Invoke Code Review**
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   prompt: |
     First, invoke the superpowers:code-reviewer skill using the Skill tool.
     Review the complete merged implementation against the implementation plan.

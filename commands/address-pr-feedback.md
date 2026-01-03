@@ -426,7 +426,7 @@ Options:
 ```
 
 3. **If "apply suggested fix":**
-   - Apply the change using Edit/Write tools
+   - Apply the change using file editing tools (`replace`, `edit`, or `write_file`)
    - Show confirmation: "✅ Applied fix to <file>"
    - If commit strategy is "commit each" or "commit and push each":
      ```bash
@@ -443,7 +443,7 @@ Options:
    - Ask: "Continue to next comment?"
 
 4. **If "show more context":**
-   - Use Read tool with larger offset
+   - Use the file reading tool (`read_file`, `Read`) with larger offset
    - Show the context
    - Loop back to ask for action again
 

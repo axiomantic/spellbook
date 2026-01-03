@@ -28,11 +28,11 @@ Before starting, internalize these failure modes:
 | Anti-Pattern | Why It's Fatal | Prevention |
 |--------------|----------------|------------|
 | **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.claude/docs/<project-encoded>/plans/ |
-| **"See the design doc"** | Vague reference, agent won't actually read it | Write explicit Read("/absolute/path") commands |
+| **Vague re-read instructions** | "See the design doc" tells agent nothing | Write explicit file reading tool calls (`read_file`, `Read`) with absolute paths |
 | **Relative paths** | Break when session resumes | ALWAYS use absolute paths starting with / |
 | **"Task 4 is done"** | May be stale/wrong | Verify file state with actual reads, not claims |
 | **Skipping plan doc search** | 90% of broken compacts miss this | This is NON-NEGOTIABLE |
-| **"Continue the workflow"** | Useless without exact position | Write Skill('name', '--resume Phase3.Task7') |
+| **"Continue the workflow"** | Useless without exact position | Write an invocation using the `Skill` tool, `use_spellbook_skill`, or platform equivalent (e.g., `Skill('name', '--resume Phase3.Task7')`) |
 | **Missing verification** | Can't confirm completion | Every task needs a runnable check command |
 
 </ANTI_PATTERNS>
@@ -98,8 +98,8 @@ Skills are often nested. Capture the full stack with exact positions:
 
 | Skill | Parent | Current Phase/Step | Resume Command |
 |-------|--------|-------------------|----------------|
-| [e.g., implement-feature] | [user request] | [Phase 4, Task 10] | [Skill('implement-feature', '--context ...')] |
-| [e.g., subagent-driven-dev] | [implement-feature] | [Batch 3] | [Skill('subagent-driven-development', '--plan ...')] |
+| [e.g., implement-feature] | [user request] | [Phase 4, Task 10] | Invoke the `implement-feature` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent |
+| [e.g., subagent-driven-dev] | [implement-feature] | [Batch 3] | Invoke the `subagent-driven-development` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent |
 
 **Skill Hierarchy Diagram:**
 ```
@@ -292,12 +292,12 @@ This is not a reference list - these are **explicit instructions** for the resum
 BEFORE ANY OTHER WORK, execute these commands:
 
 # Step 1: Read implementation plan (REQUIRED)
-Read("/path/to/impl.md")
+Use the file reading tool (`read_file`, `Read`)("/path/to/impl.md")
 # Focus on: [specific sections]
 # Extract: Current task, remaining work, verification criteria
 
 # Step 2: Read design doc (if referenced)
-Read("/path/to/design.md")
+Use the file reading tool (`read_file`, `Read`)("/path/to/design.md")
 # Focus on: [specific sections]
 # Extract: Key decisions that affect implementation
 
@@ -353,22 +353,9 @@ Concrete, runnable checks extracted from the implementation plan:
 
 ### 1.14 Skill Resume Commands
 
-**EXECUTABLE COMMANDS to restore workflow state:**
+Invoke the skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent
 
-If skills were active, provide EXACT invocation to resume:
-
-```
-# Primary skill to re-invoke:
-Skill("[skill-name]", args: "[resume context]")
-
-# Example with full context:
-Skill("implement-feature", args: """
---resume-from Phase4.Task10
---design-doc /path/to/design.md
---impl-plan /path/to/impl.md
---skip-phases 0,1,2,3
-""")
-```
+Invoke the `implement-feature` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent
 
 **If skill doesn't support --resume, provide context block:**
 ```
@@ -534,7 +521,7 @@ Known-good states to rollback to if current work is corrupted:
 
 **Template for /implement-feature resume:**
 ```
-Skill("implement-feature", args: """
+Invoke the `implement-feature` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent
 --resume-from Phase[N].Task[M]
 --design-doc [absolute-path]
 --impl-plan [absolute-path]
@@ -549,7 +536,7 @@ DO NOT re-run completed phases. DO NOT re-ask answered questions.
 
 **Template for /subagent-driven-development resume:**
 ```
-Skill("subagent-driven-development", args: """
+Invoke the `subagent-driven-development` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent
 --plan [absolute-path]
 --resume-batch [N]
 Context: Implementation plan approved. Batches 1-[N-1] complete.
@@ -590,7 +577,7 @@ Anti-patterns observed in session resumption:
 | **Checkpoint ignorance** | Trying to fix corrupted work instead of rolling back | Section 1.22: If verification fails badly, use checkpoint. |
 | **Workflow pattern violation** | Changing from parallel to sequential without user input | Section 1.1 "Workflow Pattern": Honor the established pattern. |
 | **Missing plan documents** | Plan docs exist but weren't captured; resuming agent doesn't know full scope | Section 1.9: MUST search ~/.claude/docs/<project-encoded>/plans/ and capture ALL docs with ABSOLUTE paths. |
-| **Plan docs without re-read instructions** | Plan docs listed but no explicit Read() commands for resuming agent | Section 1.10: MUST include executable Read() commands, not just path references. |
+| **Plan docs without file reading tool calls** | Plan docs listed but no explicit file reading tool calls (`read_file`, `Read`) | Section 1.10: MUST include executable file reading tool calls (`read_file`, `Read`), not just path references. |
 
 **For each failure mode, the Prevention column references which section/step blocks it.**
 
@@ -638,7 +625,7 @@ git status --porcelain | wc -l  # Expected: ~[N] uncommitted files
 Re-read Section 1.1 "Main Chat Agent." Adopt that persona and working style. You are continuing as that agent, not starting as a generic assistant.
 
 ### Step 2: Restore Todo State
-Use TodoWrite to recreate ALL items from Section 1.8:
+Use the task tracking tool (`write_todos` or `TodoWrite`) to recreate ALL items from Section 1.8:
 - Main Agent's Todos (set current task to `in_progress`)
 - Implicit Todos (add these too)
 
@@ -722,7 +709,7 @@ If Section 1.9 lists implementation docs used for progress tracking:
 1. Go to Section 1.10 "Documents to Re-Read"
 2. For EACH document listed with Priority 1 or 2:
    ```
-   Read("[absolute-path-from-section-1.10]")
+   Use the file reading tool (`read_file`, `Read`)("[absolute-path-from-section-1.10]")
    ```
 3. After reading each document, extract:
    - Current phase/task position
@@ -750,7 +737,7 @@ Ask yourself—and do not finalize until ALL answers are "yes":
 **Planning Document Verification (CRITICAL):**
 - [ ] Did I search ~/.claude/docs/<project-encoded>/plans/ for planning documents?
 - [ ] If plan docs exist, are they listed in Section 1.9 with ABSOLUTE paths?
-- [ ] Does Section 1.10 contain explicit Read() commands for the resuming agent?
+- [ ] Does Section 1.10 contain explicit file reading tool calls (`read_file`, `Read`) for the resuming agent?
 - [ ] If NO plan docs exist, did I write "NO PLANNING DOCUMENTS" explicitly (not leave blank)?
 
 **Organizational Continuity:**

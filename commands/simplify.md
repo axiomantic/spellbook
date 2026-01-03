@@ -809,8 +809,8 @@ Apply verified simplifications and integrate with git.
 **For each approved simplification:**
 
 1. Read the current file content
-2. Apply the transformation using Edit tool
-3. Re-run verification gate (parse, type check, tests)
+2. Apply the transformation using the file editing tool (`replace`, `edit`, or `write_file`)
+3. Verify the change preserves behavior (unless fixing a bug)
 4. If verification passes: keep the change
 5. If verification fails: revert the change, mark as failed
 
@@ -1253,7 +1253,7 @@ gcov <source_files>
 
 ### Transformation Application
 
-**Use Edit tool for precise changes:**
+**Use the file editing tool (`replace`, `edit`, or `write_file`) for precise changes:**
 1. Read original file content
 2. Identify exact lines to change
 3. Use Edit with old_string/new_string

@@ -48,11 +48,11 @@ Before starting, internalize these failure modes:
 | Anti-Pattern | Why It's Fatal | Prevention |
 |--------------|----------------|------------|
 | **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.claude/docs/<project-encoded>/plans/ and write explicit result |
-| **Vague re-read instructions** | "See the design doc" tells agent nothing | Write explicit Read("/absolute/path") commands with focus areas |
+| **Vague re-read instructions** | "See the design doc" tells agent nothing | Use the file reading tool (`read_file`, `Read`) with absolute paths and focus areas |
 | **Relative paths** | Break when session resumes in different context | ALWAYS use absolute paths starting with / |
 | **Trusting conversation claims** | "Task 4 is done" may be stale/wrong | Verify file state in Phase 2.5 with actual reads |
 | **Skipping plan doc search** | 90% of broken distillations miss plan docs | This is NON-NEGOTIABLE - search EVERY time |
-| **Generic skill resume** | "Continue the workflow" is useless | Write Skill('name', '--exact-resume-context') |
+| **Generic skill resume** | "Continue the workflow" is useless | Invoke the skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent with specific resume context |
 | **Missing verification commands** | Resuming agent can't verify completion | Every task needs a runnable check command |
 
 ---
@@ -164,7 +164,7 @@ python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" extract-chunk {session_f
 
 **Step 2: Spawn parallel summarization agents**
 
-Use Task tool to spawn ALL chunk summarizers in ONE message:
+Dispatch a subagent or task using the `Task` tool if available. If not available, use `write_todos` to track the subtask and execute it yourself.
 
 ```
 Task("Chunk 1 Summarizer", "[CHUNK_SUMMARIZER_PROMPT with chunk 1 content]", "general-purpose")
@@ -206,7 +206,7 @@ For EACH file touched:
 - What was the exact stopping point?
 
 ### 6. Skills & Commands (CRITICAL)
-- What /skills or Skill() invocations were active?
+- What /skills or skill invocations (using the `Skill` tool, `use_spellbook_skill`, or platform equivalent) were active?
 - What was their EXACT position (Phase N, Task M)?
 - What subagents were spawned?
   - Agent IDs
@@ -325,17 +325,14 @@ find . -name "*-impl.md" -o -name "*-design.md" -o -name "*-plan.md" 2>/dev/null
 **Step 2: For EACH planning document found**
 
 1. Record ABSOLUTE path (e.g., `/Users/alice/.claude/docs/Users-alice-Development-myproject/plans/feature-impl.md`)
-2. Read the document with Read tool
+2. Read the document with file reading tool (`read_file`, `Read`)
 3. Extract progress:
    - Which sections/tasks are complete?
    - Which are in-progress?
    - Which remain?
 4. Generate re-read instructions:
    ```
-   Read("/absolute/path/to/impl.md")
-   # Focus on: Sections X-Y (remaining work)
-   # Current position: Phase N, Task M
-   ```
+   Use the file reading tool (`read_file`, `Read`)("/absolute/path/to/impl.md")
 
 **Step 3: If NO planning documents found**
 
@@ -367,15 +364,7 @@ wc -l /path/to/file  # Expected: ~300
 **Step 2: Generate skill resume commands**
 
 For each active skill:
-```
-Skill('[skill-name]', args: """
---resume-from Phase[N].Task[M]
---impl-plan [absolute-path]
---skip-phases [0,1,2,...]
-Context: [what's already done]
-DO NOT re-run completed phases.
-""")
-```
+Invoke the skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent.
 
 ---
 
@@ -433,7 +422,7 @@ If no planning docs: Write "NO PLANNING DOCUMENTS - verified by searching ~/.cla
 **Re-Read Instructions:**
 \`\`\`
 BEFORE ANY OTHER WORK:
-Read("/Users/.../impl.md")
+Use the file reading tool (`read_file`, `Read`)("/Users/.../impl.md")
 # Extract: Current task, remaining work, verification criteria
 # Position: Phase 3, Task 7
 \`\`\`
@@ -445,7 +434,7 @@ If no docs to re-read: Write "NO DOCUMENTS TO RE-READ"
 **MUST be executable, not descriptive:**
 ```markdown
 \`\`\`
-Skill("implement-feature", args: """
+Invoke the `implement-feature` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent with the following arguments:
 --resume-from Phase3.Task7
 --impl-plan /Users/.../impl.md
 --skip-phases 0,1,2
@@ -464,7 +453,7 @@ DO NOT re-ask answered questions.
 
 1. Read each document from Section 1.10:
    \`\`\`
-   Read("/absolute/path/to/impl.md")
+   Use the file reading tool (`read_file`, `Read`)("/absolute/path/to/impl.md")
    \`\`\`
 2. Extract: Current phase/task, remaining work, verification criteria
 3. If Section 1.10 is blank: STOP - this is a malformed distillation
@@ -473,7 +462,7 @@ DO NOT re-ask answered questions.
 ## Quality Gates (verify before outputting)
 - [ ] Section 1.9 has ABSOLUTE paths or explicit "NO PLANNING DOCUMENTS"
 - [ ] Section 1.10 has Read() commands or explicit "NO DOCUMENTS TO RE-READ"
-- [ ] Section 1.14 has executable Skill() commands (not "continue the workflow")
+- [ ] Section 1.14 has executable skill invocation commands (e.g., `Skill` tool, `use_spellbook_skill`, or platform equivalent) (not "continue the workflow")
 - [ ] Section 1.12 has verified file state (not conversation claims)
 - [ ] Section 1.13 has runnable verification commands
 - [ ] Step 7 requires reading plan docs before implementation

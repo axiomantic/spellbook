@@ -28,7 +28,7 @@ ALL subagents MUST invoke skills explicitly using the Skill tool. Do NOT embed o
 
 **Correct Pattern:**
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   prompt: |
     First, invoke the [skill-name] skill using the Skill tool.
     Then follow its complete workflow.
@@ -39,7 +39,7 @@ Task (general-purpose):
 
 **WRONG Pattern:**
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   prompt: |
     Use the [skill-name] skill to do X.
     [Then duplicating the skill's instructions here]  <-- WRONG
@@ -272,7 +272,7 @@ Systematically explore codebase and surface unknowns BEFORE design work.
 All research findings must achieve 100% quality score to proceed.
 </CRITICAL>
 
-<!-- SUBAGENT: YES - Use Explore/Task subagent. Codebase exploration with uncertain scope. -->
+<!-- SUBAGENT: YES - Use Explore/Task subagent (or equivalent). Codebase exploration with uncertain scope. -->
 
 ### 1.1 Research Strategy Planning
 
@@ -307,13 +307,12 @@ Generated Questions:
 **REASON:** Exploration with uncertain scope. Subagent reads N files, returns synthesis.
 
 **Dispatch Instructions:**
-```
-Task(
+Task (or subagent simulation)(
   "Research Agent - Codebase Patterns",
   `You are a research agent. Your job is to answer these specific questions about
 the codebase. For each question:
 
-1. Search systematically (Glob + Grep patterns)
+1. Search systematically using `codebase_investigator` (if available) or standard search tools (`grep`, `glob`, `search_file_content`)
 2. Read relevant files
 3. Extract patterns, conventions, precedents
 4. FLAG any ambiguities or conflicting patterns
@@ -1179,7 +1178,7 @@ Invoke devils-advocate skill using Skill tool, then provide Understanding Docume
 **Fallback (file path):**
 
 ```
-Skill("devils-advocate", args: "--understanding-doc /tmp/understanding-doc-[slug]-[timestamp].md")
+Invoke the `devils-advocate` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent (e.g. `spellbook-codex use-skill devils-advocate`) with arguments:
 ```
 
 **Wait for critique:** Skill returns structured critique with 5 categories
@@ -1271,10 +1270,10 @@ Phase behavior depends on escape hatch handling:
 <RULE>Subagent MUST invoke brainstorming using the Skill tool in SYNTHESIS MODE.</RULE>
 
 ```
-Task (general-purpose):
-  description: "Design [feature name]"
+Task (or subagent simulation):
+  description: "Research [feature name]"
   prompt: |
-    First, invoke the brainstorming skill using the Skill tool.
+    First, invoke the research-skill...
 
     IMPORTANT: This is SYNTHESIS MODE - all discovery is complete.
     DO NOT ask questions. Use the comprehensive context below to produce the design.
@@ -1308,7 +1307,7 @@ Task (general-purpose):
 <RULE>Subagent MUST invoke design-doc-reviewer using the Skill tool.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Review design doc"
   prompt: |
     First, invoke the design-doc-reviewer skill using the Skill tool.
@@ -1361,7 +1360,7 @@ Task (general-purpose):
 <RULE>Subagent MUST invoke superpowers:executing-plans using the Skill tool.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Fix design doc"
   prompt: |
     First, invoke the superpowers:executing-plans skill using the Skill tool.
@@ -1395,7 +1394,7 @@ Phase behavior depends on escape hatch handling:
 <RULE>Subagent MUST invoke superpowers:writing-plans using the Skill tool.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Create impl plan for [feature name]"
   prompt: |
     First, invoke the superpowers:writing-plans skill using the Skill tool.
@@ -1417,7 +1416,7 @@ Task (general-purpose):
 <RULE>Subagent MUST invoke implementation-plan-reviewer using the Skill tool.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Review impl plan"
   prompt: |
     First, invoke the implementation-plan-reviewer skill using the Skill tool.
@@ -1440,7 +1439,7 @@ Task (general-purpose):
 <RULE>Subagent MUST invoke superpowers:executing-plans using the Skill tool.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Fix impl plan"
   prompt: |
     First, invoke the superpowers:executing-plans skill using the Skill tool.
@@ -1475,7 +1474,7 @@ This phase executes the implementation plan. Quality gates are enforced after EV
 Create a single worktree for the entire implementation:
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Create worktree for [feature name]"
   prompt: |
     First, invoke the superpowers:using-git-worktrees skill using the Skill tool.
@@ -1503,7 +1502,7 @@ Parse the implementation plan to find tasks marked as "setup", "skeleton", or "m
 **Step 2: Execute Setup Tasks in Main Branch**
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Execute setup/skeleton tasks"
   prompt: |
     First, invoke the superpowers:test-driven-development skill using the Skill tool.
@@ -1542,7 +1541,7 @@ Creates:
 For each parallel group, create a worktree:
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Create worktree for parallel group N"
   prompt: |
     First, invoke the superpowers:using-git-worktrees skill using the Skill tool.
@@ -1578,7 +1577,7 @@ For each worktree in SESSION_PREFERENCES.worktree_paths:
   if worktree.depends_on not all completed:
     continue (will process in next round)
 
-  Task (general-purpose):
+  Task (or subagent simulation):
     description: "Execute tasks in [worktree.path]"
     run_in_background: true  # Run parallel worktrees concurrently
     prompt: |
@@ -1612,7 +1611,7 @@ After all parallel tracks complete, proceed to **Phase 4.2.5: Smart Merge**.
 Standard parallel execution in single directory:
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Execute parallel implementation"
   prompt: |
     First, invoke the superpowers:dispatching-parallel-agents skill using the Skill tool.
@@ -1632,7 +1631,7 @@ Task (general-purpose):
 Sequential execution:
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Execute sequential implementation"
   prompt: |
     First, invoke the superpowers:subagent-driven-development skill using the Skill tool.
@@ -1656,7 +1655,7 @@ It merges all worktrees back into a unified branch.
 <RULE>Subagent MUST invoke smart-merge skill using the Skill tool.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Smart merge parallel worktrees"
   prompt: |
     First, invoke the smart-merge skill using the Skill tool.
@@ -1689,7 +1688,7 @@ After smart merge completes successfully, proceed to Phase 4.3.
 For each individual implementation task:
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Implement Task N: [task name]"
   prompt: |
     First, invoke the superpowers:test-driven-development skill using the Skill tool.
@@ -1714,7 +1713,7 @@ Task (general-purpose):
 <RULE>Subagent MUST invoke superpowers:code-reviewer using the Skill tool after EVERY task.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Review Task N implementation"
   prompt: |
     First, invoke the superpowers:code-reviewer skill using the Skill tool.
@@ -1742,7 +1741,7 @@ If issues found:
 <RULE>Subagent MUST invoke factchecker using the Skill tool after code review.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Validate claims in Task N"
   prompt: |
     First, invoke the factchecker skill using the Skill tool.
@@ -1785,7 +1784,7 @@ If tests fail:
 <RULE>Subagent MUST invoke green-mirage-audit using the Skill tool.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Audit test quality"
   prompt: |
     First, invoke the green-mirage-audit skill using the Skill tool.
@@ -1808,7 +1807,7 @@ If audit finds issues:
 <RULE>Subagent MUST invoke factchecker using the Skill tool for final comprehensive validation.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Comprehensive claim validation"
   prompt: |
     First, invoke the factchecker skill using the Skill tool.
@@ -1836,7 +1835,7 @@ If false claims or contradictions found:
 <RULE>Before any PR creation, run one final factchecker pass.</RULE>
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Pre-PR claim validation"
   prompt: |
     First, invoke the factchecker skill using the Skill tool.
@@ -1857,7 +1856,7 @@ Task (general-purpose):
 #### If post_impl == "offer_options"
 
 ```
-Task (general-purpose):
+Task (or subagent simulation):
   description: "Finish development branch"
   prompt: |
     First, invoke the superpowers:finishing-a-development-branch skill using the Skill tool.

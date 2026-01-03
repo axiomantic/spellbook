@@ -129,19 +129,11 @@ Strive for excellence. This is very important to my career.
 
 ## Step 3: Dispatch the Subagent
 
-Use the Task tool with the engineered prompt:
+Dispatch a subagent or task using the `Task` tool if available. If not available, use `write_todos` to track the subtask and execute it yourself.
 
-```typescript
-Task({
-  subagent_type: "appropriate-type",
-  prompt: engineeredPrompt,
-  description: "3-5 word summary"
-})
-```
+**Quick reference:**
 
----
-
-# Quick Reference: Persona Triggers
+Persona triggers:
 
 | Persona | Trigger Phrase |
 |---------|----------------|
@@ -261,7 +253,7 @@ Strive for excellence. Leave no vulnerability undiscovered.
 **Step 3 - Dispatch**:
 
 ```typescript
-Task({
+Task (or subagent simulation)({
   subagent_type: "general-purpose",
   prompt: engineeredPrompt,
   description: "Security review auth module"
