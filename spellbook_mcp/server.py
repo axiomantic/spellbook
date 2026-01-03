@@ -11,15 +11,45 @@ Provides three MCP tools:
 from fastmcp import FastMCP
 from pathlib import Path
 from typing import List, Dict, Any
+import os
+import json
 
 from .path_utils import get_project_dir
 from .session_ops import (
     split_by_char_limit,
     list_sessions_with_samples,
 )
+from .skill_ops import find_skills, load_skill
 
 mcp = FastMCP("spellbook")
 
+# Default directories to search for skills
+# Personal skills > Spellbook skills > Superpowers skills
+def get_skill_dirs() -> List[Path]:
+    dirs = []
+    
+    # Personal skills (e.g. ~/.opencode/skills or ~/.config/opencode/skills)
+    # Use standard XDG config or home dir patterns
+    home = Path.home()
+    dirs.append(home / ".config" / "opencode" / "skills")
+    dirs.append(home / ".opencode" / "skills")
+    dirs.append(home / ".codex" / "skills")
+    
+    # Spellbook skills (this repo)
+    # Assume this server is running from inside spellbook/spellbook_mcp
+    # So ../skills
+    repo_root = Path(__file__).parent.parent
+    dirs.append(repo_root / "skills")
+    
+    # Superpowers (if installed alongside)
+    # Check CLAUDE_CONFIG_DIR
+    claude_config = os.environ.get("CLAUDE_CONFIG_DIR", str(home / ".claude"))
+    dirs.append(Path(claude_config) / "skills")
+    
+    # Also check typical dev location
+    dirs.append(home / "Development" / "superpowers" / "skills")
+    
+    return [d for d in dirs if d.exists()]
 
 @mcp.tool()
 def find_session(name: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -110,6 +140,37 @@ def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
         return []
 
     return list_sessions_with_samples(str(project_dir), limit)
+
+@mcp.tool()
+def find_spellbook_skills() -> str:
+    """
+    List all available Spellbook skills with their descriptions.
+    
+    Returns:
+        JSON string of list of {name, description} objects.
+    """
+    dirs = get_skill_dirs()
+    skills = find_skills(dirs)
+    # Simplify output for LLM consumption (just name and description)
+    simplified = [{"name": s["name"], "description": s["description"]} for s in skills]
+    return json.dumps(simplified, indent=2)
+
+@mcp.tool()
+def use_spellbook_skill(skill_name: str) -> str:
+    """
+    Load the content of a specific Spellbook skill.
+    
+    Args:
+        skill_name: The name of the skill to load (e.g., 'scientific-debugging')
+        
+    Returns:
+        The full markdown content of the skill instructions.
+    """
+    dirs = get_skill_dirs()
+    try:
+        return load_skill(skill_name, dirs)
+    except ValueError as e:
+        return f"Error: {str(e)}"
 
 
 if __name__ == "__main__":
