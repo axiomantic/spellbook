@@ -11,11 +11,10 @@ Personal AI assistant skills, commands, and configuration for Claude Code and ot
   - [Platform-Specific Setup](#platform-specific-setup)
 - [Autonomous Mode](#autonomous-mode)
 - [Recommended Setup](#recommended-setup)
-  - [1. Claude Code Proxy (Custom Compact Behavior)](#1-claude-code-proxy-custom-compact-behavior)
-  - [2. Heads Up Claude (Statusline)](#2-heads-up-claude-statusline)
-  - [3. Superpowers (Core Workflows)](#3-superpowers-core-workflows)
-  - [4. Spellbook (This Repo)](#4-spellbook-this-repo)
-  - [5. MCP Language Server (LSP Integration)](#5-mcp-language-server-lsp-integration)
+  - [1. Superpowers (Core Workflows) - Required](#1-superpowers-core-workflows---required)
+  - [2. Spellbook (This Repo)](#2-spellbook-this-repo)
+  - [3. Heads Up Claude (Statusline) - Optional](#3-heads-up-claude-statusline---optional)
+  - [4. MCP Language Server (LSP Integration) - Recommended](#4-mcp-language-server-lsp-integration---recommended)
 - [Commands](#commands)
   - [/compact](#compact)
   - [/distill-session](#distill-session)
@@ -84,37 +83,17 @@ This allows the skill to execute multi-step workflows (git operations, file chan
 
 For the complete experience, install these components in order:
 
-### 1. Claude Code Proxy (Custom Compact Behavior)
+### 1. Superpowers (Core Workflows) - Required
 
-A proxy that intercepts Claude Code requests, enabling:
-- **Custom compact prompts** - Override the default `/compact` behavior with your own prompt (see `commands/compact.md`)
-- **Automatic model upgrades** - Use Opus for compaction to get better context preservation
-- **Alternative LLM providers** - Route requests to OpenAI-compatible APIs if desired
+The foundation for structured development workflows. **Spellbook depends on superpowers and will not work correctly without it.**
 
-```bash
-git clone https://github.com/elijahr/claude-code-proxy.git ~/Development/claude-code-proxy
-cd ~/Development/claude-code-proxy
-./install.sh
-```
+This is a fork of [obra/superpowers](https://github.com/obra/superpowers) with the following modifications:
 
-After installation, restart your shell. The `claude` command will automatically route through the proxy.
+- **Autonomous mode support** - Added AskUserQuestion patterns and autonomous mode handling to brainstorming, executing-plans, finishing-a-development-branch, subagent-driven-development, using-git-worktrees, and writing-plans skills
+- **No namespace prefix** - Skills are invoked directly (e.g., `brainstorming` instead of `superpowers:brainstorming`), making them easier to use and integrate with spellbook
+- **TUI installer** - Added `install.py` with a terminal UI for symlink management
 
-### 2. Heads Up Claude (Statusline)
-
-Adds a statusline to Claude Code showing:
-- Token usage estimates
-- Conversation stats
-- Model info
-
-```bash
-git clone https://github.com/elijahr/heads-up-claude.git ~/Development/heads-up-claude
-cd ~/Development/heads-up-claude
-./install.sh
-```
-
-### 3. Superpowers (Core Workflows)
-
-The foundation for structured development workflows:
+Core capabilities:
 - **Brainstorming** - Collaborative design exploration before coding
 - **Planning** - Detailed implementation plans with TDD, YAGNI, DRY
 - **Execution** - Subagent-driven development with code review checkpoints
@@ -126,9 +105,9 @@ cd ~/Development/superpowers
 ./install.sh
 ```
 
-**Important:** Spellbook requires [elijahr/superpowers](https://github.com/elijahr/superpowers), not the upstream [obra/superpowers](https://github.com/obra/superpowers). Our fork has critical enhancements, is not namespaced, and is designed to work seamlessly with spellbook. Do not use the marketplace version.
+**Important:** Spellbook requires [elijahr/superpowers](https://github.com/elijahr/superpowers), not the upstream [obra/superpowers](https://github.com/obra/superpowers). Do not use the marketplace version.
 
-### 4. Spellbook (This Repo)
+### 2. Spellbook (This Repo)
 
 Your personal skills and configuration, extending superpowers with:
 - Domain-specific skills (Nim PR guide, async patterns, etc.)
@@ -141,21 +120,51 @@ cd ~/Development/spellbook
 ./install.sh
 ```
 
-### 5. MCP Language Server (LSP Integration)
+### 3. Heads Up Claude (Statusline) - Optional
 
-Provides Language Server Protocol integration for Claude Code, enabling semantic code navigation:
+Adds a statusline to Claude Code showing:
+- Token usage estimates
+- Conversation stats
+- Model info
+
+```bash
+git clone https://github.com/elijahr/heads-up-claude.git ~/Development/heads-up-claude
+cd ~/Development/heads-up-claude
+./install.sh
+```
+
+### 4. MCP Language Server (LSP Integration) - Recommended
+
+Provides Language Server Protocol integration for Claude Code, enabling semantic code navigation.
+
+This is a fork of [isaacphi/mcp-language-server](https://github.com/isaacphi/mcp-language-server) with the following enhancements:
+
+- **5 additional LSP tools** - call-hierarchy, code-actions, completions, document-symbols, signature-help
+- **Capability-aware tool registration** - Only registers tools that the LSP server actually supports, avoiding errors with servers that don't implement all capabilities
+- **Improved test infrastructure** - Capability testing framework and better integration test helpers
+
+Core capabilities:
 - **Definition lookup** - Jump to symbol definitions
 - **References** - Find all usages of a symbol
 - **Diagnostics** - Get warnings and errors
 - **Hover info** - View documentation and type hints
 - **Rename** - Rename symbols project-wide
-- **Smart editing** - Context-aware code modifications
+- **Completions** - Get code completions at cursor position
+- **Signature help** - View function signatures and parameter info
+- **Code actions** - Quick fixes and refactoring suggestions
+- **Document symbols** - Navigate symbols in a file
+- **Call hierarchy** - View incoming/outgoing calls
 
 Supports: Python (pyright), Nim (nimlangserver), TypeScript (typescript-language-server), C/C++ (clangd), Rust (rust-analyzer), Go (gopls)
 
 ```bash
-cd ~/Development/spellbook
-./install.sh  # Automatically installs and configures mcp-language-server
+# Clone and build
+git clone https://github.com/axiomantic/mcp-language-server.git ~/Development/mcp-language-server
+cd ~/Development/mcp-language-server
+go build
+
+# Add to Claude Code MCP settings (~/.claude/claude_desktop_config.json or similar)
+# See config/mcp-language-server-examples.json for language-specific configurations
 ```
 
 See `config/mcp-language-server-examples.json` for configuration examples for all supported languages.
@@ -183,9 +192,8 @@ Slash commands for quick actions. These can be invoked with `/command-name` in C
 - Identifies planning documents and their role in the workflow
 
 **Important notes:**
-- This command does **NOT** override the built-in Claude Code `/compact` command by default
-- To use this custom compact instead of the built-in, you must run Claude through [claude-code-proxy](https://github.com/elijahr/claude-code-proxy) in passthru mode
-- Without the proxy, `/compact` triggers Claude's built-in compaction, and this file is ignored
+- This command does **NOT** override the built-in Claude Code `/compact` command
+- When you run `/compact`, Claude's built-in compaction runs, and this file provides additional guidance for the summary format
 - Creates extremely detailed shift-change briefings for seamless session continuation
 - Always asks "Can a fresh instance say 'continue' and know exactly what to do?"
 

@@ -421,17 +421,17 @@ install_mcp_language_server() {
     if [ ! -d "$mcp_lsp_dir" ]; then
         print_step "Cloning mcp-language-server repository..."
         if command -v git &> /dev/null; then
-            git clone https://github.com/elijahr/mcp-language-server.git "$mcp_lsp_dir" 2>/dev/null
+            git clone https://github.com/axiomantic/mcp-language-server.git "$mcp_lsp_dir" 2>/dev/null
             if [ $? -eq 0 ]; then
                 print_success "Repository cloned"
             else
                 print_warning "Failed to clone repository"
-                print_info "Run manually: git clone git@github.com:elijahr/mcp-language-server.git $mcp_lsp_dir"
+                print_info "Run manually: git clone https://github.com/axiomantic/mcp-language-server.git $mcp_lsp_dir"
                 return
             fi
         else
             print_warning "git not found, skipping clone"
-            print_info "Run manually: git clone git@github.com:elijahr/mcp-language-server.git $mcp_lsp_dir"
+            print_info "Run manually: git clone https://github.com/axiomantic/mcp-language-server.git $mcp_lsp_dir"
             return
         fi
     else
