@@ -42,6 +42,10 @@ def get_skill_dirs() -> List[Path]:
     dirs.append(repo_root / "skills")
     
     # Superpowers (if installed alongside)
+    # Check SUPERPOWERS_DIR explicitly first
+    if "SUPERPOWERS_DIR" in os.environ:
+        dirs.append(Path(os.environ["SUPERPOWERS_DIR"]) / "skills")
+    
     # Check CLAUDE_CONFIG_DIR
     claude_config = os.environ.get("CLAUDE_CONFIG_DIR", str(home / ".claude"))
     dirs.append(Path(claude_config) / "skills")
