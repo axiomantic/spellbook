@@ -359,6 +359,122 @@ setup_opencode_integration() {
     else
         print_info "OpenCode plugin not yet implemented (skipping)"
     fi
+
+    # Symlink skills to ~/.opencode/skills
+    local opencode_dir="$HOME/.opencode"
+    local opencode_skills="$opencode_dir/skills"
+
+    if [ ! -d "$opencode_dir" ]; then
+        print_info "OpenCode config directory not found (skipping skills)"
+        return
+    fi
+
+    mkdir -p "$opencode_skills"
+
+    # Some OpenCode versions prefer flat .md files
+    print_step "Linking OpenCode skills..."
+    local count=0
+    for skill_dir in "$SCRIPT_DIR/skills"/*/; do
+        if [ -d "$skill_dir" ]; then
+            local skill_name=$(basename "$skill_dir")
+            local source_file="$skill_dir/SKILL.md"
+            local target_link="$opencode_skills/$skill_name.md"
+
+            if [ -f "$source_file" ]; then
+                rm -f "$target_link"
+                ln -s "$source_file" "$target_link"
+                count=$((count + 1))
+            fi
+        fi
+    done
+    print_success "Linked $count skills to OpenCode"
+}
+
+setup_gemini_integration() {
+    print_step "Setting up Gemini integration..."
+
+    local gemini_dir="$HOME/.gemini"
+    local gemini_extensions_dir="$gemini_dir/extensions/spellbook"
+
+    if [ ! -d "$gemini_dir" ]; then
+        print_info "Gemini config directory not found (skipping)"
+        return
+    fi
+
+    mkdir -p "$gemini_extensions_dir"
+
+    # Generate absolute path for server.py
+    local server_path="$SCRIPT_DIR/spellbook_mcp/server.py"
+    
+    # Read template and replace placeholder
+    local template_file="$SCRIPT_DIR/extensions/gemini/gemini-extension.json"
+    local target_file="$gemini_extensions_dir/gemini-extension.json"
+    
+    if [ -f "$template_file" ]; then
+        # Use python or sed to replace. Sed is simpler here but robust path handling needed.
+        # We use python to avoid sed delimiter hell with paths
+        python3 -c "
+import sys
+content = open('$template_file').read()
+content = content.replace('__SERVER_PATH__', '$server_path')
+open('$target_file', 'w').write(content)
+"
+        print_success "Generated Gemini extension manifest"
+    else
+        print_warning "Gemini extension template not found"
+    fi
+
+    # Symlink context file
+    local context_source="$SCRIPT_DIR/docs/generated/GEMINI.md"
+    # Ensure generated directory exists (it should be created by generate_context.py)
+    if [ ! -f "$context_source" ]; then
+         print_warning "GEMINI.md context file not found (will be generated)"
+    fi
+    
+    # Context generation happens in install_mcp_server or dedicated step?
+    # Let's link it now assuming it will exist
+    local context_target="$gemini_extensions_dir/GEMINI.md"
+    rm -f "$context_target"
+    # We link to the generated file in docs/generated so updates propagate
+    # Wait, generate_context.py writes to stdout by default. 
+    # We should run it to file first.
+}
+
+generate_context_files() {
+    print_step "Generating AI context files..."
+    
+    local gen_script="$SCRIPT_DIR/scripts/generate_context.py"
+    local output_dir="$SCRIPT_DIR/docs/generated"
+    mkdir -p "$output_dir"
+    
+    if [ -f "$gen_script" ]; then
+        # Gemini
+        python3 "$gen_script" "$output_dir/GEMINI.md"
+        print_success "Generated GEMINI.md"
+        
+        # Codex (Agent.md)
+        python3 "$gen_script" "$output_dir/AGENTS.md"
+        print_success "Generated AGENTS.md"
+
+        # Symlink Codex AGENTS.md
+        local codex_dir="$HOME/.codex"
+        if [ -d "$codex_dir" ]; then
+             rm -f "$codex_dir/AGENTS.md"
+             ln -s "$output_dir/AGENTS.md" "$codex_dir/AGENTS.md"
+             print_success "Linked Codex AGENTS.md"
+        fi
+        
+        # Link Gemini GEMINI.md (part of extension setup, but ensure link points here)
+        local gemini_ext_dir="$HOME/.gemini/extensions/spellbook"
+        if [ -d "$gemini_ext_dir" ]; then
+            rm -f "$gemini_ext_dir/GEMINI.md"
+            ln -s "$output_dir/GEMINI.md" "$gemini_ext_dir/GEMINI.md"
+            print_success "Linked Gemini GEMINI.md"
+        fi
+
+    else
+        print_error "Context generator script not found!"
+    fi
 }
 
 install_mcp_server() {
@@ -408,7 +524,22 @@ install_mcp_server() {
         fi
     else
         print_info "Claude CLI not found, skipping MCP registration"
-        print_info "Run manually: claude mcp add spellbook -- python $server_file"
+        # print_info "Run manually: claude mcp add spellbook -- python $server_file"
+    fi
+    
+    # Register with Gemini if available (via extension link)
+    if command -v gemini &> /dev/null; then
+        print_step "Registering Gemini extension..."
+        local gemini_ext_dir="$HOME/.gemini/extensions/spellbook"
+        # Since we manually created the dir and JSON, we might just need to reload or 'link'
+        # Check if gemini extensions link command works
+        if gemini extensions list 2>/dev/null | grep -q "spellbook"; then
+             print_info "Gemini extension already present"
+        else
+             # Manual linking if 'gemini extensions link' isn't standard or needed given we put files in place
+             print_info "Gemini extension files configured in ~/.gemini/extensions/spellbook"
+             print_info "You may need to run 'gemini extensions list' to verify."
+        fi
     fi
 }
 
@@ -587,7 +718,9 @@ main() {
     setup_claude_code_bootstrap
     setup_codex_integration
     setup_opencode_integration
+    setup_gemini_integration
     install_mcp_server
+    generate_context_files
     install_mcp_language_server
     print_completion
 }
