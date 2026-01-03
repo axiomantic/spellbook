@@ -5,6 +5,7 @@ Scans available skills and creates a system prompt with skill triggers.
 """
 import sys
 import os
+import argparse
 from pathlib import Path
 from typing import List, Dict
 
@@ -52,7 +53,13 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 4. **Follow Instructions**: The tool will return the skill's specific instructions. Follow them rigorously.
 </SPELLBOOK_CONTEXT>"""
 
-def generate_context_content() -> str:
+import argparse
+
+# ... (imports remain)
+
+# ... (get_skill_dirs and TEMPLATE remain)
+
+def generate_context_content(include_content: str = "") -> str:
     dirs = get_skill_dirs()
     skills = find_skills(dirs)
     
@@ -67,16 +74,33 @@ def generate_context_content() -> str:
         desc = desc.replace('\n', ' ')
         skills_list.append(f"- **{name}**: {desc}")
         
-    return TEMPLATE.format(skills_list='\n'.join(skills_list))
+    skill_context = TEMPLATE.format(skills_list='\n'.join(skills_list))
+    
+    if include_content:
+        return f"{include_content}\n\n---\n\n# Spellbook Skill Registry\n\n{skill_context}"
+    return skill_context
 
 def main():
-    content = generate_context_content()
+    parser = argparse.ArgumentParser(description="Generate context files for Spellbook")
+    parser.add_argument("output", nargs="?", help="Output file path (default: stdout)")
+    parser.add_argument("--include", help="Path to a file to include (prepend) in the output")
     
-    # Default output is stdout
-    if len(sys.argv) > 1:
-        output_path = Path(sys.argv[1])
+    args = parser.parse_args()
+    
+    include_content = ""
+    if args.include:
+        include_path = Path(args.include)
+        if include_path.exists():
+            include_content = include_path.read_text(encoding="utf-8")
+        else:
+            print(f"Warning: Include file not found: {args.include}", file=sys.stderr)
+
+    content = generate_context_content(include_content)
+    
+    if args.output:
+        output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(content)
+        output_path.write_text(content, encoding="utf-8")
         print(f"Generated context at {output_path}")
     else:
         print(content)

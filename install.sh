@@ -445,16 +445,17 @@ generate_context_files() {
     
     local gen_script="$SCRIPT_DIR/scripts/generate_context.py"
     local output_dir="$SCRIPT_DIR/docs/generated"
+    local claude_md="$SCRIPT_DIR/CLAUDE.md"
     mkdir -p "$output_dir"
     
     if [ -f "$gen_script" ]; then
-        # Gemini
-        python3 "$gen_script" "$output_dir/GEMINI.md"
-        print_success "Generated GEMINI.md"
+        # Gemini (include CLAUDE.md)
+        python3 "$gen_script" "$output_dir/GEMINI.md" --include "$claude_md"
+        print_success "Generated GEMINI.md (with CLAUDE.md included)"
         
-        # Codex (Agent.md)
-        python3 "$gen_script" "$output_dir/AGENTS.md"
-        print_success "Generated AGENTS.md"
+        # Codex (include CLAUDE.md)
+        python3 "$gen_script" "$output_dir/AGENTS.md" --include "$claude_md"
+        print_success "Generated AGENTS.md (with CLAUDE.md included)"
 
         # Symlink Codex AGENTS.md
         local codex_dir="$HOME/.codex"
