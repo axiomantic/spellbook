@@ -1,6 +1,22 @@
 ---
 name: implement-feature
-description: Use when user wants to implement a feature, build something new, add functionality, or create a component. Also use for creating new projects, repositories, templates, libraries, or any greenfield development. Triggers on "implement X", "build Y", "add feature Z", "create X", "design a new Y", "build a template for Z", "create a repo/project that does X", "start a new project". NOT for bug fixes (use systematic-debugging instead). Orchestrates the complete workflow from requirements gathering through research, design, planning, and parallel implementation with quality gates and review checkpoints at every phase.
+description: |
+  DEFAULT skill for any request involving building, creating, or adding functionality. Invoke IMMEDIATELY when triggered - do not ask clarifying questions first (this skill has its own discovery phase).
+
+  Explicit triggers: "implement X", "build Y", "add feature Z", "create X", "design a new Y", "build a template for Z", "create a repo/project that does X", "start a new project".
+
+  Wish/desire triggers (ALSO invoke immediately):
+  - "Would be great to...", "It'd be nice to...", "It would be cool if..."
+  - "I want to...", "I need to...", "We need..."
+  - "Can we add...", "Let's add...", "We should add..."
+  - "How about adding...", "What about...", "What if we..."
+  - Any expression of wanting new functionality, behavior, or capability
+
+  Also use for: creating new projects, repositories, templates, libraries, or any greenfield development.
+
+  NOT for: bug fixes (use systematic-debugging), pure research/exploration (use Explore agent), or questions about existing code.
+
+  Orchestrates the complete workflow: requirements gathering → research → design → planning → parallel implementation with quality gates and review checkpoints at every phase.
 ---
 
 <ROLE>
@@ -1328,6 +1344,10 @@ Task (or subagent simulation):
 ```
 1. Log the review findings for the record
 2. If findings exist: proceed directly to 2.4 Fix Design Doc
+   - CRITICAL: In autonomous mode, ALWAYS favor the most complete and correct fixes
+   - Treat suggestions as mandatory improvements, not optional nice-to-haves
+   - Fix root causes, not symptoms
+   - When multiple valid fixes exist, choose the one that produces the highest quality result
 3. If no findings: proceed directly to Phase 3
 ```
 
@@ -1359,6 +1379,15 @@ Task (or subagent simulation):
 
 <RULE>Subagent MUST invoke executing-plans using the Skill tool.</RULE>
 
+<CRITICAL>
+In autonomous mode, ALWAYS favor the most complete and correct solutions:
+- Treat suggestions as mandatory improvements, not optional
+- Fix root causes, not just symptoms
+- When multiple valid fixes exist, choose the highest quality option
+- Never apply quick patches when thorough fixes are possible
+- Ensure fixes don't introduce new issues or inconsistencies
+</CRITICAL>
+
 ```
 Task (or subagent simulation):
   description: "Fix design doc"
@@ -1373,7 +1402,16 @@ Task (or subagent simulation):
 
     Design document location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
-    Address ALL items - critical, important, AND minor.
+    ## Fix Quality Requirements (AUTONOMOUS MODE)
+
+    You MUST apply the most complete and correct fix for each finding:
+    - Address ALL items: critical, important, minor, AND suggestions
+    - For each finding, choose the fix that produces the highest quality result
+    - Fix underlying issues, not just surface symptoms
+    - Ensure fixes are internally consistent with rest of document
+    - When in doubt, err on the side of more thorough treatment
+    - Never apply band-aid fixes when proper solutions are available
+
     Commit changes when done.
 ```
 
@@ -1438,6 +1476,15 @@ Task (or subagent simulation):
 
 <RULE>Subagent MUST invoke executing-plans using the Skill tool.</RULE>
 
+<CRITICAL>
+In autonomous mode, ALWAYS favor the most complete and correct solutions:
+- Treat suggestions as mandatory improvements, not optional
+- Fix root causes, not just symptoms
+- When multiple valid fixes exist, choose the highest quality option
+- Never apply quick patches when thorough fixes are possible
+- Ensure fixes maintain consistency with design document
+</CRITICAL>
+
 ```
 Task (or subagent simulation):
   description: "Fix impl plan"
@@ -1453,7 +1500,17 @@ Task (or subagent simulation):
     Implementation plan location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Parent design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
-    Pay special attention to interface contracts between parallel work.
+    ## Fix Quality Requirements (AUTONOMOUS MODE)
+
+    You MUST apply the most complete and correct fix for each finding:
+    - Address ALL items: critical, important, minor, AND suggestions
+    - For each finding, choose the fix that produces the highest quality result
+    - Fix underlying issues, not just surface symptoms
+    - Ensure fixes maintain traceability to design document
+    - Pay special attention to interface contracts between parallel work
+    - When in doubt, err on the side of more thorough treatment
+    - Never apply band-aid fixes when proper solutions are available
+
     Commit changes when done.
 ```
 
@@ -1898,8 +1955,14 @@ def handle_review_checkpoint(findings, mode):
 
     if mode == "autonomous":
         # Never pause - proceed automatically
+        # CRITICAL: In autonomous mode, ALWAYS favor most complete/correct fixes
         if findings:
-            dispatch_fix_subagent(findings)
+            dispatch_fix_subagent(
+                findings,
+                fix_strategy="most_complete",  # Not "quickest" or "minimal"
+                treat_suggestions_as="mandatory",  # Not "optional"
+                fix_depth="root_cause"  # Not "surface_symptom"
+            )
         return "proceed"
 
     if mode == "interactive":
