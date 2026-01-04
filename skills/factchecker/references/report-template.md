@@ -57,6 +57,77 @@ Use this template structure when generating reports.
 
 ---
 
+## Missing Context & Completeness
+
+If missing facts mode was enabled, include this section after Summary:
+
+### High Severity
+
+For each INCOMPLETE verdict with high severity:
+
+```markdown
+#### [Title of incomplete item]
+**Location:** `[file]:[line]`
+**Type:** Context Gap | Completeness Gap
+**Issue:** [Brief description of what's missing]
+
+**Missing Elements:**
+- [Element 1]
+- [Element 2]
+
+**Suggested Addition:**
+```[language]
+[Suggested content to add]
+```
+```
+
+### Medium/Low Severity
+
+Same format, grouped by severity.
+
+---
+
+## Extraneous Content
+
+If extraneous info mode was enabled, include this section:
+
+### Code-Restating Comments
+
+For each EXTRANEOUS verdict with type code_restate:
+
+```markdown
+#### [file]:[line]
+```[language]
+[The extraneous comment]
+[Adjacent code it describes]
+```
+
+**Reason:** [Why it's extraneous]
+**Suggestion:** Remove (operation is self-evident)
+```
+
+### LLM Patterns
+
+For each EXTRANEOUS verdict with type llm_pattern:
+
+Same format as above.
+
+### Verbose Explanations
+
+For each EXTRANEOUS verdict with type verbose:
+
+```markdown
+#### [file]:[lines]
+**Content:** [First 100 chars of verbose text]...
+**Repetition Score:** [N]%
+**Suggestion:** Simplify to:
+```
+[Simplified version]
+```
+```
+
+---
+
 ## Findings Section
 
 Organize by category, then by verdict (refuted first, then inconclusive, then verified).
@@ -217,6 +288,27 @@ These claims could not be verified automatically.
 {{/each}}
 
 ---
+```
+
+---
+
+## Clarity Mode Output
+
+If clarity mode was enabled, include this section after all findings:
+
+```markdown
+## Clarity Mode Output
+
+Generated glossary and key facts for AI configuration files.
+
+**Updated Files:**
+- [File 1]
+- [File 2]
+
+**Glossary Entries:** [N]
+**Key Facts:** [M]
+
+See updated AI config files for details.
 ```
 
 ---

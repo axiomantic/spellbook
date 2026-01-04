@@ -204,6 +204,105 @@ Skip these patterns (not verifiable claims):
 
 ---
 
+## Missing Facts Detection Patterns
+
+These patterns identify statements that are technically accurate but lack critical context.
+
+### Context Gap Indicators
+
+Claims that describe behavior without specifying constraints:
+
+```regex
+The API (returns|sends|processes|handles) \w+  # Missing: auth, errors, rate limits
+This (function|method) (does|handles) \w+     # Missing: params, returns, exceptions
+Configure (the )?\w+ (by|using|via)           # Missing: defaults, valid options
+```
+
+**Required Context Elements:**
+- **API claims**: Authentication requirements, error conditions, rate limits, data format
+- **Function claims**: Parameters and constraints, return value format, exceptions, side effects
+- **Configuration claims**: Default values, valid options/ranges, when to use each option
+
+### Completeness Gap Patterns
+
+Structural incompleteness in documentation:
+
+**JSDoc/TSDoc functions:** Count documented params vs actual params, check @returns, @throws
+
+**API endpoint documentation:** Check for error response section, auth section, rate limit info
+
+### Missing Facts Output Format
+
+```json
+{
+  "id": "missing-001",
+  "type": "context_gap" | "completeness_gap",
+  "text": "The API returns user data",
+  "location": { "file": "docs/api.md", "line": 45 },
+  "missingElements": ["authentication requirements", "error conditions", "rate limits"],
+  "severity": "high" | "medium" | "low"
+}
+```
+
+---
+
+## Extraneous Information Detection Patterns
+
+These patterns identify content that adds no value or is redundant.
+
+### Code-Restating Comment Patterns
+
+Comments that simply describe what code obviously does:
+
+```regex
+// (Increment|Decrement|Set|Get|Return|Call) \w+
+// Loop (through|over) \w+
+// Set \w+ to \w+
+```
+
+**Value indicators (keep these comments):**
+- WHY explanations: `because`, `to prevent`, `to avoid`, `to ensure`
+- Non-obvious details: `workaround`, `edge case`, `must be`, numbers/thresholds
+
+### LLM Over-Commenting Patterns
+
+Characteristic patterns from LLM-generated code:
+
+```regex
+// Import (required|necessary) (dependencies|modules)
+// Define (the|a) (main|primary)? ?(function|class|interface)
+// Initialize (variables|state|data)
+// Export (the|this) (function|class) for use
+// Process (the |this )?data
+// Handle (the )?(error|exception)
+```
+
+### Verbose Explanation Patterns
+
+**Repetition detection:**
+- Extract 3-word phrases, count occurrences
+- Flag if repetition score > 30%
+
+**Hedging detection:**
+- Count: may, might, could, possibly, perhaps, seems, appears
+- Flag if hedging score > 20%
+
+### Extraneous Info Output Format
+
+```json
+{
+  "id": "extraneous-001",
+  "type": "code_restate" | "verbose" | "llm_pattern" | "redundant",
+  "content": "// Increment counter by 1",
+  "location": { "file": "src/utils.ts", "line": 45 },
+  "reason": "Comment restates obvious operation",
+  "severity": "low" | "medium" | "high",
+  "suggestedAction": "remove" | "simplify"
+}
+```
+
+---
+
 ## Output Format
 
 For each extracted claim:

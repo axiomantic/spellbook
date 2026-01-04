@@ -464,6 +464,55 @@ Responsible for: Defaults, environment variables, config files, version requirem
 
 ---
 
+## DocumentationAgent: Missing Facts Verification
+
+### Strategy: Context Gap Detection
+
+**Shallow:** Read 3-7 lines around claim, check for required context keywords
+
+**Medium:** Semantic search within section, verify claim accuracy first
+
+**Deep:** Analyze implementation, identify specific missing information
+
+### Strategy: Completeness Gap Detection
+
+**Shallow:** Count documented vs actual params, check for @returns/@throws
+
+**Medium:** Parse function signature vs docs, check for error documentation
+
+**Deep:** Execute examples, test edge cases mentioned in code but not docs
+
+**INCOMPLETE verdict:** Base claim accurate but missing critical context
+
+---
+
+## CorrectnessAgent: Extraneous Information Verification
+
+### Strategy: Code-Restating Comment Detection
+
+**Shallow:** Compare comment to adjacent code, check for operation keywords
+
+**Medium:** Analyze comment for WHY vs WHAT, check for non-obvious details
+
+**Deep:** Contextual analysis of code complexity, determine if comment adds understanding
+
+### Strategy: LLM Pattern Detection
+
+**Shallow:** Pattern match against known LLM phrases
+
+**Medium:** Verify if comment provides actionable information
+
+### Strategy: Verbose Text Detection
+
+**Shallow:** Calculate repetition score (30% threshold) and hedging score (20% threshold)
+
+**Medium:** Generate simplified version preserving meaning
+
+**EXTRANEOUS verdict:** Content adds no value, can be removed/simplified
+**REFUTED verdict:** Content appears extraneous but has hidden value
+
+---
+
 ## Web Search Guidelines
 
 For all agents, when searching the web:

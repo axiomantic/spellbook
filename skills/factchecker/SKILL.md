@@ -42,6 +42,7 @@ vital to my career. Skipping steps or issuing verdicts without evidence would be
 a serious professional failure.
 
 You MUST:
+0. Run configuration wizard to determine analysis modes
 1. Ask user to select scope before extracting claims
 2. Present ALL claims for triage before verification begins
 3. Verify each claim with evidence appropriate to selected depth
@@ -70,6 +71,83 @@ Now proceed with confidence following this checklist to achieve outstanding resu
 ---
 
 # Factchecker Workflow
+
+## Phase 0.5: Configuration Wizard
+
+<RULE>ALWAYS run configuration wizard before scope selection to determine analysis modes.</RULE>
+
+### Mode Selection
+
+Present user with three optional analysis modes:
+
+1. **Missing Facts Detection** - Identifies gaps where claims are technically true but lack critical context
+2. **Extraneous Information Detection** - Flags unnecessary, redundant, or LLM-style over-commenting
+3. **Clarity Mode** - Generates glossaries and key facts for AI configuration files (CLAUDE.md, GEMINI.md, AGENTS.md)
+
+### Interactive Mode
+
+Use AskUserQuestion for each mode:
+
+```
+=== Factchecker Configuration ===
+
+This session will verify factual claims, but we can also:
+- Detect missing context or incomplete information
+- Flag extraneous or redundant content
+- Generate glossaries for AI configuration files
+
+Enable Missing Facts Detection? (finds gaps in information)
+Default: Yes
+Options: Y/n
+
+Enable Extraneous Information Detection? (flags unnecessary content)
+Default: Yes
+Options: Y/n
+
+Enable Clarity Mode? (generates glossaries for CLAUDE.md, GEMINI.md, AGENTS.md)
+Default: Yes
+Options: Y/n
+
+Configuration saved. Proceeding to scope selection...
+```
+
+### Autonomous Mode Detection
+
+Check context for autonomous mode indicators:
+- Context contains "Mode: AUTONOMOUS" or "autonomous mode"
+- Context contains "DO NOT ask questions"
+
+When autonomous mode detected:
+
+```
+=== Factchecker Configuration (Autonomous Mode) ===
+
+Automatically enabling all analysis modes:
+✓ Missing Facts Detection
+✓ Extraneous Information Detection
+✓ Clarity Mode
+
+Proceeding to scope selection...
+```
+
+### Configuration State
+
+Store configuration in session context:
+
+```typescript
+interface FactcheckerConfig {
+  missingFactsMode: boolean;      // Check for information gaps
+  extraneousInfoMode: boolean;    // Flag unnecessary content
+  clarityMode: boolean;            // Generate AI onboarding artifacts
+  autonomousMode: boolean;         // Auto-yes to all modes
+  scopeType: string;               // From Phase 1 (file, directory, etc.)
+  targetFiles: string[];           // Files to analyze
+}
+```
+
+This configuration object is passed to all subsequent phases.
+
+---
 
 ## Phase 1: Scope Selection
 
@@ -282,11 +360,13 @@ See `references/verification-strategies.md` for detailed per-agent strategies.
 |---------|---------|-------------------|
 | **Verified** | Claim is accurate | Concrete proof: test output, code trace, docs, benchmark |
 | **Refuted** | Claim is false | Counter-evidence: failing test, contradicting code, updated docs |
+| **Incomplete** | Claim true but missing context | Base claim verified + missing elements identified |
 | **Inconclusive** | Cannot determine | Document what was tried, why insufficient |
 | **Ambiguous** | Wording unclear | Multiple interpretations explained, clearer phrasing suggested |
 | **Misleading** | Technically true, implies falsehood | What reader assumes vs. reality |
 | **Jargon-heavy** | Too technical for audience | Unexplained terms identified, accessible version suggested |
 | **Stale** | Was true, no longer applies | When it was true, what changed, current state |
+| **Extraneous** | Content is unnecessary/redundant | Value analysis shows no added information |
 
 ---
 
@@ -298,9 +378,12 @@ Generate markdown report using `references/report-template.md`.
 
 1. **Header**: Timestamp, scope, claim counts by verdict
 2. **Summary**: Table of verdicts with action requirements
-3. **Findings by Category**: Each claim with verdict, evidence, sources
-4. **Bibliography**: All sources cited with consistent numbering
-5. **Implementation Plan**: Prioritized fixes for non-verified claims
+3. **Missing Context & Completeness**: Gaps and incomplete information (if enabled)
+4. **Extraneous Content**: Unnecessary or redundant content (if enabled)
+5. **Findings by Category**: Each claim with verdict, evidence, sources
+6. **Bibliography**: All sources cited with consistent numbering
+7. **Implementation Plan**: Prioritized fixes for non-verified claims
+8. **Clarity Mode Output**: Generated glossaries and key facts (if enabled)
 
 ### Bibliography Entry Formats
 
@@ -313,6 +396,100 @@ Generate markdown report using `references/report-template.md`.
 | **Documentation** | `Docs: <source> <section> - <URL>` |
 | **Benchmark** | `Benchmark: <method> - <results>` |
 | **Paper/RFC** | `<Citation> - <section> - <URL if available>` |
+
+---
+
+## Phase 6.5: Clarity Mode Output
+
+<RULE>Run Clarity Mode after report generation if config.clarityMode === true.</RULE>
+
+### Purpose
+
+Generate glossaries and key facts from analyzed code/documentation to improve AI agent onboarding. Extract domain terms, project-specific concepts, and critical facts, then update AI configuration files.
+
+### Target Files
+
+Search for and update these AI configuration files:
+- `CLAUDE.md` - Claude-specific configuration
+- `GEMINI.md` - Gemini-specific configuration
+- `AGENTS.md` - Generic agent configuration
+- Any `*_AGENT.md` or `*_AI.md` files in project root or `.claude/` directory
+
+### Glossary Generation
+
+1. **Extract from verified claims**: Terms from claims with VERIFIED verdicts and confidence > 0.7
+2. **Extract from code**: Class names, exported functions, type definitions with docstrings
+3. **Extract from documentation**: Section headers, emphasized terms (**bold**), defined terms
+
+**Glossary Entry Format:**
+```markdown
+- **[Term]**: [1-2 sentence definition]. [Optional usage context.]
+```
+
+**Categories:**
+- Core Concepts - fundamental domain terms
+- Technical Terms - implementation-specific terminology
+- Project-Specific - terms unique to this codebase
+
+### Key Facts Generation
+
+Extract critical information by category:
+
+1. **Architecture**: Phase flow, database usage, external integrations
+2. **Behavior**: Core functionality, business logic patterns
+3. **Integration**: APIs, dependencies, configuration requirements
+4. **Error Handling**: Exception patterns, fallback behaviors
+5. **Performance**: Caching, optimization strategies, limits
+
+**Key Fact Format:**
+```markdown
+- [Concise factual statement about the codebase]
+```
+
+### AI Config File Update
+
+For each target file found:
+
+1. **Check for existing sections**: Look for `## Glossary` and `## Key Facts`
+2. **If sections exist**: Replace with updated content
+3. **If sections don't exist**: Append before any `---` separator or at end
+
+**Section Format:**
+```markdown
+## Glossary (Generated: YYYY-MM-DD)
+
+**Terms extracted from factchecker analysis:**
+
+### Core Concepts
+
+- **[Term]**: [Definition]
+
+### Technical Terms
+
+- **[Term]**: [Definition]
+
+## Key Facts (Generated: YYYY-MM-DD)
+
+**Critical information for AI agents:**
+
+### Architecture
+
+- [Fact]
+
+### Behavior
+
+- [Fact]
+```
+
+### Output Logging
+
+Log the results to user:
+```
+Clarity Mode complete:
+- Generated [N] glossary entries
+- Extracted [M] key facts
+- Updated: CLAUDE.md, GEMINI.md
+```
 
 ---
 
@@ -535,6 +712,7 @@ Sources: [1] Code trace, [2] OWASP Password Storage Cheat Sheet
 <SELF_CHECK>
 Before finalizing ANY verification or report:
 
+- [ ] Did I run the configuration wizard to determine analysis modes?
 - [ ] Did I ask user to select scope first?
 - [ ] Did I present ALL claims for triage before verification?
 - [ ] For each claim: do I have CONCRETE evidence (not just reasoning)?
