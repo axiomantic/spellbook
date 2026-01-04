@@ -1,6 +1,6 @@
 # implement-feature
 
-Use when user wants to implement a feature, build something new, add functionality, or create a component. Triggers on "implement X", "build Y", "add feature Z", "create X". NOT for bug fixes (use systematic-debugging instead). Orchestrates the complete workflow from requirements gathering through research, design, planning, and parallel implementation with quality gates and review checkpoints at every phase.
+Use when user wants to implement a feature, build something new, add functionality, or create a component. Also use for creating new projects, repositories, templates, libraries, or any greenfield development. Triggers on "implement X", "build Y", "add feature Z", "create X", "design a new Y", "build a template for Z", "create a repo/project that does X", "start a new project". NOT for bug fixes (use systematic-debugging instead). Orchestrates the complete workflow from requirements gathering through research, design, planning, and parallel implementation with quality gates and review checkpoints at every phase.
 
 ## Skill Content
 
