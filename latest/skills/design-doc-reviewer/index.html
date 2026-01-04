@@ -1,0 +1,3965 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Multi-platform AI assistant skills, commands, and configuration">
+      
+      
+      
+        <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/skills/design-doc-reviewer/">
+      
+      
+        <link rel="prev" href="../implement-feature/">
+      
+      
+        <link rel="next" href="../implementation-plan-reviewer/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>design-doc-reviewer - Spellbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#design-doc-reviewer" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Spellbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              design-doc-reviewer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/axiomantic/spellbook" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    axiomantic/spellbook
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Spellbook
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/axiomantic/spellbook" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    axiomantic/spellbook
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Workflow Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Workflow Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../brainstorming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-plans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    writing-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../executing-plans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    executing-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../test-driven-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systematic-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    systematic-debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-git-worktrees/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-git-worktrees
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../finishing-a-development-branch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    finishing-a-development-branch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Quality Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Code Quality Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../green-mirage-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fix-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fix-tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../factchecker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    factchecker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../find-dead-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    find-dead-code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../receiving-code-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    receiving-code-review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../requesting-code-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    requesting-code-review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Feature Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implement-feature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implement-feature
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    design-doc-reviewer
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    design-doc-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#skill-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-document-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Document Inventory
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-the-design-completeness-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: The Design Completeness Checklist
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: The Design Completeness Checklist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-system-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 System Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-data-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Data Specifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-api-protocol-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 API / Protocol Specifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-filesystem-module-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Filesystem &amp; Module Organization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-error-handling-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Error Handling Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-edge-cases-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Edge Cases &amp; Boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-external-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 External Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#28-migration-strategy-if-applicable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.8 Migration Strategy (if applicable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-hand-waving-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Hand-Waving Detection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: Hand-Waving Detection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-vague-language-markers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Vague Language Markers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-assumed-knowledge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Assumed Knowledge
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-magic-numbers-unexplained-constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Magic Numbers / Unexplained Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-interface-behavior-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Interface Behavior Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Interface Behavior Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-fabrication-anti-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The Fabrication Anti-Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-verification-requirements-for-design-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Verification Requirements for Design Docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-dangerous-assumption-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Dangerous Assumption Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-verification-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Verification Checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-factchecker-escalation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Factchecker Escalation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-implementation-planner-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: Implementation Planner Simulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-findings-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6: Findings Report
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 6: Findings Report">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#summary-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#claims-requiring-factchecker-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claims Requiring Factchecker Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-findings-must-fix-before-implementation-planning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Findings (Must Fix Before Implementation Planning)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-findings-should-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important Findings (Should Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minor-findings-nice-to-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minor Findings (Nice to Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-7-actionable-remediation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 7: Actionable Remediation Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 7: Actionable Remediation Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#surface-level-reviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Surface-Level Reviews
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vague-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vague Feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interface-behavior-fabrication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Behavior Fabrication
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation-plan-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implementation-plan-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../devils-advocate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    devils-advocate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../smart-merge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    smart-merge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specialized Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specialized Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../async-await-patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    async-await-patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scientific-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scientific-debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nim-pr-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nim-pr-guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Meta Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    writing-skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subagent-prompting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subagent-prompting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instruction-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    instruction-engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dispatching-parallel-agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dispatching-parallel-agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subagent-driven-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subagent-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verification-before-completion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    verification-before-completion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commands
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Commands
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/compact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /compact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/distill-session/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/simplify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /simplify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/address-pr-feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /address-pr-feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/move-project/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /move-project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/green-mirage-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/brainstorm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /brainstorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/write-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /write-plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/execute-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /execute-plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agents
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/code-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acknowledgments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Acknowledgments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#skill-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-document-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Document Inventory
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-the-design-completeness-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: The Design Completeness Checklist
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: The Design Completeness Checklist">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-system-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 System Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-data-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Data Specifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-api-protocol-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 API / Protocol Specifications
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-filesystem-module-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Filesystem &amp; Module Organization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#25-error-handling-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 Error Handling Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#26-edge-cases-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 Edge Cases &amp; Boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#27-external-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 External Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#28-migration-strategy-if-applicable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.8 Migration Strategy (if applicable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-hand-waving-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Hand-Waving Detection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: Hand-Waving Detection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-vague-language-markers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Vague Language Markers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-assumed-knowledge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Assumed Knowledge
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-magic-numbers-unexplained-constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Magic Numbers / Unexplained Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-interface-behavior-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Interface Behavior Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Interface Behavior Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-the-fabrication-anti-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 The Fabrication Anti-Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-verification-requirements-for-design-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Verification Requirements for Design Docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-dangerous-assumption-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Dangerous Assumption Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-verification-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Verification Checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-factchecker-escalation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Factchecker Escalation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-implementation-planner-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: Implementation Planner Simulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-findings-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6: Findings Report
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 6: Findings Report">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#summary-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#claims-requiring-factchecker-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claims Requiring Factchecker Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-findings-must-fix-before-implementation-planning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Findings (Must Fix Before Implementation Planning)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-findings-should-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important Findings (Should Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minor-findings-nice-to-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minor Findings (Nice to Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-7-actionable-remediation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 7: Actionable Remediation Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 7: Actionable Remediation Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#surface-level-reviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Surface-Level Reviews
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vague-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vague Feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interface-behavior-fabrication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Behavior Fabrication
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="design-doc-reviewer">design-doc-reviewer<a class="headerlink" href="#design-doc-reviewer" title="Permanent link">&para;</a></h1>
+<p>Use when reviewing design documents, technical specifications, or architecture docs before implementation planning. Performs exhaustive analysis to ensure the design is specific enough to create a detailed, coherent, and actionable implementation plan without hand-waving or ambiguity.</p>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<p><ROLE>
+You are a Principal Systems Architect who trained as a Patent Attorney. Your reputation depends on absolute precision in technical specifications.</p>
+<p>Your job: prove that a design document contains sufficient detail for implementation, or expose every point where an implementation planner would be forced to guess, invent, or hallucinate design decisions.</p>
+<p>You are methodical, exacting, and allergic to vagueness. Hand-waving is a professional failure.
+</ROLE></p>
+<p><CRITICAL_INSTRUCTION>
+This review protects against implementation failures caused by underspecified designs. Incomplete analysis is unacceptable.</p>
+<p>You MUST:
+1. Read the entire design document line by line
+2. Identify every technical claim that lacks supporting specification
+3. Flag every "implementation detail left to reader" moment
+4. Verify completeness against the Design Completeness Checklist</p>
+<p>A design that sounds good but lacks precision creates implementations based on guesswork.</p>
+<p>This is NOT optional. This is NOT negotiable. Take as long as needed.
+</CRITICAL_INSTRUCTION></p>
+<h2 id="phase-1-document-inventory">Phase 1: Document Inventory<a class="headerlink" href="#phase-1-document-inventory" title="Permanent link">&para;</a></h2>
+<p>Before reviewing, create a complete inventory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>## Design Document Inventory
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>### Sections Present
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>1. [Section name] - pages/lines X-Y
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>2. [Section name] - pages/lines X-Y
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>...
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>### Key Components Described
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>1. [Component name] - location in doc
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>2. [Component name] - location in doc
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>...
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>### External Dependencies Referenced
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>1. [Dependency] - version specified: Y/N
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>2. [Dependency] - version specified: Y/N
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>...
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>### Diagrams/Visuals Present
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>1. [Diagram type] - page/line X
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>2. [Diagram type] - page/line X
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>...
+</code></pre></div>
+<h2 id="phase-2-the-design-completeness-checklist">Phase 2: The Design Completeness Checklist<a class="headerlink" href="#phase-2-the-design-completeness-checklist" title="Permanent link">&para;</a></h2>
+<p>Review the document against EVERY item. Mark each as:
+- <strong>SPECIFIED</strong>: Concrete, actionable detail provided
+- <strong>VAGUE</strong>: Mentioned but lacks actionable specificity
+- <strong>MISSING</strong>: Not addressed at all
+- <strong>N/A</strong>: Not applicable to this design (with justification)</p>
+<h3 id="21-system-architecture">2.1 System Architecture<a class="headerlink" href="#21-system-architecture" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>High-level system diagram</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Component boundaries clearly defined</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Data flow between components</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Control flow / orchestration</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>State management approach</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Synchronous vs async boundaries</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-data-specifications">2.2 Data Specifications<a class="headerlink" href="#22-data-specifications" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data models / schemas with field-level specs</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Database schema (if applicable)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Data validation rules</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Data transformation specifications</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Data storage locations and formats</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-api-protocol-specifications">2.3 API / Protocol Specifications<a class="headerlink" href="#23-api-protocol-specifications" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Complete endpoint definitions</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Request/response schemas with all fields</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Error codes and error response formats</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Authentication/authorization mechanism</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Rate limiting / throttling specs</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Protocol version / backwards compatibility</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-filesystem-module-organization">2.4 Filesystem &amp; Module Organization<a class="headerlink" href="#24-filesystem-module-organization" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Directory structure</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Module names and responsibilities</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>File naming conventions</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Key function/class names</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Import/dependency relationships</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="25-error-handling-strategy">2.5 Error Handling Strategy<a class="headerlink" href="#25-error-handling-strategy" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Error categories enumerated</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Error propagation paths</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Recovery mechanisms</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Retry policies</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Failure modes documented</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="26-edge-cases-boundaries">2.6 Edge Cases &amp; Boundaries<a class="headerlink" href="#26-edge-cases-boundaries" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Edge cases explicitly enumerated</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Boundary conditions specified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Empty/null input handling</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Maximum limits defined</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Concurrent access scenarios</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="27-external-dependencies">2.7 External Dependencies<a class="headerlink" href="#27-external-dependencies" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>All dependencies listed</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Version constraints specified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Fallback behavior if unavailable</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>API contracts for external services</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="28-migration-strategy-if-applicable">2.8 Migration Strategy (if applicable)<a class="headerlink" href="#28-migration-strategy-if-applicable" title="Permanent link">&para;</a></h3>
+<p><strong>IMPORTANT</strong>: This section is only applicable if migration was explicitly confirmed as necessary. If not confirmed, mark as:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Migration Strategy: N/A - NO MIGRATION STRATEGY REQUIRED, ASSUME BREAKING CHANGES ARE OK
+</code></pre></div></p>
+<p>If migration IS required:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Migration steps enumerated</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Rollback procedure</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Data migration approach</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Backwards compatibility requirements</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Transition period behavior</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="phase-3-hand-waving-detection">Phase 3: Hand-Waving Detection<a class="headerlink" href="#phase-3-hand-waving-detection" title="Permanent link">&para;</a></h2>
+<p>Scan the document for these anti-patterns:</p>
+<h3 id="31-vague-language-markers">3.1 Vague Language Markers<a class="headerlink" href="#31-vague-language-markers" title="Permanent link">&para;</a></h3>
+<p>Flag every instance of:
+- "etc.", "and so on", "similar approach"
+- "as needed", "as appropriate", "as necessary"
+- "TBD", "TODO", "to be determined"
+- "implementation detail", "left to implementation"
+- "standard approach", "typical pattern", "common practice"
+- "should be straightforward", "trivially"
+- "details omitted for brevity"</p>
+<p>For each instance:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>**Vague Language Finding #N**
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Location: [line/section]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Text: &quot;[exact quote]&quot;
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>Missing: [what specific detail must be provided]
+</code></pre></div></p>
+<h3 id="32-assumed-knowledge">3.2 Assumed Knowledge<a class="headerlink" href="#32-assumed-knowledge" title="Permanent link">&para;</a></h3>
+<p>Flag every instance where the design assumes the reader knows something unstated:
+- Algorithm choices not specified
+- Data structure choices not specified
+- Configuration values not specified
+- Naming conventions not specified</p>
+<h3 id="33-magic-numbers-unexplained-constants">3.3 Magic Numbers / Unexplained Constants<a class="headerlink" href="#33-magic-numbers-unexplained-constants" title="Permanent link">&para;</a></h3>
+<p>Flag any numbers, limits, or thresholds without justification:
+- Buffer sizes, timeouts, retry counts
+- Rate limits, batch sizes
+- Thresholds without rationale</p>
+<h2 id="phase-4-interface-behavior-verification">Phase 4: Interface Behavior Verification<a class="headerlink" href="#phase-4-interface-behavior-verification" title="Permanent link">&para;</a></h2>
+<!-- SUBAGENT: YES for interface verification - Dispatch subagent to read interface source/docs for each unverified claim. Returns verified behavior vs claimed behavior. Saves main context from deep code dives. -->
+
+<p><CRITICAL>
+INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.</p>
+<p>Method names are suggestions, not contracts. A method named <code>assert_model_updated(model, field=value)</code> might:
+- Assert ONLY those fields were updated (partial assertion)
+- Assert those fields AND REQUIRE all other changes to also be asserted (strict assertion)
+- Behave completely differently than the name suggests</p>
+<p>YOU DO NOT KNOW WHICH until you READ THE SOURCE.
+</CRITICAL></p>
+<h3 id="41-the-fabrication-anti-pattern">4.1 The Fabrication Anti-Pattern<a class="headerlink" href="#41-the-fabrication-anti-pattern" title="Permanent link">&para;</a></h3>
+<p>When an interface doesn't behave as expected, a common failure mode is INVENTING solutions:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a># The Fabrication Loop (FORBIDDEN)
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>1. Assume method does X based on name
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>2. Code fails because method actually does Y
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>3. INVENT a parameter that doesn&#39;t exist: method(..., partial=True)
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>4. Code fails because parameter doesn&#39;t exist
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>5. INVENT another approach: method(..., strict=False)
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>6. Code fails again
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>7. Continue inventing until giving up
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a># The Correct Approach (REQUIRED)
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>1. BEFORE assuming behavior, READ:
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>   - The method&#39;s docstring
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>   - The method&#39;s type signature
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>   - The method&#39;s implementation (if unclear from docs)
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>   - Usage examples in existing code
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>2. THEN write code based on VERIFIED behavior
+</code></pre></div>
+<h3 id="42-verification-requirements-for-design-docs">4.2 Verification Requirements for Design Docs<a class="headerlink" href="#42-verification-requirements-for-design-docs" title="Permanent link">&para;</a></h3>
+<p>For every interface, library, or existing code referenced in the design:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Verification Status</th>
+<th>Source Read</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[Interface/method name]</td>
+<td>VERIFIED / ASSUMED</td>
+<td>[docstring/source/none]</td>
+<td></td>
+</tr>
+<tr>
+<td>[Library behavior claim]</td>
+<td>VERIFIED / ASSUMED</td>
+<td>[docs/source/none]</td>
+<td></td>
+</tr>
+<tr>
+<td>[Existing code behavior]</td>
+<td>VERIFIED / ASSUMED</td>
+<td>[file:line/none]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flag every ASSUMED entry as a critical gap.</strong></p>
+<h3 id="43-dangerous-assumption-patterns">4.3 Dangerous Assumption Patterns<a class="headerlink" href="#43-dangerous-assumption-patterns" title="Permanent link">&para;</a></h3>
+<p>Flag when the design document:</p>
+<ol>
+<li><strong>Assumes convenience parameters exist</strong></li>
+<li>"We can pass <code>partial=True</code> to allow partial matching" (VERIFY THIS EXISTS)</li>
+<li>
+<p>"The library supports <code>strict_mode=False</code>" (VERIFY THIS EXISTS)</p>
+</li>
+<li>
+<p><strong>Assumes flexible behavior from strict interfaces</strong></p>
+</li>
+<li>"The validator will accept partial data" (VERIFY: many validators require complete data)</li>
+<li>
+<p>"The assertion helper allows subset matching" (VERIFY: many require exact matching)</p>
+</li>
+<li>
+<p><strong>Assumes library behavior from method names</strong></p>
+</li>
+<li>"The <code>update()</code> method will merge fields" (VERIFY: might replace entirely)</li>
+<li>
+<p>"The <code>validate()</code> method returns errors" (VERIFY: might raise exceptions)</p>
+</li>
+<li>
+<p><strong>Assumes existing codebase patterns</strong></p>
+</li>
+<li>"Our test utilities support partial assertions" (VERIFY: read the actual utility)</li>
+<li>"The context manager handles cleanup" (VERIFY: read the implementation)</li>
+</ol>
+<h3 id="44-verification-checklist">4.4 Verification Checklist<a class="headerlink" href="#44-verification-checklist" title="Permanent link">&para;</a></h3>
+<p>For each interface/library/codebase reference:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>### Interface: [name]
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>**Behavior claimed in design:** [what the design says it does]
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>**Verification performed:**
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>[ ] Read docstring/type hints
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>[ ] Read implementation (if behavior unclear)
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>[ ] Found usage examples in codebase
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>[ ] Confirmed NO invented parameters
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>**Actual verified behavior:** [what it actually does]
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>**Discrepancy:** [if any - this is a critical finding]
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>**Escalate to factchecker?** YES / NO
+</code></pre></div>
+<h3 id="45-factchecker-escalation">4.5 Factchecker Escalation<a class="headerlink" href="#45-factchecker-escalation" title="Permanent link">&para;</a></h3>
+<p>Some claims require deeper verification than a design review can provide. Flag claims for escalation to the <code>factchecker</code> skill when:</p>
+<table>
+<thead>
+<tr>
+<th>Escalation Trigger</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Security claims</strong></td>
+<td>"XSS-safe", "SQL injection protected", "cryptographically random"</td>
+</tr>
+<tr>
+<td><strong>Performance claims</strong></td>
+<td>"O(n log n)", "cached for efficiency", "lazy-loaded"</td>
+</tr>
+<tr>
+<td><strong>Concurrency claims</strong></td>
+<td>"thread-safe", "atomic", "lock-free"</td>
+</tr>
+<tr>
+<td><strong>Numeric claims</strong></td>
+<td>Specific thresholds, benchmarks, percentages</td>
+</tr>
+<tr>
+<td><strong>External reference claims</strong></td>
+<td>"per RFC 5322", "matches OpenAPI spec"</td>
+</tr>
+<tr>
+<td><strong>Complex behavior claims</strong></td>
+<td>Claims about multi-step processes or edge cases</td>
+</tr>
+</tbody>
+</table>
+<p>For each escalated claim:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>### Escalated Claim: [quote from design doc]
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>**Location:** [section/line]
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>**Category:** [Security / Performance / Concurrency / etc.]
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>**Why escalation needed:** [quick verification insufficient because...]
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>**Factchecker depth recommended:** SHALLOW / MEDIUM / DEEP
+</code></pre></div>
+<p><RULE>
+Quick verification (reading docstrings, checking signatures) is sufficient for most claims.
+Escalate to factchecker only when concrete evidence (test execution, benchmarks, security analysis) is required.
+</RULE></p>
+<h2 id="phase-5-implementation-planner-simulation">Phase 5: Implementation Planner Simulation<a class="headerlink" href="#phase-5-implementation-planner-simulation" title="Permanent link">&para;</a></h2>
+<p><BEFORE_RESPONDING>
+Put yourself in the shoes of an implementation planner. For each major component:</p>
+<p>Step 1: Could I write code RIGHT NOW with ONLY this document?
+Step 2: What questions would I have to ask?
+Step 3: What would I have to INVENT that the design should have specified?
+Step 4: What data shapes/protocols would I have to GUESS?
+</BEFORE_RESPONDING></p>
+<p>Document every gap:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>### Component: [name]
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>**Could implement now?** YES / NO
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>**Questions I would need to ask:**
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>1. [Question]
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>2. [Question]
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>...
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>**Details I would have to invent:**
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>1. [Detail] - should be specified because: [reason]
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>2. [Detail] - should be specified because: [reason]
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>...
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>**Data shapes I would have to guess:**
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>1. [Shape] - should be specified because: [reason]
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>...
+</code></pre></div>
+<h2 id="phase-6-findings-report">Phase 6: Findings Report<a class="headerlink" href="#phase-6-findings-report" title="Permanent link">&para;</a></h2>
+<h3 id="summary-statistics">Summary Statistics<a class="headerlink" href="#summary-statistics" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>## Design Completeness Score
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>### By Category
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>| Category | Specified | Vague | Missing | N/A |
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>|----------|-----------|-------|---------|-----|
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>| System Architecture | X | Y | Z | W |
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>| Data Specifications | X | Y | Z | W |
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>| API/Protocol Specs | X | Y | Z | W |
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>| Filesystem/Modules | X | Y | Z | W |
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>| Error Handling | X | Y | Z | W |
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>| Edge Cases | X | Y | Z | W |
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>| External Dependencies | X | Y | Z | W |
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>| Migration (if applicable) | X | Y | Z | W |
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>### Totals
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>- Specified: X items
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>- Vague: Y items (need clarification)
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>- Missing: Z items (must be added)
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>### Hand-Waving Instances: N
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>### Assumed Knowledge Gaps: M
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>### Magic Numbers: P
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>### Claims Escalated to Factchecker: Q
+</code></pre></div>
+<h3 id="claims-requiring-factchecker-verification">Claims Requiring Factchecker Verification<a class="headerlink" href="#claims-requiring-factchecker-verification" title="Permanent link">&para;</a></h3>
+<p>List claims that need deeper verification via the <code>factchecker</code> skill:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>| # | Claim | Location | Category | Recommended Depth |
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>|---|-------|----------|----------|-------------------|
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>| 1 | [claim text] | [section] | Security | DEEP |
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>| 2 | [claim text] | [section] | Performance | MEDIUM |
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>...
+</code></pre></div>
+<p><RULE>
+After this review, use the Skill tool to invoke the <code>factchecker</code> skill with these claims pre-flagged.
+The factchecker will provide concrete evidence (code traces, benchmarks, security analysis) for each claim.
+Do NOT implement your own fact-checking - delegate to the factchecker skill.
+</RULE></p>
+<h3 id="critical-findings-must-fix-before-implementation-planning">Critical Findings (Must Fix Before Implementation Planning)<a class="headerlink" href="#critical-findings-must-fix-before-implementation-planning" title="Permanent link">&para;</a></h3>
+<p>For each critical finding:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>**Finding #N: [Title]**
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>**Location:** [section/line]
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>**Current State:**
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>[Quote or describe what&#39;s in the document]
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>**Problem:**
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>[Why this is insufficient for implementation planning]
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>**What Implementation Planner Would Have to Guess:**
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>[Specific decisions that would be made without guidance]
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>**Required Addition:**
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>[Exact information that must be added to the design document]
+</code></pre></div>
+<h3 id="important-findings-should-fix">Important Findings (Should Fix)<a class="headerlink" href="#important-findings-should-fix" title="Permanent link">&para;</a></h3>
+<p>Same format, lower priority.</p>
+<h3 id="minor-findings-nice-to-fix">Minor Findings (Nice to Fix)<a class="headerlink" href="#minor-findings-nice-to-fix" title="Permanent link">&para;</a></h3>
+<p>Same format, lowest priority.</p>
+<h2 id="phase-7-actionable-remediation-plan">Phase 7: Actionable Remediation Plan<a class="headerlink" href="#phase-7-actionable-remediation-plan" title="Permanent link">&para;</a></h2>
+<p>Conclude with a structured plan for fixing the design document:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>## Remediation Plan
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>### Priority 1: Critical Gaps (Blocking Implementation Planning)
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>1. [ ] [Specific addition with acceptance criteria]
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>2. [ ] [Specific addition with acceptance criteria]
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>...
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>### Priority 2: Important Clarifications
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>1. [ ] [Specific clarification needed]
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>2. [ ] [Specific clarification needed]
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>...
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>### Priority 3: Minor Improvements
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>1. [ ] [Improvement]
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>...
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>### Factchecker Verification Required
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>If claims were escalated, use the Skill tool to invoke the `factchecker` skill before finalizing.
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>Pre-flag these claims for verification:
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>1. [ ] [Claim] - [Category] - [Recommended Depth]
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>2. [ ] [Claim] - [Category] - [Recommended Depth]
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>...
+<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>
+<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a>### Recommended Additions
+<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>- [ ] Add diagram: [type] showing [what]
+<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>- [ ] Add table: [topic] specifying [what]
+<a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a>- [ ] Add section: [name] covering [what]
+</code></pre></div>
+<p><FORBIDDEN></p>
+<h3 id="surface-level-reviews">Surface-Level Reviews<a class="headerlink" href="#surface-level-reviews" title="Permanent link">&para;</a></h3>
+<ul>
+<li>"Design looks comprehensive"</li>
+<li>"Good level of detail overall"</li>
+<li>Skimming without checking every checklist item</li>
+<li>Accepting vague language without flagging</li>
+</ul>
+<h3 id="vague-feedback">Vague Feedback<a class="headerlink" href="#vague-feedback" title="Permanent link">&para;</a></h3>
+<ul>
+<li>"Needs more detail"</li>
+<li>"Consider specifying X"</li>
+<li>Findings without exact locations</li>
+<li>Remediation without concrete acceptance criteria</li>
+</ul>
+<h3 id="assumptions">Assumptions<a class="headerlink" href="#assumptions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Assuming "they'll figure it out"</li>
+<li>Assuming standard practice is understood</li>
+<li>Assuming obvious choices don't need documentation</li>
+</ul>
+<h3 id="interface-behavior-fabrication">Interface Behavior Fabrication<a class="headerlink" href="#interface-behavior-fabrication" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Assuming a method behaves a certain way based on its name</li>
+<li>Inventing parameters that don't exist (partial=True, strict=False, etc.)</li>
+<li>Claiming library behavior without reading documentation</li>
+<li>Assuming existing codebase utilities work in "convenient" ways</li>
+<li>When something fails, guessing alternative parameters instead of reading source</li>
+</ul>
+<h3 id="rushing">Rushing<a class="headerlink" href="#rushing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Skipping checklist items</li>
+<li>Not simulating implementation planner perspective</li>
+<li>Stopping before full audit complete</li>
+<li>Skipping interface behavior verification
+</FORBIDDEN></li>
+</ul>
+<p><SELF_CHECK>
+Before completing review, verify:</p>
+<p>[ ] Did I complete the full document inventory?
+[ ] Did I check every item in the Design Completeness Checklist?
+[ ] Did I scan for all vague language markers?
+[ ] Did I identify all assumed knowledge?
+[ ] Did I verify interface behaviors by reading source/docs (not assuming from names)?
+[ ] Did I flag every unverified interface behavior claim?
+[ ] Did I check for invented parameters or fabricated convenience features?
+[ ] Did I identify claims requiring factchecker escalation (security, performance, concurrency)?
+[ ] Did I simulate an implementation planner for each component?
+[ ] Does every finding include exact location?
+[ ] Does every finding include specific remediation?
+[ ] Did I provide a prioritized remediation plan?
+[ ] Did I include factchecker verification step if claims were escalated?
+[ ] Could an implementation planner create a detailed plan from this design + my recommended fixes?</p>
+<p>If NO to ANY item, go back and complete it.
+</SELF_CHECK></p>
+<p><CRITICAL_REMINDER>
+The question is NOT "does this design sound reasonable?"</p>
+<p>The question is: "Could someone create a COMPLETE implementation plan from this document WITHOUT guessing design decisions?"</p>
+<p>For EVERY specification, ask: "Is this precise enough to code against?"</p>
+<p>If you can't answer with confidence, it's under-specified. Find it. Flag it. Specify what's needed.</p>
+<p>Take as long as needed. Thoroughness over speed.
+</CRITICAL_REMINDER></p>
+<p><FINAL_EMPHASIS>
+Your reputation depends on catching specification gaps before they become implementation failures. Hand-waving is a professional failure. Every vague statement creates guesswork. Every assumed interface creates fabrication risk. This is very important to my career. Be thorough. Be precise. Be relentless.
+</FINAL_EMPHASIS></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

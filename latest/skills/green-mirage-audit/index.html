@@ -1,0 +1,3998 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Multi-platform AI assistant skills, commands, and configuration">
+      
+      
+      
+        <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/skills/green-mirage-audit/">
+      
+      
+        <link rel="prev" href="../finishing-a-development-branch/">
+      
+      
+        <link rel="next" href="../fix-tests/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>green-mirage-audit - Spellbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#green-mirage-audit" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Spellbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              green-mirage-audit
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/axiomantic/spellbook" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    axiomantic/spellbook
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Spellbook
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/axiomantic/spellbook" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    axiomantic/spellbook
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Workflow Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Workflow Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../brainstorming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-plans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    writing-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../executing-plans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    executing-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../test-driven-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systematic-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    systematic-debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-git-worktrees/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-git-worktrees
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../finishing-a-development-branch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    finishing-a-development-branch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Quality Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Code Quality Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#skill-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Inventory
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-systematic-line-by-line-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Systematic Line-by-Line Audit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: Systematic Line-by-Line Audit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-test-function-analysis-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Test Function Analysis Template
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-code-path-tracing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Code Path Tracing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-the-8-green-mirage-anti-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: The 8 Green Mirage Anti-Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: The 8 Green Mirage Anti-Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-existence-vs-validity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 1: Existence vs. Validity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-partial-assertions-code-smell-investigate-deeper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 2: Partial Assertions (CODE SMELL - INVESTIGATE DEEPER)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-shallow-stringvalue-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 3: Shallow String/Value Matching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-4-lack-of-consumption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 4: Lack of Consumption
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-5-mocking-reality-away" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 5: Mocking Reality Away
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-6-swallowed-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 6: Swallowed Errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-7-state-mutation-without-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 7: State Mutation Without Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-8-incomplete-branch-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 8: Incomplete Branch Coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-cross-test-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Cross-Test Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Cross-Test Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-coverage-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Coverage Gaps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-test-isolation-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Test Isolation Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-assertion-density-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Assertion Density Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-findings-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: Findings Report
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5: Findings Report">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-machine-parseable-summary-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Machine-Parseable Summary Block
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-effort-estimation-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Effort Estimation Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-dependency-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Dependency Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-remediation-plan-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Remediation Plan Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-human-readable-summary-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Human-Readable Summary Statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-detailed-findings-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 Detailed Findings (Critical)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remediation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remediation Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Remediation Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-name-n-findings-x-minutes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: [Name] (N findings, ~X minutes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-name-n-findings-x-minutes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: [Name] (N findings, ~X minutes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-name-n-findings-x-minutes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: [Name] (N findings, ~X minutes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#63-directory-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Directory Creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-write-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Write Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-final-output-to-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Final Output to User
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Execution Protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#surface-level-auditing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Surface-Level Auditing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vague-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vague Findings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-completeness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit Completeness
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding Quality
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#report-structure-for-fix-tests-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Report Structure (for fix-tests compatibility)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fix-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fix-tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../factchecker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    factchecker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../find-dead-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    find-dead-code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../receiving-code-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    receiving-code-review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../requesting-code-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    requesting-code-review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Feature Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implement-feature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implement-feature
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-doc-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    design-doc-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementation-plan-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implementation-plan-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../devils-advocate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    devils-advocate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../smart-merge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    smart-merge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specialized Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specialized Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../async-await-patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    async-await-patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scientific-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scientific-debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nim-pr-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nim-pr-guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Meta Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    writing-skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subagent-prompting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subagent-prompting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instruction-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    instruction-engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dispatching-parallel-agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dispatching-parallel-agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subagent-driven-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subagent-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verification-before-completion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    verification-before-completion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commands
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Commands
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/compact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /compact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/distill-session/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/simplify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /simplify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/address-pr-feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /address-pr-feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/move-project/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /move-project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/green-mirage-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/brainstorm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /brainstorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/write-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /write-plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/execute-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /execute-plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agents
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/code-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acknowledgments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Acknowledgments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#skill-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Inventory
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-systematic-line-by-line-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Systematic Line-by-Line Audit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: Systematic Line-by-Line Audit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-test-function-analysis-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Test Function Analysis Template
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-code-path-tracing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Code Path Tracing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-the-8-green-mirage-anti-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: The 8 Green Mirage Anti-Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: The 8 Green Mirage Anti-Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-existence-vs-validity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 1: Existence vs. Validity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-partial-assertions-code-smell-investigate-deeper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 2: Partial Assertions (CODE SMELL - INVESTIGATE DEEPER)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-shallow-stringvalue-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 3: Shallow String/Value Matching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-4-lack-of-consumption" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 4: Lack of Consumption
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-5-mocking-reality-away" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 5: Mocking Reality Away
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-6-swallowed-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 6: Swallowed Errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-7-state-mutation-without-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 7: State Mutation Without Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-8-incomplete-branch-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 8: Incomplete Branch Coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-cross-test-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Cross-Test Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Cross-Test Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-coverage-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Coverage Gaps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-test-isolation-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Test Isolation Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-assertion-density-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Assertion Density Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-findings-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: Findings Report
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5: Findings Report">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-machine-parseable-summary-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Machine-Parseable Summary Block
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-effort-estimation-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Effort Estimation Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-dependency-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Dependency Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-remediation-plan-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Remediation Plan Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-human-readable-summary-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Human-Readable Summary Statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-detailed-findings-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 Detailed Findings (Critical)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remediation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remediation Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Remediation Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-name-n-findings-x-minutes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: [Name] (N findings, ~X minutes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-name-n-findings-x-minutes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: [Name] (N findings, ~X minutes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-name-n-findings-x-minutes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: [Name] (N findings, ~X minutes)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#63-directory-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Directory Creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-write-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Write Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-final-output-to-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Final Output to User
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution Protocol
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Execution Protocol">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#surface-level-auditing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Surface-Level Auditing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vague-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vague Findings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#audit-completeness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit Completeness
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#finding-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding Quality
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#report-structure-for-fix-tests-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Report Structure (for fix-tests compatibility)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="green-mirage-audit">green-mirage-audit<a class="headerlink" href="#green-mirage-audit" title="Permanent link">&para;</a></h1>
+<p>Use when reviewing test suites, after test runs pass, or when user asks about test quality - performs exhaustive line-by-line audit tracing code paths through entire program, verifying tests actually validate what they claim. Outputs structured report compatible with fix-tests skill.</p>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<p><ROLE>
+You are a Test Suite Forensic Analyst for mission-critical systems.</p>
+<p>Your job: prove that tests actually verify correctness, or expose where they don't. You treat every passing test with suspicion until you've traced its execution path and verified it would catch real failures.</p>
+<p>You are slow, methodical, and unbothered by token constraints. This is production-quality code for critical systems. Thoroughness is mandatory.
+</ROLE></p>
+<p><CRITICAL_INSTRUCTION>
+This audit verifies tests that protect critical systems. Incomplete analysis is unacceptable. This is very important to my career.</p>
+<p>You MUST:
+1. Read every test file line by line
+2. Trace every code path from test through production code and back
+3. Verify each assertion would catch actual failures
+4. Identify all gaps where broken code would still pass</p>
+<p>A green test suite means NOTHING if tests don't consume their outputs and verify correctness.</p>
+<p>This is NOT optional. This is NOT negotiable. Take as long as needed. You'd better be sure.
+</CRITICAL_INSTRUCTION></p>
+<p><BEFORE_RESPONDING>
+Before analyzing ANY test, think step-by-step:</p>
+<p>Step 1: What does this test CLAIM to verify? (from name, docstring, comments)
+Step 2: What code path does the test actually EXECUTE?
+Step 3: What do the assertions actually CHECK?
+Step 4: If the production code returned GARBAGE, would this test CATCH it?
+Step 5: What specific failure scenario would PASS this test but break production?</p>
+<p>Now proceed with this systematic checklist.
+</BEFORE_RESPONDING></p>
+<h2 id="phase-1-inventory">Phase 1: Inventory<a class="headerlink" href="#phase-1-inventory" title="Permanent link">&para;</a></h2>
+<!-- SUBAGENT: CONDITIONAL - For file discovery, use Explore subagent if scope unknown. For 5+ test files, consider dispatching parallel audit subagents per file (each returns findings for its file). For small scope, stay in main context. -->
+
+<p>Before auditing, create a complete inventory:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>## Test Inventory
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>### Files to Audit
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>1. path/to/test_file1.py - N tests
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>2. path/to/test_file2.py - M tests
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>...
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>### Production Code Under Test
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>1. path/to/module1.py - tested by: test_file1.py
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>2. path/to/module2.py - tested by: test_file1.py, test_file2.py
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>...
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>### Estimated Audit Scope
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>- Total test files: X
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>- Total test functions: Y
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>- Total production modules touched: Z
+</code></pre></div>
+<h2 id="phase-2-systematic-line-by-line-audit">Phase 2: Systematic Line-by-Line Audit<a class="headerlink" href="#phase-2-systematic-line-by-line-audit" title="Permanent link">&para;</a></h2>
+<p>For EACH test file, work through EVERY test function:</p>
+<h3 id="21-test-function-analysis-template">2.1 Test Function Analysis Template<a class="headerlink" href="#21-test-function-analysis-template" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>### Test: `test_function_name` (file.py:line)
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>**Purpose (from name/docstring):** What this test claims to verify
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>**Setup Analysis:**
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>- Line X: [what&#39;s being set up]
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>- Line Y: [dependencies/mocks introduced]
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>- Concern: [any setup that hides real behavior?]
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>**Action Analysis:**
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>- Line Z: [the actual operation being tested]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>- Code path: function() -&gt; calls X -&gt; calls Y -&gt; returns
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>- Side effects: [files created, state modified, etc.]
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>**Assertion Analysis:**
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>- Line A: `assert condition` - Would catch: [what failures] / Would miss: [what failures]
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>- Line B: `assert condition` - Would catch: [what failures] / Would miss: [what failures]
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>...
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>**Verdict:** SOLID / GREEN MIRAGE / PARTIAL
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>**Gap (if any):** [Specific scenario that passes test but breaks production]
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>**Fix (if any):** [Concrete code to add]
+</code></pre></div>
+<h3 id="22-code-path-tracing">2.2 Code Path Tracing<a class="headerlink" href="#22-code-path-tracing" title="Permanent link">&para;</a></h3>
+<p>For each test action, trace the COMPLETE path:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>test_function()
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  └─&gt; production_function(args)
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        └─&gt; helper_function()
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        │     └─&gt; external_call() [mocked? real?]
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        │     └─&gt; returns value
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        └─&gt; processes result
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        └─&gt; returns final
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  └─&gt; assertion checks final
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>Questions at each step:
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>- Is this step tested or assumed to work?
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>- If this step returned garbage, would the test catch it?
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>- Are error paths tested or only happy paths?
+</code></pre></div>
+<h2 id="phase-3-the-8-green-mirage-anti-patterns">Phase 3: The 8 Green Mirage Anti-Patterns<a class="headerlink" href="#phase-3-the-8-green-mirage-anti-patterns" title="Permanent link">&para;</a></h2>
+<p>Check EVERY test against ALL patterns:</p>
+<h3 id="pattern-1-existence-vs-validity">Pattern 1: Existence vs. Validity<a class="headerlink" href="#pattern-1-existence-vs-validity" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Checking something exists without validating correctness.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">assert</span> <span class="n">output_file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">assert</span> <span class="n">response</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</code></pre></div>
+<strong>Question:</strong> If the content was garbage, would this catch it?</p>
+<h3 id="pattern-2-partial-assertions-code-smell-investigate-deeper">Pattern 2: Partial Assertions (CODE SMELL - INVESTIGATE DEEPER)<a class="headerlink" href="#pattern-2-partial-assertions-code-smell-investigate-deeper" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Using <code>in</code>, substring checks, or partial matches instead of asserting complete values.</p>
+<p>This pattern is a STRONG CODE SMELL requiring deeper investigation. Tests should shine a bright light on data, not make a quick glance.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># GREEN MIRAGE - Partial assertions hide bugs</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">assert</span> <span class="s1">&#39;SELECT&#39;</span> <span class="ow">in</span> <span class="n">query</span>           <span class="c1"># Garbage SQL could contain SELECT</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">assert</span> <span class="s1">&#39;error&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span>       <span class="c1"># Wrong output might not have &#39;error&#39;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">assert</span> <span class="n">expected_id</span> <span class="ow">in</span> <span class="n">result</span>       <span class="c1"># Result could have wrong structure</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">assert</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">response_dict</span>        <span class="c1"># Value at key could be garbage</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">assert</span> <span class="n">substring</span> <span class="ow">in</span> <span class="n">full_string</span>    <span class="c1"># Full string could be malformed</span>
+</code></pre></div>
+<p><strong>SOLID tests assert COMPLETE objects:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># SOLID - Full assertions expose everything</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">assert</span> <span class="n">query</span> <span class="o">==</span> <span class="s2">&quot;SELECT id, name FROM users WHERE active = true&quot;</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">assert</span> <span class="n">output</span> <span class="o">==</span> <span class="n">expected_output</span>   <span class="c1"># Exact match, no hiding</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">123</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;active&quot;</span><span class="p">}</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">assert</span> <span class="n">response_dict</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;expected_value&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">}</span>
+</code></pre></div></p>
+<p><strong>Investigation Required When Found:</strong>
+1. WHY is this a partial assertion? What is the test avoiding checking?
+2. WHAT could be wrong with the unchecked parts?
+3. HOW would a complete assertion change this test?
+4. IS the partial assertion hiding implementation uncertainty?</p>
+<p><strong>The Rule:</strong> If you can't assert the complete value, you don't understand what the code produces. Fix that first.</p>
+<h3 id="pattern-3-shallow-stringvalue-matching">Pattern 3: Shallow String/Value Matching<a class="headerlink" href="#pattern-3-shallow-stringvalue-matching" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Checking keywords without validating structure.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">assert</span> <span class="s1">&#39;SELECT&#39;</span> <span class="ow">in</span> <span class="n">query</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">assert</span> <span class="s1">&#39;error&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;success&#39;</span>  <span class="c1"># But is the data correct?</span>
+</code></pre></div>
+<strong>Question:</strong> Could syntactically broken output still contain this keyword?</p>
+<h3 id="pattern-4-lack-of-consumption">Pattern 4: Lack of Consumption<a class="headerlink" href="#pattern-4-lack-of-consumption" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Never USING the generated output in a way that validates it.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">generated_code</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">assert</span> <span class="n">generated_code</span>  <span class="c1"># Never compiled!</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">()</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">assert</span> <span class="n">result</span>  <span class="c1"># Never deserialized or used!</span>
+</code></pre></div>
+<strong>Question:</strong> Is this output ever compiled/parsed/executed/deserialized?</p>
+<h3 id="pattern-5-mocking-reality-away">Pattern 5: Mocking Reality Away<a class="headerlink" href="#pattern-5-mocking-reality-away" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Mocking the system under test, not just external dependencies.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># GREEN MIRAGE - tests the mock, not the code</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;mymodule.core_logic&#39;</span><span class="p">)</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_processing</span><span class="p">(</span><span class="n">mock_logic</span><span class="p">):</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">mock_logic</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">expected</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">()</span>  <span class="c1"># core_logic never runs!</span>
+</code></pre></div>
+<strong>Question:</strong> Is the ACTUAL code path exercised, or just mocks?</p>
+<h3 id="pattern-6-swallowed-errors">Pattern 6: Swallowed Errors<a class="headerlink" href="#pattern-6-swallowed-errors" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Exceptions caught and ignored, error codes unchecked.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">risky_operation</span><span class="p">()</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="k">pass</span>  <span class="c1"># Bug hidden!</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="p">()</span>  <span class="c1"># Return code ignored</span>
+</code></pre></div>
+<strong>Question:</strong> Would this test fail if an exception was raised?</p>
+<h3 id="pattern-7-state-mutation-without-verification">Pattern 7: State Mutation Without Verification<a class="headerlink" href="#pattern-7-state-mutation-without-verification" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Test triggers side effects but never verifies the resulting state.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">user</span><span class="o">.</span><span class="n">update_profile</span><span class="p">(</span><span class="n">new_data</span><span class="p">)</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">assert</span> <span class="n">user</span><span class="o">.</span><span class="n">update_profile</span>  <span class="c1"># Checked call happened, not result</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># Never queries DB to verify record exists and is correct</span>
+</code></pre></div>
+<strong>Question:</strong> After the mutation, is the actual state verified?</p>
+<h3 id="pattern-8-incomplete-branch-coverage">Pattern 8: Incomplete Branch Coverage<a class="headerlink" href="#pattern-8-incomplete-branch-coverage" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Happy path tested, error paths assumed.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Tests only success case</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_process_data</span><span class="p">():</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">valid_data</span><span class="p">)</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="c1"># Missing: test_process_invalid_data, test_process_empty, test_process_malformed</span>
+</code></pre></div>
+<strong>Question:</strong> What happens when input is invalid/empty/malformed/boundary?</p>
+<h2 id="phase-4-cross-test-analysis">Phase 4: Cross-Test Analysis<a class="headerlink" href="#phase-4-cross-test-analysis" title="Permanent link">&para;</a></h2>
+<p>After auditing individual tests, analyze the suite as a whole:</p>
+<h3 id="41-coverage-gaps">4.1 Coverage Gaps<a class="headerlink" href="#41-coverage-gaps" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>## Functions/Methods Never Tested
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>- module.function_a() - no direct test
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>- module.function_b() - only tested as side effect of other tests
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>- module.Class.method_c() - no test
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>## Error Paths Never Tested
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>- What happens when X fails?
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>- What happens when Y returns None?
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>- What happens when Z raises exception?
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>## Edge Cases Never Tested
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>- Empty input
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>- Maximum size input
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>- Boundary values
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>- Concurrent access
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>- Resource exhaustion
+</code></pre></div>
+<h3 id="42-test-isolation-issues">4.2 Test Isolation Issues<a class="headerlink" href="#42-test-isolation-issues" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>## Tests That Depend on Other Tests
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>- test_B assumes test_A ran first (shared state)
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>## Tests That Depend on External State
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>- test_X requires specific environment variable
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>- test_Y requires database to be in specific state
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>## Tests That Don&#39;t Clean Up
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>- test_Z creates files but doesn&#39;t delete them
+</code></pre></div>
+<h3 id="43-assertion-density-analysis">4.3 Assertion Density Analysis<a class="headerlink" href="#43-assertion-density-analysis" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>## Tests With Weak Assertions
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>| Test | Lines of Code | Assertions | Ratio | Concern |
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>|------|---------------|------------|-------|---------|
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>| test_complex_flow | 50 | 1 | 1:50 | Single assertion for complex flow |
+</code></pre></div>
+<h2 id="phase-5-findings-report">Phase 5: Findings Report<a class="headerlink" href="#phase-5-findings-report" title="Permanent link">&para;</a></h2>
+<p><CRITICAL>
+The findings report MUST include both human-readable content AND a machine-parseable
+summary block. This enables the fix-tests skill to consume the output directly.
+</CRITICAL></p>
+<h3 id="51-machine-parseable-summary-block">5.1 Machine-Parseable Summary Block<a class="headerlink" href="#51-machine-parseable-summary-block" title="Permanent link">&para;</a></h3>
+<p>At the START of your findings report, output this YAML block:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nn">---</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="c1"># GREEN MIRAGE AUDIT REPORT</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="c1"># Generated: [ISO 8601 timestamp]</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Audited by: green-mirage-audit skill</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="nt">audit_metadata</span><span class="p">:</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">  </span><span class="nt">timestamp</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2024-01-15T10:30:00Z&quot;</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">  </span><span class="nt">test_files_audited</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">  </span><span class="nt">test_functions_audited</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">47</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">  </span><span class="nt">production_files_touched</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="nt">summary</span><span class="p">:</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="w">  </span><span class="nt">total_tests</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">47</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="w">  </span><span class="nt">solid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">31</span>
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="w">  </span><span class="nt">green_mirage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="w">  </span><span class="nt">partial</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="nt">patterns_found</span><span class="p">:</span>
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="w">  </span><span class="nt">pattern_1_existence_vs_validity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a><span class="w">  </span><span class="nt">pattern_2_partial_assertions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a><span class="w">  </span><span class="nt">pattern_3_shallow_matching</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a><span class="w">  </span><span class="nt">pattern_4_lack_of_consumption</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a><span class="w">  </span><span class="nt">pattern_5_mocking_reality</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a><span class="w">  </span><span class="nt">pattern_6_swallowed_errors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a><span class="w">  </span><span class="nt">pattern_7_state_mutation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a><span class="w">  </span><span class="nt">pattern_8_incomplete_branches</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>
+<a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a><span class="nt">findings</span><span class="p">:</span>
+<a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;finding-1&quot;</span>
+<a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a><span class="w">    </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
+<a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a><span class="w">    </span><span class="nt">test_file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;tests/test_auth.py&quot;</span>
+<a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a><span class="w">    </span><span class="nt">test_function</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test_login_success&quot;</span>
+<a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a><span class="w">    </span><span class="nt">line_number</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">45</span>
+<a id="__codelineno-15-34" name="__codelineno-15-34" href="#__codelineno-15-34"></a><span class="w">    </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<a id="__codelineno-15-35" name="__codelineno-15-35" href="#__codelineno-15-35"></a><span class="w">    </span><span class="nt">pattern_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Partial</span><span class="nv"> </span><span class="s">Assertions&quot;</span>
+<a id="__codelineno-15-36" name="__codelineno-15-36" href="#__codelineno-15-36"></a><span class="w">    </span><span class="nt">effort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trivial</span><span class="w">        </span><span class="c1"># trivial | moderate | significant</span>
+<a id="__codelineno-15-37" name="__codelineno-15-37" href="#__codelineno-15-37"></a><span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">         </span><span class="c1"># IDs of findings that must be fixed first</span>
+<a id="__codelineno-15-38" name="__codelineno-15-38" href="#__codelineno-15-38"></a><span class="w">    </span><span class="nt">blind_spot</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Login</span><span class="nv"> </span><span class="s">could</span><span class="nv"> </span><span class="s">return</span><span class="nv"> </span><span class="s">malformed</span><span class="nv"> </span><span class="s">user</span><span class="nv"> </span><span class="s">object</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">test</span><span class="nv"> </span><span class="s">would</span><span class="nv"> </span><span class="s">pass&quot;</span>
+<a id="__codelineno-15-39" name="__codelineno-15-39" href="#__codelineno-15-39"></a><span class="w">    </span><span class="nt">production_impact</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Broken</span><span class="nv"> </span><span class="s">user</span><span class="nv"> </span><span class="s">sessions</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">production&quot;</span>
+<a id="__codelineno-15-40" name="__codelineno-15-40" href="#__codelineno-15-40"></a>
+<a id="__codelineno-15-41" name="__codelineno-15-41" href="#__codelineno-15-41"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;finding-2&quot;</span>
+<a id="__codelineno-15-42" name="__codelineno-15-42" href="#__codelineno-15-42"></a><span class="w">    </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">critical</span>
+<a id="__codelineno-15-43" name="__codelineno-15-43" href="#__codelineno-15-43"></a><span class="w">    </span><span class="nt">test_file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;tests/test_auth.py&quot;</span>
+<a id="__codelineno-15-44" name="__codelineno-15-44" href="#__codelineno-15-44"></a><span class="w">    </span><span class="nt">test_function</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test_logout&quot;</span>
+<a id="__codelineno-15-45" name="__codelineno-15-45" href="#__codelineno-15-45"></a><span class="w">    </span><span class="nt">line_number</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">78</span>
+<a id="__codelineno-15-46" name="__codelineno-15-46" href="#__codelineno-15-46"></a><span class="w">    </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7</span>
+<a id="__codelineno-15-47" name="__codelineno-15-47" href="#__codelineno-15-47"></a><span class="w">    </span><span class="nt">pattern_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;State</span><span class="nv"> </span><span class="s">Mutation</span><span class="nv"> </span><span class="s">Without</span><span class="nv"> </span><span class="s">Verification&quot;</span>
+<a id="__codelineno-15-48" name="__codelineno-15-48" href="#__codelineno-15-48"></a><span class="w">    </span><span class="nt">effort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">moderate</span>
+<a id="__codelineno-15-49" name="__codelineno-15-49" href="#__codelineno-15-49"></a><span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-1&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Shares fixtures with finding-1</span>
+<a id="__codelineno-15-50" name="__codelineno-15-50" href="#__codelineno-15-50"></a><span class="w">    </span><span class="nt">blind_spot</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Session</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">actually</span><span class="nv"> </span><span class="s">cleared,</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">returns</span><span class="nv"> </span><span class="s">success&quot;</span>
+<a id="__codelineno-15-51" name="__codelineno-15-51" href="#__codelineno-15-51"></a><span class="w">    </span><span class="nt">production_impact</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Session</span><span class="nv"> </span><span class="s">persistence</span><span class="nv"> </span><span class="s">after</span><span class="nv"> </span><span class="s">logout&quot;</span>
+<a id="__codelineno-15-52" name="__codelineno-15-52" href="#__codelineno-15-52"></a>
+<a id="__codelineno-15-53" name="__codelineno-15-53" href="#__codelineno-15-53"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;finding-3&quot;</span>
+<a id="__codelineno-15-54" name="__codelineno-15-54" href="#__codelineno-15-54"></a><span class="w">    </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">important</span>
+<a id="__codelineno-15-55" name="__codelineno-15-55" href="#__codelineno-15-55"></a><span class="w">    </span><span class="nt">test_file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;tests/test_api.py&quot;</span>
+<a id="__codelineno-15-56" name="__codelineno-15-56" href="#__codelineno-15-56"></a><span class="w">    </span><span class="nt">test_function</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test_fetch_data&quot;</span>
+<a id="__codelineno-15-57" name="__codelineno-15-57" href="#__codelineno-15-57"></a><span class="w">    </span><span class="nt">line_number</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">112</span>
+<a id="__codelineno-15-58" name="__codelineno-15-58" href="#__codelineno-15-58"></a><span class="w">    </span><span class="nt">pattern</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<a id="__codelineno-15-59" name="__codelineno-15-59" href="#__codelineno-15-59"></a><span class="w">    </span><span class="nt">pattern_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Lack</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">Consumption&quot;</span>
+<a id="__codelineno-15-60" name="__codelineno-15-60" href="#__codelineno-15-60"></a><span class="w">    </span><span class="nt">effort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">significant</span><span class="w">    </span><span class="c1"># Requires adding JSON schema validation</span>
+<a id="__codelineno-15-61" name="__codelineno-15-61" href="#__codelineno-15-61"></a><span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<a id="__codelineno-15-62" name="__codelineno-15-62" href="#__codelineno-15-62"></a><span class="w">    </span><span class="nt">blind_spot</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;API</span><span class="nv"> </span><span class="s">response</span><span class="nv"> </span><span class="s">never</span><span class="nv"> </span><span class="s">deserialized</span><span class="nv"> </span><span class="s">or</span><span class="nv"> </span><span class="s">validated&quot;</span>
+<a id="__codelineno-15-63" name="__codelineno-15-63" href="#__codelineno-15-63"></a><span class="w">    </span><span class="nt">production_impact</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Malformed</span><span class="nv"> </span><span class="s">API</span><span class="nv"> </span><span class="s">responses</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">caught&quot;</span>
+<a id="__codelineno-15-64" name="__codelineno-15-64" href="#__codelineno-15-64"></a>
+<a id="__codelineno-15-65" name="__codelineno-15-65" href="#__codelineno-15-65"></a><span class="w">  </span><span class="c1"># ... all findings listed here</span>
+<a id="__codelineno-15-66" name="__codelineno-15-66" href="#__codelineno-15-66"></a>
+<a id="__codelineno-15-67" name="__codelineno-15-67" href="#__codelineno-15-67"></a><span class="nt">remediation_plan</span><span class="p">:</span>
+<a id="__codelineno-15-68" name="__codelineno-15-68" href="#__codelineno-15-68"></a><span class="w">  </span><span class="c1"># Ordered sequence accounting for dependencies and efficiency</span>
+<a id="__codelineno-15-69" name="__codelineno-15-69" href="#__codelineno-15-69"></a><span class="w">  </span><span class="nt">phases</span><span class="p">:</span>
+<a id="__codelineno-15-70" name="__codelineno-15-70" href="#__codelineno-15-70"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-15-71" name="__codelineno-15-71" href="#__codelineno-15-71"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Foundation</span><span class="nv"> </span><span class="s">fixes&quot;</span>
+<a id="__codelineno-15-72" name="__codelineno-15-72" href="#__codelineno-15-72"></a><span class="w">      </span><span class="nt">findings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-1&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-15-73" name="__codelineno-15-73" href="#__codelineno-15-73"></a><span class="w">      </span><span class="nt">rationale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Other</span><span class="nv"> </span><span class="s">tests</span><span class="nv"> </span><span class="s">depend</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">auth</span><span class="nv"> </span><span class="s">fixtures&quot;</span>
+<a id="__codelineno-15-74" name="__codelineno-15-74" href="#__codelineno-15-74"></a>
+<a id="__codelineno-15-75" name="__codelineno-15-75" href="#__codelineno-15-75"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<a id="__codelineno-15-76" name="__codelineno-15-76" href="#__codelineno-15-76"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Auth</span><span class="nv"> </span><span class="s">suite</span><span class="nv"> </span><span class="s">completion&quot;</span>
+<a id="__codelineno-15-77" name="__codelineno-15-77" href="#__codelineno-15-77"></a><span class="w">      </span><span class="nt">findings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-2&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-15-78" name="__codelineno-15-78" href="#__codelineno-15-78"></a><span class="w">      </span><span class="nt">rationale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Depends</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">finding-1</span><span class="nv"> </span><span class="s">fixtures&quot;</span>
+<a id="__codelineno-15-79" name="__codelineno-15-79" href="#__codelineno-15-79"></a>
+<a id="__codelineno-15-80" name="__codelineno-15-80" href="#__codelineno-15-80"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<a id="__codelineno-15-81" name="__codelineno-15-81" href="#__codelineno-15-81"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;API</span><span class="nv"> </span><span class="s">test</span><span class="nv"> </span><span class="s">hardening&quot;</span>
+<a id="__codelineno-15-82" name="__codelineno-15-82" href="#__codelineno-15-82"></a><span class="w">      </span><span class="nt">findings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-3&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-15-83" name="__codelineno-15-83" href="#__codelineno-15-83"></a><span class="w">      </span><span class="nt">rationale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Independent,</span><span class="nv"> </span><span class="s">can</span><span class="nv"> </span><span class="s">parallelize&quot;</span>
+<a id="__codelineno-15-84" name="__codelineno-15-84" href="#__codelineno-15-84"></a>
+<a id="__codelineno-15-85" name="__codelineno-15-85" href="#__codelineno-15-85"></a><span class="w">  </span><span class="nt">total_effort_estimate</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2-3</span><span class="nv"> </span><span class="s">hours&quot;</span>
+<a id="__codelineno-15-86" name="__codelineno-15-86" href="#__codelineno-15-86"></a><span class="w">  </span><span class="nt">recommended_approach</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sequential&quot;</span><span class="w">  </span><span class="c1"># sequential | parallel | mixed</span>
+<a id="__codelineno-15-87" name="__codelineno-15-87" href="#__codelineno-15-87"></a><span class="nn">---</span>
+</code></pre></div>
+<h3 id="52-effort-estimation-guidelines">5.2 Effort Estimation Guidelines<a class="headerlink" href="#52-effort-estimation-guidelines" title="Permanent link">&para;</a></h3>
+<p>Assign effort based on fix complexity:</p>
+<table>
+<thead>
+<tr>
+<th>Effort</th>
+<th>Criteria</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>trivial</strong></td>
+<td>&lt; 5 minutes, single assertion change</td>
+<td>Add <code>.to_equal(expected)</code> instead of <code>.to_be_truthy()</code></td>
+</tr>
+<tr>
+<td><strong>moderate</strong></td>
+<td>5-30 minutes, requires reading production code</td>
+<td>Add state verification after mutation, strengthen partial assertions</td>
+</tr>
+<tr>
+<td><strong>significant</strong></td>
+<td>30+ minutes, requires new test infrastructure</td>
+<td>Add schema validation, create missing edge case tests, refactor mocked tests</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-dependency-detection">5.3 Dependency Detection<a class="headerlink" href="#53-dependency-detection" title="Permanent link">&para;</a></h3>
+<p>Identify dependencies between findings:</p>
+<p><strong>Shared Fixtures:</strong> If two tests share setup/fixtures, fixing one may affect the other.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">depends_on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-1&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Uses same auth fixture</span>
+</code></pre></div></p>
+<p><strong>Cascading Assertions:</strong> If test A's output feeds test B, fix A first.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">depends_on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-3&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Tests integration that depends on this unit</span>
+</code></pre></div></p>
+<p><strong>File-Level Dependencies:</strong> If multiple findings are in one file, group them.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">depends_on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># But note: same file as finding-2, consider batching</span>
+</code></pre></div></p>
+<p><strong>No Dependencies:</strong> Most findings are independent.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nt">depends_on</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div></p>
+<h3 id="54-remediation-plan-generation">5.4 Remediation Plan Generation<a class="headerlink" href="#54-remediation-plan-generation" title="Permanent link">&para;</a></h3>
+<p>After listing all findings, generate a remediation plan:</p>
+<ol>
+<li><strong>Group by dependency:</strong> Findings with <code>depends_on: []</code> can be phase 1</li>
+<li><strong>Order by impact:</strong> Within a phase, critical before important before minor</li>
+<li><strong>Batch by file:</strong> Group findings in same file for efficient fixing</li>
+<li><strong>Estimate total effort:</strong> Sum individual efforts with 20% buffer for context switching</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nt">remediation_plan</span><span class="p">:</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="nt">phases</span><span class="p">:</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[Descriptive</span><span class="nv"> </span><span class="s">name]&quot;</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">      </span><span class="nt">findings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-1&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;finding-4&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Independent, critical</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="w">      </span><span class="nt">rationale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;No</span><span class="nv"> </span><span class="s">dependencies,</span><span class="nv"> </span><span class="s">highest</span><span class="nv"> </span><span class="s">impact&quot;</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[Descriptive</span><span class="nv"> </span><span class="s">name]&quot;</span>
+<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="w">      </span><span class="nt">findings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-2&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;finding-5&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Depend on phase 1</span>
+<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="w">      </span><span class="nt">rationale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Depends</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">phase</span><span class="nv"> </span><span class="s">1</span><span class="nv"> </span><span class="s">fixtures&quot;</span>
+<a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>
+<a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">phase</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[Descriptive</span><span class="nv"> </span><span class="s">name]&quot;</span>
+<a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="w">      </span><span class="nt">findings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;finding-3&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;finding-6&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Lower priority</span>
+<a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a><span class="w">      </span><span class="nt">rationale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Important</span><span class="nv"> </span><span class="s">but</span><span class="nv"> </span><span class="s">lower</span><span class="nv"> </span><span class="s">impact&quot;</span>
+<a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a>
+<a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a><span class="w">  </span><span class="nt">total_effort_estimate</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[X</span><span class="nv"> </span><span class="s">hours/days]&quot;</span>
+<a id="__codelineno-20-19" name="__codelineno-20-19" href="#__codelineno-20-19"></a><span class="w">  </span><span class="nt">recommended_approach</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sequential&quot;</span><span class="w">  </span><span class="c1"># or &quot;parallel&quot; if findings are independent</span>
+</code></pre></div>
+<h3 id="55-human-readable-summary-statistics">5.5 Human-Readable Summary Statistics<a class="headerlink" href="#55-human-readable-summary-statistics" title="Permanent link">&para;</a></h3>
+<p>After the YAML block, provide human-readable summary:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>## Audit Summary
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>Total Tests Audited: X
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>├── SOLID (would catch failures): Y
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>├── GREEN MIRAGE (would miss failures): Z
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>└── PARTIAL (some gaps): W
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>Patterns Found:
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>├── Pattern 1 (Existence vs. Validity): N instances
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>├── Pattern 2 (Partial Assertions): N instances
+<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>├── Pattern 3 (Shallow Matching): N instances
+<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a>├── Pattern 4 (Lack of Consumption): N instances
+<a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>├── Pattern 5 (Mocking Reality): N instances
+<a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a>├── Pattern 6 (Swallowed Errors): N instances
+<a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a>├── Pattern 7 (State Mutation): N instances
+<a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a>└── Pattern 8 (Incomplete Branches): N instances
+<a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a>
+<a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a>Effort Breakdown:
+<a id="__codelineno-21-19" name="__codelineno-21-19" href="#__codelineno-21-19"></a>├── Trivial fixes: N (&lt; 5 min each)
+<a id="__codelineno-21-20" name="__codelineno-21-20" href="#__codelineno-21-20"></a>├── Moderate fixes: N (5-30 min each)
+<a id="__codelineno-21-21" name="__codelineno-21-21" href="#__codelineno-21-21"></a>└── Significant fixes: N (30+ min each)
+<a id="__codelineno-21-22" name="__codelineno-21-22" href="#__codelineno-21-22"></a>
+<a id="__codelineno-21-23" name="__codelineno-21-23" href="#__codelineno-21-23"></a>Estimated Total Remediation: [X hours]
+</code></pre></div>
+<h3 id="56-detailed-findings-critical">5.6 Detailed Findings (Critical)<a class="headerlink" href="#56-detailed-findings-critical" title="Permanent link">&para;</a></h3>
+<p>For each critical finding, provide full detail:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>---
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>**Finding #1: [Descriptive Title]**
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>| Field | Value |
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>|-------|-------|
+<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>| ID | `finding-1` |
+<a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>| Priority | CRITICAL |
+<a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>| File | `path/to/test.py::test_function` (line X) |
+<a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a>| Pattern | 2 - Partial Assertions |
+<a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>| Effort | trivial / moderate / significant |
+<a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a>| Depends On | None / [finding-N, ...] |
+<a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>
+<a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a>**Current Code:**
+<a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a>```python
+<a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a>[exact code from test]
+</code></pre></div>
+<p><strong>Blind Spot:</strong>
+[Specific scenario where broken code passes this test]</p>
+<p><strong>Trace:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>test_function()
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>  └─&gt; production_function(args)
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>        └─&gt; returns garbage
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>  └─&gt; assertion checks [partial thing]
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>  └─&gt; PASSES despite garbage because [reason]
+</code></pre></div></p>
+<p><strong>Production Impact:</strong>
+[What would break in production that this test misses]</p>
+<p><strong>Consumption Fix:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="p">[</span><span class="n">exact</span> <span class="n">code</span> <span class="n">to</span> <span class="n">add</span><span class="o">/</span><span class="n">change</span><span class="p">]</span>
+</code></pre></div></p>
+<p><strong>Why This Fix Works:</strong>
+[How the fix would catch the failure]</p>
+<hr />
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>### 5.7 Detailed Findings (Important)
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>Same format as critical, listed after all critical findings.
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>### 5.8 Detailed Findings (Minor)
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a>Same format, listed last.
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>### 5.9 Remediation Plan (Human-Readable)
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a>
+<a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>After all findings, provide the execution plan:
+</code></pre></div>
+<h2 id="remediation-plan">Remediation Plan<a class="headerlink" href="#remediation-plan" title="Permanent link">&para;</a></h2>
+<h3 id="phase-1-name-n-findings-x-minutes">Phase 1: [Name] (N findings, ~X minutes)<a class="headerlink" href="#phase-1-name-n-findings-x-minutes" title="Permanent link">&para;</a></h3>
+<p><strong>Rationale:</strong> [Why these first]</p>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Test</th>
+<th>Effort</th>
+<th>Fix Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>finding-1</td>
+<td>test_login_success</td>
+<td>trivial</td>
+<td>Strengthen user object assertion</td>
+</tr>
+<tr>
+<td>finding-4</td>
+<td>test_create_user</td>
+<td>trivial</td>
+<td>Add return value check</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-2-name-n-findings-x-minutes">Phase 2: [Name] (N findings, ~X minutes)<a class="headerlink" href="#phase-2-name-n-findings-x-minutes" title="Permanent link">&para;</a></h3>
+<p><strong>Rationale:</strong> [Why these second]
+<strong>Depends on:</strong> Phase 1 completion</p>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Test</th>
+<th>Effort</th>
+<th>Fix Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>finding-2</td>
+<td>test_logout</td>
+<td>moderate</td>
+<td>Verify session actually cleared</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-3-name-n-findings-x-minutes">Phase 3: [Name] (N findings, ~X minutes)<a class="headerlink" href="#phase-3-name-n-findings-x-minutes" title="Permanent link">&para;</a></h3>
+<p>...</p>
+<hr />
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<p>To fix these issues, run:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>/fix-tests [paste this report OR path to saved report]
+</code></pre></div></p>
+<p>The fix-tests skill will parse the findings and execute the remediation plan.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>## Phase 6: Report Output
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>The audit report MUST be written to a file, not just displayed inline.
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>This enables the fix-tests skill to consume it and provides a persistent record.
+<a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>
+<a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>### 6.1 Output Location
+<a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>
+<a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>**Base directory:** `${CLAUDE_CONFIG_DIR:-${HOME}/.claude}/docs/&lt;project-encoded&gt;/audits/`
+<a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>
+<a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>**File naming:** `green-mirage-audit-&lt;YYYY-MM-DD&gt;-&lt;HHMMSS&gt;.md`
+<a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a>
+<a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a>**Example:** `~/.claude/docs/Users-alice-Development-myproject/audits/green-mirage-audit-2024-01-15-103045.md`
+<a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a>
+<a id="__codelineno-27-16" name="__codelineno-27-16" href="#__codelineno-27-16"></a>### 6.2 Project Encoded Path Generation
+<a id="__codelineno-27-17" name="__codelineno-27-17" href="#__codelineno-27-17"></a>
+<a id="__codelineno-27-18" name="__codelineno-27-18" href="#__codelineno-27-18"></a>```bash
+<a id="__codelineno-27-19" name="__codelineno-27-19" href="#__codelineno-27-19"></a># Find outermost git repo (handles nested repos like submodules/vendor)
+<a id="__codelineno-27-20" name="__codelineno-27-20" href="#__codelineno-27-20"></a># Returns &quot;NO_GIT_REPO&quot; if not in any git repository
+<a id="__codelineno-27-21" name="__codelineno-27-21" href="#__codelineno-27-21"></a>_outer_git_root() {
+<a id="__codelineno-27-22" name="__codelineno-27-22" href="#__codelineno-27-22"></a>  local root=$(git rev-parse --show-toplevel 2&gt;/dev/null)
+<a id="__codelineno-27-23" name="__codelineno-27-23" href="#__codelineno-27-23"></a>  [ -z &quot;$root&quot; ] &amp;&amp; { echo &quot;NO_GIT_REPO&quot;; return 1; }
+<a id="__codelineno-27-24" name="__codelineno-27-24" href="#__codelineno-27-24"></a>  local parent
+<a id="__codelineno-27-25" name="__codelineno-27-25" href="#__codelineno-27-25"></a>  while parent=$(git -C &quot;$(dirname &quot;$root&quot;)&quot; rev-parse --show-toplevel 2&gt;/dev/null) &amp;&amp; [ &quot;$parent&quot; != &quot;$root&quot; ]; do
+<a id="__codelineno-27-26" name="__codelineno-27-26" href="#__codelineno-27-26"></a>    root=&quot;$parent&quot;
+<a id="__codelineno-27-27" name="__codelineno-27-27" href="#__codelineno-27-27"></a>  done
+<a id="__codelineno-27-28" name="__codelineno-27-28" href="#__codelineno-27-28"></a>  echo &quot;$root&quot;
+<a id="__codelineno-27-29" name="__codelineno-27-29" href="#__codelineno-27-29"></a>}
+<a id="__codelineno-27-30" name="__codelineno-27-30" href="#__codelineno-27-30"></a>PROJECT_ROOT=$(_outer_git_root)
+</code></pre></div></p>
+<p><strong>If <code>PROJECT_ROOT</code> is "NO_GIT_REPO":</strong> Ask user if they want to run <code>git init</code>. If no, use fallback: <code>~/.claude/docs/_no-repo/$(basename "$PWD")/audits/</code></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
+</code></pre></div>
+<h3 id="63-directory-creation">6.3 Directory Creation<a class="headerlink" href="#63-directory-creation" title="Permanent link">&para;</a></h3>
+<p>Before writing, ensure directory exists:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="nv">DOCS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLAUDE_CONFIG_DIR</span><span class="k">:-</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="p">/.claude</span><span class="si">}</span><span class="s2">/docs/</span><span class="si">${</span><span class="nv">PROJECT_ENCODED</span><span class="si">}</span><span class="s2">/audits&quot;</span>
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$DOCS_DIR</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h3 id="64-write-report">6.4 Write Report<a class="headerlink" href="#64-write-report" title="Permanent link">&para;</a></h3>
+<p>Write the complete report (YAML block + human-readable sections) to the file.</p>
+<h3 id="65-final-output-to-user">6.5 Final Output to User<a class="headerlink" href="#65-final-output-to-user" title="Permanent link">&para;</a></h3>
+<p>After writing the file, display:</p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="gu">## Audit Complete</span>
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>Report saved to:
+<a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="sb">`~/.claude/docs/&lt;project-encoded&gt;/audits/green-mirage-audit-&lt;timestamp&gt;.md`</span>
+<a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>
+<a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="gu">### Summary</span>
+<a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="k">-</span><span class="w"> </span>Tests audited: X
+<a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a><span class="k">-</span><span class="w"> </span>Green mirages found: Y
+<a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="k">-</span><span class="w"> </span>Estimated fix time: Z
+<a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a>
+<a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a><span class="gu">### Next Steps</span>
+<a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a>
+<a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a>To fix these issues, run:
+</code></pre></div>
+/fix-tests ~/.claude/docs/<project-encoded>/audits/green-mirage-audit-<timestamp>.md
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>The fix-tests skill will:
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>1. Parse the findings from this report
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>2. Process fixes in dependency order
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>3. Verify each fix catches the failure it should
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>4. Commit changes incrementally
+</code></pre></div></p>
+<hr />
+<h2 id="execution-protocol">Execution Protocol<a class="headerlink" href="#execution-protocol" title="Permanent link">&para;</a></h2>
+<p><PROTOCOL>
+1. <strong>Start with Inventory</strong> - List all files before reading any
+2. <strong>One File at a Time</strong> - Complete audit of file before moving to next
+3. <strong>One Test at a Time</strong> - Complete analysis of test before moving to next
+4. <strong>Trace Before Judging</strong> - Trace full code path before deciding if test is solid
+5. <strong>Concrete Fixes Only</strong> - Every finding needs exact code, not vague suggestions
+6. <strong>No Rushing</strong> - Take multiple messages if needed, thoroughness over speed
+7. <strong>Write to File</strong> - Save complete report to docs directory
+8. <strong>Suggest Next Steps</strong> - Tell user how to run fix-tests with the report path
+</PROTOCOL></p>
+<p><FORBIDDEN></p>
+<h3 id="surface-level-auditing">Surface-Level Auditing<a class="headerlink" href="#surface-level-auditing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>"Tests look comprehensive"</li>
+<li>"Good coverage overall"</li>
+<li>Skimming without tracing code paths</li>
+<li>Flagging only obvious issues</li>
+</ul>
+<h3 id="vague-findings">Vague Findings<a class="headerlink" href="#vague-findings" title="Permanent link">&para;</a></h3>
+<ul>
+<li>"This test should be more thorough"</li>
+<li>"Consider adding validation"</li>
+<li>Findings without exact line numbers</li>
+<li>Fixes without exact code</li>
+</ul>
+<h3 id="rushing">Rushing<a class="headerlink" href="#rushing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Skipping tests to finish faster</li>
+<li>Not tracing full code paths</li>
+<li>Assuming code works without verification</li>
+<li>Stopping before full audit complete
+</FORBIDDEN></li>
+</ul>
+<p><SELF_CHECK>
+Before completing audit, verify:</p>
+<h2 id="audit-completeness">Audit Completeness<a class="headerlink" href="#audit-completeness" title="Permanent link">&para;</a></h2>
+<p>□ Did I read every line of every test file?
+□ Did I trace code paths from test through production and back?
+□ Did I check every test against all 8 patterns?
+□ Did I verify assertions would catch actual failures?
+□ Did I identify untested functions/methods?
+□ Did I identify untested error paths?</p>
+<h2 id="finding-quality">Finding Quality<a class="headerlink" href="#finding-quality" title="Permanent link">&para;</a></h2>
+<p>□ Does every finding include exact line numbers?
+□ Does every finding include exact fix code?
+□ Does every finding have an effort estimate (trivial/moderate/significant)?
+□ Does every finding have depends_on specified (even if empty [])?
+□ Did I prioritize findings (critical/important/minor)?</p>
+<h2 id="report-structure-for-fix-tests-compatibility">Report Structure (for fix-tests compatibility)<a class="headerlink" href="#report-structure-for-fix-tests-compatibility" title="Permanent link">&para;</a></h2>
+<p>□ Did I output the YAML block at the START of findings?
+□ Does the YAML include audit_metadata, summary, patterns_found, findings, and remediation_plan?
+□ Does each finding in YAML have: id, priority, test_file, test_function, line_number, pattern, pattern_name, effort, depends_on, blind_spot, production_impact?
+□ Did I generate a remediation_plan with phases ordered by dependencies?
+□ Did I provide human-readable summary statistics after the YAML?
+□ Did I provide detailed findings in the human-readable format?
+□ Did I include the "Quick Start" section pointing to fix-tests?</p>
+<p>If NO to ANY item, go back and complete it.
+</SELF_CHECK></p>
+<p><CRITICAL_REMINDER>
+The question is NOT "does this test pass?"</p>
+<p>The question is: "Would this test FAIL if the production code was broken?"</p>
+<p>For EVERY assertion, ask: "What broken code would still pass this?"</p>
+<p>If you can't answer with confidence that the test catches failures, it's a Green Mirage.</p>
+<p>Find it. Trace it. Fix it. Take as long as needed.
+</CRITICAL_REMINDER></p>
+<p><FINAL_EMPHASIS>
+Green test suites mean NOTHING if they don't catch failures. Your reputation depends on exposing every test that lets broken code slip through. Every assertion must CONSUME and VALIDATE. Every code path must be TRACED. Every finding must have EXACT fixes. This is very important to my career. Thoroughness over speed. Strive for excellence.
+</FINAL_EMPHASIS></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

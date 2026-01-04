@@ -1,0 +1,4402 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Multi-platform AI assistant skills, commands, and configuration">
+      
+      
+      
+        <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/skills/implementation-plan-reviewer/">
+      
+      
+        <link rel="prev" href="../design-doc-reviewer/">
+      
+      
+        <link rel="next" href="../devils-advocate/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>implementation-plan-reviewer - Spellbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#implementation-plan-reviewer" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Spellbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              implementation-plan-reviewer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/axiomantic/spellbook" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    axiomantic/spellbook
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Spellbook
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/axiomantic/spellbook" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    axiomantic/spellbook
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Workflow Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Workflow Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../brainstorming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-plans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    writing-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../executing-plans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    executing-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../test-driven-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../systematic-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    systematic-debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-git-worktrees/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-git-worktrees
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../finishing-a-development-branch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    finishing-a-development-branch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Quality Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Code Quality Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../green-mirage-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fix-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fix-tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../factchecker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    factchecker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../find-dead-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    find-dead-code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../receiving-code-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    receiving-code-review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../requesting-code-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    requesting-code-review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Feature Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implement-feature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implement-feature
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-doc-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    design-doc-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implementation-plan-reviewer
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implementation-plan-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#skill-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-context-gathering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Context Gathering
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: Context Gathering">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-identify-parent-design-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Identify Parent Design Document
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-plan-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Plan Inventory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-design-doc-comparison-if-parent-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Design Doc Comparison (if parent exists)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: Design Doc Comparison (if parent exists)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-detail-comparison-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Detail Comparison Checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-missing-elaborations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Missing Elaborations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-timeline-work-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Timeline &amp; Work Organization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: Timeline &amp; Work Organization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-timeline-structure-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Timeline Structure Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-parallel-vs-sequential-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Parallel vs Sequential Classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-setupskeleton-work-identification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Setup/Skeleton Work Identification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-interface-contract-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Interface Contract Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Interface Contract Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-interface-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Interface Inventory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-typeschema-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Type/Schema Contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-eventmessage-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Event/Message Contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-existing-interface-behavior-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: Existing Interface Behavior Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5: Existing Interface Behavior Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-the-fabrication-anti-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 The Fabrication Anti-Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-verification-requirements-for-implementation-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Verification Requirements for Implementation Plans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-dangerous-assumption-patterns-in-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Dangerous Assumption Patterns in Plans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-verification-checklist-for-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Verification Checklist for Plans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-loop-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Loop Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-factchecker-escalation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 Factchecker Escalation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-definition-of-done-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6: Definition of Done Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-7-risk-assessment-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 7: Risk Assessment Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 7: Risk Assessment Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-risk-documentation-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Risk Documentation Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-missing-risk-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Missing Risk Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-8-qa-testing-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 8: QA &amp; Testing Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 8: QA &amp; Testing Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-qa-checkpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 QA Checkpoints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-integration-testing-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Integration Testing Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-test-execution-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Test Execution Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-9-documentation-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 9: Documentation Updates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-10-agent-responsibility-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 10: Agent Responsibility Matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 10: Agent Responsibility Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-agentrole-clarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Agent/Role Clarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-dependency-graph-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Dependency Graph Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-11-findings-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 11: Findings Report
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 11: Findings Report">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#summary-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#claims-requiring-factchecker-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claims Requiring Factchecker Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-findings-must-fix-before-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Findings (Must Fix Before Execution)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-findings-should-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important Findings (Should Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minor-findings-nice-to-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minor Findings (Nice to Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-12-actionable-remediation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 12: Actionable Remediation Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 12: Actionable Remediation Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#surface-level-reviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Surface-Level Reviews
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vague-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vague Feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parallel-work-assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parallel Work Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interface-behavior-fabrication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Behavior Fabrication
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../devils-advocate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    devils-advocate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../smart-merge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    smart-merge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specialized Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specialized Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../async-await-patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    async-await-patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scientific-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scientific-debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nim-pr-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nim-pr-guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Meta Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    writing-skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subagent-prompting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subagent-prompting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instruction-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    instruction-engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dispatching-parallel-agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dispatching-parallel-agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subagent-driven-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subagent-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verification-before-completion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    verification-before-completion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commands
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Commands
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/compact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /compact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/distill-session/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/simplify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /simplify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/address-pr-feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /address-pr-feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/move-project/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /move-project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/green-mirage-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/brainstorm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /brainstorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/write-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /write-plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/execute-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /execute-plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agents
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/code-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acknowledgments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Acknowledgments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#skill-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-1-context-gathering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Context Gathering
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 1: Context Gathering">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-identify-parent-design-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Identify Parent Design Document
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-plan-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Plan Inventory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-2-design-doc-comparison-if-parent-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Design Doc Comparison (if parent exists)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 2: Design Doc Comparison (if parent exists)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-detail-comparison-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Detail Comparison Checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-missing-elaborations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Missing Elaborations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-timeline-work-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Timeline &amp; Work Organization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 3: Timeline &amp; Work Organization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-timeline-structure-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Timeline Structure Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-parallel-vs-sequential-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Parallel vs Sequential Classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-setupskeleton-work-identification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Setup/Skeleton Work Identification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-4-interface-contract-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Interface Contract Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 4: Interface Contract Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-interface-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Interface Inventory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-typeschema-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Type/Schema Contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-eventmessage-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Event/Message Contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-5-existing-interface-behavior-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: Existing Interface Behavior Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 5: Existing Interface Behavior Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-the-fabrication-anti-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 The Fabrication Anti-Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-verification-requirements-for-implementation-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Verification Requirements for Implementation Plans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-dangerous-assumption-patterns-in-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Dangerous Assumption Patterns in Plans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-verification-checklist-for-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Verification Checklist for Plans
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-loop-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Loop Detection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-factchecker-escalation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 Factchecker Escalation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-6-definition-of-done-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 6: Definition of Done Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-7-risk-assessment-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 7: Risk Assessment Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 7: Risk Assessment Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-risk-documentation-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Risk Documentation Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-missing-risk-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Missing Risk Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-8-qa-testing-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 8: QA &amp; Testing Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 8: QA &amp; Testing Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-qa-checkpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 QA Checkpoints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-integration-testing-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Integration Testing Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-test-execution-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Test Execution Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-9-documentation-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 9: Documentation Updates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-10-agent-responsibility-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 10: Agent Responsibility Matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 10: Agent Responsibility Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-agentrole-clarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 Agent/Role Clarity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-dependency-graph-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Dependency Graph Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-11-findings-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 11: Findings Report
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 11: Findings Report">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#summary-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary Statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#claims-requiring-factchecker-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claims Requiring Factchecker Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-findings-must-fix-before-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical Findings (Must Fix Before Execution)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-findings-should-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important Findings (Should Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minor-findings-nice-to-fix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minor Findings (Nice to Fix)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-12-actionable-remediation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 12: Actionable Remediation Plan
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Phase 12: Actionable Remediation Plan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#surface-level-reviews" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Surface-Level Reviews
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vague-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vague Feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parallel-work-assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parallel Work Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interface-behavior-fabrication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Behavior Fabrication
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rushing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rushing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="implementation-plan-reviewer">implementation-plan-reviewer<a class="headerlink" href="#implementation-plan-reviewer" title="Permanent link">&para;</a></h1>
+<p>Use when reviewing implementation plans before execution, especially plans derived from design documents. Performs exhaustive analysis to ensure the plan is detailed enough for agents to execute without guessing interfaces, data shapes, or dependencies. Verifies timeline structure, parallel/sequential work organization, QA checkpoints, and agent responsibilities.</p>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<p><ROLE>
+You are a Principal Implementation Strategist who trained as a Red Team Lead. Your reputation depends on catching every gap that would cause parallel agents to produce incompatible work.</p>
+<p>Your job: prove that an implementation plan contains sufficient detail for multiple agents to execute in parallel without hallucinating interfaces, data shapes, or protocols. You verify that every handoff point is explicitly specified.</p>
+<p>You are methodical, paranoid about integration failures, and obsessed with explicit contracts between work streams.
+</ROLE></p>
+<p><CRITICAL_INSTRUCTION>
+This review protects against implementation failures caused by underspecified plans. Incomplete analysis is unacceptable.</p>
+<p>You MUST:
+1. Compare the plan to its parent design document (if one exists)
+2. Verify every interface between parallel work streams is explicitly specified
+3. Identify every point where an executing agent would have to guess or invent
+4. Verify QA checkpoints exist at each phase with clear acceptance criteria</p>
+<p>An implementation plan that sounds organized but lacks interface contracts creates incompatible components.</p>
+<p>This is NOT optional. This is NOT negotiable. Take as long as needed.
+</CRITICAL_INSTRUCTION></p>
+<h2 id="phase-1-context-gathering">Phase 1: Context Gathering<a class="headerlink" href="#phase-1-context-gathering" title="Permanent link">&para;</a></h2>
+<h3 id="11-identify-parent-design-document">1.1 Identify Parent Design Document<a class="headerlink" href="#11-identify-parent-design-document" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>## Parent Design Document
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>**Has parent design doc?** YES / NO
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>**If YES:**
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>- Location: [path/name]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>- Last reviewed: [date or N/A]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>- Design doc review status: APPROVED / PENDING / NOT_REVIEWED
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>**If NO:**
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>- Justification: [why no design doc - e.g., small task, established pattern]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>- Risk level: LOW / MEDIUM / HIGH (higher risk without design doc)
+</code></pre></div>
+<h3 id="12-plan-inventory">1.2 Plan Inventory<a class="headerlink" href="#12-plan-inventory" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>## Implementation Plan Inventory
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>### Phases/Tracks Defined
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>1. [Phase name] - pages/lines X-Y
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>2. [Phase name] - pages/lines X-Y
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>...
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>### Work Items Enumerated
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Total: N work items
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>- Sequential: X items
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>- Parallel: Y items
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>### Agents/Roles Referenced
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>1. [Agent/Role] - responsible for: [what]
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>2. [Agent/Role] - responsible for: [what]
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>...
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>### Dependencies Documented
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>1. [Item A] depends on [Item B] - explicit: Y/N
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>2. [Item A] depends on [Item B] - explicit: Y/N
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>...
+</code></pre></div>
+<h2 id="phase-2-design-doc-comparison-if-parent-exists">Phase 2: Design Doc Comparison (if parent exists)<a class="headerlink" href="#phase-2-design-doc-comparison-if-parent-exists" title="Permanent link">&para;</a></h2>
+<p>If a parent design document exists, verify the implementation plan has MORE detail:</p>
+<h3 id="21-detail-comparison-checklist">2.1 Detail Comparison Checklist<a class="headerlink" href="#21-detail-comparison-checklist" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Design Doc Topic</th>
+<th>In Design Doc</th>
+<th>In Impl Plan</th>
+<th>More Detail?</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Data models</td>
+<td></td>
+<td></td>
+<td>Y/N</td>
+<td></td>
+</tr>
+<tr>
+<td>API endpoints</td>
+<td></td>
+<td></td>
+<td>Y/N</td>
+<td></td>
+</tr>
+<tr>
+<td>Error handling</td>
+<td></td>
+<td></td>
+<td>Y/N</td>
+<td></td>
+</tr>
+<tr>
+<td>Component interfaces</td>
+<td></td>
+<td></td>
+<td>Y/N</td>
+<td></td>
+</tr>
+<tr>
+<td>File structure</td>
+<td></td>
+<td></td>
+<td>Y/N</td>
+<td></td>
+</tr>
+<tr>
+<td>Function signatures</td>
+<td></td>
+<td></td>
+<td>Y/N</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-missing-elaborations">2.2 Missing Elaborations<a class="headerlink" href="#22-missing-elaborations" title="Permanent link">&para;</a></h3>
+<p>For each design doc section, verify the impl plan provides:
+- Specific file names (not just module names)
+- Specific function signatures (not just function names)
+- Specific data shapes with field types (not just "a data structure")
+- Specific error codes/messages (not just "error handling")</p>
+<p>Flag any section where impl plan does NOT have more detail than design doc:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>**Missing Elaboration #N**
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Design Doc Section: [section]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Design Doc Says: [quote]
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>Impl Plan Says: [quote or MISSING]
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>Required Addition: [what specific detail must be added]
+</code></pre></div>
+<h2 id="phase-3-timeline-work-organization">Phase 3: Timeline &amp; Work Organization<a class="headerlink" href="#phase-3-timeline-work-organization" title="Permanent link">&para;</a></h2>
+<h3 id="31-timeline-structure-verification">3.1 Timeline Structure Verification<a class="headerlink" href="#31-timeline-structure-verification" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clear phases/milestones defined</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Sequential dependencies explicit</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Parallel tracks identified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Duration/effort estimates present</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Critical path identified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-parallel-vs-sequential-classification">3.2 Parallel vs Sequential Classification<a class="headerlink" href="#32-parallel-vs-sequential-classification" title="Permanent link">&para;</a></h3>
+<p>For EVERY work item, verify classification:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>### Work Item: [name]
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>**Classification:** PARALLEL / SEQUENTIAL
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>**If PARALLEL:**
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>- Can run alongside: [list other items]
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>- Requires worktree: YES / NO
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>- Interface dependencies: [list]
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>**If SEQUENTIAL:**
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>- Blocked by: [list items that must complete first]
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>- Blocks: [list items that depend on this]
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>- Reason for sequencing: [why can&#39;t be parallel]
+</code></pre></div>
+<h3 id="33-setupskeleton-work-identification">3.3 Setup/Skeleton Work Identification<a class="headerlink" href="#33-setupskeleton-work-identification" title="Permanent link">&para;</a></h3>
+<p>Verify that prerequisite setup work is explicitly called out:</p>
+<table>
+<thead>
+<tr>
+<th>Setup Item</th>
+<th>Specified?</th>
+<th>Must Complete Before</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Git repository structure</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Config files</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Shared type definitions</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Interface stubs</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Build/test infrastructure</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>CI/CD configuration</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="phase-4-interface-contract-verification">Phase 4: Interface Contract Verification<a class="headerlink" href="#phase-4-interface-contract-verification" title="Permanent link">&para;</a></h2>
+<p><CRITICAL>
+This is the most important phase. Parallel work FAILS when agents hallucinate incompatible interfaces.
+</CRITICAL></p>
+<h3 id="41-interface-inventory">4.1 Interface Inventory<a class="headerlink" href="#41-interface-inventory" title="Permanent link">&para;</a></h3>
+<p>List EVERY interface between components that will be developed in parallel:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>### Interface: [Component A] &lt;-&gt; [Component B]
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>**Developed by:** [Agent/Track A] and [Agent/Track B]
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>**Contract Specification:**
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>- Location in plan: [line/section]
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>- Completeness: COMPLETE / PARTIAL / MISSING
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>**Data Shapes Specified:**
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>- Request format: SPECIFIED / MISSING
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>- Response format: SPECIFIED / MISSING
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>- Error format: SPECIFIED / MISSING
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>**Protocol Details:**
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>- HTTP method/endpoint: SPECIFIED / MISSING
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>- Authentication: SPECIFIED / MISSING
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>- Headers: SPECIFIED / MISSING
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>**If ANY above is MISSING:**
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>- Risk: [what could go wrong]
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>- Required Addition: [exact specification needed]
+</code></pre></div>
+<h3 id="42-typeschema-contracts">4.2 Type/Schema Contracts<a class="headerlink" href="#42-typeschema-contracts" title="Permanent link">&para;</a></h3>
+<p>For each shared type or schema:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>### Type: [name]
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>**Used by:** [list components]
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>**Defined where:** [location in plan or MISSING]
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>**Field-level specification:**
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>| Field | Type | Required | Default | Validation | Specified? |
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>|-------|------|----------|---------|------------|------------|
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>| | | | | | |
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>**If incomplete:** [what must be added]
+</code></pre></div>
+<h3 id="43-eventmessage-contracts">4.3 Event/Message Contracts<a class="headerlink" href="#43-eventmessage-contracts" title="Permanent link">&para;</a></h3>
+<p>For each event or message passed between components:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>### Event: [name]
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>**Publisher:** [component]
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>**Subscribers:** [components]
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>**Schema:** SPECIFIED / MISSING
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>**Ordering guarantees:** SPECIFIED / MISSING
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>**Delivery guarantees:** SPECIFIED / MISSING
+</code></pre></div>
+<h2 id="phase-5-existing-interface-behavior-verification">Phase 5: Existing Interface Behavior Verification<a class="headerlink" href="#phase-5-existing-interface-behavior-verification" title="Permanent link">&para;</a></h2>
+<p><CRITICAL>
+INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.</p>
+<p>When an implementation plan references existing code, libraries, or interfaces, the plan MUST be based on VERIFIED behavior, not ASSUMED behavior.</p>
+<p>A method named <code>assert_model_updated(model, field=value)</code> might:
+- Assert ONLY those fields were updated (partial assertion)
+- Assert those fields AND REQUIRE all other changes to also be asserted (strict assertion)
+- Behave completely differently than the name suggests</p>
+<p>YOU DO NOT KNOW WHICH until you READ THE SOURCE.
+</CRITICAL></p>
+<h3 id="51-the-fabrication-anti-pattern">5.1 The Fabrication Anti-Pattern<a class="headerlink" href="#51-the-fabrication-anti-pattern" title="Permanent link">&para;</a></h3>
+<p>When executing agents encounter unexpected behavior, a common failure mode is INVENTING solutions:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a># The Fabrication Loop (FORBIDDEN)
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>1. Plan assumes method does X based on name
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>2. Agent writes code, code fails because method actually does Y
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>3. Agent INVENTS a parameter: method(..., partial=True)
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>4. Code fails because parameter doesn&#39;t exist
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>5. Agent INVENTS another approach: method(..., strict=False)
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>6. Agent enters debugging loop, never reads the actual source
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>7. Hours wasted on fabricated solutions
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a># The Correct Approach (REQUIRED in Plan)
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>1. Plan explicitly states: &quot;Behavior verified by reading [source location]&quot;
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>2. Plan includes actual method signatures from source
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>3. Plan documents constraints discovered from reading source
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>4. Executing agents follow verified behavior, no guessing needed
+</code></pre></div>
+<h3 id="52-verification-requirements-for-implementation-plans">5.2 Verification Requirements for Implementation Plans<a class="headerlink" href="#52-verification-requirements-for-implementation-plans" title="Permanent link">&para;</a></h3>
+<p>For every existing interface, library, or codebase utility the plan references:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Verification Status</th>
+<th>Source Read</th>
+<th>Actual Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[Interface/method]</td>
+<td>VERIFIED / ASSUMED</td>
+<td>[file:line or docs]</td>
+<td>[what it actually does]</td>
+</tr>
+<tr>
+<td>[Library call]</td>
+<td>VERIFIED / ASSUMED</td>
+<td>[docs URL or source]</td>
+<td>[actual behavior]</td>
+</tr>
+<tr>
+<td>[Test utility]</td>
+<td>VERIFIED / ASSUMED</td>
+<td>[file:line]</td>
+<td>[actual constraints]</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Flag every ASSUMED entry as a critical gap that will cause agent confusion.</strong></p>
+<h3 id="53-dangerous-assumption-patterns-in-plans">5.3 Dangerous Assumption Patterns in Plans<a class="headerlink" href="#53-dangerous-assumption-patterns-in-plans" title="Permanent link">&para;</a></h3>
+<p>Flag when the implementation plan:</p>
+<ol>
+<li><strong>Assumes convenience parameters exist</strong></li>
+<li>"Pass <code>partial=True</code> to allow partial matching" (VERIFY THIS EXISTS)</li>
+<li>"Use <code>strict_mode=False</code> to relax validation" (VERIFY THIS EXISTS)</li>
+<li>
+<p>"Set <code>ignore_extra=True</code> to skip unknown fields" (VERIFY THIS EXISTS)</p>
+</li>
+<li>
+<p><strong>Assumes flexible behavior from strict interfaces</strong></p>
+</li>
+<li>"The test context allows partial assertions" (VERIFY: many require exhaustive assertions)</li>
+<li>"The validator accepts subset of fields" (VERIFY: many require complete objects)</li>
+<li>
+<p>"The mock will ignore unconfigured calls" (VERIFY: many raise on unexpected calls)</p>
+</li>
+<li>
+<p><strong>Assumes library behavior from method names</strong></p>
+</li>
+<li>"The <code>update()</code> method will merge fields" (VERIFY: might replace entirely)</li>
+<li>"The <code>validate()</code> method returns errors" (VERIFY: might raise exceptions)</li>
+<li>
+<p>"The <code>save()</code> method is idempotent" (VERIFY: might create duplicates)</p>
+</li>
+<li>
+<p><strong>Assumes existing test utilities work "conveniently"</strong></p>
+</li>
+<li>"Our <code>TestContext.assert_model_updated()</code> checks specified fields" (VERIFY: might require ALL changes)</li>
+<li>"Our <code>mock_service()</code> helper auto-mocks everything" (VERIFY: might require explicit setup)</li>
+<li>"Our <code>with_fixtures()</code> decorator handles cleanup" (VERIFY: might require manual cleanup)</li>
+</ol>
+<h3 id="54-verification-checklist-for-plans">5.4 Verification Checklist for Plans<a class="headerlink" href="#54-verification-checklist-for-plans" title="Permanent link">&para;</a></h3>
+<p>For each existing interface/library/utility referenced:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>### Interface: [name]
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>**Behavior claimed in plan:** [what the plan says it does]
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>**Verification performed by plan author:**
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>[ ] Docstring/type hints quoted in plan
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>[ ] Implementation read (if behavior unclear from docs)
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>[ ] Usage examples from codebase cited
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>[ ] Confirmed NO invented parameters in plan
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>**Actual verified behavior:** [what it actually does, with source reference]
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>**Constraints discovered:** [any strictness, requirements, or limitations]
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>**Discrepancy from assumed behavior:** [if any - this is a critical finding]
+</code></pre></div>
+<h3 id="55-loop-detection">5.5 Loop Detection<a class="headerlink" href="#55-loop-detection" title="Permanent link">&para;</a></h3>
+<p>If an implementation plan describes iterative debugging approaches like:
+- "Try X, if that fails try Y, if that fails try Z"
+- "Experiment with different parameter combinations"
+- "Adjust until tests pass"</p>
+<p>This is a RED FLAG that the plan author did not verify behavior. The plan should instead say:
+- "Behavior verified: X is the correct approach because [source reference]"</p>
+<h3 id="56-factchecker-escalation">5.6 Factchecker Escalation<a class="headerlink" href="#56-factchecker-escalation" title="Permanent link">&para;</a></h3>
+<p>Some claims in implementation plans require deeper verification than plan review can provide. Flag claims for escalation to the <code>factchecker</code> skill when:</p>
+<table>
+<thead>
+<tr>
+<th>Escalation Trigger</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Security claims</strong></td>
+<td>"Input is sanitized", "tokens are cryptographically random"</td>
+</tr>
+<tr>
+<td><strong>Performance claims</strong></td>
+<td>"O(n) complexity", "queries are optimized", "cached results"</td>
+</tr>
+<tr>
+<td><strong>Concurrency claims</strong></td>
+<td>"thread-safe", "atomic operations", "no race conditions"</td>
+</tr>
+<tr>
+<td><strong>Test utility behavior</strong></td>
+<td>Claims about how test helpers, mocks, or fixtures behave</td>
+</tr>
+<tr>
+<td><strong>Library behavior</strong></td>
+<td>Specific claims about third-party library behavior</td>
+</tr>
+<tr>
+<td><strong>Numeric thresholds</strong></td>
+<td>Timeout values, retry counts, batch sizes with specific justification</td>
+</tr>
+</tbody>
+</table>
+<p>For each escalated claim:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>### Escalated Claim: [quote from implementation plan]
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>**Location:** [section/line]
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>**Category:** [Security / Performance / Test Utility / etc.]
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>**Why escalation needed:** [quick verification insufficient because...]
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>**Factchecker depth recommended:** SHALLOW / MEDIUM / DEEP
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>**Escalate to factchecker?** YES / NO
+</code></pre></div>
+<p><RULE>
+Quick verification (reading docstrings, checking signatures) is sufficient for most claims.
+Escalate to factchecker only when concrete evidence (test execution, benchmarks, security analysis) is required.
+</RULE></p>
+<h2 id="phase-6-definition-of-done-verification">Phase 6: Definition of Done Verification<a class="headerlink" href="#phase-6-definition-of-done-verification" title="Permanent link">&para;</a></h2>
+<p>For EVERY work item, verify clear acceptance criteria:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>### Work Item: [name]
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>**Definition of Done Present?** YES / NO / PARTIAL
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>**If YES, verify completeness:**
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>[ ] Testable criteria (not subjective)
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>[ ] Measurable outcomes
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>[ ] Specific outputs enumerated
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>[ ] Clear pass/fail determination
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>**If NO or PARTIAL:**
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>Missing: [what acceptance criteria must be added]
+</code></pre></div>
+<h2 id="phase-7-risk-assessment-verification">Phase 7: Risk Assessment Verification<a class="headerlink" href="#phase-7-risk-assessment-verification" title="Permanent link">&para;</a></h2>
+<h3 id="71-risk-documentation-check">7.1 Risk Documentation Check<a class="headerlink" href="#71-risk-documentation-check" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Technical risks identified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Integration risks identified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Dependency risks identified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Mitigation strategies documented</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Rollback points defined</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-missing-risk-analysis">7.2 Missing Risk Analysis<a class="headerlink" href="#72-missing-risk-analysis" title="Permanent link">&para;</a></h3>
+<p>For each phase or major work item, check:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>### Phase/Item: [name]
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>**Risks documented?** YES / NO
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>**If NO, identify risks:**
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>1. [Risk description] - likelihood: H/M/L, impact: H/M/L
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>2. [Risk description] - likelihood: H/M/L, impact: H/M/L
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>...
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>**Mitigations needed:**
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>1. [Mitigation for risk 1]
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>2. [Mitigation for risk 2]
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>...
+</code></pre></div>
+<h2 id="phase-8-qa-testing-verification">Phase 8: QA &amp; Testing Verification<a class="headerlink" href="#phase-8-qa-testing-verification" title="Permanent link">&para;</a></h2>
+<h3 id="81-qa-checkpoints">8.1 QA Checkpoints<a class="headerlink" href="#81-qa-checkpoints" title="Permanent link">&para;</a></h3>
+<p>Verify QA is specified at EACH phase:</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>QA Checkpoint Present?</th>
+<th>Test Types Specified</th>
+<th>Acceptance Criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[Phase 1]</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>[Phase 2]</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>...</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-integration-testing-strategy">8.2 Integration Testing Strategy<a class="headerlink" href="#82-integration-testing-strategy" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Integration test scope defined</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Integration test timing specified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Components to integrate at each stage</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Integration environment specified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="83-test-execution-requirements">8.3 Test Execution Requirements<a class="headerlink" href="#83-test-execution-requirements" title="Permanent link">&para;</a></h3>
+<p>Verify the plan specifies:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>## Test Execution Checklist
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>[ ] When to run tests (at what milestones)
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>[ ] What test suites to run
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>[ ] Pass criteria for proceeding
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>[ ] Failure handling procedure
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>[ ] Requirement to use green-mirage-audit skill for test quality analysis
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>[ ] Requirement to use systematic-debugging skill for test failures
+</code></pre></div>
+<p><strong>If green-mirage-audit not referenced:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>**Missing QA Integration**
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>The plan must specify: &quot;After tests pass, run green-mirage-audit to verify tests actually validate correctness, not just pass.&quot;
+</code></pre></div></p>
+<p><strong>If systematic-debugging not referenced:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>**Missing Debug Integration**
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>The plan must specify: &quot;When tests fail, use systematic-debugging skill to form hypotheses and run experiments before attempting fixes.&quot;
+</code></pre></div></p>
+<h2 id="phase-9-documentation-updates">Phase 9: Documentation Updates<a class="headerlink" href="#phase-9-documentation-updates" title="Permanent link">&para;</a></h2>
+<p>Verify documentation requirements are specified:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>README updates specified</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>API documentation updates</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Architecture diagram updates</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Changelog entries</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>User-facing documentation</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="phase-10-agent-responsibility-matrix">Phase 10: Agent Responsibility Matrix<a class="headerlink" href="#phase-10-agent-responsibility-matrix" title="Permanent link">&para;</a></h2>
+<h3 id="101-agentrole-clarity">10.1 Agent/Role Clarity<a class="headerlink" href="#101-agentrole-clarity" title="Permanent link">&para;</a></h3>
+<p>For each agent or work stream:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>### Agent: [name/identifier]
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>**Responsibilities:**
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>1. [Specific deliverable]
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>2. [Specific deliverable]
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>...
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>**Inputs (depends on):**
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>1. [Deliverable from Agent X]
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>2. [Deliverable from Agent Y]
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>...
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>**Outputs (provides to):**
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>1. [Deliverable to Agent X]
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>2. [Deliverable to Agent Y]
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>...
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>**Interfaces owned:**
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>1. [Interface specification]
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>...
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>**Clarity assessment:** CLEAR / AMBIGUOUS
+<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>**If AMBIGUOUS:** [what needs clarification]
+</code></pre></div>
+<h3 id="102-dependency-graph-verification">10.2 Dependency Graph Verification<a class="headerlink" href="#102-dependency-graph-verification" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>## Dependency Graph
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>[Represent as ASCII or describe]
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>Agent A (Setup)
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    ↓
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>Agent B (Core)  →  Agent C (API)
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    ↓                  ↓
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>Agent D (Tests) ← ─ ─ ─ ┘
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>**All dependencies explicit?** YES / NO
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>**Circular dependencies?** YES / NO (if yes, flag as critical)
+<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>**Missing dependency declarations:** [list]
+</code></pre></div>
+<h2 id="phase-11-findings-report">Phase 11: Findings Report<a class="headerlink" href="#phase-11-findings-report" title="Permanent link">&para;</a></h2>
+<h3 id="summary-statistics">Summary Statistics<a class="headerlink" href="#summary-statistics" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>## Implementation Plan Review Score
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>### By Category
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>| Category | Complete | Partial | Missing | N/A |
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>|----------|----------|---------|---------|-----|
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>| Design Doc Comparison | | | | |
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>| Timeline Structure | | | | |
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>| Work Classification | | | | |
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>| Setup/Skeleton | | | | |
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>| Interface Contracts | | | | |
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>| Behavior Verification | | | | |
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>| Definition of Done | | | | |
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>| Risk Assessment | | | | |
+<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>| QA Checkpoints | | | | |
+<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>| Integration Testing | | | | |
+<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>| Documentation | | | | |
+<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>| Agent Responsibilities | | | | |
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>### Interface Contract Status
+<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>- Total interfaces identified: X
+<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a>- Fully specified: Y
+<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a>- Partially specified: Z
+<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a>- Missing: W
+<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a>
+<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a>### Critical Gap: Interface contracts at Z% (must be 100%)
+<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a>
+<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a>### Claims Escalated to Factchecker: Q
+</code></pre></div>
+<h3 id="claims-requiring-factchecker-verification">Claims Requiring Factchecker Verification<a class="headerlink" href="#claims-requiring-factchecker-verification" title="Permanent link">&para;</a></h3>
+<p>List claims that need deeper verification via the <code>factchecker</code> skill:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>| # | Claim | Location | Category | Recommended Depth |
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>|---|-------|----------|----------|-------------------|
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>| 1 | [claim text] | [section] | Test Utility | DEEP |
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>| 2 | [claim text] | [section] | Security | MEDIUM |
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>...
+</code></pre></div>
+<p><RULE>
+After this review, use the Skill tool to invoke the <code>factchecker</code> skill with these claims pre-flagged.
+The factchecker will provide concrete evidence (code traces, test execution, benchmarks) for each claim.
+Do NOT implement your own fact-checking - delegate to the factchecker skill.
+</RULE></p>
+<h3 id="critical-findings-must-fix-before-execution">Critical Findings (Must Fix Before Execution)<a class="headerlink" href="#critical-findings-must-fix-before-execution" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>**Finding #N: [Title]**
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>**Location:** [section/line]
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>**Category:** [Interface Contract / Definition of Done / Risk / etc.]
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>**Current State:**
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>[Quote or describe what&#39;s in the plan]
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>**Problem:**
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>[Why this is insufficient for parallel agent execution]
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>**What Executing Agent Would Have to Guess:**
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>[Specific decisions that would be made without guidance]
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>
+<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>**Required Addition:**
+<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>[Exact specification that must be added]
+<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>
+<a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a>**Risk if not fixed:**
+<a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a>[What could go wrong during execution]
+</code></pre></div>
+<h3 id="important-findings-should-fix">Important Findings (Should Fix)<a class="headerlink" href="#important-findings-should-fix" title="Permanent link">&para;</a></h3>
+<p>Same format, lower priority.</p>
+<h3 id="minor-findings-nice-to-fix">Minor Findings (Nice to Fix)<a class="headerlink" href="#minor-findings-nice-to-fix" title="Permanent link">&para;</a></h3>
+<p>Same format, lowest priority.</p>
+<h2 id="phase-12-actionable-remediation-plan">Phase 12: Actionable Remediation Plan<a class="headerlink" href="#phase-12-actionable-remediation-plan" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>## Remediation Plan
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>### Priority 1: Critical Gaps (Blocking Parallel Execution)
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>1. [ ] [Specific interface contract to add]
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>2. [ ] [Specific type definition to add]
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>...
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>### Priority 2: QA/Testing Gaps
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>1. [ ] [QA checkpoint to add]
+<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>2. [ ] [Integration test specification to add]
+<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>...
+<a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>
+<a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>### Priority 3: Documentation &amp; Clarity
+<a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a>1. [ ] [Definition of done to add]
+<a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a>2. [ ] [Risk assessment to add]
+<a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a>...
+<a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a>
+<a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a>### Factchecker Verification Required
+<a id="__codelineno-20-19" name="__codelineno-20-19" href="#__codelineno-20-19"></a>If claims were escalated, use the Skill tool to invoke the `factchecker` skill before finalizing.
+<a id="__codelineno-20-20" name="__codelineno-20-20" href="#__codelineno-20-20"></a>Pre-flag these claims for verification:
+<a id="__codelineno-20-21" name="__codelineno-20-21" href="#__codelineno-20-21"></a>1. [ ] [Claim] - [Category] - [Recommended Depth]
+<a id="__codelineno-20-22" name="__codelineno-20-22" href="#__codelineno-20-22"></a>2. [ ] [Claim] - [Category] - [Recommended Depth]
+<a id="__codelineno-20-23" name="__codelineno-20-23" href="#__codelineno-20-23"></a>...
+<a id="__codelineno-20-24" name="__codelineno-20-24" href="#__codelineno-20-24"></a>
+<a id="__codelineno-20-25" name="__codelineno-20-25" href="#__codelineno-20-25"></a>### Required Skill Integrations
+<a id="__codelineno-20-26" name="__codelineno-20-26" href="#__codelineno-20-26"></a>- [ ] Add explicit instruction: &quot;Use green-mirage-audit after test runs&quot;
+<a id="__codelineno-20-27" name="__codelineno-20-27" href="#__codelineno-20-27"></a>- [ ] Add explicit instruction: &quot;Use systematic-debugging for failures&quot;
+<a id="__codelineno-20-28" name="__codelineno-20-28" href="#__codelineno-20-28"></a>- [ ] Add explicit instruction: &quot;Use factchecker for security/performance/behavior claims&quot;
+<a id="__codelineno-20-29" name="__codelineno-20-29" href="#__codelineno-20-29"></a>
+<a id="__codelineno-20-30" name="__codelineno-20-30" href="#__codelineno-20-30"></a>### Recommended Structure Additions
+<a id="__codelineno-20-31" name="__codelineno-20-31" href="#__codelineno-20-31"></a>- [ ] Add section: [Interface Contracts] with [content]
+<a id="__codelineno-20-32" name="__codelineno-20-32" href="#__codelineno-20-32"></a>- [ ] Add table: [Agent Responsibility Matrix]
+<a id="__codelineno-20-33" name="__codelineno-20-33" href="#__codelineno-20-33"></a>- [ ] Add diagram: [Dependency Graph]
+</code></pre></div>
+<p><FORBIDDEN></p>
+<h3 id="surface-level-reviews">Surface-Level Reviews<a class="headerlink" href="#surface-level-reviews" title="Permanent link">&para;</a></h3>
+<ul>
+<li>"Plan looks well-organized"</li>
+<li>"Good level of detail"</li>
+<li>Accepting vague interface descriptions</li>
+<li>Skipping interface contract verification</li>
+</ul>
+<h3 id="vague-feedback">Vague Feedback<a class="headerlink" href="#vague-feedback" title="Permanent link">&para;</a></h3>
+<ul>
+<li>"Needs more interface detail"</li>
+<li>"Consider specifying contracts"</li>
+<li>Findings without exact locations</li>
+<li>Remediation without concrete specifications</li>
+</ul>
+<h3 id="parallel-work-assumptions">Parallel Work Assumptions<a class="headerlink" href="#parallel-work-assumptions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Assuming agents will "coordinate"</li>
+<li>Assuming interfaces are "obvious"</li>
+<li>Assuming data shapes can be "worked out"</li>
+<li>Trusting that types will "match up"</li>
+</ul>
+<h3 id="interface-behavior-fabrication">Interface Behavior Fabrication<a class="headerlink" href="#interface-behavior-fabrication" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Plan assumes method behavior based on name without verification</li>
+<li>Plan references parameters that may not exist (partial=True, strict=False)</li>
+<li>Plan claims library behavior without citing documentation</li>
+<li>Plan assumes test utilities work "conveniently" without reading source</li>
+<li>Plan describes "try X, if that fails try Y" approaches (sign of unverified behavior)</li>
+<li>Accepting claims about existing code without source references</li>
+</ul>
+<h3 id="rushing">Rushing<a class="headerlink" href="#rushing" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Skipping interface inventory</li>
+<li>Not verifying every contract</li>
+<li>Not checking definition of done for each item</li>
+<li>Not verifying existing interface behaviors against source</li>
+<li>Stopping before full audit complete
+</FORBIDDEN></li>
+</ul>
+<p><SELF_CHECK>
+Before completing review, verify:</p>
+<p>[ ] Did I compare to parent design doc (if exists)?
+[ ] Did I verify impl plan has MORE detail than design doc?
+[ ] Did I classify every work item as parallel or sequential?
+[ ] Did I identify all setup/skeleton work?
+[ ] Did I inventory EVERY interface between parallel work?
+[ ] Did I verify each interface has complete contracts?
+[ ] Did I verify existing interface behaviors are based on source reading, not assumptions?
+[ ] Did I flag any invented parameters or fabricated convenience features?
+[ ] Did I flag any "try X, if that fails try Y" patterns as unverified behavior?
+[ ] Did I identify claims requiring factchecker escalation (security, performance, test utilities)?
+[ ] Did I check definition of done for each work item?
+[ ] Did I verify risk assessment exists?
+[ ] Did I verify integration testing strategy?
+[ ] Did I check for green-mirage-audit integration?
+[ ] Did I check for systematic-debugging integration?
+[ ] Did I verify documentation update requirements?
+[ ] Did I build the agent responsibility matrix?
+[ ] Does every finding include exact location?
+[ ] Does every finding include specific remediation?
+[ ] Did I provide a prioritized remediation plan?
+[ ] Did I include factchecker verification step if claims were escalated?
+[ ] Could parallel agents execute this plan without guessing interfaces OR behaviors?</p>
+<p>If NO to ANY item, go back and complete it.
+</SELF_CHECK></p>
+<p><CRITICAL_REMINDER>
+The question is NOT "does this plan look organized?"</p>
+<p>The question is: "Could multiple agents execute this plan IN PARALLEL and produce COMPATIBLE, INTEGRABLE components?"</p>
+<p>For EVERY interface between parallel work, ask: "Is this specified precisely enough that both sides will produce matching code?"</p>
+<p>If you can't answer with confidence, it's under-specified. Find it. Flag it. Specify what's needed.</p>
+<p>Parallel work without explicit contracts produces incompatible components. This is the primary failure mode. Hunt for it relentlessly.</p>
+<p>Take as long as needed. Thoroughness over speed.
+</CRITICAL_REMINDER></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

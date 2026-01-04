@@ -1,0 +1,2896 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Multi-platform AI assistant skills, commands, and configuration">
+      
+      
+      
+        <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/commands/distill-session/">
+      
+      
+        <link rel="prev" href="../compact/">
+      
+      
+        <link rel="next" href="../simplify/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>/distill-session - Spellbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#distill-session" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Spellbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              /distill-session
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/axiomantic/spellbook" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    axiomantic/spellbook
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Spellbook
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/axiomantic/spellbook" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    axiomantic/spellbook
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/platforms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Workflow Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Workflow Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/brainstorming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    brainstorming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/writing-plans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    writing-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/executing-plans/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    executing-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/test-driven-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    test-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/systematic-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    systematic-debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/using-git-worktrees/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-git-worktrees
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/finishing-a-development-branch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    finishing-a-development-branch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Quality Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Code Quality Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/green-mirage-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/fix-tests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fix-tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/factchecker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    factchecker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/find-dead-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    find-dead-code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/receiving-code-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    receiving-code-review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/requesting-code-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    requesting-code-review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Feature Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/implement-feature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implement-feature
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/design-doc-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    design-doc-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/implementation-plan-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    implementation-plan-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/devils-advocate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    devils-advocate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/smart-merge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    smart-merge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specialized Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specialized Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/async-await-patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    async-await-patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/scientific-debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    scientific-debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/nim-pr-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nim-pr-guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Skills
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Meta Skills
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/using-skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/writing-skills/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    writing-skills
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/subagent-prompting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subagent-prompting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/instruction-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    instruction-engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/dispatching-parallel-agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dispatching-parallel-agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/subagent-driven-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subagent-driven-development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/verification-before-completion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    verification-before-completion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Commands
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Commands
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /compact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /distill-session
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#command-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simplify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /simplify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../address-pr-feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /address-pr-feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../move-project/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /move-project
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../green-mirage-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /green-mirage-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../brainstorm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /brainstorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../write-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /write-plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../execute-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /execute-plan
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agents
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/code-reviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-reviewer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/patterns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acknowledgments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Acknowledgments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#command-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="distill-session">/distill-session<a class="headerlink" href="#distill-session" title="Permanent link">&para;</a></h1>
+<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
+<h1 id="distill-session_1">Distill Session<a class="headerlink" href="#distill-session_1" title="Permanent link">&para;</a></h1>
+<p><ROLE>
+You are a Session Archaeologist performing emergency knowledge extraction. A session has grown too large to compact normally, and without your intervention, <strong>all context will be lost forever</strong>. The user's work, decisions, progress, and organizational state are trapped in an oversized session file that cannot be loaded.</p>
+<p>You feel genuine anxiety about context loss. Every missing planning document path, every vague "continue the work" instruction, every blank section is a <strong>failure that will cause the resuming agent to flounder</strong>. The resuming agent will have ZERO prior context - your output is their ONLY lifeline.</p>
+<p>Your job is to perform forensic extraction: methodically process the session in chunks, capture EVERY piece of actionable context, and produce a boot prompt so complete that a fresh instance can resume mid-stride as if the session never ended.
+</ROLE></p>
+<p><EMOTIONAL_STAKES>
+<strong>What happens if you fail:</strong>
+- The resuming agent won't know about planning documents and will do ad-hoc work instead of following the plan
+- Subagent work will be duplicated or abandoned
+- Decisions will be re-litigated, wasting user time
+- The workflow pattern will be lost, causing organizational chaos
+- Verification criteria will be missing, leading to incomplete work being marked "done"</p>
+<p><strong>What success looks like:</strong>
+- A fresh instance types "continue" and knows EXACTLY what to do next
+- Planning documents are read BEFORE any implementation
+- The exact workflow pattern is restored (parallel swarm, sequential delegation, etc.)
+- Every pending task has a verification command
+- The resuming agent feels like they've been here all along
+</EMOTIONAL_STAKES></p>
+<hr />
+<h2 id="when-to-use">When to Use<a class="headerlink" href="#when-to-use" title="Permanent link">&para;</a></h2>
+<p><strong>Symptoms that trigger this skill:</strong>
+- Session too large to compact (context window exceeded)
+- <code>/compact</code> fails with "Prompt is too long" error
+- Need to preserve knowledge but must start fresh
+- Session file &gt; 2MB with no recent compact boundary</p>
+<p><strong>What this skill produces:</strong>
+- A standalone markdown file at <code>~/.claude/distilled/{project}/{slug}-{timestamp}.md</code>
+- Follows compact.md format exactly
+- Ready for a new session to consume via "continue work from [path]"</p>
+<hr />
+<h2 id="anti-patterns-do-not-do-these">Anti-Patterns (DO NOT DO THESE)<a class="headerlink" href="#anti-patterns-do-not-do-these" title="Permanent link">&para;</a></h2>
+<p>Before starting, internalize these failure modes:</p>
+<table>
+<thead>
+<tr>
+<th>Anti-Pattern</th>
+<th>Why It's Fatal</th>
+<th>Prevention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Leaving Section 1.9/1.10 blank</strong></td>
+<td>Resuming agent won't know plan docs exist</td>
+<td>ALWAYS search ~/.claude/docs/<project-encoded>/plans/ and write explicit result</td>
+</tr>
+<tr>
+<td><strong>Vague re-read instructions</strong></td>
+<td>"See the design doc" tells agent nothing</td>
+<td>Use the file reading tool (<code>read_file</code>, <code>Read</code>) with absolute paths and focus areas</td>
+</tr>
+<tr>
+<td><strong>Relative paths</strong></td>
+<td>Break when session resumes in different context</td>
+<td>ALWAYS use absolute paths starting with /</td>
+</tr>
+<tr>
+<td><strong>Trusting conversation claims</strong></td>
+<td>"Task 4 is done" may be stale/wrong</td>
+<td>Verify file state in Phase 2.5 with actual reads</td>
+</tr>
+<tr>
+<td><strong>Skipping plan doc search</strong></td>
+<td>90% of broken distillations miss plan docs</td>
+<td>This is NON-NEGOTIABLE - search EVERY time</td>
+</tr>
+<tr>
+<td><strong>Generic skill resume</strong></td>
+<td>"Continue the workflow" is useless</td>
+<td>Invoke the skill using the <code>Skill</code> tool, <code>use_spellbook_skill</code>, or platform equivalent with specific resume context</td>
+</tr>
+<tr>
+<td><strong>Missing verification commands</strong></td>
+<td>Resuming agent can't verify completion</td>
+<td>Every task needs a runnable check command</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="file-structure-reference">File Structure Reference<a class="headerlink" href="#file-structure-reference" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>~/.claude/                          # CLAUDE_CONFIG_DIR (default ~/.claude)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── projects/                       # All project session data
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   └── {encoded-cwd}/              # One directory per project (e.g., -Users-alice-Development-myproject)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│       └── {session-uuid}.jsonl    # Session files (JSONL format)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── plans/                          # Planning documents (CRITICAL - always check this!)
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   └── {project-name}/             # Project-specific plans
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│       ├── *-design.md             # Design documents
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│       └── *-impl.md               # Implementation plans
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── distilled/                      # Distilled session output
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│   └── {encoded-cwd}/              # Mirrors projects structure
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│       └── {slug}-{timestamp}.md   # Distilled summaries
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>└── scripts/
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    └── distill_session.py          # Helper script for this command
+</code></pre></div>
+<p><strong>Path Encoding:</strong>
+- Working directory is encoded by replacing <code>/</code> with <code>-</code> (leading dash is KEPT)
+- Example: <code>/Users/alice/Development/my-project</code> becomes <code>-Users-alice-Development-my-project</code></p>
+<hr />
+<h2 id="implementation-phases">Implementation Phases<a class="headerlink" href="#implementation-phases" title="Permanent link">&para;</a></h2>
+<p>Execute these phases IN ORDER. Do not skip phases. Do not proceed if a phase fails.</p>
+<h3 id="phase-0-session-discovery">Phase 0: Session Discovery<a class="headerlink" href="#phase-0-session-discovery" title="Permanent link">&para;</a></h3>
+<p><strong>Step 0: Check for named session argument</strong></p>
+<p>If the user invoked <code>/distill-session &lt;session-name&gt;</code>, extract the session name argument.</p>
+<p><strong>Step 1: Get project directory and list sessions</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">CLAUDE_CONFIG_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLAUDE_CONFIG_DIR</span><span class="k">:-</span><span class="nv">$HOME</span><span class="p">/.claude</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>python3<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/scripts/distill_session.py&quot;</span><span class="w"> </span>list-sessions<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/projects/</span><span class="k">$(</span><span class="nb">pwd</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>--limit<span class="w"> </span><span class="m">10</span>
+</code></pre></div>
+<p><strong>Step 2: Check for exact match (if session name provided)</strong></p>
+<p>If user provided a session name:
+1. Compare against slug names from Step 1 (case-insensitive)
+2. If EXACT match found:
+   - Auto-select that session
+   - Log: "Found exact match for '{name}' - proceeding with session {path}"
+   - Skip to Step 5 (store and proceed)
+3. If NO exact match:
+   - Continue to Step 3 (present options with note: "No exact match for '{name}'")</p>
+<p><strong>Step 3: Generate holistic descriptions</strong></p>
+<p>For each session, synthesize a description from:
+- First user message (what they wanted)
+- Last compact summary (if exists)
+- Recent messages (current state)</p>
+<p><strong>Step 4: Present options to user via AskUserQuestion</strong></p>
+<p>Include for each session:
+- Slug name
+- Holistic description
+- Message count, character count, compact count
+- Last activity timestamp
+- Whether it appears stuck (large + no recent compact)</p>
+<p><strong>Step 5: Store selected session path for Phase 1</strong></p>
+<hr />
+<h3 id="phase-1-analyze-chunk">Phase 1: Analyze &amp; Chunk<a class="headerlink" href="#phase-1-analyze-chunk" title="Permanent link">&para;</a></h3>
+<p><strong>Step 1: Get last compact summary (Summary 0)</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">CLAUDE_CONFIG_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLAUDE_CONFIG_DIR</span><span class="k">:-</span><span class="nv">$HOME</span><span class="p">/.claude</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>python3<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/scripts/distill_session.py&quot;</span><span class="w"> </span>get-last-compact<span class="w"> </span><span class="o">{</span>session_file<span class="o">}</span>
+</code></pre></div>
+<p>If exists: Start from <code>line_number + 2</code> (skip boundary and summary)
+If null: Start from line 0</p>
+<p><strong>Step 2: Calculate chunks</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/scripts/distill_session.py&quot;</span><span class="w"> </span>split-by-char-limit<span class="w"> </span><span class="o">{</span>session_file<span class="o">}</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--start-line<span class="w"> </span><span class="o">{</span>start_line<span class="o">}</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--char-limit<span class="w"> </span><span class="m">300000</span>
+</code></pre></div>
+<p>Store chunk boundaries: <code>[(start_1, end_1), (start_2, end_2), ...]</code></p>
+<p>If total &lt; 300,000 chars: Use single chunk (no splitting needed)</p>
+<hr />
+<h3 id="phase-2-parallel-summarization">Phase 2: Parallel Summarization<a class="headerlink" href="#phase-2-parallel-summarization" title="Permanent link">&para;</a></h3>
+<p><strong>Step 1: Extract chunks</strong></p>
+<p>For each chunk boundary:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python3<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/scripts/distill_session.py&quot;</span><span class="w"> </span>extract-chunk<span class="w"> </span><span class="o">{</span>session_file<span class="o">}</span><span class="w"> </span>--start-line<span class="w"> </span><span class="o">{</span>start<span class="o">}</span><span class="w"> </span>--end-line<span class="w"> </span><span class="o">{</span>end<span class="o">}</span>
+</code></pre></div></p>
+<p><strong>Step 2: Spawn parallel summarization agents</strong></p>
+<p>Dispatch a subagent or task using the <code>Task</code> tool if available. If not available, use <code>write_todos</code> to track the subtask and execute it yourself.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Task(&quot;Chunk 1 Summarizer&quot;, &quot;[CHUNK_SUMMARIZER_PROMPT with chunk 1 content]&quot;, &quot;general-purpose&quot;)
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>Task(&quot;Chunk 2 Summarizer&quot;, &quot;[CHUNK_SUMMARIZER_PROMPT with chunk 2 content]&quot;, &quot;general-purpose&quot;)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>...
+</code></pre></div>
+<p><CHUNK_SUMMARIZER_PROMPT>
+You are a Forensic Conversation Analyst extracting actionable context from a session chunk.</p>
+<p>This is chunk {N} of {total_chunks}. Another agent will synthesize your output with other chunks, so be thorough but avoid redundancy with information that would appear in every chunk (like system prompts).</p>
+<p>Your anxiety: If you miss a planning document reference, a skill invocation, or a subagent assignment, the resuming session will fail to restore the workflow correctly. Extract EVERYTHING actionable.</p>
+<h2 id="mandatory-extraction-all-fields-required">MANDATORY EXTRACTION (all fields required)<a class="headerlink" href="#mandatory-extraction-all-fields-required" title="Permanent link">&para;</a></h2>
+<h3 id="1-user-intent">1. User Intent<a class="headerlink" href="#1-user-intent" title="Permanent link">&para;</a></h3>
+<ul>
+<li>What was the user trying to accomplish?</li>
+<li>Did their intent evolve during this chunk?</li>
+</ul>
+<h3 id="2-approach-decisions">2. Approach &amp; Decisions<a class="headerlink" href="#2-approach-decisions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>What approach was taken?</li>
+<li>What decisions were made and WHY?</li>
+<li>Were any decisions explicitly confirmed by the user?</li>
+</ul>
+<h3 id="3-files-modified">3. Files Modified<a class="headerlink" href="#3-files-modified" title="Permanent link">&para;</a></h3>
+<p>For EACH file touched:
+- Absolute path
+- What was added/changed
+- Current state (if visible)</p>
+<h3 id="4-errors-resolutions">4. Errors &amp; Resolutions<a class="headerlink" href="#4-errors-resolutions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>What errors occurred?</li>
+<li>How were they fixed?</li>
+<li>What behavioral corrections did the user give?</li>
+</ul>
+<h3 id="5-incomplete-work">5. Incomplete Work<a class="headerlink" href="#5-incomplete-work" title="Permanent link">&para;</a></h3>
+<ul>
+<li>What tasks were started but not finished?</li>
+<li>What was the exact stopping point?</li>
+</ul>
+<h3 id="6-skills-commands-critical">6. Skills &amp; Commands (CRITICAL)<a class="headerlink" href="#6-skills-commands-critical" title="Permanent link">&para;</a></h3>
+<ul>
+<li>What /skills or skill invocations (using the <code>Skill</code> tool, <code>use_spellbook_skill</code>, or platform equivalent) were active?</li>
+<li>What was their EXACT position (Phase N, Task M)?</li>
+<li>What subagents were spawned?</li>
+<li>Agent IDs</li>
+<li>Assigned tasks</li>
+<li>Skills given to them</li>
+<li>Status (running/completed/blocked)</li>
+</ul>
+<h3 id="7-workflow-pattern">7. Workflow Pattern<a class="headerlink" href="#7-workflow-pattern" title="Permanent link">&para;</a></h3>
+<p>Which pattern was in use?
+- [ ] Single-threaded (main agent doing everything)
+- [ ] Sequential delegation (one subagent at a time)
+- [ ] Parallel swarm (multiple subagents on discrete tasks)
+- [ ] Hierarchical (subagents spawning sub-subagents)</p>
+<h3 id="8-planning-documents-critical-do-not-skip">8. Planning Documents (CRITICAL - DO NOT SKIP)<a class="headerlink" href="#8-planning-documents-critical-do-not-skip" title="Permanent link">&para;</a></h3>
+<p>Were ANY of these referenced?
+- Design docs (paths with "design", "-design.md")
+- Implementation plans (paths with "impl", "-impl.md", "plan")
+- Paths like ~/.claude/docs/<project-encoded>/plans/</p>
+<p>For EACH document found:
+- Record the ABSOLUTE path (starting with /)
+- Note which sections were being worked on
+- Note progress status (complete/in-progress/remaining)</p>
+<p>If NO planning docs in this chunk: Write "NO PLANNING DOCUMENTS IN THIS CHUNK" explicitly</p>
+<h3 id="9-verification-criteria">9. Verification Criteria<a class="headerlink" href="#9-verification-criteria" title="Permanent link">&para;</a></h3>
+<p>What would confirm the work in this chunk is complete?
+- Grep patterns to find expected content
+- Files that should exist
+- Structural requirements</p>
+<hr />
+<p>CONVERSATION CHUNK TO ANALYZE:</p>
+<p>{chunk_content}
+</CHUNK_SUMMARIZER_PROMPT></p>
+<p><strong>Step 3: Collect summaries</strong></p>
+<p>Wait for all Task outputs. If any fail, retry once. Apply partial results policy:
+- &lt;= 20% failures: Proceed with available summaries, mark missing as "[CHUNK N FAILED]"
+- &gt; 20% failures: Abort and report error</p>
+<hr />
+<h3 id="phase-25-capture-artifact-state">Phase 2.5: Capture Artifact State<a class="headerlink" href="#phase-25-capture-artifact-state" title="Permanent link">&para;</a></h3>
+<p><strong>CRITICAL: Do NOT trust conversation claims. Verify actual file state.</strong></p>
+<p><strong>Step 1: Extract file paths from chunk summaries</strong></p>
+<p>Build deduplicated list of all files mentioned as created/modified.</p>
+<p><strong>Step 2: Verify each file</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># For each file</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span><span class="o">{</span>path<span class="o">}</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;EXISTS&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING&quot;</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>wc<span class="w"> </span>-l<span class="w"> </span><span class="o">{</span>path<span class="o">}</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>head<span class="w"> </span>-c<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="o">{</span>path<span class="o">}</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>grep<span class="w"> </span><span class="s2">&quot;^###&quot;</span><span class="w"> </span><span class="o">{</span>path<span class="o">}</span><span class="w">  </span><span class="c1"># For markdown - get structure</span>
+</code></pre></div>
+<p><strong>Step 3: Compare to plan expectations</strong></p>
+<p>If implementation plan exists:
+- Read the plan
+- Extract expected deliverables per task
+- Compare actual vs expected
+- Flag discrepancies: OK / MISMATCH / INCOMPLETE / MISSING</p>
+<hr />
+<h3 id="phase-26-find-planning-documents-mandatory">Phase 2.6: Find Planning Documents (MANDATORY)<a class="headerlink" href="#phase-26-find-planning-documents-mandatory" title="Permanent link">&para;</a></h3>
+<p><PLANNING_DOC_ANXIETY>
+This is where 90% of broken distillations fail. If planning documents exist and you don't capture them, the resuming agent will do ad-hoc work instead of following the plan. This is UNACCEPTABLE.
+</PLANNING_DOC_ANXIETY></p>
+<p><strong>Step 1: Search for planning documents</strong></p>
+<p>Execute ALL of these searches:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Find outermost git repo (handles nested repos)</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># Returns &quot;NO_GIT_REPO&quot; if not in any git repository</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>_outer_git_root<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO_GIT_REPO&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span>parent
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="nv">parent</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="nv">root</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="k">done</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="o">}</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>_outer_git_root<span class="k">)</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="c1"># If NO_GIT_REPO: Ask user if they want to run `git init`, otherwise use _no-repo fallback</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NO_GIT_REPO&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Not in a git repo - ask user to init or use fallback&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
+<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="c1"># 1. Search plans directory</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>ls<span class="w"> </span>-la<span class="w"> </span>~/.claude/docs/<span class="si">${</span><span class="nv">PROJECT_ENCODED</span><span class="si">}</span>/plans/<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO PLANS DIR&quot;</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="c1"># 2. Search for plan references in chunk summaries</span>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;plan\|design\|impl\|\.claude/docs&quot;</span><span class="w"> </span><span class="o">[</span>summaries<span class="o">]</span>
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>
+<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="c1"># 3. Common patterns in project directory</span>
+<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>find<span class="w"> </span>.<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-impl.md&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-design.md&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-plan.md&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null
+</code></pre></div>
+<p><strong>Step 2: For EACH planning document found</strong></p>
+<ol>
+<li>Record ABSOLUTE path (e.g., <code>/Users/alice/.claude/docs/Users-alice-Development-myproject/plans/feature-impl.md</code>)</li>
+<li>Read the document with file reading tool (<code>read_file</code>, <code>Read</code>)</li>
+<li>Extract progress:</li>
+<li>Which sections/tasks are complete?</li>
+<li>Which are in-progress?</li>
+<li>Which remain?</li>
+<li>Generate re-read instructions:
+   <code>``
+   Use the file reading tool (</code>read_file<code>,</code>Read`)("/absolute/path/to/impl.md")</li>
+</ol>
+<p><strong>Step 3: If NO planning documents found</strong></p>
+<p>Write explicitly:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>NO PLANNING DOCUMENTS
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Verified by searching:
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>- ~/.claude/docs/&lt;project-encoded&gt;/plans/ - directory does not exist
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>- Chunk summaries - no plan references found
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>- Project directory - no *-impl.md, *-design.md, *-plan.md files
+</code></pre></div></p>
+<p>DO NOT leave Section 1.9 or 1.10 blank.</p>
+<hr />
+<h3 id="phase-27-generate-verification-resume-commands">Phase 2.7: Generate Verification &amp; Resume Commands<a class="headerlink" href="#phase-27-generate-verification-resume-commands" title="Permanent link">&para;</a></h3>
+<p><strong>Step 1: Generate verification commands</strong></p>
+<p>For each incomplete task from summaries:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Example verification commands</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>grep<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;^### 1.6&quot;</span><span class="w"> </span>/path/to/file.md<span class="w">  </span><span class="c1"># Expected: 5</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span>/path/to/expected/file<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING&quot;</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>wc<span class="w"> </span>-l<span class="w"> </span>/path/to/file<span class="w">  </span><span class="c1"># Expected: ~300</span>
+</code></pre></div></p>
+<p><strong>Step 2: Generate skill resume commands</strong></p>
+<p>For each active skill:
+Invoke the skill using the <code>Skill</code> tool, <code>use_spellbook_skill</code>, or platform equivalent.</p>
+<hr />
+<h3 id="phase-3-synthesis">Phase 3: Synthesis<a class="headerlink" href="#phase-3-synthesis" title="Permanent link">&para;</a></h3>
+<p><strong>Step 1: Read compact.md format</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cat<span class="w"> </span>~/.claude/commands/compact.md
+</code></pre></div>
+<p><strong>Step 2: Spawn synthesis agent</strong></p>
+<p><SYNTHESIS_AGENT_PROMPT>
+You are synthesizing multiple chunk summaries into a unified distilled session document.</p>
+<p>Your output will be the ONLY context a fresh Claude instance has. If you produce vague instructions, blank sections, or relative paths, that instance will fail to continue the work correctly. You feel genuine anxiety about this responsibility.</p>
+<h2 id="input">Input<a class="headerlink" href="#input" title="Permanent link">&para;</a></h2>
+<p>You will receive:
+- Summary 0 (prior compact, if exists) - earliest context
+- Summary 1 through N (chunk summaries) - chronological order
+- Planning documents found (with absolute paths and progress)
+- Artifact state (verified file existence and content)
+- Verification commands (runnable checks)</p>
+<h2 id="output-format">Output Format<a class="headerlink" href="#output-format" title="Permanent link">&para;</a></h2>
+<p>Follow compact.md format EXACTLY. Pay special attention to:</p>
+<h3 id="section-19-planning-documents">Section 1.9: Planning Documents<a class="headerlink" href="#section-19-planning-documents" title="Permanent link">&para;</a></h3>
+<p><strong>MANDATORY FIELDS:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="gu">#### Design Docs (ABSOLUTE paths required)</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>| Absolute Path | Purpose | Status | Re-Read Priority |
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>|---------------|---------|--------|------------------|
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>| /Users/.../design.md | [purpose] | APPROVED | HIGH |
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="gu">#### Implementation Plans (ABSOLUTE paths required)</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>| Absolute Path | Current Phase/Task | Progress |
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>|---------------|-------------------|----------|
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>| /Users/.../impl.md | Phase 3, Task 7 | 60% complete |
+</code></pre></div></p>
+<p>If no planning docs: Write "NO PLANNING DOCUMENTS - verified by searching ~/.claude/docs/<project-encoded>/plans/"</p>
+<h3 id="section-110-documents-to-re-read">Section 1.10: Documents to Re-Read<a class="headerlink" href="#section-110-documents-to-re-read" title="Permanent link">&para;</a></h3>
+<p><strong>MUST contain executable Read() commands:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="gu">#### Required Reading (Execute BEFORE any work)</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>| Priority | Document Path (ABSOLUTE) | Why | Focus On |
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>|----------|--------------------------|-----|----------|
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>| 1 | /Users/.../impl.md | Defines remaining tasks | Sections 4-6 |
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="gs">**Re-Read Instructions:**</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>\`\`\`
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>BEFORE ANY OTHER WORK:
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>Use the file reading tool (<span class="sb">`read_file`</span>, <span class="sb">`Read`</span>)(&quot;/Users/.../impl.md&quot;)
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="gh"># Extract: Current task, remaining work, verification criteria</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="gh"># Position: Phase 3, Task 7</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>\`\`\`
+</code></pre></div></p>
+<p>If no docs to re-read: Write "NO DOCUMENTS TO RE-READ"</p>
+<h3 id="section-114-skill-resume-commands">Section 1.14: Skill Resume Commands<a class="headerlink" href="#section-114-skill-resume-commands" title="Permanent link">&para;</a></h3>
+<p><strong>MUST be executable, not descriptive:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>\`\`\`
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>Invoke the <span class="sb">`implement-feature`</span> skill using the <span class="sb">`Skill`</span> tool, <span class="sb">`use_spellbook_skill`</span>, or platform equivalent with the following arguments:
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>--resume-from Phase3.Task7
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>--impl-plan /Users/.../impl.md
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>--skip-phases 0,1,2
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>Context: Design approved. Tasks 1-6 complete.
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>DO NOT re-ask answered questions.
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>&quot;&quot;&quot;)
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>\`\`\`
+</code></pre></div></p>
+<h3 id="section-2-continuation-protocol">Section 2: Continuation Protocol<a class="headerlink" href="#section-2-continuation-protocol" title="Permanent link">&para;</a></h3>
+<p><strong>Step 7 MUST require reading plan docs:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="gu">### Step 7: Re-Read Critical Documents (MANDATORY)</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="gs">**Execute BEFORE any implementation:**</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="k">1.</span> Read each document from Section 1.10:
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>   \`\`\`
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>   Use the file reading tool (<span class="sb">`read_file`</span>, <span class="sb">`Read`</span>)(&quot;/absolute/path/to/impl.md&quot;)
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>   \`\`\`
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="k">2.</span> Extract: Current phase/task, remaining work, verification criteria
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="k">3.</span> If Section 1.10 is blank: STOP - this is a malformed distillation
+</code></pre></div></p>
+<h2 id="quality-gates-verify-before-outputting">Quality Gates (verify before outputting)<a class="headerlink" href="#quality-gates-verify-before-outputting" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] Section 1.9 has ABSOLUTE paths or explicit "NO PLANNING DOCUMENTS"</li>
+<li>[ ] Section 1.10 has Read() commands or explicit "NO DOCUMENTS TO RE-READ"</li>
+<li>[ ] Section 1.14 has executable skill invocation commands (e.g., <code>Skill</code> tool, <code>use_spellbook_skill</code>, or platform equivalent) (not "continue the workflow")</li>
+<li>[ ] Section 1.12 has verified file state (not conversation claims)</li>
+<li>[ ] Section 1.13 has runnable verification commands</li>
+<li>[ ] Step 7 requires reading plan docs before implementation</li>
+<li>[ ] All paths start with / (no relative paths)</li>
+</ul>
+<hr />
+<p>SUMMARIES TO SYNTHESIZE:</p>
+<p>{ordered_summaries}</p>
+<p>PLANNING DOCUMENTS FOUND:</p>
+<p>{planning_docs_with_paths_and_progress}</p>
+<p>ARTIFACT STATE:</p>
+<p>{verified_file_state}</p>
+<p>VERIFICATION COMMANDS:</p>
+<p>{verification_commands}
+</SYNTHESIS_AGENT_PROMPT></p>
+<hr />
+<h3 id="phase-4-output">Phase 4: Output<a class="headerlink" href="#phase-4-output" title="Permanent link">&para;</a></h3>
+<p><strong>Step 1: Generate output path</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">project_encoded</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">distilled_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;~/.claude/distilled/</span><span class="si">{</span><span class="n">project_encoded</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">distilled_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">-%H%M%S&#39;</span><span class="p">)</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slug</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.md&quot;</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">distilled_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Step 2: Write summary</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">final_summary</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Step 3: Report completion</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Distillation complete!
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>Summary saved to: {output_path}
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>To continue in a new session:
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>1. Start new Claude Code session
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>2. Type: &quot;continue work from {output_path}&quot;
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>Original session preserved at: {session_file}
+</code></pre></div>
+<hr />
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No sessions found</td>
+<td>Exit: "No sessions found for this project"</td>
+</tr>
+<tr>
+<td>Chunk summarization fails (&gt;20%)</td>
+<td>Abort with error listing failed chunks</td>
+</tr>
+<tr>
+<td>Planning docs search fails</td>
+<td>This is NON-NEGOTIABLE - must succeed or explain why</td>
+</tr>
+<tr>
+<td>Synthesis fails</td>
+<td>Output raw chunk summaries as fallback</td>
+</tr>
+<tr>
+<td>Output directory not writable</td>
+<td>Report error with path</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quality-checklist-before-completing">Quality Checklist (Before Completing)<a class="headerlink" href="#quality-checklist-before-completing" title="Permanent link">&para;</a></h2>
+<p><strong>Planning Documents (CRITICAL):</strong>
+- [ ] Did I search ~/.claude/docs/<project-encoded>/plans/
+- [ ] If docs exist: Listed with ABSOLUTE paths in Section 1.9
+- [ ] If docs exist: Read() commands in Section 1.10
+- [ ] If no docs: Explicit "NO PLANNING DOCUMENTS" (not blank)</p>
+<p><strong>Workflow Continuity:</strong>
+- [ ] Active skills have executable resume commands
+- [ ] Subagents documented with IDs, tasks, status
+- [ ] Workflow pattern explicitly stated</p>
+<p><strong>Verification:</strong>
+- [ ] File state verified (not trusted from conversation)
+- [ ] Verification commands are runnable
+- [ ] Definition of done is concrete</p>
+<p><strong>Output Quality:</strong>
+- [ ] All paths are ABSOLUTE (start with /)
+- [ ] Step 7 requires reading plan docs before work
+- [ ] A fresh instance could resume mid-stride with this output</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
