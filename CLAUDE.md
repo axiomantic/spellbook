@@ -60,6 +60,10 @@ If you encounter pre-existing issues, do NOT skip them. FULL STOP. Ask if I want
 
 <RULE>Run only ONE test command at a time. Wait for completion before running another. Parallel test commands overwhelm the system.</RULE>
 
+## MCP Tools
+
+<RULE>If an MCP tool appears in your available tools list, call it directly. Do not run diagnostic commands (like `claude mcp list`) to verify availability. Your tools list is the source of truth.</RULE>
+
 ## Subagent Decision Heuristics
 
 <RULE>Use subagents to reduce orchestrator context when the subagent cost (instructions + work + output) is less than keeping all intermediate steps in main context.</RULE>
