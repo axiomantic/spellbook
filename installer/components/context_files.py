@@ -26,88 +26,6 @@ def get_spellbook_claude_md_content(spellbook_dir: Path) -> str:
     return claude_md.read_text(encoding="utf-8").strip()
 
 
-def generate_skill_registry(spellbook_dir: Path) -> str:
-    """
-    Generate a skill registry section listing all available skills.
-
-    This can be appended to context files to help AI assistants
-    discover and use skills.
-    """
-    try:
-        from spellbook_mcp.skill_ops import find_skills
-    except ImportError:
-        # Fallback if spellbook_mcp not available
-        return _generate_skill_registry_fallback(spellbook_dir)
-
-    # Get skill directories
-    skill_dirs = [spellbook_dir / "skills"]
-
-    # Also check for claude config skills
-    claude_config = Path.home() / ".claude"
-    claude_skills = claude_config / "skills"
-    if claude_skills.exists():
-        skill_dirs.append(claude_skills)
-
-    skills = find_skills(skill_dirs)
-    skills.sort(key=lambda x: x["name"])
-
-    lines = ["## Available Skills", ""]
-    for skill in skills:
-        name = skill["name"]
-        desc = skill.get("description", "No description provided.")
-        # Clean description newlines
-        desc = desc.replace("\n", " ").strip()
-        lines.append(f"- **{name}**: {desc}")
-
-    return "\n".join(lines)
-
-
-def _generate_skill_registry_fallback(spellbook_dir: Path) -> str:
-    """Fallback skill registry generation without spellbook_mcp."""
-    skills_dir = spellbook_dir / "skills"
-    if not skills_dir.exists():
-        return ""
-
-    lines = ["## Available Skills", ""]
-
-    for skill_dir in sorted(skills_dir.iterdir()):
-        if not skill_dir.is_dir():
-            continue
-
-        skill_md = skill_dir / "SKILL.md"
-        if not skill_md.exists():
-            continue
-
-        name = skill_dir.name
-        desc = _extract_description(skill_md)
-        lines.append(f"- **{name}**: {desc}")
-
-    return "\n".join(lines)
-
-
-def _extract_description(skill_md: Path) -> str:
-    """Extract description from SKILL.md frontmatter."""
-    try:
-        content = skill_md.read_text(encoding="utf-8")
-
-        # Look for YAML frontmatter
-        if content.startswith("---"):
-            end = content.find("---", 3)
-            if end > 0:
-                frontmatter = content[3:end]
-                for line in frontmatter.split("\n"):
-                    if line.startswith("description:"):
-                        desc = line[12:].strip()
-                        # Handle multi-line with >
-                        if desc.startswith(">"):
-                            desc = desc[1:].strip()
-                        return desc.replace("\n", " ")
-
-        return "No description provided."
-    except OSError:
-        return "No description provided."
-
-
 def generate_gemini_context(spellbook_dir: Path, include_claude_md: bool = True) -> str:
     """
     Generate context content for Gemini CLI.
@@ -125,21 +43,45 @@ def generate_gemini_context(spellbook_dir: Path, include_claude_md: bool = True)
         if claude_content:
             parts.append(claude_content)
 
-    skill_registry = generate_skill_registry(spellbook_dir)
-    if skill_registry:
-        parts.append("")
-        parts.append("---")
-        parts.append("")
-        parts.append("# Spellbook Skill Registry")
-        parts.append("")
-        parts.append(skill_registry)
-        parts.append("")
-        parts.append("## Usage")
-        parts.append("")
-        parts.append("To use a skill, invoke it via the spellbook MCP server:")
-        parts.append("```")
-        parts.append('spellbook.use_spellbook_skill(skill_name="<skill-name>")')
-        parts.append("```")
+    # Add MCP-based skill discovery instructions (no static list)
+    parts.append("")
+    parts.append("---")
+    parts.append("")
+    parts.append("# Spellbook Skills")
+    parts.append("")
+    parts.append("**CRITICAL:** Spellbook skills are MANDATORY workflows that MUST be invoked")
+    parts.append("when their trigger conditions are met. Skills enforce quality gates and")
+    parts.append("prevent shortcuts that lead to bugs and technical debt.")
+    parts.append("")
+    parts.append("## BINDING Priority Order")
+    parts.append("")
+    parts.append("Skills are resolved in this BINDING priority order (first match wins):")
+    parts.append("")
+    parts.append("1. **Personal skills** (~/.config/opencode/skills/, ~/.codex/skills/)")
+    parts.append("2. **Spellbook skills** (shared repository skills)")
+    parts.append("3. **Claude skills** ($CLAUDE_CONFIG_DIR/skills/)")
+    parts.append("")
+    parts.append("Personal customizations ALWAYS override shared skills. This is non-negotiable.")
+    parts.append("")
+    parts.append("## Discovering Skills")
+    parts.append("")
+    parts.append("List all available skills with their trigger conditions:")
+    parts.append("```")
+    parts.append("spellbook.find_spellbook_skills()")
+    parts.append("```")
+    parts.append("")
+    parts.append("Each skill's description specifies WHEN to use it (e.g., 'Use when")
+    parts.append("implementing features', 'Use when debugging'). When these conditions")
+    parts.append("are met, you MUST invoke the skill before proceeding.")
+    parts.append("")
+    parts.append("## Using Skills")
+    parts.append("")
+    parts.append("Load and follow a skill's complete workflow:")
+    parts.append("```")
+    parts.append('spellbook.use_spellbook_skill(skill_name="<skill-name>")')
+    parts.append("```")
+    parts.append("")
+    parts.append("Skills are always up-to-date via runtime discovery.")
 
     return "\n".join(parts)
 
@@ -161,21 +103,45 @@ def generate_codex_context(spellbook_dir: Path, include_claude_md: bool = True) 
         if claude_content:
             parts.append(claude_content)
 
-    skill_registry = generate_skill_registry(spellbook_dir)
-    if skill_registry:
-        parts.append("")
-        parts.append("---")
-        parts.append("")
-        parts.append("# Spellbook Skill Registry")
-        parts.append("")
-        parts.append(skill_registry)
-        parts.append("")
-        parts.append("## Usage")
-        parts.append("")
-        parts.append("To use a skill in Codex, run:")
-        parts.append("```")
-        parts.append(".codex/spellbook-codex use-skill <skill-name>")
-        parts.append("```")
+    # Add MCP-based skill discovery instructions (no static list)
+    parts.append("")
+    parts.append("---")
+    parts.append("")
+    parts.append("# Spellbook Skills")
+    parts.append("")
+    parts.append("**CRITICAL:** Spellbook skills are MANDATORY workflows that MUST be invoked")
+    parts.append("when their trigger conditions are met. Skills enforce quality gates and")
+    parts.append("prevent shortcuts that lead to bugs and technical debt.")
+    parts.append("")
+    parts.append("## BINDING Priority Order")
+    parts.append("")
+    parts.append("Skills are resolved in this BINDING priority order (first match wins):")
+    parts.append("")
+    parts.append("1. **Personal skills** (~/.config/opencode/skills/, ~/.codex/skills/)")
+    parts.append("2. **Spellbook skills** (shared repository skills)")
+    parts.append("3. **Claude skills** ($CLAUDE_CONFIG_DIR/skills/)")
+    parts.append("")
+    parts.append("Personal customizations ALWAYS override shared skills. This is non-negotiable.")
+    parts.append("")
+    parts.append("## Discovering Skills")
+    parts.append("")
+    parts.append("List all available skills with their trigger conditions:")
+    parts.append("```")
+    parts.append("spellbook.find_spellbook_skills()")
+    parts.append("```")
+    parts.append("")
+    parts.append("Each skill's description specifies WHEN to use it (e.g., 'Use when")
+    parts.append("implementing features', 'Use when debugging'). When these conditions")
+    parts.append("are met, you MUST invoke the skill before proceeding.")
+    parts.append("")
+    parts.append("## Using Skills")
+    parts.append("")
+    parts.append("Load and follow a skill's complete workflow:")
+    parts.append("```")
+    parts.append('spellbook.use_spellbook_skill(skill_name="<skill-name>")')
+    parts.append("```")
+    parts.append("")
+    parts.append("Skills are always up-to-date via runtime discovery.")
 
     return "\n".join(parts)
 

@@ -9,6 +9,14 @@
     - [Commands (9 total)](#commands-9-total)
     - [Agents (1 total)](#agents-1-total)
   - [Platform Support](#platform-support)
+  - [Workflow Recipes](#workflow-recipes)
+    - [End-to-End Feature Implementation](#end-to-end-feature-implementation)
+    - [Session Handoff Between Coding Assistants](#session-handoff-between-coding-assistants)
+    - [Use Skills in Any MCP-Enabled Assistant](#use-skills-in-any-mcp-enabled-assistant)
+    - [Parallel Worktree Development](#parallel-worktree-development)
+    - [Prevent Green Mirages (False-Positive Tests)](#prevent-green-mirages-false-positive-tests)
+    - [Find and Reuse Past Patterns](#find-and-reuse-past-patterns)
+    - [Create Custom Domain Skills](#create-custom-domain-skills)
   - [Companion Tools](#companion-tools)
     - [Heads Up Claude (Recommended)](#heads-up-claude-recommended)
     - [MCP Language Server (Recommended)](#mcp-language-server-recommended)
@@ -97,6 +105,155 @@ Reusable workflows for structured development:
 | OpenCode | Full | Plugin + CLI |
 | Codex | Full | Bootstrap + CLI |
 | Gemini CLI | Partial | MCP server + context file |
+
+## Workflow Recipes
+
+### End-to-End Feature Implementation
+
+The `implement-feature` meta-skill orchestrates the complete development workflow from requirements to PR.
+
+```bash
+# 1. Just describe what you want to build
+"Implement user authentication with MFA support"
+
+# 2. The implement-feature skill triggers automatically and runs:
+#    Phase 1: brainstorming (explores requirements, gathers context)
+#    Phase 2: design-doc-reviewer (validates architecture)
+#    Phase 3: writing-plans (creates detailed implementation plan)
+#    Phase 4: implementation-plan-reviewer (verifies plan completeness)
+#    Phase 5: test-driven-development (per task, in parallel worktrees)
+#    Phase 6: code-reviewer (after each change)
+#    Phase 7: finishing-a-development-branch (creates PR)
+
+# 3. Configuration prompts at start:
+#    - Autonomous mode? (run without prompting)
+#    - Parallel worktrees? (isolated branches for parallel work)
+#    - Auto-PR? (create PR when complete)
+```
+
+**Why it works:** Design is reviewed BEFORE coding. Tests are written BEFORE implementation. Every phase has a quality gate. No steps skipped or rationalized away.
+
+### Session Handoff Between Coding Assistants
+
+Pause work in one assistant, resume in another with full context.
+
+```bash
+# In Cursor/Windsurf/any MCP-enabled assistant
+# You're 40K tokens deep, need Claude Code's reasoning
+
+# 1. Distill the session (extracts decisions, plans, progress)
+/distill-session
+
+# 2. Session saved to ~/.claude/distilled/<project>/session-YYYYMMDD-HHMMSS.md
+
+# 3. In Claude Code (or any other assistant):
+#    Paste the distilled context, then:
+Skill('using-skills')  # Resume with full skill awareness
+```
+
+**Why it works:** Sessions become portable boot prompts. 50K tokens compress to ~3K words of critical context. MCP tools (`find_session`, `split_session`) handle discovery.
+
+### Use Skills in Any MCP-Enabled Assistant
+
+Run the same structured workflows in Cursor, Windsurf, or Gemini CLI.
+
+```bash
+# 1. Spellbook MCP server exposes skills universally
+claude mcp add spellbook -- uv run ~/.local/share/spellbook/spellbook_mcp/server.py
+
+# 2. In any MCP-enabled assistant, call skills the same way:
+use_spellbook_skill("systematic-debugging")
+use_spellbook_skill("green-mirage-audit")
+use_spellbook_skill("test-driven-development")
+
+# 3. Skills are just markdown - same behavior everywhere
+```
+
+**Why it works:** Skills are platform-agnostic markdown files. The MCP server acts as a universal delivery mechanism across all supported assistants.
+
+### Parallel Worktree Development
+
+Implement complex features across isolated branches, merge intelligently.
+
+```bash
+# 1. Plan the feature
+Skill('brainstorming')
+
+# 2. Create isolated worktrees
+Skill('using-git-worktrees')
+# Creates: .worktrees/auth-feature, .worktrees/db-schema, .worktrees/api-endpoints
+
+# 3. Dispatch parallel subagents (each works in their worktree)
+Task("Auth module", "Implement authentication in .worktrees/auth-feature", "coder")
+Task("DB schema", "Design schema in .worktrees/db-schema", "coder")
+Task("API endpoints", "Build API in .worktrees/api-endpoints", "coder")
+
+# 4. When all pass tests, merge with 3-way analysis
+Skill('smart-merge')
+```
+
+**Why it works:** Interface contracts from the design prevent conflicts. Smart-merge synthesizes parallel changes instead of choosing sides. 2-4x faster than sequential development.
+
+### Prevent Green Mirages (False-Positive Tests)
+
+Audit whether tests actually catch bugs, not just achieve coverage.
+
+```bash
+# 1. Tests pass, but do they verify anything?
+/green-mirage-audit
+
+# 2. Forensic analysis traces code paths through production code
+#    Output: ~/.claude/docs/<project>/audits/green-mirage-audit-TIMESTAMP.md
+#    Shows which tests are SOLID vs GREEN MIRAGE
+
+# 3. Fix identified issues
+Skill('fix-tests')  # Takes audit report as input, rewrites weak tests
+
+# 4. Re-audit until all tests are SOLID
+```
+
+**Why it works:** Coverage % doesn't guarantee bug detection. Green-mirage-audit checks whether tests would catch real failures.
+
+### Find and Reuse Past Patterns
+
+Query old sessions without searching through files.
+
+```bash
+# 1. Use MCP tools to find relevant sessions
+find_session(name="async-retry", limit=10)
+# Returns: session slugs, timestamps, metadata
+
+# 2. Load specific chunks (respects message boundaries)
+split_session(session_path="~/.claude/projects/.../session.jsonl", start_line=0, char_limit=200000)
+
+# 3. Apply the pattern with context
+Skill('async-await-patterns')
+```
+
+**Why it works:** Sessions become organizational memory. MCP query API replaces manual file searching.
+
+### Create Custom Domain Skills
+
+Encode team-specific workflows as shareable skills.
+
+```bash
+# 1. Invoke the skill creation workflow
+Skill('writing-skills')
+
+# 2. Define your skill:
+#    - Name: graphql-schema-testing
+#    - Description: "Use when modifying GraphQL schema"
+#    - ROLE, CRITICAL_INSTRUCTION, workflow steps
+
+# 3. Place at ~/.config/opencode/skills/graphql-schema-testing/SKILL.md
+
+# 4. MCP server auto-discovers it
+#    Invoke with: Skill('graphql-schema-testing')
+
+# 5. Share via Git - team gets the same workflow
+```
+
+**Why it works:** Skills are just markdown. Personal discipline becomes team patterns. Spellbook becomes a living knowledge base.
 
 ## Companion Tools
 
