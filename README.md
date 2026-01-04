@@ -69,32 +69,72 @@ Reusable workflows for structured development:
 
 | Category | Skills | Origin |
 |----------|--------|--------|
-| **Core Workflow** | brainstorming, writing-plans, executing-plans, test-driven-development, systematic-debugging, using-git-worktrees, finishing-a-development-branch | [superpowers] |
-| **Code Quality** | green-mirage-audit, fix-tests, factchecker, find-dead-code, receiving-code-review, requesting-code-review | mixed |
-| **Feature Dev** | implement-feature, design-doc-reviewer, implementation-plan-reviewer, devils-advocate, smart-merge | spellbook |
-| **Specialized** | async-await-patterns, scientific-debugging, nim-pr-guide | spellbook |
-| **Meta** | using-skills, writing-skills, subagent-prompting, instruction-engineering, dispatching-parallel-agents, subagent-driven-development, verification-before-completion | [superpowers] |
+| **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [systematic-debugging], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
+| **Code Quality** | [green-mirage-audit], [fix-tests], [factchecker], [find-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
+| **Feature Dev** | [implement-feature], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [smart-merge] | spellbook |
+| **Specialized** | [async-await-patterns], [scientific-debugging], [nim-pr-guide] | spellbook |
+| **Meta** | [using-skills], [writing-skills], [subagent-prompting], [instruction-engineering], [dispatching-parallel-agents], [subagent-driven-development], [verification-before-completion] | [superpowers] |
+
+[brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
+[writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
+[executing-plans]: https://axiomantic.github.io/spellbook/latest/skills/executing-plans/
+[test-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/
+[systematic-debugging]: https://axiomantic.github.io/spellbook/latest/skills/systematic-debugging/
+[using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
+[finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
+[green-mirage-audit]: https://axiomantic.github.io/spellbook/latest/skills/green-mirage-audit/
+[fix-tests]: https://axiomantic.github.io/spellbook/latest/skills/fix-tests/
+[factchecker]: https://axiomantic.github.io/spellbook/latest/skills/factchecker/
+[find-dead-code]: https://axiomantic.github.io/spellbook/latest/skills/find-dead-code/
+[receiving-code-review]: https://axiomantic.github.io/spellbook/latest/skills/receiving-code-review/
+[requesting-code-review]: https://axiomantic.github.io/spellbook/latest/skills/requesting-code-review/
+[implement-feature]: https://axiomantic.github.io/spellbook/latest/skills/implement-feature/
+[design-doc-reviewer]: https://axiomantic.github.io/spellbook/latest/skills/design-doc-reviewer/
+[implementation-plan-reviewer]: https://axiomantic.github.io/spellbook/latest/skills/implementation-plan-reviewer/
+[devils-advocate]: https://axiomantic.github.io/spellbook/latest/skills/devils-advocate/
+[smart-merge]: https://axiomantic.github.io/spellbook/latest/skills/smart-merge/
+[async-await-patterns]: https://axiomantic.github.io/spellbook/latest/skills/async-await-patterns/
+[scientific-debugging]: https://axiomantic.github.io/spellbook/latest/skills/scientific-debugging/
+[nim-pr-guide]: https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/
+[using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
+[writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
+[subagent-prompting]: https://axiomantic.github.io/spellbook/latest/skills/subagent-prompting/
+[instruction-engineering]: https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/
+[dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
+[subagent-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/subagent-driven-development/
+[verification-before-completion]: https://axiomantic.github.io/spellbook/latest/skills/verification-before-completion/
 
 ### Commands (9 total)
 
 | Command | Description | Origin |
 |---------|-------------|--------|
-| `/compact` | Custom session compaction | spellbook |
-| `/distill-session` | Extract knowledge from sessions | spellbook |
-| `/simplify` | Code complexity reduction | spellbook |
-| `/address-pr-feedback` | Handle PR review comments | spellbook |
-| `/move-project` | Relocate projects safely | spellbook |
-| `/green-mirage-audit` | Test suite audit | spellbook |
-| `/brainstorm` | Design exploration | [superpowers] |
-| `/write-plan` | Create implementation plan | [superpowers] |
-| `/execute-plan` | Execute implementation plan | [superpowers] |
+| [/compact] | Custom session compaction | spellbook |
+| [/distill-session] | Extract knowledge from sessions | spellbook |
+| [/simplify] | Code complexity reduction | spellbook |
+| [/address-pr-feedback] | Handle PR review comments | spellbook |
+| [/move-project] | Relocate projects safely | spellbook |
+| [/green-mirage-audit] | Test suite audit | spellbook |
+| [/brainstorm] | Design exploration | [superpowers] |
+| [/write-plan] | Create implementation plan | [superpowers] |
+| [/execute-plan] | Execute implementation plan | [superpowers] |
+
+[/compact]: https://axiomantic.github.io/spellbook/latest/commands/compact/
+[/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
+[/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/
+[/address-pr-feedback]: https://axiomantic.github.io/spellbook/latest/commands/address-pr-feedback/
+[/move-project]: https://axiomantic.github.io/spellbook/latest/commands/move-project/
+[/green-mirage-audit]: https://axiomantic.github.io/spellbook/latest/commands/green-mirage-audit/
+[/brainstorm]: https://axiomantic.github.io/spellbook/latest/commands/brainstorm/
+[/write-plan]: https://axiomantic.github.io/spellbook/latest/commands/write-plan/
+[/execute-plan]: https://axiomantic.github.io/spellbook/latest/commands/execute-plan/
 
 ### Agents (1 total)
 
 | Agent | Description | Origin |
 |-------|-------------|--------|
-| code-reviewer | Specialized code review | [superpowers] |
+| [code-reviewer] | Specialized code review | [superpowers] |
 
+[code-reviewer]: https://axiomantic.github.io/spellbook/latest/agents/code-reviewer/
 [superpowers]: https://github.com/obra/superpowers
 
 ## Platform Support
