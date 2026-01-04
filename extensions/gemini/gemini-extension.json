@@ -1,11 +1,11 @@
 {
   "name": "spellbook",
   "version": "1.0.0",
-  "description": "Agent skills and superpowers for Gemini CLI",
+  "description": "Agent skills and workflows for Gemini CLI",
   "mcpServers": {
     "spellbook": {
-      "command": "python3",
-      "args": ["__SERVER_PATH__"]
+      "command": "uv",
+      "args": ["run", "--quiet", "--python", "__PYTHON_PATH__", "__SERVER_PATH__"]
     }
   },
   "contextFiles": ["GEMINI.md"]

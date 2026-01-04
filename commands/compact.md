@@ -257,7 +257,7 @@ find . -name "*-impl.md" -o -name "*-design.md" -o -name "*-plan.md" 2>/dev/null
 **If NO planning documents exist:** Write "NO PLANNING DOCUMENTS - ad-hoc work" explicitly. Do not leave blank.
 
 **How These Docs Are Used:**
-- [ ] Design doc → Implementation doc generation (via superpowers skills)
+- [ ] Design doc → Implementation doc generation (via spellbook skills)
 - [ ] Implementation doc sections → Subagent task assignments
 - [ ] Implementation doc checkboxes/sections → Progress tracking
 - [ ] Other: [describe]

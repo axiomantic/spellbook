@@ -1,0 +1,85 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs-src/**'
+      - 'mkdocs.yml'
+      - 'skills/**'
+      - 'commands/**'
+      - 'agents/**'
+      - 'scripts/generate_docs.py'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 1.0.0, latest)'
+        required: false
+        default: 'latest'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install mkdocs-material mike
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate docs from skills/commands/agents
+        run: python3 scripts/generate_docs.py
+
+      - name: Fetch gh-pages
+        run: git fetch origin gh-pages --depth=1 || true
+
+      - name: Deploy with mike
+        run: |
+          VERSION=${{ github.event.inputs.version || 'latest' }}
+          mike deploy --push --update-aliases $VERSION latest
+          mike set-default --push latest
+
+  # Build job for PR previews
+  build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install mkdocs-material mike
+
+      - name: Generate docs
+        run: python3 scripts/generate_docs.py
+
+      - name: Build docs
+        run: mkdocs build --strict
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-preview
+          path: site/

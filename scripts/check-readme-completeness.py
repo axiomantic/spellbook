@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
 """
-Check that all commands and skills are documented in README.md.
+Check that all commands, skills, and agents are documented.
+
+Validates:
+1. README.md mentions all skills/commands/agents
+2. docs-src/ has documentation pages for all items
+3. mkdocs.yml nav includes all items
 
 Exits with code 0 if all are documented, code 1 if any are missing.
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -14,17 +22,22 @@ def main():
     # Get repo root
     repo_root = Path(__file__).parent.parent.absolute()
     readme_path = repo_root / "README.md"
+    mkdocs_path = repo_root / "mkdocs.yml"
     commands_dir = repo_root / "commands"
     skills_dir = repo_root / "skills"
+    agents_dir = repo_root / "agents"
+    docs_skills_dir = repo_root / "docs-src" / "skills"
+    docs_commands_dir = repo_root / "docs-src" / "commands"
+    docs_agents_dir = repo_root / "docs-src" / "agents"
 
-    # Read README
+    # Read files
     readme_content = readme_path.read_text()
+    mkdocs_content = mkdocs_path.read_text() if mkdocs_path.exists() else ""
 
     # Find all commands (exclude files starting with underscore)
     commands = []
     for cmd_file in commands_dir.glob("*.md"):
         if not cmd_file.name.startswith("_"):
-            # Extract command name (filename without .md)
             commands.append(cmd_file.stem)
 
     # Find all skills (directories with SKILL.md, exclude underscore prefix)
@@ -35,40 +48,68 @@ def main():
             if skill_file.exists():
                 skills.append(skill_dir.name)
 
-    # Check for missing documentation
-    missing_commands = []
-    missing_skills = []
+    # Find all agents (exclude files starting with underscore)
+    agents = []
+    if agents_dir.exists():
+        for agent_file in agents_dir.glob("*.md"):
+            if not agent_file.name.startswith("_"):
+                agents.append(agent_file.stem)
 
+    # Check for issues
+    issues = []
+
+    # Check README mentions all items
     for cmd in commands:
-        # Check if command appears in README (as /command-name or ### /command-name)
-        if f"/{cmd}" not in readme_content and f"# /{cmd}" not in readme_content:
-            missing_commands.append(cmd)
+        if f"/{cmd}" not in readme_content:
+            issues.append(f"README missing command: /{cmd}")
 
     for skill in skills:
-        # Check if skill name appears in README (as heading or link)
         if skill not in readme_content:
-            missing_skills.append(skill)
+            issues.append(f"README missing skill: {skill}")
+
+    for agent in agents:
+        if agent not in readme_content:
+            issues.append(f"README missing agent: {agent}")
+
+    # Check docs pages exist
+    for skill in skills:
+        doc_file = docs_skills_dir / f"{skill}.md"
+        if not doc_file.exists():
+            issues.append(f"Missing docs page: docs-src/skills/{skill}.md")
+
+    for cmd in commands:
+        doc_file = docs_commands_dir / f"{cmd}.md"
+        if not doc_file.exists():
+            issues.append(f"Missing docs page: docs-src/commands/{cmd}.md")
+
+    for agent in agents:
+        doc_file = docs_agents_dir / f"{agent}.md"
+        if not doc_file.exists():
+            issues.append(f"Missing docs page: docs-src/agents/{agent}.md")
+
+    # Check mkdocs.yml nav includes items
+    for skill in skills:
+        if f"skills/{skill}.md" not in mkdocs_content:
+            issues.append(f"mkdocs.yml nav missing: skills/{skill}.md")
+
+    for cmd in commands:
+        if f"commands/{cmd}.md" not in mkdocs_content:
+            issues.append(f"mkdocs.yml nav missing: commands/{cmd}.md")
+
+    for agent in agents:
+        if f"agents/{agent}.md" not in mkdocs_content:
+            issues.append(f"mkdocs.yml nav missing: agents/{agent}.md")
 
     # Report findings
-    if missing_commands or missing_skills:
-        print("❌ README.md is incomplete!")
-        print()
-
-        if missing_commands:
-            print("Missing commands:")
-            for cmd in sorted(missing_commands):
-                print(f"  - /{cmd}")
-            print()
-
-        if missing_skills:
-            print("Missing skills:")
-            for skill in sorted(missing_skills):
-                print(f"  - {skill}")
-            print()
-
+    if issues:
+        print("Documentation issues found:\n")
+        for issue in sorted(issues):
+            print(f"  - {issue}")
+        print(f"\nTotal: {len(issues)} issues")
+        print("\nRun 'python3 scripts/generate_docs.py' to regenerate docs pages.")
         sys.exit(1)
     else:
-        print("✅ README.md documents all commands and skills")
+        print("All commands, skills, and agents are properly documented")
         sys.exit(0)
 
 

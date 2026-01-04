@@ -87,19 +87,19 @@ Phase 2: Design (subagents run in SYNTHESIS MODE - no questions)
   └─ Fix design doc (subagent invokes executing-plans)
     ↓
 Phase 3: Implementation Planning
-  ├─ Create impl plan (subagent invokes superpowers:writing-plans)
+  ├─ Create impl plan (subagent invokes writing-plans)
   ├─ Review impl plan (subagent invokes implementation-plan-reviewer)
   ├─ Present review → User approval gate (if interactive mode)
-  └─ Fix impl plan (subagent invokes superpowers:executing-plans)
+  └─ Fix impl plan (subagent invokes executing-plans)
     ↓
 Phase 4: Implementation
-  ├─ Setup worktree (subagent invokes superpowers:using-git-worktrees)
-  ├─ Execute tasks (subagent per task, invokes superpowers:test-driven-development)
-  ├─ Code review after each (subagent invokes superpowers:code-reviewer)
+  ├─ Setup worktree (subagent invokes using-git-worktrees)
+  ├─ Execute tasks (subagent per task, invokes test-driven-development)
+  ├─ Code review after each (subagent invokes code-reviewer)
   ├─ Claim validation after each (subagent invokes factchecker)
   ├─ Run tests + green-mirage-audit (subagent invokes green-mirage-audit)
   ├─ Comprehensive claim validation (subagent invokes factchecker)
-  └─ Finish branch (subagent invokes superpowers:finishing-a-development-branch)
+  └─ Finish branch (subagent invokes finishing-a-development-branch)
 ```
 
 ---
@@ -1357,13 +1357,13 @@ Task (or subagent simulation):
 
 ### 2.4 Fix Design Document
 
-<RULE>Subagent MUST invoke superpowers:executing-plans using the Skill tool.</RULE>
+<RULE>Subagent MUST invoke executing-plans using the Skill tool.</RULE>
 
 ```
 Task (or subagent simulation):
   description: "Fix design doc"
   prompt: |
-    First, invoke the superpowers:executing-plans skill using the Skill tool.
+    First, invoke the executing-plans skill using the Skill tool.
     Then use its workflow to systematically fix the design document.
 
     ## Context for the Skill
@@ -1391,13 +1391,13 @@ Phase behavior depends on escape hatch handling:
 
 ### 3.1 Create Implementation Plan
 
-<RULE>Subagent MUST invoke superpowers:writing-plans using the Skill tool.</RULE>
+<RULE>Subagent MUST invoke writing-plans using the Skill tool.</RULE>
 
 ```
 Task (or subagent simulation):
   description: "Create impl plan for [feature name]"
   prompt: |
-    First, invoke the superpowers:writing-plans skill using the Skill tool.
+    First, invoke the writing-plans skill using the Skill tool.
     Then follow its complete workflow to create the implementation plan.
 
     ## Context for the Skill
@@ -1436,13 +1436,13 @@ Task (or subagent simulation):
 
 ### 3.4 Fix Implementation Plan
 
-<RULE>Subagent MUST invoke superpowers:executing-plans using the Skill tool.</RULE>
+<RULE>Subagent MUST invoke executing-plans using the Skill tool.</RULE>
 
 ```
 Task (or subagent simulation):
   description: "Fix impl plan"
   prompt: |
-    First, invoke the superpowers:executing-plans skill using the Skill tool.
+    First, invoke the executing-plans skill using the Skill tool.
     Then use its workflow to systematically fix the implementation plan.
 
     ## Context for the Skill
@@ -1477,7 +1477,7 @@ Create a single worktree for the entire implementation:
 Task (or subagent simulation):
   description: "Create worktree for [feature name]"
   prompt: |
-    First, invoke the superpowers:using-git-worktrees skill using the Skill tool.
+    First, invoke the using-git-worktrees skill using the Skill tool.
     Then follow its workflow to create an isolated workspace.
 
     ## Context for the Skill
@@ -1505,7 +1505,7 @@ Parse the implementation plan to find tasks marked as "setup", "skeleton", or "m
 Task (or subagent simulation):
   description: "Execute setup/skeleton tasks"
   prompt: |
-    First, invoke the superpowers:test-driven-development skill using the Skill tool.
+    First, invoke the test-driven-development skill using the Skill tool.
     Execute ONLY the setup/skeleton tasks from the implementation plan.
 
     ## Context for the Skill
@@ -1544,7 +1544,7 @@ For each parallel group, create a worktree:
 Task (or subagent simulation):
   description: "Create worktree for parallel group N"
   prompt: |
-    First, invoke the superpowers:using-git-worktrees skill using the Skill tool.
+    First, invoke the using-git-worktrees skill using the Skill tool.
     Create a worktree for this parallel work track.
 
     ## Context for the Skill
@@ -1581,7 +1581,7 @@ For each worktree in SESSION_PREFERENCES.worktree_paths:
     description: "Execute tasks in [worktree.path]"
     run_in_background: true  # Run parallel worktrees concurrently
     prompt: |
-      First, invoke the superpowers:subagent-driven-development skill using the Skill tool.
+      First, invoke the subagent-driven-development skill using the Skill tool.
       Execute the assigned tasks in this worktree.
 
       ## Context for the Skill
@@ -1594,7 +1594,7 @@ For each worktree in SESSION_PREFERENCES.worktree_paths:
       Do NOT modify files outside this worktree.
 
       After each task:
-      1. Run code review (invoke superpowers:code-reviewer)
+      1. Run code review (invoke code-reviewer)
       2. Run claim validation (invoke factchecker)
       3. Commit changes
 
@@ -1614,7 +1614,7 @@ Standard parallel execution in single directory:
 Task (or subagent simulation):
   description: "Execute parallel implementation"
   prompt: |
-    First, invoke the superpowers:dispatching-parallel-agents skill using the Skill tool.
+    First, invoke the dispatching-parallel-agents skill using the Skill tool.
     Then use its workflow to execute the implementation plan with parallel task groups.
 
     ## Context for the Skill
@@ -1634,7 +1634,7 @@ Sequential execution:
 Task (or subagent simulation):
   description: "Execute sequential implementation"
   prompt: |
-    First, invoke the superpowers:subagent-driven-development skill using the Skill tool.
+    First, invoke the subagent-driven-development skill using the Skill tool.
     Then use its workflow to execute the implementation plan sequentially.
 
     ## Context for the Skill
@@ -1691,7 +1691,7 @@ For each individual implementation task:
 Task (or subagent simulation):
   description: "Implement Task N: [task name]"
   prompt: |
-    First, invoke the superpowers:test-driven-development skill using the Skill tool.
+    First, invoke the test-driven-development skill using the Skill tool.
     Then use its workflow to implement this task.
 
     ## Context for the Skill
@@ -1710,13 +1710,13 @@ Task (or subagent simulation):
 
 <!-- SUBAGENT: YES - Self-contained verification task. Fresh eyes, returns verdict + issues only. Saves orchestrator context. -->
 
-<RULE>Subagent MUST invoke superpowers:code-reviewer using the Skill tool after EVERY task.</RULE>
+<RULE>Subagent MUST invoke code-reviewer using the Skill tool after EVERY task.</RULE>
 
 ```
 Task (or subagent simulation):
   description: "Review Task N implementation"
   prompt: |
-    First, invoke the superpowers:code-reviewer skill using the Skill tool.
+    First, invoke the code-reviewer skill using the Skill tool.
     Then follow its workflow to review the implementation.
 
     ## Context for the Skill
@@ -1773,7 +1773,7 @@ pytest  # or npm test, cargo test, etc.
 ```
 
 If tests fail:
-1. Dispatch subagent to invoke superpowers:systematic-debugging
+1. Dispatch subagent to invoke systematic-debugging
 2. Fix the issues
 3. Re-run tests until passing
 
@@ -1859,7 +1859,7 @@ Task (or subagent simulation):
 Task (or subagent simulation):
   description: "Finish development branch"
   prompt: |
-    First, invoke the superpowers:finishing-a-development-branch skill using the Skill tool.
+    First, invoke the finishing-a-development-branch skill using the Skill tool.
     Then follow its workflow to complete this development work.
 
     ## Context for the Skill
@@ -1956,24 +1956,24 @@ Subagent prompts provide CONTEXT for the skill, not duplicated instructions.
 
 | Phase | Skill to Invoke | Purpose |
 |-------|-----------------|---------|
-| 2.1 | superpowers:brainstorming | Create design doc |
+| 2.1 | brainstorming | Create design doc |
 | 2.2 | design-doc-reviewer | Review design doc |
-| 2.4 | superpowers:executing-plans | Fix design doc |
-| 3.1 | superpowers:writing-plans | Create impl plan |
+| 2.4 | executing-plans | Fix design doc |
+| 3.1 | writing-plans | Create impl plan |
 | 3.2 | implementation-plan-reviewer | Review impl plan |
-| 3.4 | superpowers:executing-plans | Fix impl plan |
-| 4.1 | superpowers:using-git-worktrees | Create isolated workspace(s) |
-| 4.2 | superpowers:dispatching-parallel-agents | Parallel execution (single worktree) |
-| 4.2 | superpowers:subagent-driven-development | Sequential or per-worktree execution |
+| 3.4 | executing-plans | Fix impl plan |
+| 4.1 | using-git-worktrees | Create isolated workspace(s) |
+| 4.2 | dispatching-parallel-agents | Parallel execution (single worktree) |
+| 4.2 | subagent-driven-development | Sequential or per-worktree execution |
 | 4.2.5 | smart-merge | Merge parallel worktrees (if per_parallel_track) |
-| 4.3 | superpowers:test-driven-development | TDD for each task |
-| 4.4 | superpowers:code-reviewer | Review each task |
+| 4.3 | test-driven-development | TDD for each task |
+| 4.4 | code-reviewer | Review each task |
 | 4.4.1 | factchecker | Validate claims per task |
-| 4.5.1 | superpowers:systematic-debugging | Debug test failures |
+| 4.5.1 | systematic-debugging | Debug test failures |
 | 4.5.2 | green-mirage-audit | Audit test quality |
 | 4.5.3 | factchecker | Comprehensive claim validation |
 | 4.5.4 | factchecker | Pre-PR claim validation |
-| 4.6 | superpowers:finishing-a-development-branch | Complete workflow |
+| 4.6 | finishing-a-development-branch | Complete workflow |
 
 ### Document Locations
 
@@ -2070,27 +2070,27 @@ Verify the orchestrator has:
 - [ ] Design context includes: architectural decisions, scope boundaries, integration requirements, success criteria
 
 ### Phase 2 (if not skipped)
-- [ ] Subagent invoked superpowers:brainstorming
+- [ ] Subagent invoked brainstorming
 - [ ] Subagent invoked design-doc-reviewer
 - [ ] Handled approval gate per autonomous_mode
-- [ ] Subagent invoked superpowers:executing-plans to fix
+- [ ] Subagent invoked executing-plans to fix
 
 ### Phase 3 (if not skipped)
-- [ ] Subagent invoked superpowers:writing-plans
+- [ ] Subagent invoked writing-plans
 - [ ] Subagent invoked implementation-plan-reviewer
 - [ ] Handled approval gate per autonomous_mode
-- [ ] Subagent invoked superpowers:executing-plans to fix
+- [ ] Subagent invoked executing-plans to fix
 
 ### Phase 4
-- [ ] Subagent invoked superpowers:using-git-worktrees (if worktree requested)
+- [ ] Subagent invoked using-git-worktrees (if worktree requested)
 - [ ] Executed tasks with appropriate parallelization
-- [ ] Subagent invoked superpowers:code-reviewer after EVERY task
+- [ ] Subagent invoked code-reviewer after EVERY task
 - [ ] Subagent invoked factchecker after EVERY task
 - [ ] Ran full test suite
 - [ ] Subagent invoked green-mirage-audit
 - [ ] Subagent invoked factchecker for comprehensive validation
 - [ ] Subagent invoked factchecker for pre-PR validation
-- [ ] Subagent invoked superpowers:finishing-a-development-branch (if applicable)
+- [ ] Subagent invoked finishing-a-development-branch (if applicable)
 
 ### Phase 4 (if worktree == "per_parallel_track")
 - [ ] Setup/skeleton tasks completed and committed BEFORE creating worktrees

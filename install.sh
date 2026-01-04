@@ -403,20 +403,21 @@ setup_gemini_integration() {
 
     mkdir -p "$gemini_extensions_dir"
 
-    # Generate absolute path for server.py
+    # Generate absolute path for server.py and venv python
     local server_path="$SCRIPT_DIR/spellbook_mcp/server.py"
+    local venv_python="$SCRIPT_DIR/spellbook_mcp/.venv/bin/python"
     
-    # Read template and replace placeholder
+    # Read template and replace placeholders
     local template_file="$SCRIPT_DIR/extensions/gemini/gemini-extension.json"
     local target_file="$gemini_extensions_dir/gemini-extension.json"
     
     if [ -f "$template_file" ]; then
-        # Use python or sed to replace. Sed is simpler here but robust path handling needed.
-        # We use python to avoid sed delimiter hell with paths
+        # Use python for robust string replacement
         python3 -c "
 import sys
 content = open('$template_file').read()
 content = content.replace('__SERVER_PATH__', '$server_path')
+content = content.replace('__PYTHON_PATH__', '$venv_python')
 open('$target_file', 'w').write(content)
 "
         print_success "Generated Gemini extension manifest"
@@ -494,12 +495,27 @@ install_mcp_server() {
     # Install Python dependencies
     if [ -f "$requirements_file" ]; then
         print_step "Installing MCP server dependencies..."
-        if command -v pip3 &> /dev/null; then
+        
+        # Try using uv first
+        if command -v uv &> /dev/null; then
+            print_info "Using uv for dependency management"
+            
+            # Create venv if it doesn't exist
+            if [ ! -d "$mcp_dir/.venv" ]; then
+                print_step "Creating virtual environment..."
+                uv venv "$mcp_dir/.venv" >/dev/null 2>&1
+            fi
+            
+            # Install dependencies
+            print_step "Installing requirements with uv..."
+            uv pip install -q -r "$requirements_file" --python "$mcp_dir/.venv/bin/python" 2>/dev/null
+            print_success "MCP dependencies installed (uv)"
+        elif command -v pip3 &> /dev/null; then
             pip3 install -q -r "$requirements_file" 2>/dev/null
-            print_success "MCP dependencies installed"
+            print_success "MCP dependencies installed (pip3)"
         elif command -v pip &> /dev/null; then
             pip install -q -r "$requirements_file" 2>/dev/null
-            print_success "MCP dependencies installed"
+            print_success "MCP dependencies installed (pip)"
         else
             print_warning "pip not found, skipping MCP dependencies"
             print_info "Run: pip install -r $requirements_file"
@@ -517,11 +533,17 @@ install_mcp_server() {
         fi
 
         # Add the MCP server
-        if claude mcp add spellbook -- python "$server_file" 2>/dev/null; then
-            print_success "MCP server registered with Claude Code"
+        local venv_python="$mcp_dir/.venv/bin/python"
+        if [ ! -f "$venv_python" ]; then
+            # Fallback to system python if venv not used
+            venv_python="python3"
+        fi
+
+        if claude mcp add spellbook --scope user -- "$venv_python" "$server_file" 2>/dev/null; then
+            print_success "MCP server registered with Claude Code (user scope)"
         else
             print_warning "Failed to register MCP server automatically"
-            print_info "Run manually: claude mcp add spellbook -- python $server_file"
+            print_info "Run manually: claude mcp add spellbook --scope user -- $venv_python $server_file"
         fi
     else
         print_info "Claude CLI not found, skipping MCP registration"

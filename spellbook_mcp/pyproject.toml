@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spellbook-mcp"
+version = "1.0.0"
+description = "MCP server for Spellbook skills discovery and session management"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "fastmcp>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[project.scripts]
+spellbook-mcp = "server:mcp.run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+exclude = [".venv", "__pycache__"]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+]

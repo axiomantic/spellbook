@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "fastmcp",
+# ]
+# ///
 """
 Spellbook MCP Server - Session management tools for Claude Code.
 
@@ -13,46 +19,46 @@ from pathlib import Path
 from typing import List, Dict, Any
 import os
 import json
+import sys
 
-from .path_utils import get_project_dir
-from .session_ops import (
+# Add script directory to sys.path to allow imports when run directly
+# This fixes "ImportError: attempted relative import with no known parent package"
+# when the server is executed as a standalone script by Gemini CLI.
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+from path_utils import get_project_dir
+from session_ops import (
     split_by_char_limit,
     list_sessions_with_samples,
 )
-from .skill_ops import find_skills, load_skill
+from skill_ops import find_skills, load_skill
 
 mcp = FastMCP("spellbook")
 
 # Default directories to search for skills
-# Personal skills > Spellbook skills > Superpowers skills
+# Personal skills > Spellbook skills
 def get_skill_dirs() -> List[Path]:
     dirs = []
-    
+
     # Personal skills (e.g. ~/.opencode/skills or ~/.config/opencode/skills)
     # Use standard XDG config or home dir patterns
     home = Path.home()
     dirs.append(home / ".config" / "opencode" / "skills")
     dirs.append(home / ".opencode" / "skills")
     dirs.append(home / ".codex" / "skills")
-    
+
     # Spellbook skills (this repo)
     # Assume this server is running from inside spellbook/spellbook_mcp
     # So ../skills
     repo_root = Path(__file__).parent.parent
     dirs.append(repo_root / "skills")
-    
-    # Superpowers (if installed alongside)
-    # Check SUPERPOWERS_DIR explicitly first
-    if "SUPERPOWERS_DIR" in os.environ:
-        dirs.append(Path(os.environ["SUPERPOWERS_DIR"]) / "skills")
-    
+
     # Check CLAUDE_CONFIG_DIR
     claude_config = os.environ.get("CLAUDE_CONFIG_DIR", str(home / ".claude"))
     dirs.append(Path(claude_config) / "skills")
-    
-    # Also check typical dev location
-    dirs.append(home / "Development" / "superpowers" / "skills")
-    
+
     return [d for d in dirs if d.exists()]
 
 @mcp.tool()

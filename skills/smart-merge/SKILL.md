@@ -374,7 +374,7 @@ Task (or subagent simulation):
 ```
 Task (or subagent simulation):
   prompt: |
-    First, invoke the superpowers:code-reviewer skill using the Skill tool.
+    First, invoke the code-reviewer skill using the Skill tool.
     Review the complete merged implementation against the implementation plan.
 
     Implementation plan: [path]

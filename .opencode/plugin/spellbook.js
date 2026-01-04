@@ -2,7 +2,8 @@
  * Spellbook plugin for OpenCode.ai
  *
  * Provides custom tools for loading and discovering skills from spellbook.
- * Works alongside superpowers - spellbook skills are personal/custom extensions.
+ * Spellbook includes core workflow skills (from obra/superpowers) plus
+ * domain-specific extensions.
  */
 
 import path from 'path';
@@ -22,15 +23,16 @@ export const SpellbookPlugin = async ({ client, directory }) => {
   const spellbookSkillsDir = path.resolve(__dirname, '../../skills');
   const personalSkillsDir = path.join(homeDir, '.config/opencode/skills');
 
-  // Check for superpowers installation
-  const superpowersSkillsDir = path.join(homeDir, '.config/opencode/superpowers/skills');
+  // Claude config skills (from CLAUDE_CONFIG_DIR)
+  const claudeConfigDir = process.env.CLAUDE_CONFIG_DIR || path.join(homeDir, '.claude');
+  const claudeSkillsDir = path.join(claudeConfigDir, 'skills');
 
   // Helper to generate bootstrap content
   const getBootstrapContent = (compact = false) => {
     const toolMapping = compact
       ? `**Tool Mapping:** TodoWrite->update_plan, Task->@mention, Skill->use_spellbook_skill
 
-**Skills naming (priority):** project: > personal > spellbook: > superpowers:`
+**Skills naming (priority):** project: > personal > spellbook: > claude:`
       : `**Tool Mapping for OpenCode:**
 When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`TodoWrite\` → \`update_plan\`
@@ -42,13 +44,14 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - Project skills: \`project:skill-name\` (in .opencode/skills/)
 - Personal skills: \`skill-name\` (in ~/.config/opencode/skills/)
 - Spellbook skills: \`spellbook:skill-name\` (from spellbook repo)
-- Superpowers skills: \`superpowers:skill-name\` (if superpowers installed)`;
+- Claude skills: \`claude:skill-name\` (from $CLAUDE_CONFIG_DIR/skills/)`;
 
     return `<SPELLBOOK_CONTEXT>
-You have access to spellbook skills - personal AI assistant workflows and patterns.
+You have access to spellbook skills - AI assistant workflows and patterns.
 
-Spellbook extends superpowers with domain-specific skills like async-await-patterns,
-factchecker, green-mirage-audit, scientific-debugging, and more.
+Spellbook includes core workflow skills (brainstorming, planning, debugging, TDD)
+plus domain-specific skills like async-await-patterns, factchecker, green-mirage-audit,
+scientific-debugging, and more.
 
 ${toolMapping}
 
@@ -78,7 +81,7 @@ Use \`use_spellbook_skill <name>\` to load and follow a skill.
   return {
     tool: {
       use_spellbook_skill: tool({
-        description: 'Load a skill from spellbook. Spellbook skills are personal/domain-specific extensions to superpowers.',
+        description: 'Load a skill from spellbook. Spellbook includes workflow and domain-specific skills.',
         args: {
           skill_name: tool.schema.string().describe('Name of the skill (e.g., "async-await-patterns", "spellbook:factchecker", "project:my-skill")')
         },
@@ -104,13 +107,13 @@ Use \`use_spellbook_skill <name>\` to load and follow a skill.
             }
           }
 
-          // Fall back to personal/spellbook/superpowers resolution
+          // Fall back to personal/spellbook/claude resolution
           if (!resolved && !forceProject) {
             resolved = skillsCore.resolveSkillPath(
               skill_name,
               spellbookSkillsDir,
               personalSkillsDir,
-              fs.existsSync(superpowersSkillsDir) ? superpowersSkillsDir : null
+              fs.existsSync(claudeSkillsDir) ? claudeSkillsDir : null
             );
           }
 
@@ -150,22 +153,22 @@ Use \`use_spellbook_skill <name>\` to load and follow a skill.
       }),
 
       find_spellbook_skills: tool({
-        description: 'List all available skills from project, personal, spellbook, and superpowers libraries.',
+        description: 'List all available skills from project, personal, spellbook, and claude libraries.',
         args: {},
         execute: async (args, context) => {
           const projectSkills = skillsCore.findSkillsInDir(projectSkillsDir, 'project', 3);
           const personalSkills = skillsCore.findSkillsInDir(personalSkillsDir, 'personal', 3);
           const spellbookSkills = skillsCore.findSkillsInDir(spellbookSkillsDir, 'spellbook', 3);
 
-          let superpowersSkills = [];
-          if (fs.existsSync(superpowersSkillsDir)) {
-            superpowersSkills = skillsCore.findSkillsInDir(superpowersSkillsDir, 'superpowers', 3);
+          let claudeSkills = [];
+          if (fs.existsSync(claudeSkillsDir)) {
+            claudeSkills = skillsCore.findSkillsInDir(claudeSkillsDir, 'claude', 3);
           }
 
-          const allSkills = [...projectSkills, ...personalSkills, ...spellbookSkills, ...superpowersSkills];
+          const allSkills = [...projectSkills, ...personalSkills, ...spellbookSkills, ...claudeSkills];
 
           if (allSkills.length === 0) {
-            return 'No skills found. Check installation of spellbook and/or superpowers.';
+            return 'No skills found. Check installation of spellbook.';
           }
 
           let output = 'Available skills:\n\n';
@@ -176,7 +179,7 @@ Use \`use_spellbook_skill <name>\` to load and follow a skill.
               case 'project': namespace = 'project:'; break;
               case 'personal': namespace = ''; break;
               case 'spellbook': namespace = 'spellbook:'; break;
-              default: namespace = 'superpowers:';
+              default: namespace = 'claude:';
             }
 
             output += `${namespace}${skill.name}\n`;

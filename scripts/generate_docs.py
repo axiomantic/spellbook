@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
+"""
+Generate documentation pages from SKILL.md, command, and agent files.
+"""
+import os
+import re
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).parent.parent
+SKILLS_DIR = REPO_ROOT / "skills"
+COMMANDS_DIR = REPO_ROOT / "commands"
+AGENTS_DIR = REPO_ROOT / "agents"
+DOCS_DIR = REPO_ROOT / "docs-src"
+
+# Skills that came from superpowers
+SUPERPOWERS_SKILLS = {
+    "brainstorming",
+    "dispatching-parallel-agents",
+    "executing-plans",
+    "finishing-a-development-branch",
+    "receiving-code-review",
+    "requesting-code-review",
+    "subagent-driven-development",
+    "systematic-debugging",
+    "test-driven-development",
+    "using-git-worktrees",
+    "using-skills",
+    "verification-before-completion",
+    "writing-plans",
+    "writing-skills",
+}
+
+SUPERPOWERS_COMMANDS = {"brainstorm", "execute-plan", "write-plan"}
+
+SUPERPOWERS_AGENTS = {"code-reviewer"}
+
+
+def extract_frontmatter(content: str) -> tuple[dict, str]:
+    """Extract YAML frontmatter and body from markdown content."""
+    if not content.startswith("---"):
+        return {}, content
+
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return {}, content
+
+    frontmatter = {}
+    for line in parts[1].strip().split("\n"):
+        if ":" in line:
+            key, value = line.split(":", 1)
+            frontmatter[key.strip()] = value.strip()
+
+    return frontmatter, parts[2].strip()
+
+
+def generate_skill_doc(skill_dir: Path) -> str:
+    """Generate documentation page for a skill."""
+    skill_name = skill_dir.name
+    skill_file = skill_dir / "SKILL.md"
+
+    if not skill_file.exists():
+        return None
+
+    content = skill_file.read_text()
+    frontmatter, body = extract_frontmatter(content)
+
+    name = frontmatter.get("name", skill_name)
+    description = frontmatter.get("description", "")
+
+    # Check if from superpowers
+    from_superpowers = skill_name in SUPERPOWERS_SKILLS
+    attribution = ""
+    if from_superpowers:
+        attribution = "\n!!! info \"Origin\"\n    This skill originated from [obra/superpowers](https://github.com/obra/superpowers).\n"
+
+    doc = f"""# {name}
+
+{description}
+{attribution}
+## Skill Content
+
+{body}
+"""
+    return doc
+
+
+def generate_command_doc(command_file: Path) -> str:
+    """Generate documentation page for a command."""
+    command_name = command_file.stem
+    content = command_file.read_text()
+    frontmatter, body = extract_frontmatter(content)
+
+    # Check if from superpowers
+    from_superpowers = command_name in SUPERPOWERS_COMMANDS
+    attribution = ""
+    if from_superpowers:
+        attribution = "\n!!! info \"Origin\"\n    This command originated from [obra/superpowers](https://github.com/obra/superpowers).\n"
+
+    doc = f"""# /{command_name}
+{attribution}
+## Command Content
+
+{body}
+"""
+    return doc
+
+
+def generate_agent_doc(agent_file: Path) -> str:
+    """Generate documentation page for an agent."""
+    agent_name = agent_file.stem
+    content = agent_file.read_text()
+    frontmatter, body = extract_frontmatter(content)
+
+    # Check if from superpowers
+    from_superpowers = agent_name in SUPERPOWERS_AGENTS
+    attribution = ""
+    if from_superpowers:
+        attribution = "\n!!! info \"Origin\"\n    This agent originated from [obra/superpowers](https://github.com/obra/superpowers).\n"
+
+    doc = f"""# {agent_name}
+{attribution}
+## Agent Content
+
+{body}
+"""
+    return doc
+
+
+def main():
+    # Create output directories
+    (DOCS_DIR / "skills").mkdir(parents=True, exist_ok=True)
+    (DOCS_DIR / "commands").mkdir(parents=True, exist_ok=True)
+    (DOCS_DIR / "agents").mkdir(parents=True, exist_ok=True)
+
+    # Generate skill docs
+    skill_count = 0
+    for skill_dir in sorted(SKILLS_DIR.iterdir()):
+        if skill_dir.is_dir() and (skill_dir / "SKILL.md").exists():
+            doc = generate_skill_doc(skill_dir)
+            if doc:
+                output_file = DOCS_DIR / "skills" / f"{skill_dir.name}.md"
+                output_file.write_text(doc)
+                skill_count += 1
+                print(f"Generated: skills/{skill_dir.name}.md")
+
+    # Generate command docs
+    command_count = 0
+    for cmd_file in sorted(COMMANDS_DIR.glob("*.md")):
+        doc = generate_command_doc(cmd_file)
+        if doc:
+            output_file = DOCS_DIR / "commands" / cmd_file.name
+            output_file.write_text(doc)
+            command_count += 1
+            print(f"Generated: commands/{cmd_file.name}")
+
+    # Generate agent docs
+    agent_count = 0
+    for agent_file in sorted(AGENTS_DIR.glob("*.md")):
+        doc = generate_agent_doc(agent_file)
+        if doc:
+            output_file = DOCS_DIR / "agents" / agent_file.name
+            output_file.write_text(doc)
+            agent_count += 1
+            print(f"Generated: agents/{agent_file.name}")
+
+    # Generate commands index
+    commands_index = """# Commands Overview
+
+Commands are slash commands that can be invoked with `/<command-name>` in Claude Code.
+
+## Available Commands
+
+| Command | Description | Origin |
+|---------|-------------|--------|
+"""
+    for cmd_file in sorted(COMMANDS_DIR.glob("*.md")):
+        name = cmd_file.stem
+        content = cmd_file.read_text()
+        # Try to extract a description from the first paragraph
+        lines = content.split("\n")
+        desc = ""
+        for line in lines:
+            if line.strip() and not line.startswith("#") and not line.startswith("---"):
+                desc = line.strip()[:80]
+                if len(line.strip()) > 80:
+                    desc += "..."
+                break
+        origin = "[superpowers](https://github.com/obra/superpowers)" if name in SUPERPOWERS_COMMANDS else "spellbook"
+        commands_index += f"| [/{name}]({name}.md) | {desc} | {origin} |\n"
+
+    (DOCS_DIR / "commands" / "index.md").write_text(commands_index)
+    print("Generated: commands/index.md")
+
+    # Generate agents index
+    agents_index = """# Agents Overview
+
+Agents are specialized reviewers that can be invoked for specific tasks.
+
+## Available Agents
+
+| Agent | Description | Origin |
+|-------|-------------|--------|
+"""
+    for agent_file in sorted(AGENTS_DIR.glob("*.md")):
+        name = agent_file.stem
+        origin = "[superpowers](https://github.com/obra/superpowers)" if name in SUPERPOWERS_AGENTS else "spellbook"
+        agents_index += f"| [{name}]({name}.md) | Specialized code review agent | {origin} |\n"
+
+    (DOCS_DIR / "agents" / "index.md").write_text(agents_index)
+    print("Generated: agents/index.md")
+
+    print(f"\nGenerated {skill_count} skills, {command_count} commands, {agent_count} agents")
+
+
+if __name__ == "__main__":
+    main()

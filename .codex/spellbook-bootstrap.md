@@ -49,7 +49,7 @@ Skills are resolved in this priority order:
 
 1. **Personal skills** (`~/.codex/skills/`) - highest priority
 2. **Spellbook skills** (`~/Development/spellbook/skills/`) - middle priority
-3. **Superpowers skills** (built-in) - lowest priority
+3. **Claude skills** (`$CLAUDE_CONFIG_DIR/skills/`) - lowest priority
 
 Personal customizations always override shared skills.
 

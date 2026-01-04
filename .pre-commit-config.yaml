@@ -1,8 +1,15 @@
 repos:
   - repo: local
     hooks:
-      - id: check-readme-completeness
-        name: Check README completeness
+      - id: generate-docs
+        name: Generate documentation
+        entry: python3 scripts/generate_docs.py
+        language: system
+        pass_filenames: false
+        files: ^(skills/|commands/|agents/)
+
+      - id: check-docs-completeness
+        name: Check documentation completeness
         entry: python3 scripts/check-readme-completeness.py
         language: system
         pass_filenames: false

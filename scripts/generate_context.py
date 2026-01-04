@@ -26,12 +26,11 @@ try:
         # This repo's skills
         repo_root = Path(__file__).parent.parent
         dirs.append(repo_root / "skills")
-        
-        # Superpowers
+
+        # Claude config skills
         claude_config = os.environ.get("CLAUDE_CONFIG_DIR", str(home / ".claude"))
         dirs.append(Path(claude_config) / "skills")
-        dirs.append(home / "Development" / "superpowers" / "skills")
-        
+
         return [d for d in dirs if d.exists()]
 
 except ImportError:

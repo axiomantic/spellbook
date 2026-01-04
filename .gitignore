@@ -2,6 +2,7 @@
 .claude-flow/
 .swarm/
 logs/
+site/
 
 # OS files
 .DS_Store

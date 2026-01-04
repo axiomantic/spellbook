@@ -1,0 +1,121 @@
+docs_dir: docs-src
+site_name: Spellbook
+site_description: Multi-platform AI assistant skills, commands, and configuration
+site_url: https://axiomantic.github.io/spellbook/
+repo_url: https://github.com/axiomantic/spellbook
+repo_name: axiomantic/spellbook
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+  - mike:
+      version_selector: true
+      css_dir: css
+      javascript_dir: js
+
+extra:
+  version:
+    provider: mike
+    default: latest
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Platform Support: getting-started/platforms.md
+    - Quick Start: getting-started/quickstart.md
+  - Skills:
+    - Overview: skills/index.md
+    - Core Workflow Skills:
+      - skills/brainstorming.md
+      - skills/writing-plans.md
+      - skills/executing-plans.md
+      - skills/test-driven-development.md
+      - skills/systematic-debugging.md
+      - skills/using-git-worktrees.md
+      - skills/finishing-a-development-branch.md
+    - Code Quality Skills:
+      - skills/green-mirage-audit.md
+      - skills/fix-tests.md
+      - skills/factchecker.md
+      - skills/find-dead-code.md
+      - skills/receiving-code-review.md
+      - skills/requesting-code-review.md
+    - Feature Development:
+      - skills/implement-feature.md
+      - skills/design-doc-reviewer.md
+      - skills/implementation-plan-reviewer.md
+      - skills/devils-advocate.md
+      - skills/smart-merge.md
+    - Specialized Skills:
+      - skills/async-await-patterns.md
+      - skills/scientific-debugging.md
+      - skills/nim-pr-guide.md
+    - Meta Skills:
+      - skills/using-skills.md
+      - skills/writing-skills.md
+      - skills/subagent-prompting.md
+      - skills/instruction-engineering.md
+      - skills/dispatching-parallel-agents.md
+      - skills/subagent-driven-development.md
+      - skills/verification-before-completion.md
+  - Commands:
+    - Overview: commands/index.md
+    - commands/compact.md
+    - commands/distill-session.md
+    - commands/simplify.md
+    - commands/address-pr-feedback.md
+    - commands/move-project.md
+    - commands/green-mirage-audit.md
+    - commands/brainstorm.md
+    - commands/write-plan.md
+    - commands/execute-plan.md
+  - Agents:
+    - Overview: agents/index.md
+    - agents/code-reviewer.md
+  - Reference:
+    - Architecture: reference/architecture.md
+    - Patterns: reference/patterns.md
+    - Contributing: reference/contributing.md
+  - Acknowledgments: acknowledgments.md
