@@ -76,8 +76,8 @@ Before starting, internalize these failure modes:
 ```
 
 **Path Encoding:**
-- Working directory is encoded by replacing `/` with `-` and stripping leading `-`
-- Example: `/Users/alice/Development/my-project` becomes `Users-alice-Development-my-project`
+- Working directory is encoded by replacing `/` with `-` (leading dash is KEPT)
+- Example: `/Users/alice/Development/my-project` becomes `-Users-alice-Development-my-project`
 
 ---
 
@@ -94,7 +94,7 @@ If the user invoked `/distill-session <session-name>`, extract the session name 
 **Step 1: Get project directory and list sessions**
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$CLAUDE_CONFIG_DIR/projects/$(pwd | sed 's|/|-|g' | sed 's|^-||')" --limit 10
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$CLAUDE_CONFIG_DIR/projects/$(pwd | tr '/' '-')" --limit 10
 ```
 
 **Step 2: Check for exact match (if session name provided)**

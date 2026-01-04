@@ -87,6 +87,40 @@ def get_last_compact_summary(session_path: str) -> Optional[Dict[str, Any]]:
     }
 
 
+def resolve_project_dir(project_dir: str) -> str:
+    """
+    Resolve project directory, trying alternate encodings if needed.
+
+    Claude Code encodes paths by replacing '/' with '-', keeping the leading dash.
+    But older documentation stripped the leading dash, so we try both.
+
+    Examples:
+        /Users/alice/dev/proj -> -Users-alice-dev-proj (current Claude Code behavior)
+        /Users/alice/dev/proj -> Users-alice-dev-proj (old documentation)
+    """
+    if os.path.isdir(project_dir):
+        return project_dir
+
+    # Get the basename to try alternate encodings
+    parent = os.path.dirname(project_dir)
+    basename = os.path.basename(project_dir)
+
+    # Try adding leading dash if missing
+    if not basename.startswith('-'):
+        alt_path = os.path.join(parent, '-' + basename)
+        if os.path.isdir(alt_path):
+            return alt_path
+
+    # Try removing leading dash if present
+    if basename.startswith('-'):
+        alt_path = os.path.join(parent, basename[1:])
+        if os.path.isdir(alt_path):
+            return alt_path
+
+    # Neither worked, return original for error message
+    return project_dir
+
+
 def list_sessions_with_samples(project_dir: str, limit: int = 5) -> List[Dict[str, Any]]:
     """
     List recent sessions with metadata and content samples.
@@ -109,6 +143,9 @@ def list_sessions_with_samples(project_dir: str, limit: int = 5) -> List[Dict[st
 
     Sorted by last_activity descending (most recent first).
     """
+    # Try to resolve alternate path encodings
+    project_dir = resolve_project_dir(project_dir)
+
     if not os.path.isdir(project_dir):
         raise FileNotFoundError(f"Project directory not found: {project_dir}")
 
