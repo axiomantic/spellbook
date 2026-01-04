@@ -54,7 +54,11 @@ jobs:
       - name: Deploy with mike
         run: |
           VERSION=${{ github.event.inputs.version || 'latest' }}
-          mike deploy --push --update-aliases $VERSION latest
+          if [ "$VERSION" = "latest" ]; then
+            mike deploy --push $VERSION
+          else
+            mike deploy --push --update-aliases $VERSION latest
+          fi
           mike set-default --push latest
 
   # Build job for PR previews
