@@ -27,7 +27,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from installer.core import Installer
-from installer.ui import print_header, print_info, print_report, print_success, print_warning
+from installer.ui import (
+    print_directory_config,
+    print_header,
+    print_info,
+    print_report,
+    print_success,
+    print_warning,
+)
 from installer.components.mcp import verify_mcp_connectivity
 
 
@@ -97,6 +104,9 @@ def main() -> int:
             # Fall back to auto-detect if TUI fails
             print_warning(f"Interactive mode unavailable ({e}), using auto-detect")
             platforms = installer.detect_platforms()
+
+    # Show directory configuration
+    print_directory_config(spellbook_dir, platforms)
 
     if args.dry_run:
         print_warning("DRY RUN - no changes will be made")

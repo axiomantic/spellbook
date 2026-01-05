@@ -2,13 +2,20 @@
 Terminal output formatting for spellbook installer.
 """
 
+import os
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List
 
 if TYPE_CHECKING:
     from .core import InstallResult, InstallSession
 
-from .config import PLATFORM_CONFIG
+from .config import (
+    PLATFORM_CONFIG,
+    SPELLBOOK_DEFAULT_CONFIG_DIR,
+    get_platform_config_dir,
+    get_spellbook_config_dir,
+)
 
 
 class Colors:
@@ -69,6 +76,52 @@ def print_header(version: str) -> None:
     print(color(line, Colors.CYAN))
     print(color(f"  Spellbook Installer v{version}", Colors.CYAN))
     print(color(line, Colors.CYAN))
+    print()
+
+
+def print_directory_config(spellbook_dir: Path, platforms: List[str]) -> None:
+    """Print directory configuration showing where files will be installed."""
+    print(color("Directory Configuration:", Colors.CYAN))
+    print()
+
+    # Spellbook source
+    print(f"  {color('Source:', Colors.BOLD)}")
+    print(f"    SPELLBOOK_DIR = {spellbook_dir}")
+    print()
+
+    # Spellbook output directory
+    spellbook_config = get_spellbook_config_dir()
+    is_custom_output = (
+        os.environ.get('SPELLBOOK_CONFIG_DIR') or
+        os.environ.get('CLAUDE_CONFIG_DIR')
+    )
+    print(f"  {color('Output Directory:', Colors.BOLD)}")
+    print(f"    SPELLBOOK_CONFIG_DIR = {spellbook_config}")
+    if is_custom_output:
+        env_var = 'SPELLBOOK_CONFIG_DIR' if os.environ.get('SPELLBOOK_CONFIG_DIR') else 'CLAUDE_CONFIG_DIR'
+        print(f"    {color(f'(from ${env_var})', Colors.YELLOW)}")
+    else:
+        print(f"    {color('(default)', Colors.CYAN)}")
+    print()
+
+    # Platform targets
+    print(f"  {color('Platform Targets:', Colors.BOLD)}")
+    for platform in platforms:
+        config = PLATFORM_CONFIG.get(platform, {})
+        platform_name = config.get("name", platform)
+        config_dir = get_platform_config_dir(platform)
+
+        # Check if using custom env var
+        env_var = config.get("config_dir_env")
+        is_custom = env_var and os.environ.get(env_var)
+
+        print(f"    {platform_name}:")
+        print(f"      {config_dir}")
+        if is_custom:
+            print(f"      {color(f'(from ${env_var})', Colors.YELLOW)}")
+
+    print()
+    print(color("-" * 60, Colors.CYAN))
     print()
 
 
