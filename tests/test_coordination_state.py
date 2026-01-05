@@ -1,7 +1,8 @@
 """Test SQLite state management."""
+import re
 import pytest
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 
 @pytest.fixture
@@ -15,22 +16,37 @@ def state_manager(tmp_path):
 
 
 def test_create_swarm(state_manager):
-    """Test creating a swarm."""
+    """Test creating a swarm with full field verification."""
     swarm_id = state_manager.create_swarm(
         feature="test-feature",
         manifest_path="/path/to/manifest.json",
         auto_merge=False,
         notify_on_complete=True
     )
-    assert swarm_id.startswith("swarm-")
 
+    # Verify swarm_id structure: swarm-YYYYMMDD-HHMMSS-XXXXXX
+    assert re.match(r"^swarm-\d{8}-\d{6}-[a-f0-9]{6}$", swarm_id), \
+        f"Swarm ID '{swarm_id}' doesn't match expected format"
+
+    # Verify ALL fields in database
     swarm = state_manager.get_swarm(swarm_id)
+    assert swarm["swarm_id"] == swarm_id
     assert swarm["feature"] == "test-feature"
+    assert swarm["manifest_path"] == "/path/to/manifest.json"
     assert swarm["status"] == "created"
+    assert swarm["auto_merge"] == False
+    assert swarm["notify_on_complete"] == True
+
+    # Verify timestamps are valid ISO8601 with Z suffix
+    assert swarm["created_at"].endswith("Z")
+    assert swarm["updated_at"].endswith("Z")
+    datetime.fromisoformat(swarm["created_at"].replace("Z", "+00:00"))
+    assert swarm["created_at"] == swarm["updated_at"]  # Same on creation
+    assert swarm["completed_at"] is None
 
 
 def test_register_worker(state_manager):
-    """Test registering a worker."""
+    """Test registering a worker with database verification."""
     swarm_id = state_manager.create_swarm(
         feature="test",
         manifest_path="/path/to/manifest.json"
@@ -45,12 +61,44 @@ def test_register_worker(state_manager):
     )
     assert worker_id > 0
 
+    # VERIFY WORKER IN DATABASE (Finding #1 fix)
+    conn = state_manager._get_connection()
+    try:
+        row = conn.execute(
+            "SELECT * FROM workers WHERE worker_id = ?",
+            (worker_id,)
+        ).fetchone()
+
+        assert row is not None, "Worker not found in database"
+        assert row["worker_id"] == worker_id
+        assert row["swarm_id"] == swarm_id
+        assert row["packet_id"] == 1
+        assert row["packet_name"] == "track-1-backend"
+        assert row["worktree"] == "/path/to/worktree"
+        assert row["status"] == "registered"
+        assert row["tasks_total"] == 5
+        assert row["tasks_completed"] == 0
+        assert row["final_commit"] is None
+        assert row["tests_passed"] is None
+        assert row["review_passed"] is None
+        assert row["completed_at"] is None
+    finally:
+        conn.close()
+
+    # VERIFY REGISTRATION EVENT LOGGED (Finding #13 fix)
+    events = state_manager.get_events(swarm_id, since_event_id=0)
+    registration_events = [e for e in events if e["event_type"] == "worker_registered"]
+    assert len(registration_events) == 1
+    reg_event = registration_events[0]
+    assert reg_event["packet_id"] == 1
+
+    # Verify swarm status changed to running
     swarm = state_manager.get_swarm(swarm_id)
     assert swarm["status"] == "running"
 
 
 def test_update_progress(state_manager):
-    """Test updating worker progress."""
+    """Test updating worker progress with state verification."""
     swarm_id = state_manager.create_swarm(
         feature="test",
         manifest_path="/path/to/manifest.json"
@@ -74,12 +122,36 @@ def test_update_progress(state_manager):
         commit="abc123"
     )
 
+    # VERIFY WORKER STATE UPDATED (Finding #2 fix)
+    conn = state_manager._get_connection()
+    try:
+        worker = conn.execute(
+            "SELECT * FROM workers WHERE swarm_id = ? AND packet_id = ?",
+            (swarm_id, 1)
+        ).fetchone()
+
+        assert worker is not None
+        assert worker["status"] == "running"
+        assert worker["tasks_completed"] == 2
+    finally:
+        conn.close()
+
+    # VERIFY EVENT CONTENT
     events = state_manager.get_events(swarm_id, since_event_id=0)
-    assert len(events) >= 2  # registration + progress
+    assert len(events) == 2  # Exact count: registration + progress
+
+    progress_events = [e for e in events if e["event_type"] == "progress"]
+    assert len(progress_events) == 1
+
+    progress_event = progress_events[0]
+    assert progress_event["packet_id"] == 1
+    assert progress_event["task_id"] == "task-2"
+    assert progress_event["task_name"] == "Implement feature"
+    assert progress_event["commit"] == "abc123"
 
 
 def test_mark_complete(state_manager):
-    """Test marking worker as complete."""
+    """Test marking worker as complete with database verification."""
     swarm_id = state_manager.create_swarm(
         feature="test",
         manifest_path="/path/to/manifest.json"
@@ -100,14 +172,35 @@ def test_mark_complete(state_manager):
         review_passed=True
     )
 
+    # VERIFY WORKER STATE IN DATABASE (Finding #4 fix)
+    conn = state_manager._get_connection()
+    try:
+        worker = conn.execute(
+            "SELECT * FROM workers WHERE swarm_id = ? AND packet_id = ?",
+            (swarm_id, 1)
+        ).fetchone()
+
+        assert worker["status"] == "complete"
+        assert worker["final_commit"] == "def456"
+        assert worker["tests_passed"] == 1  # SQLite stores as 1/0
+        assert worker["review_passed"] == 1
+        assert worker["completed_at"] is not None
+        datetime.fromisoformat(worker["completed_at"].replace("Z", "+00:00"))
+    finally:
+        conn.close()
+
+    # VERIFY EVENT
     events = state_manager.get_events(swarm_id, since_event_id=0)
     complete_events = [e for e in events if e["event_type"] == "worker_complete"]
     assert len(complete_events) == 1
-    assert complete_events[0]["packet_id"] == 1
+
+    complete_event = complete_events[0]
+    assert complete_event["packet_id"] == 1
+    assert complete_event["commit"] == "def456"
 
 
 def test_record_error(state_manager):
-    """Test recording an error."""
+    """Test recording an error with worker status verification."""
     swarm_id = state_manager.create_swarm(
         feature="test",
         manifest_path="/path/to/manifest.json"
@@ -129,10 +222,29 @@ def test_record_error(state_manager):
         recoverable=False
     )
 
+    # VERIFY WORKER STATUS CHANGED TO FAILED (Finding #5 fix)
+    conn = state_manager._get_connection()
+    try:
+        worker = conn.execute(
+            "SELECT status FROM workers WHERE swarm_id = ? AND packet_id = ?",
+            (swarm_id, 1)
+        ).fetchone()
+
+        assert worker["status"] == "failed"
+    finally:
+        conn.close()
+
+    # VERIFY EVENT CONTENT
     events = state_manager.get_events(swarm_id, since_event_id=0)
     error_events = [e for e in events if e["event_type"] == "worker_error"]
     assert len(error_events) == 1
-    assert error_events[0]["error_type"] == "test_failure"
+
+    error_event = error_events[0]
+    assert error_event["error_type"] == "test_failure"
+    assert error_event["error_message"] == "3 tests failed"
+    assert error_event["task_id"] == "task-3"
+    assert error_event["packet_id"] == 1
+    assert error_event["recoverable"] == 0  # SQLite stores as 0
 
 
 def test_get_events_since_id(state_manager):
