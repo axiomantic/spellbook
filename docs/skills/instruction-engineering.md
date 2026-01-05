@@ -181,7 +181,7 @@ When the engineered prompt will dispatch multiple subagents, include this struct
 ### Design Agent (general-purpose)
 **Scope:** Design document creation via brainstorming skill
 **Why subagent:** Self-contained deliverable with provided context (synthesis mode)
-**Expected output:** Complete design document saved to $CLAUDE_CONFIG_DIR/plans/
+**Expected output:** Complete design document saved to $SPELLBOOK_CONFIG_DIR/plans/
 **Constraints:** Use provided design_context, don't ask questions (synthesis mode)
 
 ### Implementation Agents (per task)

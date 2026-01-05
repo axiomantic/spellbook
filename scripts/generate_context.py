@@ -12,6 +12,26 @@ from typing import List, Dict
 # Add parent directory to path to import spellbook_mcp modules
 sys.path.append(str(Path(__file__).parent.parent))
 
+def get_spellbook_config_dir() -> Path:
+    """
+    Get the spellbook configuration directory.
+
+    Resolution order:
+    1. SPELLBOOK_CONFIG_DIR environment variable
+    2. CLAUDE_CONFIG_DIR environment variable (backward compatibility)
+    3. ~/.local/spellbook (portable default)
+    """
+    config_dir = os.environ.get('SPELLBOOK_CONFIG_DIR')
+    if config_dir:
+        return Path(config_dir)
+
+    claude_config = os.environ.get('CLAUDE_CONFIG_DIR')
+    if claude_config:
+        return Path(claude_config)
+
+    return Path.home() / '.local' / 'spellbook'
+
+
 try:
     from spellbook_mcp.skill_ops import find_skills
     # Mimic server.py's get_skill_dirs logic but simplified for generation
@@ -22,14 +42,19 @@ try:
         dirs.append(home / ".config" / "opencode" / "skills")
         dirs.append(home / ".opencode" / "skills")
         dirs.append(home / ".codex" / "skills")
-        
+
         # This repo's skills
         repo_root = Path(__file__).parent.parent
         dirs.append(repo_root / "skills")
 
-        # Claude config skills
-        claude_config = os.environ.get("CLAUDE_CONFIG_DIR", str(home / ".claude"))
-        dirs.append(Path(claude_config) / "skills")
+        # Spellbook config directory skills (portable location)
+        spellbook_config = get_spellbook_config_dir()
+        dirs.append(spellbook_config / "skills")
+
+        # Also check CLAUDE_CONFIG_DIR if different (backward compatibility)
+        claude_config = os.environ.get("CLAUDE_CONFIG_DIR")
+        if claude_config and Path(claude_config) != spellbook_config:
+            dirs.append(Path(claude_config) / "skills")
 
         return [d for d in dirs if d.exists()]
 

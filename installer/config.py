@@ -6,10 +6,38 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# Supported platforms
+# Spellbook's own config directory (platform-agnostic)
+# This is where spellbook stores its outputs: projects, logs, distilled sessions, etc.
+SPELLBOOK_CONFIG_DIR_ENV = "SPELLBOOK_CONFIG_DIR"
+SPELLBOOK_DEFAULT_CONFIG_DIR = Path.home() / ".local" / "spellbook"
+
+
+def get_spellbook_config_dir() -> Path:
+    """
+    Get the spellbook configuration directory.
+
+    Resolution order:
+    1. SPELLBOOK_CONFIG_DIR environment variable
+    2. CLAUDE_CONFIG_DIR environment variable (backward compatibility)
+    3. ~/.local/spellbook (portable default)
+    """
+    config_dir = os.environ.get('SPELLBOOK_CONFIG_DIR')
+    if config_dir:
+        return Path(config_dir)
+
+    claude_config = os.environ.get('CLAUDE_CONFIG_DIR')
+    if claude_config:
+        return Path(claude_config)
+
+    return SPELLBOOK_DEFAULT_CONFIG_DIR
+
+
+# Supported platforms (AI coding assistants that can consume spellbook)
 SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini"]
 
 # Platform configuration
+# NOTE: These are the AI assistant platforms that consume spellbook.
+# Spellbook's own config (SPELLBOOK_CONFIG_DIR) is separate from these.
 PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
     "claude_code": {
         "name": "Claude Code",

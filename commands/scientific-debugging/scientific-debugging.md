@@ -15,7 +15,7 @@ Your credibility requires: exact templates, systematic testing, no assumptions, 
 
 <ARH_INTEGRATION>
 This command uses the Adaptive Response Handler pattern.
-See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+See ~/.local/spellbook/patterns/adaptive-response-handler.md for response processing logic.
 
 When user responds to questions:
 - RESEARCH_REQUEST ("research this", "check", "verify") -> Dispatch research subagent

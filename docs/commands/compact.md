@@ -31,7 +31,7 @@ Before starting, internalize these failure modes:
 
 | Anti-Pattern | Why It's Fatal | Prevention |
 |--------------|----------------|------------|
-| **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.claude/docs/<project-encoded>/plans/ |
+| **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.local/spellbook/docs/<project-encoded>/plans/ |
 | **Vague re-read instructions** | "See the design doc" tells agent nothing | Write explicit file reading tool calls (`read_file`, `Read`) with absolute paths |
 | **Relative paths** | Break when session resumes | ALWAYS use absolute paths starting with / |
 | **"Task 4 is done"** | May be stale/wrong | Verify file state with actual reads, not claims |
@@ -72,7 +72,7 @@ Chronologically walk through the conversation:
    - What exact position in the skill workflow?
    - What context must be passed?
 6. **CRITICAL - Find ALL planning documents:**
-   - Search: ~/.claude/docs/<project-encoded>/plans/
+   - Search: ~/.local/spellbook/docs/<project-encoded>/plans/
    - Search conversation for references to "plan", "design", "impl"
    - For EACH document found:
      * Record ABSOLUTE path (not relative)
@@ -239,7 +239,7 @@ PROJECT_ROOT=$(_outer_git_root)
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 
 # Search plans directory
-ls ~/.claude/docs/${PROJECT_ENCODED}/plans/ 2>/dev/null
+ls ~/.local/spellbook/docs/${PROJECT_ENCODED}/plans/ 2>/dev/null
 
 # Check for plan references in conversation
 grep -i "plan\|design\|impl" [session-file] | head -20
@@ -580,7 +580,7 @@ Anti-patterns observed in session resumption:
 | **Context bloat** | Passing entire distill when resuming skill | Section 1.23: Pass only relevant context (paths, position, decisions). |
 | **Checkpoint ignorance** | Trying to fix corrupted work instead of rolling back | Section 1.22: If verification fails badly, use checkpoint. |
 | **Workflow pattern violation** | Changing from parallel to sequential without user input | Section 1.1 "Workflow Pattern": Honor the established pattern. |
-| **Missing plan documents** | Plan docs exist but weren't captured; resuming agent doesn't know full scope | Section 1.9: MUST search ~/.claude/docs/<project-encoded>/plans/ and capture ALL docs with ABSOLUTE paths. |
+| **Missing plan documents** | Plan docs exist but weren't captured; resuming agent doesn't know full scope | Section 1.9: MUST search ~/.local/spellbook/docs/<project-encoded>/plans/ and capture ALL docs with ABSOLUTE paths. |
 | **Plan docs without file reading tool calls** | Plan docs listed but no explicit file reading tool calls (`read_file`, `Read`) | Section 1.10: MUST include executable file reading tool calls (`read_file`, `Read`), not just path references. |
 
 **For each failure mode, the Prevention column references which section/step blocks it.**
@@ -724,7 +724,7 @@ If Section 1.9 lists implementation docs used for progress tracking:
 
 **If Section 1.10 says "NO DOCUMENTS TO RE-READ":** Proceed to Step 8.
 
-**If Section 1.10 is blank or missing:** STOP. This is a malformed compact. The original compactor failed to capture planning documents. Search ~/.claude/docs/<project-encoded>/plans/ manually before proceeding.
+**If Section 1.10 is blank or missing:** STOP. This is a malformed compact. The original compactor failed to capture planning documents. Search ~/.local/spellbook/docs/<project-encoded>/plans/ manually before proceeding.
 
 ### Step 8: Resume YOUR Exact Position
 Return to Section 1.1 "Your Exact Position." Not a higher abstraction. If you were debugging line 47, debug line 47. If you were mid-review of subagent output, continue that review.
@@ -739,7 +739,7 @@ Do not change methodologies. Do not "simplify" the organizational structure. Do 
 Ask yourself—and do not finalize until ALL answers are "yes":
 
 **Planning Document Verification (CRITICAL):**
-- [ ] Did I search ~/.claude/docs/<project-encoded>/plans/ for planning documents?
+- [ ] Did I search ~/.local/spellbook/docs/<project-encoded>/plans/ for planning documents?
 - [ ] If plan docs exist, are they listed in Section 1.9 with ABSOLUTE paths?
 - [ ] Does Section 1.10 contain explicit file reading tool calls (`read_file`, `Read`) for the resuming agent?
 - [ ] If NO plan docs exist, did I write "NO PLANNING DOCUMENTS" explicitly (not leave blank)?

@@ -35,7 +35,7 @@ Your job is to perform forensic extraction: methodically process the session in 
 - Session file > 2MB with no recent compact boundary
 
 **What this skill produces:**
-- A standalone markdown file at `~/.claude/distilled/{project}/{slug}-{timestamp}.md`
+- A standalone markdown file at `~/.local/spellbook/distilled/{project}/{slug}-{timestamp}.md`
 - Follows compact.md format exactly
 - Ready for a new session to consume via "continue work from [path]"
 
@@ -47,7 +47,7 @@ Before starting, internalize these failure modes:
 
 | Anti-Pattern | Why It's Fatal | Prevention |
 |--------------|----------------|------------|
-| **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.claude/docs/<project-encoded>/plans/ and write explicit result |
+| **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.local/spellbook/docs/<project-encoded>/plans/ and write explicit result |
 | **Vague re-read instructions** | "See the design doc" tells agent nothing | Use the file reading tool (`read_file`, `Read`) with absolute paths and focus areas |
 | **Relative paths** | Break when session resumes in different context | ALWAYS use absolute paths starting with / |
 | **Trusting conversation claims** | "Task 4 is done" may be stale/wrong | Verify file state in Phase 2.5 with actual reads |
@@ -59,26 +59,35 @@ Before starting, internalize these failure modes:
 
 ## File Structure Reference
 
+**Claude Code Session Storage** (CLAUDE_CONFIG_DIR, default ~/.claude):
 ```
-~/.claude/                          # CLAUDE_CONFIG_DIR (default ~/.claude)
+~/.claude/
 ├── projects/                       # All project session data
-│   └── {encoded-cwd}/              # One directory per project (e.g., -Users-alice-Development-myproject)
+│   └── {encoded-cwd}/              # One directory per project
 │       ├── {session-uuid}.jsonl    # Session files (JSONL format)
 │       └── agent-{id}.jsonl        # SUBAGENT SESSION FILES (persisted outputs!)
-├── plans/                          # Planning documents (CRITICAL - always check this!)
-│   └── {project-name}/             # Project-specific plans
-│       ├── *-design.md             # Design documents
-│       └── *-impl.md               # Implementation plans
+└── history.jsonl                   # Session history
+```
+
+**Spellbook Output Storage** (SPELLBOOK_CONFIG_DIR, default ~/.local/spellbook):
+```
+~/.local/spellbook/
+├── docs/                           # Generated documentation
+│   └── {project-encoded}/          # Per-project docs
+│       ├── plans/                  # Planning documents (CRITICAL!)
+│       │   ├── *-design.md         # Design documents
+│       │   └── *-impl.md           # Implementation plans
+│       ├── audits/                 # Audit reports
+│       └── reports/                # Analysis reports
 ├── distilled/                      # Distilled session output
-│   └── {encoded-cwd}/              # Mirrors projects structure
+│   └── {project-encoded}/          # Mirrors projects structure
 │       └── {slug}-{timestamp}.md   # Distilled summaries
-└── scripts/
-    └── distill_session.py          # Helper script for this command
+└── logs/                           # Operation logs
 ```
 
 **Agent Session Files (CRITICAL for distillation):**
 - Every subagent spawned via Task tool gets its own `.jsonl` file
-- Location: `~/.claude/projects/<project-encoded>/agent-<id>.jsonl`
+- Location: `$CLAUDE_CONFIG_DIR/projects/<project-encoded>/agent-<id>.jsonl`
 - Contains: Full conversation (prompt + response)
 - Linked to parent via `sessionId` field
 - **These persist even after TaskOutput returns** - use them for reliable output retrieval
@@ -246,7 +255,7 @@ Which pattern was in use?
 Were ANY of these referenced?
 - Design docs (paths with "design", "-design.md")
 - Implementation plans (paths with "impl", "-impl.md", "plan")
-- Paths like ~/.claude/docs/<project-encoded>/plans/
+- Paths like ~/.local/spellbook/docs/<project-encoded>/plans/
 
 For EACH document found:
 - Record the ABSOLUTE path (starting with /)
@@ -381,7 +390,7 @@ PROJECT_ROOT=$(_outer_git_root)
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 
 # 1. Search plans directory
-ls -la ~/.claude/docs/${PROJECT_ENCODED}/plans/ 2>/dev/null || echo "NO PLANS DIR"
+ls -la ~/.local/spellbook/docs/${PROJECT_ENCODED}/plans/ 2>/dev/null || echo "NO PLANS DIR"
 
 # 2. Search for plan references in chunk summaries
 grep -i "plan\|design\|impl\|\.claude/docs" [summaries]
@@ -408,7 +417,7 @@ Write explicitly:
 ```
 NO PLANNING DOCUMENTS
 Verified by searching:
-- ~/.claude/docs/<project-encoded>/plans/ - directory does not exist
+- ~/.local/spellbook/docs/<project-encoded>/plans/ - directory does not exist
 - Chunk summaries - no plan references found
 - Project directory - no *-impl.md, *-design.md, *-plan.md files
 ```
@@ -476,7 +485,7 @@ Follow compact.md format EXACTLY. Pay special attention to:
 | /Users/.../impl.md | Phase 3, Task 7 | 60% complete |
 ```
 
-If no planning docs: Write "NO PLANNING DOCUMENTS - verified by searching ~/.claude/docs/<project-encoded>/plans/"
+If no planning docs: Write "NO PLANNING DOCUMENTS - verified by searching ~/.local/spellbook/docs/<project-encoded>/plans/"
 
 ### Section 1.10: Documents to Re-Read
 **MUST contain executable Read() commands:**
@@ -566,7 +575,7 @@ import os
 from datetime import datetime
 
 project_encoded = os.getcwd().replace('/', '-').lstrip('-')
-distilled_dir = os.path.expanduser(f"~/.claude/distilled/{project_encoded}")
+distilled_dir = os.path.expanduser(f"~/.local/spellbook/distilled/{project_encoded}")
 os.makedirs(distilled_dir, exist_ok=True)
 
 timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -612,7 +621,7 @@ Original session preserved at: {session_file}
 ## Quality Checklist (Before Completing)
 
 **Planning Documents (CRITICAL):**
-- [ ] Did I search ~/.claude/docs/<project-encoded>/plans/
+- [ ] Did I search ~/.local/spellbook/docs/<project-encoded>/plans/
 - [ ] If docs exist: Listed with ABSOLUTE paths in Section 1.9
 - [ ] If docs exist: Read() commands in Section 1.10
 - [ ] If no docs: Explicit "NO PLANNING DOCUMENTS" (not blank)

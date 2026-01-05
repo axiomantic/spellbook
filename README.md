@@ -252,7 +252,7 @@ Pause work in one assistant, resume in another with full context.
 # 1. Distill the session (extracts decisions, plans, progress)
 /distill-session
 
-# 2. Session saved to ~/.claude/distilled/<project>/session-YYYYMMDD-HHMMSS.md
+# 2. Session saved to ~/.local/spellbook/distilled/<project>/session-YYYYMMDD-HHMMSS.md
 
 # 3. In Claude Code (or any other assistant):
 #    Paste the distilled context, then:
@@ -311,7 +311,7 @@ Audit whether tests actually catch bugs, not just achieve coverage.
 /green-mirage-audit
 
 # 2. Forensic analysis traces code paths through production code
-#    Output: ~/.claude/docs/<project>/audits/green-mirage-audit-TIMESTAMP.md
+#    Output: ~/.local/spellbook/docs/<project>/audits/green-mirage-audit-TIMESTAMP.md
 #    Shows which tests are SOLID vs GREEN MIRAGE
 
 # 3. Fix identified issues

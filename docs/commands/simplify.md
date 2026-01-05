@@ -734,7 +734,7 @@ Options:
 
 ### 5.5 Save Report
 
-**Default location:** `${CLAUDE_CONFIG_DIR:-~/.claude}/docs/<project-encoded>/reports/simplify-report-<YYYY-MM-DD>.md`
+**Default location:** `${SPELLBOOK_CONFIG_DIR:-~/.local/spellbook}/docs/<project-encoded>/reports/simplify-report-<YYYY-MM-DD>.md`
 
 Generate project encoded path:
 ```bash
@@ -757,7 +757,7 @@ PROJECT_ROOT=$(_outer_git_root)
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 ```
 
-Create directory if needed: `mkdir -p "${CLAUDE_CONFIG_DIR:-~/.claude}/docs/${PROJECT_ENCODED}/reports"`
+Create directory if needed: `mkdir -p "${SPELLBOOK_CONFIG_DIR:-~/.local/spellbook}/docs/${PROJECT_ENCODED}/reports"`
 
 **Custom location:** Use --save-report=<path> flag to override
 

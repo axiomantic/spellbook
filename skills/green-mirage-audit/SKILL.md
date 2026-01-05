@@ -576,11 +576,11 @@ This enables the fix-tests skill to consume it and provides a persistent record.
 
 ### 6.1 Output Location
 
-**Base directory:** `${CLAUDE_CONFIG_DIR:-${HOME}/.claude}/docs/<project-encoded>/audits/`
+**Base directory:** `${SPELLBOOK_CONFIG_DIR:-${HOME}/.local/spellbook}/docs/<project-encoded>/audits/`
 
 **File naming:** `green-mirage-audit-<YYYY-MM-DD>-<HHMMSS>.md`
 
-**Example:** `~/.claude/docs/Users-alice-Development-myproject/audits/green-mirage-audit-2024-01-15-103045.md`
+**Example:** `~/.local/spellbook/docs/Users-alice-Development-myproject/audits/green-mirage-audit-2024-01-15-103045.md`
 
 ### 6.2 Project Encoded Path Generation
 
@@ -599,7 +599,7 @@ _outer_git_root() {
 PROJECT_ROOT=$(_outer_git_root)
 ```
 
-**If `PROJECT_ROOT` is "NO_GIT_REPO":** Ask user if they want to run `git init`. If no, use fallback: `~/.claude/docs/_no-repo/$(basename "$PWD")/audits/`
+**If `PROJECT_ROOT` is "NO_GIT_REPO":** Ask user if they want to run `git init`. If no, use fallback: `~/.local/spellbook/docs/_no-repo/$(basename "$PWD")/audits/`
 
 ```bash
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
@@ -610,7 +610,7 @@ PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 Before writing, ensure directory exists:
 
 ```bash
-DOCS_DIR="${CLAUDE_CONFIG_DIR:-${HOME}/.claude}/docs/${PROJECT_ENCODED}/audits"
+DOCS_DIR="${SPELLBOOK_CONFIG_DIR:-${HOME}/.local/spellbook}/docs/${PROJECT_ENCODED}/audits"
 mkdir -p "$DOCS_DIR"
 ```
 
@@ -626,7 +626,7 @@ After writing the file, display:
 ## Audit Complete
 
 Report saved to:
-`~/.claude/docs/<project-encoded>/audits/green-mirage-audit-<timestamp>.md`
+`~/.local/spellbook/docs/<project-encoded>/audits/green-mirage-audit-<timestamp>.md`
 
 ### Summary
 - Tests audited: X
@@ -637,7 +637,7 @@ Report saved to:
 
 To fix these issues, run:
 ```
-/fix-tests ~/.claude/docs/<project-encoded>/audits/green-mirage-audit-<timestamp>.md
+/fix-tests ~/.local/spellbook/docs/<project-encoded>/audits/green-mirage-audit-<timestamp>.md
 ```
 
 The fix-tests skill will:

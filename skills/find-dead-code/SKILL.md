@@ -24,7 +24,7 @@ You operate with skepticism: all code is dead until proven alive.
 
 <ARH_INTEGRATION>
 This skill uses the Adaptive Response Handler pattern.
-See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+See ~/.local/spellbook/patterns/adaptive-response-handler.md for response processing logic.
 
 When user responds to questions:
 - RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent
@@ -174,7 +174,7 @@ After selection, identify the target files using:
 
 **After presenting scope options, process user response:**
 
-1. **Detect response type** using ARH patterns from `~/.claude/patterns/adaptive-response-handler.md`
+1. **Detect response type** using ARH patterns from `~/.local/spellbook/patterns/adaptive-response-handler.md`
 2. **Handle by type:**
    - **DIRECT_ANSWER (A/B/C/D):** Apply scope selection, proceed to extraction
    - **RESEARCH_REQUEST ("can you check what changed"):** Show git diff summary, re-ask
@@ -608,7 +608,7 @@ Choose A/B/C/D:
 
 **After presenting implementation options, process user response:**
 
-1. **Detect response type** using ARH patterns from `~/.claude/patterns/adaptive-response-handler.md`
+1. **Detect response type** using ARH patterns from `~/.local/spellbook/patterns/adaptive-response-handler.md`
 2. **Handle by type:**
    - **DIRECT_ANSWER (A/B/C/D):** Execute chosen implementation strategy
    - **RESEARCH_REQUEST ("can you verify X is really unused?"):** Re-run usage search for specific item

@@ -519,7 +519,7 @@ Handler pattern for intelligent response processing. All discovery must achieve
 100% completeness score before proceeding to design.
 </CRITICAL>
 
-**Reference:** See `~/.claude/patterns/adaptive-response-handler.md` for ARH pattern
+**Reference:** See `~/.local/spellbook/patterns/adaptive-response-handler.md` for ARH pattern
 
 ### 1.5.0 Disambiguation Session
 
@@ -549,7 +549,7 @@ Your choice: ___
 
 **PROCESSING (ARH Pattern):**
 
-1. **Detect response type** using ARH patterns from `~/.claude/patterns/adaptive-response-handler.md`
+1. **Detect response type** using ARH patterns from `~/.local/spellbook/patterns/adaptive-response-handler.md`
 2. **Handle by type:**
    - **DIRECT_ANSWER (A-D):** Update disambiguation_results, continue
    - **RESEARCH_REQUEST ("research this"):** Dispatch subagent, regenerate ALL disambiguation questions
@@ -1018,7 +1018,7 @@ IF completeness_score == 100:
 ### 1.5.6 Understanding Document Validation Gate
 
 **FILE PATH:**
-- Base: `$CLAUDE_CONFIG_DIR/docs/<project-encoded>/understanding/` (defaults to `~/.claude/docs/<project-encoded>/understanding/`)
+- Base: `$SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/understanding/` (defaults to `~/.local/spellbook/docs/<project-encoded>/understanding/`)
 - Format: `understanding-[feature-slug]-[timestamp].md`
 
 **PROJECT ENCODED PATH GENERATION:**
@@ -1037,7 +1037,7 @@ _outer_git_root() {
 PROJECT_ROOT=$(_outer_git_root)
 ```
 
-**If `PROJECT_ROOT` is "NO_GIT_REPO":** Ask user if they want to run `git init`. If no, use fallback: `~/.claude/docs/_no-repo/$(basename "$PWD")/understanding/`
+**If `PROJECT_ROOT` is "NO_GIT_REPO":** Ask user if they want to run `git init`. If no, use fallback: `~/.local/spellbook/docs/_no-repo/$(basename "$PWD")/understanding/`
 
 ```bash
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
@@ -1054,7 +1054,7 @@ PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 
 **DIRECTORY CREATION:**
 1. Check if directory exists
-2. If not: `mkdir -p $CLAUDE_CONFIG_DIR/docs/${PROJECT_ENCODED}/understanding/`
+2. If not: `mkdir -p $SPELLBOOK_CONFIG_DIR/docs/${PROJECT_ENCODED}/understanding/`
 3. If fails: Fallback to `/tmp/understanding-[slug]-[timestamp].md`
 
 **GENERATE UNDERSTANDING DOCUMENT:**
@@ -1333,7 +1333,7 @@ Task (or subagent simulation):
     2. Skip the "Exploring approaches" questions - decisions are made
     3. Go directly to "Presenting the design" - write the full design
     4. Do NOT ask "does this look right so far" - proceed through all sections
-    5. Save to: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+    5. Save to: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
     6. Commit the design document when done
 
     If you encounter a circuit breaker condition (security-critical, contradictory requirements),
@@ -1353,7 +1353,7 @@ Task (or subagent simulation):
 
     ## Context for the Skill
 
-    Design document location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+    Design document location: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     Return the complete findings report with remediation plan.
 ```
@@ -1409,7 +1409,7 @@ Task (or subagent simulation):
     Review findings to address:
     [Paste complete findings report and remediation plan]
 
-    Design document location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+    Design document location: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     Address ALL items - critical, important, AND minor.
     Commit changes when done.
@@ -1440,13 +1440,13 @@ Task (or subagent simulation):
 
     ## Context for the Skill
 
-    Design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+    Design document: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     User's parallelization preference: [maximize/conservative/ask]
     - If maximize: group independent tasks into parallel groups
     - If conservative: default to sequential
 
-    Save implementation plan to: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Save implementation plan to: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
 ```
 
 ### 3.2 Review Implementation Plan
@@ -1462,8 +1462,8 @@ Task (or subagent simulation):
 
     ## Context for the Skill
 
-    Implementation plan location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
-    Parent design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan location: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Parent design document: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     Return the complete findings report with remediation plan.
 ```
@@ -1488,8 +1488,8 @@ Task (or subagent simulation):
     Review findings to address:
     [Paste complete findings report and remediation plan]
 
-    Implementation plan location: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
-    Parent design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan location: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Parent design document: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 
     Pay special attention to interface contracts between parallel work.
     Commit changes when done.
@@ -1548,7 +1548,7 @@ Task (or subagent simulation):
 
     ## Context for the Skill
 
-    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Tasks to execute: [list setup tasks by number]
 
     These tasks create shared interfaces, type definitions, and stubs that parallel
@@ -1624,7 +1624,7 @@ For each worktree in SESSION_PREFERENCES.worktree_paths:
 
       ## Context for the Skill
 
-      Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+      Implementation plan: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
       Tasks to execute: [worktree.tasks]
       Working directory: [worktree.path]
 
@@ -1657,7 +1657,7 @@ Task (or subagent simulation):
 
     ## Context for the Skill
 
-    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Working directory: [worktree path or current directory]
 
     Group tasks by their "Parallel Group" field.
@@ -1677,7 +1677,7 @@ Task (or subagent simulation):
 
     ## Context for the Skill
 
-    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Working directory: [worktree path or current directory]
 
     Execute tasks one at a time with code review after each.
@@ -1709,7 +1709,7 @@ Task (or subagent simulation):
     - Tasks implemented: [worktree.tasks]
     - Depends on: [worktree.depends_on]
 
-    Interface contracts: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Interface contracts: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     (See "Interface Contracts" section of the implementation plan)
 
     After successful merge:
@@ -1734,7 +1734,7 @@ Task (or subagent simulation):
 
     ## Context for the Skill
 
-    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Implementation plan: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Task number: N
     Working directory: [worktree path or current directory]
 
@@ -1760,7 +1760,7 @@ Task (or subagent simulation):
     ## Context for the Skill
 
     What was implemented: [from implementation subagent's report]
-    Plan/requirements: Task N from $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Plan/requirements: Task N from $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
     Base SHA: [commit before task]
     Head SHA: [commit after task]
 
@@ -1856,8 +1856,8 @@ Task (or subagent simulation):
     Scope: All files created/modified in this feature
     [Complete list of all files]
 
-    Design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
-    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Design document: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+    Implementation plan: $SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
 
     This is the final claim validation gate.
     Cross-reference claims against design doc and implementation plan.
@@ -2017,8 +2017,8 @@ Subagent prompts provide CONTEXT for the skill, not duplicated instructions.
 
 | Document | Path |
 |----------|------|
-| Design Document | `$CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md` |
-| Implementation Plan | `$CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md` |
+| Design Document | `$SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md` |
+| Implementation Plan | `$SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md` |
 
 ---
 

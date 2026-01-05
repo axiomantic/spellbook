@@ -282,7 +282,7 @@ This will:
 - Generate audit report
 
 If audit fails:
-- Review report in {CLAUDE_CONFIG_DIR}/docs/<project>/audits/
+- Review report in {SPELLBOOK_CONFIG_DIR}/docs/<project>/audits/
 - Fix test quality issues
 - Re-run merge
 ```

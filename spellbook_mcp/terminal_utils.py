@@ -1,4 +1,4 @@
-"""Terminal detection and spawning utilities for spawn_claude_session MCP tool."""
+"""Terminal detection and spawning utilities for spawn_session MCP tool."""
 
 import sys
 import os
@@ -123,15 +123,17 @@ def detect_windows_terminal() -> str:
 def spawn_terminal_window(
     terminal: str,
     prompt: str,
-    working_directory: Optional[str] = None
+    working_directory: Optional[str] = None,
+    cli_command: Optional[str] = None
 ) -> dict:
     """
-    Spawn a new terminal window with a Claude session.
+    Spawn a new terminal window with an AI assistant session.
 
     Args:
         terminal: Terminal application name
-        prompt: Initial prompt to send to Claude
+        prompt: Initial prompt to send to the AI assistant
         working_directory: Directory to start in (defaults to cwd)
+        cli_command: CLI command to invoke (defaults to 'claude', supports 'codex', 'gemini', etc.)
 
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
@@ -142,10 +144,13 @@ def spawn_terminal_window(
     if working_directory is None:
         working_directory = os.getcwd()
 
+    if cli_command is None:
+        cli_command = os.environ.get('SPELLBOOK_CLI_COMMAND', 'claude')
+
     if sys.platform == 'darwin':
-        return spawn_macos_terminal(terminal, prompt, working_directory)
+        return spawn_macos_terminal(terminal, prompt, working_directory, cli_command)
     elif sys.platform.startswith('linux'):
-        return spawn_linux_terminal(terminal, prompt, working_directory)
+        return spawn_linux_terminal(terminal, prompt, working_directory, cli_command)
     elif sys.platform == 'win32':
         raise NotImplementedError("Windows terminal spawning not implemented in MVP")
     else:
@@ -155,15 +160,17 @@ def spawn_terminal_window(
 def spawn_macos_terminal(
     terminal: str,
     prompt: str,
-    working_directory: str
+    working_directory: str,
+    cli_command: str = 'claude'
 ) -> dict:
     """
     Spawn a macOS terminal window using AppleScript.
 
     Args:
         terminal: Terminal application name ('iTerm2', 'Warp', 'terminal')
-        prompt: Initial prompt to send to Claude
+        prompt: Initial prompt to send to the AI assistant
         working_directory: Directory to start in
+        cli_command: CLI command to invoke (e.g., 'claude', 'codex', 'gemini')
 
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
@@ -173,7 +180,7 @@ def spawn_macos_terminal(
     escaped_wd = working_directory.replace('"', '\\"')
 
     # Build command to execute
-    command = f'cd "{escaped_wd}" && claude "{escaped_prompt}"'
+    command = f'cd "{escaped_wd}" && {cli_command} "{escaped_prompt}"'
 
     if terminal.lower() == 'iterm2':
         applescript = f'''
@@ -221,15 +228,17 @@ end tell
 def spawn_linux_terminal(
     terminal: str,
     prompt: str,
-    working_directory: str
+    working_directory: str,
+    cli_command: str = 'claude'
 ) -> dict:
     """
     Spawn a Linux terminal window.
 
     Args:
         terminal: Terminal application name
-        prompt: Initial prompt to send to Claude
+        prompt: Initial prompt to send to the AI assistant
         working_directory: Directory to start in
+        cli_command: CLI command to invoke (e.g., 'claude', 'codex', 'gemini')
 
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
@@ -239,7 +248,7 @@ def spawn_linux_terminal(
     escaped_wd = working_directory.replace('"', '\\"')
 
     # Build command
-    command = f'cd "{escaped_wd}" && claude "{escaped_prompt}"; exec bash'
+    command = f'cd "{escaped_wd}" && {cli_command} "{escaped_prompt}"; exec bash'
 
     # Build terminal-specific command
     if terminal == 'gnome-terminal':

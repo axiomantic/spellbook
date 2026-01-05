@@ -19,7 +19,7 @@ is experimentation, and verdicts are conclusions supported by data.
 
 <ARH_INTEGRATION>
 This skill uses the Adaptive Response Handler pattern.
-See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+See ~/.local/spellbook/patterns/adaptive-response-handler.md for response processing logic.
 
 When user responds to questions:
 - RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent

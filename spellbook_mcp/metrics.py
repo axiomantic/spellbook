@@ -1,9 +1,31 @@
 """Feature implementation metrics logging."""
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Dict, Any
+
+
+def get_spellbook_config_dir() -> Path:
+    """
+    Get the spellbook configuration directory.
+
+    Resolution order:
+    1. SPELLBOOK_CONFIG_DIR environment variable
+    2. CLAUDE_CONFIG_DIR environment variable (backward compatibility)
+    3. ~/.local/spellbook (portable default)
+    """
+    config_dir = os.environ.get('SPELLBOOK_CONFIG_DIR')
+    if config_dir:
+        return Path(config_dir)
+
+    claude_config = os.environ.get('CLAUDE_CONFIG_DIR')
+    if claude_config:
+        return Path(claude_config)
+
+    return Path.home() / '.local' / 'spellbook'
+
 
 def log_feature_metrics(
     feature_slug: str,
@@ -38,7 +60,7 @@ def log_feature_metrics(
         tracks: List of track outcomes
         project_encoded: Encoded project path for log directory
     """
-    log_dir = Path.home() / ".claude" / "logs" / project_encoded
+    log_dir = get_spellbook_config_dir() / "logs" / project_encoded
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "implement-feature-metrics.jsonl"
 

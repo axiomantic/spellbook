@@ -86,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Phase 1: Analyze & chunk large sessions (300k char limit per chunk)
   - Phase 2: Parallel summarization via subagents
   - Phase 3: Synthesis following compact.md format
-  - Phase 4: Output to `~/.claude/distilled/{project}/` directory
+  - Phase 4: Output to `~/.local/spellbook/distilled/{project}/` directory
 - `distill_session.py` helper script with CLI interface
 - Integration test suite for distill-session
 - Error handling documentation for distill-session edge cases

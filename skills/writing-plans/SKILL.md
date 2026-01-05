@@ -15,8 +15,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
-**Save plans to:** `~/.claude/docs/<project-encoded>/plans/YYYY-MM-DD-<feature-name>.md`
-- Create the directory if it doesn't exist: `mkdir -p ~/.claude/docs/<project-encoded>/plans`
+**Save plans to:** `~/.local/spellbook/docs/<project-encoded>/plans/YYYY-MM-DD-<feature-name>.md`
+- Create the directory if it doesn't exist: `mkdir -p ~/.local/spellbook/docs/<project-encoded>/plans`
 - Generate project encoded path:
   ```bash
   # Encode full project path: /Users/alice/Development/myproject → Users-alice-Development-myproject
@@ -62,7 +62,7 @@ When autonomous mode is active:
 
 **In interactive mode:** Ask the user for the path to the design document before writing the plan.
 
-**In autonomous mode:** Use the design document path from context. If not provided, search for the most recent design doc in `~/.claude/docs/<project-encoded>/plans/`.
+**In autonomous mode:** Use the design document path from context. If not provided, search for the most recent design doc in `~/.local/spellbook/docs/<project-encoded>/plans/`.
 
 Record the path in the header so reviewers and executing agents can reference the original design decisions.
 
@@ -144,7 +144,7 @@ git commit -m "feat: add specific feature"
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `~/.claude/docs/<project-encoded>/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `~/.local/spellbook/docs/<project-encoded>/plans/<filename>.md`. Two execution options:**
 
 **1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
 
@@ -167,6 +167,6 @@ After saving the plan, offer execution choice:
 
 Skip the execution choice. Just save the plan and report completion:
 
-**"Plan complete and saved to `~/.claude/docs/<project-encoded>/plans/<filename>.md`."**
+**"Plan complete and saved to `~/.local/spellbook/docs/<project-encoded>/plans/<filename>.md`."**
 
 The orchestrating skill (e.g., implement-feature) will handle execution dispatch.

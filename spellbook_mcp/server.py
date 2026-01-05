@@ -6,7 +6,7 @@
 # ]
 # ///
 """
-Spellbook MCP Server - Session management and swarm coordination tools for Claude Code.
+Spellbook MCP Server - Session management and swarm coordination tools for MCP-enabled clients.
 
 Provides MCP tools:
 Session Management:
@@ -44,7 +44,7 @@ if current_dir not in sys.path:
 if repo_root not in sys.path:
     sys.path.insert(0, repo_root)
 
-from path_utils import get_project_dir
+from path_utils import get_project_dir, get_spellbook_config_dir
 from session_ops import (
     split_by_char_limit,
     list_sessions_with_samples,
@@ -66,23 +66,27 @@ mcp = FastMCP("spellbook")
 # Personal skills > Spellbook skills
 def get_skill_dirs() -> List[Path]:
     dirs = []
-
-    # Personal skills (e.g. ~/.opencode/skills or ~/.config/opencode/skills)
-    # Use standard XDG config or home dir patterns
     home = Path.home()
+
+    # Personal skills from various platform config directories
     dirs.append(home / ".config" / "opencode" / "skills")
     dirs.append(home / ".opencode" / "skills")
     dirs.append(home / ".codex" / "skills")
 
     # Spellbook skills (this repo)
     # Assume this server is running from inside spellbook/spellbook_mcp
-    # So ../skills
     repo_root = Path(__file__).parent.parent
     dirs.append(repo_root / "skills")
 
-    # Check CLAUDE_CONFIG_DIR
-    claude_config = os.environ.get("CLAUDE_CONFIG_DIR", str(home / ".claude"))
-    dirs.append(Path(claude_config) / "skills")
+    # Spellbook config directory skills (portable location)
+    spellbook_config = get_spellbook_config_dir()
+    dirs.append(spellbook_config / "skills")
+
+    # Also check CLAUDE_CONFIG_DIR if different from spellbook config
+    # (for backward compatibility with existing user skills)
+    claude_config = os.environ.get("CLAUDE_CONFIG_DIR")
+    if claude_config and Path(claude_config) != spellbook_config:
+        dirs.append(Path(claude_config) / "skills")
 
     return [d for d in dirs if d.exists()]
 

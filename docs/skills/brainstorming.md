@@ -96,8 +96,8 @@ Use the Circuit Breaker Format from patterns/autonomous-mode-protocol.md if paus
 ## After the Design
 
 **Documentation:**
-- Write the validated design to `~/.claude/docs/<project-encoded>/plans/YYYY-MM-DD-<topic>-design.md`
-- Create the directory if it doesn't exist: `mkdir -p ~/.claude/docs/<project-encoded>/plans`
+- Write the validated design to `~/.local/spellbook/docs/<project-encoded>/plans/YYYY-MM-DD-<topic>-design.md`
+- Create the directory if it doesn't exist: `mkdir -p ~/.local/spellbook/docs/<project-encoded>/plans`
 - Generate project encoded path:
   ```bash
   # Encode full project path: /Users/alice/Development/myproject → Users-alice-Development-myproject

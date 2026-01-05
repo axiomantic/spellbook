@@ -513,7 +513,7 @@ Handler pattern for intelligent response processing. All discovery must achieve
 100% completeness score before proceeding to design.
 </CRITICAL>
 
-**Reference:** See `~/.claude/patterns/adaptive-response-handler.md` for ARH pattern
+**Reference:** See `~/.local/spellbook/patterns/adaptive-response-handler.md` for ARH pattern
 
 ### 1.5.0 Disambiguation Session
 
@@ -543,7 +543,7 @@ Your choice: ___
 
 **PROCESSING (ARH Pattern):**
 
-1. **Detect response type** using ARH patterns from `~/.claude/patterns/adaptive-response-handler.md`
+1. **Detect response type** using ARH patterns from `~/.local/spellbook/patterns/adaptive-response-handler.md`
 2. **Handle by type:**
    - **DIRECT_ANSWER (A-D):** Update disambiguation_results, continue
    - **RESEARCH_REQUEST ("research this"):** Dispatch subagent, regenerate ALL disambiguation questions
@@ -1012,7 +1012,7 @@ IF completeness_score == 100:
 ### 1.5.6 Understanding Document Validation Gate
 
 **FILE PATH:**
-- Base: `$CLAUDE_CONFIG_DIR/docs/<project-encoded>/understanding/` (defaults to `~/.claude/docs/<project-encoded>/understanding/`)
+- Base: `$CLAUDE_CONFIG_DIR/docs/<project-encoded>/understanding/` (defaults to `~/.local/spellbook/docs/<project-encoded>/understanding/`)
 - Format: `understanding-[feature-slug]-[timestamp].md`
 
 **PROJECT ENCODED PATH GENERATION:**
@@ -1031,7 +1031,7 @@ _outer_git_root() {
 PROJECT_ROOT=$(_outer_git_root)
 ```
 
-**If `PROJECT_ROOT` is "NO_GIT_REPO":** Ask user if they want to run `git init`. If no, use fallback: `~/.claude/docs/_no-repo/$(basename "$PWD")/understanding/`
+**If `PROJECT_ROOT` is "NO_GIT_REPO":** Ask user if they want to run `git init`. If no, use fallback: `~/.local/spellbook/docs/_no-repo/$(basename "$PWD")/understanding/`
 
 ```bash
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
@@ -1539,7 +1539,7 @@ The choice affects whether work continues in this session or spawns separate ses
 
 **Step 1: Calculate Estimated Context Usage**
 
-Use the token estimation formulas from `/Users/elijahrutschman/Development/spellbook/tests/test_implement_feature_execution_mode.py`:
+Use the token estimation formulas from `$SPELLBOOK_DIR/tests/test_implement_feature_execution_mode.py`:
 
 ```python
 TOKENS_PER_KB = 350
@@ -1658,7 +1658,7 @@ It extracts tracks from the implementation plan and generates work packet files 
 
 **Step 1: Extract Tracks from Implementation Plan**
 
-Use the track extraction logic from `/Users/elijahrutschman/Development/spellbook/tests/test_implement_feature_execution_mode.py`:
+Use the track extraction logic from `$SPELLBOOK_DIR/tests/test_implement_feature_execution_mode.py`:
 
 ```python
 def extract_tracks_from_impl_plan(impl_plan_content):
@@ -1982,7 +1982,7 @@ SESSION_PREFERENCES.has_spawn_tool = <true if found, false otherwise>
 
 **Step 3: Generate Session Commands**
 
-Use the command generation logic from `/Users/elijahrutschman/Development/spellbook/tests/test_implement_feature_execution_mode.py`:
+Use the command generation logic from `$SPELLBOOK_DIR/tests/test_implement_feature_execution_mode.py`:
 
 ```python
 def generate_session_commands(manifest_path, track_id, has_spawn_tool):

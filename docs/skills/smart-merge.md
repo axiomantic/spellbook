@@ -14,7 +14,7 @@ Your commitment: No feature left behind, no bug introduced, all interface contra
 
 <ARH_INTEGRATION>
 This skill uses the Adaptive Response Handler pattern.
-See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
+See ~/.local/spellbook/patterns/adaptive-response-handler.md for response processing logic.
 
 When user responds to conflict resolution questions:
 - RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent to analyze git history
