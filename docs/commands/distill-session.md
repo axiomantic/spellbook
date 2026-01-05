@@ -1,7 +1,3 @@
-# /distill-session
-
-## Command Content
-
 # Distill Session
 
 <ROLE>
@@ -67,7 +63,8 @@ Before starting, internalize these failure modes:
 ~/.claude/                          # CLAUDE_CONFIG_DIR (default ~/.claude)
 ├── projects/                       # All project session data
 │   └── {encoded-cwd}/              # One directory per project (e.g., -Users-alice-Development-myproject)
-│       └── {session-uuid}.jsonl    # Session files (JSONL format)
+│       ├── {session-uuid}.jsonl    # Session files (JSONL format)
+│       └── agent-{id}.jsonl        # SUBAGENT SESSION FILES (persisted outputs!)
 ├── plans/                          # Planning documents (CRITICAL - always check this!)
 │   └── {project-name}/             # Project-specific plans
 │       ├── *-design.md             # Design documents
@@ -79,9 +76,16 @@ Before starting, internalize these failure modes:
     └── distill_session.py          # Helper script for this command
 ```
 
+**Agent Session Files (CRITICAL for distillation):**
+- Every subagent spawned via Task tool gets its own `.jsonl` file
+- Location: `~/.claude/projects/<project-encoded>/agent-<id>.jsonl`
+- Contains: Full conversation (prompt + response)
+- Linked to parent via `sessionId` field
+- **These persist even after TaskOutput returns** - use them for reliable output retrieval
+
 **Path Encoding:**
-- Working directory is encoded by replacing `/` with `-` and stripping leading `-`
-- Example: `/Users/alice/Development/my-project` becomes `Users-alice-Development-my-project`
+- Working directory is encoded by replacing `/` with `-` (leading dash is KEPT)
+- Example: `/Users/alice/Development/my-project` becomes `-Users-alice-Development-my-project`
 
 ---
 
@@ -98,7 +102,7 @@ If the user invoked `/distill-session <session-name>`, extract the session name 
 **Step 1: Get project directory and list sessions**
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$CLAUDE_CONFIG_DIR/projects/$(pwd | sed 's|/|-|g' | sed 's|^-||')" --limit 10
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$CLAUDE_CONFIG_DIR/projects/$(pwd | tr '/' '-')" --limit 10
 ```
 
 **Step 2: Check for exact match (if session name provided)**
@@ -168,13 +172,26 @@ python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" extract-chunk {session_f
 
 **Step 2: Spawn parallel summarization agents**
 
-Dispatch a subagent or task using the `Task` tool if available. If not available, use `write_todos` to track the subtask and execute it yourself.
+Dispatch subagents using the `Task` tool. **CRITICAL: Capture the agentId from each response.**
 
 ```
 Task("Chunk 1 Summarizer", "[CHUNK_SUMMARIZER_PROMPT with chunk 1 content]", "general-purpose")
+# Response includes: agentId: a1b2c3d
 Task("Chunk 2 Summarizer", "[CHUNK_SUMMARIZER_PROMPT with chunk 2 content]", "general-purpose")
+# Response includes: agentId: e4f5g6h
 ...
 ```
+
+**Store agent IDs in a mapping:**
+```
+chunk_agents = {
+    1: "a1b2c3d",
+    2: "e4f5g6h",
+    ...
+}
+```
+
+These IDs are needed to retrieve persisted outputs from `agent-{id}.jsonl` files.
 
 <CHUNK_SUMMARIZER_PROMPT>
 You are a Forensic Conversation Analyst extracting actionable context from a session chunk.
@@ -251,10 +268,57 @@ CONVERSATION CHUNK TO ANALYZE:
 {chunk_content}
 </CHUNK_SUMMARIZER_PROMPT>
 
-**Step 3: Collect summaries**
+**Step 3: Collect summaries from persisted agent files**
 
-Wait for all Task outputs. If any fail, retry once. Apply partial results policy:
-- <= 20% failures: Proceed with available summaries, mark missing as "[CHUNK N FAILED]"
+**DO NOT rely solely on TaskOutput** - agent outputs may timeout or be lost. Instead, read from persisted agent session files.
+
+For each agent ID captured in Step 2:
+
+```bash
+# Get project-encoded path
+PROJECT_ENCODED=$(pwd | tr '/' '-')
+
+# Read agent's session file (contains full conversation)
+AGENT_FILE="$HOME/.claude/projects/${PROJECT_ENCODED}/agent-{agent_id}.jsonl"
+
+# Extract the agent's final response (last line with role=assistant)
+tail -1 "$AGENT_FILE" | jq -r '.message.content[0].text // .message.content'
+```
+
+**Python helper for extraction:**
+```python
+import json
+from pathlib import Path
+
+def get_agent_output(project_encoded: str, agent_id: str) -> str:
+    """Extract agent's final output from persisted session file."""
+    agent_file = Path.home() / ".claude" / "projects" / project_encoded / f"agent-{agent_id}.jsonl"
+
+    if not agent_file.exists():
+        return f"[AGENT {agent_id} FILE NOT FOUND]"
+
+    # Read last line (assistant's response)
+    with open(agent_file) as f:
+        lines = f.readlines()
+
+    for line in reversed(lines):
+        msg = json.loads(line)
+        if msg.get("message", {}).get("role") == "assistant":
+            content = msg["message"].get("content", [])
+            if isinstance(content, list) and content:
+                return content[0].get("text", str(content))
+            return str(content)
+
+    return f"[AGENT {agent_id} NO ASSISTANT RESPONSE]"
+```
+
+**Fallback order:**
+1. **Primary:** Read from `agent-{id}.jsonl` file (most reliable)
+2. **Secondary:** TaskOutput if agent file missing
+3. **Last resort:** Mark as "[CHUNK N FAILED]"
+
+Apply partial results policy:
+- <= 20% failures: Proceed with available summaries
 - > 20% failures: Abort and report error
 
 ---

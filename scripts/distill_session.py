@@ -310,6 +310,137 @@ def get_content_from_start(session_path: str) -> str:
     return json.dumps(messages, indent=2)
 
 
+def get_agent_output(project_dir: str, agent_id: str) -> Dict[str, Any]:
+    """
+    Extract agent's final output from persisted session file.
+
+    Agent session files are stored at:
+        ~/.claude/projects/<project-encoded>/agent-<id>.jsonl
+
+    Returns: {
+        'agent_id': str,
+        'found': bool,
+        'output': str | None,       # The agent's final response text
+        'prompt': str | None,       # The original prompt sent to agent
+        'session_id': str | None,   # Parent session ID
+        'file_path': str,
+    }
+    """
+    # Try to resolve alternate path encodings
+    project_dir = resolve_project_dir(project_dir)
+
+    agent_file = os.path.join(project_dir, f"agent-{agent_id}.jsonl")
+
+    result = {
+        'agent_id': agent_id,
+        'found': False,
+        'output': None,
+        'prompt': None,
+        'session_id': None,
+        'file_path': agent_file,
+    }
+
+    if not os.path.exists(agent_file):
+        return result
+
+    try:
+        messages = load_jsonl(agent_file)
+        result['found'] = True
+
+        # Extract session ID from first message
+        if messages:
+            result['session_id'] = messages[0].get('sessionId')
+
+        # Find the prompt (first user message)
+        for msg in messages:
+            if msg.get('type') == 'user' or msg.get('message', {}).get('role') == 'user':
+                content = msg.get('message', {}).get('content', '')
+                result['prompt'] = content[:1000] if content else None
+                break
+
+        # Find the final output (last assistant message)
+        for msg in reversed(messages):
+            msg_data = msg.get('message', {})
+            if msg_data.get('role') == 'assistant':
+                content = msg_data.get('content', [])
+                if isinstance(content, list) and content:
+                    # Handle content array format
+                    text_parts = []
+                    for part in content:
+                        if isinstance(part, dict) and part.get('type') == 'text':
+                            text_parts.append(part.get('text', ''))
+                        elif isinstance(part, str):
+                            text_parts.append(part)
+                    result['output'] = '\n'.join(text_parts)
+                elif isinstance(content, str):
+                    result['output'] = content
+                break
+
+    except Exception as e:
+        result['error'] = str(e)
+
+    return result
+
+
+def list_agents_for_session(project_dir: str, session_id: str) -> List[Dict[str, Any]]:
+    """
+    List all agent session files that belong to a parent session.
+
+    Returns: [{
+        'agent_id': str,
+        'file_path': str,
+        'timestamp': str | None,
+        'prompt_preview': str | None,  # First 200 chars of prompt
+    }]
+    """
+    # Try to resolve alternate path encodings
+    project_dir = resolve_project_dir(project_dir)
+
+    if not os.path.isdir(project_dir):
+        raise FileNotFoundError(f"Project directory not found: {project_dir}")
+
+    agents = []
+
+    for agent_file in glob.glob(f"{project_dir}/agent-*.jsonl"):
+        try:
+            # Extract agent ID from filename
+            basename = os.path.basename(agent_file)
+            agent_id = basename.replace('agent-', '').replace('.jsonl', '')
+
+            messages = load_jsonl(agent_file)
+            if not messages:
+                continue
+
+            # Check if this agent belongs to the target session
+            agent_session_id = messages[0].get('sessionId')
+            if agent_session_id != session_id:
+                continue
+
+            # Extract metadata
+            timestamp = messages[0].get('timestamp')
+            prompt_preview = None
+
+            for msg in messages:
+                if msg.get('type') == 'user' or msg.get('message', {}).get('role') == 'user':
+                    content = msg.get('message', {}).get('content', '')
+                    prompt_preview = content[:200] if content else None
+                    break
+
+            agents.append({
+                'agent_id': agent_id,
+                'file_path': agent_file,
+                'timestamp': timestamp,
+                'prompt_preview': prompt_preview,
+            })
+
+        except Exception:
+            continue
+
+    # Sort by timestamp
+    agents.sort(key=lambda x: x.get('timestamp') or '', reverse=False)
+    return agents
+
+
 def main():
     """Main entry point with command dispatcher."""
     parser = argparse.ArgumentParser(
@@ -350,6 +481,16 @@ def main():
     extract_cmd.add_argument('--start-line', type=int, required=True, help='Start line')
     extract_cmd.add_argument('--end-line', type=int, required=True, help='End line')
 
+    # get-agent-output
+    agent_cmd = subparsers.add_parser('get-agent-output', help='Get agent output from persisted session file')
+    agent_cmd.add_argument('project_dir', help='Project directory path (e.g., ~/.claude/projects/-Users-...)')
+    agent_cmd.add_argument('--agent-id', required=True, help='Agent ID (e.g., a1b2c3d)')
+
+    # list-agents
+    list_agents_cmd = subparsers.add_parser('list-agents', help='List agents belonging to a session')
+    list_agents_cmd.add_argument('project_dir', help='Project directory path')
+    list_agents_cmd.add_argument('--session-id', required=True, help='Parent session UUID')
+
     args = parser.parse_args()
 
     # Dispatch to command handler
@@ -372,6 +513,12 @@ def main():
         elif args.command == 'extract-chunk':
             result = extract_chunk(args.session_file, args.start_line, args.end_line)
             print(result)
+        elif args.command == 'get-agent-output':
+            result = get_agent_output(args.project_dir, args.agent_id)
+            print(json.dumps(result, indent=2))
+        elif args.command == 'list-agents':
+            result = list_agents_for_session(args.project_dir, args.session_id)
+            print(json.dumps(result, indent=2))
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(2)
