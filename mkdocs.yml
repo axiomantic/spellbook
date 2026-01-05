@@ -114,6 +114,10 @@ nav:
       - commands/brainstorm.md
       - commands/write-plan.md
       - commands/execute-plan.md
+    - Execution Mode Commands:
+      - commands/execute-work-packet.md
+      - commands/execute-work-packets-seq.md
+      - commands/merge-work-packets.md
   - Agents:
     - Overview: agents/index.md
     - agents/code-reviewer.md
@@ -121,4 +125,6 @@ nav:
     - Architecture: reference/architecture.md
     - Patterns: reference/patterns.md
     - Contributing: reference/contributing.md
+  - Contributing:
+    - Porting to Your Assistant: contributing/porting-to-your-assistant.md
   - Acknowledgments: acknowledgments.md
