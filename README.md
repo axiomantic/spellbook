@@ -6,11 +6,12 @@
   - [Quick Install](#quick-install)
   - [What's Included](#whats-included)
     - [Skills (26 total)](#skills-26-total)
-    - [Commands (12 total)](#commands-12-total)
+    - [Commands (15 total)](#commands-15-total)
     - [Agents (1 total)](#agents-1-total)
   - [Platform Support](#platform-support)
   - [Workflow Recipes](#workflow-recipes)
     - [End-to-End Feature Implementation](#end-to-end-feature-implementation)
+    - [Execution Mode: Work Packets for Large Features](#execution-mode-work-packets-for-large-features)
     - [Session Handoff Between Coding Assistants](#session-handoff-between-coding-assistants)
     - [Use Skills in Any MCP-Enabled Assistant](#use-skills-in-any-mcp-enabled-assistant)
     - [Parallel Worktree Development](#parallel-worktree-development)
@@ -102,7 +103,7 @@ Reusable workflows for structured development:
 [subagent-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/subagent-driven-development/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 
-### Commands (12 total)
+### Commands (15 total)
 
 | Command | Description | Origin |
 |---------|-------------|--------|
@@ -118,6 +119,9 @@ Reusable workflows for structured development:
 | [/brainstorm] | Design exploration | [superpowers] |
 | [/write-plan] | Create implementation plan | [superpowers] |
 | [/execute-plan] | Execute implementation plan | [superpowers] |
+| [/execute-work-packet] | Execute a single work packet with TDD | spellbook |
+| [/execute-work-packets-seq] | Execute all packets sequentially | spellbook |
+| [/merge-work-packets] | Merge completed packets with QA gates | spellbook |
 
 *\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
 
@@ -178,6 +182,63 @@ The `implement-feature` meta-skill orchestrates the complete development workflo
 ```
 
 **Why it works:** Design is reviewed BEFORE coding. Tests are written BEFORE implementation. Every phase has a quality gate. No steps skipped or rationalized away.
+
+### Execution Mode: Work Packets for Large Features
+
+For large features that would exhaust context in a single session, `implement-feature` can split work into **work packets** that run in separate sessions.
+
+```bash
+# 1. Start feature implementation
+"Implement user authentication with MFA support"
+
+# 2. implement-feature analyzes size:
+#    - Token estimation: 150,000 tokens (~75% of context window)
+#    - Tasks: 24 across 4 tracks
+#    - Recommendation: "swarmed" mode
+
+# 3. You choose execution mode:
+#    - swarmed: Parallel sessions, one per track (fastest)
+#    - sequential: Single session, works through tracks sequentially
+#    - delegated: Stay in session, use subagents heavily
+#    - direct: Stay in session, minimal delegation (small features)
+
+# 4. For swarmed mode, work packets are generated:
+#    ~/.claude/work-packets/user-auth/
+#    ├── manifest.json           # Track metadata, dependencies
+#    ├── track-1-backend.md      # Boot prompt for backend work
+#    ├── track-2-frontend.md     # Boot prompt for frontend work
+#    ├── track-3-tests.md        # Boot prompt for test work
+#    └── track-4-docs.md         # Boot prompt for docs
+
+# 5. Worker sessions execute packets (parallel terminals):
+/execute-work-packet ~/.claude/work-packets/user-auth/track-1-backend.md
+
+# 6. When all tracks complete, merge:
+/merge-work-packets ~/.claude/work-packets/user-auth/
+```
+
+**Execution Mode Selection:**
+
+| Mode | When to Use | Behavior |
+|------|-------------|----------|
+| `swarmed` | 25+ tasks OR 80%+ context usage | Parallel sessions, one per track |
+| `sequential` | 16-25 tasks OR 65-80% usage | Single session, works through packets |
+| `delegated` | 9-15 tasks OR 40-65% usage | Current session, heavy subagent delegation |
+| `direct` | ≤8 tasks AND <40% usage | Current session, minimal delegation |
+
+**MCP Tool: `spawn_claude_session`**
+
+Automatically opens terminal windows with worker sessions (macOS/Linux):
+
+```python
+# Detected terminal: iTerm2, Warp, Terminal.app, gnome-terminal, etc.
+spawn_claude_session(
+    prompt="/execute-work-packet ~/.claude/work-packets/user-auth/track-1.md",
+    working_directory="/path/to/project"
+)
+```
+
+**Why it works:** Context overflow is the #1 failure mode for large features. Work packets are self-contained boot prompts. Each worker has fresh context. Smart-merge synthesizes parallel work.
 
 ### Session Handoff Between Coding Assistants
 
