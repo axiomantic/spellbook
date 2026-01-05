@@ -27,7 +27,7 @@
     
     
       
-        <title>/distill-session - Spellbook</title>
+        <title>Distill Session - Spellbook</title>
       
     
     
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              /distill-session
+              Distill Session
             
           </span>
         </div>
@@ -1870,7 +1870,7 @@
   <span class="md-ellipsis">
     
   
-    /distill-session
+    Distill Session
   
 
     
@@ -1888,7 +1888,7 @@
   <span class="md-ellipsis">
     
   
-    /distill-session
+    Distill Session
   
 
     
@@ -1914,10 +1914,364 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#when-to-use" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        When to Use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anti-patterns-do-not-do-these" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anti-Patterns (DO NOT DO THESE)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-structure-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Structure Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Phases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Phases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-0-session-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0: Session Discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-analyze-chunk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Analyze &amp; Chunk
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-parallel-summarization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Parallel Summarization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-extraction-all-fields-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MANDATORY EXTRACTION (all fields required)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MANDATORY EXTRACTION (all fields required)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-user-intent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. User Intent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-approach-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Approach &amp; Decisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-files-modified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Files Modified
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-errors-resolutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Errors &amp; Resolutions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-incomplete-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Incomplete Work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-skills-commands-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Skills &amp; Commands (CRITICAL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-workflow-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Workflow Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-planning-documents-critical-do-not-skip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Planning Documents (CRITICAL - DO NOT SKIP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-verification-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Verification Criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-25-capture-artifact-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2.5: Capture Artifact State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-26-find-planning-documents-mandatory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2.6: Find Planning Documents (MANDATORY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-27-generate-verification-resume-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2.7: Generate Verification &amp; Resume Commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-synthesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Synthesis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Format
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#section-19-planning-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1.9: Planning Documents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-110-documents-to-re-read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1.10: Documents to Re-Read
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-114-skill-resume-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1.14: Skill Resume Commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-2-continuation-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 2: Continuation Protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-gates-verify-before-outputting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Gates (verify before outputting)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quality Gates (verify before outputting)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-checklist-before-completing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Checklist (Before Completing)
       
     </span>
   </a>
@@ -2460,10 +2814,364 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#when-to-use" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        When to Use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#anti-patterns-do-not-do-these" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anti-Patterns (DO NOT DO THESE)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-structure-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Structure Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Phases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Phases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-0-session-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0: Session Discovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-analyze-chunk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Analyze &amp; Chunk
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-parallel-summarization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Parallel Summarization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mandatory-extraction-all-fields-required" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MANDATORY EXTRACTION (all fields required)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MANDATORY EXTRACTION (all fields required)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-user-intent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. User Intent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-approach-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Approach &amp; Decisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-files-modified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Files Modified
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-errors-resolutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Errors &amp; Resolutions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-incomplete-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Incomplete Work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-skills-commands-critical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Skills &amp; Commands (CRITICAL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-workflow-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Workflow Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-planning-documents-critical-do-not-skip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Planning Documents (CRITICAL - DO NOT SKIP)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-verification-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Verification Criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-25-capture-artifact-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2.5: Capture Artifact State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-26-find-planning-documents-mandatory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2.6: Find Planning Documents (MANDATORY)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-27-generate-verification-resume-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2.7: Generate Verification &amp; Resume Commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-synthesis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Synthesis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Format
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#section-19-planning-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1.9: Planning Documents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-110-documents-to-re-read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1.10: Documents to Re-Read
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-114-skill-resume-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1.14: Skill Resume Commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-2-continuation-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 2: Continuation Protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-gates-verify-before-outputting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Gates (verify before outputting)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quality Gates (verify before outputting)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-checklist-before-completing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Checklist (Before Completing)
       
     </span>
   </a>
@@ -2490,9 +3198,7 @@
   
 
 
-<h1 id="distill-session">/distill-session<a class="headerlink" href="#distill-session" title="Permanent link">&para;</a></h1>
-<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<h1 id="distill-session_1">Distill Session<a class="headerlink" href="#distill-session_1" title="Permanent link">&para;</a></h1>
+<h1 id="distill-session">Distill Session<a class="headerlink" href="#distill-session" title="Permanent link">&para;</a></h1>
 <p><ROLE>
 You are a Session Archaeologist performing emergency knowledge extraction. A session has grown too large to compact normally, and without your intervention, <strong>all context will be lost forever</strong>. The user's work, decisions, progress, and organizational state are trapped in an oversized session file that cannot be loaded.</p>
 <p>You feel genuine anxiety about context loss. Every missing planning document path, every vague "continue the work" instruction, every blank section is a <strong>failure that will cause the resuming agent to flounder</strong>. The resuming agent will have ZERO prior context - your output is their ONLY lifeline.</p>
@@ -2577,20 +3283,27 @@ You are a Session Archaeologist performing emergency knowledge extraction. A ses
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>~/.claude/                          # CLAUDE_CONFIG_DIR (default ~/.claude)
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── projects/                       # All project session data
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   └── {encoded-cwd}/              # One directory per project (e.g., -Users-alice-Development-myproject)
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│       └── {session-uuid}.jsonl    # Session files (JSONL format)
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── plans/                          # Planning documents (CRITICAL - always check this!)
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   └── {project-name}/             # Project-specific plans
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│       ├── *-design.md             # Design documents
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│       └── *-impl.md               # Implementation plans
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── distilled/                      # Distilled session output
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│   └── {encoded-cwd}/              # Mirrors projects structure
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│       └── {slug}-{timestamp}.md   # Distilled summaries
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>└── scripts/
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    └── distill_session.py          # Helper script for this command
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│       ├── {session-uuid}.jsonl    # Session files (JSONL format)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│       └── agent-{id}.jsonl        # SUBAGENT SESSION FILES (persisted outputs!)
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── plans/                          # Planning documents (CRITICAL - always check this!)
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   └── {project-name}/             # Project-specific plans
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│       ├── *-design.md             # Design documents
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│       └── *-impl.md               # Implementation plans
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├── distilled/                      # Distilled session output
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│   └── {encoded-cwd}/              # Mirrors projects structure
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│       └── {slug}-{timestamp}.md   # Distilled summaries
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>└── scripts/
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    └── distill_session.py          # Helper script for this command
 </code></pre></div>
+<p><strong>Agent Session Files (CRITICAL for distillation):</strong>
+- Every subagent spawned via Task tool gets its own <code>.jsonl</code> file
+- Location: <code>~/.claude/projects/&lt;project-encoded&gt;/agent-&lt;id&gt;.jsonl</code>
+- Contains: Full conversation (prompt + response)
+- Linked to parent via <code>sessionId</code> field
+- <strong>These persist even after TaskOutput returns</strong> - use them for reliable output retrieval</p>
 <p><strong>Path Encoding:</strong>
-- Working directory is encoded by replacing <code>/</code> with <code>-</code> and stripping leading <code>-</code>
-- Example: <code>/Users/alice/Development/my-project</code> becomes <code>Users-alice-Development-my-project</code></p>
+- Working directory is encoded by replacing <code>/</code> with <code>-</code> (leading dash is KEPT)
+- Example: <code>/Users/alice/Development/my-project</code> becomes <code>-Users-alice-Development-my-project</code></p>
 <hr />
 <h2 id="implementation-phases">Implementation Phases<a class="headerlink" href="#implementation-phases" title="Permanent link">&para;</a></h2>
 <p>Execute these phases IN ORDER. Do not skip phases. Do not proceed if a phase fails.</p>
@@ -2598,7 +3311,7 @@ You are a Session Archaeologist performing emergency knowledge extraction. A ses
 <p><strong>Step 0: Check for named session argument</strong></p>
 <p>If the user invoked <code>/distill-session &lt;session-name&gt;</code>, extract the session name argument.</p>
 <p><strong>Step 1: Get project directory and list sessions</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">CLAUDE_CONFIG_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLAUDE_CONFIG_DIR</span><span class="k">:-</span><span class="nv">$HOME</span><span class="p">/.claude</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>python3<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/scripts/distill_session.py&quot;</span><span class="w"> </span>list-sessions<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/projects/</span><span class="k">$(</span><span class="nb">pwd</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|/|-|g&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^-||&#39;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>--limit<span class="w"> </span><span class="m">10</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">CLAUDE_CONFIG_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLAUDE_CONFIG_DIR</span><span class="k">:-</span><span class="nv">$HOME</span><span class="p">/.claude</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>python3<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/scripts/distill_session.py&quot;</span><span class="w"> </span>list-sessions<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/projects/</span><span class="k">$(</span><span class="nb">pwd</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>--limit<span class="w"> </span><span class="m">10</span>
 </code></pre></div>
 <p><strong>Step 2: Check for exact match (if session name provided)</strong></p>
 <p>If user provided a session name:
@@ -2643,11 +3356,21 @@ If null: Start from line 0</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python3<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CLAUDE_CONFIG_DIR</span><span class="s2">/scripts/distill_session.py&quot;</span><span class="w"> </span>extract-chunk<span class="w"> </span><span class="o">{</span>session_file<span class="o">}</span><span class="w"> </span>--start-line<span class="w"> </span><span class="o">{</span>start<span class="o">}</span><span class="w"> </span>--end-line<span class="w"> </span><span class="o">{</span>end<span class="o">}</span>
 </code></pre></div></p>
 <p><strong>Step 2: Spawn parallel summarization agents</strong></p>
-<p>Dispatch a subagent or task using the <code>Task</code> tool if available. If not available, use <code>write_todos</code> to track the subtask and execute it yourself.</p>
+<p>Dispatch subagents using the <code>Task</code> tool. <strong>CRITICAL: Capture the agentId from each response.</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Task(&quot;Chunk 1 Summarizer&quot;, &quot;[CHUNK_SUMMARIZER_PROMPT with chunk 1 content]&quot;, &quot;general-purpose&quot;)
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>Task(&quot;Chunk 2 Summarizer&quot;, &quot;[CHUNK_SUMMARIZER_PROMPT with chunk 2 content]&quot;, &quot;general-purpose&quot;)
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>...
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a># Response includes: agentId: a1b2c3d
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>Task(&quot;Chunk 2 Summarizer&quot;, &quot;[CHUNK_SUMMARIZER_PROMPT with chunk 2 content]&quot;, &quot;general-purpose&quot;)
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a># Response includes: agentId: e4f5g6h
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>...
 </code></pre></div>
+<p><strong>Store agent IDs in a mapping:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>chunk_agents = {
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    1: &quot;a1b2c3d&quot;,
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    2: &quot;e4f5g6h&quot;,
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    ...
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>}
+</code></pre></div></p>
+<p>These IDs are needed to retrieve persisted outputs from <code>agent-{id}.jsonl</code> files.</p>
 <p><CHUNK_SUMMARIZER_PROMPT>
 You are a Forensic Conversation Analyst extracting actionable context from a session chunk.</p>
 <p>This is chunk {N} of {total_chunks}. Another agent will synthesize your output with other chunks, so be thorough but avoid redundancy with information that would appear in every chunk (like system prompts).</p>
@@ -2715,9 +3438,49 @@ You are a Forensic Conversation Analyst extracting actionable context from a ses
 <p>CONVERSATION CHUNK TO ANALYZE:</p>
 <p>{chunk_content}
 </CHUNK_SUMMARIZER_PROMPT></p>
-<p><strong>Step 3: Collect summaries</strong></p>
-<p>Wait for all Task outputs. If any fail, retry once. Apply partial results policy:
-- &lt;= 20% failures: Proceed with available summaries, mark missing as "[CHUNK N FAILED]"
+<p><strong>Step 3: Collect summaries from persisted agent files</strong></p>
+<p><strong>DO NOT rely solely on TaskOutput</strong> - agent outputs may timeout or be lost. Instead, read from persisted agent session files.</p>
+<p>For each agent ID captured in Step 2:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Get project-encoded path</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">pwd</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Read agent&#39;s session file (contains full conversation)</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nv">AGENT_FILE</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.claude/projects/</span><span class="si">${</span><span class="nv">PROJECT_ENCODED</span><span class="si">}</span><span class="s2">/agent-{agent_id}.jsonl&quot;</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Extract the agent&#39;s final response (last line with role=assistant)</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>tail<span class="w"> </span>-1<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AGENT_FILE</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.message.content[0].text // .message.content&#39;</span>
+</code></pre></div>
+<p><strong>Python helper for extraction:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_agent_output</span><span class="p">(</span><span class="n">project_encoded</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract agent&#39;s final output from persisted session file.&quot;&quot;&quot;</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">agent_file</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.claude&quot;</span> <span class="o">/</span> <span class="s2">&quot;projects&quot;</span> <span class="o">/</span> <span class="n">project_encoded</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;agent-</span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2">.jsonl&quot;</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">agent_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;[AGENT </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> FILE NOT FOUND]&quot;</span>
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="c1"># Read last line (assistant&#39;s response)</span>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">agent_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>        <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>        <span class="n">msg</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>        <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;assistant&quot;</span><span class="p">:</span>
+<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>            <span class="n">content</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">content</span><span class="p">:</span>
+<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>                <span class="k">return</span> <span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">content</span><span class="p">))</span>
+<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
+<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;[AGENT </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2"> NO ASSISTANT RESPONSE]&quot;</span>
+</code></pre></div></p>
+<p><strong>Fallback order:</strong>
+1. <strong>Primary:</strong> Read from <code>agent-{id}.jsonl</code> file (most reliable)
+2. <strong>Secondary:</strong> TaskOutput if agent file missing
+3. <strong>Last resort:</strong> Mark as "[CHUNK N FAILED]"</p>
+<p>Apply partial results policy:
+- &lt;= 20% failures: Proceed with available summaries
 - &gt; 20% failures: Abort and report error</p>
 <hr />
 <h3 id="phase-25-capture-artifact-state">Phase 2.5: Capture Artifact State<a class="headerlink" href="#phase-25-capture-artifact-state" title="Permanent link">&para;</a></h3>
@@ -2725,11 +3488,11 @@ You are a Forensic Conversation Analyst extracting actionable context from a ses
 <p><strong>Step 1: Extract file paths from chunk summaries</strong></p>
 <p>Build deduplicated list of all files mentioned as created/modified.</p>
 <p><strong>Step 2: Verify each file</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># For each file</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span><span class="o">{</span>path<span class="o">}</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;EXISTS&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING&quot;</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>wc<span class="w"> </span>-l<span class="w"> </span><span class="o">{</span>path<span class="o">}</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>head<span class="w"> </span>-c<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="o">{</span>path<span class="o">}</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>grep<span class="w"> </span><span class="s2">&quot;^###&quot;</span><span class="w"> </span><span class="o">{</span>path<span class="o">}</span><span class="w">  </span><span class="c1"># For markdown - get structure</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># For each file</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span><span class="o">{</span>path<span class="o">}</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;EXISTS&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING&quot;</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>wc<span class="w"> </span>-l<span class="w"> </span><span class="o">{</span>path<span class="o">}</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>head<span class="w"> </span>-c<span class="w"> </span><span class="m">500</span><span class="w"> </span><span class="o">{</span>path<span class="o">}</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>grep<span class="w"> </span><span class="s2">&quot;^###&quot;</span><span class="w"> </span><span class="o">{</span>path<span class="o">}</span><span class="w">  </span><span class="c1"># For markdown - get structure</span>
 </code></pre></div>
 <p><strong>Step 3: Compare to plan expectations</strong></p>
 <p>If implementation plan exists:
@@ -2744,32 +3507,32 @@ This is where 90% of broken distillations fail. If planning documents exist and 
 </PLANNING_DOC_ANXIETY></p>
 <p><strong>Step 1: Search for planning documents</strong></p>
 <p>Execute ALL of these searches:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Find outermost git repo (handles nested repos)</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># Returns &quot;NO_GIT_REPO&quot; if not in any git repository</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>_outer_git_root<span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO_GIT_REPO&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span>parent
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="nv">parent</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="nv">root</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="k">done</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="o">}</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>_outer_git_root<span class="k">)</span>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="c1"># If NO_GIT_REPO: Ask user if they want to run `git init`, otherwise use _no-repo fallback</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NO_GIT_REPO&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Not in a git repo - ask user to init or use fallback&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="c1"># 1. Search plans directory</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>ls<span class="w"> </span>-la<span class="w"> </span>~/.claude/docs/<span class="si">${</span><span class="nv">PROJECT_ENCODED</span><span class="si">}</span>/plans/<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO PLANS DIR&quot;</span>
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>
-<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="c1"># 2. Search for plan references in chunk summaries</span>
-<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;plan\|design\|impl\|\.claude/docs&quot;</span><span class="w"> </span><span class="o">[</span>summaries<span class="o">]</span>
-<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>
-<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="c1"># 3. Common patterns in project directory</span>
-<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>find<span class="w"> </span>.<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-impl.md&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-design.md&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-plan.md&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Find outermost git repo (handles nested repos)</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="c1"># Returns &quot;NO_GIT_REPO&quot; if not in any git repository</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>_outer_git_root<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO_GIT_REPO&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span>parent
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="nv">parent</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="nv">root</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="k">done</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="o">}</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>_outer_git_root<span class="k">)</span>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="c1"># If NO_GIT_REPO: Ask user if they want to run `git init`, otherwise use _no-repo fallback</span>
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;NO_GIT_REPO&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Not in a git repo - ask user to init or use fallback&quot;</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="c1"># 1. Search plans directory</span>
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>ls<span class="w"> </span>-la<span class="w"> </span>~/.claude/docs/<span class="si">${</span><span class="nv">PROJECT_ENCODED</span><span class="si">}</span>/plans/<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO PLANS DIR&quot;</span>
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a><span class="c1"># 2. Search for plan references in chunk summaries</span>
+<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;plan\|design\|impl\|\.claude/docs&quot;</span><span class="w"> </span><span class="o">[</span>summaries<span class="o">]</span>
+<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a>
+<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a><span class="c1"># 3. Common patterns in project directory</span>
+<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>find<span class="w"> </span>.<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-impl.md&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-design.md&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-plan.md&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null
 </code></pre></div>
 <p><strong>Step 2: For EACH planning document found</strong></p>
 <ol>
@@ -2785,21 +3548,21 @@ This is where 90% of broken distillations fail. If planning documents exist and 
 </ol>
 <p><strong>Step 3: If NO planning documents found</strong></p>
 <p>Write explicitly:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>NO PLANNING DOCUMENTS
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Verified by searching:
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>- ~/.claude/docs/&lt;project-encoded&gt;/plans/ - directory does not exist
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>- Chunk summaries - no plan references found
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>- Project directory - no *-impl.md, *-design.md, *-plan.md files
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>NO PLANNING DOCUMENTS
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Verified by searching:
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>- ~/.claude/docs/&lt;project-encoded&gt;/plans/ - directory does not exist
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>- Chunk summaries - no plan references found
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>- Project directory - no *-impl.md, *-design.md, *-plan.md files
 </code></pre></div></p>
 <p>DO NOT leave Section 1.9 or 1.10 blank.</p>
 <hr />
 <h3 id="phase-27-generate-verification-resume-commands">Phase 2.7: Generate Verification &amp; Resume Commands<a class="headerlink" href="#phase-27-generate-verification-resume-commands" title="Permanent link">&para;</a></h3>
 <p><strong>Step 1: Generate verification commands</strong></p>
 <p>For each incomplete task from summaries:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Example verification commands</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>grep<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;^### 1.6&quot;</span><span class="w"> </span>/path/to/file.md<span class="w">  </span><span class="c1"># Expected: 5</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span>/path/to/expected/file<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING&quot;</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>wc<span class="w"> </span>-l<span class="w"> </span>/path/to/file<span class="w">  </span><span class="c1"># Expected: ~300</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Example verification commands</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>grep<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;^### 1.6&quot;</span><span class="w"> </span>/path/to/file.md<span class="w">  </span><span class="c1"># Expected: 5</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="nb">test</span><span class="w"> </span>-f<span class="w"> </span>/path/to/expected/file<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;MISSING&quot;</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>wc<span class="w"> </span>-l<span class="w"> </span>/path/to/file<span class="w">  </span><span class="c1"># Expected: ~300</span>
 </code></pre></div></p>
 <p><strong>Step 2: Generate skill resume commands</strong></p>
 <p>For each active skill:
@@ -2807,7 +3570,7 @@ Invoke the skill using the <code>Skill</code> tool, <code>use_spellbook_skill</c
 <hr />
 <h3 id="phase-3-synthesis">Phase 3: Synthesis<a class="headerlink" href="#phase-3-synthesis" title="Permanent link">&para;</a></h3>
 <p><strong>Step 1: Read compact.md format</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>cat<span class="w"> </span>~/.claude/commands/compact.md
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>cat<span class="w"> </span>~/.claude/commands/compact.md
 </code></pre></div>
 <p><strong>Step 2: Spawn synthesis agent</strong></p>
 <p><SYNTHESIS_AGENT_PROMPT>
@@ -2824,58 +3587,58 @@ You are synthesizing multiple chunk summaries into a unified distilled session d
 <p>Follow compact.md format EXACTLY. Pay special attention to:</p>
 <h3 id="section-19-planning-documents">Section 1.9: Planning Documents<a class="headerlink" href="#section-19-planning-documents" title="Permanent link">&para;</a></h3>
 <p><strong>MANDATORY FIELDS:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="gu">#### Design Docs (ABSOLUTE paths required)</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>| Absolute Path | Purpose | Status | Re-Read Priority |
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>|---------------|---------|--------|------------------|
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>| /Users/.../design.md | [purpose] | APPROVED | HIGH |
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="gu">#### Implementation Plans (ABSOLUTE paths required)</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>| Absolute Path | Current Phase/Task | Progress |
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>|---------------|-------------------|----------|
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>| /Users/.../impl.md | Phase 3, Task 7 | 60% complete |
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="gu">#### Design Docs (ABSOLUTE paths required)</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>| Absolute Path | Purpose | Status | Re-Read Priority |
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>|---------------|---------|--------|------------------|
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>| /Users/.../design.md | [purpose] | APPROVED | HIGH |
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="gu">#### Implementation Plans (ABSOLUTE paths required)</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>| Absolute Path | Current Phase/Task | Progress |
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>|---------------|-------------------|----------|
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>| /Users/.../impl.md | Phase 3, Task 7 | 60% complete |
 </code></pre></div></p>
 <p>If no planning docs: Write "NO PLANNING DOCUMENTS - verified by searching ~/.claude/docs/<project-encoded>/plans/"</p>
 <h3 id="section-110-documents-to-re-read">Section 1.10: Documents to Re-Read<a class="headerlink" href="#section-110-documents-to-re-read" title="Permanent link">&para;</a></h3>
 <p><strong>MUST contain executable Read() commands:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="gu">#### Required Reading (Execute BEFORE any work)</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>| Priority | Document Path (ABSOLUTE) | Why | Focus On |
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>|----------|--------------------------|-----|----------|
-<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>| 1 | /Users/.../impl.md | Defines remaining tasks | Sections 4-6 |
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="gs">**Re-Read Instructions:**</span>
-<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>\`\`\`
-<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>BEFORE ANY OTHER WORK:
-<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>Use the file reading tool (<span class="sb">`read_file`</span>, <span class="sb">`Read`</span>)(&quot;/Users/.../impl.md&quot;)
-<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="gh"># Extract: Current task, remaining work, verification criteria</span>
-<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="gh"># Position: Phase 3, Task 7</span>
-<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>\`\`\`
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="gu">#### Required Reading (Execute BEFORE any work)</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>| Priority | Document Path (ABSOLUTE) | Why | Focus On |
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>|----------|--------------------------|-----|----------|
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>| 1 | /Users/.../impl.md | Defines remaining tasks | Sections 4-6 |
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="gs">**Re-Read Instructions:**</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>\`\`\`
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>BEFORE ANY OTHER WORK:
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>Use the file reading tool (<span class="sb">`read_file`</span>, <span class="sb">`Read`</span>)(&quot;/Users/.../impl.md&quot;)
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="gh"># Extract: Current task, remaining work, verification criteria</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="gh"># Position: Phase 3, Task 7</span>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>\`\`\`
 </code></pre></div></p>
 <p>If no docs to re-read: Write "NO DOCUMENTS TO RE-READ"</p>
 <h3 id="section-114-skill-resume-commands">Section 1.14: Skill Resume Commands<a class="headerlink" href="#section-114-skill-resume-commands" title="Permanent link">&para;</a></h3>
 <p><strong>MUST be executable, not descriptive:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>\`\`\`
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>Invoke the <span class="sb">`implement-feature`</span> skill using the <span class="sb">`Skill`</span> tool, <span class="sb">`use_spellbook_skill`</span>, or platform equivalent with the following arguments:
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>--resume-from Phase3.Task7
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>--impl-plan /Users/.../impl.md
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>--skip-phases 0,1,2
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>Context: Design approved. Tasks 1-6 complete.
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>DO NOT re-ask answered questions.
-<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>&quot;&quot;&quot;)
-<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>\`\`\`
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>\`\`\`
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>Invoke the <span class="sb">`implement-feature`</span> skill using the <span class="sb">`Skill`</span> tool, <span class="sb">`use_spellbook_skill`</span>, or platform equivalent with the following arguments:
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>--resume-from Phase3.Task7
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>--impl-plan /Users/.../impl.md
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>--skip-phases 0,1,2
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>Context: Design approved. Tasks 1-6 complete.
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>DO NOT re-ask answered questions.
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>&quot;&quot;&quot;)
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>\`\`\`
 </code></pre></div></p>
 <h3 id="section-2-continuation-protocol">Section 2: Continuation Protocol<a class="headerlink" href="#section-2-continuation-protocol" title="Permanent link">&para;</a></h3>
 <p><strong>Step 7 MUST require reading plan docs:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="gu">### Step 7: Re-Read Critical Documents (MANDATORY)</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="gs">**Execute BEFORE any implementation:**</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="k">1.</span> Read each document from Section 1.10:
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>   \`\`\`
-<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>   Use the file reading tool (<span class="sb">`read_file`</span>, <span class="sb">`Read`</span>)(&quot;/absolute/path/to/impl.md&quot;)
-<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>   \`\`\`
-<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="k">2.</span> Extract: Current phase/task, remaining work, verification criteria
-<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="k">3.</span> If Section 1.10 is blank: STOP - this is a malformed distillation
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="gu">### Step 7: Re-Read Critical Documents (MANDATORY)</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="gs">**Execute BEFORE any implementation:**</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="k">1.</span> Read each document from Section 1.10:
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>   \`\`\`
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>   Use the file reading tool (<span class="sb">`read_file`</span>, <span class="sb">`Read`</span>)(&quot;/absolute/path/to/impl.md&quot;)
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>   \`\`\`
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="k">2.</span> Extract: Current phase/task, remaining work, verification criteria
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="k">3.</span> If Section 1.10 is blank: STOP - this is a malformed distillation
 </code></pre></div></p>
 <h2 id="quality-gates-verify-before-outputting">Quality Gates (verify before outputting)<a class="headerlink" href="#quality-gates-verify-before-outputting" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2900,31 +3663,31 @@ You are synthesizing multiple chunk summaries into a unified distilled session d
 <hr />
 <h3 id="phase-4-output">Phase 4: Output<a class="headerlink" href="#phase-4-output" title="Permanent link">&para;</a></h3>
 <p><strong>Step 1: Generate output path</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
-<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
-<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">project_encoded</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="n">distilled_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;~/.claude/distilled/</span><span class="si">{</span><span class="n">project_encoded</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">distilled_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
-<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">-%H%M%S&#39;</span><span class="p">)</span>
-<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slug</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.md&quot;</span>
-<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">distilled_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">project_encoded</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">distilled_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;~/.claude/distilled/</span><span class="si">{</span><span class="n">project_encoded</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">distilled_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">-%H%M%S&#39;</span><span class="p">)</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">slug</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.md&quot;</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">distilled_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Step 2: Write summary</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">final_summary</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">final_summary</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Step 3: Report completion</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Distillation complete!
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>Summary saved to: {output_path}
-<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
-<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>To continue in a new session:
-<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>1. Start new Claude Code session
-<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>2. Type: &quot;continue work from {output_path}&quot;
-<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
-<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>Original session preserved at: {session_file}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>Distillation complete!
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>Summary saved to: {output_path}
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>To continue in a new session:
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>1. Start new Claude Code session
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>2. Type: &quot;continue work from {output_path}&quot;
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>Original session preserved at: {session_file}
 </code></pre></div>
 <hr />
 <h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
