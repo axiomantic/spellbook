@@ -1,4 +1,4 @@
-docs_dir: docs-src
+docs_dir: docs
 site_name: Spellbook
 site_description: Multi-platform AI assistant skills, commands, and configuration
 site_url: https://axiomantic.github.io/spellbook/

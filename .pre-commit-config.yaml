@@ -14,3 +14,10 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      - id: update-context-files
+        name: Update GEMINI.md and AGENTS.md
+        entry: python3 scripts/update_context_files.py
+        language: system
+        pass_filenames: false
+        files: ^(skills/|commands/|agents/|CLAUDE\.md)

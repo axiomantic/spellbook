@@ -497,52 +497,47 @@ open('$target_file', 'w').write(content)
         print_warning "Gemini extension template not found"
     fi
 
-    # Symlink context file
-    local context_source="$SCRIPT_DIR/docs/generated/GEMINI.md"
-    # Ensure generated directory exists (it should be created by generate_context.py)
+    # Symlink context file (GEMINI.md is at repo root, kept up-to-date by pre-commit hook)
+    local context_source="$SCRIPT_DIR/GEMINI.md"
     if [ ! -f "$context_source" ]; then
-         print_warning "GEMINI.md context file not found (will be generated)"
+         print_warning "GEMINI.md context file not found"
     fi
-    
-    # Context generation happens in install_mcp_server or dedicated step?
-    # Let's link it now assuming it will exist
     local context_target="$gemini_extensions_dir/GEMINI.md"
     rm -f "$context_target"
-    # We link to the generated file in docs/generated so updates propagate
-    # Wait, generate_context.py writes to stdout by default. 
-    # We should run it to file first.
+    ln -s "$context_source" "$context_target"
+    print_success "Linked GEMINI.md"
 }
 
 generate_context_files() {
     print_step "Generating AI context files..."
-    
+
     local gen_script="$SCRIPT_DIR/scripts/generate_context.py"
-    local output_dir="$SCRIPT_DIR/docs/generated"
     local claude_md="$SCRIPT_DIR/CLAUDE.md"
-    mkdir -p "$output_dir"
-    
+
+    # Context files are at repo root (kept up-to-date by pre-commit hook)
+    # This function regenerates them if needed and sets up symlinks
+
     if [ -f "$gen_script" ]; then
-        # Gemini (include CLAUDE.md)
-        python3 "$gen_script" "$output_dir/GEMINI.md" --include "$claude_md"
+        # Regenerate if needed (pre-commit hook handles this normally)
+        python3 "$gen_script" "$SCRIPT_DIR/GEMINI.md" --include "$claude_md"
         print_success "Generated GEMINI.md (with CLAUDE.md included)"
-        
-        # Codex (include CLAUDE.md)
-        python3 "$gen_script" "$output_dir/AGENTS.md" --include "$claude_md"
+
+        python3 "$gen_script" "$SCRIPT_DIR/AGENTS.md" --include "$claude_md"
         print_success "Generated AGENTS.md (with CLAUDE.md included)"
 
         # Symlink Codex AGENTS.md
         local codex_dir="$HOME/.codex"
         if [ -d "$codex_dir" ]; then
              rm -f "$codex_dir/AGENTS.md"
-             ln -s "$output_dir/AGENTS.md" "$codex_dir/AGENTS.md"
+             ln -s "$SCRIPT_DIR/AGENTS.md" "$codex_dir/AGENTS.md"
              print_success "Linked Codex AGENTS.md"
         fi
-        
-        # Link Gemini GEMINI.md (part of extension setup, but ensure link points here)
+
+        # Link Gemini GEMINI.md
         local gemini_ext_dir="$HOME/.gemini/extensions/spellbook"
         if [ -d "$gemini_ext_dir" ]; then
             rm -f "$gemini_ext_dir/GEMINI.md"
-            ln -s "$output_dir/GEMINI.md" "$gemini_ext_dir/GEMINI.md"
+            ln -s "$SCRIPT_DIR/GEMINI.md" "$gemini_ext_dir/GEMINI.md"
             print_success "Linked Gemini GEMINI.md"
         fi
 
