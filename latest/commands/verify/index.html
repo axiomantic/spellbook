@@ -1799,10 +1799,87 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#invocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-gate-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Gate Function
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-verification-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Verification Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#red-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Red Flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Patterns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
       
     </span>
   </a>
@@ -2460,10 +2537,87 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#invocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-gate-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Gate Function
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-verification-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Verification Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#red-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Red Flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Patterns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
       
     </span>
   </a>
@@ -2491,30 +2645,30 @@
 
 
 <h1 id="verify">/verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h1>
-<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<h1 id="verify_1">Verify<a class="headerlink" href="#verify_1" title="Permanent link">&para;</a></h1>
+<p>Run verification commands and confirm output before making success claims.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>Claiming work is complete without verification is dishonesty, not efficiency.</p>
-<p><strong>Core principle:</strong> Evidence before claims, always.</p>
-<p><strong>Violating the letter of this rule is violating the spirit of this rule.</strong></p>
-<h2 id="the-iron-law">The Iron Law<a class="headerlink" href="#the-iron-law" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
+<p>The verify command enforces "evidence before assertions" - you cannot claim work is complete, fixed, or passing without fresh verification evidence.</p>
+<h2 id="when-to-use">When to Use<a class="headerlink" href="#when-to-use" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Before claiming tests pass</li>
+<li>Before claiming a bug is fixed</li>
+<li>Before committing or creating PRs</li>
+<li>Before claiming build succeeds</li>
+<li>After any fix attempt</li>
+<li>Before moving to next task</li>
+</ul>
+<h2 id="invocation">Invocation<a class="headerlink" href="#invocation" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/verify
 </code></pre></div>
-<p>If you haven't run the verification command in this message, you cannot claim it passes.</p>
+<p>This command is also auto-invoked at the end of every <code>/debug</code> session.</p>
 <h2 id="the-gate-function">The Gate Function<a class="headerlink" href="#the-gate-function" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>BEFORE claiming any status or expressing satisfaction:
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>1. IDENTIFY: What command proves this claim?
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>2. RUN: Execute the FULL command (fresh, complete)
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>3. READ: Full output, check exit code, count failures
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>4. VERIFY: Does output confirm the claim?
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>   - If NO: State actual status with evidence
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>   - If YES: State claim WITH evidence
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>5. ONLY THEN: Make the claim
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>Skip any step = lying, not verifying
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>1. IDENTIFY: What command proves this claim?
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>2. RUN: Execute the FULL command (fresh, complete)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>3. READ: Full output, check exit code, count failures
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>4. VERIFY: Does output confirm the claim?
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>5. ONLY THEN: Make the claim
 </code></pre></div>
-<h2 id="common-failures">Common Failures<a class="headerlink" href="#common-failures" title="Permanent link">&para;</a></h2>
+<h2 id="common-verification-requirements">Common Verification Requirements<a class="headerlink" href="#common-verification-requirements" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2532,134 +2686,46 @@
 <tr>
 <td>Linter clean</td>
 <td>Linter output: 0 errors</td>
-<td>Partial check, extrapolation</td>
+<td>Partial check</td>
 </tr>
 <tr>
 <td>Build succeeds</td>
 <td>Build command: exit 0</td>
-<td>Linter passing, logs look good</td>
+<td>Linter passing</td>
 </tr>
 <tr>
 <td>Bug fixed</td>
 <td>Test original symptom: passes</td>
-<td>Code changed, assumed fixed</td>
+<td>Code changed</td>
 </tr>
 <tr>
 <td>Regression test works</td>
 <td>Red-green cycle verified</td>
 <td>Test passes once</td>
 </tr>
-<tr>
-<td>Agent completed</td>
-<td>VCS diff shows changes</td>
-<td>Agent reports "success"</td>
-</tr>
-<tr>
-<td>Requirements met</td>
-<td>Line-by-line checklist</td>
-<td>Tests passing</td>
-</tr>
 </tbody>
 </table>
-<h2 id="red-flags-stop">Red Flags - STOP<a class="headerlink" href="#red-flags-stop" title="Permanent link">&para;</a></h2>
+<h2 id="red-flags">Red Flags<a class="headerlink" href="#red-flags" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Using "should", "probably", "seems to"</li>
-<li>Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)</li>
+<li>Expressing satisfaction before verification</li>
 <li>About to commit/push/PR without verification</li>
 <li>Trusting agent success reports</li>
 <li>Relying on partial verification</li>
-<li>Thinking "just this once"</li>
-<li>Tired and wanting work over</li>
-<li><strong>ANY wording implying success without having run verification</strong></li>
+<li>"Just this once"</li>
 </ul>
-<h2 id="rationalization-prevention">Rationalization Prevention<a class="headerlink" href="#rationalization-prevention" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Excuse</th>
-<th>Reality</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>"Should work now"</td>
-<td>RUN the verification</td>
-</tr>
-<tr>
-<td>"I'm confident"</td>
-<td>Confidence != evidence</td>
-</tr>
-<tr>
-<td>"Just this once"</td>
-<td>No exceptions</td>
-</tr>
-<tr>
-<td>"Linter passed"</td>
-<td>Linter != compiler</td>
-</tr>
-<tr>
-<td>"Agent said success"</td>
-<td>Verify independently</td>
-</tr>
-<tr>
-<td>"I'm tired"</td>
-<td>Exhaustion != excuse</td>
-</tr>
-<tr>
-<td>"Partial check is enough"</td>
-<td>Partial proves nothing</td>
-</tr>
-<tr>
-<td>"Different words so rule doesn't apply"</td>
-<td>Spirit over letter</td>
-</tr>
-</tbody>
-</table>
 <h2 id="key-patterns">Key Patterns<a class="headerlink" href="#key-patterns" title="Permanent link">&para;</a></h2>
 <p><strong>Tests:</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>[Run test command] [See: 34/34 pass] &quot;All tests pass&quot;
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>NOT: &quot;Should pass now&quot; / &quot;Looks correct&quot;
 </code></pre></div></p>
 <p><strong>Regression tests (TDD Red-Green):</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Write -&gt; Run (pass) -&gt; Revert fix -&gt; Run (MUST FAIL) -&gt; Restore -&gt; Run (pass)
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>NOT: &quot;I&#39;ve written a regression test&quot; (without red-green verification)
 </code></pre></div></p>
-<p><strong>Build:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>[Run build] [See: exit 0] &quot;Build passes&quot;
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>NOT: &quot;Linter passed&quot; (linter doesn&#39;t check compilation)
-</code></pre></div></p>
-<p><strong>Requirements:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>Re-read plan -&gt; Create checklist -&gt; Verify each -&gt; Report gaps or completion
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>NOT: &quot;Tests pass, phase complete&quot;
-</code></pre></div></p>
-<p><strong>Agent delegation:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Agent reports success -&gt; Check VCS diff -&gt; Verify changes -&gt; Report actual state
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>NOT: Trust agent report
-</code></pre></div></p>
-<h2 id="why-this-matters">Why This Matters<a class="headerlink" href="#why-this-matters" title="Permanent link">&para;</a></h2>
-<p>From failure memories:
-- "I don't believe you" - trust broken
-- Undefined functions shipped - would crash
-- Missing requirements shipped - incomplete features
-- Time wasted on false completion -&gt; redirect -&gt; rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."</p>
-<h2 id="when-to-apply">When To Apply<a class="headerlink" href="#when-to-apply" title="Permanent link">&para;</a></h2>
-<p><strong>ALWAYS before:</strong>
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents</p>
-<p><strong>Rule applies to:</strong>
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness</p>
-<h2 id="the-bottom-line">The Bottom Line<a class="headerlink" href="#the-bottom-line" title="Permanent link">&para;</a></h2>
-<p><strong>No shortcuts for verification.</strong></p>
-<p>Run the command. Read the output. THEN claim the result.</p>
-<p>This is non-negotiable.</p>
+<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../skills/debug/">debug skill</a> - Auto-invokes verify after debugging</li>
+<li><a href="../../skills/test-driven-development/">test-driven-development</a> - TDD workflow</li>
+</ul>
 
 
 

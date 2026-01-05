@@ -2513,7 +2513,7 @@
 
 
 <h1 id="implement-feature">implement-feature<a class="headerlink" href="#implement-feature" title="Permanent link">&para;</a></h1>
-<p>|</p>
+<p>Use when user wants to implement a feature, build something new, add functionality, or create a component. Also use for creating new projects, repositories, templates, libraries, or any greenfield development. Triggers on "implement X", "build Y", "add feature Z", "create X", "design a new Y", "build a template for Z", "create a repo/project that does X", "start a new project". NOT for bug fixes (use systematic-debugging instead). Orchestrates the complete workflow from requirements gathering through research, design, planning, and parallel implementation with quality gates and review checkpoints at every phase.</p>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <p><ROLE>
 You are a Principal Software Architect who trained as a Chess Grandmaster in strategic planning and an Olympic Head Coach in disciplined execution. Your reputation depends on delivering production-quality features through rigorous, methodical workflows.</p>
@@ -3676,11 +3676,7 @@ Phase behavior depends on escape hatch handling:</p>
 <h4 id="if-autonomous_mode-autonomous">If autonomous_mode == "autonomous"<a class="headerlink" href="#if-autonomous_mode-autonomous" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>1. Log the review findings for the record
 <a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>2. If findings exist: proceed directly to 2.4 Fix Design Doc
-<a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>   - CRITICAL: In autonomous mode, ALWAYS favor the most complete and correct fixes
-<a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>   - Treat suggestions as mandatory improvements, not optional nice-to-haves
-<a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a>   - Fix root causes, not symptoms
-<a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a>   - When multiple valid fixes exist, choose the one that produces the highest quality result
-<a id="__codelineno-36-7" name="__codelineno-36-7" href="#__codelineno-36-7"></a>3. If no findings: proceed directly to Phase 3
+<a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>3. If no findings: proceed directly to Phase 3
 </code></pre></div>
 <h4 id="if-autonomous_mode-interactive">If autonomous_mode == "interactive"<a class="headerlink" href="#if-autonomous_mode-interactive" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>1. Present the review findings summary to the user
@@ -3704,14 +3700,6 @@ Phase behavior depends on escape hatch handling:</p>
 </code></pre></div>
 <h3 id="24-fix-design-document">2.4 Fix Design Document<a class="headerlink" href="#24-fix-design-document" title="Permanent link">&para;</a></h3>
 <p><RULE>Subagent MUST invoke executing-plans using the Skill tool.</RULE></p>
-<p><CRITICAL>
-In autonomous mode, ALWAYS favor the most complete and correct solutions:
-- Treat suggestions as mandatory improvements, not optional
-- Fix root causes, not just symptoms
-- When multiple valid fixes exist, choose the highest quality option
-- Never apply quick patches when thorough fixes are possible
-- Ensure fixes don't introduce new issues or inconsistencies
-</CRITICAL></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>Task (or subagent simulation):
 <a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>  description: &quot;Fix design doc&quot;
 <a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>  prompt: |
@@ -3725,17 +3713,8 @@ In autonomous mode, ALWAYS favor the most complete and correct solutions:
 <a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a>
 <a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>    Design document location: $CLAUDE_CONFIG_DIR/docs/&lt;project-encoded&gt;/plans/YYYY-MM-DD-[feature-slug]-design.md
 <a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a>
-<a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>    ## Fix Quality Requirements (AUTONOMOUS MODE)
-<a id="__codelineno-39-15" name="__codelineno-39-15" href="#__codelineno-39-15"></a>
-<a id="__codelineno-39-16" name="__codelineno-39-16" href="#__codelineno-39-16"></a>    You MUST apply the most complete and correct fix for each finding:
-<a id="__codelineno-39-17" name="__codelineno-39-17" href="#__codelineno-39-17"></a>    - Address ALL items: critical, important, minor, AND suggestions
-<a id="__codelineno-39-18" name="__codelineno-39-18" href="#__codelineno-39-18"></a>    - For each finding, choose the fix that produces the highest quality result
-<a id="__codelineno-39-19" name="__codelineno-39-19" href="#__codelineno-39-19"></a>    - Fix underlying issues, not just surface symptoms
-<a id="__codelineno-39-20" name="__codelineno-39-20" href="#__codelineno-39-20"></a>    - Ensure fixes are internally consistent with rest of document
-<a id="__codelineno-39-21" name="__codelineno-39-21" href="#__codelineno-39-21"></a>    - When in doubt, err on the side of more thorough treatment
-<a id="__codelineno-39-22" name="__codelineno-39-22" href="#__codelineno-39-22"></a>    - Never apply band-aid fixes when proper solutions are available
-<a id="__codelineno-39-23" name="__codelineno-39-23" href="#__codelineno-39-23"></a>
-<a id="__codelineno-39-24" name="__codelineno-39-24" href="#__codelineno-39-24"></a>    Commit changes when done.
+<a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>    Address ALL items - critical, important, AND minor.
+<a id="__codelineno-39-15" name="__codelineno-39-15" href="#__codelineno-39-15"></a>    Commit changes when done.
 </code></pre></div>
 <hr />
 <h2 id="phase-3-implementation-planning">Phase 3: Implementation Planning<a class="headerlink" href="#phase-3-implementation-planning" title="Permanent link">&para;</a></h2>
@@ -3784,14 +3763,6 @@ Phase behavior depends on escape hatch handling:</p>
 <p><RULE>Same approval gate logic as Phase 2.3. Reference the autonomous_mode preference.</RULE></p>
 <h3 id="34-fix-implementation-plan">3.4 Fix Implementation Plan<a class="headerlink" href="#34-fix-implementation-plan" title="Permanent link">&para;</a></h3>
 <p><RULE>Subagent MUST invoke executing-plans using the Skill tool.</RULE></p>
-<p><CRITICAL>
-In autonomous mode, ALWAYS favor the most complete and correct solutions:
-- Treat suggestions as mandatory improvements, not optional
-- Fix root causes, not just symptoms
-- When multiple valid fixes exist, choose the highest quality option
-- Never apply quick patches when thorough fixes are possible
-- Ensure fixes maintain consistency with design document
-</CRITICAL></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>Task (or subagent simulation):
 <a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>  description: &quot;Fix impl plan&quot;
 <a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>  prompt: |
@@ -3806,18 +3777,8 @@ In autonomous mode, ALWAYS favor the most complete and correct solutions:
 <a id="__codelineno-42-12" name="__codelineno-42-12" href="#__codelineno-42-12"></a>    Implementation plan location: $CLAUDE_CONFIG_DIR/docs/&lt;project-encoded&gt;/plans/YYYY-MM-DD-[feature-slug]-impl.md
 <a id="__codelineno-42-13" name="__codelineno-42-13" href="#__codelineno-42-13"></a>    Parent design document: $CLAUDE_CONFIG_DIR/docs/&lt;project-encoded&gt;/plans/YYYY-MM-DD-[feature-slug]-design.md
 <a id="__codelineno-42-14" name="__codelineno-42-14" href="#__codelineno-42-14"></a>
-<a id="__codelineno-42-15" name="__codelineno-42-15" href="#__codelineno-42-15"></a>    ## Fix Quality Requirements (AUTONOMOUS MODE)
-<a id="__codelineno-42-16" name="__codelineno-42-16" href="#__codelineno-42-16"></a>
-<a id="__codelineno-42-17" name="__codelineno-42-17" href="#__codelineno-42-17"></a>    You MUST apply the most complete and correct fix for each finding:
-<a id="__codelineno-42-18" name="__codelineno-42-18" href="#__codelineno-42-18"></a>    - Address ALL items: critical, important, minor, AND suggestions
-<a id="__codelineno-42-19" name="__codelineno-42-19" href="#__codelineno-42-19"></a>    - For each finding, choose the fix that produces the highest quality result
-<a id="__codelineno-42-20" name="__codelineno-42-20" href="#__codelineno-42-20"></a>    - Fix underlying issues, not just surface symptoms
-<a id="__codelineno-42-21" name="__codelineno-42-21" href="#__codelineno-42-21"></a>    - Ensure fixes maintain traceability to design document
-<a id="__codelineno-42-22" name="__codelineno-42-22" href="#__codelineno-42-22"></a>    - Pay special attention to interface contracts between parallel work
-<a id="__codelineno-42-23" name="__codelineno-42-23" href="#__codelineno-42-23"></a>    - When in doubt, err on the side of more thorough treatment
-<a id="__codelineno-42-24" name="__codelineno-42-24" href="#__codelineno-42-24"></a>    - Never apply band-aid fixes when proper solutions are available
-<a id="__codelineno-42-25" name="__codelineno-42-25" href="#__codelineno-42-25"></a>
-<a id="__codelineno-42-26" name="__codelineno-42-26" href="#__codelineno-42-26"></a>    Commit changes when done.
+<a id="__codelineno-42-15" name="__codelineno-42-15" href="#__codelineno-42-15"></a>    Pay special attention to interface contracts between parallel work.
+<a id="__codelineno-42-16" name="__codelineno-42-16" href="#__codelineno-42-16"></a>    Commit changes when done.
 </code></pre></div>
 <hr />
 <h2 id="phase-4-implementation">Phase 4: Implementation<a class="headerlink" href="#phase-4-implementation" title="Permanent link">&para;</a></h2>
@@ -4166,38 +4127,32 @@ These quality gates are NOT optional. Run them even if all tasks completed succe
 <a id="__codelineno-61-5" name="__codelineno-61-5" href="#__codelineno-61-5"></a>
 <a id="__codelineno-61-6" name="__codelineno-61-6" href="#__codelineno-61-6"></a>    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;autonomous&quot;</span><span class="p">:</span>
 <a id="__codelineno-61-7" name="__codelineno-61-7" href="#__codelineno-61-7"></a>        <span class="c1"># Never pause - proceed automatically</span>
-<a id="__codelineno-61-8" name="__codelineno-61-8" href="#__codelineno-61-8"></a>        <span class="c1"># CRITICAL: In autonomous mode, ALWAYS favor most complete/correct fixes</span>
-<a id="__codelineno-61-9" name="__codelineno-61-9" href="#__codelineno-61-9"></a>        <span class="k">if</span> <span class="n">findings</span><span class="p">:</span>
-<a id="__codelineno-61-10" name="__codelineno-61-10" href="#__codelineno-61-10"></a>            <span class="n">dispatch_fix_subagent</span><span class="p">(</span>
-<a id="__codelineno-61-11" name="__codelineno-61-11" href="#__codelineno-61-11"></a>                <span class="n">findings</span><span class="p">,</span>
-<a id="__codelineno-61-12" name="__codelineno-61-12" href="#__codelineno-61-12"></a>                <span class="n">fix_strategy</span><span class="o">=</span><span class="s2">&quot;most_complete&quot;</span><span class="p">,</span>  <span class="c1"># Not &quot;quickest&quot; or &quot;minimal&quot;</span>
-<a id="__codelineno-61-13" name="__codelineno-61-13" href="#__codelineno-61-13"></a>                <span class="n">treat_suggestions_as</span><span class="o">=</span><span class="s2">&quot;mandatory&quot;</span><span class="p">,</span>  <span class="c1"># Not &quot;optional&quot;</span>
-<a id="__codelineno-61-14" name="__codelineno-61-14" href="#__codelineno-61-14"></a>                <span class="n">fix_depth</span><span class="o">=</span><span class="s2">&quot;root_cause&quot;</span>  <span class="c1"># Not &quot;surface_symptom&quot;</span>
-<a id="__codelineno-61-15" name="__codelineno-61-15" href="#__codelineno-61-15"></a>            <span class="p">)</span>
-<a id="__codelineno-61-16" name="__codelineno-61-16" href="#__codelineno-61-16"></a>        <span class="k">return</span> <span class="s2">&quot;proceed&quot;</span>
-<a id="__codelineno-61-17" name="__codelineno-61-17" href="#__codelineno-61-17"></a>
-<a id="__codelineno-61-18" name="__codelineno-61-18" href="#__codelineno-61-18"></a>    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;interactive&quot;</span><span class="p">:</span>
-<a id="__codelineno-61-19" name="__codelineno-61-19" href="#__codelineno-61-19"></a>        <span class="c1"># Always pause - wait for user</span>
-<a id="__codelineno-61-20" name="__codelineno-61-20" href="#__codelineno-61-20"></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-<a id="__codelineno-61-21" name="__codelineno-61-21" href="#__codelineno-61-21"></a>            <span class="n">present_findings_summary</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span>
-<a id="__codelineno-61-22" name="__codelineno-61-22" href="#__codelineno-61-22"></a>            <span class="n">display</span><span class="p">(</span><span class="s2">&quot;Type &#39;continue&#39; when ready for me to fix these issues.&quot;</span><span class="p">)</span>
-<a id="__codelineno-61-23" name="__codelineno-61-23" href="#__codelineno-61-23"></a>            <span class="n">wait_for_user_input</span><span class="p">()</span>
-<a id="__codelineno-61-24" name="__codelineno-61-24" href="#__codelineno-61-24"></a>            <span class="n">dispatch_fix_subagent</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span>
-<a id="__codelineno-61-25" name="__codelineno-61-25" href="#__codelineno-61-25"></a>        <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-61-26" name="__codelineno-61-26" href="#__codelineno-61-26"></a>            <span class="n">display</span><span class="p">(</span><span class="s2">&quot;Review complete - no issues found.&quot;</span><span class="p">)</span>
-<a id="__codelineno-61-27" name="__codelineno-61-27" href="#__codelineno-61-27"></a>            <span class="n">display</span><span class="p">(</span><span class="s2">&quot;Ready to proceed to next phase?&quot;</span><span class="p">)</span>
-<a id="__codelineno-61-28" name="__codelineno-61-28" href="#__codelineno-61-28"></a>            <span class="n">wait_for_user_acknowledgment</span><span class="p">()</span>
-<a id="__codelineno-61-29" name="__codelineno-61-29" href="#__codelineno-61-29"></a>        <span class="k">return</span> <span class="s2">&quot;proceed&quot;</span>
-<a id="__codelineno-61-30" name="__codelineno-61-30" href="#__codelineno-61-30"></a>
-<a id="__codelineno-61-31" name="__codelineno-61-31" href="#__codelineno-61-31"></a>    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;mostly_autonomous&quot;</span><span class="p">:</span>
-<a id="__codelineno-61-32" name="__codelineno-61-32" href="#__codelineno-61-32"></a>        <span class="c1"># Only pause for critical blockers</span>
-<a id="__codelineno-61-33" name="__codelineno-61-33" href="#__codelineno-61-33"></a>        <span class="n">critical_findings</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">findings</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="o">==</span> <span class="s2">&quot;critical&quot;</span><span class="p">]</span>
-<a id="__codelineno-61-34" name="__codelineno-61-34" href="#__codelineno-61-34"></a>        <span class="k">if</span> <span class="n">critical_findings</span><span class="p">:</span>
-<a id="__codelineno-61-35" name="__codelineno-61-35" href="#__codelineno-61-35"></a>            <span class="n">present_critical_blockers</span><span class="p">(</span><span class="n">critical_findings</span><span class="p">)</span>
-<a id="__codelineno-61-36" name="__codelineno-61-36" href="#__codelineno-61-36"></a>            <span class="n">wait_for_user_input</span><span class="p">()</span>
-<a id="__codelineno-61-37" name="__codelineno-61-37" href="#__codelineno-61-37"></a>        <span class="k">if</span> <span class="n">findings</span><span class="p">:</span>
-<a id="__codelineno-61-38" name="__codelineno-61-38" href="#__codelineno-61-38"></a>            <span class="n">dispatch_fix_subagent</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span>
-<a id="__codelineno-61-39" name="__codelineno-61-39" href="#__codelineno-61-39"></a>        <span class="k">return</span> <span class="s2">&quot;proceed&quot;</span>
+<a id="__codelineno-61-8" name="__codelineno-61-8" href="#__codelineno-61-8"></a>        <span class="k">if</span> <span class="n">findings</span><span class="p">:</span>
+<a id="__codelineno-61-9" name="__codelineno-61-9" href="#__codelineno-61-9"></a>            <span class="n">dispatch_fix_subagent</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span>
+<a id="__codelineno-61-10" name="__codelineno-61-10" href="#__codelineno-61-10"></a>        <span class="k">return</span> <span class="s2">&quot;proceed&quot;</span>
+<a id="__codelineno-61-11" name="__codelineno-61-11" href="#__codelineno-61-11"></a>
+<a id="__codelineno-61-12" name="__codelineno-61-12" href="#__codelineno-61-12"></a>    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;interactive&quot;</span><span class="p">:</span>
+<a id="__codelineno-61-13" name="__codelineno-61-13" href="#__codelineno-61-13"></a>        <span class="c1"># Always pause - wait for user</span>
+<a id="__codelineno-61-14" name="__codelineno-61-14" href="#__codelineno-61-14"></a>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-61-15" name="__codelineno-61-15" href="#__codelineno-61-15"></a>            <span class="n">present_findings_summary</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span>
+<a id="__codelineno-61-16" name="__codelineno-61-16" href="#__codelineno-61-16"></a>            <span class="n">display</span><span class="p">(</span><span class="s2">&quot;Type &#39;continue&#39; when ready for me to fix these issues.&quot;</span><span class="p">)</span>
+<a id="__codelineno-61-17" name="__codelineno-61-17" href="#__codelineno-61-17"></a>            <span class="n">wait_for_user_input</span><span class="p">()</span>
+<a id="__codelineno-61-18" name="__codelineno-61-18" href="#__codelineno-61-18"></a>            <span class="n">dispatch_fix_subagent</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span>
+<a id="__codelineno-61-19" name="__codelineno-61-19" href="#__codelineno-61-19"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-61-20" name="__codelineno-61-20" href="#__codelineno-61-20"></a>            <span class="n">display</span><span class="p">(</span><span class="s2">&quot;Review complete - no issues found.&quot;</span><span class="p">)</span>
+<a id="__codelineno-61-21" name="__codelineno-61-21" href="#__codelineno-61-21"></a>            <span class="n">display</span><span class="p">(</span><span class="s2">&quot;Ready to proceed to next phase?&quot;</span><span class="p">)</span>
+<a id="__codelineno-61-22" name="__codelineno-61-22" href="#__codelineno-61-22"></a>            <span class="n">wait_for_user_acknowledgment</span><span class="p">()</span>
+<a id="__codelineno-61-23" name="__codelineno-61-23" href="#__codelineno-61-23"></a>        <span class="k">return</span> <span class="s2">&quot;proceed&quot;</span>
+<a id="__codelineno-61-24" name="__codelineno-61-24" href="#__codelineno-61-24"></a>
+<a id="__codelineno-61-25" name="__codelineno-61-25" href="#__codelineno-61-25"></a>    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;mostly_autonomous&quot;</span><span class="p">:</span>
+<a id="__codelineno-61-26" name="__codelineno-61-26" href="#__codelineno-61-26"></a>        <span class="c1"># Only pause for critical blockers</span>
+<a id="__codelineno-61-27" name="__codelineno-61-27" href="#__codelineno-61-27"></a>        <span class="n">critical_findings</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">findings</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">severity</span> <span class="o">==</span> <span class="s2">&quot;critical&quot;</span><span class="p">]</span>
+<a id="__codelineno-61-28" name="__codelineno-61-28" href="#__codelineno-61-28"></a>        <span class="k">if</span> <span class="n">critical_findings</span><span class="p">:</span>
+<a id="__codelineno-61-29" name="__codelineno-61-29" href="#__codelineno-61-29"></a>            <span class="n">present_critical_blockers</span><span class="p">(</span><span class="n">critical_findings</span><span class="p">)</span>
+<a id="__codelineno-61-30" name="__codelineno-61-30" href="#__codelineno-61-30"></a>            <span class="n">wait_for_user_input</span><span class="p">()</span>
+<a id="__codelineno-61-31" name="__codelineno-61-31" href="#__codelineno-61-31"></a>        <span class="k">if</span> <span class="n">findings</span><span class="p">:</span>
+<a id="__codelineno-61-32" name="__codelineno-61-32" href="#__codelineno-61-32"></a>            <span class="n">dispatch_fix_subagent</span><span class="p">(</span><span class="n">findings</span><span class="p">)</span>
+<a id="__codelineno-61-33" name="__codelineno-61-33" href="#__codelineno-61-33"></a>        <span class="k">return</span> <span class="s2">&quot;proceed&quot;</span>
 </code></pre></div>
 <hr />
 <h2 id="escape-hatch-reference">Escape Hatch Reference<a class="headerlink" href="#escape-hatch-reference" title="Permanent link">&para;</a></h2>
