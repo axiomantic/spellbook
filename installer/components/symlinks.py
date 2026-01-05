@@ -222,6 +222,10 @@ def create_command_symlinks(
     """
     Create symlinks for all commands.
 
+    Handles both:
+    - Simple commands: .md files in commands root (e.g., commands/verify.md)
+    - Complex commands: subdirectories with supporting files (e.g., commands/systematic-debugging/)
+
     Args:
         commands_source: Source commands directory
         commands_target: Target commands directory
@@ -234,10 +238,18 @@ def create_command_symlinks(
     if not commands_source.exists():
         return results
 
+    # Install simple command files (.md files in commands root)
     for cmd_file in commands_source.glob("*.md"):
         target = commands_target / cmd_file.name
         result = create_symlink(cmd_file, target, dry_run)
         results.append(result)
+
+    # Install command directories (subdirectories in commands/)
+    for cmd_dir in commands_source.iterdir():
+        if cmd_dir.is_dir():
+            target = commands_target / cmd_dir.name
+            result = create_symlink(cmd_dir, target, dry_run)
+            results.append(result)
 
     return results
 

@@ -1,17 +1,17 @@
 ---
-description: Guide completion of development work by presenting structured options for merge, PR, or cleanup. Use when implementation is complete and all tests pass.
-disable-model-invocation: true
+name: finishing-a-development-branch
+description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
 ---
 
-# Finish Branch
+# Finishing a Development Branch
 
 ## Overview
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests -> Present options -> Execute choice -> Clean up.
+**Core principle:** Verify tests → Present options → Execute choice → Clean up.
 
-**Announce at start:** "I'm using the finish-branch command to complete this work."
+**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ---
 
@@ -183,10 +183,10 @@ git worktree remove <worktree-path>
 
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
-| 1. Merge locally | Yes | - | - | Yes |
-| 2. Create PR | - | Yes | Yes | - |
-| 3. Keep as-is | - | - | Yes | - |
-| 4. Discard | - | - | - | Yes (force) |
+| 1. Merge locally | ✓ | - | - | ✓ |
+| 2. Create PR | - | ✓ | ✓ | - |
+| 3. Keep as-is | - | - | ✓ | - |
+| 4. Discard | - | - | - | ✓ (force) |
 
 ## Common Mistakes
 
@@ -195,7 +195,7 @@ git worktree remove <worktree-path>
 - **Fix:** Always verify tests before offering options
 
 **Open-ended questions**
-- **Problem:** "What should I do next?" - ambiguous
+- **Problem:** "What should I do next?" → ambiguous
 - **Fix:** Present exactly 4 structured options
 
 **Automatic worktree cleanup**

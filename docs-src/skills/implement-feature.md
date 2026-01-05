@@ -1282,7 +1282,7 @@ Task (or subagent simulation):
     ## Autonomous Mode Context
 
     **Mode:** AUTONOMOUS - Proceed without asking questions
-    **Protocol:** See docs/autonomous-mode-protocol.md
+    **Protocol:** See patterns/autonomous-mode-protocol.md
     **Circuit breakers:** Only pause for security-critical decisions or contradictory requirements
 
     ## Pre-Collected Discovery Context

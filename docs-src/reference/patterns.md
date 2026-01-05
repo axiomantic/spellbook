@@ -82,4 +82,4 @@ Before claiming completion, verify with evidence:
 4. Document any failures
 ```
 
-See the `verification-before-completion` skill for the full pattern.
+See the `/verify` command for the full pattern.

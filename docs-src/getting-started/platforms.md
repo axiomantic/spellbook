@@ -19,34 +19,28 @@ python3 install.py
 - Native skill invocation via `Skill` tool
 - TodoWrite for task management
 - Task tool for subagent orchestration
-- Hooks for session automation
-- MCP server for skill discovery
+- MCP server for skill discovery and session management
 
 ## OpenCode
 
 **Status:** Full Support
 
-OpenCode integration via plugin system.
+OpenCode integration via skill symlinks.
 
 ### Setup
 
 1. Run the installer: `python3 install.py`
-2. Enable the spellbook plugin in OpenCode settings
+2. Skills are automatically available in `~/.opencode/skills/`
 
 ### Features
 
-- Custom `use_spellbook_skill` tool
-- Custom `find_spellbook_skills` tool
-- Session bootstrap with context injection
-- Tool mapping from Claude Code equivalents
+- Skills installed as flat `.md` files in `~/.opencode/skills/`
+- OpenCode discovers skills automatically from the skills directory
+- Same skill content as other platforms
 
-### Tool Mapping
+### Notes
 
-| Claude Code | OpenCode |
-|-------------|----------|
-| `TodoWrite` | `update_plan` |
-| `Task` | `@mention` subagents |
-| `Skill` | `use_spellbook_skill` |
+OpenCode uses its native skill discovery. The installer creates symlinks to spellbook skills, making them available alongside any personal skills you create.
 
 ## Codex
 

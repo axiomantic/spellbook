@@ -65,7 +65,7 @@ When synthesis mode / autonomous mode is active:
 - Contradictory requirements that cannot be reconciled
 - Missing context that makes design impossible (not just inconvenient)
 
-Use the Circuit Breaker Format from docs/autonomous-mode-protocol.md if pausing.
+Use the Circuit Breaker Format from patterns/autonomous-mode-protocol.md if pausing.
 
 ---
 

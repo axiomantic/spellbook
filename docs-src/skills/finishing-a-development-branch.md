@@ -1,10 +1,10 @@
-# /finish-branch
+# finishing-a-development-branch
 
 Guide completion of development work by presenting structured options for merge, PR, or cleanup.
 
 ## Overview
 
-The finish-branch command provides a structured workflow for completing development branches. It verifies tests, presents exactly 4 options, and handles cleanup appropriately.
+The finishing-a-development-branch skill provides a structured workflow for completing development branches. It verifies tests, presents exactly 4 options, and handles cleanup appropriately.
 
 ## When to Use
 
@@ -14,15 +14,19 @@ The finish-branch command provides a structured workflow for completing developm
 
 ## Invocation
 
+Invoked programmatically by other skills via the Skill tool:
+
 ```
-/finish-branch
+Skill("finishing-a-development-branch")
 ```
+
+Or referenced as a required sub-skill in workflow skills.
 
 ## The Process
 
 ### Step 1: Verify Tests
 
-Before presenting options, tests must pass. If tests fail, the command blocks.
+Before presenting options, tests must pass. If tests fail, the skill blocks.
 
 ### Step 2: Present 4 Options
 
@@ -65,12 +69,13 @@ Always pause for:
 Called by:
 - `subagent-driven-development` (Step 7)
 - `executing-plans` (Step 5)
+- `implement-feature` (Phase 4.6)
 
 Pairs with:
 - `using-git-worktrees` - Cleans up worktree created by that skill
 
 ## Related
 
-- [debug skill](../skills/debug.md) - May invoke after debugging
-- [using-git-worktrees](../skills/using-git-worktrees.md) - Worktree creation
-- [executing-plans](../skills/executing-plans.md) - Plan execution workflow
+- [debug skill](debug.md) - May invoke after debugging
+- [using-git-worktrees](using-git-worktrees.md) - Worktree creation
+- [executing-plans](executing-plans.md) - Plan execution workflow

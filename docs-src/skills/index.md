@@ -9,7 +9,7 @@ Skills are reusable workflows that provide structured approaches to common devel
 Skills are invoked automatically when relevant, or explicitly:
 
 ```
-Use the systematic-debugging skill to investigate this issue
+Use the debug skill to investigate this issue
 ```
 
 ### In Other Platforms
@@ -30,6 +30,7 @@ Foundational skills for structured development (from [obra/superpowers](https://
 | [test-driven-development](test-driven-development.md) | Implementing any feature or fix |
 | [debug](debug.md) | **Unified debugging entry point** - routes to appropriate methodology |
 | [using-git-worktrees](using-git-worktrees.md) | Isolating feature work from main codebase |
+| [finishing-a-development-branch](finishing-a-development-branch.md) | Complete development work with merge/PR/cleanup options |
 
 ### Code Quality Skills
 
@@ -38,6 +39,7 @@ Skills for maintaining and improving code quality:
 | Skill | When to Use |
 |-------|-------------|
 | [green-mirage-audit](green-mirage-audit.md) | Auditing test suite quality |
+| [fix-tests](fix-tests.md) | Fixing failing or weak tests |
 | [factchecker](factchecker.md) | Verifying claims and assumptions |
 | [find-dead-code](find-dead-code.md) | Identifying unused code |
 | [receiving-code-review](receiving-code-review.md) | Processing code review feedback |

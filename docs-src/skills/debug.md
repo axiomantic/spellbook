@@ -63,7 +63,7 @@ Every debug session automatically invokes the `/verify` command at completion to
 - [/scientific-debugging](../commands/scientific-debugging.md) - Rigorous theory-experiment methodology
 - [/systematic-debugging](../commands/systematic-debugging.md) - 4-phase root cause analysis
 - [/verify](../commands/verify.md) - Verification before completion claims
-- [/finish-branch](../commands/finish-branch.md) - Complete development branch
+- [finishing-a-development-branch](finishing-a-development-branch.md) - Complete development branch
 
 ## See Also
 

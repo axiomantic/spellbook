@@ -74,6 +74,7 @@ nav:
       - skills/test-driven-development.md
       - skills/debug.md
       - skills/using-git-worktrees.md
+      - skills/finishing-a-development-branch.md
     - Code Quality Skills:
       - skills/green-mirage-audit.md
       - skills/fix-tests.md
@@ -103,7 +104,6 @@ nav:
       - commands/scientific-debugging.md
       - commands/systematic-debugging.md
       - commands/verify.md
-      - commands/finish-branch.md
     - Workflow Commands:
       - commands/compact.md
       - commands/distill-session.md

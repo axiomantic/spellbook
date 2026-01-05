@@ -5,8 +5,8 @@
   - [Prerequisites](#prerequisites)
   - [Quick Install](#quick-install)
   - [What's Included](#whats-included)
-    - [Skills (28 total)](#skills-28-total)
-    - [Commands (9 total)](#commands-9-total)
+    - [Skills (26 total)](#skills-26-total)
+    - [Commands (12 total)](#commands-12-total)
     - [Agents (1 total)](#agents-1-total)
   - [Platform Support](#platform-support)
   - [Workflow Recipes](#workflow-recipes)
@@ -63,25 +63,24 @@ uv run install.py
 
 ## What's Included
 
-### Skills (28 total)
+### Skills (26 total)
 
 Reusable workflows for structured development:
 
 | Category | Skills | Origin |
 |----------|--------|--------|
-| **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [systematic-debugging], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
+| **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [debug], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
 | **Code Quality** | [green-mirage-audit], [fix-tests], [factchecker], [find-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
 | **Feature Dev** | [implement-feature], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [smart-merge] | spellbook |
-| **Specialized** | [async-await-patterns], [scientific-debugging], [nim-pr-guide] | spellbook |
-| **Meta** | [using-skills], [writing-skills], [subagent-prompting], [instruction-engineering], [dispatching-parallel-agents], [subagent-driven-development], [verification-before-completion] | [superpowers] |
+| **Specialized** | [async-await-patterns], [nim-pr-guide] | spellbook |
+| **Meta** | [using-skills], [writing-skills], [subagent-prompting], [instruction-engineering], [dispatching-parallel-agents], [subagent-driven-development] | [superpowers] |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
 [executing-plans]: https://axiomantic.github.io/spellbook/latest/skills/executing-plans/
 [test-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/
-[systematic-debugging]: https://axiomantic.github.io/spellbook/latest/skills/systematic-debugging/
+[debug]: https://axiomantic.github.io/spellbook/latest/skills/debug/
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
-[finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [green-mirage-audit]: https://axiomantic.github.io/spellbook/latest/skills/green-mirage-audit/
 [fix-tests]: https://axiomantic.github.io/spellbook/latest/skills/fix-tests/
 [factchecker]: https://axiomantic.github.io/spellbook/latest/skills/factchecker/
@@ -94,7 +93,6 @@ Reusable workflows for structured development:
 [devils-advocate]: https://axiomantic.github.io/spellbook/latest/skills/devils-advocate/
 [smart-merge]: https://axiomantic.github.io/spellbook/latest/skills/smart-merge/
 [async-await-patterns]: https://axiomantic.github.io/spellbook/latest/skills/async-await-patterns/
-[scientific-debugging]: https://axiomantic.github.io/spellbook/latest/skills/scientific-debugging/
 [nim-pr-guide]: https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
@@ -102,9 +100,9 @@ Reusable workflows for structured development:
 [instruction-engineering]: https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
 [subagent-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/subagent-driven-development/
-[verification-before-completion]: https://axiomantic.github.io/spellbook/latest/skills/verification-before-completion/
+[finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 
-### Commands (9 total)
+### Commands (12 total)
 
 | Command | Description | Origin |
 |---------|-------------|--------|
@@ -114,9 +112,14 @@ Reusable workflows for structured development:
 | [/address-pr-feedback] | Handle PR review comments | spellbook |
 | [/move-project] | Relocate projects safely | spellbook |
 | [/green-mirage-audit] | Test suite audit | spellbook |
+| [/verify] | Verification before completion | [superpowers]* |
+| [/systematic-debugging] | Methodical debugging workflow | [superpowers]* |
+| [/scientific-debugging] | Hypothesis-driven debugging | spellbook |
 | [/brainstorm] | Design exploration | [superpowers] |
 | [/write-plan] | Create implementation plan | [superpowers] |
 | [/execute-plan] | Execute implementation plan | [superpowers] |
+
+*\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
 
 [/compact]: https://axiomantic.github.io/spellbook/latest/commands/compact/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
@@ -124,6 +127,9 @@ Reusable workflows for structured development:
 [/address-pr-feedback]: https://axiomantic.github.io/spellbook/latest/commands/address-pr-feedback/
 [/move-project]: https://axiomantic.github.io/spellbook/latest/commands/move-project/
 [/green-mirage-audit]: https://axiomantic.github.io/spellbook/latest/commands/green-mirage-audit/
+[/verify]: https://axiomantic.github.io/spellbook/latest/commands/verify/
+[/systematic-debugging]: https://axiomantic.github.io/spellbook/latest/commands/systematic-debugging/
+[/scientific-debugging]: https://axiomantic.github.io/spellbook/latest/commands/scientific-debugging/
 [/brainstorm]: https://axiomantic.github.io/spellbook/latest/commands/brainstorm/
 [/write-plan]: https://axiomantic.github.io/spellbook/latest/commands/write-plan/
 [/execute-plan]: https://axiomantic.github.io/spellbook/latest/commands/execute-plan/
@@ -142,7 +148,7 @@ Reusable workflows for structured development:
 | Platform | Status | Details |
 |----------|--------|---------|
 | Claude Code | Full | Native skills + MCP server |
-| OpenCode | Full | Plugin + CLI |
+| OpenCode | Full | Skill symlinks |
 | Codex | Full | Bootstrap + CLI |
 | Gemini CLI | Partial | MCP server + context file |
 

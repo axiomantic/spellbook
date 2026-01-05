@@ -71,7 +71,7 @@ This allows skills to execute multi-step workflows (git operations, file changes
 | Bug investigation | `systematic-debugging` |
 | Test-first development | `test-driven-development` |
 | Feature isolation | `using-git-worktrees` |
-| Quality verification | `verification-before-completion` |
+| Quality verification | `/verify` command |
 
 ## Tips
 

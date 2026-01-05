@@ -17,13 +17,20 @@ The following components originated from the superpowers project:
 | [receiving-code-review](skills/receiving-code-review.md) | Processing and responding to code review feedback |
 | [requesting-code-review](skills/requesting-code-review.md) | Structured code review requests |
 | [subagent-driven-development](skills/subagent-driven-development.md) | Delegating work to specialized subagents |
-| [systematic-debugging](skills/systematic-debugging.md) | Methodical debugging with hypothesis testing |
 | [test-driven-development](skills/test-driven-development.md) | Red-green-refactor TDD workflow |
 | [using-git-worktrees](skills/using-git-worktrees.md) | Isolated workspaces for feature development |
 | [using-skills](skills/using-skills.md) | Meta-skill for invoking other skills (originally "using-superpowers") |
-| [verification-before-completion](skills/verification-before-completion.md) | Pre-completion verification checklist |
 | [writing-plans](skills/writing-plans.md) | Creating detailed implementation plans |
 | [writing-skills](skills/writing-skills.md) | Creating new skills |
+
+### Transformed Items
+
+The following items originated as skills in superpowers but have been converted to commands in spellbook:
+
+| Command | Original Skill | Transformation |
+|---------|----------------|----------------|
+| [/systematic-debugging](commands/systematic-debugging.md) | `systematic-debugging` | Converted to command; routed via `debug` skill |
+| [/verify](commands/verify.md) | `verification-before-completion` | Converted to command; renamed for brevity |
 
 ### Commands
 
@@ -55,6 +62,7 @@ The following skills were developed specifically for Spellbook:
 | [async-await-patterns](skills/async-await-patterns.md) | JavaScript/TypeScript async/await best practices |
 | [design-doc-reviewer](skills/design-doc-reviewer.md) | Design document completeness review |
 | [devils-advocate](skills/devils-advocate.md) | Adversarial review of assumptions |
+| [debug](skills/debug.md) | Unified debugging entry point (routes to debugging commands) |
 | [factchecker](skills/factchecker.md) | Systematic claim verification |
 | [find-dead-code](skills/find-dead-code.md) | Unused code detection |
 | [fix-tests](skills/fix-tests.md) | Test remediation and quality improvement |
@@ -63,9 +71,20 @@ The following skills were developed specifically for Spellbook:
 | [implementation-plan-reviewer](skills/implementation-plan-reviewer.md) | Implementation plan review |
 | [instruction-engineering](skills/instruction-engineering.md) | LLM prompt optimization |
 | [nim-pr-guide](skills/nim-pr-guide.md) | Nim language PR contribution guide |
-| [scientific-debugging](skills/scientific-debugging.md) | Formal scientific debugging method |
 | [smart-merge](skills/smart-merge.md) | Intelligent worktree merging |
 | [subagent-prompting](skills/subagent-prompting.md) | Effective subagent instruction patterns |
+
+### Original Commands (Spellbook)
+
+| Command | Description |
+|---------|-------------|
+| [/scientific-debugging](commands/scientific-debugging.md) | Rigorous hypothesis-driven debugging methodology |
+| [/compact](commands/compact.md) | Custom session compaction |
+| [/distill-session](commands/distill-session.md) | Extract knowledge from sessions |
+| [/simplify](commands/simplify.md) | Code complexity reduction |
+| [/address-pr-feedback](commands/address-pr-feedback.md) | Handle PR review comments |
+| [/move-project](commands/move-project.md) | Relocate projects safely |
+| [/green-mirage-audit](commands/green-mirage-audit.md) | Test suite audit command |
 
 ## License
 

@@ -13,7 +13,6 @@ Commands for debugging and verification (typically invoked via the `/debug` skil
 | [/scientific-debugging](scientific-debugging.md) | Rigorous theory-experiment methodology | spellbook |
 | [/systematic-debugging](systematic-debugging.md) | 4-phase root cause analysis | spellbook |
 | [/verify](verify.md) | Run verification before completion claims | spellbook |
-| [/finish-branch](finish-branch.md) | Complete development branch with options | spellbook |
 
 ### Workflow Commands
 
