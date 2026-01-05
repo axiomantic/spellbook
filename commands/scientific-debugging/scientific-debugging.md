@@ -1,8 +1,7 @@
-# scientific-debugging
-
-Use when user requests scientific debugging, mentions being a scientist about debugging, or asks for rigorous hypothesis testing - enforces formal theory-experiment cycles with clear evidence requirements, no smoking guns or assumptions
-
-## Skill Content
+---
+description: Rigorous theory-experiment debugging methodology. Use when debugging complex issues requiring hypothesis testing. Typically invoked via /debug skill, but available directly for experts.
+disable-model-invocation: true
+---
 
 # Scientific Debugging
 
@@ -15,16 +14,16 @@ Your credibility requires: exact templates, systematic testing, no assumptions, 
 </ROLE>
 
 <ARH_INTEGRATION>
-This skill uses the Adaptive Response Handler pattern.
+This command uses the Adaptive Response Handler pattern.
 See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.
 
 When user responds to questions:
-- RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent
-- UNKNOWN ("don't know", "not sure") → Dispatch research subagent
-- CLARIFICATION (ends with ?) → Answer the clarification, then re-ask
-- SKIP ("skip", "move on") → Proceed to next item
+- RESEARCH_REQUEST ("research this", "check", "verify") -> Dispatch research subagent
+- UNKNOWN ("don't know", "not sure") -> Dispatch research subagent
+- CLARIFICATION (ends with ?) -> Answer the clarification, then re-ask
+- SKIP ("skip", "move on") -> Proceed to next item
 
-NOTE: This skill uses MANDATORY_TEMPLATE for question format. ARH processing applies AFTER user response received.
+NOTE: This command uses MANDATORY_TEMPLATE for question format. ARH processing applies AFTER user response received.
 </ARH_INTEGRATION>
 
 <CRITICAL_INSTRUCTION>
@@ -114,25 +113,25 @@ Now write your response following this exact template.
 
 <FORBIDDEN pattern="1">
 ### Gathering Data Before Theories
-❌ "Let me gather facts first..."
-❌ "Before forming theories, I need to understand..."
+- "Let me gather facts first..."
+- "Before forming theories, I need to understand..."
 
 **Reality:** Theories come from symptom description only. This prevents confirmation bias.
 </FORBIDDEN>
 
 <FORBIDDEN pattern="2">
 ### Ranking/Probability
-❌ "Theory 1 (most likely)"
-❌ "60% sure it's X"
+- "Theory 1 (most likely)"
+- "60% sure it's X"
 
 **Reality:** All theories are equal until tested. Repeat: ALL THEORIES ARE EQUAL.
 </FORBIDDEN>
 
 <FORBIDDEN pattern="3">
 ### Wrong Format
-❌ Creating 5 theories
-❌ Skipping "# Scientific Debugging Plan" heading
-❌ Asking "Which hypothesis should I test first?"
+- Creating 5 theories
+- Skipping "# Scientific Debugging Plan" heading
+- Asking "Which hypothesis should I test first?"
 
 **Reality:** Use the EXACT template above. No variations. Repeat: NO VARIATIONS.
 </FORBIDDEN>
@@ -179,22 +178,22 @@ Your response:
 
 ## Theory Exhaustion
 
-When all 3 theories disproven: Summarize data from experiments → Generate 3 NEW theories based on that data → Design experiments → Present new plan → Use AskUserQuestion to get approval before testing new theories.
+When all 3 theories disproven: Summarize data from experiments -> Generate 3 NEW theories based on that data -> Design experiments -> Present new plan -> Use AskUserQuestion to get approval before testing new theories.
 
 Do NOT ask for more data. You already have it from experiments.
 
 ## Systematic Execution
 
-Test ONE theory at a time, fully → Run ALL experiments for that theory → Theory is only proven with CLEAR SCIENTIFIC EVIDENCE → Move to next theory only when current is disproven.
+Test ONE theory at a time, fully -> Run ALL experiments for that theory -> Theory is only proven with CLEAR SCIENTIFIC EVIDENCE -> Move to next theory only when current is disproven.
 
 <SELF_CHECK>
 Before submitting your response, verify:
 
-☐ Did I use "# Scientific Debugging Plan" as the heading?
-☐ Did I create exactly 3 theories (count them: 1, 2, 3)?
-☐ Did I avoid ANY ranking words ("likely", "probably", percentages)?
-☐ Did I design 3+ experiments per theory with prove/disprove criteria?
-☐ Did I end with "May I proceed with testing these theories?"
+[ ] Did I use "# Scientific Debugging Plan" as the heading?
+[ ] Did I create exactly 3 theories (count them: 1, 2, 3)?
+[ ] Did I avoid ANY ranking words ("likely", "probably", percentages)?
+[ ] Did I design 3+ experiments per theory with prove/disprove criteria?
+[ ] Did I end with "May I proceed with testing these theories?"
 
 If you checked NO to ANY item above, DELETE your response and start over using the template.
 

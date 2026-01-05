@@ -1,6 +1,6 @@
 ---
-name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: 4-phase root cause debugging methodology. Use when encountering bugs, test failures, or unexpected behavior. Typically invoked via /debug skill, but available directly for experts.
+disable-model-invocation: true
 ---
 
 # Systematic Debugging

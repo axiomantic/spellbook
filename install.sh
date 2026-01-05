@@ -47,6 +47,61 @@ print_info() {
     echo -e "${INFO} $1"
 }
 
+cleanup_dead_symlinks() {
+    print_step "Checking for dead symlinks pointing to spellbook..."
+
+    local dead_links=()
+
+    # Find all symlinks in ~/.claude that point to spellbook directory
+    while IFS= read -r -d '' link; do
+        if [ -L "$link" ]; then
+            local target
+            target=$(readlink "$link")
+
+            # Check if symlink points to spellbook repo
+            if [[ "$target" == *"$SCRIPT_DIR"* ]] || [[ "$target" == *"/spellbook/"* ]]; then
+                # Check if target exists
+                if [ ! -e "$link" ]; then
+                    dead_links+=("$link")
+                fi
+            fi
+        fi
+    done < <(find "$CLAUDE_CONFIG_DIR" -type l -print0 2>/dev/null)
+
+    if [ ${#dead_links[@]} -eq 0 ]; then
+        print_success "No dead symlinks found"
+        return
+    fi
+
+    # Display dead symlinks
+    echo ""
+    print_warning "Found ${#dead_links[@]} dead symlink(s) pointing to spellbook:"
+    echo ""
+    for link in "${dead_links[@]}"; do
+        local target
+        target=$(readlink "$link")
+        echo -e "  ${RED}broken${NC}: $link"
+        echo -e "         ${YELLOW}->$target${NC}"
+    done
+    echo ""
+
+    # Ask for confirmation
+    echo -e "${CYAN}Would you like to remove these dead symlinks? [y/N]${NC} "
+    read -r response
+
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        local removed=0
+        for link in "${dead_links[@]}"; do
+            if rm -f "$link"; then
+                removed=$((removed + 1))
+            fi
+        done
+        print_success "Removed $removed dead symlink(s)"
+    else
+        print_info "Keeping dead symlinks (no changes made)"
+    fi
+}
+
 create_directories() {
     print_step "Ensuring directories exist..."
 
@@ -84,6 +139,8 @@ install_commands() {
     print_step "Installing commands..."
 
     local count=0
+
+    # Install command files (.md files in commands/ root)
     for cmd_file in "$SCRIPT_DIR/commands"/*.md; do
         if [ -f "$cmd_file" ]; then
             local cmd_name=$(basename "$cmd_file")
@@ -94,6 +151,21 @@ install_commands() {
 
             # Create symlink
             ln -s "$cmd_file" "$target"
+            count=$((count + 1))
+        fi
+    done
+
+    # Install command directories (subdirectories in commands/)
+    for cmd_dir in "$SCRIPT_DIR/commands"/*/; do
+        if [ -d "$cmd_dir" ]; then
+            local cmd_name=$(basename "$cmd_dir")
+            local target="$CLAUDE_CONFIG_DIR/commands/$cmd_name"
+
+            # Remove existing (file, dir, or symlink)
+            rm -rf "$target"
+
+            # Create symlink to directory
+            ln -s "$cmd_dir" "$target"
             count=$((count + 1))
         fi
     done
@@ -728,6 +800,9 @@ main() {
         print_error "No skills or commands found in $SCRIPT_DIR"
         exit 1
     fi
+
+    # Clean up dead symlinks before installing new ones
+    cleanup_dead_symlinks
 
     create_directories
     install_skills

@@ -72,9 +72,8 @@ nav:
       - skills/writing-plans.md
       - skills/executing-plans.md
       - skills/test-driven-development.md
-      - skills/systematic-debugging.md
+      - skills/debug.md
       - skills/using-git-worktrees.md
-      - skills/finishing-a-development-branch.md
     - Code Quality Skills:
       - skills/green-mirage-audit.md
       - skills/fix-tests.md
@@ -90,7 +89,6 @@ nav:
       - skills/smart-merge.md
     - Specialized Skills:
       - skills/async-await-patterns.md
-      - skills/scientific-debugging.md
       - skills/nim-pr-guide.md
     - Meta Skills:
       - skills/using-skills.md
@@ -99,18 +97,23 @@ nav:
       - skills/instruction-engineering.md
       - skills/dispatching-parallel-agents.md
       - skills/subagent-driven-development.md
-      - skills/verification-before-completion.md
   - Commands:
     - Overview: commands/index.md
-    - commands/compact.md
-    - commands/distill-session.md
-    - commands/simplify.md
-    - commands/address-pr-feedback.md
-    - commands/move-project.md
-    - commands/green-mirage-audit.md
-    - commands/brainstorm.md
-    - commands/write-plan.md
-    - commands/execute-plan.md
+    - Debugging Commands:
+      - commands/scientific-debugging.md
+      - commands/systematic-debugging.md
+      - commands/verify.md
+      - commands/finish-branch.md
+    - Workflow Commands:
+      - commands/compact.md
+      - commands/distill-session.md
+      - commands/simplify.md
+      - commands/address-pr-feedback.md
+      - commands/move-project.md
+      - commands/green-mirage-audit.md
+      - commands/brainstorm.md
+      - commands/write-plan.md
+      - commands/execute-plan.md
   - Agents:
     - Overview: agents/index.md
     - agents/code-reviewer.md

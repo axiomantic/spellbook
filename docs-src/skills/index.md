@@ -28,9 +28,8 @@ Foundational skills for structured development (from [obra/superpowers](https://
 | [writing-plans](writing-plans.md) | After brainstorming - create implementation plan |
 | [executing-plans](executing-plans.md) | Execute a written plan systematically |
 | [test-driven-development](test-driven-development.md) | Implementing any feature or fix |
-| [systematic-debugging](systematic-debugging.md) | Investigating bugs or unexpected behavior |
+| [debug](debug.md) | **Unified debugging entry point** - routes to appropriate methodology |
 | [using-git-worktrees](using-git-worktrees.md) | Isolating feature work from main codebase |
-| [finishing-a-development-branch](finishing-a-development-branch.md) | Completing and integrating work |
 
 ### Code Quality Skills
 
@@ -63,7 +62,6 @@ Domain-specific skills:
 | Skill | When to Use |
 |-------|-------------|
 | [async-await-patterns](async-await-patterns.md) | Writing async JavaScript/TypeScript |
-| [scientific-debugging](scientific-debugging.md) | Formal scientific debugging method |
 | [nim-pr-guide](nim-pr-guide.md) | Contributing to Nim repositories |
 
 ### Meta Skills
@@ -78,7 +76,6 @@ Skills about skills and subagent orchestration:
 | [instruction-engineering](instruction-engineering.md) | Optimizing LLM prompts |
 | [dispatching-parallel-agents](dispatching-parallel-agents.md) | Parallel subagent orchestration |
 | [subagent-driven-development](subagent-driven-development.md) | Delegating to subagents |
-| [verification-before-completion](verification-before-completion.md) | Pre-completion checks |
 
 ## Creating Custom Skills
 
