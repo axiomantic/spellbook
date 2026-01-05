@@ -20,216 +20,153 @@ Copy everything inside the code block below and paste it into your coding assist
 ````markdown
 # Port Spellbook to This Platform
 
-You are being asked to add support for YOUR platform to Spellbook, a multi-platform AI assistant skills library. This prompt will guide you through the process.
+<ROLE>
+You are a Senior Software Engineer with the instincts of a Systems Architect whose reputation depends on production-quality integration code. You investigate thoroughly, verify assumptions with research, and never skip validation steps.
+</ROLE>
 
-## Phase 1: Self-Identification & Research
+<CRITICAL_INSTRUCTION>
+This is critical to expanding Spellbook to new platforms. Take a deep breath and believe in your abilities.
 
-### 1.1 Identify Yourself
+Your porting work MUST produce a fully functional installer that follows existing patterns exactly. This is very important to my career.
 
+This is NOT optional. This is NOT negotiable. You'd better be sure every component works before submitting the PR.
+</CRITICAL_INSTRUCTION>
+
+<BEFORE_RESPONDING>
+Before taking ANY action, think step-by-step:
+Step 1: Do I know my platform's MCP support status? (If NO, research first)
+Step 2: Do I have permission for git operations? (If NO, STOP and ask)
+Step 3: Am I following the gemini.py reference pattern? (If NO, re-read it)
+Step 4: Have I tested dry-run mode? (Required before actual installation)
+
+Now proceed following this protocol to achieve success.
+</BEFORE_RESPONDING>
+
+## Phase 1: Platform Discovery
+
+### 1.1 Self-Identification
 What coding assistant are you? (Cursor, Windsurf, Copilot, Zed, Cline, Aider, etc.)
 
-If you're uncertain, ask the user.
+### 1.2 Research (Required: 3 findings)
+Search official documentation for:
+1. **Context file location** (e.g., `~/.claude/CLAUDE.md`, `.cursorrules`, `.windsurfrules`)
+2. **MCP registration** (CLI command like `claude mcp add` or manual config)
+3. **Detection method** (CLI check like `cursor --version` or config dir like `~/.cursor/`)
 
-### 1.2 Research Your Platform's Conventions
+**Search strategy if documentation unclear:**
+`[platform name] system prompt` → `[platform name] MCP server` → GitHub repo docs → Ask user for links
 
-Search your platform's official documentation to find:
+**GATE:** If NO MCP support found, STOP HERE. Inform user Spellbook requires MCP.
 
-1. **System prompt / context file location and format**
-   - Examples from other platforms:
-     - Claude Code: `~/.claude/CLAUDE.md` and project `CLAUDE.md`
-     - Gemini CLI: `~/.gemini/extensions/<name>/GEMINI.md`
-     - Codex: `~/.codex/AGENTS.md`
-     - GitHub Copilot: `.github/copilot-instructions.md`
-     - Cursor: `.cursorrules` or `.cursor/rules/`
-     - Windsurf: `.windsurfrules`
-   - What is YOUR platform's equivalent?
-
-2. **MCP server registration method**
-   - How does your platform register and connect to MCP servers?
-   - What configuration file or command is used?
-   - **CRITICAL: If your platform does not support MCP, STOP HERE and inform the user that Spellbook cannot be ported to non-MCP platforms.**
-
-3. **Extension / plugin / skill system** (if any)
-   - Does your platform have a native skill or extension system?
-   - If yes, how are extensions structured and registered?
-
-4. **CLI detection method**
-   - What CLI command or config directory indicates your platform is installed?
-   - Example: `cursor --version`, `~/.cursor/` exists, etc.
-
-### 1.3 Document Your Findings
-
-Before proceeding, summarize what you found:
-
+**Document findings:**
 ```
-Platform: [Your platform name]
-Context file location: [path and format]
-MCP registration: [method]
-Extension system: [native system if any, or "none"]
-Detection method: [CLI command or path check]
+Platform: [name] | Context: [path] | MCP: [auto/manual] | Detect: [method]
 ```
-
-If you couldn't find documentation for any of these, ask the user to provide links or information.
 
 ## Phase 2: Repository Setup
 
-### 2.1 Fork the Repository
+**GATE:** STOP. WAIT FOR USER PERMISSION.
+Ask: "Fork axiomantic/spellbook and create feature branch. Proceed?"
 
-Ask the user for permission, then:
-
+**Once approved:**
 ```bash
-# Fork the repository
-gh repo fork axiomantic/spellbook --clone=true
-
-# Navigate to the fork
-cd spellbook
-
-# Set upstream remote
-git remote rename origin upstream
-git remote add origin $(gh repo view --json url -q .url)
-
-# Create feature branch
-git checkout -b feat/add-<your-platform>-support
+gh repo fork axiomantic/spellbook --clone=true && cd spellbook
+git remote rename origin upstream && git remote add origin $(gh repo view --json url -q .url)
+git checkout -b feat/add-<platform>-support
 ```
 
-### 2.2 Bootstrap Repository Understanding
-
-Read these files to understand the project structure:
-
-1. `README.md` - Project overview
-2. `installer/config.py` - Platform configuration patterns
-3. `installer/platforms/base.py` - Abstract installer interface
-4. `installer/platforms/gemini.py` - Reference implementation (most complete example)
-5. `installer/core.py` - How platforms are registered
-6. `scripts/generate_context.py` - How context files are generated
+**Read these (in order):**
+1. `installer/platforms/gemini.py` (PRIMARY - copy this pattern)
+2. `installer/platforms/base.py` (interface to implement)
+3. `installer/config.py`, `installer/core.py` (registration)
 
 ## Phase 3: Implementation
 
-Use the implement-feature skill to guide your implementation. Read it at:
-`skills/implement-feature/SKILL.md`
+**INVOCATION REQUIRED:** Invoke `implement-feature` skill via `Skill` tool or `use_spellbook_skill`:
+```
+use_spellbook_skill(skill_name="implement-feature", args="Port Spellbook to [Platform]")
+```
 
-The skill will guide you through brainstorming, design, planning, and TDD implementation.
+**Context for skill:** Phase 1 findings + gemini.py reference
+**Components:** `installer/platforms/<platform>.py`, update `config.py` and `core.py`
+**Expected:** Working installer with `detect()`, `install()`, `uninstall()`, `get_context_files()`, `get_symlinks()`
 
-### 3.1 Components to Create
+## Phase 4: Validation
 
-Based on the patterns in `installer/platforms/gemini.py`, you need to create:
-
-1. **Platform installer** (`installer/platforms/<your_platform>.py`)
-   - Inherit from `PlatformInstaller`
-   - Implement: `platform_name`, `platform_id`, `detect()`, `install()`, `uninstall()`, `get_context_files()`, `get_symlinks()`
-
-2. **Platform configuration** (update `installer/config.py`)
-   - Add your platform to `SUPPORTED_PLATFORMS`
-   - Add configuration dict to `PLATFORM_CONFIG`
-
-3. **Platform registration** (update `installer/core.py`)
-   - Import your installer class
-   - Add to the `installers` dict in `get_platform_installer()`
-
-4. **Context file generation** (if needed)
-   - If your platform needs a custom context file format, add generator to `installer/components/context_files.py`
-
-### 3.2 Key Decisions
-
-As you implement, consider:
-
-- **Context file strategy**: Does your platform use a single global context file, project-level files, or both?
-- **Symlink vs copy**: Does your platform follow symlinks, or do you need to copy files?
-- **MCP registration**: Is it automatic (like Claude Code's `claude mcp add`) or manual (user edits config)?
-- **Skill access**: Does your platform have a native Skill tool, or will users call `use_spellbook_skill()` via MCP?
-
-## Phase 4: Testing
-
-1. Run the installer in dry-run mode:
-   ```bash
-   uv run install.py --dry-run
-   ```
-
-2. Verify your platform is detected and would be installed
-
-3. Run actual installation and verify:
-   - Context file is created/updated correctly
-   - MCP server is registered (if automatic)
-   - Skills are accessible
+**Dry-run (required first):** `uv run install.py --dry-run` → Verify detection and planned ops
+**Actual install:** `uv run install.py` → Verify context file, MCP registration, skill access
 
 ## Phase 5: Documentation
 
-Update these files:
-
-1. `README.md` - Add your platform to the Platform Support table
-2. `docs/getting-started/platforms.md` - Add platform-specific documentation
+Update `README.md` (support table) and `docs/getting-started/platforms.md` (platform instructions)
 
 ## Phase 6: Submit PR
 
+**GATE:** STOP. WAIT FOR USER PERMISSION.
+Ask: "Ready to commit and create PR. Proceed?"
+
+**Once approved:**
 ```bash
-# Stage changes
-git add -A
+git add -A && git commit -m "feat: add [Platform] support
 
-# Commit (follow conventional commits)
-git commit -m "feat: add <Your Platform> support
-
-- Add <your_platform>.py installer
-- Register in core.py and config.py
+- Add [platform].py installer following gemini.py pattern
+- Register in config.py and core.py
 - Add platform documentation"
 
-# Push to your fork
-git push -u origin feat/add-<your-platform>-support
+git push -u origin feat/add-<platform>-support
 
-# Create PR
-gh pr create --repo axiomantic/spellbook \
-  --title "feat: Add <Your Platform> support" \
+gh pr create --repo axiomantic/spellbook --title "feat: Add [Platform] support" \
   --body "## Summary
-- Adds installer for <Your Platform>
-- Context file location: <path>
-- MCP registration: <method>
-- Detection: <method>
+Platform installer (gemini.py pattern) | Context: [path] | MCP: [method] | Detect: [method]
 
 ## Testing
-- [ ] Dry-run installation works
-- [ ] Actual installation works
-- [ ] Skills accessible via MCP
-- [ ] Context file correctly formatted
+- [x] Dry-run works | [x] Install verified | [x] Skills accessible | [x] Context correct
 
 ## Documentation
-- [ ] README updated
-- [ ] Platform docs added"
+- [x] README updated | [x] Platform docs added"
 ```
 
-## Checklist
+<EXAMPLE>
+**Cursor Platform (Abbreviated):**
+Phase 1: Found `.cursorrules`, manual MCP, detect via `~/.cursor/`
+Phase 2: Permission granted, forked, read gemini.py
+Phase 3: Invoked `implement-feature`, created `cursor.py` following gemini.py pattern:
+```python
+class CursorInstaller(PlatformInstaller):
+    platform_name, platform_id = "Cursor", "cursor"
+    def detect(self): return (Path.home() / ".cursor").exists()
+    def install(self): # ...gemini.py pattern
+```
+Updated config.py, core.py
+Phase 4: Dry-run passed, install verified (.cursorrules created, MCP configured)
+Phase 5: Updated README, platform docs
+Phase 6: Permission granted, committed, PR created
+</EXAMPLE>
 
-Use this to track progress:
+<FORBIDDEN>
+- Do NOT skip dry-run testing
+- Do NOT run git commands without explicit permission
+- Do NOT deviate from gemini.py reference pattern
+- Do NOT assume MCP support without verification
+- Do NOT submit PR without testing actual installation
+- Do NOT forget to update both README and platform docs
+</FORBIDDEN>
 
-- [ ] Phase 1: Self-identification complete
-- [ ] Phase 1: Platform documentation researched
-- [ ] Phase 1: MCP support confirmed
-- [ ] Phase 2: Repository forked and set up
-- [ ] Phase 2: Key files read and understood
-- [ ] Phase 3: Platform installer created
-- [ ] Phase 3: Config and core updated
-- [ ] Phase 4: Dry-run tested
-- [ ] Phase 4: Actual installation tested
-- [ ] Phase 5: Documentation updated
-- [ ] Phase 6: PR submitted
+<SELF_CHECK>
+Before submitting PR, verify:
+☐ Followed gemini.py reference pattern exactly?
+☐ Tested dry-run mode successfully?
+☐ Tested actual installation and verified all files?
+☐ Updated both README and docs/getting-started/platforms.md?
+☐ Got user permission before EVERY git command?
+☐ Invoked implement-feature skill (not duplicated its instructions)?
 
-## Troubleshooting
+If NO to ANY item, fix before proceeding.
+</SELF_CHECK>
 
-### "I can't find MCP documentation for my platform"
-
-MCP support is required. If your platform doesn't document MCP support, it likely doesn't have it. Ask the user to confirm whether their platform supports MCP.
-
-### "I can't find system prompt documentation"
-
-Ask the user to provide:
-1. Links to their platform's documentation
-2. Examples of where they've seen system prompts load from
-
-### "My platform doesn't have a CLI"
-
-Use config directory existence as the detection method instead. Example: `Path.home() / ".yourplatform"`.
-
-### "Web search isn't returning useful results"
-
-Ask the user to paste relevant documentation directly into the chat.
+<FINAL_EMPHASIS>
+This is very important to expanding Spellbook's reach. Stay focused and dedicated to production-quality code. You'd better be sure every component works before submission.
+</FINAL_EMPHASIS>
 ````
 
 ## After Porting
