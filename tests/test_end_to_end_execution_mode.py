@@ -25,8 +25,8 @@ class TestWorkPacketE2E:
 
     def test_full_work_packet_lifecycle(self, tmp_path):
         """Test creating, reading, and updating work packet artifacts."""
-        from spellbook.types import Manifest, Track, Checkpoint, CompletionMarker
-        from spellbook.command_utils import atomic_write_json, read_json_safe
+        from spellbook_mcp.models import Manifest, Track, Checkpoint, CompletionMarker
+        from spellbook_mcp.command_utils import atomic_write_json, read_json_safe
 
         # Step 1: Create manifest
         packet_dir = tmp_path / "work-packets" / "test-feature"
@@ -118,7 +118,7 @@ class TestWorkPacketE2E:
 
     def test_concurrent_checkpoint_updates(self, tmp_path):
         """Test that concurrent checkpoint updates don't corrupt files."""
-        from spellbook.command_utils import atomic_write_json, read_json_safe
+        from spellbook_mcp.command_utils import atomic_write_json, read_json_safe
 
         checkpoint_path = tmp_path / "checkpoint.json"
         results = []
@@ -159,7 +159,7 @@ class TestWorkPacketE2E:
 
     def test_packet_file_parsing(self, tmp_path):
         """Test parsing work packet markdown files with YAML frontmatter."""
-        from spellbook.command_utils import parse_packet_file
+        from spellbook_mcp.command_utils import parse_packet_file
 
         packet_content = """---
 format_version: "1.0.0"
@@ -317,11 +317,11 @@ class TestPreferencesE2E:
 
     def test_preferences_persistence(self, tmp_path, monkeypatch):
         """Test that preferences persist across calls."""
-        from spellbook.preferences import load_preferences, save_preference, get_preferences_path
+        from spellbook_mcp.preferences import load_preferences, save_preference, get_preferences_path
 
         # Monkeypatch the preferences path to use tmp_path
         prefs_path = tmp_path / "preferences.json"
-        monkeypatch.setattr('spellbook.preferences.get_preferences_path', lambda: prefs_path)
+        monkeypatch.setattr('spellbook_mcp.preferences.get_preferences_path', lambda: prefs_path)
 
         # Save a preference (dot-separated key)
         save_preference("terminal.program", "iterm2")
@@ -337,11 +337,11 @@ class TestPreferencesE2E:
 
     def test_preferences_default_values(self, tmp_path, monkeypatch):
         """Test that missing preferences return defaults."""
-        from spellbook.preferences import load_preferences, get_preferences_path
+        from spellbook_mcp.preferences import load_preferences, get_preferences_path
 
         # Monkeypatch the preferences path to use non-existent file
         prefs_path = tmp_path / "nonexistent.json"
-        monkeypatch.setattr('spellbook.preferences.get_preferences_path', lambda: prefs_path)
+        monkeypatch.setattr('spellbook_mcp.preferences.get_preferences_path', lambda: prefs_path)
 
         # Load preferences (should return defaults)
         prefs = load_preferences()
@@ -355,7 +355,7 @@ class TestMetricsE2E:
 
     def test_metrics_logging(self, tmp_path, monkeypatch):
         """Test that metrics are logged correctly."""
-        from spellbook.metrics import log_feature_metrics, get_project_encoded
+        from spellbook_mcp.metrics import log_feature_metrics, get_project_encoded
 
         # Monkeypatch Path.home() to use tmp_path
         monkeypatch.setattr('pathlib.Path.home', lambda: tmp_path)
@@ -395,8 +395,8 @@ class TestDataclassesE2E:
 
     def test_manifest_round_trip(self, tmp_path):
         """Test Manifest dataclass can be serialized and deserialized."""
-        from spellbook.types import Manifest, Track
-        from spellbook.command_utils import atomic_write_json, read_json_safe
+        from spellbook_mcp.models import Manifest, Track
+        from spellbook_mcp.command_utils import atomic_write_json, read_json_safe
         from dataclasses import asdict
 
         track = Track(
@@ -439,8 +439,8 @@ class TestDataclassesE2E:
 
     def test_checkpoint_round_trip(self, tmp_path):
         """Test Checkpoint dataclass can be serialized and deserialized."""
-        from spellbook.types import Checkpoint
-        from spellbook.command_utils import atomic_write_json, read_json_safe
+        from spellbook_mcp.models import Checkpoint
+        from spellbook_mcp.command_utils import atomic_write_json, read_json_safe
         from dataclasses import asdict
 
         checkpoint = Checkpoint(

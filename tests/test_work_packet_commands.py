@@ -4,8 +4,8 @@ import json
 import pytest
 from pathlib import Path
 from datetime import datetime
-from spellbook.command_utils import atomic_write_json, read_json_safe, parse_packet_file
-from spellbook.types import Manifest, Track, Checkpoint, CompletionMarker
+from spellbook_mcp.command_utils import atomic_write_json, read_json_safe, parse_packet_file
+from spellbook_mcp.models import Manifest, Track, Checkpoint, CompletionMarker
 
 
 @pytest.fixture

@@ -2,8 +2,8 @@
 import pytest
 from unittest.mock import AsyncMock, Mock, patch, MagicMock
 from datetime import datetime
-from spellbook.coordination.backends.mcp_streamable_http import MCPStreamableHTTPBackend
-from spellbook.coordination.backends.base import CoordinationBackend
+from spellbook_mcp.coordination.backends.mcp_streamable_http import MCPStreamableHTTPBackend
+from spellbook_mcp.coordination.backends.base import CoordinationBackend
 
 pytestmark = pytest.mark.anyio
 
@@ -11,7 +11,7 @@ pytestmark = pytest.mark.anyio
 @pytest.fixture
 def mock_httpx_client():
     """Mock httpx AsyncClient."""
-    with patch("spellbook.coordination.backends.mcp_streamable_http.httpx.AsyncClient") as mock_client:
+    with patch("spellbook_mcp.coordination.backends.mcp_streamable_http.httpx.AsyncClient") as mock_client:
         yield mock_client
 
 

@@ -4,7 +4,7 @@ import pytest
 
 def test_error_category_enum():
     """Test ErrorCategory enum exists."""
-    from spellbook.coordination.retry import ErrorCategory
+    from spellbook_mcp.coordination.retry import ErrorCategory
 
     assert ErrorCategory.RECOVERABLE is not None
     assert ErrorCategory.NON_RECOVERABLE is not None
@@ -12,7 +12,7 @@ def test_error_category_enum():
 
 def test_classify_error_recoverable():
     """Test classifying recoverable errors."""
-    from spellbook.coordination.retry import classify_error, ErrorCategory
+    from spellbook_mcp.coordination.retry import classify_error, ErrorCategory
 
     assert classify_error("network_error") == ErrorCategory.RECOVERABLE
     assert classify_error("rate_limit") == ErrorCategory.RECOVERABLE
@@ -22,7 +22,7 @@ def test_classify_error_recoverable():
 
 def test_classify_error_non_recoverable():
     """Test classifying non-recoverable errors."""
-    from spellbook.coordination.retry import classify_error, ErrorCategory
+    from spellbook_mcp.coordination.retry import classify_error, ErrorCategory
 
     assert classify_error("test_failure") == ErrorCategory.NON_RECOVERABLE
     assert classify_error("build_failure") == ErrorCategory.NON_RECOVERABLE
@@ -32,7 +32,7 @@ def test_classify_error_non_recoverable():
 
 def test_classify_error_unknown_defaults_non_recoverable():
     """Test unknown error types default to non-recoverable."""
-    from spellbook.coordination.retry import classify_error, ErrorCategory
+    from spellbook_mcp.coordination.retry import classify_error, ErrorCategory
 
     assert classify_error("unknown_error") == ErrorCategory.NON_RECOVERABLE
     assert classify_error("") == ErrorCategory.NON_RECOVERABLE
@@ -40,7 +40,7 @@ def test_classify_error_unknown_defaults_non_recoverable():
 
 def test_retry_policy_default_values():
     """Test RetryPolicy default values."""
-    from spellbook.coordination.retry import RetryPolicy
+    from spellbook_mcp.coordination.retry import RetryPolicy
 
     policy = RetryPolicy()
     assert policy.max_retries == 2
@@ -50,7 +50,7 @@ def test_retry_policy_default_values():
 
 def test_retry_policy_get_retry_delay():
     """Test retry delay calculation."""
-    from spellbook.coordination.retry import RetryPolicy
+    from spellbook_mcp.coordination.retry import RetryPolicy
 
     policy = RetryPolicy()
 
@@ -67,7 +67,7 @@ def test_retry_policy_get_retry_delay():
 
 def test_retry_policy_custom_values():
     """Test RetryPolicy with custom values."""
-    from spellbook.coordination.retry import RetryPolicy
+    from spellbook_mcp.coordination.retry import RetryPolicy
 
     policy = RetryPolicy(max_retries=3, backoff_base=10, backoff_multiplier=3)
 

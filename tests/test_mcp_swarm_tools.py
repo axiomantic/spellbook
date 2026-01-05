@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
 import asyncio
-from spellbook.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
+from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
 
 
 @pytest.fixture
@@ -274,7 +274,7 @@ class TestBackendInitialization:
     def test_gets_mcp_http_backend(self):
         """Test getting MCP HTTP backend."""
         from spellbook_mcp.swarm_tools import _get_backend
-        from spellbook.coordination.backends.mcp_streamable_http import MCPStreamableHTTPBackend
+        from spellbook_mcp.coordination.backends.mcp_streamable_http import MCPStreamableHTTPBackend
 
         config = CoordinationConfig(
             backend=CoordinationBackend.MCP_STREAMABLE_HTTP,

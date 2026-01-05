@@ -1,7 +1,7 @@
 """Tests for coordination backend base class."""
 import pytest
 from abc import ABC
-from spellbook.coordination.backends.base import (
+from spellbook_mcp.coordination.backends.base import (
     CoordinationBackend,
     BACKENDS,
     register_backend,

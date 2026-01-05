@@ -1,7 +1,7 @@
 """Integration tests for MCP server with swarm tools."""
 import pytest
 from unittest.mock import patch, AsyncMock
-from spellbook.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
+from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend, MCPSSEConfig
 
 
 class TestMCPServerSwarmToolsIntegration:

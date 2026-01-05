@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, UTC
 def state_manager(tmp_path):
     """Create temporary state manager."""
     # Import here to ensure test fails if module doesn't exist
-    from spellbook.coordination.state import StateManager
+    from spellbook_mcp.coordination.state import StateManager
 
     db_path = tmp_path / "test.db"
     return StateManager(str(db_path))

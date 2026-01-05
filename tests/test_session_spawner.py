@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from spellbook.session.spawner import SessionSpawner
+from spellbook_mcp.session.spawner import SessionSpawner
 
 
 @pytest.fixture

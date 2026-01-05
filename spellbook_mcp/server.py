@@ -34,14 +34,15 @@ import json
 import sys
 
 # Add script directory and repo root to sys.path to allow imports when run directly.
-# This fixes "ImportError: attempted relative import with no known parent package"
-# when the server is executed as a standalone script by Gemini CLI or Claude Code.
+# - current_dir: allows "from path_utils import ..." style imports
+# - repo_root: allows "from spellbook_mcp.X import ..." style imports
+# This fixes import issues when the server is executed as a standalone script.
 current_dir = os.path.dirname(os.path.abspath(__file__))
-repo_root = os.path.dirname(current_dir)  # Parent of spellbook_mcp is repo root
+repo_root = os.path.dirname(current_dir)
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 if repo_root not in sys.path:
-    sys.path.insert(0, repo_root)  # Allows importing spellbook package
+    sys.path.insert(0, repo_root)
 
 from path_utils import get_project_dir
 from session_ops import (

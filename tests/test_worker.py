@@ -7,7 +7,7 @@ import json
 
 def test_swarm_worker_initialization():
     """Test SwarmWorker initializes with correct attributes."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -27,7 +27,7 @@ def test_swarm_worker_initialization():
 
 def test_swarm_worker_checkpoint_path():
     """Test SwarmWorker computes correct checkpoint file path."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -44,7 +44,7 @@ def test_swarm_worker_checkpoint_path():
 @pytest.mark.asyncio
 async def test_register_creates_checkpoint_and_calls_backend():
     """Test register() writes marker file and calls MCP backend."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -63,9 +63,9 @@ async def test_register_creates_checkpoint_and_calls_backend():
         "registered_at": "2026-01-05T10:00:00Z"
     }
 
-    with patch("spellbook.coordination.worker.get_backend", return_value=mock_backend):
-        with patch("spellbook.coordination.worker.Path.mkdir") as mock_mkdir:
-            with patch("spellbook.coordination.worker.Path.write_text") as mock_write:
+    with patch("spellbook_mcp.coordination.worker.get_backend", return_value=mock_backend):
+        with patch("spellbook_mcp.coordination.worker.Path.mkdir") as mock_mkdir:
+            with patch("spellbook_mcp.coordination.worker.Path.write_text") as mock_write:
                 result = await worker.register()
 
     # Verify checkpoint directory created
@@ -97,7 +97,7 @@ async def test_register_creates_checkpoint_and_calls_backend():
 @pytest.mark.asyncio
 async def test_report_progress_increments_counter():
     """Test report_progress() increments tasks_completed counter."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -117,9 +117,9 @@ async def test_report_progress_increments_counter():
         "timestamp": "2026-01-05T10:01:00Z"
     }
 
-    with patch("spellbook.coordination.worker.get_backend", return_value=mock_backend):
-        with patch("spellbook.coordination.worker.Path.mkdir"):
-            with patch("spellbook.coordination.worker.Path.write_text"):
+    with patch("spellbook_mcp.coordination.worker.get_backend", return_value=mock_backend):
+        with patch("spellbook_mcp.coordination.worker.Path.mkdir"):
+            with patch("spellbook_mcp.coordination.worker.Path.write_text"):
                 result = await worker.report_progress(
                     task_id="task-1",
                     task_name="Implement authentication",
@@ -146,7 +146,7 @@ async def test_report_progress_increments_counter():
 @pytest.mark.asyncio
 async def test_report_progress_writes_checkpoint():
     """Test report_progress() writes checkpoint marker file."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -166,9 +166,9 @@ async def test_report_progress_writes_checkpoint():
         "timestamp": "2026-01-05T10:01:00Z"
     }
 
-    with patch("spellbook.coordination.worker.get_backend", return_value=mock_backend):
-        with patch("spellbook.coordination.worker.Path.mkdir") as mock_mkdir:
-            with patch("spellbook.coordination.worker.Path.write_text") as mock_write:
+    with patch("spellbook_mcp.coordination.worker.get_backend", return_value=mock_backend):
+        with patch("spellbook_mcp.coordination.worker.Path.mkdir") as mock_mkdir:
+            with patch("spellbook_mcp.coordination.worker.Path.write_text") as mock_write:
                 await worker.report_progress(
                     task_id="task-1",
                     task_name="Implement authentication",
@@ -188,7 +188,7 @@ async def test_report_progress_writes_checkpoint():
 @pytest.mark.asyncio
 async def test_report_progress_handles_optional_commit():
     """Test report_progress() handles optional commit parameter."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -201,9 +201,9 @@ async def test_report_progress_handles_optional_commit():
     mock_backend = AsyncMock()
     mock_backend.report_progress.return_value = {"acknowledged": True}
 
-    with patch("spellbook.coordination.worker.get_backend", return_value=mock_backend):
-        with patch("spellbook.coordination.worker.Path.mkdir"):
-            with patch("spellbook.coordination.worker.Path.write_text"):
+    with patch("spellbook_mcp.coordination.worker.get_backend", return_value=mock_backend):
+        with patch("spellbook_mcp.coordination.worker.Path.mkdir"):
+            with patch("spellbook_mcp.coordination.worker.Path.write_text"):
                 # Without commit
                 await worker.report_progress(
                     task_id="task-1",
@@ -219,7 +219,7 @@ async def test_report_progress_handles_optional_commit():
 @pytest.mark.asyncio
 async def test_report_complete_writes_checkpoint_and_calls_backend():
     """Test report_complete() writes marker file and calls backend."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -240,9 +240,9 @@ async def test_report_complete_writes_checkpoint_and_calls_backend():
         "remaining_workers": 2
     }
 
-    with patch("spellbook.coordination.worker.get_backend", return_value=mock_backend):
-        with patch("spellbook.coordination.worker.Path.mkdir"):
-            with patch("spellbook.coordination.worker.Path.write_text") as mock_write:
+    with patch("spellbook_mcp.coordination.worker.get_backend", return_value=mock_backend):
+        with patch("spellbook_mcp.coordination.worker.Path.mkdir"):
+            with patch("spellbook_mcp.coordination.worker.Path.write_text") as mock_write:
                 result = await worker.report_complete(
                     final_commit="def5678",
                     tests_passed=True,
@@ -270,7 +270,7 @@ async def test_report_complete_writes_checkpoint_and_calls_backend():
 @pytest.mark.asyncio
 async def test_report_error_writes_checkpoint_and_calls_backend():
     """Test report_error() writes marker file and calls backend."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -289,9 +289,9 @@ async def test_report_error_writes_checkpoint_and_calls_backend():
         "retry_in_seconds": 30
     }
 
-    with patch("spellbook.coordination.worker.get_backend", return_value=mock_backend):
-        with patch("spellbook.coordination.worker.Path.mkdir"):
-            with patch("spellbook.coordination.worker.Path.write_text") as mock_write:
+    with patch("spellbook_mcp.coordination.worker.get_backend", return_value=mock_backend):
+        with patch("spellbook_mcp.coordination.worker.Path.mkdir"):
+            with patch("spellbook_mcp.coordination.worker.Path.write_text") as mock_write:
                 result = await worker.report_error(
                     task_id="task-1",
                     error_type="network_error",
@@ -321,7 +321,7 @@ async def test_report_error_writes_checkpoint_and_calls_backend():
 @pytest.mark.asyncio
 async def test_report_progress_multiple_tasks_increments_correctly():
     """Test multiple progress reports increment counter correctly."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -334,9 +334,9 @@ async def test_report_progress_multiple_tasks_increments_correctly():
     mock_backend = AsyncMock()
     mock_backend.report_progress.return_value = {"acknowledged": True}
 
-    with patch("spellbook.coordination.worker.get_backend", return_value=mock_backend):
-        with patch("spellbook.coordination.worker.Path.mkdir"):
-            with patch("spellbook.coordination.worker.Path.write_text"):
+    with patch("spellbook_mcp.coordination.worker.get_backend", return_value=mock_backend):
+        with patch("spellbook_mcp.coordination.worker.Path.mkdir"):
+            with patch("spellbook_mcp.coordination.worker.Path.write_text"):
                 await worker.report_progress("task-1", "Task 1", "completed")
                 assert worker.tasks_completed == 1
 
@@ -350,7 +350,7 @@ async def test_report_progress_multiple_tasks_increments_correctly():
 @pytest.mark.asyncio
 async def test_dual_write_behavior_on_failure():
     """Test that checkpoint is written even if backend call fails."""
-    from spellbook.coordination.worker import SwarmWorker
+    from spellbook_mcp.coordination.worker import SwarmWorker
 
     worker = SwarmWorker(
         swarm_id="test-swarm-123",
@@ -363,9 +363,9 @@ async def test_dual_write_behavior_on_failure():
     mock_backend = AsyncMock()
     mock_backend.register_worker.side_effect = Exception("Network error")
 
-    with patch("spellbook.coordination.worker.get_backend", return_value=mock_backend):
-        with patch("spellbook.coordination.worker.Path.mkdir"):
-            with patch("spellbook.coordination.worker.Path.write_text") as mock_write:
+    with patch("spellbook_mcp.coordination.worker.get_backend", return_value=mock_backend):
+        with patch("spellbook_mcp.coordination.worker.Path.mkdir"):
+            with patch("spellbook_mcp.coordination.worker.Path.write_text") as mock_write:
                 with pytest.raises(Exception, match="Network error"):
                     await worker.register()
 

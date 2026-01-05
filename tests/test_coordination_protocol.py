@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 def test_register_request_valid():
     """Test valid RegisterRequest."""
-    from spellbook.coordination.protocol import RegisterRequest
+    from spellbook_mcp.coordination.protocol import RegisterRequest
 
     req = RegisterRequest(
         packet_id=1,
@@ -21,7 +21,7 @@ def test_register_request_valid():
 
 def test_register_request_invalid_packet_id():
     """Test RegisterRequest with invalid packet_id."""
-    from spellbook.coordination.protocol import RegisterRequest
+    from spellbook_mcp.coordination.protocol import RegisterRequest
 
     with pytest.raises(ValidationError):
         RegisterRequest(
@@ -34,7 +34,7 @@ def test_register_request_invalid_packet_id():
 
 def test_register_request_invalid_packet_name():
     """Test RegisterRequest with invalid packet_name."""
-    from spellbook.coordination.protocol import RegisterRequest
+    from spellbook_mcp.coordination.protocol import RegisterRequest
 
     with pytest.raises(ValidationError):
         RegisterRequest(
@@ -47,7 +47,7 @@ def test_register_request_invalid_packet_name():
 
 def test_register_request_invalid_tasks_total():
     """Test RegisterRequest with invalid tasks_total."""
-    from spellbook.coordination.protocol import RegisterRequest
+    from spellbook_mcp.coordination.protocol import RegisterRequest
 
     with pytest.raises(ValidationError):
         RegisterRequest(
@@ -60,7 +60,7 @@ def test_register_request_invalid_tasks_total():
 
 def test_progress_request_valid():
     """Test valid ProgressRequest."""
-    from spellbook.coordination.protocol import ProgressRequest
+    from spellbook_mcp.coordination.protocol import ProgressRequest
 
     req = ProgressRequest(
         packet_id=1,
@@ -78,7 +78,7 @@ def test_progress_request_valid():
 
 def test_progress_request_invalid_status():
     """Test ProgressRequest with invalid status."""
-    from spellbook.coordination.protocol import ProgressRequest
+    from spellbook_mcp.coordination.protocol import ProgressRequest
 
     with pytest.raises(ValidationError):
         ProgressRequest(
@@ -93,7 +93,7 @@ def test_progress_request_invalid_status():
 
 def test_progress_request_invalid_commit():
     """Test ProgressRequest with invalid commit."""
-    from spellbook.coordination.protocol import ProgressRequest
+    from spellbook_mcp.coordination.protocol import ProgressRequest
 
     with pytest.raises(ValidationError):
         ProgressRequest(
@@ -109,7 +109,7 @@ def test_progress_request_invalid_commit():
 
 def test_progress_request_tasks_completed_exceeds_total():
     """Test ProgressRequest with tasks_completed > tasks_total."""
-    from spellbook.coordination.protocol import ProgressRequest
+    from spellbook_mcp.coordination.protocol import ProgressRequest
 
     with pytest.raises(ValidationError):
         ProgressRequest(
@@ -124,7 +124,7 @@ def test_progress_request_tasks_completed_exceeds_total():
 
 def test_complete_request_valid():
     """Test valid CompleteRequest."""
-    from spellbook.coordination.protocol import CompleteRequest
+    from spellbook_mcp.coordination.protocol import CompleteRequest
 
     req = CompleteRequest(
         packet_id=1,
@@ -138,7 +138,7 @@ def test_complete_request_valid():
 
 def test_complete_request_invalid_commit():
     """Test CompleteRequest with invalid commit."""
-    from spellbook.coordination.protocol import CompleteRequest
+    from spellbook_mcp.coordination.protocol import CompleteRequest
 
     with pytest.raises(ValidationError):
         CompleteRequest(
@@ -151,7 +151,7 @@ def test_complete_request_invalid_commit():
 
 def test_error_request_valid():
     """Test valid ErrorRequest."""
-    from spellbook.coordination.protocol import ErrorRequest
+    from spellbook_mcp.coordination.protocol import ErrorRequest
 
     req = ErrorRequest(
         packet_id=1,
@@ -166,7 +166,7 @@ def test_error_request_valid():
 
 def test_error_request_message_too_long():
     """Test ErrorRequest with message too long."""
-    from spellbook.coordination.protocol import ErrorRequest
+    from spellbook_mcp.coordination.protocol import ErrorRequest
 
     with pytest.raises(ValidationError):
         ErrorRequest(
@@ -180,7 +180,7 @@ def test_error_request_message_too_long():
 
 def test_swarm_create_response():
     """Test SwarmCreateResponse."""
-    from spellbook.coordination.protocol import SwarmCreateResponse
+    from spellbook_mcp.coordination.protocol import SwarmCreateResponse
 
     resp = SwarmCreateResponse(
         swarm_id="swarm-123",
@@ -195,7 +195,7 @@ def test_swarm_create_response():
 
 def test_register_response():
     """Test RegisterResponse."""
-    from spellbook.coordination.protocol import RegisterResponse
+    from spellbook_mcp.coordination.protocol import RegisterResponse
 
     resp = RegisterResponse(
         registered=True,
@@ -210,7 +210,7 @@ def test_register_response():
 
 def test_swarm_status():
     """Test SwarmStatus."""
-    from spellbook.coordination.protocol import SwarmStatus, WorkerStatus
+    from spellbook_mcp.coordination.protocol import SwarmStatus, WorkerStatus
 
     status = SwarmStatus(
         swarm_id="swarm-123",

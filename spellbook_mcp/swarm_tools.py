@@ -10,13 +10,13 @@ All tools are synchronous wrappers around async backend operations.
 """
 import asyncio
 from typing import Dict, Any, Optional
-from spellbook.preferences import (
+from spellbook_mcp.preferences import (
     load_coordination_config,
     CoordinationConfig,
     CoordinationBackend
 )
-from spellbook.coordination.backends.base import CoordinationBackend as BackendInterface
-from spellbook.coordination.backends.mcp_streamable_http import MCPStreamableHTTPBackend
+from spellbook_mcp.coordination.backends.base import CoordinationBackend as BackendInterface
+from spellbook_mcp.coordination.backends.mcp_streamable_http import MCPStreamableHTTPBackend
 
 
 def _get_backend(config: CoordinationConfig) -> BackendInterface:
