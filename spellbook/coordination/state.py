@@ -1,0 +1,2 @@
+"""SQLite state management."""
+pass
