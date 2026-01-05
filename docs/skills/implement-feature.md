@@ -88,12 +88,12 @@ Phase 2: Design (subagents run in SYNTHESIS MODE - no questions)
   └─ Fix design doc (subagent invokes executing-plans)
     ↓
 Phase 3: Implementation Planning
-  ├─ Create impl plan (subagent invokes writing-plans)
-  ├─ Review impl plan (subagent invokes implementation-plan-reviewer)
-  ├─ Present review → User approval gate (if interactive mode)
-  └─ Fix impl plan (subagent invokes executing-plans)
+  ├─ 3.1-3.4: Create and review impl plan
+  ├─ 3.4.5: Execution Mode Analysis (estimate tokens, recommend mode)
+  ├─ 3.5: Generate Work Packets (if swarmed/sequential mode)
+  └─ 3.6: Session Handoff (spawn workers, EXIT orchestrator)
     ↓
-Phase 4: Implementation
+Phase 4: Implementation (direct/delegated) OR Worker Sessions (swarmed/sequential)
   ├─ Setup worktree (subagent invokes using-git-worktrees)
   ├─ Execute tasks (subagent per task, invokes test-driven-development)
   ├─ Code review after each (subagent invokes code-reviewer)
@@ -102,6 +102,43 @@ Phase 4: Implementation
   ├─ Comprehensive claim validation (subagent invokes factchecker)
   └─ Finish branch (subagent invokes finishing-a-development-branch)
 ```
+
+## Execution Mode (New in v2.0)
+
+For large features that would exhaust context in a single session, the skill now supports **execution mode** selection:
+
+### Execution Modes
+
+| Mode | When Selected | Behavior |
+|------|---------------|----------|
+| **swarmed** | >25 tasks OR >80% context usage | Generate work packets, spawn parallel sessions per track |
+| **sequential** | Large features, poor parallelization | Generate work packets, work through tracks one at a time |
+| **delegated** | 10-25 tasks, 40-65% context usage | Stay in session, delegate heavily to subagents |
+| **direct** | <10 tasks, <40% context usage | Stay in session, minimal delegation |
+
+### Work Packet Generation (Phase 3.5)
+
+When execution mode is `swarmed` or `sequential`, the skill:
+
+1. Extracts tracks from the implementation plan
+2. Generates work packet files in `~/.claude/work-packets/{feature-slug}/`
+3. Creates a manifest with track metadata and dependencies
+4. Each packet is a self-contained boot prompt for a worker session
+
+### Session Handoff (Phase 3.6)
+
+For swarmed/sequential modes, the orchestrator:
+
+1. Identifies independent tracks (no dependencies)
+2. Offers to auto-spawn worker sessions via `spawn_claude_session` MCP tool
+3. Provides manual terminal commands if MCP tool unavailable
+4. **EXITS** - the orchestrator's job is complete
+
+### Related Commands
+
+- [/execute-work-packet](../commands/execute-work-packet.md) - Execute a single work packet
+- [/execute-work-packets-seq](../commands/execute-work-packets-seq.md) - Execute all packets sequentially
+- [/merge-work-packets](../commands/merge-work-packets.md) - Merge completed packets with QA gates
 
 ---
 

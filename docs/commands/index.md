@@ -27,3 +27,13 @@ Commands for debugging and verification (typically invoked via the `/debug` skil
 | [/move-project](move-project.md) | Relocate project files | spellbook |
 | [/simplify](simplify.md) | Code simplification analysis | spellbook |
 | [/write-plan](write-plan.md) | Create detailed implementation plan | [superpowers](https://github.com/obra/superpowers) |
+
+### Execution Mode Commands
+
+Commands for work packet execution (used by `implement-feature` for large features):
+
+| Command | Description | Origin |
+|---------|-------------|--------|
+| [/execute-work-packet](execute-work-packet.md) | Execute a single work packet with TDD | spellbook |
+| [/execute-work-packets-seq](execute-work-packets-seq.md) | Execute all packets sequentially | spellbook |
+| [/merge-work-packets](merge-work-packets.md) | Merge completed packets with QA gates | spellbook |
