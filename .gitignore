@@ -3,6 +3,7 @@
 .swarm/
 logs/
 site/
+.worktrees/
 
 # OS files
 .DS_Store
