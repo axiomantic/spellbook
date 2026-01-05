@@ -125,8 +125,10 @@ Phase 3: Implementation Planning
 Phase 4: Implementation (ONLY if delegated/direct mode)
   ├─ Setup worktree (subagent invokes using-git-worktrees)
   ├─ Execute tasks (subagent per task, invokes test-driven-development)
+  ├─ Implementation completion verification after each task (NEW)
   ├─ Code review after each (subagent invokes code-reviewer)
   ├─ Claim validation after each (subagent invokes factchecker)
+  ├─ Comprehensive implementation completion audit (NEW)
   ├─ Run tests + green-mirage-audit (subagent invokes green-mirage-audit)
   ├─ Comprehensive claim validation (subagent invokes factchecker)
   └─ Finish branch (subagent invokes finishing-a-development-branch)
@@ -2400,7 +2402,129 @@ Task (or subagent simulation):
     Report: files changed, test results, commit hash, any issues.
 ```
 
-### 4.4 Code Review After Each Task
+### 4.4 Implementation Completion Verification
+
+<!-- SUBAGENT: YES - Self-contained verification. Traces plan items through code, returns findings. -->
+
+<CRITICAL>
+This verification runs AFTER each task completes and BEFORE code review.
+Catches incomplete work early rather than discovering gaps at the end.
+</CRITICAL>
+
+<RULE>Verify implementation completeness before reviewing quality.</RULE>
+
+```
+Task (or subagent simulation):
+  description: "Verify Task N implementation completeness"
+  prompt: |
+    You are an Implementation Completeness Auditor. Your job is to verify that
+    claimed work was actually done - not review quality, just existence and completeness.
+
+    ## Task Being Verified
+
+    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Task number: N
+    Task description: [from plan]
+
+    ## Verification Protocol
+
+    For EACH item below, trace through actual code to verify existence.
+    Do NOT trust file names or comments - verify actual behavior.
+
+    ### 1. Acceptance Criteria Verification
+
+    For each acceptance criterion in Task N:
+    1. State the criterion
+    2. Identify where in code this should be implemented
+    3. Read the code and trace the execution path
+    4. Verdict: COMPLETE | INCOMPLETE | PARTIAL
+    5. If not COMPLETE: What's missing?
+
+    ### 2. Expected Outputs Verification
+
+    For each expected output (file, function, class, endpoint):
+    1. State the expected output
+    2. Verify it exists
+    3. Verify it has the expected interface/signature
+    4. Verdict: EXISTS | MISSING | WRONG_INTERFACE
+
+    ### 3. Interface Contract Verification
+
+    For each interface this task was supposed to implement:
+    1. State the interface contract from the plan
+    2. Find the actual implementation
+    3. Compare signatures, types, behavior
+    4. Verdict: MATCHES | DIFFERS | MISSING
+
+    ### 4. Behavior Verification (not just structure)
+
+    For key behaviors this task should enable:
+    1. State the expected behavior
+    2. Trace through code: can this behavior actually occur?
+    3. Identify any dead code paths or unreachable logic
+    4. Verdict: FUNCTIONAL | NON_FUNCTIONAL | PARTIAL
+
+    ## Output Format
+
+    ```
+    TASK N COMPLETION AUDIT
+
+    Overall: COMPLETE | INCOMPLETE | PARTIAL
+
+    ACCEPTANCE CRITERIA:
+    ✓ [criterion 1]: COMPLETE
+    ✗ [criterion 2]: INCOMPLETE - [what's missing]
+    ◐ [criterion 3]: PARTIAL - [what's done, what's not]
+
+    EXPECTED OUTPUTS:
+    ✓ src/foo.ts: EXISTS, interface matches
+    ✗ src/bar.ts: MISSING
+    ◐ src/baz.ts: EXISTS, WRONG_INTERFACE - expected X, got Y
+
+    INTERFACE CONTRACTS:
+    ✓ FooService.doThing(): MATCHES
+    ✗ BarService.process(): DIFFERS - missing error handling param
+
+    BEHAVIOR VERIFICATION:
+    ✓ User can create widget: FUNCTIONAL
+    ✗ Widget validates input: NON_FUNCTIONAL - validation exists but never called
+
+    BLOCKING ISSUES (must fix before proceeding):
+    1. [issue]
+    2. [issue]
+
+    TOTAL: [N]/[M] items complete
+    ```
+
+    IMPORTANT: This is about EXISTENCE and COMPLETENESS, not quality.
+    Code review (next phase) handles quality. You handle "did they build it at all?"
+```
+
+**Gate Behavior:**
+
+IF any BLOCKING ISSUES found:
+1. Return to task implementation
+2. Fix the incomplete items
+3. Re-run completion verification
+4. Loop until all items COMPLETE
+
+IF all items COMPLETE:
+- Proceed to Phase 4.5 (Code Review)
+
+**What This Catches That Other Gates Miss:**
+
+| Gap Type | Completion Audit | Code Review | Factchecker | Green Mirage |
+|----------|-----------------|-------------|-------------|--------------|
+| Feature not implemented at all | ✓ | ✗ | ✗ | ✗ |
+| Interface differs from spec | ✓ | Maybe | ✗ | ✗ |
+| Dead code (exists but unreachable) | ✓ | Maybe | ✗ | ✗ |
+| Partial implementation | ✓ | ✗ | ✗ | ✗ |
+| Wrong signature/types | ✓ | Maybe | ✗ | ✗ |
+| Code quality issues | ✗ | ✓ | ✗ | ✗ |
+| Inaccurate comments/docs | ✗ | ✗ | ✓ | ✗ |
+| Tests don't test claims | ✗ | ✗ | ✗ | ✓ |
+
+### 4.5 Code Review After Each Task
 
 <!-- SUBAGENT: YES - Self-contained verification task. Fresh eyes, returns verdict + issues only. Saves orchestrator context. -->
 
@@ -2428,7 +2552,7 @@ If issues found:
 - Important: Fix before next task
 - Minor: Note for later
 
-### 4.4.1 Validate Claims After Each Task
+### 4.5.1 Validate Claims After Each Task
 
 <!-- SUBAGENT: YES - Self-contained verification. Subagent traces claims through code, returns findings only. -->
 
@@ -2453,13 +2577,176 @@ Task (or subagent simulation):
 
 If false claims found: Fix immediately before proceeding to next task.
 
-### 4.5 Quality Gates After All Tasks
+### 4.6 Quality Gates After All Tasks
 
 <CRITICAL>
 These quality gates are NOT optional. Run them even if all tasks completed successfully.
 </CRITICAL>
 
-#### 4.5.1 Run Full Test Suite
+#### 4.6.1 Comprehensive Implementation Completion Audit
+
+<!-- SUBAGENT: YES - Full plan verification. Traces all items through final codebase state. -->
+
+<CRITICAL>
+This runs AFTER all tasks complete, BEFORE test suite.
+Verifies the ENTIRE implementation plan against final codebase state.
+Catches cross-task integration gaps and items that degraded during later work.
+</CRITICAL>
+
+<RULE>Per-task verification catches early gaps. This catches the whole picture.</RULE>
+
+```
+Task (or subagent simulation):
+  description: "Comprehensive implementation completion audit"
+  prompt: |
+    You are a Senior Implementation Auditor performing final verification.
+
+    The implementation claims to be complete. Your job: verify every item
+    in the plan actually exists in the final codebase.
+
+    ## Inputs
+
+    Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-impl.md
+    Design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
+
+    ## Comprehensive Verification Protocol
+
+    ### Phase 1: Plan Item Sweep
+
+    For EVERY task in the implementation plan:
+    1. List all acceptance criteria
+    2. For each criterion, trace through CURRENT codebase state
+    3. Mark: COMPLETE | INCOMPLETE | DEGRADED
+
+    DEGRADED means: passed per-task verification but no longer works
+    (later changes broke it, code was removed, dependency changed)
+
+    ### Phase 2: Cross-Task Integration Verification
+
+    For each integration point between tasks:
+    1. Identify: Task A produces X, Task B consumes X
+    2. Verify Task A's output exists and has correct shape
+    3. Verify Task B actually imports/calls Task A's output
+    4. Verify the connection actually works (types match, no dead imports)
+
+    Common failures:
+    - Task B imports from Task A but never calls it
+    - Interface changed during Task B, Task A's callers not updated
+    - Circular dependency introduced
+    - Type mismatch between producer and consumer
+
+    ### Phase 3: Design Document Traceability
+
+    For each requirement in the design document:
+    1. Identify which task(s) should implement it
+    2. Verify implementation exists
+    3. Verify implementation matches design intent (not just exists)
+
+    ### Phase 4: Feature Completeness
+
+    Answer these questions with evidence:
+    1. Can a user actually USE this feature end-to-end?
+    2. Are there any dead ends (UI exists but handler missing, etc.)?
+    3. Are there any orphaned pieces (code exists but nothing calls it)?
+    4. Does the happy path work? (trace through manually)
+
+    ## Output Format
+
+    ```
+    COMPREHENSIVE IMPLEMENTATION AUDIT
+
+    Overall: COMPLETE | INCOMPLETE | PARTIAL
+
+    ═══════════════════════════════════════
+    PLAN ITEM SWEEP
+    ═══════════════════════════════════════
+
+    Task 1: [name]
+    ✓ Criterion 1.1: COMPLETE
+    ✓ Criterion 1.2: COMPLETE
+
+    Task 2: [name]
+    ✓ Criterion 2.1: COMPLETE
+    ✗ Criterion 2.2: DEGRADED - was complete, now broken by [commit/change]
+
+    Task 3: [name]
+    ✗ Criterion 3.1: INCOMPLETE - never implemented
+    ◐ Criterion 3.2: PARTIAL - [details]
+
+    PLAN ITEMS: [N]/[M] complete ([X] degraded)
+
+    ═══════════════════════════════════════
+    CROSS-TASK INTEGRATION
+    ═══════════════════════════════════════
+
+    Task 1 → Task 2 (UserService → AuthController):
+    ✓ Interface matches
+    ✓ Actually connected
+
+    Task 2 → Task 3 (AuthController → SessionManager):
+    ✗ DISCONNECTED - SessionManager imports AuthController but never calls it
+
+    Task 3 → Task 1 (SessionManager → UserService):
+    ✗ TYPE_MISMATCH - expects User, receives UserDTO
+
+    INTEGRATIONS: [N]/[M] connected
+
+    ═══════════════════════════════════════
+    DESIGN TRACEABILITY
+    ═══════════════════════════════════════
+
+    Requirement: "Users can reset password via email"
+    ✗ NOT_IMPLEMENTED - no evidence in codebase
+
+    Requirement: "Rate limiting on auth endpoints"
+    ◐ PARTIAL - rate limiter exists but not applied to /login
+
+    REQUIREMENTS: [N]/[M] implemented
+
+    ═══════════════════════════════════════
+    FEATURE COMPLETENESS
+    ═══════════════════════════════════════
+
+    End-to-end usable: YES | NO | PARTIAL
+    Dead ends found: [list]
+    Orphaned code: [list]
+    Happy path: WORKS | BROKEN at [step]
+
+    ═══════════════════════════════════════
+    BLOCKING ISSUES
+    ═══════════════════════════════════════
+
+    MUST FIX before proceeding:
+    1. [issue with location]
+    2. [issue with location]
+
+    SHOULD FIX (non-blocking):
+    1. [issue]
+    ```
+```
+
+**Gate Behavior:**
+
+IF BLOCKING ISSUES found:
+1. Return to implementation (dispatch fix subagent)
+2. Re-run comprehensive audit
+3. Loop until clean
+
+IF clean:
+- Proceed to 4.6.2 (Run Full Test Suite)
+
+**Why Both Per-Task AND Comprehensive:**
+
+| What It Catches | Per-Task (4.4) | Comprehensive (4.6.1) |
+|-----------------|----------------|----------------------|
+| Item never implemented | ✓ Early | ✓ Late (backup) |
+| Item degraded by later work | ✗ | ✓ |
+| Cross-task integration broken | ✗ | ✓ |
+| Design requirement missed entirely | ✗ | ✓ |
+| Feature unusable end-to-end | ✗ | ✓ |
+| Orphaned/dead code | ✗ | ✓ |
+
+#### 4.6.2 Run Full Test Suite
 
 ```bash
 # Run the appropriate test command for the project
@@ -2471,7 +2758,7 @@ If tests fail:
 2. Fix the issues
 3. Re-run tests until passing
 
-#### 4.5.2 Green Mirage Audit
+#### 4.6.3 Green Mirage Audit
 
 <!-- SUBAGENT: YES - Deep dive verification. Subagent traces test paths through production code, returns findings. Won't reference again. -->
 
@@ -2496,7 +2783,7 @@ If audit finds issues:
 1. Fix the tests
 2. Re-run audit until passing
 
-#### 4.5.3 Comprehensive Claim Validation
+#### 4.6.4 Comprehensive Claim Validation
 
 <RULE>Subagent MUST invoke factchecker using the Skill tool for final comprehensive validation.</RULE>
 
@@ -2524,7 +2811,7 @@ If false claims or contradictions found:
 1. Fix all issues
 2. Re-run comprehensive validation until clean
 
-#### 4.5.4 Pre-PR Claim Validation
+#### 4.6.5 Pre-PR Claim Validation
 
 <RULE>Before any PR creation, run one final factchecker pass.</RULE>
 
@@ -2543,7 +2830,7 @@ Task (or subagent simulation):
     Nothing ships with false claims.
 ```
 
-### 4.6 Finish Implementation
+### 4.7 Finish Implementation
 
 <RULE>Behavior depends on post_impl preference.</RULE>
 
@@ -2667,13 +2954,15 @@ Subagent prompts provide CONTEXT for the skill, not duplicated instructions.
 | 4.2 | subagent-driven-development | Sequential or per-worktree execution |
 | 4.2.5 | smart-merge | Merge parallel worktrees (if per_parallel_track) |
 | 4.3 | test-driven-development | TDD for each task |
-| 4.4 | code-reviewer | Review each task |
-| 4.4.1 | factchecker | Validate claims per task |
-| 4.5.1 | systematic-debugging | Debug test failures |
-| 4.5.2 | green-mirage-audit | Audit test quality |
-| 4.5.3 | factchecker | Comprehensive claim validation |
-| 4.5.4 | factchecker | Pre-PR claim validation |
-| 4.6 | finishing-a-development-branch | Complete workflow |
+| 4.4 | (embedded) | Implementation completion verification per task |
+| 4.5 | code-reviewer | Review each task |
+| 4.5.1 | factchecker | Validate claims per task |
+| 4.6.1 | (embedded) | Comprehensive implementation completion audit |
+| 4.6.2 | systematic-debugging | Debug test failures |
+| 4.6.3 | green-mirage-audit | Audit test quality |
+| 4.6.4 | factchecker | Comprehensive claim validation |
+| 4.6.5 | factchecker | Pre-PR claim validation |
+| 4.7 | finishing-a-development-branch | Complete workflow |
 
 ### Document Locations
 
@@ -2722,12 +3011,16 @@ Subagent prompts provide CONTEXT for the skill, not duplicated instructions.
 
 ### Phase 4 Anti-Patterns
 - Dispatching parallel subagents that edit the same files
+- Skipping implementation completion verification between tasks
 - Skipping code review between tasks
 - Skipping claim validation between tasks
+- Not running comprehensive implementation completion audit after all tasks
 - Not running green-mirage-audit
 - Not running comprehensive claim validation
 - Not running pre-PR claim validation
 - Committing without running tests
+- Claiming task is complete without verifying acceptance criteria exist in code
+- Trusting file names or comments instead of tracing actual behavior
 
 ### Parallel Worktree Anti-Patterns
 - Creating parallel worktrees WITHOUT completing setup/skeleton work first
@@ -2784,13 +3077,15 @@ Verify the orchestrator has:
 ### Phase 4
 - [ ] Subagent invoked using-git-worktrees (if worktree requested)
 - [ ] Executed tasks with appropriate parallelization
-- [ ] Subagent invoked code-reviewer after EVERY task
-- [ ] Subagent invoked factchecker after EVERY task
-- [ ] Ran full test suite
-- [ ] Subagent invoked green-mirage-audit
-- [ ] Subagent invoked factchecker for comprehensive validation
-- [ ] Subagent invoked factchecker for pre-PR validation
-- [ ] Subagent invoked finishing-a-development-branch (if applicable)
+- [ ] Ran implementation completion verification after EVERY task (4.4)
+- [ ] Subagent invoked code-reviewer after EVERY task (4.5)
+- [ ] Subagent invoked factchecker after EVERY task (4.5.1)
+- [ ] Ran comprehensive implementation completion audit after all tasks (4.6.1)
+- [ ] Ran full test suite (4.6.2)
+- [ ] Subagent invoked green-mirage-audit (4.6.3)
+- [ ] Subagent invoked factchecker for comprehensive validation (4.6.4)
+- [ ] Subagent invoked factchecker for pre-PR validation (4.6.5)
+- [ ] Subagent invoked finishing-a-development-branch (if applicable) (4.7)
 
 ### Phase 4 (if worktree == "per_parallel_track")
 - [ ] Setup/skeleton tasks completed and committed BEFORE creating worktrees

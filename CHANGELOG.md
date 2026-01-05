@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Implementation Completion Verification** for `implement-feature` skill - systematic verification that work was actually done
+  - Phase 4.4: Per-task verification - runs after task execution, before code review; verifies acceptance criteria, expected outputs, interface contracts, and behavior against the implementation plan
+  - Phase 4.6.1: Comprehensive audit - runs after all tasks complete; does full plan sweep, cross-task integration verification, design document traceability, and end-to-end feature completeness check
+  - Catches incomplete implementations, degraded items, integration gaps, and orphaned code before quality review phases
 - **Execution Mode** for `implement-feature` skill - automatically selects optimal execution strategy for large features
   - Phase 3.4.5: Execution Mode Analysis - estimates token usage and recommends mode (swarmed/sequential/delegated/direct)
   - Phase 3.5: Generate Work Packets - creates self-contained boot prompts for parallel execution
