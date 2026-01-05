@@ -8,10 +8,13 @@
 """
 Spellbook MCP Server - Session management tools for Claude Code.
 
-Provides three MCP tools:
+Provides MCP tools:
 - find_session: Search sessions by name (case-insensitive)
 - split_session: Calculate chunk boundaries for session content
 - list_sessions: List recent sessions with metadata and samples
+- find_spellbook_skills: List available Spellbook skills
+- use_spellbook_skill: Load a specific skill's content
+- spawn_claude_session: Open a new terminal window with Claude session
 """
 
 from fastmcp import FastMCP
@@ -34,6 +37,7 @@ from session_ops import (
     list_sessions_with_samples,
 )
 from skill_ops import find_skills, load_skill
+from terminal_utils import detect_terminal, spawn_terminal_window
 
 mcp = FastMCP("spellbook")
 
@@ -169,10 +173,10 @@ def find_spellbook_skills() -> str:
 def use_spellbook_skill(skill_name: str) -> str:
     """
     Load the content of a specific Spellbook skill.
-    
+
     Args:
         skill_name: The name of the skill to load (e.g., 'scientific-debugging')
-        
+
     Returns:
         The full markdown content of the skill instructions.
     """
@@ -181,6 +185,32 @@ def use_spellbook_skill(skill_name: str) -> str:
         return load_skill(skill_name, dirs)
     except ValueError as e:
         return f"Error: {str(e)}"
+
+
+@mcp.tool()
+def spawn_claude_session(
+    prompt: str,
+    working_directory: str = None,
+    terminal: str = None
+) -> dict:
+    """
+    Open a new terminal window with an interactive Claude session.
+
+    Args:
+        prompt: Initial prompt/command to send to Claude
+        working_directory: Directory to start in (defaults to cwd)
+        terminal: Terminal program (auto-detected if not specified)
+
+    Returns:
+        {"status": "spawned", "terminal": str, "pid": int | None}
+    """
+    if terminal is None:
+        terminal = detect_terminal()
+
+    if working_directory is None:
+        working_directory = os.getcwd()
+
+    return spawn_terminal_window(terminal, prompt, working_directory)
 
 
 if __name__ == "__main__":

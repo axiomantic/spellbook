@@ -103,12 +103,26 @@ Phase 2: Design (subagents run in SYNTHESIS MODE - no questions)
   └─ Fix design doc (subagent invokes executing-plans)
     ↓
 Phase 3: Implementation Planning
-  ├─ Create impl plan (subagent invokes writing-plans)
-  ├─ Review impl plan (subagent invokes implementation-plan-reviewer)
-  ├─ Present review → User approval gate (if interactive mode)
-  └─ Fix impl plan (subagent invokes executing-plans)
+  ├─ 3.1: Create impl plan (subagent invokes writing-plans)
+  ├─ 3.2: Review impl plan (subagent invokes implementation-plan-reviewer)
+  ├─ 3.3: Present review → User approval gate (if interactive mode)
+  ├─ 3.4: Fix impl plan (subagent invokes executing-plans)
+  ├─ 3.4.5: Execution mode analysis & selection (NEW)
+  │   ├─ Calculate estimated context usage
+  │   ├─ Recommend execution mode (swarmed/sequential/delegated/direct)
+  │   └─ Route: If swarmed/sequential → 3.5, else → Phase 4
+  ├─ 3.5: Generate work packets (ONLY if swarmed/sequential) (NEW)
+  │   ├─ Extract tracks from impl plan
+  │   ├─ Generate work packet files
+  │   ├─ Create manifest.json
+  │   └─ Create README.md
+  └─ 3.6: Session handoff (TERMINAL - exits this session) (NEW)
+      ├─ Identify independent tracks
+      ├─ Check for spawn_claude_session MCP tool
+      ├─ Offer auto-launch or provide manual commands
+      └─ EXIT (workers take over)
     ↓
-Phase 4: Implementation
+Phase 4: Implementation (ONLY if delegated/direct mode)
   ├─ Setup worktree (subagent invokes using-git-worktrees)
   ├─ Execute tasks (subagent per task, invokes test-driven-development)
   ├─ Code review after each (subagent invokes code-reviewer)
@@ -1514,6 +1528,629 @@ Task (or subagent simulation):
     Commit changes when done.
 ```
 
+### 3.4.5 Execution Mode Analysis & Selection
+
+<CRITICAL>
+This phase analyzes the feature size and complexity to determine the optimal execution strategy.
+The choice affects whether work continues in this session or spawns separate sessions.
+</CRITICAL>
+
+**Step 1: Calculate Estimated Context Usage**
+
+Use the token estimation formulas from `/Users/elijahrutschman/Development/spellbook/tests/test_implement_feature_execution_mode.py`:
+
+```python
+TOKENS_PER_KB = 350
+BASE_OVERHEAD = 20000
+TOKENS_PER_TASK_OUTPUT = 2000
+TOKENS_PER_REVIEW = 800
+TOKENS_PER_FACTCHECK = 500
+TOKENS_PER_FILE = 400
+CONTEXT_WINDOW = 200000
+
+def estimate_session_tokens(design_context_kb, design_doc_kb, impl_plan_kb, num_tasks, num_files):
+    design_phase = (design_context_kb + design_doc_kb + impl_plan_kb) * TOKENS_PER_KB
+    per_task = TOKENS_PER_TASK_OUTPUT + TOKENS_PER_REVIEW + TOKENS_PER_FACTCHECK
+    execution_phase = num_tasks * per_task
+    file_context = num_files * TOKENS_PER_FILE
+    return BASE_OVERHEAD + design_phase + execution_phase + file_context
+```
+
+Parse the implementation plan to count:
+- `num_tasks`: Count all `- [ ] Task N.M:` lines
+- `num_files`: Count all unique files mentioned in "Files:" lines
+- `num_parallel_tracks`: Count all `## Track N:` headers
+
+Calculate file sizes:
+- `design_context_kb`: Size of research findings + discovery wizard notes
+- `design_doc_kb`: Size of design document
+- `impl_plan_kb`: Size of implementation plan
+
+**Step 2: Recommend Execution Mode**
+
+```python
+def recommend_execution_mode(estimated_tokens, num_tasks, num_parallel_tracks):
+    usage_ratio = estimated_tokens / CONTEXT_WINDOW
+
+    if num_tasks > 25 or usage_ratio > 0.80:
+        return "swarmed", "Feature size exceeds safe single-session capacity"
+
+    if usage_ratio > 0.65 or (num_tasks > 15 and num_parallel_tracks >= 3):
+        return "swarmed", "Large feature with good parallelization potential"
+
+    if num_tasks > 10 or usage_ratio > 0.40:
+        return "delegated", "Moderate size, subagents can handle workload"
+
+    return "direct", "Small feature, direct execution is efficient"
+```
+
+**Execution Modes:**
+
+- **swarmed**: Generate work packets, spawn separate Claude sessions per track
+  - Use when: Large features, >25 tasks, >65% context usage, or good parallelization (>15 tasks + 3+ tracks)
+  - Behavior: Proceed to Phase 3.5 and 3.6, then EXIT this session
+
+- **sequential**: Generate work packets, work through one track at a time in new sessions
+  - Use when: Large features but poor parallelization
+  - Behavior: Proceed to Phase 3.5 and 3.6, then EXIT this session
+  - Note: Currently maps to "swarmed" mode with manual track execution
+
+- **delegated**: Stay in this session, delegate heavily to subagents
+  - Use when: Medium features, 10-25 tasks, 40-65% context usage
+  - Behavior: Skip Phase 3.5 and 3.6, proceed directly to Phase 4
+
+- **direct**: Stay in this session, minimal delegation
+  - Use when: Small features, <10 tasks, <40% context usage
+  - Behavior: Skip Phase 3.5 and 3.6, proceed directly to Phase 4
+
+**Step 3: Present Recommendation**
+
+```
+Analysis Results:
+- Tasks: [num_tasks]
+- Files: [num_files]
+- Parallel tracks: [num_parallel_tracks]
+- Estimated tokens: [estimated_tokens] ([usage_ratio]% of context window)
+
+Recommended execution mode: [mode]
+Reason: [reason]
+
+[If mode is "swarmed" or "sequential":]
+This feature is large enough to benefit from parallel execution across separate sessions.
+Proceeding to generate work packets and spawn worker sessions.
+
+[If mode is "delegated" or "direct":]
+This feature can be executed efficiently in this session.
+Proceeding to Phase 4: Implementation.
+```
+
+**Step 4: Store Execution Mode**
+
+Store the execution mode in SESSION_PREFERENCES:
+```python
+SESSION_PREFERENCES.execution_mode = mode
+SESSION_PREFERENCES.estimated_tokens = estimated_tokens
+SESSION_PREFERENCES.feature_stats = {
+    "num_tasks": num_tasks,
+    "num_files": num_files,
+    "num_parallel_tracks": num_parallel_tracks
+}
+```
+
+**Step 5: Route to Next Phase**
+
+- If `execution_mode` is "swarmed" or "sequential": Proceed to **Phase 3.5**
+- If `execution_mode` is "delegated" or "direct": Skip to **Phase 4**
+
+### 3.5 Generate Work Packets
+
+<CRITICAL>
+This phase ONLY runs when execution_mode is "swarmed" or "sequential".
+It extracts tracks from the implementation plan and generates work packet files for parallel execution.
+</CRITICAL>
+
+**Prerequisites:**
+- `execution_mode` must be "swarmed" or "sequential"
+- Implementation plan must be finalized and committed
+- PROJECT_ROOT must be determined (from git or current directory)
+
+**Step 1: Extract Tracks from Implementation Plan**
+
+Use the track extraction logic from `/Users/elijahrutschman/Development/spellbook/tests/test_implement_feature_execution_mode.py`:
+
+```python
+def extract_tracks_from_impl_plan(impl_plan_content):
+    """
+    Parse implementation plan to find:
+    - Track headers: ## Track N: <name>
+    - Dependencies: <!-- depends-on: Track 1, Track 3 -->
+    - Tasks: - [ ] Task N.M: Description
+    - Files: Files: file1.ts, file2.ts
+    """
+    tracks = []
+    current_track = None
+
+    for line in impl_plan_content.split('\n'):
+        # Track header: ## Track N: <name>
+        if line.startswith('## Track '):
+            if current_track:
+                tracks.append(current_track)
+
+            parts = line[9:].split(':', 1)  # Skip "## Track "
+            track_id = int(parts[0].strip())
+            track_name = parts[1].strip().lower().replace(' ', '-')
+
+            current_track = {
+                "id": track_id,
+                "name": track_name,
+                "depends_on": [],
+                "tasks": [],
+                "files": []
+            }
+
+        # Dependency comment: <!-- depends-on: Track 1, Track 3 -->
+        elif current_track and line.strip().startswith('<!-- depends-on:'):
+            deps_str = line.strip()[16:-4]  # Extract "Track 1, Track 3"
+            for dep in deps_str.split(','):
+                dep = dep.strip()
+                if dep.startswith('Track '):
+                    dep_id = int(dep[6:])
+                    current_track["depends_on"].append(dep_id)
+
+        # Task item: - [ ] Task N.M: Description
+        elif current_track and line.strip().startswith('- [ ] Task '):
+            task = line.strip()[6:]  # Remove "- [ ] "
+            current_track["tasks"].append(task)
+
+        # Files line: Files: file1.ts, file2.ts
+        elif current_track and line.strip().startswith('Files:'):
+            files_str = line.strip()[6:].strip()  # Remove "Files:"
+            files = [f.strip() for f in files_str.split(',')]
+            current_track["files"].extend(files)
+
+    if current_track:
+        tracks.append(current_track)
+
+    return tracks
+```
+
+Read the implementation plan and extract all tracks.
+
+**Step 2: Create Work Packet Directory**
+
+```bash
+WORK_PACKET_DIR="$HOME/.claude/work-packets/$FEATURE_SLUG"
+mkdir -p "$WORK_PACKET_DIR"
+```
+
+**Step 3: Generate Work Packet Files**
+
+For each track, create a work packet markdown file:
+
+**File: `$WORK_PACKET_DIR/track-{id}-{name}.md`**
+
+```markdown
+# Work Packet: Track {id} - {name}
+
+**Feature:** {feature-slug}
+**Track:** {id} of {total-tracks}
+**Dependencies:** {comma-separated list of track IDs or "None"}
+
+## Context
+
+This work packet is part of a larger feature implementation split across multiple tracks for parallel execution.
+
+### Project Information
+- Project root: {PROJECT_ROOT}
+- Branch: feature/{feature-slug}/track-{id}
+- Worktree: {worktree-path}
+
+### Parent Documents
+- Design document: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-{feature-slug}-design.md
+- Implementation plan: $CLAUDE_CONFIG_DIR/docs/<project-encoded>/plans/YYYY-MM-DD-{feature-slug}-impl.md
+
+### Track Dependencies
+
+{If track has dependencies:}
+This track depends on the following tracks being completed first:
+{For each dependency:}
+- Track {dep-id}: {dep-name}
+  - Status: Check manifest.json for current status
+  - Branch: feature/{feature-slug}/track-{dep-id}
+
+{If no dependencies:}
+This track has no dependencies and can be started immediately.
+
+## Tasks
+
+{For each task in this track:}
+### {task}
+
+{If files are specified for this task:}
+Files to modify/create:
+{list of files}
+
+{If no files specified:}
+Refer to implementation plan for file locations.
+
+## Implementation Instructions
+
+1. **Before starting:**
+   - Verify all dependencies are completed (check manifest.json)
+   - Ensure you are in the correct worktree directory
+   - Read the design document for full context
+   - Read the implementation plan to understand how this track fits
+
+2. **For each task:**
+   - Follow TDD methodology (invoke test-driven-development skill)
+   - Run code review after implementation (invoke requesting-code-review skill)
+   - Run claim validation (invoke factchecker skill)
+   - Commit changes with descriptive message
+
+3. **After completing all tasks:**
+   - Run full test suite to verify no regressions
+   - Update manifest.json status to "completed"
+   - Push branch to remote if requested
+   - Report completion with commit hashes and test results
+
+## Quality Gates
+
+Every task MUST pass:
+1. Tests written FIRST (TDD RED phase)
+2. Implementation passes tests (TDD GREEN phase)
+3. Code review approval (no critical/important findings)
+4. Claim validation (factchecker confirms accuracy)
+5. All tests pass (including existing tests)
+
+Do NOT proceed to next task if any gate fails.
+
+## Reporting
+
+When complete, provide:
+- List of commits (with hashes)
+- Test results (pass/fail counts)
+- Files modified/created
+- Any issues encountered
+- Recommendations for integration/merge
+```
+
+**Step 4: Generate Manifest File**
+
+Create `$WORK_PACKET_DIR/manifest.json`:
+
+```python
+def generate_work_packet_manifest(feature_slug, project_root, execution_mode, tracks):
+    manifest = {
+        "format_version": "1.0.0",
+        "feature": feature_slug,
+        "created": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+        "project_root": project_root,
+        "execution_mode": execution_mode,
+        "tracks": []
+    }
+
+    for track in tracks:
+        # Generate worktree path in parent directory
+        parent_dir = os.path.dirname(project_root)
+        worktree_name = f"{os.path.basename(project_root)}-{feature_slug}-track-{track['id']}"
+        worktree_path = os.path.join(parent_dir, worktree_name)
+
+        manifest["tracks"].append({
+            "id": track["id"],
+            "name": track["name"],
+            "packet": f"track-{track['id']}-{track['name']}.md",
+            "worktree": worktree_path,
+            "branch": f"feature/{feature_slug}/track-{track['id']}",
+            "status": "pending",
+            "depends_on": track["depends_on"]
+        })
+
+    return manifest
+```
+
+Write the manifest to `$WORK_PACKET_DIR/manifest.json`.
+
+**Step 5: Create README**
+
+Create `$WORK_PACKET_DIR/README.md`:
+
+```markdown
+# Work Packets: {feature-slug}
+
+Generated: {timestamp}
+Execution mode: {execution_mode}
+
+## Overview
+
+This directory contains work packets for parallel implementation of the {feature-slug} feature.
+Each track can be executed independently in its own Claude session.
+
+## Manifest
+
+See `manifest.json` for track metadata, dependencies, and status.
+
+## Tracks
+
+{For each track:}
+### Track {id}: {name}
+- Packet: {packet-filename}
+- Dependencies: {list or "None"}
+- Status: {pending/in_progress/completed}
+- Branch: {branch-name}
+- Worktree: {worktree-path}
+
+## Execution Instructions
+
+{If execution_mode is "swarmed":}
+For parallel execution, spawn separate Claude sessions for independent tracks:
+
+1. Check track dependencies in manifest.json
+2. Start with tracks that have no dependencies
+3. For each independent track, spawn a new session (see Phase 3.6)
+4. Once dependencies complete, spawn dependent tracks
+
+{If execution_mode is "sequential":}
+For sequential execution, work through tracks one at a time:
+
+1. Start with Track 1
+2. Complete all tasks in the track
+3. Update manifest.json status to "completed"
+4. Move to next track
+5. Repeat until all tracks complete
+
+## Integration
+
+After all tracks complete, use the smart-merge skill to integrate work:
+- Invoke: smart-merge skill with manifest.json
+- Handles 3-way diffs and dependency-ordered merging
+- Produces unified branch ready for PR
+```
+
+**Step 6: Present Work Packets**
+
+```
+Work packets generated successfully!
+
+Location: $HOME/.claude/work-packets/{feature-slug}/
+
+Files created:
+- manifest.json (track metadata and status)
+- README.md (execution instructions)
+{For each track:}
+- track-{id}-{name}.md (work packet)
+
+Summary:
+- Total tracks: {count}
+- Independent tracks: {count-with-no-deps}
+- Dependent tracks: {count-with-deps}
+
+Execution mode: {execution_mode}
+
+Proceeding to Phase 3.6: Session Handoff
+```
+
+Store work packet directory in SESSION_PREFERENCES:
+```python
+SESSION_PREFERENCES.work_packet_dir = "$HOME/.claude/work-packets/{feature-slug}"
+SESSION_PREFERENCES.manifest_path = f"{work_packet_dir}/manifest.json"
+```
+
+### 3.6 Session Handoff (TERMINAL)
+
+<CRITICAL>
+This phase is TERMINAL. After completing handoff, this session MUST EXIT.
+The orchestrator's job is done. Execution continues in spawned worker sessions.
+</CRITICAL>
+
+**Prerequisites:**
+- Work packets generated in Phase 3.5
+- Manifest file created with track metadata
+- All design/planning documents committed
+
+**Step 1: Identify Independent Tracks**
+
+Parse manifest.json to find tracks with no dependencies (can start immediately):
+
+```python
+def get_independent_tracks(manifest_path):
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+
+    independent = [
+        track for track in manifest["tracks"]
+        if len(track["depends_on"]) == 0
+    ]
+
+    return independent
+```
+
+**Step 2: Check for spawn_claude_session MCP Tool**
+
+Check if `spawn_claude_session` MCP tool is available:
+
+```bash
+# Check available MCP tools
+claude mcp list | grep spawn_claude_session
+```
+
+Store result:
+```python
+SESSION_PREFERENCES.has_spawn_tool = <true if found, false otherwise>
+```
+
+**Step 3: Generate Session Commands**
+
+Use the command generation logic from `/Users/elijahrutschman/Development/spellbook/tests/test_implement_feature_execution_mode.py`:
+
+```python
+def generate_session_commands(manifest_path, track_id, has_spawn_tool):
+    if has_spawn_tool:
+        return [
+            f"# Auto-spawn using MCP tool",
+            f"spawn_claude_session --manifest {manifest_path} --track {track_id}"
+        ]
+    else:
+        work_packet_dir = os.path.dirname(manifest_path)
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+
+        track = next(t for t in manifest["tracks"] if t["id"] == track_id)
+        packet_path = os.path.join(work_packet_dir, track["packet"])
+        worktree_path = track["worktree"]
+
+        return [
+            f"# Manual spawn for Track {track_id}",
+            f"cd {worktree_path}",
+            f"claude --session-context {packet_path}",
+        ]
+```
+
+**Step 4: Offer Auto-Launch (if MCP tool available)**
+
+If `has_spawn_tool` is true:
+
+```
+The spawn_claude_session MCP tool is available.
+I can automatically launch worker sessions for all independent tracks.
+
+Would you like me to:
+1. Auto-launch all {count} independent tracks now
+2. Provide manual commands for you to run
+3. Launch only specific tracks (you choose which ones)
+
+Please choose an option (1, 2, or 3):
+```
+
+**If user chooses option 1 (auto-launch all):**
+
+For each independent track:
+```bash
+spawn_claude_session --manifest {manifest_path} --track {track_id}
+```
+
+Present results:
+```
+Launched {count} worker sessions:
+{For each track:}
+- Track {id}: {name} (session ID: {session-id})
+
+Workers are now executing in parallel.
+
+To monitor progress:
+- Check manifest.json for track status updates
+- Review commits in feature/{feature-slug}/track-{id} branches
+- Use `claude session list` to see active sessions
+
+After all tracks complete, merge with:
+  claude invoke smart-merge --manifest {manifest_path}
+
+This orchestrator session is now complete. Exiting.
+```
+
+EXIT this session.
+
+**If user chooses option 2 (manual commands):**
+
+Skip to Step 5 (provide manual instructions).
+
+**If user chooses option 3 (specific tracks):**
+
+```
+Which tracks would you like to launch? (comma-separated IDs)
+Available independent tracks:
+{For each independent track:}
+- Track {id}: {name}
+
+Enter track IDs:
+```
+
+After user response, launch specified tracks and present results (same as option 1).
+
+**Step 5: Provide Manual Instructions (fallback or user preference)**
+
+If `has_spawn_tool` is false OR user chose manual option:
+
+```
+Work packets are ready for execution!
+
+Location: {work_packet_dir}
+
+## Independent Tracks (can start immediately)
+
+{For each independent track:}
+### Track {id}: {name}
+
+Work packet: {work_packet_dir}/track-{id}-{name}.md
+
+Commands to spawn worker session:
+```bash
+# Create worktree
+git worktree add {worktree_path} -b {branch_name}
+
+# Start Claude session with work packet
+cd {worktree_path}
+claude --session-context {work_packet_dir}/track-{id}-{name}.md
+```
+
+{If execution_mode is "swarmed":}
+You can run these commands in parallel (separate terminals) for concurrent execution.
+
+{If execution_mode is "sequential":}
+Run these commands one at a time. After each track completes, start the next.
+
+## Dependent Tracks (wait for dependencies)
+
+{For each dependent track:}
+### Track {id}: {name}
+Dependencies: Track {dep-ids}
+
+Wait until dependencies complete before starting this track.
+Check manifest.json for dependency status.
+
+## After All Tracks Complete
+
+Integrate the work with smart-merge:
+
+```bash
+claude invoke smart-merge --manifest {manifest_path}
+```
+
+This will:
+1. Perform 3-way diffs for all track branches
+2. Merge in dependency order
+3. Resolve conflicts intelligently
+4. Produce unified branch ready for PR
+
+---
+
+**This orchestrator session is now complete.**
+
+The implementation plan is ready. Work packets are generated.
+Execution continues in spawned worker sessions.
+
+Exiting.
+```
+
+EXIT this session.
+
+**Step 6: Terminal Behavior**
+
+<CRITICAL>
+After presenting handoff instructions (auto-launch or manual), this session TERMINATES.
+
+Do NOT continue to Phase 4.
+Do NOT wait for user input beyond the handoff questions.
+Do NOT attempt to execute the implementation.
+
+The orchestrator's job ends here. Workers take over.
+</CRITICAL>
+
+Exit with final message:
+```
+Orchestration complete. Workers executing.
+Session ending.
+```
+
 ---
 
 ## Phase 4: Implementation
@@ -1630,7 +2267,7 @@ Execute each parallel track in its own worktree:
 ```
 For each worktree in SESSION_PREFERENCES.worktree_paths:
 
-  # Skip worktrees whose dependencies haven't completed yet
+# Skip worktrees whose dependencies haven't completed yet
   if worktree.depends_on not all completed:
     continue (will process in next round)
 
@@ -1657,8 +2294,8 @@ For each worktree in SESSION_PREFERENCES.worktree_paths:
 
       Report when all tasks complete: files changed, test results, commit hashes.
 
-  # Dispatch all independent worktrees in parallel
-  # Wait for all to complete before processing dependent worktrees
+# Dispatch all independent worktrees in parallel
+# Wait for all to complete before processing dependent worktrees
 ```
 
 After all parallel tracks complete, proceed to **Phase 4.2.5: Smart Merge**.
