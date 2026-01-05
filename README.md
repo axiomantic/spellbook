@@ -18,13 +18,14 @@
     - [Prevent Green Mirages (False-Positive Tests)](#prevent-green-mirages-false-positive-tests)
     - [Find and Reuse Past Patterns](#find-and-reuse-past-patterns)
     - [Create Custom Domain Skills](#create-custom-domain-skills)
-  - [Companion Tools](#companion-tools)
-    - [Heads Up Claude (Recommended)](#heads-up-claude-recommended)
-    - [MCP Language Server (Recommended)](#mcp-language-server-recommended)
+  - [Recommended Companion Tools](#recommended-companion-tools)
+    - [Heads Up Claude](#heads-up-claude)
+    - [MCP Language Server](#mcp-language-server)
   - [Development](#development)
     - [Serve Documentation Locally](#serve-documentation-locally)
     - [Run MCP Server Directly](#run-mcp-server-directly)
   - [Documentation](#documentation)
+  - [Contributing](#contributing)
   - [Acknowledgments](#acknowledgments)
   - [License](#license)
 
@@ -360,22 +361,24 @@ Skill('writing-skills')
 # 5. Share via Git - team gets the same workflow
 ```
 
-**Why it works:** Skills are just markdown. Personal discipline becomes team patterns. Spellbook becomes a living knowledge base.
+**Why it works:** Skills are just markdown. Personal discipline becomes team patterns.
 
-## Companion Tools
+## Recommended Companion Tools
 
-### Heads Up Claude (Recommended)
+These tools are not necessary but contribute to better development workflows with coding assistants.
 
-Statusline showing token usage and conversation stats.
+### Heads Up Claude
+
+Statusline for Claude Code CLI showing token usage and conversation stats. Helps you track how much context you have left and how much of your subscription quota you have used.
 
 ```bash
 git clone https://github.com/elijahr/heads-up-claude.git ~/Development/heads-up-claude
 cd ~/Development/heads-up-claude && ./install.sh
 ```
 
-### MCP Language Server (Recommended)
+### MCP Language Server
 
-LSP integration for semantic code navigation.
+LSP integration for semantic code navigation, refactoring, and more.
 
 ```bash
 git clone https://github.com/axiomantic/mcp-language-server.git ~/Development/mcp-language-server
@@ -411,9 +414,15 @@ Full documentation available at **[axiomantic.github.io/spellbook](https://axiom
 - [Architecture](https://axiomantic.github.io/spellbook/reference/architecture/)
 - [Contributing](https://axiomantic.github.io/spellbook/reference/contributing/)
 
+## Contributing
+
+**Want Spellbook on your coding assistant?** e.g. Cursor, Kline, Roo, Kilo, Continue, GitHub Copilot, etc. If your assistant supports MCP but isn't listed in Platform Support, you can port it yourself:
+
+See the [**Porting Guide**](docs/contributing/porting-to-your-assistant.md) - A self-contained prompt you paste into your coding assistant to have it add Spellbook support for itself and submit a PR back to this repo. We appreciate your contributions!
+
 ## Acknowledgments
 
-Spellbook includes skills, commands, agents, and hooks from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. These foundational workflow patterns (brainstorming, planning, execution, git worktrees, TDD, debugging) form the core of spellbook's development methodology.
+Spellbook includes many skills, commands, agents, and hooks from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. These workflow patterns (brainstorming, planning, execution, git worktrees, TDD, debugging) are a core part of spellbook's development methodology.
 
 See [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES) for full attribution and license details.
 
