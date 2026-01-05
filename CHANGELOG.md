@@ -8,15 +8,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Execution Mode** for `implement-feature` skill - automatically selects optimal execution strategy for large features
+  - Phase 3.4.5: Execution Mode Analysis - estimates token usage and recommends mode (swarmed/sequential/delegated/direct)
+  - Phase 3.5: Generate Work Packets - creates self-contained boot prompts for parallel execution
+  - Phase 3.6: Session Handoff - spawns worker sessions and exits orchestrator
+- `/execute-work-packet` command - execute a single work packet with TDD workflow
+- `/execute-work-packets-seq` command - execute all packets sequentially with context resets
+- `/merge-work-packets` command - merge completed packets with smart-merge and QA gates
+- `spawn_claude_session` MCP tool - auto-launch terminal windows with Claude sessions (macOS/Linux)
+  - Terminal detection for iTerm2, Warp, Terminal.app, gnome-terminal, konsole, xterm
+  - AppleScript spawning for macOS, CLI spawning for Linux
+- Supporting infrastructure for execution mode:
+  - `spellbook.types` - dataclasses for Manifest, Track, Packet, Checkpoint, CompletionMarker
+  - `spellbook.command_utils` - atomic file operations, JSON handling, packet parsing
+  - `spellbook.preferences` - user preference persistence
+  - `spellbook.metrics` - feature implementation metrics logging
+  - `spellbook_mcp.terminal_utils` - terminal detection and spawning utilities
+- 61 new tests for execution mode (124 total, 86% coverage)
+- `autonomous-mode-protocol` pattern for subagent behavior without user interaction
+- `devils-advocate` skill for challenging assumptions in design documents
+- Adaptive Response Handler (ARH) pattern for intelligent user response processing
+- `debug` skill - unified entry point for all debugging scenarios (routes to scientific or systematic)
+- `/scientific-debugging` command - rigorous theory-experiment methodology
+- `/systematic-debugging` command - 4-phase root cause analysis
+- `/verify` command - verification before completion claims
+- MkDocs documentation site with full skill and command reference
+- Gemini CLI support with extension manifest and context generator
+- OpenCode support with skill symlinks
+- Codex support with bootstrap and CLI integration
+- MCP server skill discovery and loading (`find_spellbook_skills`, `use_spellbook_skill` tools)
+- `SUPERPOWERS_DIR` environment variable support for custom skill locations
+- Pre-commit check for README completeness
+- LSP tool prioritization rules in CLAUDE.md
+- MCP tools usage rule in CLAUDE.md
+- `factchecker` clarity modes for enhanced documentation analysis
+- `implement-feature` expanded scope to greenfield projects (new repos, templates, libraries)
+- `implement-feature` favors complete fixes in autonomous mode
+- Artifact state capture and skill resume commands in distill-session
 - File structure reference in distill-session command documenting Claude Code session storage paths
 - Stuck session detection criteria including: "Prompt is too long" errors, failed compacts, API errors, error-hinted renames, large sessions without recent compacts
 - Multi-project usage documentation for distilling sessions from different projects
 - Workflow continuity preservation in chunk summarization (skills, subagents, workflow patterns)
-- Emphasized workflow continuity in synthesis prompt to ensure session resumption works correctly
+
+### Changed
+- Unified debugging workflow - `debug` skill now triages and routes to appropriate methodology
+- Converted `verification-before-completion` and `systematic-debugging` skills to commands
+- Replaced static skill registries with MCP runtime discovery
+- Standardized tool references for cross-platform support (Skill tool, use_spellbook_skill, spellbook-codex)
+- Moved context files to repository root, renamed `docs-src` to `docs`
+- Installer now includes CLAUDE.md content in generated context files
+- Updated installer for Gemini, OpenCode, and Codex platform support
+- Consolidated superpowers skills into spellbook with proper attribution
+
+### Fixed
+- Restored `finishing-a-development-branch` as skill (was incorrectly converted)
+- Fixed attributions for superpowers-derived content
+- Fixed mike duplicate version/alias error in docs deployment
+- Fixed distill-session skill priority improvements
+- Strengthened MCP test assertions after green mirage audit
+- Fixed multi-line bash commands joining to prevent shell parse errors
+- Fixed markdown lint issues (blank lines after tables)
 
 ### Removed
 - `repair-session` command (superseded by `distill-session`)
 - `repair-session.py` script (not needed by distill-session)
+- Static skill registries (replaced by MCP runtime discovery)
 
 ## [0.2.0] - 2025-12-31
 
