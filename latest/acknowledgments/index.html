@@ -730,6 +730,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skills/finishing-a-development-branch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    finishing-a-development-branch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1730,34 +1758,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../commands/finish-branch/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    /finish-branch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -2436,6 +2436,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#transformed-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transformed Items
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#commands" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2481,6 +2492,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Original Skills (Spellbook)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#original-commands-spellbook" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Original Commands (Spellbook)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2553,6 +2581,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#transformed-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transformed Items
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#commands" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2598,6 +2637,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Original Skills (Spellbook)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#original-commands-spellbook" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Original Commands (Spellbook)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2658,7 +2714,7 @@
 <td>Systematic plan execution with checkpoints</td>
 </tr>
 <tr>
-<td><a href="skills/finishing-a-development-branch.md">finishing-a-development-branch</a></td>
+<td><a href="../skills/finishing-a-development-branch/">finishing-a-development-branch</a></td>
 <td>Completing and integrating feature work</td>
 </tr>
 <tr>
@@ -2674,10 +2730,6 @@
 <td>Delegating work to specialized subagents</td>
 </tr>
 <tr>
-<td><a href="skills/systematic-debugging.md">systematic-debugging</a></td>
-<td>Methodical debugging with hypothesis testing</td>
-</tr>
-<tr>
 <td><a href="../skills/test-driven-development/">test-driven-development</a></td>
 <td>Red-green-refactor TDD workflow</td>
 </tr>
@@ -2690,16 +2742,35 @@
 <td>Meta-skill for invoking other skills (originally "using-superpowers")</td>
 </tr>
 <tr>
-<td><a href="skills/verification-before-completion.md">verification-before-completion</a></td>
-<td>Pre-completion verification checklist</td>
-</tr>
-<tr>
 <td><a href="../skills/writing-plans/">writing-plans</a></td>
 <td>Creating detailed implementation plans</td>
 </tr>
 <tr>
 <td><a href="../skills/writing-skills/">writing-skills</a></td>
 <td>Creating new skills</td>
+</tr>
+</tbody>
+</table>
+<h3 id="transformed-items">Transformed Items<a class="headerlink" href="#transformed-items" title="Permanent link">&para;</a></h3>
+<p>The following items originated as skills in superpowers but have been converted to commands in spellbook:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Original Skill</th>
+<th>Transformation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../commands/systematic-debugging/">/systematic-debugging</a></td>
+<td><code>systematic-debugging</code></td>
+<td>Converted to command; routed via <code>debug</code> skill</td>
+</tr>
+<tr>
+<td><a href="../commands/verify/">/verify</a></td>
+<td><code>verification-before-completion</code></td>
+<td>Converted to command; renamed for brevity</td>
 </tr>
 </tbody>
 </table>
@@ -2783,6 +2854,10 @@
 <td>Adversarial review of assumptions</td>
 </tr>
 <tr>
+<td><a href="../skills/debug/">debug</a></td>
+<td>Unified debugging entry point (routes to debugging commands)</td>
+</tr>
+<tr>
 <td><a href="../skills/factchecker/">factchecker</a></td>
 <td>Systematic claim verification</td>
 </tr>
@@ -2815,16 +2890,51 @@
 <td>Nim language PR contribution guide</td>
 </tr>
 <tr>
-<td><a href="skills/scientific-debugging.md">scientific-debugging</a></td>
-<td>Formal scientific debugging method</td>
-</tr>
-<tr>
 <td><a href="../skills/smart-merge/">smart-merge</a></td>
 <td>Intelligent worktree merging</td>
 </tr>
 <tr>
 <td><a href="../skills/subagent-prompting/">subagent-prompting</a></td>
 <td>Effective subagent instruction patterns</td>
+</tr>
+</tbody>
+</table>
+<h3 id="original-commands-spellbook">Original Commands (Spellbook)<a class="headerlink" href="#original-commands-spellbook" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../commands/scientific-debugging/">/scientific-debugging</a></td>
+<td>Rigorous hypothesis-driven debugging methodology</td>
+</tr>
+<tr>
+<td><a href="../commands/compact/">/compact</a></td>
+<td>Custom session compaction</td>
+</tr>
+<tr>
+<td><a href="../commands/distill-session/">/distill-session</a></td>
+<td>Extract knowledge from sessions</td>
+</tr>
+<tr>
+<td><a href="../commands/simplify/">/simplify</a></td>
+<td>Code complexity reduction</td>
+</tr>
+<tr>
+<td><a href="../commands/address-pr-feedback/">/address-pr-feedback</a></td>
+<td>Handle PR review comments</td>
+</tr>
+<tr>
+<td><a href="../commands/move-project/">/move-project</a></td>
+<td>Relocate projects safely</td>
+</tr>
+<tr>
+<td><a href="../commands/green-mirage-audit/">/green-mirage-audit</a></td>
+<td>Test suite audit command</td>
 </tr>
 </tbody>
 </table>

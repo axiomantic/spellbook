@@ -508,10 +508,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tool-mapping" class="md-nav__link">
+  <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tool Mapping
+        Notes
       
     </span>
   </a>
@@ -955,6 +955,34 @@
     
   
     using-git-worktrees
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/finishing-a-development-branch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    finishing-a-development-branch
   
 
     
@@ -1968,34 +1996,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../commands/finish-branch/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    /finish-branch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -2711,10 +2711,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tool-mapping" class="md-nav__link">
+  <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tool Mapping
+        Notes
       
     </span>
   </a>
@@ -2859,47 +2859,24 @@
 <li>Native skill invocation via <code>Skill</code> tool</li>
 <li>TodoWrite for task management</li>
 <li>Task tool for subagent orchestration</li>
-<li>Hooks for session automation</li>
-<li>MCP server for skill discovery</li>
+<li>MCP server for skill discovery and session management</li>
 </ul>
 <h2 id="opencode">OpenCode<a class="headerlink" href="#opencode" title="Permanent link">&para;</a></h2>
 <p><strong>Status:</strong> Full Support</p>
-<p>OpenCode integration via plugin system.</p>
+<p>OpenCode integration via skill symlinks.</p>
 <h3 id="setup_1">Setup<a class="headerlink" href="#setup_1" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Run the installer: <code>python3 install.py</code></li>
-<li>Enable the spellbook plugin in OpenCode settings</li>
+<li>Skills are automatically available in <code>~/.opencode/skills/</code></li>
 </ol>
 <h3 id="features_1">Features<a class="headerlink" href="#features_1" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Custom <code>use_spellbook_skill</code> tool</li>
-<li>Custom <code>find_spellbook_skills</code> tool</li>
-<li>Session bootstrap with context injection</li>
-<li>Tool mapping from Claude Code equivalents</li>
+<li>Skills installed as flat <code>.md</code> files in <code>~/.opencode/skills/</code></li>
+<li>OpenCode discovers skills automatically from the skills directory</li>
+<li>Same skill content as other platforms</li>
 </ul>
-<h3 id="tool-mapping">Tool Mapping<a class="headerlink" href="#tool-mapping" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Claude Code</th>
-<th>OpenCode</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>TodoWrite</code></td>
-<td><code>update_plan</code></td>
-</tr>
-<tr>
-<td><code>Task</code></td>
-<td><code>@mention</code> subagents</td>
-</tr>
-<tr>
-<td><code>Skill</code></td>
-<td><code>use_spellbook_skill</code></td>
-</tr>
-</tbody>
-</table>
+<h3 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h3>
+<p>OpenCode uses its native skill discovery. The installer creates symlinks to spellbook skills, making them available alongside any personal skills you create.</p>
 <h2 id="codex">Codex<a class="headerlink" href="#codex" title="Permanent link">&para;</a></h2>
 <p><strong>Status:</strong> Full Support</p>
 <p>Codex integration via CLI script and bootstrap context.</p>

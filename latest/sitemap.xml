@@ -41,10 +41,6 @@
          <lastmod>2026-01-05</lastmod>
     </url>
     <url>
-         <loc>https://axiomantic.github.io/spellbook/latest/commands/finish-branch/</loc>
-         <lastmod>2026-01-05</lastmod>
-    </url>
-    <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/green-mirage-audit/</loc>
          <lastmod>2026-01-05</lastmod>
     </url>
@@ -134,6 +130,10 @@
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/find-dead-code/</loc>
+         <lastmod>2026-01-05</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/</loc>
          <lastmod>2026-01-05</lastmod>
     </url>
     <url>
