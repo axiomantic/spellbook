@@ -41,7 +41,7 @@
 
 <p align="center">
   <em>Principled development on autopilot. Decades of engineering expertise, built in.</em><br>
-  For Claude Code, OpenCode, Codex, and Gemini CLI.
+  For Claude Code, OpenCode, Codex, Gemini CLI, and Crush.
 </p>
 
 <p align="center">
@@ -180,6 +180,7 @@ Reusable workflows for structured development:
 | OpenCode | Full | Skill symlinks |
 | Codex | Full | Bootstrap + MCP |
 | Gemini CLI | Partial | MCP server + context file |
+| Crush | Full | Native Agent Skills + MCP server |
 
 ### Autonomous Mode
 
@@ -205,10 +206,11 @@ For fully automated workflows (no permission prompts), each platform has its own
 | OpenCode | `opencode --prompt "task"` | Non-interactive mode auto-approves all |
 | Codex | `codex --full-auto` | Workspace writes + on-request approval |
 | Codex | `codex --yolo` | Bypasses all approvals and sandbox |
+| Crush | `crush --yolo` | Bypasses all permission prompts |
 
 Without autonomous mode, you'll be prompted to approve each file write, command execution, etc. The workflows still function, but require manual approval at each step.
 
-See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/permissions/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli).
+See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/permissions/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Crush](https://github.com/charmbracelet/crush).
 
 ## Workflow Recipes
 

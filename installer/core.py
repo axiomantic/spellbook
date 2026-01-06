@@ -56,6 +56,7 @@ def get_platform_installer(
     """Get the appropriate installer for a platform."""
     from .platforms.claude_code import ClaudeCodeInstaller
     from .platforms.codex import CodexInstaller
+    from .platforms.crush import CrushInstaller
     from .platforms.gemini import GeminiInstaller
     from .platforms.opencode import OpenCodeInstaller
 
@@ -66,6 +67,7 @@ def get_platform_installer(
         "opencode": OpenCodeInstaller,
         "codex": CodexInstaller,
         "gemini": GeminiInstaller,
+        "crush": CrushInstaller,
     }
 
     installer_class = installers.get(platform)
