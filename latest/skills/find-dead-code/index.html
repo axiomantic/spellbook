@@ -2137,6 +2137,149 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Execution Mode Commands
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Execution Mode Commands
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/execute-work-packet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /execute-work-packet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/execute-work-packets-seq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /execute-work-packets-seq
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/merge-work-packets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /merge-work-packets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2412,6 +2555,95 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/porting-to-your-assistant/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Porting to Your Assistant
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../acknowledgments/" class="md-nav__link">
         
@@ -2504,7 +2736,7 @@ by concrete evidence of actual usage.</p>
 </ROLE></p>
 <p><ARH_INTEGRATION>
 This skill uses the Adaptive Response Handler pattern.
-See ~/.claude/patterns/adaptive-response-handler.md for response processing logic.</p>
+See ~/.local/spellbook/patterns/adaptive-response-handler.md for response processing logic.</p>
 <p>When user responds to questions:
 - RESEARCH_REQUEST ("research this", "check", "verify") → Dispatch research subagent
 - UNKNOWN ("don't know", "not sure") → Dispatch research subagent
@@ -2628,7 +2860,7 @@ Before ANY action in this skill, think step-by-step to ensure success:</p>
 <h3 id="arh-response-processing-for-scope-selection">ARH Response Processing for Scope Selection<a class="headerlink" href="#arh-response-processing-for-scope-selection" title="Permanent link">&para;</a></h3>
 <p><strong>After presenting scope options, process user response:</strong></p>
 <ol>
-<li><strong>Detect response type</strong> using ARH patterns from <code>~/.claude/patterns/adaptive-response-handler.md</code></li>
+<li><strong>Detect response type</strong> using ARH patterns from <code>~/.local/spellbook/patterns/adaptive-response-handler.md</code></li>
 <li><strong>Handle by type:</strong></li>
 <li><strong>DIRECT_ANSWER (A/B/C/D):</strong> Apply scope selection, proceed to extraction</li>
 <li><strong>RESEARCH_REQUEST ("can you check what changed"):</strong> Show git diff summary, re-ask</li>
@@ -3091,7 +3323,7 @@ D. Just keep the report, you'll handle it</p>
 <a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
 <a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>**After presenting implementation options, process user response:**
 <a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>1. **Detect response type** using ARH patterns from `~/.claude/patterns/adaptive-response-handler.md`
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>1. **Detect response type** using ARH patterns from `~/.local/spellbook/patterns/adaptive-response-handler.md`
 <a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>2. **Handle by type:**
 <a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>   - **DIRECT_ANSWER (A/B/C/D):** Execute chosen implementation strategy
 <a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>   - **RESEARCH_REQUEST (&quot;can you verify X is really unused?&quot;):** Re-run usage search for specific item

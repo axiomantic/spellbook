@@ -2,214 +2,218 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/acknowledgments/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/agents/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/agents/code-reviewer/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/address-pr-feedback/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/brainstorm/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/compact/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/distill-session/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/execute-plan/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/execute-work-packet/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/green-mirage-audit/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/move-project/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/scientific-debugging/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/simplify/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/systematic-debugging/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/verify/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/write-plan/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/contributing/porting-to-your-assistant/</loc>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/getting-started/installation/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/getting-started/platforms/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/getting-started/quickstart/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/reference/architecture/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/reference/contributing/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/reference/patterns/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/async-await-patterns/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/brainstorming/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/debug/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/design-doc-reviewer/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/devils-advocate/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/executing-plans/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/factchecker/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/find-dead-code/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/fix-tests/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/green-mirage-audit/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/implement-feature/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/implementation-plan-reviewer/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/receiving-code-review/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/requesting-code-review/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/smart-merge/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/subagent-driven-development/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/subagent-prompting/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/using-skills/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/writing-plans/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/writing-skills/</loc>
-         <lastmod>2026-01-05</lastmod>
+         <lastmod>2026-01-06</lastmod>
     </url>
 </urlset>
