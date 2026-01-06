@@ -53,8 +53,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stuck session detection criteria including: "Prompt is too long" errors, failed compacts, API errors, error-hinted renames, large sessions without recent compacts
 - Multi-project usage documentation for distilling sessions from different projects
 - Workflow continuity preservation in chunk summarization (skills, subagents, workflow patterns)
+- **Section 0: Mandatory First Actions** in shift-change.md and distill-session output format
+  - Executable `Skill()` call for workflow restoration before reading context
+  - Required document `Read()` calls before any implementation
+  - `TodoWrite()` for todo state restoration
+  - Restoration checkpoint and behavioral constraints
+  - Prevents resuming agents from doing ad-hoc work instead of following established workflows
 
 ### Changed
+- Renamed `/compact` command to `/shift-change` to avoid conflict with built-in Claude Code compact
 - Unified debugging workflow - `debug` skill now triages and routes to appropriate methodology
 - Converted `verification-before-completion` and `systematic-debugging` skills to commands
 - Replaced static skill registries with MCP runtime discovery
@@ -85,7 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Phase 0: Session discovery with AI-generated descriptions
   - Phase 1: Analyze & chunk large sessions (300k char limit per chunk)
   - Phase 2: Parallel summarization via subagents
-  - Phase 3: Synthesis following compact.md format
+  - Phase 3: Synthesis following shift-change.md format
   - Phase 4: Output to `~/.local/spellbook/distilled/{project}/` directory
 - `distill_session.py` helper script with CLI interface
 - Integration test suite for distill-session
@@ -93,7 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `simplify` command for systematic code complexity reduction
 
 ### Changed
-- Updated compact.md to capture subagent responsibilities, skills/commands, and workflow patterns
+- Updated shift-change.md (formerly compact.md) to capture subagent responsibilities, skills/commands, and workflow patterns
 
 ## [0.1.0] - 2025-12-15
 

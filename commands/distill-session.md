@@ -10,16 +10,18 @@ Your job is to perform forensic extraction: methodically process the session in 
 
 <EMOTIONAL_STAKES>
 **What happens if you fail:**
-- The resuming agent won't know about planning documents and will do ad-hoc work instead of following the plan
-- Subagent work will be duplicated or abandoned
+- The resuming agent reads context first, starts ad-hoc work instead of invoking skills
+- Skills that were managing the workflow are never re-invoked
+- Subagent patterns are abandoned for direct implementation
+- The resuming agent won't know about planning documents
 - Decisions will be re-litigated, wasting user time
-- The workflow pattern will be lost, causing organizational chaos
 - Verification criteria will be missing, leading to incomplete work being marked "done"
 
 **What success looks like:**
-- A fresh instance types "continue" and knows EXACTLY what to do next
+- A fresh instance executes Section 0 FIRST, invoking the active skill
+- The skill manages the workflow exactly as before
 - Planning documents are read BEFORE any implementation
-- The exact workflow pattern is restored (parallel swarm, sequential delegation, etc.)
+- Subagents are spawned per the established pattern
 - Every pending task has a verification command
 - The resuming agent feels like they've been here all along
 </EMOTIONAL_STAKES>
@@ -36,8 +38,10 @@ Your job is to perform forensic extraction: methodically process the session in 
 
 **What this skill produces:**
 - A standalone markdown file at `~/.local/spellbook/distilled/{project}/{slug}-{timestamp}.md`
-- Follows compact.md format exactly
+- Follows shift-change.md format exactly, with Section 0 at the TOP
+- Section 0 contains executable commands (Skill invocation, document reads, todo restoration)
 - Ready for a new session to consume via "continue work from [path]"
+- New session will execute Section 0 FIRST, restoring workflow before reading context
 
 ---
 
@@ -47,6 +51,9 @@ Before starting, internalize these failure modes:
 
 | Anti-Pattern | Why It's Fatal | Prevention |
 |--------------|----------------|------------|
+| **Missing Section 0** | Resuming agent reads context first, starts ad-hoc work | Section 0 MUST be at TOP with executable commands |
+| **Section 0.1 says "continue workflow"** | Not executable; agent doesn't know what to invoke | Write `Skill("name", "--resume args")` with exact params |
+| **Skill in Section 1.14 but not Section 0.1** | Agent reads context before finding skill call | Section 0.1 is the primary location; 1.14 is backup reference |
 | **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.local/spellbook/docs/<project-encoded>/plans/ and write explicit result |
 | **Vague re-read instructions** | "See the design doc" tells agent nothing | Use the file reading tool (`read_file`, `Read`) with absolute paths and focus areas |
 | **Relative paths** | Break when session resumes in different context | ALWAYS use absolute paths starting with / |
@@ -447,10 +454,10 @@ Invoke the skill using the `Skill` tool, `use_spellbook_skill`, or platform equi
 
 ### Phase 3: Synthesis
 
-**Step 1: Read compact.md format**
+**Step 1: Read shift-change.md format**
 
 ```bash
-cat ~/.claude/commands/compact.md
+cat ~/.claude/commands/shift-change.md
 ```
 
 **Step 2: Spawn synthesis agent**
@@ -469,7 +476,59 @@ You will receive:
 - Verification commands (runnable checks)
 
 ## Output Format
-Follow compact.md format EXACTLY. Pay special attention to:
+Follow shift-change.md format EXACTLY. **Section 0 is the MOST CRITICAL** - it must appear FIRST and contain executable commands.
+
+### Section 0: MANDATORY FIRST ACTIONS (MUST BE AT TOP)
+
+**This section MUST appear before any context. It contains commands the resuming agent executes IMMEDIATELY.**
+
+```markdown
+## SECTION 0: MANDATORY FIRST ACTIONS (Execute Before Reading Further)
+
+### 0.1 Workflow Restoration (EXECUTE FIRST)
+
+\`\`\`
+Skill("[skill-name]", "[exact resume args with absolute paths]")
+\`\`\`
+
+**If no active skill:** Write "NO ACTIVE SKILL - proceed to Step 0.2"
+
+### 0.2 Required Document Reads (EXECUTE SECOND)
+
+\`\`\`
+Read("/absolute/path/to/impl.md")
+Read("/absolute/path/to/design.md")
+\`\`\`
+
+**If no documents:** Write "NO DOCUMENTS TO READ"
+
+### 0.3 Todo State Restoration (EXECUTE THIRD)
+
+\`\`\`
+TodoWrite([
+  {"content": "...", "status": "in_progress", "activeForm": "..."},
+  ...
+])
+\`\`\`
+
+### 0.4 Restoration Checkpoint
+
+**STOP. Before reading Section 1, verify:**
+- [ ] Skill invoked (or confirmed no active skill)?
+- [ ] Documents read (or confirmed none needed)?
+- [ ] Todos restored?
+
+### 0.5 Behavioral Constraints
+
+While working, you MUST:
+- Follow the skill's workflow, not ad-hoc implementation
+- Spawn subagents per the workflow pattern
+- Run verification commands before marking complete
+```
+
+**CRITICAL:** If any skill was active (found in chunk summaries), Section 0.1 MUST contain an executable `Skill()` call. "Continue the workflow" is NOT acceptable.
+
+Pay special attention to:
 
 ### Section 1.9: Planning Documents
 **MANDATORY FIELDS:**
@@ -537,9 +596,18 @@ DO NOT re-ask answered questions.
 ```
 
 ## Quality Gates (verify before outputting)
+
+**Section 0 (MOST CRITICAL - verify these FIRST):**
+- [ ] Section 0 appears at the TOP of the output (before Section 1)
+- [ ] Section 0.1 has executable `Skill()` call OR explicit "NO ACTIVE SKILL"
+- [ ] Section 0.2 has executable `Read()` calls OR explicit "NO DOCUMENTS TO READ"
+- [ ] Section 0.3 has exact `TodoWrite()` with all pending todos
+- [ ] Section 0.5 has behavioral constraints reminding agent to follow workflow
+
+**Section 1 (Context):**
 - [ ] Section 1.9 has ABSOLUTE paths or explicit "NO PLANNING DOCUMENTS"
 - [ ] Section 1.10 has Read() commands or explicit "NO DOCUMENTS TO RE-READ"
-- [ ] Section 1.14 has executable skill invocation commands (e.g., `Skill` tool, `use_spellbook_skill`, or platform equivalent) (not "continue the workflow")
+- [ ] Section 1.14 has executable skill invocation commands (backup reference)
 - [ ] Section 1.12 has verified file state (not conversation claims)
 - [ ] Section 1.13 has runnable verification commands
 - [ ] Step 7 requires reading plan docs before implementation
@@ -620,14 +688,22 @@ Original session preserved at: {session_file}
 
 ## Quality Checklist (Before Completing)
 
+**Section 0 (MOST CRITICAL - check FIRST):**
+- [ ] Section 0 exists and is at the TOP of the output
+- [ ] Section 0.1 has executable `Skill()` call OR explicit "NO ACTIVE SKILL"
+- [ ] Section 0.2 has executable `Read()` calls OR explicit "NO DOCUMENTS TO READ"
+- [ ] Section 0.3 has exact `TodoWrite()` with all pending todos
+- [ ] Section 0.4 has restoration checkpoint
+- [ ] Section 0.5 has behavioral constraints
+
 **Planning Documents (CRITICAL):**
 - [ ] Did I search ~/.local/spellbook/docs/<project-encoded>/plans/
 - [ ] If docs exist: Listed with ABSOLUTE paths in Section 1.9
-- [ ] If docs exist: Read() commands in Section 1.10
+- [ ] If docs exist: Read() commands in Section 1.10 (backup to Section 0.2)
 - [ ] If no docs: Explicit "NO PLANNING DOCUMENTS" (not blank)
 
 **Workflow Continuity:**
-- [ ] Active skills have executable resume commands
+- [ ] Active skills have executable resume commands in Section 0.1
 - [ ] Subagents documented with IDs, tasks, status
 - [ ] Workflow pattern explicitly stated
 
@@ -638,5 +714,5 @@ Original session preserved at: {session_file}
 
 **Output Quality:**
 - [ ] All paths are ABSOLUTE (start with /)
-- [ ] Step 7 requires reading plan docs before work
+- [ ] A fresh instance executing Section 0 would restore workflow before reading context
 - [ ] A fresh instance could resume mid-stride with this output

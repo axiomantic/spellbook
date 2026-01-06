@@ -115,7 +115,7 @@ After each track completes:
 
 Context size is growing. To preserve session capacity:
 
-Invoke /compact command to:
+Invoke /shift-change command to:
 - Capture track completion state
 - Preserve manifest location and progress
 - Clear implementation details from context
@@ -300,7 +300,7 @@ Status: Starting...
 ✓ Track 1 completed
 Completion marker: track-1.completion.json
 
-Context compaction suggested. Run /compact? [yes/no]
+Context compaction suggested. Run /shift-change? [yes/no]
 
 === Executing Track 2: Frontend ===
 Packet: /Users/me/.claude/docs/myproject/packets/track-2.md

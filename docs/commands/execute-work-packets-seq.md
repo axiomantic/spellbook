@@ -25,12 +25,12 @@ This command executes the entire feature implementation by working through work 
 3. **Execute each packet** - Process tracks in dependency order:
    - Execute all tasks for the track
    - Create completion marker
-   - Suggest `/compact` to reset context
+   - Suggest `/shift-change` to reset context
 4. **Completion** - When all tracks done, suggest `/merge-work-packets`
 
 ## Context Management
 
-After each track completes, the command suggests running `/compact` to:
+After each track completes, the command suggests running `/shift-change` to:
 
 - Reset context for the next track
 - Preserve progress in the checkpoint/completion markers
@@ -70,7 +70,7 @@ Track 1: backend (no dependencies)
   [TDD workflow for each task]
   Track 1 complete.
 
-  Suggest: /compact to reset context before next track
+  Suggest: /shift-change to reset context before next track
 
 Track 2: frontend (depends on: backend)
   Verifying Track 1 completion... OK
@@ -88,5 +88,5 @@ Suggest: /merge-work-packets ~/.claude/work-packets/user-auth/
 
 - [/execute-work-packet](execute-work-packet.md) - Execute a single packet
 - [/merge-work-packets](merge-work-packets.md) - Merge completed packets
-- [/compact](compact.md) - Reset session context
+- [/shift-change](shift-change.md) - Reset session context
 - [implement-feature](../skills/implement-feature.md) - Skill that generates work packets

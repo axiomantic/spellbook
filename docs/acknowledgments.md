@@ -79,7 +79,7 @@ The following skills were developed specifically for Spellbook:
 | Command | Description |
 |---------|-------------|
 | [/scientific-debugging](commands/scientific-debugging.md) | Rigorous hypothesis-driven debugging methodology |
-| [/compact](commands/compact.md) | Custom session compaction |
+| [/shift-change](commands/shift-change.md) | Custom session compaction |
 | [/distill-session](commands/distill-session.md) | Extract knowledge from sessions |
 | [/simplify](commands/simplify.md) | Code complexity reduction |
 | [/address-pr-feedback](commands/address-pr-feedback.md) | Handle PR review comments |

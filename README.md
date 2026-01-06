@@ -132,7 +132,7 @@ Reusable workflows for structured development:
 
 | Command | Description | Origin |
 |---------|-------------|--------|
-| [/compact] | Custom session compaction | spellbook |
+| [/shift-change] | Custom session compaction | spellbook |
 | [/distill-session] | Extract knowledge from sessions | spellbook |
 | [/simplify] | Code complexity reduction | spellbook |
 | [/address-pr-feedback] | Handle PR review comments | spellbook |
@@ -150,7 +150,7 @@ Reusable workflows for structured development:
 
 *\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
 
-[/compact]: https://axiomantic.github.io/spellbook/latest/commands/compact/
+[/shift-change]: https://axiomantic.github.io/spellbook/latest/commands/shift-change/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
 [/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/
 [/address-pr-feedback]: https://axiomantic.github.io/spellbook/latest/commands/address-pr-feedback/

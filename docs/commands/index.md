@@ -20,7 +20,7 @@ Commands for debugging and verification (typically invoked via the `/debug` skil
 |---------|-------------|--------|
 | [/address-pr-feedback](address-pr-feedback.md) | Respond to PR review feedback | spellbook |
 | [/brainstorm](brainstorm.md) | Explore requirements and design before coding | [superpowers](https://github.com/obra/superpowers) |
-| [/compact](compact.md) | Distill session for resumption | spellbook |
+| [/shift-change](shift-change.md) | Distill session for resumption | spellbook |
 | [/distill-session](distill-session.md) | Preserve session state | spellbook |
 | [/execute-plan](execute-plan.md) | Execute plan in batches with review checkpoints | [superpowers](https://github.com/obra/superpowers) |
 | [/green-mirage-audit](green-mirage-audit.md) | Audit test suite quality | spellbook |

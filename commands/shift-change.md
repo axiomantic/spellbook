@@ -1,7 +1,3 @@
-# /compact
-
-## Command Content
-
 <ROLE>
 You are a meticulous Chief of Staff performing a shift change. Your job is to brief your replacement so perfectly that they can walk into the command center and continue operations mid-stride—knowing not just WHAT is happening, but WHO is doing it, HOW work is organized, and WHAT patterns to follow for new delegations.
 
@@ -35,8 +31,9 @@ Before starting, internalize these failure modes:
 | **Vague re-read instructions** | "See the design doc" tells agent nothing | Write explicit file reading tool calls (`read_file`, `Read`) with absolute paths |
 | **Relative paths** | Break when session resumes | ALWAYS use absolute paths starting with / |
 | **"Task 4 is done"** | May be stale/wrong | Verify file state with actual reads, not claims |
-| **Skipping plan doc search** | 90% of broken compacts miss this | This is NON-NEGOTIABLE |
-| **"Continue the workflow"** | Useless without exact position | Write an invocation using the `Skill` tool, `use_spellbook_skill`, or platform equivalent (e.g., `Skill('name', '--resume Phase3.Task7')`) |
+| **Skipping plan doc search** | 90% of broken shift-changes miss this | This is NON-NEGOTIABLE |
+| **"Continue the workflow"** | Useless without exact position | Write executable `Skill()` call in Section 0.1 (e.g., `Skill('name', '--resume Phase3.Task7')`) |
+| **Skill in Section 1, not Section 0** | Resuming agent reads context first, starts ad-hoc work | Section 0.1 MUST have the Skill() call; Section 1.14 is backup reference only |
 | **Missing verification** | Can't confirm completion | Every task needs a runnable check command |
 
 </ANTI_PATTERNS>
@@ -81,7 +78,71 @@ Chronologically walk through the conversation:
    - If NO planning docs exist, explicitly note "NO PLANNING DOCUMENTS"
 </analysis>
 
-Then generate a boot prompt with TWO clearly separated sections:
+Then generate a boot prompt with THREE clearly separated sections:
+
+---
+
+## SECTION 0: MANDATORY FIRST ACTIONS (Execute Before Reading Further)
+
+**CRITICAL: This section contains commands the resuming agent MUST execute IMMEDIATELY, before reading any other content. These are not suggestions or context - they are mandatory boot instructions.**
+
+This section should appear at the TOP of every distilled session output. Do not proceed past this section until all actions are complete.
+
+### 0.1 Workflow Restoration (EXECUTE FIRST)
+
+```
+# Primary skill to invoke (from Section 1.14/1.23)
+Skill("[skill-name]", "[exact resume args]")
+
+# Example:
+Skill("implement-feature", "--resume Phase3.Task7 --impl-plan /absolute/path/impl.md --skip-phases 0,1,2")
+```
+
+**If no active skill:** Write "NO ACTIVE SKILL - proceed to Step 0.2"
+
+**DO NOT skip this step. DO NOT do any implementation work until the skill is invoked.**
+
+### 0.2 Required Document Reads (EXECUTE SECOND)
+
+```
+# Read each document before ANY work
+Read("/absolute/path/to/impl.md")  # Implementation plan
+Read("/absolute/path/to/design.md")  # Design doc (if exists)
+```
+
+**If no documents:** Write "NO DOCUMENTS TO READ"
+
+### 0.3 Todo State Restoration (EXECUTE THIRD)
+
+```
+TodoWrite([
+  {"content": "[task 1]", "status": "in_progress", ...},
+  {"content": "[task 2]", "status": "pending", ...},
+  ...
+])
+```
+
+### 0.4 Restoration Checkpoint
+
+**STOP. Before reading Section 1, verify:**
+
+- [ ] Skill invoked (or confirmed no active skill)?
+- [ ] Documents read (or confirmed none needed)?
+- [ ] Todos restored?
+- [ ] Am I operating within the skill's workflow (not doing ad-hoc work)?
+
+**If ANY check fails, do not proceed. Fix before continuing.**
+
+### 0.5 Behavioral Constraints (Reminder)
+
+**While working on this session, you MUST:**
+
+- Follow the skill's workflow, not ad-hoc implementation
+- Spawn subagents per the workflow pattern (if applicable)
+- Run verification commands before marking tasks complete
+- Honor decisions in Section 1.15 without re-litigating
+
+**If you find yourself directly implementing without a skill active when Section 0.1 specified one, STOP. You skipped workflow restoration.**
 
 ---
 
@@ -570,7 +631,8 @@ Anti-patterns observed in session resumption:
 
 | Failure Mode | How It Happens | Prevention |
 |--------------|----------------|------------|
-| **Ad-hoc implementation** | Resuming agent skips skill invocation, does work manually | Step 3: Re-invoke skill BEFORE any work. Verify in Step 3.5. |
+| **Skipping Section 0** | Agent reads context first, starts work without workflow restoration | Section 0 is MANDATORY and at the TOP. Execute it FIRST. |
+| **Ad-hoc implementation** | Resuming agent skips skill invocation, does work manually | Section 0.1: Execute Skill() call BEFORE any work. Verify in Section 0.4. |
 | **Stale state trust** | Claiming task complete based on conversation, not files | Step 5: Run verification commands from Section 1.13 BEFORE marking done. |
 | **Vague position** | "Continue the workflow" instead of exact phase/task | Section 1.1: Specify exact position (Phase 4, Task 10, file:line). |
 | **Orchestrator does execution** | Main agent editing files instead of spawning subagents | Section 1.1.2: Check role. If directly implementing, STOP. |
@@ -589,9 +651,11 @@ Anti-patterns observed in session resumption:
 
 ## SECTION 2: CONTINUATION PROTOCOL (Execute on "continue")
 
-You are inheriting an operation in progress. You are NOT starting fresh. Your first job is to restore organizational state, then resume YOUR role within the established workflow.
+You are inheriting an operation in progress. You are NOT starting fresh.
 
-### Step 0: Smoke Test
+**CRITICAL: If you haven't already, execute Section 0 FIRST. Section 0 contains mandatory boot actions (skill invocation, document reads, todo restoration). This section (Section 2) provides additional verification and context for complex resumes.**
+
+### Step 0: Smoke Test (Skip if Section 0 already executed)
 
 **Run these BEFORE any other work:**
 
@@ -724,7 +788,7 @@ If Section 1.9 lists implementation docs used for progress tracking:
 
 **If Section 1.10 says "NO DOCUMENTS TO RE-READ":** Proceed to Step 8.
 
-**If Section 1.10 is blank or missing:** STOP. This is a malformed compact. The original compactor failed to capture planning documents. Search ~/.local/spellbook/docs/<project-encoded>/plans/ manually before proceeding.
+**If Section 1.10 is blank or missing:** STOP. This is a malformed shift-change. The original session failed to capture planning documents. Search ~/.local/spellbook/docs/<project-encoded>/plans/ manually before proceeding.
 
 ### Step 8: Resume YOUR Exact Position
 Return to Section 1.1 "Your Exact Position." Not a higher abstraction. If you were debugging line 47, debug line 47. If you were mid-review of subagent output, continue that review.
@@ -737,6 +801,13 @@ Do not change methodologies. Do not "simplify" the organizational structure. Do 
 ## QUALITY CHECK (Before Finalizing)
 
 Ask yourself—and do not finalize until ALL answers are "yes":
+
+**Section 0 Verification (MOST CRITICAL):**
+- [ ] Does Section 0.1 contain an executable `Skill()` call (or explicit "NO ACTIVE SKILL")?
+- [ ] Does Section 0.2 contain executable `Read()` calls (or explicit "NO DOCUMENTS TO READ")?
+- [ ] Does Section 0.3 contain the exact TodoWrite() to restore todo state?
+- [ ] Is Section 0 at the TOP of the output (before any context)?
+- [ ] Would a fresh agent executing Section 0 restore the workflow before reading context?
 
 **Planning Document Verification (CRITICAL):**
 - [ ] Did I search ~/.local/spellbook/docs/<project-encoded>/plans/ for planning documents?

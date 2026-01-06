@@ -316,7 +316,7 @@ When user asks to "add X to CLAUDE.md" for such a project:
 ## Compacting
 
 <CRITICAL>
-When compacting, follow $CLAUDE_CONFIG_DIR/commands/compact.md exactly (defaults to ~/.claude/commands/compact.md if not set). You MUST:
+When compacting, follow $CLAUDE_CONFIG_DIR/commands/shift-change.md exactly (defaults to ~/.claude/commands/shift-change.md if not set). You MUST:
 - Retain ALL relevant context about remaining work in great detail
 - Include done work as a simple checklist
 - Preserve any active slash command workflow
