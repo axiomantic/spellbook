@@ -1,12 +1,11 @@
 {
   "name": "spellbook",
   "version": "0.1.0",
-  "description": "Agent skills and workflows for Gemini CLI",
+  "description": "AI assistant skills and workflows for Gemini CLI",
   "mcpServers": {
     "spellbook": {
-      "command": "uv",
-      "args": ["run", "--quiet", "--python", "__PYTHON_PATH__", "__SERVER_PATH__"]
+      "command": "python3",
+      "args": ["${extensionPath}/../../spellbook_mcp/server.py"]
     }
-  },
-  "contextFiles": ["GEMINI.md"]
+  }
 }

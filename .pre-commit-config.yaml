@@ -23,8 +23,8 @@ repos:
         always_run: true
 
       - id: update-context-files
-        name: Update GEMINI.md and AGENTS.md
+        name: Update AGENTS.spellbook.md
         entry: python3 scripts/update_context_files.py
         language: system
         pass_filenames: false
-        files: ^(skills/|commands/|agents/|CLAUDE\.md)
+        files: ^(skills/|commands/|agents/|CLAUDE\.spellbook\.md)

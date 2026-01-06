@@ -118,6 +118,8 @@ def generate_context_content(include_content: str = "") -> str:
     skill_context = TEMPLATE.format(skills_list='\n'.join(skills_list))
     
     if include_content:
+        # Strip trailing whitespace to ensure consistent output
+        include_content = include_content.rstrip()
         return f"{include_content}\n\n---\n\n# Spellbook Skill Registry\n\n{skill_context}"
     return skill_context
 

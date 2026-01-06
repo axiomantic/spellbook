@@ -59,9 +59,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `TodoWrite()` for todo state restoration
   - Restoration checkpoint and behavioral constraints
   - Prevents resuming agents from doing ad-hoc work instead of following established workflows
+- Project-specific `CLAUDE.md` for spellbook development (separate from installable templates)
+- OpenCode full integration with AGENTS.md and MCP server support
 
 ### Changed
 - Renamed `/compact` command to `/shift-change` to avoid conflict with built-in Claude Code compact
+- **Separated installable templates from project files**: `CLAUDE.md`, `GEMINI.md`, `AGENTS.md` renamed to `*.spellbook.md`
+  - Project-specific `CLAUDE.md`, `GEMINI.md`, `AGENTS.md` now contain spellbook development instructions
+  - `GEMINI.md` and `AGENTS.md` are symlinks to `CLAUDE.md`
+- OpenCode installer now uses native AGENTS.md and MCP instead of custom plugin
 - Unified debugging workflow - `debug` skill now triages and routes to appropriate methodology
 - Converted `verification-before-completion` and `systematic-debugging` skills to commands
 - Replaced static skill registries with MCP runtime discovery
@@ -72,6 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consolidated superpowers skills into spellbook with proper attribution
 
 ### Fixed
+- Gemini installer now correctly installs to `~/.gemini/GEMINI.md` (global context) instead of extensions subdirectory
+- OpenCode installer no longer creates skill symlinks (OpenCode reads from `~/.claude/skills/*` natively)
 - Restored `finishing-a-development-branch` as skill (was incorrectly converted)
 - Fixed attributions for superpowers-derived content
 - Fixed mike duplicate version/alias error in docs deployment
@@ -84,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `repair-session` command (superseded by `distill-session`)
 - `repair-session.py` script (not needed by distill-session)
 - Static skill registries (replaced by MCP runtime discovery)
+- `.opencode/plugin/spellbook.js` (replaced by native AGENTS.md + MCP support)
 
 ## [0.2.0] - 2025-12-31
 

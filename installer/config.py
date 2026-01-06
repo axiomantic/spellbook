@@ -33,7 +33,7 @@ def get_spellbook_config_dir() -> Path:
 
 
 # Supported platforms (AI coding assistants that can consume spellbook)
-SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini"]
+SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini", "crush"]
 
 # Platform configuration
 # NOTE: These are the AI assistant platforms that consume spellbook.
@@ -58,10 +58,10 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "name": "OpenCode",
         "config_dir_env": None,
         "default_config_dir": Path.home() / ".config" / "opencode",
-        "context_file": None,  # Uses CLAUDE.md via symlink resolution
-        "skills_subdir": "skills",
-        "skill_format": "flat_md",  # Skills as individual .md files
-        "mcp_supported": False,
+        "context_file": "AGENTS.md",
+        # Note: OpenCode reads skills from ~/.claude/skills/* natively
+        "mcp_supported": True,
+        "mcp_server_name": "spellbook",
     },
     "codex": {
         "name": "Codex",
@@ -76,10 +76,20 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "name": "Gemini CLI",
         "config_dir_env": None,
         "default_config_dir": Path.home() / ".gemini",
-        "context_file": "GEMINI.md",
-        "extensions_subdir": "extensions/spellbook",
-        "extension_manifest": "gemini-extension.json",
-        "mcp_supported": True,  # Via extension manifest
+        # Context provided via native extension system (gemini extensions link)
+        # Extension at ~/.gemini/extensions/spellbook/ -> <repo>/extensions/gemini/
+        "context_file": None,
+        "mcp_supported": True,  # Via extension
+    },
+    "crush": {
+        "name": "Crush",
+        "config_dir_env": "CRUSH_GLOBAL_CONFIG",
+        "default_config_dir": Path.home() / ".config" / "crush",
+        "context_file": "AGENTS.md",
+        # Note: Crush reads skills from options.skills_paths in crush.json
+        # We configure it to include ~/.claude/skills/ for shared skills
+        "mcp_supported": True,
+        "mcp_server_name": "spellbook",
     },
 }
 
@@ -111,11 +121,8 @@ def get_context_file_path(platform: str) -> Optional[Path]:
 
     config_dir = get_platform_config_dir(platform)
 
-    # Special handling for platforms with subdirectories
-    if platform == "gemini":
-        extensions_subdir = config.get("extensions_subdir", "")
-        return config_dir / extensions_subdir / context_file
-
+    # Context files go at the root of the config directory
+    # (Gemini's extension manifest is separate from GEMINI.md global context)
     return config_dir / context_file
 
 

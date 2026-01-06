@@ -1,16 +1,106 @@
 """
 OpenCode platform installer.
+
+OpenCode supports:
+- AGENTS.md for context (installed to ~/.config/opencode/AGENTS.md)
+- MCP for spellbook tools (find_spellbook_skills, use_spellbook_skill, etc.)
+- Native skill discovery from ~/.claude/skills/* (no symlinks needed)
+
+Note: OpenCode automatically reads skills from ~/.claude/skills/, so we don't
+need to create skill symlinks for OpenCode. The Claude Code installer handles
+skill installation to that location.
 """
 
+import json
 from pathlib import Path
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.symlinks import create_skill_symlinks, remove_spellbook_symlinks
-from ..demarcation import get_installed_version
+from ..components.context_files import generate_codex_context
+from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
+
+
+# JSON markers for spellbook MCP config (used in comments)
+JSON_MARKER_START = "spellbook-mcp-start"
+JSON_MARKER_END = "spellbook-mcp-end"
+
+
+def _update_opencode_config(
+    config_path: Path, server_path: Path, dry_run: bool = False
+) -> Tuple[bool, str]:
+    """Add spellbook MCP server to OpenCode config."""
+    if dry_run:
+        return (True, "would register MCP server")
+
+    # Ensure parent directory exists
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Read existing config or create new
+    config = {}
+    if config_path.exists():
+        try:
+            content = config_path.read_text(encoding="utf-8")
+            config = json.loads(content)
+        except json.JSONDecodeError:
+            # If config is invalid, we'll overwrite it
+            pass
+
+    # Ensure mcp section exists
+    if "mcp" not in config:
+        config["mcp"] = {}
+
+    # Check if spellbook is already configured
+    if "spellbook" in config["mcp"]:
+        # Update existing config
+        config["mcp"]["spellbook"]["command"] = ["python3", str(server_path)]
+        config["mcp"]["spellbook"]["enabled"] = True
+        action = "updated MCP server config"
+    else:
+        # Add new spellbook MCP server
+        config["mcp"]["spellbook"] = {
+            "type": "local",
+            "command": ["python3", str(server_path)],
+            "enabled": True,
+        }
+        action = "registered MCP server"
+
+    # Ensure schema is set
+    if "$schema" not in config:
+        config["$schema"] = "https://opencode.ai/config.json"
+
+    # Write config
+    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    return (True, action)
+
+
+def _remove_opencode_mcp_config(
+    config_path: Path, dry_run: bool = False
+) -> Tuple[bool, str]:
+    """Remove spellbook MCP server from OpenCode config."""
+    if not config_path.exists():
+        return (True, "config not found")
+
+    if dry_run:
+        return (True, "would remove MCP server config")
+
+    try:
+        content = config_path.read_text(encoding="utf-8")
+        config = json.loads(content)
+    except json.JSONDecodeError:
+        return (True, "config is not valid JSON")
+
+    if "mcp" not in config or "spellbook" not in config.get("mcp", {}):
+        return (True, "MCP server was not configured")
+
+    # Remove spellbook from mcp
+    del config["mcp"]["spellbook"]
+
+    # Write config back
+    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    return (True, "removed MCP server config")
 
 
 class OpenCodeInstaller(PlatformInstaller):
@@ -24,27 +114,35 @@ class OpenCodeInstaller(PlatformInstaller):
     def platform_id(self) -> str:
         return "opencode"
 
+    @property
+    def opencode_config_file(self) -> Path:
+        """Get the OpenCode config file path."""
+        return self.config_dir / "opencode.json"
+
     def detect(self) -> PlatformStatus:
         """Detect OpenCode installation status."""
-        # OpenCode uses flat .md files in skills directory
-        skills_dir = self.config_dir / "skills"
-        has_skills = False
+        # Check for AGENTS.md
+        context_file = self.config_dir / "AGENTS.md"
+        installed_version = get_installed_version(context_file)
 
-        if skills_dir.exists():
-            # Check if any spellbook skills are symlinked
-            for item in skills_dir.iterdir():
-                if item.is_symlink():
-                    target = item.resolve()
-                    if "spellbook" in str(target):
-                        has_skills = True
-                        break
+        # Check for MCP config
+        has_mcp = False
+        if self.opencode_config_file.exists():
+            try:
+                config = json.loads(self.opencode_config_file.read_text(encoding="utf-8"))
+                has_mcp = "spellbook" in config.get("mcp", {})
+            except json.JSONDecodeError:
+                pass
 
         return PlatformStatus(
             platform=self.platform_id,
             available=self.config_dir.exists(),
-            installed=has_skills,
-            version=None,  # No version tracking for symlink-only platform
-            details={"config_dir": str(self.config_dir)},
+            installed=installed_version is not None or has_mcp,
+            version=installed_version,
+            details={
+                "config_dir": str(self.config_dir),
+                "mcp_registered": has_mcp,
+            },
         )
 
     def install(self, force: bool = False) -> List["InstallResult"]:
@@ -65,29 +163,57 @@ class OpenCodeInstaller(PlatformInstaller):
             )
             return results
 
-        # Create skills directory
-        skills_dir = self.config_dir / "skills"
-        if not self.dry_run:
-            skills_dir.mkdir(parents=True, exist_ok=True)
+        # Note: OpenCode reads skills from ~/.claude/skills/* natively,
+        # so no skill symlinks are needed. Claude Code installer handles that.
 
-        # Install skills as flat .md files (OpenCode format)
-        skills_results = create_skill_symlinks(
-            self.spellbook_dir / "skills",
-            skills_dir,
-            as_directories=False,  # Flat .md files
-            dry_run=self.dry_run,
-        )
-        skill_count = sum(1 for r in skills_results if r.success)
+        # Install AGENTS.md with demarcated section
+        context_file = self.config_dir / "AGENTS.md"
+        # Reuse generate_codex_context since format is identical
+        spellbook_content = generate_codex_context(self.spellbook_dir)
 
-        results.append(
-            InstallResult(
-                component="skills",
-                platform=self.platform_id,
-                success=skill_count > 0 or not skills_results,
-                action="installed" if skills_results else "skipped",
-                message=f"skills: {skill_count} installed (as .md files)",
+        if spellbook_content:
+            if self.dry_run:
+                results.append(
+                    InstallResult(
+                        component="AGENTS.md",
+                        platform=self.platform_id,
+                        success=True,
+                        action="installed",
+                        message="AGENTS.md: would be updated",
+                    )
+                )
+            else:
+                action, backup_path = update_demarcated_section(
+                    context_file, spellbook_content, self.version
+                )
+                msg = f"AGENTS.md: {action}"
+                if backup_path:
+                    msg += f" (backup: {backup_path.name})"
+                results.append(
+                    InstallResult(
+                        component="AGENTS.md",
+                        platform=self.platform_id,
+                        success=True,
+                        action=action,
+                        message=msg,
+                    )
+                )
+
+        # Register MCP server in opencode.json
+        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
+        if server_path.exists():
+            success, msg = _update_opencode_config(
+                self.opencode_config_file, server_path, self.dry_run
             )
-        )
+            results.append(
+                InstallResult(
+                    component="mcp_server",
+                    platform=self.platform_id,
+                    success=success,
+                    action="installed" if success else "failed",
+                    message=f"MCP server: {msg}",
+                )
+            )
 
         return results
 
@@ -100,37 +226,58 @@ class OpenCodeInstaller(PlatformInstaller):
         if not self.config_dir.exists():
             return results
 
-        # Remove skill symlinks
-        skills_dir = self.config_dir / "skills"
-        symlink_results = remove_spellbook_symlinks(
-            skills_dir, self.spellbook_dir, dry_run=self.dry_run
-        )
-        if symlink_results:
-            removed_count = sum(1 for r in symlink_results if r.action == "removed")
-            results.append(
-                InstallResult(
-                    component="skills",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message=f"skills: {removed_count} removed",
+        # Note: Skills are in ~/.claude/skills/* and managed by Claude Code installer,
+        # not by OpenCode installer.
+
+        # Remove demarcated section from AGENTS.md
+        context_file = self.config_dir / "AGENTS.md"
+        if context_file.exists():
+            if self.dry_run:
+                results.append(
+                    InstallResult(
+                        component="AGENTS.md",
+                        platform=self.platform_id,
+                        success=True,
+                        action="removed",
+                        message="AGENTS.md: would remove spellbook section",
+                    )
                 )
+            else:
+                action, backup_path = remove_demarcated_section(context_file)
+                msg = f"AGENTS.md: {action}"
+                if backup_path:
+                    msg += f" (backup: {backup_path.name})"
+                results.append(
+                    InstallResult(
+                        component="AGENTS.md",
+                        platform=self.platform_id,
+                        success=True,
+                        action=action,
+                        message=msg,
+                    )
+                )
+
+        # Remove MCP server from opencode.json
+        success, msg = _remove_opencode_mcp_config(
+            self.opencode_config_file, self.dry_run
+        )
+        results.append(
+            InstallResult(
+                component="mcp_server",
+                platform=self.platform_id,
+                success=success,
+                action="removed" if "removed" in msg else "skipped",
+                message=f"MCP server: {msg}",
             )
+        )
 
         return results
 
     def get_context_files(self) -> List[Path]:
         """Get context files for this platform."""
-        return []  # OpenCode doesn't have a separate context file
+        return [self.config_dir / "AGENTS.md"]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""
-        symlinks = []
-
-        skills_dir = self.config_dir / "skills"
-        if skills_dir.exists():
-            for item in skills_dir.iterdir():
-                if item.is_symlink():
-                    symlinks.append(item)
-
-        return symlinks
+        # OpenCode doesn't create symlinks - skills are read from ~/.claude/skills/*
+        return []

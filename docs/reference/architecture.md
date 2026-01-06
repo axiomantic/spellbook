@@ -43,10 +43,10 @@ Native integration via:
 
 ### OpenCode
 
-Plugin-based integration:
-- `.opencode/plugin/spellbook.js` provides custom tools
-- Bootstrap context injected at session start
-- Tool mapping from Claude Code equivalents
+Native integration via AGENTS.md and MCP:
+- Context installed to `~/.config/opencode/AGENTS.md`
+- MCP server registered in `~/.config/opencode/opencode.json`
+- Skills read natively from `~/.claude/skills/*` (no separate installation needed)
 
 ### Codex
 
@@ -57,10 +57,10 @@ MCP server integration:
 
 ### Gemini CLI
 
-MCP server integration:
-- `extensions/gemini/gemini-extension.json` configuration
-- Generated `GEMINI.md` context file
-- Limited tool availability
+Native extension system:
+- Extension linked via `gemini extensions link` to `extensions/gemini/`
+- Extension provides MCP server config and GEMINI.md context
+- Full skill discovery and loading via MCP
 
 ## MCP Server
 

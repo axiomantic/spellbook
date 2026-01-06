@@ -25,22 +25,24 @@ python3 install.py
 
 **Status:** Full Support
 
-OpenCode integration via skill symlinks.
+OpenCode integration via AGENTS.md and MCP server.
 
 ### Setup
 
 1. Run the installer: `python3 install.py`
-2. Skills are automatically available in `~/.opencode/skills/`
+2. The installer:
+   - Creates `~/.config/opencode/AGENTS.md` with spellbook context
+   - Registers spellbook MCP server in `~/.config/opencode/opencode.json`
 
 ### Features
 
-- Skills installed as flat `.md` files in `~/.opencode/skills/`
-- OpenCode discovers skills automatically from the skills directory
-- Same skill content as other platforms
+- Context and instructions via AGENTS.md
+- MCP server for spellbook tools
+- Native skill discovery from `~/.claude/skills/*`
 
 ### Notes
 
-OpenCode uses its native skill discovery. The installer creates symlinks to spellbook skills, making them available alongside any personal skills you create.
+OpenCode natively reads skills from `~/.claude/skills/*`, which is where the Claude Code installer places them. No separate skill installation is needed for OpenCode. Install spellbook for Claude Code first, and OpenCode will automatically see the skills.
 
 ## Codex
 
@@ -65,19 +67,20 @@ Skills auto-trigger based on your intent. For example, saying "debug this issue"
 
 ## Gemini CLI
 
-**Status:** Partial Support
+**Status:** Full Support
 
-Gemini CLI integration via MCP server and context files.
+Gemini CLI integration via native extension system.
 
 ### Setup
 
 1. Run the installer: `python3 install.py`
-2. Add the MCP server to Gemini's configuration
-3. The installer generates `GEMINI.md` with skill triggers
+2. The installer links the spellbook extension via `gemini extensions link`
 
 ### Features
 
-- MCP server for skill loading
+- Native extension with GEMINI.md context
+- MCP server for skill discovery and loading
+- Automatic context loading at startup
 - Context file with skill registry
 - Basic skill invocation
 
@@ -85,3 +88,49 @@ Gemini CLI integration via MCP server and context files.
 
 - Limited tool availability compared to Claude Code
 - Some workflow skills may not function fully
+
+## Crush
+
+**Status:** Full Support
+
+Crush (by Charmbracelet) integration via AGENTS.md, MCP server, and native Agent Skills.
+
+### Setup
+
+1. Run the installer: `python3 install.py`
+2. The installer:
+   - Creates `~/.config/crush/AGENTS.md` with spellbook context
+   - Registers spellbook MCP server in `~/.config/crush/crush.json`
+   - Adds `~/.claude/skills` to `options.skills_paths` for shared skills
+   - Adds the context file to `options.context_paths`
+
+### Features
+
+- Context and instructions via AGENTS.md
+- MCP server for spellbook tools
+- Native Agent Skills support (same SKILL.md format as Claude Code)
+- Shared skills with Claude Code via `~/.claude/skills`
+
+### Notes
+
+Crush has native support for the Agent Skills open standard (the same format used by Claude Code). The installer configures Crush to read skills from the Claude Code skills directory (`~/.claude/skills`), so installing spellbook for Claude Code first ensures skills are available for both platforms.
+
+### Configuration
+
+Crush stores its configuration in `~/.config/crush/crush.json`. The installer adds:
+
+```json
+{
+  "options": {
+    "skills_paths": ["~/.claude/skills"],
+    "context_paths": ["~/.config/crush/AGENTS.md"]
+  },
+  "mcp": {
+    "spellbook": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["/path/to/spellbook_mcp/server.py"]
+    }
+  }
+}
+```

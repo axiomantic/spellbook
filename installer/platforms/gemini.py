@@ -1,14 +1,16 @@
 """
 Gemini CLI platform installer.
+
+Uses Gemini's native extension system via `gemini extensions link`.
+The extension provides:
+- MCP server for skill discovery and loading
+- Context via GEMINI.md in the extension directory
 """
 
-import json
 import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.context_files import generate_gemini_context
-from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
@@ -26,13 +28,31 @@ def check_gemini_cli_available() -> bool:
         return False
 
 
-def install_gemini_extension(extension_path: Path, dry_run: bool = False) -> Tuple[bool, str]:
+def get_linked_extensions() -> List[str]:
+    """Get list of linked extension names."""
+    try:
+        result = subprocess.run(
+            ["gemini", "extensions", "list"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode == 0:
+            # Parse output to find linked extensions
+            # Format varies, but we're looking for "spellbook"
+            return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        return []
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return []
+
+
+def link_extension(extension_path: Path, dry_run: bool = False) -> Tuple[bool, str]:
     """
-    Install a Gemini extension using the CLI.
+    Link a Gemini extension using `gemini extensions link`.
 
     Args:
         extension_path: Path to extension directory containing gemini-extension.json
-        dry_run: If True, don't actually install
+        dry_run: If True, don't actually link
 
     Returns: (success, message)
     """
@@ -40,25 +60,24 @@ def install_gemini_extension(extension_path: Path, dry_run: bool = False) -> Tup
         return (False, "gemini CLI not available")
 
     if dry_run:
-        return (True, "Would install extension")
+        return (True, f"would link extension from {extension_path}")
 
     try:
-        # Gemini extensions install takes a path
         result = subprocess.run(
-            ["gemini", "extensions", "install", str(extension_path)],
+            ["gemini", "extensions", "link", str(extension_path)],
             capture_output=True,
             text=True,
             timeout=30,
         )
 
         if result.returncode == 0:
-            return (True, "extension installed")
+            return (True, "extension linked")
         else:
             error = result.stderr.strip() or result.stdout.strip()
-            # Check if already installed
-            if "already" in error.lower():
-                return (True, "extension already installed")
-            return (False, f"install failed: {error}")
+            # Check if already linked
+            if "already" in error.lower() or "exists" in error.lower():
+                return (True, "extension already linked")
+            return (False, f"link failed: {error}")
 
     except subprocess.TimeoutExpired:
         return (False, "command timed out")
@@ -66,29 +85,29 @@ def install_gemini_extension(extension_path: Path, dry_run: bool = False) -> Tup
         return (False, str(e))
 
 
-def uninstall_gemini_extension(name: str, dry_run: bool = False) -> Tuple[bool, str]:
-    """Uninstall a Gemini extension."""
+def unlink_extension(name: str, dry_run: bool = False) -> Tuple[bool, str]:
+    """Unlink a Gemini extension using `gemini extensions unlink`."""
     if not check_gemini_cli_available():
         return (False, "gemini CLI not available")
 
     if dry_run:
-        return (True, "Would uninstall extension")
+        return (True, f"would unlink extension {name}")
 
     try:
         result = subprocess.run(
-            ["gemini", "extensions", "uninstall", name],
+            ["gemini", "extensions", "unlink", name],
             capture_output=True,
             text=True,
             timeout=30,
         )
 
         if result.returncode == 0:
-            return (True, "extension uninstalled")
+            return (True, "extension unlinked")
         else:
             error = result.stderr.strip() or result.stdout.strip()
-            if "not found" in error.lower() or "not installed" in error.lower():
-                return (True, "extension was not installed")
-            return (False, f"uninstall failed: {error}")
+            if "not found" in error.lower() or "not linked" in error.lower():
+                return (True, "extension was not linked")
+            return (False, f"unlink failed: {error}")
 
     except subprocess.TimeoutExpired:
         return (False, "command timed out")
@@ -97,7 +116,7 @@ def uninstall_gemini_extension(name: str, dry_run: bool = False) -> Tuple[bool, 
 
 
 class GeminiInstaller(PlatformInstaller):
-    """Installer for Gemini CLI platform."""
+    """Installer for Gemini CLI platform using native extensions."""
 
     @property
     def platform_name(self) -> str:
@@ -108,262 +127,154 @@ class GeminiInstaller(PlatformInstaller):
         return "gemini"
 
     @property
-    def extensions_dir(self) -> Path:
-        """Get the extensions directory for spellbook."""
+    def extension_dir(self) -> Path:
+        """Get the spellbook extension directory in the repo."""
+        return self.spellbook_dir / "extensions" / "gemini"
+
+    @property
+    def linked_extension_path(self) -> Path:
+        """Get the path where the extension would be linked."""
         return self.config_dir / "extensions" / "spellbook"
 
     def detect(self) -> PlatformStatus:
         """Detect Gemini CLI installation status."""
-        context_file = self.extensions_dir / "GEMINI.md"
-        installed_version = get_installed_version(context_file)
+        # Check if extension is linked (symlink exists)
+        is_linked = (
+            self.linked_extension_path.is_symlink()
+            or self.linked_extension_path.exists()
+        )
 
-        manifest_file = self.extensions_dir / "gemini-extension.json"
-        has_manifest = manifest_file.exists()
+        # Try to resolve if it points to our extension
+        points_to_spellbook = False
+        if is_linked and self.linked_extension_path.is_symlink():
+            try:
+                target = self.linked_extension_path.resolve()
+                points_to_spellbook = "spellbook" in str(target)
+            except OSError:
+                pass
 
         return PlatformStatus(
             platform=self.platform_id,
-            available=self.config_dir.exists(),
-            installed=installed_version is not None or has_manifest,
-            version=installed_version,
+            available=self.config_dir.exists() or check_gemini_cli_available(),
+            installed=is_linked and points_to_spellbook,
+            version=self.version if points_to_spellbook else None,
             details={
                 "config_dir": str(self.config_dir),
-                "extensions_dir": str(self.extensions_dir),
-                "has_manifest": has_manifest,
+                "extension_linked": is_linked,
+                "gemini_cli_available": check_gemini_cli_available(),
             },
         )
 
     def install(self, force: bool = False) -> List["InstallResult"]:
-        """Install Gemini CLI components."""
+        """Install Gemini CLI extension via `gemini extensions link`."""
         from ..core import InstallResult
 
         results = []
 
-        if not self.config_dir.exists():
+        # Check if gemini CLI is available
+        if not check_gemini_cli_available():
             results.append(
                 InstallResult(
                     component="platform",
                     platform=self.platform_id,
                     success=True,
                     action="skipped",
-                    message="~/.gemini not found",
+                    message="gemini CLI not available",
                 )
             )
             return results
 
-        # Create extensions directory
-        if not self.dry_run:
-            self.extensions_dir.mkdir(parents=True, exist_ok=True)
-
-        # Generate and install extension manifest
-        template_file = self.spellbook_dir / "extensions" / "gemini" / "gemini-extension.json"
-        manifest_file = self.extensions_dir / "gemini-extension.json"
-
-        if template_file.exists():
-            if self.dry_run:
-                results.append(
-                    InstallResult(
-                        component="manifest",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message="extension manifest: would be created",
-                    )
-                )
-            else:
-                try:
-                    # Read template and replace placeholder
-                    template_content = template_file.read_text(encoding="utf-8")
-                    server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
-                    content = template_content.replace("__SERVER_PATH__", str(server_path))
-
-                    # Update version
-                    try:
-                        data = json.loads(content)
-                        data["version"] = self.version
-                        content = json.dumps(data, indent=2) + "\n"
-                    except json.JSONDecodeError:
-                        pass
-
-                    manifest_file.write_text(content, encoding="utf-8")
-                    results.append(
-                        InstallResult(
-                            component="manifest",
-                            platform=self.platform_id,
-                            success=True,
-                            action="installed",
-                            message="extension manifest: created",
-                        )
-                    )
-                except OSError as e:
-                    results.append(
-                        InstallResult(
-                            component="manifest",
-                            platform=self.platform_id,
-                            success=False,
-                            action="failed",
-                            message=f"extension manifest: {e}",
-                        )
-                    )
-        else:
+        # Check if extension source exists
+        if not self.extension_dir.exists():
             results.append(
                 InstallResult(
-                    component="manifest",
+                    component="extension",
                     platform=self.platform_id,
-                    success=True,
-                    action="skipped",
-                    message="extension manifest: template not found",
+                    success=False,
+                    action="failed",
+                    message=f"extension not found at {self.extension_dir}",
                 )
             )
+            return results
 
-        # Install GEMINI.md with demarcated section
-        context_file = self.extensions_dir / "GEMINI.md"
-        spellbook_content = generate_gemini_context(self.spellbook_dir)
-
-        if spellbook_content:
-            if self.dry_run:
-                results.append(
-                    InstallResult(
-                        component="GEMINI.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message="GEMINI.md: would be updated",
-                    )
-                )
-            else:
-                action, backup_path = update_demarcated_section(
-                    context_file, spellbook_content, self.version
-                )
-                msg = f"GEMINI.md: {action}"
-                if backup_path:
-                    msg += f" (backup: {backup_path.name})"
-                results.append(
-                    InstallResult(
-                        component="GEMINI.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action=action,
-                        message=msg,
-                    )
-                )
-
-        # Register extension with Gemini CLI if available
-        if check_gemini_cli_available():
-            success, msg = install_gemini_extension(self.extensions_dir, dry_run=self.dry_run)
-            results.append(
-                InstallResult(
-                    component="extension_registration",
-                    platform=self.platform_id,
-                    success=success,
-                    action="installed" if success else "failed",
-                    message=f"extension: {msg}",
-                )
+        # Link the extension
+        success, msg = link_extension(self.extension_dir, dry_run=self.dry_run)
+        results.append(
+            InstallResult(
+                component="extension",
+                platform=self.platform_id,
+                success=success,
+                action="installed" if success else "failed",
+                message=f"extension: {msg}",
             )
-        else:
-            results.append(
-                InstallResult(
-                    component="extension_registration",
-                    platform=self.platform_id,
-                    success=True,
-                    action="skipped",
-                    message="extension: gemini CLI not available (manual registration needed)",
-                )
-            )
+        )
 
         return results
 
     def uninstall(self) -> List["InstallResult"]:
-        """Uninstall Gemini CLI components."""
+        """Uninstall Gemini CLI extension via `gemini extensions unlink`."""
         from ..core import InstallResult
 
         results = []
 
-        if not self.config_dir.exists():
-            return results
-
-        # Unregister extension with Gemini CLI if available
-        if check_gemini_cli_available():
-            success, msg = uninstall_gemini_extension("spellbook", dry_run=self.dry_run)
-            results.append(
-                InstallResult(
-                    component="extension_registration",
-                    platform=self.platform_id,
-                    success=success,
-                    action="removed" if success else "failed",
-                    message=f"extension: {msg}",
-                )
-            )
-
-        # Remove demarcated section from GEMINI.md
-        context_file = self.extensions_dir / "GEMINI.md"
-        if context_file.exists():
-            if self.dry_run:
-                results.append(
-                    InstallResult(
-                        component="GEMINI.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action="removed",
-                        message="GEMINI.md: would remove spellbook section",
-                    )
-                )
-            else:
-                action, backup_path = remove_demarcated_section(context_file)
-                msg = f"GEMINI.md: {action}"
-                if backup_path:
-                    msg += f" (backup: {backup_path.name})"
-                results.append(
-                    InstallResult(
-                        component="GEMINI.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action=action,
-                        message=msg,
-                    )
-                )
-
-        # Remove extension manifest
-        manifest_file = self.extensions_dir / "gemini-extension.json"
-        if manifest_file.exists():
-            if self.dry_run:
-                results.append(
-                    InstallResult(
-                        component="manifest",
-                        platform=self.platform_id,
-                        success=True,
-                        action="removed",
-                        message="extension manifest: would be removed",
-                    )
-                )
-            else:
-                try:
-                    manifest_file.unlink()
+        if not check_gemini_cli_available():
+            # Try to remove symlink manually if CLI not available
+            if self.linked_extension_path.is_symlink():
+                if self.dry_run:
                     results.append(
                         InstallResult(
-                            component="manifest",
+                            component="extension",
                             platform=self.platform_id,
                             success=True,
                             action="removed",
-                            message="extension manifest: removed",
+                            message="extension: would remove symlink (CLI not available)",
                         )
                     )
-                except OSError as e:
-                    results.append(
-                        InstallResult(
-                            component="manifest",
-                            platform=self.platform_id,
-                            success=False,
-                            action="failed",
-                            message=f"extension manifest: {e}",
+                else:
+                    try:
+                        self.linked_extension_path.unlink()
+                        results.append(
+                            InstallResult(
+                                component="extension",
+                                platform=self.platform_id,
+                                success=True,
+                                action="removed",
+                                message="extension: removed symlink (CLI not available)",
+                            )
                         )
-                    )
+                    except OSError as e:
+                        results.append(
+                            InstallResult(
+                                component="extension",
+                                platform=self.platform_id,
+                                success=False,
+                                action="failed",
+                                message=f"extension: failed to remove symlink: {e}",
+                            )
+                        )
+            return results
+
+        # Unlink using CLI
+        success, msg = unlink_extension("spellbook", dry_run=self.dry_run)
+        results.append(
+            InstallResult(
+                component="extension",
+                platform=self.platform_id,
+                success=success,
+                action="removed" if success else "failed",
+                message=f"extension: {msg}",
+            )
+        )
 
         return results
 
     def get_context_files(self) -> List[Path]:
         """Get context files for this platform."""
-        return [self.extensions_dir / "GEMINI.md"]
+        # Context is provided via extension's GEMINI.md, not a separate file
+        return []
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""
-        return []  # Gemini doesn't use symlinks, just files
+        if self.linked_extension_path.is_symlink():
+            return [self.linked_extension_path]
+        return []
