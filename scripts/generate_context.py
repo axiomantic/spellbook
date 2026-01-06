@@ -40,7 +40,7 @@ try:
         dirs = []
         home = Path.home()
         dirs.append(home / ".config" / "opencode" / "skills")
-        dirs.append(home / ".opencode" / "skills")
+        dirs.append(home / ".opencode" / "skills")  # Legacy path
         dirs.append(home / ".codex" / "skills")
 
         # This repo's skills
@@ -70,11 +70,28 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 
 {skills_list}
 
-## Instruction
-1. **Analyze the User Request**: Compare it against the skill descriptions above.
-2. **Auto-Trigger**: If a skill matches the intent (e.g. user asks to "debug"), you MUST load it.
-3. **Load Skill**: Use the tool `spellbook.use_spellbook_skill(skill_name="...")` (or `spellbook-codex use-skill ...` in Codex).
-4. **Follow Instructions**: The tool will return the skill's specific instructions. Follow them rigorously.
+## CRITICAL: Skill Activation Protocol
+
+**BEFORE responding to ANY user message**, you MUST:
+
+1. **Check for skill match**: Compare the user's request against skill descriptions above.
+2. **Load matching skill FIRST**: If a skill matches, call `spellbook.use_spellbook_skill(skill_name="...")` BEFORE generating any response.
+3. **Follow skill instructions exactly**: The tool returns detailed workflow instructions. These instructions OVERRIDE your default behavior. Follow them step-by-step.
+4. **Maintain skill context**: Once a skill is loaded, its instructions govern the entire workflow until complete.
+
+**Skill trigger examples:**
+- "debug this" / "fix this bug" / "tests failing" → load `debug` skill
+- "implement X" / "add feature Y" / "build Z" → load `implement-feature` skill
+- "let's think through" / "explore options" → load `brainstorming` skill
+- "write tests first" / "TDD" → load `test-driven-development` skill
+
+**IMPORTANT**: Skills are detailed expert workflows, not simple prompts. When loaded, they contain:
+- Step-by-step phases with checkpoints
+- Quality gates and verification requirements
+- Tool usage patterns and best practices
+- Output formats and deliverables
+
+Do NOT summarize or skip steps. Execute the skill workflow as written.
 </SPELLBOOK_CONTEXT>"""
 
 import argparse

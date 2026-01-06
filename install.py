@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from installer.core import Installer
 from installer.ui import (
+    Spinner,
     print_directory_config,
     print_header,
     print_info,
@@ -112,17 +113,18 @@ def main() -> int:
         print_warning("DRY RUN - no changes will be made")
         print()
 
-    session = installer.run(
-        platforms=platforms,
-        force=args.force,
-        dry_run=args.dry_run,
-    )
+    with Spinner("Installing"):
+        session = installer.run(
+            platforms=platforms,
+            force=args.force,
+            dry_run=args.dry_run,
+        )
 
     if args.verify_mcp and not args.dry_run:
         print()
-        print_info("Verifying MCP server...")
         server_path = spellbook_dir / "spellbook_mcp" / "server.py"
-        success, msg = verify_mcp_connectivity(server_path)
+        with Spinner("Verifying MCP server"):
+            success, msg = verify_mcp_connectivity(server_path)
         if success:
             print_success(f"MCP server: {msg}")
         else:

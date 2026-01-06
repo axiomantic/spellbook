@@ -1,6 +1,12 @@
-# Spellbook
+<p align="center">
+  <img src="assets/logo.svg" alt="Spellbook" width="120" height="120">
+</p>
 
-Multi-platform AI assistant skills, commands, and configuration for Claude Code, OpenCode, Codex, and Gemini CLI.
+<h1 align="center">Spellbook</h1>
+
+<p align="center">
+  Multi-platform AI assistant skills, commands, and configuration for Claude Code, OpenCode, Codex, and Gemini CLI.
+</p>
 
 ## What is Spellbook?
 
@@ -28,8 +34,8 @@ See [Installation Guide](getting-started/installation.md) for options and manual
 | Platform | Status | Method |
 |----------|--------|--------|
 | Claude Code | Full | Native skills + MCP server |
-| OpenCode | Full | Plugin + CLI |
-| Codex | Full | Bootstrap + CLI |
+| OpenCode | Full | Skill symlinks |
+| Codex | Full | Bootstrap + MCP |
 | Gemini CLI | Partial | MCP server + context file |
 
 ## Attribution

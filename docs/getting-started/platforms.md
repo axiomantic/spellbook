@@ -46,22 +46,17 @@ OpenCode uses its native skill discovery. The installer creates symlinks to spel
 
 **Status:** Full Support
 
-Codex integration via CLI script and bootstrap context.
+Codex integration via MCP server and bootstrap context.
 
 ### Setup
 
 1. Run the installer: `python3 install.py`
-2. Codex will automatically load `.codex/spellbook-bootstrap.md`
+2. The installer registers the spellbook MCP server in `~/.codex/config.toml`
+3. Codex will automatically load `.codex/spellbook-bootstrap.md`
 
 ### Usage
 
-```bash
-# Load a skill
-.codex/spellbook-codex use-skill systematic-debugging
-
-# List available skills
-.codex/spellbook-codex list-skills
-```
+Skills auto-trigger based on your intent. For example, saying "debug this issue" activates the debugging skill automatically.
 
 ### Limitations
 

@@ -50,10 +50,10 @@ Plugin-based integration:
 
 ### Codex
 
-CLI-based integration:
-- `.codex/spellbook-codex` script for skill loading
+MCP server integration:
+- MCP server registered in `~/.codex/config.toml`
 - `.codex/spellbook-bootstrap.md` for context
-- JavaScript-based skill resolution
+- Same `spellbook.use_spellbook_skill` tool as other platforms
 
 ### Gemini CLI
 

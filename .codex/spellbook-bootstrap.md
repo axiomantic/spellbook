@@ -4,7 +4,7 @@
 
 ## What is Spellbook?
 
-Spellbook is a centralized skills repository providing specialized workflows and domain knowledge across multiple AI coding platforms (Claude Code, Codex, OpenCode).
+Spellbook is a centralized skills repository providing specialized workflows and domain knowledge across multiple AI coding platforms (Claude Code, Codex, OpenCode, Gemini).
 
 ## EXTREMELY_IMPORTANT: Tool Mappings
 
@@ -14,7 +14,7 @@ Codex uses different tool names than Claude Code. Map Claude Code patterns to Co
 |-----------------|------------------|-------|
 | `TodoWrite` | `update_plan` | Update the conversation plan with task status |
 | `Task` | **NOT AVAILABLE** | Tell user subagents are unavailable in Codex |
-| `Skill` | `spellbook-codex` command | Use CLI script to load skills |
+| `Skill` | `spellbook.use_spellbook_skill` | MCP tool to load skills |
 
 **EXTREMELY_IMPORTANT:** When a skill requires the Task tool for subagent orchestration, you MUST inform the user that subagent features are not available in Codex and suggest using Claude Code instead.
 
@@ -26,29 +26,24 @@ All spellbook skills use kebab-case naming (lowercase with hyphens):
 - `SystematicDebugging` ✗
 - `test_driven_development` ✗
 
-## Loading Skills in Codex
+## Skill Activation
 
-Use the `spellbook-codex` CLI script to load skills:
+**EXTREMELY_IMPORTANT:** Skills auto-trigger based on user intent. When a user's request matches a skill description (e.g., "debug this issue" matches systematic-debugging), you MUST load and follow that skill.
 
-```bash
-# Load a specific skill
-.codex/spellbook-codex use-skill <skill-name>
+To load a skill, use the MCP tool:
 
-# List available skills
-.codex/spellbook-codex list-skills
-
-# Get help
-.codex/spellbook-codex --help
+```
+spellbook.use_spellbook_skill(skill_name="<skill-name>")
 ```
 
-The script validates skill names, resolves paths using priority order, and outputs markdown content with frontmatter stripped.
+The tool validates skill names, resolves paths using priority order, and returns the skill's markdown content.
 
 ## EXTREMELY_IMPORTANT: Priority Resolution
 
 Skills are resolved in this priority order:
 
 1. **Personal skills** (`~/.codex/skills/`) - highest priority
-2. **Spellbook skills** (`~/Development/spellbook/skills/`) - middle priority
+2. **Spellbook skills** (from spellbook repository) - middle priority
 3. **Claude skills** (`$CLAUDE_CONFIG_DIR/skills/`) - lowest priority
 
 Personal customizations always override shared skills.
@@ -63,8 +58,6 @@ Personal customizations always override shared skills.
 
 ## Skills Location
 
-Spellbook skills are installed at: `~/Development/spellbook/skills/`
-
 Each skill is a markdown file with:
 - Frontmatter metadata (name, description, triggers)
 - Workflow instructions
@@ -75,7 +68,7 @@ Each skill is a markdown file with:
 
 Codex integration is provided via:
 - This bootstrap file (context)
-- `spellbook-codex` CLI script (skill loading)
+- Spellbook MCP server (skill loading via `spellbook.use_spellbook_skill`)
 - Symlink at `~/.codex/spellbook` (optional, for easy access)
 
-**EXTREMELY_IMPORTANT:** The `spellbook-codex` script is the ONLY supported way to load skills in Codex. Do not attempt to read skill files directly or implement custom loading logic.
+**EXTREMELY_IMPORTANT:** Use the `spellbook.use_spellbook_skill` MCP tool to load skills. Do not attempt to read skill files directly or implement custom loading logic.

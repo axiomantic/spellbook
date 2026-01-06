@@ -234,8 +234,7 @@ def show_post_install_instructions(platforms: List[str]) -> None:
     if "codex" in platforms:
         print(color("  Codex:", Colors.BLUE))
         print("    AGENTS.md context file installed.")
-        print("    Load skills with: .codex/spellbook-codex use-skill <name>")
-        print("    Restart Codex CLI and VSCode extension to apply changes.")
+        print("    Skills auto-trigger based on your intent (e.g., 'debug this' activates debugging).")
         print()
 
     if "claude_code" in platforms:

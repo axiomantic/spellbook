@@ -78,34 +78,6 @@ def sync_version_to_files(spellbook_dir: Path, version: str) -> List[str]:
         except (json.JSONDecodeError, OSError):
             pass
 
-    # 2. spellbook-codex (JS file with VERSION constant)
-    codex_cli = spellbook_dir / ".codex" / "spellbook-codex"
-    if codex_cli.exists():
-        try:
-            content = codex_cli.read_text(encoding="utf-8")
-            pattern = r"const VERSION = '[^']+'"
-            replacement = f"const VERSION = '{version}'"
-            new_content = re.sub(pattern, replacement, content)
-            if new_content != content:
-                codex_cli.write_text(new_content, encoding="utf-8")
-                updated.append(str(codex_cli))
-        except OSError:
-            pass
-
-    # 3. installer/__init__.py
-    installer_init = spellbook_dir / "installer" / "__init__.py"
-    if installer_init.exists():
-        try:
-            content = installer_init.read_text(encoding="utf-8")
-            pattern = r'__version__ = "[^"]+"'
-            replacement = f'__version__ = "{version}"'
-            new_content = re.sub(pattern, replacement, content)
-            if new_content != content:
-                installer_init.write_text(new_content, encoding="utf-8")
-                updated.append(str(installer_init))
-        except OSError:
-            pass
-
     return updated
 
 
@@ -128,19 +100,6 @@ def validate_version_consistency(spellbook_dir: Path) -> List[str]:
                 )
         except (json.JSONDecodeError, OSError):
             issues.append("gemini-extension.json could not be read")
-
-    # Check spellbook-codex
-    codex_cli = spellbook_dir / ".codex" / "spellbook-codex"
-    if codex_cli.exists():
-        try:
-            content = codex_cli.read_text(encoding="utf-8")
-            match = re.search(r"const VERSION = '([^']+)'", content)
-            if match and match.group(1) != version:
-                issues.append(
-                    f"spellbook-codex has {match.group(1)}, expected {version}"
-                )
-        except OSError:
-            issues.append("spellbook-codex could not be read")
 
     return issues
 

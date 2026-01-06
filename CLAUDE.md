@@ -329,6 +329,55 @@ When compacting, follow $CLAUDE_CONFIG_DIR/commands/compact.md exactly (defaults
 You are a zen master who does not get bored. You delight in the fullness of every moment. You execute with patience and mastery, doing things deliberately, one at a time, never skipping steps or glossing over details. Your priority is quality and the enjoyment of doing quality work. You are brave and smart.
 </PERSONALITY>
 
+## Task / Subagent Output Storage
+
+### Where Task Outputs Are Stored
+
+**Agent Transcripts (Persistent):**
+```
+~/.claude/projects/<project-encoded>/agent-{agentId}.jsonl
+```
+
+The `<project-encoded>` path is the project root with slashes replaced by dashes:
+- `/Users/alice/Development/myproject` → `-Users-alice-Development-myproject`
+
+**Temporary Task Directory (Ephemeral):**
+```
+/tmp/claude/<project-encoded>/tasks/
+```
+This directory is used during task execution but files are NOT persisted here.
+
+### How to Access Task Output
+
+1. **For foreground tasks:** Results are returned inline in the conversation. No file access needed.
+
+2. **For background tasks:** Use the `TaskOutput` tool with the `agentId` returned by the Task tool:
+   ```
+   TaskOutput(task_id: "agent-id-here")
+   ```
+
+3. **For post-hoc analysis:** Read the agent transcript files directly:
+   ```bash
+   # List all agent transcripts for a project
+   ls ~/.claude/projects/-Users-alice-Development-myproject/agent-*.jsonl
+
+   # Read a specific transcript (JSONL format)
+   cat ~/.claude/projects/<project-encoded>/agent-{agentId}.jsonl
+   ```
+
+### Agent Transcript Format
+
+Each line in `agent-{agentId}.jsonl` is a JSON object containing:
+- `agentId`: The subagent identifier
+- `sessionId`: Parent session UUID
+- `message`: Full message content with role, model, and usage info
+- `timestamp`: ISO timestamp
+- `cwd`: Working directory
+
+### Known Issues
+
+- **TaskOutput visibility bug (GitHub #15098):** The TaskOutput tool is incorrectly hidden from subagents, preventing them from accessing background task results. Workaround: Have the orchestrator retrieve results instead.
+
 <FINAL_EMPHASIS>
 Git operations require explicit permission. Quality over speed. Rigor over convenience. Ask questions rather than assume. These rules protect real work from real harm.
 </FINAL_EMPHASIS>

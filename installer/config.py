@@ -57,7 +57,7 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
     "opencode": {
         "name": "OpenCode",
         "config_dir_env": None,
-        "default_config_dir": Path.home() / ".opencode",
+        "default_config_dir": Path.home() / ".config" / "opencode",
         "context_file": None,  # Uses CLAUDE.md via symlink resolution
         "skills_subdir": "skills",
         "skill_format": "flat_md",  # Skills as individual .md files
@@ -69,8 +69,8 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "default_config_dir": Path.home() / ".codex",
         "context_file": "AGENTS.md",
         "spellbook_symlink": "spellbook",  # Symlink to spellbook root
-        "cli_script": ".codex/spellbook-codex",
-        "mcp_supported": False,
+        "mcp_server_name": "spellbook",
+        "mcp_supported": True,
     },
     "gemini": {
         "name": "Gemini CLI",

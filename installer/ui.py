@@ -2,8 +2,11 @@
 Terminal output formatting for spellbook installer.
 """
 
+import itertools
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List
 
@@ -16,6 +19,60 @@ from .config import (
     get_platform_config_dir,
     get_spellbook_config_dir,
 )
+
+
+class Spinner:
+    """
+    A simple terminal spinner for showing progress during operations.
+
+    Usage:
+        with Spinner("Installing"):
+            do_work()
+    """
+
+    FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+
+    def __init__(self, message: str = "Working", delay: float = 0.1):
+        self.message = message
+        self.delay = delay
+        self._stop_event = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def _spin(self) -> None:
+        """Spinner thread loop."""
+        frames = itertools.cycle(self.FRAMES)
+        while not self._stop_event.is_set():
+            frame = next(frames)
+            sys.stdout.write(f"\r{frame} {self.message}...")
+            sys.stdout.flush()
+            time.sleep(self.delay)
+
+    def start(self) -> None:
+        """Start the spinner."""
+        if not sys.stdout.isatty():
+            # Non-interactive, just print message
+            print(f"{self.message}...")
+            return
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._spin, daemon=True)
+        self._thread.start()
+
+    def stop(self, success: bool = True) -> None:
+        """Stop the spinner and show result."""
+        self._stop_event.set()
+        if self._thread:
+            self._thread.join(timeout=0.5)
+        if sys.stdout.isatty():
+            # Clear the spinner line
+            sys.stdout.write("\r" + " " * (len(self.message) + 10) + "\r")
+            sys.stdout.flush()
+
+    def __enter__(self) -> "Spinner":
+        self.start()
+        return self
+
+    def __exit__(self, *args) -> None:
+        self.stop()
 
 
 class Colors:
@@ -234,12 +291,12 @@ def print_report(session: "InstallSession") -> None:
 
     if "opencode" in ready_platforms:
         print("  OpenCode:")
-        print("    Skills available in ~/.opencode/skills/")
+        print("    Skills available in ~/.config/opencode/skills/")
         print()
 
     if "codex" in ready_platforms:
         print("  Codex:")
-        print("    Load skills with: .codex/spellbook-codex use-skill <skill-name>")
+        print("    Skills auto-trigger based on your intent.")
         print()
 
     # Print source location

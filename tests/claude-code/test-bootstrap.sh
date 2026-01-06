@@ -17,7 +17,8 @@ assert_not_contains "$(cat $REPO_ROOT/.claude-plugin/bootstrap.md)" "automatical
 
 # Test Codex bootstrap
 assert_file_exists "$REPO_ROOT/.codex/spellbook-bootstrap.md" "Codex bootstrap exists"
-assert_contains "$(cat $REPO_ROOT/.codex/spellbook-bootstrap.md)" "TodoWrite → update_plan" "Tool mapping documented"
+assert_contains "$(cat $REPO_ROOT/.codex/spellbook-bootstrap.md)" "TodoWrite" "Tool mapping documented"
+assert_contains "$(cat $REPO_ROOT/.codex/spellbook-bootstrap.md)" "update_plan" "Codex equivalent documented"
 assert_contains "$(cat $REPO_ROOT/.codex/spellbook-bootstrap.md)" "EXTREMELY_IMPORTANT" "Codex emphasis tags present"
 
 echo ""

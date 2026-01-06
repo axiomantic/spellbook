@@ -1,4 +1,11 @@
 repos:
+  - repo: https://github.com/thlorenz/doctoc
+    rev: v2.2.0
+    hooks:
+      - id: doctoc
+        args: ['--github', '--maxlevel', '3']
+        files: ^README\.md$
+
   - repo: local
     hooks:
       - id: generate-docs

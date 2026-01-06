@@ -26,7 +26,7 @@ This reduces session discovery from 10+ LLM tool calls to a single MCP invocatio
 Run from the spellbook root:
 
 ```bash
-./install.sh
+uv run install.py
 ```
 
 This will install Python dependencies and register the MCP server with Claude Code.

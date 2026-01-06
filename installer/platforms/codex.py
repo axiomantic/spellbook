@@ -2,8 +2,9 @@
 Codex platform installer.
 """
 
+import re
 from pathlib import Path
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Tuple
 
 from ..components.context_files import generate_codex_context
 from ..components.symlinks import create_symlink, remove_symlink
@@ -12,6 +13,79 @@ from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
+
+
+# TOML section markers for spellbook MCP config
+TOML_START_MARKER = "# SPELLBOOK:START"
+TOML_END_MARKER = "# SPELLBOOK:END"
+
+
+def _generate_mcp_toml_section(server_path: Path) -> str:
+    """Generate the TOML section for spellbook MCP server."""
+    return f"""{TOML_START_MARKER}
+[mcp_servers.spellbook]
+command = "python3"
+args = ["{server_path}"]
+{TOML_END_MARKER}
+"""
+
+
+def _add_mcp_to_config_toml(
+    config_path: Path, server_path: Path, dry_run: bool = False
+) -> Tuple[bool, str]:
+    """Add spellbook MCP server to Codex config.toml."""
+    section = _generate_mcp_toml_section(server_path)
+
+    if dry_run:
+        return (True, "would register MCP server")
+
+    if config_path.exists():
+        content = config_path.read_text(encoding="utf-8")
+        # Check if already present
+        if TOML_START_MARKER in content:
+            # Update existing section
+            pattern = re.compile(
+                rf"{re.escape(TOML_START_MARKER)}.*?{re.escape(TOML_END_MARKER)}\n?",
+                re.DOTALL,
+            )
+            new_content = pattern.sub(section, content)
+            config_path.write_text(new_content, encoding="utf-8")
+            return (True, "updated MCP server config")
+        else:
+            # Append new section
+            if not content.endswith("\n"):
+                content += "\n"
+            content += "\n" + section
+            config_path.write_text(content, encoding="utf-8")
+            return (True, "registered MCP server")
+    else:
+        # Create new config.toml
+        config_path.write_text(section, encoding="utf-8")
+        return (True, "created config.toml with MCP server")
+
+
+def _remove_mcp_from_config_toml(
+    config_path: Path, dry_run: bool = False
+) -> Tuple[bool, str]:
+    """Remove spellbook MCP server from Codex config.toml."""
+    if not config_path.exists():
+        return (True, "config.toml not found")
+
+    content = config_path.read_text(encoding="utf-8")
+    if TOML_START_MARKER not in content:
+        return (True, "MCP server was not configured")
+
+    if dry_run:
+        return (True, "would remove MCP server config")
+
+    # Remove the section
+    pattern = re.compile(
+        rf"\n?{re.escape(TOML_START_MARKER)}.*?{re.escape(TOML_END_MARKER)}\n?",
+        re.DOTALL,
+    )
+    new_content = pattern.sub("", content)
+    config_path.write_text(new_content, encoding="utf-8")
+    return (True, "removed MCP server config")
 
 
 class CodexInstaller(PlatformInstaller):
@@ -33,14 +107,22 @@ class CodexInstaller(PlatformInstaller):
         spellbook_link = self.config_dir / "spellbook"
         has_link = spellbook_link.is_symlink()
 
+        # Check if MCP server is registered
+        config_toml = self.config_dir / "config.toml"
+        has_mcp = False
+        if config_toml.exists():
+            content = config_toml.read_text(encoding="utf-8")
+            has_mcp = TOML_START_MARKER in content
+
         return PlatformStatus(
             platform=self.platform_id,
             available=self.config_dir.exists(),
-            installed=installed_version is not None or has_link,
+            installed=installed_version is not None or has_link or has_mcp,
             version=installed_version,
             details={
                 "config_dir": str(self.config_dir),
                 "spellbook_link": has_link,
+                "mcp_registered": has_mcp,
             },
         )
 
@@ -107,16 +189,18 @@ class CodexInstaller(PlatformInstaller):
                     )
                 )
 
-        # Verify CLI script exists and is executable
-        cli_script = self.spellbook_dir / ".codex" / "spellbook-codex"
-        if cli_script.exists():
+        # Register MCP server in config.toml
+        config_toml = self.config_dir / "config.toml"
+        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
+        if server_path.exists():
+            success, msg = _add_mcp_to_config_toml(config_toml, server_path, self.dry_run)
             results.append(
                 InstallResult(
-                    component="cli_script",
+                    component="mcp_server",
                     platform=self.platform_id,
-                    success=True,
-                    action="installed",
-                    message="CLI script: ready at .codex/spellbook-codex",
+                    success=success,
+                    action="installed" if success else "failed",
+                    message=f"MCP server: {msg}",
                 )
             )
 
@@ -174,6 +258,19 @@ class CodexInstaller(PlatformInstaller):
                     message=f"spellbook link: {link_result.action}",
                 )
             )
+
+        # Remove MCP server from config.toml
+        config_toml = self.config_dir / "config.toml"
+        success, msg = _remove_mcp_from_config_toml(config_toml, self.dry_run)
+        results.append(
+            InstallResult(
+                component="mcp_server",
+                platform=self.platform_id,
+                success=success,
+                action="removed" if "removed" in msg else "skipped",
+                message=f"MCP server: {msg}",
+            )
+        )
 
         return results
 

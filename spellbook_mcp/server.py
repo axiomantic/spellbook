@@ -70,7 +70,7 @@ def get_skill_dirs() -> List[Path]:
 
     # Personal skills from various platform config directories
     dirs.append(home / ".config" / "opencode" / "skills")
-    dirs.append(home / ".opencode" / "skills")
+    dirs.append(home / ".opencode" / "skills")  # Legacy path
     dirs.append(home / ".codex" / "skills")
 
     # Spellbook skills (this repo)

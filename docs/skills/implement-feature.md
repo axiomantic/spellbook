@@ -1173,7 +1173,7 @@ ERROR: devils-advocate skill not found
 The Devil's Advocate review is REQUIRED for quality assurance.
 
 OPTIONS:
-A) Install skill (run install.sh or create manually)
+A) Install skill (run 'uv run install.py' or create manually)
 B) Skip review for this session (not recommended)
 C) Manual review (I'll present Understanding Document for your critique)
 
@@ -1181,7 +1181,7 @@ Your choice: ___
 ```
 
 **Handle user choice:**
-- **A:** Exit with instructions: "Run install.sh then restart"
+- **A:** Exit with instructions: "Run 'uv run install.py' then restart"
 - **B:** Set skip_devils_advocate flag, proceed to Phase 2
 - **C:** Present Understanding Document, collect manual critique, proceed
 
@@ -1216,7 +1216,7 @@ Invoke devils-advocate skill using Skill tool, then provide Understanding Docume
 **Fallback (file path):**
 
 ```
-Invoke the `devils-advocate` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent (e.g. `spellbook-codex use-skill devils-advocate`) with arguments:
+Invoke the `devils-advocate` skill using the `Skill` tool or `spellbook.use_spellbook_skill` MCP tool with arguments:
 ```
 
 **Wait for critique:** Skill returns structured critique with 5 categories

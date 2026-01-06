@@ -60,7 +60,7 @@ class OpenCodeInstaller(PlatformInstaller):
                     platform=self.platform_id,
                     success=True,
                     action="skipped",
-                    message="~/.opencode not found",
+                    message="~/.config/opencode not found",
                 )
             )
             return results
