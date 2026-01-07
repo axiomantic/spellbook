@@ -1,9 +1,9 @@
 
-<h1 align="center">Spellbook</h1>
-
 <p align="center">
   <img src="./docs/assets/logo-book.svg" alt="Spellbook" width="300">
 </p>
+
+<h1 align="center">Spellbook</h1>
 
 <p align="center">
   <em>Principled development on autopilot. Decades of engineering expertise, built in.</em><br>
