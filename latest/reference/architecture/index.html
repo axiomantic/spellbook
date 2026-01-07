@@ -1826,14 +1826,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/compact/" class="md-nav__link">
+      <a href="../../commands/shift-change/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /compact
+    Shift change
   
 
     
@@ -3078,29 +3078,30 @@
 - Hooks from <code>~/.claude/hooks/</code>
 - MCP server for runtime skill discovery</p>
 <h3 id="opencode">OpenCode<a class="headerlink" href="#opencode" title="Permanent link">&para;</a></h3>
-<p>Plugin-based integration:
-- <code>.opencode/plugin/spellbook.js</code> provides custom tools
-- Bootstrap context injected at session start
-- Tool mapping from Claude Code equivalents</p>
+<p>Native integration via AGENTS.md and MCP:
+- Context installed to <code>~/.config/opencode/AGENTS.md</code>
+- MCP server registered in <code>~/.config/opencode/opencode.json</code>
+- Skills read natively from <code>~/.claude/skills/*</code> (no separate installation needed)</p>
 <h3 id="codex">Codex<a class="headerlink" href="#codex" title="Permanent link">&para;</a></h3>
-<p>MCP server integration:
+<p>Native skill integration via AGENTS.md and MCP:
 - MCP server registered in <code>~/.codex/config.toml</code>
-- <code>.codex/spellbook-bootstrap.md</code> for context
-- Same <code>spellbook.use_spellbook_skill</code> tool as other platforms</p>
+- Context installed to <code>~/.codex/AGENTS.md</code>
+- Skills symlinked to <code>~/.codex/skills/</code> for native discovery</p>
 <h3 id="gemini-cli">Gemini CLI<a class="headerlink" href="#gemini-cli" title="Permanent link">&para;</a></h3>
-<p>MCP server integration:
-- <code>extensions/gemini/gemini-extension.json</code> configuration
-- Generated <code>GEMINI.md</code> context file
-- Limited tool availability</p>
+<p>Native extension system:
+- Extension linked via <code>gemini extensions link</code> to <code>extensions/gemini/</code>
+- Extension provides MCP server config and GEMINI.md context
+- Skills symlinked in <code>extensions/gemini/skills/</code> for native discovery</p>
+<p><strong>Note:</strong> Native skills support is pending <a href="https://github.com/google-gemini/gemini-cli/issues/15327">GitHub Issue #15327</a>. As of January 7, 2026, this feature is unreleased. Skills will be auto-discovered once the epic lands in an official Gemini CLI release.</p>
 <h2 id="mcp-server">MCP Server<a class="headerlink" href="#mcp-server" title="Permanent link">&para;</a></h2>
 <p>The <code>spellbook_mcp/</code> directory contains a FastMCP server providing:</p>
-<ul>
-<li><code>find_session</code> - Search sessions by name</li>
-<li><code>split_session</code> - Calculate chunk boundaries</li>
-<li><code>list_sessions</code> - List recent sessions</li>
-<li><code>find_spellbook_skills</code> - List available skills</li>
-<li><code>use_spellbook_skill</code> - Load skill content</li>
-</ul>
+<p><strong>Session Tools:</strong>
+- <code>find_session</code> - Search sessions by name
+- <code>split_session</code> - Calculate chunk boundaries
+- <code>list_sessions</code> - List recent sessions</p>
+<p><strong>Swarm Tools:</strong>
+- <code>swarm_init</code> - Initialize swarm coordination
+- <code>swarm_status</code> - Get current swarm status</p>
 <h2 id="hooks">Hooks<a class="headerlink" href="#hooks" title="Permanent link">&para;</a></h2>
 <p>Hooks automate session behavior:</p>
 <table>

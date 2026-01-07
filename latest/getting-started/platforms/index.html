@@ -623,6 +623,67 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#crush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crush
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Crush">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#features_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2062,14 +2123,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/compact/" class="md-nav__link">
+      <a href="../../commands/shift-change/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /compact
+    Shift change
   
 
     
@@ -3058,6 +3119,67 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#crush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crush
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Crush">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#features_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3095,20 +3217,22 @@
 </ul>
 <h2 id="opencode">OpenCode<a class="headerlink" href="#opencode" title="Permanent link">&para;</a></h2>
 <p><strong>Status:</strong> Full Support</p>
-<p>OpenCode integration via skill symlinks.</p>
+<p>OpenCode integration via AGENTS.md and MCP server.</p>
 <h3 id="setup_1">Setup<a class="headerlink" href="#setup_1" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Run the installer: <code>python3 install.py</code></li>
-<li>Skills are automatically available in <code>~/.opencode/skills/</code></li>
+<li>The installer:</li>
+<li>Creates <code>~/.config/opencode/AGENTS.md</code> with spellbook context</li>
+<li>Registers spellbook MCP server in <code>~/.config/opencode/opencode.json</code></li>
 </ol>
 <h3 id="features_1">Features<a class="headerlink" href="#features_1" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Skills installed as flat <code>.md</code> files in <code>~/.opencode/skills/</code></li>
-<li>OpenCode discovers skills automatically from the skills directory</li>
-<li>Same skill content as other platforms</li>
+<li>Context and instructions via AGENTS.md</li>
+<li>MCP server for spellbook tools</li>
+<li>Native skill discovery from <code>~/.claude/skills/*</code></li>
 </ul>
 <h3 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h3>
-<p>OpenCode uses its native skill discovery. The installer creates symlinks to spellbook skills, making them available alongside any personal skills you create.</p>
+<p>OpenCode natively reads skills from <code>~/.claude/skills/*</code>, which is where the Claude Code installer places them. No separate skill installation is needed for OpenCode. Install spellbook for Claude Code first, and OpenCode will automatically see the skills.</p>
 <h2 id="codex">Codex<a class="headerlink" href="#codex" title="Permanent link">&para;</a></h2>
 <p><strong>Status:</strong> Full Support</p>
 <p>Codex integration via MCP server and bootstrap context.</p>
@@ -3126,17 +3250,18 @@
 <li>Skills requiring subagents will inform user to use Claude Code</li>
 </ul>
 <h2 id="gemini-cli">Gemini CLI<a class="headerlink" href="#gemini-cli" title="Permanent link">&para;</a></h2>
-<p><strong>Status:</strong> Partial Support</p>
-<p>Gemini CLI integration via MCP server and context files.</p>
+<p><strong>Status:</strong> Full Support</p>
+<p>Gemini CLI integration via native extension system.</p>
 <h3 id="setup_3">Setup<a class="headerlink" href="#setup_3" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Run the installer: <code>python3 install.py</code></li>
-<li>Add the MCP server to Gemini's configuration</li>
-<li>The installer generates <code>GEMINI.md</code> with skill triggers</li>
+<li>The installer links the spellbook extension via <code>gemini extensions link</code></li>
 </ol>
 <h3 id="features_2">Features<a class="headerlink" href="#features_2" title="Permanent link">&para;</a></h3>
 <ul>
-<li>MCP server for skill loading</li>
+<li>Native extension with GEMINI.md context</li>
+<li>MCP server for skill discovery and loading</li>
+<li>Automatic context loading at startup</li>
 <li>Context file with skill registry</li>
 <li>Basic skill invocation</li>
 </ul>
@@ -3145,6 +3270,43 @@
 <li>Limited tool availability compared to Claude Code</li>
 <li>Some workflow skills may not function fully</li>
 </ul>
+<h2 id="crush">Crush<a class="headerlink" href="#crush" title="Permanent link">&para;</a></h2>
+<p><strong>Status:</strong> Full Support</p>
+<p>Crush (by Charmbracelet) integration via AGENTS.md, MCP server, and native Agent Skills.</p>
+<h3 id="setup_4">Setup<a class="headerlink" href="#setup_4" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Run the installer: <code>python3 install.py</code></li>
+<li>The installer:</li>
+<li>Creates <code>~/.config/crush/AGENTS.md</code> with spellbook context</li>
+<li>Registers spellbook MCP server in <code>~/.config/crush/crush.json</code></li>
+<li>Adds <code>~/.claude/skills</code> to <code>options.skills_paths</code> for shared skills</li>
+<li>Adds the context file to <code>options.context_paths</code></li>
+</ol>
+<h3 id="features_3">Features<a class="headerlink" href="#features_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Context and instructions via AGENTS.md</li>
+<li>MCP server for spellbook tools</li>
+<li>Native Agent Skills support (same SKILL.md format as Claude Code)</li>
+<li>Shared skills with Claude Code via <code>~/.claude/skills</code></li>
+</ul>
+<h3 id="notes_1">Notes<a class="headerlink" href="#notes_1" title="Permanent link">&para;</a></h3>
+<p>Crush has native support for the Agent Skills open standard (the same format used by Claude Code). The installer configures Crush to read skills from the Claude Code skills directory (<code>~/.claude/skills</code>), so installing spellbook for Claude Code first ensures skills are available for both platforms.</p>
+<h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
+<p>Crush stores its configuration in <code>~/.config/crush/crush.json</code>. The installer adds:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;options&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">&quot;skills_paths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;~/.claude/skills&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">&quot;context_paths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;~/.config/crush/AGENTS.md&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">&quot;mcp&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">&quot;spellbook&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stdio&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;python3&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">      </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;/path/to/spellbook_mcp/server.py&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">}</span>
+</code></pre></div>
 
 
 

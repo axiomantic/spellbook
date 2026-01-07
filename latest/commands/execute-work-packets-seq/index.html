@@ -1826,14 +1826,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../compact/" class="md-nav__link">
+      <a href="../shift-change/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /compact
+    Shift change
   
 
     
@@ -2931,11 +2931,11 @@
 <li><strong>Execute each packet</strong> - Process tracks in dependency order:</li>
 <li>Execute all tasks for the track</li>
 <li>Create completion marker</li>
-<li>Suggest <code>/compact</code> to reset context</li>
+<li>Suggest <code>/shift-change</code> to reset context</li>
 <li><strong>Completion</strong> - When all tracks done, suggest <code>/merge-work-packets</code></li>
 </ol>
 <h2 id="context-management">Context Management<a class="headerlink" href="#context-management" title="Permanent link">&para;</a></h2>
-<p>After each track completes, the command suggests running <code>/compact</code> to:</p>
+<p>After each track completes, the command suggests running <code>/shift-change</code> to:</p>
 <ul>
 <li>Reset context for the next track</li>
 <li>Preserve progress in the checkpoint/completion markers</li>
@@ -2969,7 +2969,7 @@
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  [TDD workflow for each task]
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  Track 1 complete.
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  Suggest: /compact to reset context before next track
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  Suggest: /shift-change to reset context before next track
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>Track 2: frontend (depends on: backend)
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>  Verifying Track 1 completion... OK
@@ -2986,7 +2986,7 @@
 <ul>
 <li><a href="../execute-work-packet/">/execute-work-packet</a> - Execute a single packet</li>
 <li><a href="../merge-work-packets/">/merge-work-packets</a> - Merge completed packets</li>
-<li><a href="../compact/">/compact</a> - Reset session context</li>
+<li><a href="../shift-change/">/shift-change</a> - Reset session context</li>
 <li><a href="../../skills/implement-feature/">implement-feature</a> - Skill that generates work packets</li>
 </ul>
 
