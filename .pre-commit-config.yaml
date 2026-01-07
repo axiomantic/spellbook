@@ -1,9 +1,9 @@
 repos:
   - repo: https://github.com/thlorenz/doctoc
-    rev: v2.2.0
+    rev: d713d623c0c0e80b3084ee2f09d4eb83aa7298e9
     hooks:
       - id: doctoc
-        args: ['--github', '--maxlevel', '3']
+        args: ['--github', '--minlevel', '2', '--maxlevel', '3']
         files: ^README\.md$
 
   - repo: local

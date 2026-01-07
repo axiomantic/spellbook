@@ -122,7 +122,7 @@ rm -rf ~/.local/share/spellbook
 Statusline showing token usage and conversation stats.
 
 ```bash
-git clone https://github.com/elijahr/heads-up-claude.git ~/Development/heads-up-claude
+git clone https://github.com/axiomantic/heads-up-claude.git ~/Development/heads-up-claude
 cd ~/Development/heads-up-claude
 ./install.sh
 ```

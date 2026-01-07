@@ -1,39 +1,9 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-- [Spellbook](#spellbook)
-  - [Prerequisites](#prerequisites)
-  - [Quick Install](#quick-install)
-  - [What's Included](#whats-included)
-    - [Skills (26 total)](#skills-26-total)
-    - [Commands (15 total)](#commands-15-total)
-    - [Agents (1 total)](#agents-1-total)
-  - [Platform Support](#platform-support)
-    - [Autonomous Mode](#autonomous-mode)
-  - [Playbooks](#playbooks)
-    - [Large Feature with Context Exhaustion](#large-feature-with-context-exhaustion)
-    - [Test Suite Audit and Remediation](#test-suite-audit-and-remediation)
-    - [Parallel Worktree Development](#parallel-worktree-development)
-    - [Cross-Assistant Handoff](#cross-assistant-handoff)
-  - [Recommended Companion Tools](#recommended-companion-tools)
-    - [Heads Up Claude](#heads-up-claude)
-    - [MCP Language Server](#mcp-language-server)
-  - [Development](#development)
-    - [Serve Documentation Locally](#serve-documentation-locally)
-    - [Run MCP Server Directly](#run-mcp-server-directly)
-  - [Documentation](#documentation)
-  - [Contributing](#contributing)
-  - [Acknowledgments](#acknowledgments)
-  - [Attribution](#attribution)
-  - [License](#license)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-<p align="center">
-  <img src="./docs/assets/logo.svg" alt="Spellbook" width="120" height="120">
-</p>
 
 <h1 align="center">Spellbook</h1>
+
+<p align="center">
+  <img src="./docs/assets/logo-book.svg" alt="Spellbook" width="300">
+</p>
 
 <p align="center">
   <em>Principled development on autopilot. Decades of engineering expertise, built in.</em><br>
@@ -56,6 +26,40 @@
   <a href="https://axiomantic.github.io/spellbook/getting-started/installation/"><strong>Getting Started</strong></a> ·
   <a href="https://axiomantic.github.io/spellbook/skills/"><strong>Skills Reference</strong></a>
 </p>
+
+---
+## Table of Contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Prerequisites](#prerequisites)
+- [Quick Install](#quick-install)
+- [What's Included](#whats-included)
+  - [Skills (26 total)](#skills-26-total)
+  - [Commands (15 total)](#commands-15-total)
+  - [Agents (1 total)](#agents-1-total)
+- [Platform Support](#platform-support)
+  - [Autonomous Mode](#autonomous-mode)
+- [Playbooks](#playbooks)
+  - [Large Feature with Context Exhaustion](#large-feature-with-context-exhaustion)
+  - [Test Suite Audit and Remediation](#test-suite-audit-and-remediation)
+  - [Parallel Worktree Development](#parallel-worktree-development)
+  - [Cross-Assistant Handoff](#cross-assistant-handoff)
+- [Recommended Companion Tools](#recommended-companion-tools)
+  - [Heads Up Claude](#heads-up-claude)
+  - [MCP Language Server](#mcp-language-server)
+- [Development](#development)
+  - [Serve Documentation Locally](#serve-documentation-locally)
+  - [Run MCP Server Directly](#run-mcp-server-directly)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [Attribution](#attribution)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+---
 
 ## Prerequisites
 
@@ -175,11 +179,13 @@ Reusable workflows for structured development:
 
 | Platform | Status | Details |
 |----------|--------|---------|
-| Claude Code | Full | Native skills + MCP server |
-| OpenCode | Full | Skill symlinks |
-| Codex | Full | Bootstrap + MCP |
-| Gemini CLI | Partial | MCP server + context file |
-| Crush | Full | Native Agent Skills + MCP server |
+| Claude Code | Full | Native agent skills |
+| OpenCode | Full | Native agent skills |
+| Codex | Full | Native agent skills |
+| Gemini CLI | Full[^1] | Native agent skills |
+| Crush | Full | Native agent skills |
+
+[^1]: Gemini does not yet support agent skills, but it is actively being worked on by the Gemini team. Spellbook skills are already installed to ~/.gemini/extensions/spellbook/skills and should begin working as soon as Gemini releases the feature. You can follow the epic's progress here: https://github.com/google-gemini/gemini-cli/issues/15327
 
 ### Autonomous Mode
 
@@ -472,7 +478,7 @@ Split work across isolated branches, merge when complete.
 Move work between different AI coding assistants without losing context.
 
 ```
-# In Cursor, context is running low on a complex refactor...
+# In Codex, context is running low on a complex refactor...
 
 ╭─────────────────────────────────────────────────────────────────────────────╮
 │ > /distill-session                                                          │
@@ -510,7 +516,7 @@ These tools are not necessary but contribute to better development workflows wit
 Statusline for Claude Code CLI showing token usage and conversation stats. Helps you track how much context you have left and how much of your subscription quota you have used.
 
 ```bash
-git clone https://github.com/elijahr/heads-up-claude.git ~/Development/heads-up-claude
+git clone https://github.com/axiomantic/heads-up-claude.git ~/Development/heads-up-claude
 cd ~/Development/heads-up-claude && ./install.sh
 ```
 
