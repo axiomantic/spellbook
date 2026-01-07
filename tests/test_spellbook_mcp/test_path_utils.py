@@ -30,14 +30,16 @@ def test_encode_cwd_root_directory():
 
 
 def test_get_project_dir_with_cwd(monkeypatch):
-    """Test project directory resolution."""
+    """Test project directory resolution uses portable default."""
     from spellbook_mcp.path_utils import get_project_dir
 
     monkeypatch.setattr(os, 'getcwd', lambda: '/Users/test/Development/myproject')
     monkeypatch.delenv('CLAUDE_CONFIG_DIR', raising=False)
+    monkeypatch.delenv('SPELLBOOK_CONFIG_DIR', raising=False)
 
     result = get_project_dir()
-    expected = Path.home() / '.claude' / 'projects' / 'Users-test-Development-myproject'
+    # Default is ~/.local/spellbook (portable location)
+    expected = Path.home() / '.local' / 'spellbook' / 'projects' / 'Users-test-Development-myproject'
     assert result == expected
 
 
@@ -67,6 +69,7 @@ def test_get_project_dir_creates_valid_path(monkeypatch):
 
     monkeypatch.setattr(os, 'getcwd', lambda: '/Users/test/myapp')
     monkeypatch.delenv('CLAUDE_CONFIG_DIR', raising=False)
+    monkeypatch.delenv('SPELLBOOK_CONFIG_DIR', raising=False)
 
     result = get_project_dir()
 

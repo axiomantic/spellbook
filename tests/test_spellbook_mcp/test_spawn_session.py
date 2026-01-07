@@ -241,7 +241,7 @@ class TestSpawnTerminalWindow(unittest.TestCase):
         result = spawn_terminal_window('iTerm2', 'test', '/tmp')
 
         self.assertEqual(result['status'], 'spawned')
-        mock_macos_spawn.assert_called_once_with('iTerm2', 'test', '/tmp')
+        mock_macos_spawn.assert_called_once_with('iTerm2', 'test', '/tmp', 'claude')
 
     @patch('spellbook_mcp.terminal_utils.spawn_linux_terminal')
     @patch('sys.platform', 'linux')
@@ -256,7 +256,7 @@ class TestSpawnTerminalWindow(unittest.TestCase):
         result = spawn_terminal_window('gnome-terminal', 'test', '/var')
 
         self.assertEqual(result['status'], 'spawned')
-        mock_linux_spawn.assert_called_once_with('gnome-terminal', 'test', '/var')
+        mock_linux_spawn.assert_called_once_with('gnome-terminal', 'test', '/var', 'claude')
 
     @patch('sys.platform', 'win32')
     def test_windows_not_supported(self):

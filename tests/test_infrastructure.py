@@ -203,8 +203,10 @@ def test_metrics_logging(tmp_path, monkeypatch):
     from datetime import datetime
     import json
 
-    # Use tmp_path as home
+    # Use tmp_path as home and clear env vars for portable default
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("SPELLBOOK_CONFIG_DIR", raising=False)
+    monkeypatch.delenv("CLAUDE_CONFIG_DIR", raising=False)
 
     # Log a feature completion
     log_feature_metrics(
@@ -226,8 +228,8 @@ def test_metrics_logging(tmp_path, monkeypatch):
         project_encoded="test-project"
     )
 
-    # Verify log file exists
-    log_dir = tmp_path / ".claude" / "logs" / "test-project"
+    # Verify log file exists at portable default location
+    log_dir = tmp_path / ".local" / "spellbook" / "logs" / "test-project"
     log_file = log_dir / "implement-feature-metrics.jsonl"
     assert log_file.exists()
 

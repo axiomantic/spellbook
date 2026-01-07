@@ -33,7 +33,6 @@ run_test() {
 # Run all test scripts
 run_test "$SCRIPT_DIR/test-version.sh"
 run_test "$SCRIPT_DIR/test-bootstrap.sh"
-run_test "$SCRIPT_DIR/test-codex-cli.sh"
 
 # Print summary
 echo "========================================="

@@ -359,6 +359,9 @@ class TestMetricsE2E:
 
         # Monkeypatch Path.home() to use tmp_path
         monkeypatch.setattr('pathlib.Path.home', lambda: tmp_path)
+        # Clear env vars so we use the default path (Path.home()/.local/spellbook)
+        monkeypatch.delenv('SPELLBOOK_CONFIG_DIR', raising=False)
+        monkeypatch.delenv('CLAUDE_CONFIG_DIR', raising=False)
 
         # Log some metrics with correct signature
         log_feature_metrics(
@@ -377,8 +380,8 @@ class TestMetricsE2E:
             project_encoded="test-project"
         )
 
-        # Verify metrics file exists
-        metrics_file = tmp_path / ".claude" / "logs" / "test-project" / "implement-feature-metrics.jsonl"
+        # Verify metrics file exists at portable default location
+        metrics_file = tmp_path / ".local" / "spellbook" / "logs" / "test-project" / "implement-feature-metrics.jsonl"
         assert metrics_file.exists()
 
         # Verify content

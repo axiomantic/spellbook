@@ -10,15 +10,11 @@
     - [Agents (1 total)](#agents-1-total)
   - [Platform Support](#platform-support)
     - [Autonomous Mode](#autonomous-mode)
-  - [Workflow Recipes](#workflow-recipes)
-    - [End-to-End Feature Implementation](#end-to-end-feature-implementation)
-    - [Work Packets for Large Features](#work-packets-for-large-features)
-    - [Session Handoff Between Assistants](#session-handoff-between-assistants)
-    - [Using Skills](#using-skills)
+  - [Playbooks](#playbooks)
+    - [Large Feature with Context Exhaustion](#large-feature-with-context-exhaustion)
+    - [Test Suite Audit and Remediation](#test-suite-audit-and-remediation)
     - [Parallel Worktree Development](#parallel-worktree-development)
-    - [Audit Test Quality](#audit-test-quality)
-    - [Find Past Patterns](#find-past-patterns)
-    - [Create Custom Skills](#create-custom-skills)
+    - [Cross-Assistant Handoff](#cross-assistant-handoff)
   - [Recommended Companion Tools](#recommended-companion-tools)
     - [Heads Up Claude](#heads-up-claude)
     - [MCP Language Server](#mcp-language-server)
@@ -162,6 +158,9 @@ Reusable workflows for structured development:
 [/brainstorm]: https://axiomantic.github.io/spellbook/latest/commands/brainstorm/
 [/write-plan]: https://axiomantic.github.io/spellbook/latest/commands/write-plan/
 [/execute-plan]: https://axiomantic.github.io/spellbook/latest/commands/execute-plan/
+[/execute-work-packet]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packet/
+[/execute-work-packets-seq]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/
+[/merge-work-packets]: https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/
 
 ### Agents (1 total)
 
@@ -212,159 +211,295 @@ Without autonomous mode, you'll be prompted to approve each file write, command 
 
 See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/permissions/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Crush](https://github.com/charmbracelet/crush).
 
-## Workflow Recipes
+## Playbooks
 
-### End-to-End Feature Implementation
+Real-world usage patterns with example transcripts.
 
-The `implement-feature` skill orchestrates the complete workflow from requirements to PR.
+### Large Feature with Context Exhaustion
 
-```
-You: "Implement user authentication with MFA support"
-
-# implement-feature triggers automatically and runs:
-#   → brainstorming (explores requirements, gathers context)
-#   → design-doc-reviewer (validates architecture)
-#   → writing-plans (creates detailed implementation plan)
-#   → implementation-plan-reviewer (verifies plan completeness)
-#   → test-driven-development (per task, in parallel worktrees)
-#   → code-reviewer (after each change)
-#   → finishing-a-development-branch (creates PR)
-```
-
-Configuration options prompt at start: autonomous mode, parallel worktrees, auto-PR.
-
-### Work Packets for Large Features
-
-For large features where even heavy subagent use would exhaust the orchestrator's context, `implement-feature` splits work into **work packets** that run in completely separate sessions.
+When implementing a complex feature, context can fill up before work completes. The workflow handles this gracefully.
 
 ```
-You: "Implement user authentication with MFA support"
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > Implement webhook delivery with retry logic and dead letter queue         │
+╰─────────────────────────────────────────────────────────────────────────────╯
 
-# implement-feature analyzes the work:
-#   Token estimation: 150,000 tokens (~75% of context)
-#   Tasks: 24 across 4 tracks
-#   Recommendation: "swarmed" mode
+⏺ Skill(implement-feature)
 
-# You choose execution mode, then work packets are generated:
-~/.claude/work-packets/user-auth/
-├── manifest.json           # Track metadata, dependencies
-├── track-1-backend.md      # Boot prompt for backend work
-├── track-2-frontend.md     # Boot prompt for frontend work
-├── track-3-tests.md        # Boot prompt for test work
-└── track-4-docs.md         # Boot prompt for docs
+  I'll help you implement the webhook delivery system. Let me first
+  understand the current codebase architecture and gather requirements.
+
+⏺ Task(Explore)
+
+  ⎿ Found: src/events/, src/queue/, src/models/Webhook.ts
+    Current event system uses Redis pub/sub. No existing retry logic.
+
+⏺ AskUserQuestion
+
+  ╭─────────────────────────────────────────────────────────────────────────╮
+  │ Retry strategy                                                          │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │ ○ Exponential backoff (Recommended)                                     │
+  │ ○ Fixed interval                                                        │
+  │ ○ Linear backoff                                                        │
+  ╰─────────────────────────────────────────────────────────────────────────╯
+
+> Exponential backoff
+
+⏺ Writing implementation plan to:
+  ~/.local/spellbook/docs/Users-me-myproject/plans/webhook-delivery-impl.md
+
+  ...
+
+⏺ Task(Backend API) [in background]
+  ⎿ Implementing retry queue with exponential backoff...
+
+⏺ Task(Worker Service) [in background]
+  ⎿ Building delivery worker with circuit breaker...
+
+⏺ Task(Dead Letter Queue) [in background]
+  ⎿ Setting up DLQ with monitoring hooks...
+
+  ...
+
+⏺ Task Output(non-blocking) ad8b5e4
+  ⎿ Task is still running…
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ ⚠ Context low · Run /compact to compact & continue                         │
+╰─────────────────────────────────────────────────────────────────────────────╯
 ```
 
-Execute packets in parallel terminals:
-```
-/execute-work-packet ~/.claude/work-packets/user-auth/track-1-backend.md
-```
-
-When all tracks complete:
-```
-/merge-work-packets ~/.claude/work-packets/user-auth/
-```
-
-**Execution modes:**
-
-| Mode | When | What happens |
-|------|------|--------------|
-| `swarmed` | 25+ tasks or 80%+ context | Parallel sessions, one per track |
-| `sequential` | 16-25 tasks or 65-80% | Single session, processes packets in order |
-| `delegated` | 9-15 tasks or 40-65% | Current session, heavy subagent use |
-| `direct` | ≤8 tasks and <40% | Current session, minimal delegation |
-
-### Session Handoff Between Assistants
-
-Pause work in one assistant, resume in another with full context.
+When context runs low, name and distill the session for later:
 
 ```
-# In Cursor/Windsurf/any assistant, when you need to switch:
-/distill-session
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > /rename-session webhook-delivery                                          │
+╰─────────────────────────────────────────────────────────────────────────────╯
 
-# Output: Session saved to ~/.claude/distilled/<project>/session-20260105-143022.md
+⏺ Session renamed to: webhook-delivery
 
-# In your new session (after /clear or in a different assistant):
-You: "Continue work from ~/.claude/distilled/<project>/session-20260105-143022.md"
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > /distill-session webhook-delivery                                         │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Skill(distill-session)
+
+  Found session: webhook-delivery
+  Processing 847 messages across 3 compact boundaries...
+
+  ⏺ Task(Chunk 1 Summary) [in background]
+  ⏺ Task(Chunk 2 Summary) [in background]
+  ⏺ Task(Chunk 3 Summary) [in background]
+
+  Synthesizing summaries...
+
+  ✓ Distilled session saved to:
+    ~/.local/spellbook/distilled/Users-me-myproject/webhook-delivery-20260106-143022.md
+
+  To continue in a new session:
+    1. Start new Claude Code session
+    2. Type: "continue work from ~/.local/spellbook/distilled/Users-me-myproject/
+              webhook-delivery-20260106-143022.md"
 ```
 
-The distilled file contains decisions, plans, and progress. 50K tokens compress to ~3K words.
-
-### Using Skills
-
-Skills trigger automatically based on what you ask for. You don't invoke them explicitly.
+Start fresh and resume exactly where you left off:
 
 ```
-You: "I want to add dark mode support"
-# implement-feature triggers, orchestrates the full workflow
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > /clear                                                                    │
+╰─────────────────────────────────────────────────────────────────────────────╯
 
-You: "Tests are failing and I don't know why"
-# debug skill triggers, guides systematic investigation
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > continue work from ~/.local/spellbook/distilled/Users-me-myproject/       │
+│   webhook-delivery-20260106-143022.md                                       │
+╰─────────────────────────────────────────────────────────────────────────────╯
 
-You: "Let's think through the architecture before coding"
-# brainstorming skill triggers, explores requirements first
+⏺ Read(~/.local/spellbook/distilled/.../webhook-delivery-20260106-143022.md)
+
+⏺ SECTION 0: MANDATORY FIRST ACTIONS
+
+  Executing restoration sequence...
+
+⏺ Skill(implement-feature, --resume-from Phase3.Task4)
+
+  Resuming webhook delivery implementation.
+
+  Prior work completed:
+  ✓ Design approved (exponential backoff, 5 retries, 1hr max)
+  ✓ Database migrations for delivery_attempts table
+  ✓ Retry queue infrastructure
+  ○ Worker service (in progress - 60% complete)
+  ○ Dead letter queue
+  ○ Monitoring dashboard
+
+⏺ Read(~/.local/spellbook/docs/.../webhook-delivery-impl.md)
+
+  Continuing from Phase 3, Task 4: Complete worker service...
 ```
 
-See [Platform Support](#platform-support) for which assistants have native skill support. To add support for a new assistant, see the [Porting Guide](docs/contributing/porting-to-your-assistant.md).
+### Test Suite Audit and Remediation
+
+Discover tests that pass but don't actually verify behavior, then fix them.
+
+```
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > /green-mirage-audit                                                       │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Skill(green-mirage-audit)
+
+  Analyzing test suite: tests/**/*.test.ts
+  Found 247 test cases across 34 files.
+
+  ⏺ Task(Analyze auth tests) [in background]
+  ⏺ Task(Analyze api tests) [in background]
+  ⏺ Task(Analyze util tests) [in background]
+
+  ...
+
+  ✓ Audit complete. Report saved to:
+    ~/.local/spellbook/docs/Users-me-myproject/audits/green-mirage-audit-20260106-091522.md
+
+  Summary:
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ SOLID (actually verify behavior)      │ 189 tests (76%)                │
+  │ GREEN MIRAGE (false confidence)       │  58 tests (24%)                │
+  │                                       │                                │
+  │ Critical issues:                      │                                │
+  │   • 12 tests mock the thing tested    │                                │
+  │   • 8 tests have no meaningful assert │                                │
+  │   • 38 tests check implementation     │                                │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > Fix the critical issues from the audit                                    │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Skill(fix-tests)
+
+  Loading audit report...
+  Found 58 tests requiring remediation.
+
+  Starting with highest-impact fixes (mocked implementations)...
+
+⏺ Read(tests/auth/login.test.ts)
+
+⏺ Edit(tests/auth/login.test.ts)
+
+  - jest.mock('../services/AuthService')  // Mocks the thing we're testing!
+  + // Test actual AuthService behavior with test database
+```
 
 ### Parallel Worktree Development
 
-Work on multiple parts of a feature simultaneously in isolated branches.
+Split work across isolated branches, merge when complete.
 
 ```
-You: "Let's design the new payment system"
-# brainstorming skill kicks in, creates design with interface contracts
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > Let's design a new notification system                                    │
+╰─────────────────────────────────────────────────────────────────────────────╯
 
-You: "Set up worktrees for this"
-# using-git-worktrees creates: .worktrees/payment-api, .worktrees/payment-ui, .worktrees/payment-tests
+⏺ Skill(brainstorming)
 
-You: "Work on these in parallel"
-# Spawns subagents, each working in their own worktree
+  I'll explore the notification system requirements with you.
 
-You: "Merge the worktrees"
-# smart-merge synthesizes changes using 3-way diff analysis
+  ...design discussion, interface contracts established...
+
+  Design document saved to:
+    ~/.local/spellbook/docs/Users-me-myproject/plans/notifications-design.md
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > Set up worktrees to implement this in parallel                            │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Skill(using-git-worktrees)
+
+  Creating isolated worktrees for parallel development:
+
+  ✓ .worktrees/notif-backend     (branch: feature/notif-backend)
+  ✓ .worktrees/notif-frontend    (branch: feature/notif-frontend)
+  ✓ .worktrees/notif-tests       (branch: feature/notif-tests)
+
+  Interface contracts copied to each worktree.
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > Work on all three tracks                                                  │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Task(.worktrees/notif-backend) [in background]
+  ⎿ Implementing notification service, queue, templates...
+
+⏺ Task(.worktrees/notif-frontend) [in background]
+  ⎿ Building NotificationCenter component, hooks, real-time updates...
+
+⏺ Task(.worktrees/notif-tests) [in background]
+  ⎿ Writing integration tests against interface contracts...
+
+  ...
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > Merge the worktrees back together                                         │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Skill(smart-merge)
+
+  Analyzing 3 worktrees for merge:
+
+  Step 1: Dependency analysis
+    notif-tests depends on: notif-backend, notif-frontend
+    notif-frontend depends on: notif-backend (types only)
+    notif-backend: no dependencies (merge first)
+
+  Step 2: 3-way diff analysis
+    No conflicts detected. Interface contracts honored.
+
+  Step 3: Merge sequence
+    ✓ Merged notif-backend → main
+    ✓ Merged notif-frontend → main
+    ✓ Merged notif-tests → main
+
+  Step 4: Validation
+    ✓ All tests pass
+    ✓ Type check clean
+    ✓ Worktrees cleaned up
+
+  Ready to push or create PR.
 ```
 
-### Audit Test Quality
+### Cross-Assistant Handoff
 
-Check whether tests actually catch bugs, not just achieve coverage.
-
-```
-/green-mirage-audit
-
-# Output: ~/.claude/docs/<project>/audits/green-mirage-audit-20260105-143022.md
-# Shows which tests are SOLID vs GREEN MIRAGE (false confidence)
-
-You: "Fix the issues from the audit"
-# fix-tests skill takes the report and rewrites weak tests
-```
-
-### Find Past Patterns
-
-The MCP server provides tools to query old sessions.
+Move work between different AI coding assistants without losing context.
 
 ```
-You: "Find sessions where I worked on async retry logic"
-# Uses find_session MCP tool, returns matching sessions with metadata
+# In Cursor, context is running low on a complex refactor...
 
-You: "Load that session and show me the retry pattern I used"
-# Uses split_session to load chunks, extracts the relevant code
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > /distill-session                                                          │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Session distilled to:
+  ~/.local/spellbook/distilled/Users-me-myproject/refactor-auth-20260106-162033.md
+
+# Open Claude Code CLI in terminal...
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > continue work from ~/.local/spellbook/distilled/Users-me-myproject/       │
+│   refactor-auth-20260106-162033.md                                          │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Loading distilled session...
+
+  Context restored:
+  • Refactoring auth from session-based to JWT
+  • 4 of 7 services migrated
+  • Current: PaymentService (blocked on token refresh)
+  • Decision: Chose sliding window refresh (not fixed expiry)
+
+  Continuing with PaymentService migration...
 ```
 
-### Create Custom Skills
-
-Encode team-specific workflows as shareable markdown files.
-
-```
-You: "Help me create a skill for our GraphQL schema testing workflow"
-# writing-skills guides you through:
-#   - Skill name and description
-#   - When it should trigger
-#   - Step-by-step workflow
-#   - Quality gates and outputs
-
-# Result: ~/.claude/skills/graphql-schema-testing.md
-# Share via Git - your team gets the same workflow
-```
+The distilled file compresses ~50K tokens of conversation into ~3K words of actionable context.
 
 ## Recommended Companion Tools
 
