@@ -50,27 +50,32 @@ Native integration via AGENTS.md and MCP:
 
 ### Codex
 
-MCP server integration:
+Native skill integration via AGENTS.md and MCP:
 - MCP server registered in `~/.codex/config.toml`
-- `.codex/spellbook-bootstrap.md` for context
-- Same `spellbook.use_spellbook_skill` tool as other platforms
+- Context installed to `~/.codex/AGENTS.md`
+- Skills symlinked to `~/.codex/skills/` for native discovery
 
 ### Gemini CLI
 
 Native extension system:
 - Extension linked via `gemini extensions link` to `extensions/gemini/`
 - Extension provides MCP server config and GEMINI.md context
-- Full skill discovery and loading via MCP
+- Skills symlinked in `extensions/gemini/skills/` for native discovery
+
+**Note:** Native skills support is pending [GitHub Issue #15327](https://github.com/google-gemini/gemini-cli/issues/15327). As of January 7, 2026, this feature is unreleased. Skills will be auto-discovered once the epic lands in an official Gemini CLI release.
 
 ## MCP Server
 
 The `spellbook_mcp/` directory contains a FastMCP server providing:
 
+**Session Tools:**
 - `find_session` - Search sessions by name
 - `split_session` - Calculate chunk boundaries
 - `list_sessions` - List recent sessions
-- `find_spellbook_skills` - List available skills
-- `use_spellbook_skill` - Load skill content
+
+**Swarm Tools:**
+- `swarm_init` - Initialize swarm coordination
+- `swarm_status` - Get current swarm status
 
 ## Hooks
 

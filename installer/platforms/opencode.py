@@ -3,7 +3,7 @@ OpenCode platform installer.
 
 OpenCode supports:
 - AGENTS.md for context (installed to ~/.config/opencode/AGENTS.md)
-- MCP for spellbook tools (find_spellbook_skills, use_spellbook_skill, etc.)
+- MCP for session/swarm management tools
 - Native skill discovery from ~/.claude/skills/* (no symlinks needed)
 
 Note: OpenCode automatically reads skills from ~/.claude/skills/, so we don't

@@ -82,9 +82,13 @@ git checkout -b feat/add-<platform>-support
 
 ## Phase 3: Implementation
 
-**INVOCATION REQUIRED:** Invoke `implement-feature` skill via `Skill` tool or `use_spellbook_skill`:
+**INVOCATION REQUIRED:** Invoke `implement-feature` skill using your platform's skill loading mechanism:
 ```
-use_spellbook_skill(skill_name="implement-feature", args="Port Spellbook to [Platform]")
+# Claude Code: Skill tool
+Skill(skill="implement-feature", args="Port Spellbook to [Platform]")
+
+# Other platforms: Use native skill loading
+# Skills are available from spellbook installation
 ```
 
 **Context for skill:** Phase 1 findings + gemini.py reference

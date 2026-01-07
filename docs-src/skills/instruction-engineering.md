@@ -1,7 +1,5 @@
 # instruction-engineering
 
-
-
 ## Skill Content
 
 # Instruction Engineering for LLMs (Enhanced)
@@ -117,7 +115,7 @@ For complex tasks requiring multiple competencies, combine personas:
 ### 13. Explicit Skill Invocation Pattern
 
 <CRITICAL>
-When instructions reference skills, the agent MUST invoke the skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent.
+When instructions reference skills, the agent MUST invoke the skill using the `Skill` tool or your platform's native skill loading.
 Do NOT duplicate skill instructions. Do NOT say "use the X skill" and then embed its content.
 </CRITICAL>
 
@@ -217,7 +215,7 @@ Every multi-subagent prompt MUST include:
 
 **Correct Pattern:**
 ```
-First, invoke the [skill-name] skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent.
+First, invoke the [skill-name] skill using the `Skill` tool or your platform's native skill loading.
 Then follow its complete workflow.
 
 ## Context for the Skill
@@ -307,9 +305,8 @@ Before submitting these engineered instructions, verify:
 - [ ] Total length is under 200 lines?
 - [ ] Used Few-Shot instead of Zero-Shot where possible?
 - [ ] Critical instructions are at the top and bottom?
-- Ensuring subagents INVOKE skills via the `Skill` tool, `use_spellbook_skill`, or platform equivalent (not duplicate instructions)
+- Ensuring subagents INVOKE skills via the `Skill` tool or your platform's native skill loading (not duplicate instructions)
 - [ ] If referencing skills: only CONTEXT provided, no duplicated skill instructions?
 - [ ] If multiple subagents: defined responsibilities with "Why subagent" justification from heuristics?
 - [ ] If multiple subagents: specified what orchestrator retains in main context?
 </SELF_CHECK>
-

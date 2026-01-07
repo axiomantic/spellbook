@@ -118,6 +118,57 @@ def unlink_extension(name: str, dry_run: bool = False) -> Tuple[bool, str]:
 class GeminiInstaller(PlatformInstaller):
     """Installer for Gemini CLI platform using native extensions."""
 
+    def _ensure_extension_skills_symlinks(self) -> Tuple[int, int]:
+        """
+        Ensure skills symlinks exist in Gemini extension.
+
+        Creates relative symlinks: extensions/gemini/skills/<skill-name> -> ../../skills/<skill-name>/
+
+        Returns: (created_count, error_count)
+        """
+        import os
+
+        extension_skills = self.extension_dir / "skills"
+        source_skills = self.spellbook_dir / "skills"
+
+        if not self.dry_run:
+            extension_skills.mkdir(parents=True, exist_ok=True)
+
+        created = 0
+        errors = 0
+
+        for skill_dir in source_skills.iterdir():
+            if not skill_dir.is_dir():
+                continue
+
+            skill_name = skill_dir.name
+            target = extension_skills / skill_name
+
+            # Create relative path: ../../../skills/<skill-name>
+            # From extensions/gemini/skills/<skill-name> to skills/<skill-name>
+            relative_source = Path("..") / ".." / ".." / "skills" / skill_name
+
+            if self.dry_run:
+                created += 1
+                continue
+
+            try:
+                # Remove existing symlink if present
+                if target.is_symlink() or target.exists():
+                    if target.is_dir() and not target.is_symlink():
+                        errors += 1
+                        continue
+                    target.unlink()
+
+                # Create relative symlink
+                target.symlink_to(relative_source)
+                created += 1
+
+            except OSError:
+                errors += 1
+
+        return (created, errors)
+
     @property
     def platform_name(self) -> str:
         return "Gemini CLI"
@@ -196,6 +247,19 @@ class GeminiInstaller(PlatformInstaller):
                 )
             )
             return results
+
+        # Ensure skills symlinks exist in extension
+        created, errors = self._ensure_extension_skills_symlinks()
+        if created > 0 or errors > 0:
+            results.append(
+                InstallResult(
+                    component="extension_skills",
+                    platform=self.platform_id,
+                    success=errors == 0,
+                    action="installed",
+                    message=f"extension skills: {created} linked, {errors} errors",
+                )
+            )
 
         # Link the extension
         success, msg = link_extension(self.extension_dir, dry_run=self.dry_run)

@@ -1,10 +1,10 @@
 # Spellbook MCP Server
 
-Session and skill management tools for Claude Code via Model Context Protocol.
+Session and swarm management tools for Claude Code via Model Context Protocol.
 
 ## Overview
 
-The Spellbook MCP server provides five tools for session discovery and skill management:
+The Spellbook MCP server provides tools for session discovery and swarm coordination:
 
 **Session Tools:**
 
@@ -12,12 +12,12 @@ The Spellbook MCP server provides five tools for session discovery and skill man
 - **split_session**: Calculate chunk boundaries for session content
 - **list_sessions**: List recent sessions with metadata and content samples
 
-**Skill Tools:**
+**Swarm Tools:**
 
-- **find_spellbook_skills**: List all available skills with descriptions
-- **use_spellbook_skill**: Load the content of a specific skill
+- **swarm_init**: Initialize swarm coordination
+- **swarm_status**: Get current swarm status
 
-This reduces session discovery from 10+ LLM tool calls to a single MCP invocation, and enables skill access from any MCP-enabled assistant.
+This reduces session discovery from 10+ LLM tool calls to a single MCP invocation.
 
 ## Installation
 
@@ -85,24 +85,6 @@ List recent sessions in current project:
 ```python
 list_sessions(limit=10)
 # Returns 10 most recent sessions with metadata and samples
-```
-
-### find_spellbook_skills
-
-List all available skills with descriptions:
-
-```python
-find_spellbook_skills()
-# Returns JSON: [{"name": "debug", "description": "Unified debugging..."}, ...]
-```
-
-### use_spellbook_skill
-
-Load a specific skill's content:
-
-```python
-use_spellbook_skill(skill_name="debug")
-# Returns the full markdown content of the skill
 ```
 
 ## Configuration

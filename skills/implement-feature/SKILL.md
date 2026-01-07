@@ -1210,7 +1210,7 @@ Invoke devils-advocate skill using Skill tool, then provide Understanding Docume
 **Fallback (file path):**
 
 ```
-Invoke the `devils-advocate` skill using the `Skill` tool or `spellbook.use_spellbook_skill` MCP tool with arguments:
+Invoke the `devils-advocate` skill using the `Skill` tool (or your platform's native skill loading) with arguments:
 ```
 
 **Wait for critique:** Skill returns structured critique with 5 categories

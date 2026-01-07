@@ -32,36 +32,55 @@ def get_spellbook_config_dir() -> Path:
     return Path.home() / '.local' / 'spellbook'
 
 
-try:
-    from spellbook_mcp.skill_ops import find_skills
-    # Mimic server.py's get_skill_dirs logic but simplified for generation
-    # We want to document ALL skills found in the standard locations
-    def get_skill_dirs() -> List[Path]:
-        dirs = []
-        home = Path.home()
-        dirs.append(home / ".config" / "opencode" / "skills")
-        dirs.append(home / ".opencode" / "skills")  # Legacy path
-        dirs.append(home / ".codex" / "skills")
+# Direct implementation of skill discovery (no dependency on skill_ops)
+def find_skills(skill_dirs: List[Path]) -> List[Dict[str, str]]:
+    """Find all skills in the given directories."""
+    skills = []
+    for skill_dir in skill_dirs:
+        if not skill_dir.exists():
+            continue
+        for skill_path in skill_dir.iterdir():
+            if skill_path.is_dir():
+                skill_file = skill_path / "SKILL.md"
+                if skill_file.exists():
+                    # Parse frontmatter
+                    content = skill_file.read_text(encoding="utf-8")
+                    # Simple frontmatter parsing
+                    if content.startswith("---"):
+                        parts = content.split("---", 2)
+                        if len(parts) >= 3:
+                            import re
+                            frontmatter = parts[1]
+                            name_match = re.search(r'name:\s*(.+)', frontmatter)
+                            desc_match = re.search(r'description:\s*(.+)', frontmatter)
+                            if name_match:
+                                name = name_match.group(1).strip().strip('"\'')
+                                desc = desc_match.group(1).strip().strip('"\'') if desc_match else "No description"
+                                skills.append({"name": name, "description": desc})
+    return skills
 
-        # This repo's skills
-        repo_root = Path(__file__).parent.parent
-        dirs.append(repo_root / "skills")
+def get_skill_dirs() -> List[Path]:
+    """Get all skill directories to scan."""
+    dirs = []
+    home = Path.home()
+    dirs.append(home / ".config" / "opencode" / "skills")
+    dirs.append(home / ".opencode" / "skills")  # Legacy path
+    dirs.append(home / ".codex" / "skills")
 
-        # Spellbook config directory skills (portable location)
-        spellbook_config = get_spellbook_config_dir()
-        dirs.append(spellbook_config / "skills")
+    # This repo's skills
+    repo_root = Path(__file__).parent.parent
+    dirs.append(repo_root / "skills")
 
-        # Also check CLAUDE_CONFIG_DIR if different (backward compatibility)
-        claude_config = os.environ.get("CLAUDE_CONFIG_DIR")
-        if claude_config and Path(claude_config) != spellbook_config:
-            dirs.append(Path(claude_config) / "skills")
+    # Spellbook config directory skills (portable location)
+    spellbook_config = get_spellbook_config_dir()
+    dirs.append(spellbook_config / "skills")
 
-        return [d for d in dirs if d.exists()]
+    # Also check CLAUDE_CONFIG_DIR if different (backward compatibility)
+    claude_config = os.environ.get("CLAUDE_CONFIG_DIR")
+    if claude_config and Path(claude_config) != spellbook_config:
+        dirs.append(Path(claude_config) / "skills")
 
-except ImportError:
-    # Fallback if spellbook_mcp not importable (should not happen if structure preserved)
-    print("Error: Could not import spellbook_mcp.skill_ops")
-    sys.exit(1)
+    return [d for d in dirs if d.exists()]
 
 TEMPLATE = """<SPELLBOOK_CONTEXT>
 You are equipped with "Spellbook" - a library of expert agent skills.

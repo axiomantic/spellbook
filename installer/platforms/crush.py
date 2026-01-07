@@ -3,7 +3,7 @@ Crush platform installer.
 
 Crush (by Charmbracelet) supports:
 - AGENTS.md for context (installed to ~/.config/crush/AGENTS.md)
-- MCP for spellbook tools (find_spellbook_skills, use_spellbook_skill, etc.)
+- MCP for session/swarm management tools
 - Native Agent Skills via options.skills_paths in crush.json
 - Context files via options.context_paths in crush.json
 

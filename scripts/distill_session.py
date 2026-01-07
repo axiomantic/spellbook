@@ -315,7 +315,8 @@ def get_agent_output(project_dir: str, agent_id: str) -> Dict[str, Any]:
     Extract agent's final output from persisted session file.
 
     Agent session files are stored at:
-        ~/.claude/projects/<project-encoded>/agent-<id>.jsonl
+        $CLAUDE_CONFIG_DIR/projects/<project-encoded>/agent-<id>.jsonl
+    Where CLAUDE_CONFIG_DIR defaults to ~/.claude if not set.
 
     Returns: {
         'agent_id': str,
@@ -483,7 +484,7 @@ def main():
 
     # get-agent-output
     agent_cmd = subparsers.add_parser('get-agent-output', help='Get agent output from persisted session file')
-    agent_cmd.add_argument('project_dir', help='Project directory path (e.g., ~/.claude/projects/-Users-...)')
+    agent_cmd.add_argument('project_dir', help='Project directory path (e.g., $CLAUDE_CONFIG_DIR/projects/-Users-...)')
     agent_cmd.add_argument('--agent-id', required=True, help='Agent ID (e.g., a1b2c3d)')
 
     # list-agents

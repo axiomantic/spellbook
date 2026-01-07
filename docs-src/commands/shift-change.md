@@ -167,8 +167,8 @@ Skills are often nested. Capture the full stack with exact positions:
 
 | Skill | Parent | Current Phase/Step | Resume Command |
 |-------|--------|-------------------|----------------|
-| [e.g., implement-feature] | [user request] | [Phase 4, Task 10] | Invoke the `implement-feature` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent |
-| [e.g., subagent-driven-dev] | [implement-feature] | [Batch 3] | Invoke the `subagent-driven-development` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent |
+| [e.g., implement-feature] | [user request] | [Phase 4, Task 10] | Invoke the `implement-feature` skill using the `Skill` tool or your platform's native skill loading |
+| [e.g., subagent-driven-dev] | [implement-feature] | [Batch 3] | Invoke the `subagent-driven-development` skill using the `Skill` tool or your platform's native skill loading |
 
 **Skill Hierarchy Diagram:**
 ```
@@ -422,9 +422,9 @@ Concrete, runnable checks extracted from the implementation plan:
 
 ### 1.14 Skill Resume Commands
 
-Invoke the skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent
+Invoke the skill using the `Skill` tool or your platform's native skill loading
 
-Invoke the `implement-feature` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent
+Invoke the `implement-feature` skill using the `Skill` tool or your platform's native skill loading
 
 **If skill doesn't support --resume, provide context block:**
 ```
@@ -590,7 +590,7 @@ Known-good states to rollback to if current work is corrupted:
 
 **Template for /implement-feature resume:**
 ```
-Invoke the `implement-feature` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent
+Invoke the `implement-feature` skill using the `Skill` tool or your platform's native skill loading
 --resume-from Phase[N].Task[M]
 --design-doc [absolute-path]
 --impl-plan [absolute-path]
@@ -605,7 +605,7 @@ DO NOT re-run completed phases. DO NOT re-ask answered questions.
 
 **Template for /subagent-driven-development resume:**
 ```
-Invoke the `subagent-driven-development` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent
+Invoke the `subagent-driven-development` skill using the `Skill` tool or your platform's native skill loading
 --plan [absolute-path]
 --resume-batch [N]
 Context: Implementation plan approved. Batches 1-[N-1] complete.
@@ -847,4 +847,3 @@ Ask yourself—and do not finalize until ALL answers are "yes":
 - [ ] If a plan doc exists, would the resuming agent find it and read it BEFORE starting work?
 
 If ANY answer is "no," add more detail. You are the last line of defense against context loss. The next instance's success depends entirely on what you write here.
-

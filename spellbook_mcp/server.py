@@ -13,8 +13,6 @@ Session Management:
 - find_session: Search sessions by name (case-insensitive)
 - split_session: Calculate chunk boundaries for session content
 - list_sessions: List recent sessions with metadata and samples
-- find_spellbook_skills: List available Spellbook skills
-- use_spellbook_skill: Load a specific skill's content
 - spawn_claude_session: Open a new terminal window with Claude session
 
 Swarm Coordination:
@@ -44,12 +42,11 @@ if current_dir not in sys.path:
 if repo_root not in sys.path:
     sys.path.insert(0, repo_root)
 
-from path_utils import get_project_dir, get_spellbook_config_dir
+from path_utils import get_project_dir
 from session_ops import (
     split_by_char_limit,
     list_sessions_with_samples,
 )
-from skill_ops import find_skills, load_skill
 from terminal_utils import detect_terminal, spawn_terminal_window
 from swarm_tools import (
     swarm_create,
@@ -61,34 +58,6 @@ from swarm_tools import (
 )
 
 mcp = FastMCP("spellbook")
-
-# Default directories to search for skills
-# Personal skills > Spellbook skills
-def get_skill_dirs() -> List[Path]:
-    dirs = []
-    home = Path.home()
-
-    # Personal skills from various platform config directories
-    dirs.append(home / ".config" / "opencode" / "skills")
-    dirs.append(home / ".opencode" / "skills")  # Legacy path
-    dirs.append(home / ".codex" / "skills")
-
-    # Spellbook skills (this repo)
-    # Assume this server is running from inside spellbook/spellbook_mcp
-    repo_root = Path(__file__).parent.parent
-    dirs.append(repo_root / "skills")
-
-    # Spellbook config directory skills (portable location)
-    spellbook_config = get_spellbook_config_dir()
-    dirs.append(spellbook_config / "skills")
-
-    # Also check CLAUDE_CONFIG_DIR if different from spellbook config
-    # (for backward compatibility with existing user skills)
-    claude_config = os.environ.get("CLAUDE_CONFIG_DIR")
-    if claude_config and Path(claude_config) != spellbook_config:
-        dirs.append(Path(claude_config) / "skills")
-
-    return [d for d in dirs if d.exists()]
 
 @mcp.tool()
 def find_session(name: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -179,38 +148,6 @@ def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
         return []
 
     return list_sessions_with_samples(str(project_dir), limit)
-
-@mcp.tool()
-def find_spellbook_skills() -> str:
-    """
-    List all available Spellbook skills with their descriptions.
-    
-    Returns:
-        JSON string of list of {name, description} objects.
-    """
-    dirs = get_skill_dirs()
-    skills = find_skills(dirs)
-    # Simplify output for LLM consumption (just name and description)
-    simplified = [{"name": s["name"], "description": s["description"]} for s in skills]
-    return json.dumps(simplified, indent=2)
-
-@mcp.tool()
-def use_spellbook_skill(skill_name: str) -> str:
-    """
-    Load the content of a specific Spellbook skill.
-
-    Args:
-        skill_name: The name of the skill to load (e.g., 'scientific-debugging')
-
-    Returns:
-        The full markdown content of the skill instructions.
-    """
-    dirs = get_skill_dirs()
-    try:
-        return load_skill(skill_name, dirs)
-    except ValueError as e:
-        return f"Error: {str(e)}"
-
 
 @mcp.tool()
 def spawn_claude_session(

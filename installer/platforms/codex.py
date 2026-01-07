@@ -7,7 +7,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
 from ..components.context_files import generate_codex_context
-from ..components.symlinks import create_symlink, remove_symlink
+from ..components.symlinks import (
+    create_symlink,
+    create_skill_symlinks,
+    remove_symlink,
+    remove_spellbook_symlinks,
+)
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
@@ -157,6 +162,28 @@ class CodexInstaller(PlatformInstaller):
             )
         )
 
+        # Create per-skill symlinks for native discovery
+        skills_dir = self.config_dir / "skills"
+        if not self.dry_run:
+            skills_dir.mkdir(parents=True, exist_ok=True)
+
+        skills_results = create_skill_symlinks(
+            self.spellbook_dir / "skills",
+            skills_dir,
+            as_directories=True,
+            dry_run=self.dry_run,
+        )
+        skill_count = sum(1 for r in skills_results if r.success)
+        results.append(
+            InstallResult(
+                component="skills",
+                platform=self.platform_id,
+                success=skill_count > 0 or not skills_results,
+                action="installed" if skills_results else "skipped",
+                message=f"skills: {skill_count} installed",
+            )
+        )
+
         # Install AGENTS.md with demarcated section
         context_file = self.config_dir / "AGENTS.md"
         spellbook_content = generate_codex_context(self.spellbook_dir)
@@ -259,6 +286,23 @@ class CodexInstaller(PlatformInstaller):
                 )
             )
 
+        # Remove skill symlinks
+        skills_dir = self.config_dir / "skills"
+        symlink_results = remove_spellbook_symlinks(
+            skills_dir, self.spellbook_dir, dry_run=self.dry_run
+        )
+        if symlink_results:
+            removed_count = sum(1 for r in symlink_results if r.action == "removed")
+            results.append(
+                InstallResult(
+                    component="skills",
+                    platform=self.platform_id,
+                    success=True,
+                    action="removed",
+                    message=f"skills: {removed_count} removed",
+                )
+            )
+
         # Remove MCP server from config.toml
         config_toml = self.config_dir / "config.toml"
         success, msg = _remove_mcp_from_config_toml(config_toml, self.dry_run)
@@ -282,8 +326,16 @@ class CodexInstaller(PlatformInstaller):
         """Get all symlinks created by this platform."""
         symlinks = []
 
+        # Spellbook root link
         spellbook_link = self.config_dir / "spellbook"
         if spellbook_link.is_symlink():
             symlinks.append(spellbook_link)
+
+        # Skills
+        skills_dir = self.config_dir / "skills"
+        if skills_dir.exists():
+            for item in skills_dir.iterdir():
+                if item.is_symlink():
+                    symlinks.append(item)
 
         return symlinks
