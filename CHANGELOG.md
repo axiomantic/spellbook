@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **porting-to-your-assistant guide** - rewritten as instruction-engineered prompt
+  - Added fork/clone setup as mandatory first step
+  - Integrated implement-feature skill workflow
+  - Added manual skill reading instructions for assistants without MCP server
+  - Added comprehensive testing phase with TDD requirements and spellbook test standards
+  - Changed PR submission to require user confirmation first (no automatic PRs)
+  - Applied instruction-engineering patterns (ROLE, CRITICAL_INSTRUCTION, BEFORE_RESPONDING, SELF_CHECK, FINAL_EMPHASIS)
 - **instruction-engineering skill** - length constraint is now a strong recommendation, not a hard rule
   - Added token estimation formulas (`lines * 7` or `len(prompt) / 4`)
   - Added length thresholds table: OPTIMAL (<150), ACCEPTABLE (150-200), EXTENDED (200-500), ORCHESTRATION-SCALE (500+)
