@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **instruction-engineering skill** - length constraint is now a strong recommendation, not a hard rule
+  - Added token estimation formulas (`lines * 7` or `len(prompt) / 4`)
+  - Added length thresholds table: OPTIMAL (<150), ACCEPTABLE (150-200), EXTENDED (200-500), ORCHESTRATION-SCALE (500+)
+  - Added Length Decision Protocol with `handle_extended_length()` and `analyze_prompt_for_justification()` functions
+  - Added AskUserQuestion integration for prompts exceeding 200 lines in interactive mode
+  - Added autonomous mode smart decisions that detect valid justifications (orchestration_skill, multi_phase_workflow, comprehensive_examples, safety_critical, compliance_requirements)
+  - Added Prompt Metrics comment template for documenting length/status at end of prompts
+  - Updated SELF_CHECK with new Length Verification section
+- **subagent-prompting skill** - added Step 2.5 (Verify Length) before dispatch
+  - Quick length check with action table
+  - Updated SELF_CHECK with length verification items
+- **implement-feature skill** - added length verification and self-documentation
+  - Added Subagent Prompt Length Verification section in CRITICAL block
+  - Added Prompt Metrics comment documenting justified ORCHESTRATION-SCALE status (3120 lines, ~21840 tokens)
+
 ## [0.2.1] - 2025-01-08
 
 ### Added

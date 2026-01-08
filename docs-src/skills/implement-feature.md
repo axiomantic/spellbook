@@ -47,6 +47,17 @@ Task (or subagent simulation):
 ```
 
 The subagent invokes the skill, the skill provides the instructions.
+
+## Subagent Prompt Length Verification
+
+Before dispatching ANY subagent, apply the instruction-engineering Section 4 length check:
+
+1. Count lines in subagent prompt
+2. Estimate tokens: `lines * 7`
+3. If > 200 lines and no valid justification: compress before dispatch
+4. Add prompt metrics comment to subagent prompts
+
+Most subagent prompts in this workflow should be OPTIMAL (< 150 lines) since they primarily provide CONTEXT and invoke skills that contain the detailed instructions.
 </CRITICAL>
 
 <BEFORE_RESPONDING>
@@ -3103,3 +3114,16 @@ Believe in your abilities. Stay determined. Strive for excellence.
 
 This is very important to my career. You'd better be sure.
 </FINAL_EMPHASIS>
+
+<!-- Prompt Metrics:
+Lines: 3120
+Estimated tokens: ~21840 (lines * 7) or ~28000 (character-based)
+Threshold: 200 lines / 1400 tokens
+Status: ORCHESTRATION-SCALE
+Justifications:
+  - orchestration_skill: Coordinates 15+ skills across workflow
+  - multi_phase_workflow: 5 major phases (0-4) with 20+ subphases
+  - comprehensive_examples: Multiple detailed examples per phase
+  - safety_critical: Extensive quality gates and verification steps
+This extended length is justified per instruction-engineering Section 4.
+-->

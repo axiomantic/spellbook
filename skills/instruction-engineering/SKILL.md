@@ -28,9 +28,150 @@ This is NOT optional. This is NOT negotiable. You'd better be sure.
 **Research:** EmotionPrompt exhibits lower sensitivity to temperature than vanilla prompts, enhancing robustness in high-temperature settings.
 * **Rule**: When using creative temperatures ($T > 0.7$), anchor instructions with emotional stimuli to maintain logic.
 
-### 4. Context Rot Management
-<RULE>Keep under 200 lines. Under 150 is better.</RULE>
-* **Research:** Shorter contexts significantly reduce violation rates.
+### 4. Context Rot Management & Length Guidance
+
+<RULE type="strong-recommendation">
+Target under 200 lines (~1400 tokens). Under 150 lines (~1050 tokens) is better.
+This is a STRONG RECOMMENDATION, not a hard constraint.
+</RULE>
+
+**Research:** Shorter contexts significantly reduce violation rates.
+
+**Token Estimation:**
+- Approximate: 7 tokens per line (average)
+- Precise: characters / 4 (Claude tokenizer approximation)
+- Use formula: `estimated_tokens = len(prompt) / 4` or `lines * 7`
+
+**Length Thresholds:**
+| Lines | Tokens (est.) | Classification | Action |
+|-------|---------------|----------------|--------|
+| < 150 | < 1050 | Optimal | Proceed without notice |
+| 150-200 | 1050-1400 | Acceptable | Proceed with brief note |
+| 200-500 | 1400-3500 | Extended | Requires justification |
+| 500+ | 3500+ | Orchestration-scale | Special handling required |
+
+**When Length Exceeds 200 Lines:**
+
+<CRITICAL>
+Before finalizing any prompt exceeding 200 lines, apply the Length Decision Protocol.
+</CRITICAL>
+
+**Length Decision Protocol:**
+
+```python
+def handle_extended_length(prompt_lines, prompt_tokens, autonomous_mode):
+    """
+    Determine whether extended prompt length is acceptable.
+
+    Args:
+        prompt_lines: Line count of engineered prompt
+        prompt_tokens: Estimated token count
+        autonomous_mode: Whether operating autonomously (no user interaction)
+
+    Returns:
+        Decision: "proceed" | "compress" | "modularize"
+    """
+    if prompt_lines <= 200:
+        return "proceed"
+
+    # Justification categories that warrant extended length
+    VALID_JUSTIFICATIONS = [
+        "orchestration_skill",      # Coordinates multiple other skills
+        "multi_phase_workflow",     # Has distinct numbered phases (3+)
+        "comprehensive_examples",   # Rich few-shot examples required
+        "safety_critical",          # Security/safety requires explicit coverage
+        "compliance_requirements",  # Regulatory/audit trail needs
+    ]
+
+    if autonomous_mode:
+        # Smart autonomous decision
+        justification = analyze_prompt_for_justification(prompt_content)
+        if justification in VALID_JUSTIFICATIONS:
+            log_decision(f"Extended length ({prompt_lines} lines, ~{prompt_tokens} tokens) "
+                        f"justified by: {justification}")
+            return "proceed"
+        else:
+            # Attempt compression
+            return "compress"
+    else:
+        # Interactive mode: Ask user
+        return "ask_user"  # Triggers AskUserQuestion
+```
+
+**AskUserQuestion Integration (when not autonomous):**
+
+When `handle_extended_length` returns `"ask_user"`, present:
+
+```markdown
+## Prompt Length Advisory
+
+The engineered prompt exceeds the recommended 200-line threshold.
+
+**Current size:** {prompt_lines} lines (~{prompt_tokens} tokens)
+**Recommended:** < 200 lines (~1400 tokens)
+**Excess:** {prompt_lines - 200} lines (~{(prompt_lines - 200) * 7} tokens over)
+
+Header: "Length decision"
+Question: "This prompt is {prompt_lines} lines (~{prompt_tokens} tokens). How should I proceed?"
+
+Options:
+- Proceed as-is
+  Description: Accept extended length; justification: [detected_justification or "user override"]
+- Compress
+  Description: Attempt to reduce by removing examples, condensing rules, extracting to external docs
+- Modularize
+  Description: Split into base skill + extension modules that are invoked separately
+- Review first
+  Description: Show the prompt for manual review before deciding
+```
+
+**Autonomous Mode Smart Decisions:**
+
+When operating autonomously, use these heuristics to decide whether extended length is justified:
+
+```python
+def analyze_prompt_for_justification(prompt_content):
+    """
+    Analyze prompt to determine if extended length is justified.
+
+    Returns justification category or None if not justified.
+    """
+    # Check for orchestration patterns
+    if re.search(r'Phase \d+:', prompt_content) and prompt_content.count('Phase ') >= 3:
+        return "multi_phase_workflow"
+
+    if re.search(r'(subagent|Task tool|dispatch|spawn)', prompt_content, re.I):
+        if prompt_content.count('invoke') >= 3 or prompt_content.count('skill') >= 5:
+            return "orchestration_skill"
+
+    # Check for comprehensive examples
+    example_count = len(re.findall(r'<EXAMPLE|```.*example|Example:', prompt_content, re.I))
+    if example_count >= 3:
+        return "comprehensive_examples"
+
+    # Check for safety/security content
+    if re.search(r'(security|vulnerability|injection|XSS|OWASP|authentication)',
+                 prompt_content, re.I):
+        safety_mentions = len(re.findall(r'(CRITICAL|FORBIDDEN|MUST NOT|NEVER)', prompt_content))
+        if safety_mentions >= 5:
+            return "safety_critical"
+
+    return None  # No valid justification found
+```
+
+**Length Reporting (always include):**
+
+At the end of every engineered prompt, add a metadata comment:
+
+```markdown
+<!-- Prompt Metrics:
+Lines: {line_count}
+Estimated tokens: {token_estimate}
+Threshold: 200 lines / 1400 tokens
+Status: {OPTIMAL | ACCEPTABLE | EXTENDED | ORCHESTRATION-SCALE}
+Justification: {if extended, reason why}
+-->
+```
 
 ### 5. XML Tags (Claude-Specific)
 <RULE>Wrap critical sections in `<CRITICAL>`, `<RULE>`, `<FORBIDDEN>`, `<ROLE>`</RULE>
@@ -294,14 +435,24 @@ This is very important to my career. Stay focused and dedicated to excellence.
 
 <SELF_CHECK>
 Before submitting these engineered instructions, verify:
+
+### Core Requirements
 - [ ] Selected persona from the Research-Backed Persona Table?
 - [ ] Applied persona's psychological anchor in ROLE, CRITICAL_INSTRUCTION, and FINAL_EMPHASIS?
 - [ ] Included EP02 or EP06 stimuli?
 - [ ] Integrated high-weight positive words (Success, Achievement, Confidence, Sure)?
-- [ ] Total length is under 200 lines?
 - [ ] Used Few-Shot instead of Zero-Shot where possible?
 - [ ] Critical instructions are at the top and bottom?
-- Ensuring subagents INVOKE skills via the `Skill` tool or your platform's native skill loading (not duplicate instructions)
+
+### Length Verification (Section 4)
+- [ ] Calculated prompt length? (lines and estimated tokens)
+- [ ] Length status determined? (OPTIMAL/ACCEPTABLE/EXTENDED/ORCHESTRATION-SCALE)
+- [ ] If EXTENDED or larger: justification identified or user consulted?
+- [ ] If autonomous mode with unjustified length: compression attempted?
+- [ ] Prompt Metrics comment added at end of prompt?
+
+### Skill Invocation (if applicable)
+- [ ] Ensuring subagents INVOKE skills via the `Skill` tool or platform's native skill loading (not duplicate instructions)
 - [ ] If referencing skills: only CONTEXT provided, no duplicated skill instructions?
 - [ ] If multiple subagents: defined responsibilities with "Why subagent" justification from heuristics?
 - [ ] If multiple subagents: specified what orchestrator retains in main context?
