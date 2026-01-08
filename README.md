@@ -214,17 +214,21 @@ For fully automated workflows (no permission prompts), each platform has its own
 |----------|---------|--------------|
 | Claude Code | `claude --dangerously-skip-permissions` | Skips all permission prompts |
 | Gemini CLI | `gemini --yolo` | Enables autonomous execution |
-| OpenCode | `opencode --agent yolo` | YOLO agent with full permissions (balanced) |
-| OpenCode | `opencode --agent yolo-focused` | YOLO agent optimized for precision (low temp) |
+| OpenCode | `opencode --agent yolo`[^2] | Spellbook agent with all tools allowed |
+| OpenCode | `opencode --agent yolo-focused`[^2] | Spellbook agent, low temp for precision |
 | Codex | `codex --full-auto` | Workspace writes + on-request approval |
 | Codex | `codex --yolo` | Bypasses all approvals and sandbox |
 | Crush | `crush --yolo` | Bypasses all permission prompts |
 
+[^2]: The `yolo` and `yolo-focused` agents are provided by spellbook, not built into OpenCode. They are [OpenCode agent definitions](https://opencode.ai/docs/agents/) with `permission: "*": "*": allow` for all tools, installed to `~/.config/opencode/agent/` by the spellbook installer.
+
 Without YOLO mode, you'll be prompted to approve each file write, command execution, etc. The workflows still function, but require manual approval at each step.
 
-**OpenCode agents:** Spellbook installs two YOLO mode agents for OpenCode:
+**OpenCode YOLO agents (spellbook-provided):**
 - `yolo` (temperature 0.7): Balanced agent for general autonomous work
 - `yolo-focused` (temperature 0.2): Precision agent for refactoring, bug fixes, and mechanical tasks
+
+These agents grant "allow" permission for all tools (write, edit, bash, webfetch, task). They are symlinked from `spellbook/opencode/agent/` to `~/.config/opencode/agent/` during installation.
 
 See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/agents/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Crush](https://github.com/charmbracelet/crush).
 
