@@ -1,5 +1,11 @@
 # Contributing
 
+## Porting to New Platforms
+
+Want Spellbook on your coding assistant? Spellbook requires **agent skills** support, which means prompt files that automatically activate based on trigger descriptions (e.g., "Use when implementing features"). This is different from MCP tools or programmatic hooks.
+
+See the [Porting Guide](../contributing/porting-to-your-assistant.md) for requirements and instructions.
+
 ## Prerequisites
 
 Install [uv](https://docs.astral.sh/uv/):

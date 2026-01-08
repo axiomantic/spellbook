@@ -575,9 +575,11 @@ Full documentation available at **[axiomantic.github.io/spellbook](https://axiom
 
 ## Contributing
 
-**Want Spellbook on your coding assistant?** e.g. Cursor, Kline, Roo, Kilo, Continue, GitHub Copilot, etc. If your assistant supports MCP but isn't listed in Platform Support, you can port it yourself:
+**Want Spellbook on your coding assistant?** (Cursor, Cline, Roo, Kilo, Continue, GitHub Copilot, etc.)
 
-See the [**Porting Guide**](docs/contributing/porting-to-your-assistant.md) - A self-contained prompt you paste into your coding assistant to have it add Spellbook support for itself and submit a PR back to this repo. We appreciate your contributions!
+Spellbook requires **agent skills** support. Agent skills are prompt files that automatically activate based on trigger descriptions (e.g., "Use when implementing features" or "Use when tests are failing"). This is different from MCP tools or programmatic hooks.
+
+If your assistant supports agent skills with description-based triggers, see the [**Porting Guide**](docs/contributing/porting-to-your-assistant.md) for instructions on adding support. We appreciate contributions!
 
 ## Acknowledgments
 
