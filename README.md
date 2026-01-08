@@ -42,6 +42,7 @@
 - [Platform Support](#platform-support)
   - [YOLO Mode](#yolo-mode)
 - [Playbooks](#playbooks)
+  - [Implementing a Feature](#implementing-a-feature)
   - [Large Feature with Context Exhaustion](#large-feature-with-context-exhaustion)
   - [Test Suite Audit and Remediation](#test-suite-audit-and-remediation)
   - [Parallel Worktree Development](#parallel-worktree-development)
@@ -235,6 +236,66 @@ See platform documentation for details: [Claude Code](https://docs.anthropic.com
 ## Playbooks
 
 Real-world usage patterns with example transcripts.
+
+### Implementing a Feature
+
+The core workflow: request a feature, answer a few questions, and let the skill handle research, design, and implementation.
+
+```
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > Add dark mode toggle to settings                                          │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+⏺ Skill(implement-feature)
+
+  I'll help implement dark mode. First, let me gather preferences.
+
+⏺ AskUserQuestion
+
+  ╭─────────────────────────────────────────────────────────────────────────╮
+  │ Execution mode                                                          │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │ ○ Fully autonomous (Recommended)                                        │
+  │ ○ Interactive                                                           │
+  ╰─────────────────────────────────────────────────────────────────────────╯
+
+> Fully autonomous
+
+⏺ Task(Explore)
+
+  ⎿ Found: src/context/ThemeContext.tsx, src/components/Settings.tsx
+    React app with styled-components, existing light theme only.
+
+⏺ AskUserQuestion
+
+  ╭─────────────────────────────────────────────────────────────────────────╮
+  │ Theme persistence                                                       │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │ ○ localStorage (Recommended)                                            │
+  │ ○ User account (backend)                                                │
+  │ ○ System preference only                                                │
+  ╰─────────────────────────────────────────────────────────────────────────╯
+
+> localStorage
+
+⏺ Writing design doc...
+  ✓ ~/.local/spellbook/docs/.../plans/dark-mode-design.md
+
+⏺ Writing implementation plan...
+  ✓ ~/.local/spellbook/docs/.../plans/dark-mode-impl.md
+
+⏺ Task(Implement ThemeContext updates)
+  ⎿ Tests written, implementation complete, code review passed
+
+⏺ Task(Add toggle to Settings)
+  ⎿ Tests written, implementation complete, code review passed
+
+⏺ Task(Add CSS variables)
+  ⎿ Tests written, implementation complete, code review passed
+
+✓ All tests passing. Dark mode implemented.
+  Ready to merge or create PR.
+```
 
 ### Large Feature with Context Exhaustion
 
