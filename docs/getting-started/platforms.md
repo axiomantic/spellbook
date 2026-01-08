@@ -25,7 +25,7 @@ python3 install.py
 
 **Status:** Full Support
 
-OpenCode integration via AGENTS.md and MCP server.
+OpenCode integration via AGENTS.md, MCP server, and YOLO mode agents.
 
 ### Setup
 
@@ -33,12 +33,28 @@ OpenCode integration via AGENTS.md and MCP server.
 2. The installer:
    - Creates `~/.config/opencode/AGENTS.md` with spellbook context
    - Registers spellbook MCP server in `~/.config/opencode/opencode.json`
+   - Installs YOLO mode agents to `~/.config/opencode/agent/`
 
 ### Features
 
 - Context and instructions via AGENTS.md
 - MCP server for spellbook tools
 - Native skill discovery from `~/.claude/skills/*`
+- YOLO mode agents for autonomous execution
+
+### YOLO Mode
+
+Spellbook installs two agents for autonomous execution without permission prompts:
+
+```bash
+# Balanced agent (temperature 0.7) - general autonomous work
+opencode --agent yolo
+
+# Precision agent (temperature 0.2) - refactoring, bug fixes, mechanical tasks
+opencode --agent yolo-focused
+```
+
+Both agents have full tool permissions (write, edit, bash, webfetch, task) with all operations auto-approved. Use in isolated environments with appropriate spending limits.
 
 ### Notes
 

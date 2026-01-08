@@ -5,10 +5,14 @@ OpenCode supports:
 - AGENTS.md for context (installed to ~/.config/opencode/AGENTS.md)
 - MCP for session/swarm management tools
 - Native skill discovery from ~/.claude/skills/* (no symlinks needed)
+- Agent definitions for YOLO mode (installed to ~/.config/opencode/agent/)
 
 Note: OpenCode automatically reads skills from ~/.claude/skills/, so we don't
 need to create skill symlinks for OpenCode. The Claude Code installer handles
 skill installation to that location.
+
+Agent files (yolo.md, yolo-focused.md) are symlinked to enable autonomous
+execution via `opencode --agent yolo` or `opencode --agent yolo-focused`.
 """
 
 import json
@@ -16,6 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
 from ..components.context_files import generate_codex_context
+from ..components.symlinks import create_symlink, remove_symlink
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
@@ -119,6 +124,16 @@ class OpenCodeInstaller(PlatformInstaller):
         """Get the OpenCode config file path."""
         return self.config_dir / "opencode.json"
 
+    @property
+    def agent_source_dir(self) -> Path:
+        """Get the source directory for agent definitions."""
+        return self.spellbook_dir / "opencode" / "agent"
+
+    @property
+    def agent_target_dir(self) -> Path:
+        """Get the target directory for agent symlinks."""
+        return self.config_dir / "agent"
+
     def detect(self) -> PlatformStatus:
         """Detect OpenCode installation status."""
         # Check for AGENTS.md
@@ -215,6 +230,21 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Install agent symlinks for YOLO mode
+        if self.agent_source_dir.exists():
+            for agent_file in self.agent_source_dir.glob("*.md"):
+                target = self.agent_target_dir / agent_file.name
+                result = create_symlink(agent_file, target, self.dry_run)
+                results.append(
+                    InstallResult(
+                        component=f"agent:{agent_file.stem}",
+                        platform=self.platform_id,
+                        success=result.success,
+                        action=result.action,
+                        message=f"Agent {agent_file.stem}: {result.message}",
+                    )
+                )
+
         return results
 
     def uninstall(self) -> List["InstallResult"]:
@@ -271,6 +301,24 @@ class OpenCodeInstaller(PlatformInstaller):
             )
         )
 
+        # Remove agent symlinks
+        if self.agent_target_dir.exists():
+            for agent_symlink in self.agent_target_dir.iterdir():
+                if agent_symlink.is_symlink():
+                    result = remove_symlink(
+                        agent_symlink, verify_source=self.spellbook_dir, dry_run=self.dry_run
+                    )
+                    if result.action != "skipped":
+                        results.append(
+                            InstallResult(
+                                component=f"agent:{agent_symlink.stem}",
+                                platform=self.platform_id,
+                                success=result.success,
+                                action=result.action,
+                                message=f"Agent {agent_symlink.stem}: {result.message}",
+                            )
+                        )
+
         return results
 
     def get_context_files(self) -> List[Path]:
@@ -279,5 +327,10 @@ class OpenCodeInstaller(PlatformInstaller):
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""
-        # OpenCode doesn't create symlinks - skills are read from ~/.claude/skills/*
-        return []
+        symlinks = []
+        # Agent symlinks for YOLO mode
+        if self.agent_target_dir.exists():
+            for item in self.agent_target_dir.iterdir():
+                if item.is_symlink():
+                    symlinks.append(item)
+        return symlinks

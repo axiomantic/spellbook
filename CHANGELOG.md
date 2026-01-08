@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-01-08
+
+### Added
+- **OpenCode YOLO mode agents** - autonomous execution without permission prompts
+  - `yolo.md` (temperature 0.7): Balanced agent for general autonomous work
+  - `yolo-focused.md` (temperature 0.2): Precision agent for refactoring, bug fixes, and mechanical tasks
+  - Invoke with `opencode --agent yolo` or `opencode --agent yolo-focused`
+  - Agent symlinks installed automatically by spellbook installer to `~/.config/opencode/agent/`
+
+### Changed
+- Renamed README "Autonomous Mode" section to "YOLO Mode" for consistency with platform terminology
+- Updated OpenCode entry in YOLO mode table (was incorrectly showing `--prompt "task"`)
+- Added cost/credit warnings to YOLO mode documentation
+
+## [0.2.0] - 2025-12-31
+
 ### Added
 - **Implementation Completion Verification** for `implement-feature` skill - systematic verification that work was actually done
   - Phase 4.4: Per-task verification - runs after task execution, before code review; verifies acceptance criteria, expected outputs, interface contracts, and behavior against the implementation plan
@@ -130,6 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/elijahr/spellbook/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/elijahr/spellbook/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/elijahr/spellbook/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/elijahr/spellbook/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/elijahr/spellbook/releases/tag/v0.1.0

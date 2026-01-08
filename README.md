@@ -40,7 +40,7 @@
   - [Commands (15 total)](#commands-15-total)
   - [Agents (1 total)](#agents-1-total)
 - [Platform Support](#platform-support)
-  - [Autonomous Mode](#autonomous-mode)
+  - [YOLO Mode](#yolo-mode)
 - [Playbooks](#playbooks)
   - [Large Feature with Context Exhaustion](#large-feature-with-context-exhaustion)
   - [Test Suite Audit and Remediation](#test-suite-audit-and-remediation)
@@ -187,18 +187,24 @@ Reusable workflows for structured development:
 
 [^1]: Gemini does not yet support agent skills, but it is actively being worked on by the Gemini team. Spellbook skills are already installed to ~/.gemini/extensions/spellbook/skills and should begin working as soon as Gemini releases the feature. You can follow the epic's progress here: https://github.com/google-gemini/gemini-cli/issues/15327
 
-### Autonomous Mode
+### YOLO Mode
 
 > [!CAUTION]
-> **Autonomous mode gives your AI assistant full control of your system.**
+> **YOLO mode gives your AI assistant full control of your system.**
 >
-> It can execute arbitrary commands, write and delete files, install packages, and make irreversible changes - all without asking permission. A misconfigured workflow or hallucinated command can corrupt your project, expose secrets, or worse.
+> It can execute arbitrary commands, write and delete files, install packages, and make irreversible changes without asking permission. A misconfigured workflow or hallucinated command can corrupt your project, expose secrets, or worse.
 >
-> **Only enable autonomous mode when:**
+> **Cost warning:** YOLO mode sessions can run indefinitely without human checkpoints. This means:
+> - Per-token or usage-based pricing can accumulate rapidly
+> - Credit limits or usage caps can be exhausted in a single session
+> - Long-running tasks may consume significantly more resources than expected
+>
+> **Only enable YOLO mode when:**
 > - Working in an isolated environment (container, VM, disposable branch)
 > - You have tested the workflow manually first
 > - You have backups and version control
 > - You understand what each platform's flag actually permits
+> - You have set appropriate spending limits or usage caps
 >
 > **You are responsible for what it does.** Review platform documentation before enabling.
 
@@ -208,14 +214,19 @@ For fully automated workflows (no permission prompts), each platform has its own
 |----------|---------|--------------|
 | Claude Code | `claude --dangerously-skip-permissions` | Skips all permission prompts |
 | Gemini CLI | `gemini --yolo` | Enables autonomous execution |
-| OpenCode | `opencode --prompt "task"` | Non-interactive mode auto-approves all |
+| OpenCode | `opencode --agent yolo` | YOLO agent with full permissions (balanced) |
+| OpenCode | `opencode --agent yolo-focused` | YOLO agent optimized for precision (low temp) |
 | Codex | `codex --full-auto` | Workspace writes + on-request approval |
 | Codex | `codex --yolo` | Bypasses all approvals and sandbox |
 | Crush | `crush --yolo` | Bypasses all permission prompts |
 
-Without autonomous mode, you'll be prompted to approve each file write, command execution, etc. The workflows still function, but require manual approval at each step.
+Without YOLO mode, you'll be prompted to approve each file write, command execution, etc. The workflows still function, but require manual approval at each step.
 
-See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/permissions/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Crush](https://github.com/charmbracelet/crush).
+**OpenCode agents:** Spellbook installs two YOLO mode agents for OpenCode:
+- `yolo` (temperature 0.7): Balanced agent for general autonomous work
+- `yolo-focused` (temperature 0.2): Precision agent for refactoring, bug fixes, and mechanical tasks
+
+See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/agents/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Crush](https://github.com/charmbracelet/crush).
 
 ## Playbooks
 

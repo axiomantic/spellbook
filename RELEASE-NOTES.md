@@ -1,5 +1,18 @@
 # Spellbook Release Notes
 
+## 0.2.1 - 2026-01-08
+
+### Added
+- **OpenCode YOLO mode agents**: Autonomous execution without permission prompts
+  - `yolo.md` (temperature 0.7): Balanced agent for general autonomous work
+  - `yolo-focused.md` (temperature 0.2): Precision agent for refactoring, bug fixes, mechanical tasks
+  - Invoke with `opencode --agent yolo` or `opencode --agent yolo-focused`
+
+### Changed
+- Renamed README "Autonomous Mode" section to "YOLO Mode"
+- Fixed OpenCode entry in YOLO mode table (was incorrectly showing `--prompt "task"`)
+- Added cost/credit warnings to YOLO mode documentation
+
 ## 0.2.0 - 2026-01-06
 
 ### Added
