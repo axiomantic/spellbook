@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **fun-mode announcement structure** - explicit checklist for richer introductions
+  - Must include: greeting, invented name, persona description, undertow history, context, characteristic action
+  - Updated example with "Aldous Pemberton" showing full structure
+- **docs generation** - skill/command/agent content wrapped in 10-backtick code blocks
+  - Prevents XML-style tags (`<ROLE>`, `<CRITICAL>`, etc.) from rendering as HTML
+  - Nested triple-backtick code blocks now display correctly
+
 ## [0.3.0] - 2026-01-09
 
 ### Added
