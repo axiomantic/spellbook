@@ -741,14 +741,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../debug/" class="md-nav__link">
+      <a href="../debugging/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    debug
+    debugging
   
 
     
@@ -912,14 +912,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fix-tests/" class="md-nav__link">
+      <a href="../fixing-tests/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    fix-tests
+    fixing-tests
   
 
     
@@ -940,14 +940,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../factchecker/" class="md-nav__link">
+      <a href="../fact-checking/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    factchecker
+    fact-checking
   
 
     
@@ -968,14 +968,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../find-dead-code/" class="md-nav__link">
+      <a href="../finding-dead-code/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    find-dead-code
+    finding-dead-code
   
 
     
@@ -1111,14 +1111,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../implement-feature/" class="md-nav__link">
+      <a href="../implementing-features/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    implement-feature
+    implementing-features
   
 
     
@@ -1223,14 +1223,42 @@
   
   
     <li class="md-nav__item">
-      <a href="../smart-merge/" class="md-nav__link">
+      <a href="../worktree-merge/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    smart-merge
+    worktree-merge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../merge-conflict-resolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    merge-conflict-resolution
   
 
     
@@ -1318,6 +1346,34 @@
     
   
     async-await-patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-lsp-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-lsp-tools
   
 
     
@@ -1537,14 +1593,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../instruction-optimizer.md" class="md-nav__link">
+      <a href="../instruction-optimizer/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    instruction-optimizer
   
 
     
@@ -1565,14 +1621,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../emotional-stakes.md" class="md-nav__link">
+      <a href="../emotional-stakes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    emotional-stakes
   
 
     
@@ -1708,14 +1764,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fun-mode.md" class="md-nav__link">
+      <a href="../fun-mode/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    fun-mode
   
 
     
@@ -2027,14 +2083,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/shift-change/" class="md-nav__link">
+      <a href="../../commands/handoff/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Shift change
+    /handoff
   
 
     
@@ -2062,7 +2118,7 @@
   <span class="md-ellipsis">
     
   
-    Distill Session
+    /distill-session
   
 
     
@@ -2167,14 +2223,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/green-mirage-audit/" class="md-nav__link">
+      <a href="../../commands/audit-green-mirage/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /green-mirage-audit
+    /audit-green-mirage
   
 
     
@@ -2481,14 +2537,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/fun.md" class="md-nav__link">
+      <a href="../../commands/toggle-fun/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    /toggle-fun
   
 
     
@@ -2959,98 +3015,117 @@
 <p>This skill originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
 </div>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<h1 id="executing-plans_1">Executing Plans<a class="headerlink" href="#executing-plans_1" title="Permanent link">&para;</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>Load plan, review critically, execute tasks in batches, report for review between batches.</p>
-<p><strong>Core principle:</strong> Batch execution with checkpoints for architect review.</p>
-<p><strong>Announce at start:</strong> "I'm using the executing-plans skill to implement this plan."</p>
-<hr />
-<h2 id="autonomous-mode-behavior">Autonomous Mode Behavior<a class="headerlink" href="#autonomous-mode-behavior" title="Permanent link">&para;</a></h2>
-<p>Check your context for autonomous mode indicators:
-- "Mode: AUTONOMOUS" or "autonomous mode"
-- Explicit instruction to proceed without asking</p>
-<p>When autonomous mode is active:</p>
-<h3 id="skip-these-interactions">Skip These Interactions<a class="headerlink" href="#skip-these-interactions" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Concerns about plan (proceed if minor, log concerns for later)</li>
-<li>"Ready for feedback" checkpoint (continue to next batch)</li>
-</ul>
-<h3 id="make-these-decisions-autonomously">Make These Decisions Autonomously<a class="headerlink" href="#make-these-decisions-autonomously" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Minor plan concerns: Log and proceed</li>
-<li>Batch size: Use default (3 tasks)</li>
-</ul>
-<h3 id="circuit-breakers-still-pause-for">Circuit Breakers (Still Pause For)<a class="headerlink" href="#circuit-breakers-still-pause-for" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Critical plan gaps that prevent execution</li>
-<li>Repeated test failures (3+ consecutive)</li>
-<li>Security-sensitive operations not clearly specified</li>
-</ul>
-<hr />
-<h2 id="the-process">The Process<a class="headerlink" href="#the-process" title="Permanent link">&para;</a></h2>
-<h3 id="step-1-load-and-review-plan">Step 1: Load and Review Plan<a class="headerlink" href="#step-1-load-and-review-plan" title="Permanent link">&para;</a></h3>
-<ol>
-<li>Read plan file</li>
-<li>Review critically - identify any questions or concerns about the plan</li>
-<li>If concerns: Use AskUserQuestion to raise them:
-   <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">AskUserQuestion</span><span class="p">({</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nx">questions</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nx">question</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Found [N] concerns with the plan. How should we proceed?&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nx">header</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Plan Review&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nx">options</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Discuss concerns&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Review each concern before starting&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Proceed anyway (Recommended if minor)&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Start execution, address issues as they arise&quot;</span><span class="w"> </span><span class="p">},</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Update plan first&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Revise the plan to address concerns&quot;</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="p">],</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nx">multiSelect</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="p">}]</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">})</span>
-</code></pre></div></li>
-<li>If no concerns: Create TodoWrite and proceed</li>
-</ol>
-<h3 id="step-2-execute-batch">Step 2: Execute Batch<a class="headerlink" href="#step-2-execute-batch" title="Permanent link">&para;</a></h3>
-<p><strong>Default: First 3 tasks</strong></p>
-<p>For each task:
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. Mark as completed</p>
-<h3 id="step-3-report">Step 3: Report<a class="headerlink" href="#step-3-report" title="Permanent link">&para;</a></h3>
-<p>When batch complete:
-- Show what was implemented
-- Show verification output
-- Say: "Ready for feedback."</p>
-<h3 id="step-4-continue">Step 4: Continue<a class="headerlink" href="#step-4-continue" title="Permanent link">&para;</a></h3>
-<p>Based on feedback:
-- Apply changes if needed
-- Execute next batch
-- Repeat until complete</p>
-<h3 id="step-5-complete-development">Step 5: Complete Development<a class="headerlink" href="#step-5-complete-development" title="Permanent link">&para;</a></h3>
-<p>After all tasks complete and verified:
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- <strong>REQUIRED SUB-SKILL:</strong> Use finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice</p>
-<h2 id="when-to-stop-and-ask-for-help">When to Stop and Ask for Help<a class="headerlink" href="#when-to-stop-and-ask-for-help" title="Permanent link">&para;</a></h2>
-<p><strong>STOP executing immediately when:</strong>
-- Hit a blocker mid-batch (missing dependency, test fails, instruction unclear)
-- Plan has critical gaps preventing starting
-- You don't understand an instruction
-- Verification fails repeatedly</p>
-<p><strong>Ask for clarification rather than guessing.</strong></p>
-<h2 id="when-to-revisit-earlier-steps">When to Revisit Earlier Steps<a class="headerlink" href="#when-to-revisit-earlier-steps" title="Permanent link">&para;</a></h2>
-<p><strong>Return to Review (Step 1) when:</strong>
-- Partner updates the plan based on your feedback
-- Fundamental approach needs rethinking</p>
-<p><strong>Don't force through blockers</strong> - stop and ask.</p>
-<h2 id="remember">Remember<a class="headerlink" href="#remember" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Review plan critically first</li>
-<li>Follow plan steps exactly</li>
-<li>Don't skip verifications</li>
-<li>Reference skills when plan says to</li>
-<li>Between batches: just report and wait</li>
-<li>Stop when blocked, don't guess</li>
-</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Executing Plans</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gu">## Overview</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Load plan, review critically, execute tasks in batches, report for review between batches.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gs">**Core principle:**</span> Batch execution with checkpoints for architect review.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gs">**Announce at start:**</span> &quot;I&#39;m using the executing-plans skill to implement this plan.&quot;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>---
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Autonomous Mode Behavior</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>Check your context for autonomous mode indicators:
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>&quot;Mode: AUTONOMOUS&quot; or &quot;autonomous mode&quot;
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>Explicit instruction to proceed without asking
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>When autonomous mode is active:
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">### Skip These Interactions</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">-</span><span class="w"> </span>Concerns about plan (proceed if minor, log concerns for later)
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">-</span><span class="w"> </span>&quot;Ready for feedback&quot; checkpoint (continue to next batch)
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="gu">### Make These Decisions Autonomously</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">-</span><span class="w"> </span>Minor plan concerns: Log and proceed
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>Batch size: Use default (3 tasks)
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">### Circuit Breakers (Still Pause For)</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">-</span><span class="w"> </span>Critical plan gaps that prevent execution
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">-</span><span class="w"> </span>Repeated test failures (3+ consecutive)
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">-</span><span class="w"> </span>Security-sensitive operations not clearly specified
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>---
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="gu">## The Process</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gu">### Step 1: Load and Review Plan</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">1.</span> Read plan file
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">2.</span> Review critically - identify any questions or concerns about the plan
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">3.</span> If concerns: Use AskUserQuestion to raise them:
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">   ```javascript</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">   </span><span class="nx">AskUserQuestion</span><span class="p">({</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="w">     </span><span class="nx">questions</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="w">       </span><span class="nx">question</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Found [N] concerns with the plan. How should we proceed?&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="w">       </span><span class="nx">header</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Plan Review&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="w">       </span><span class="nx">options</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="w">         </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Discuss concerns&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Review each concern before starting&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">         </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Proceed anyway (Recommended if minor)&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Start execution, address issues as they arise&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="w">         </span><span class="p">{</span><span class="w"> </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Update plan first&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Revise the plan to address concerns&quot;</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="w">       </span><span class="p">],</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">       </span><span class="nx">multiSelect</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="w">     </span><span class="p">}]</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="w">   </span><span class="p">})</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">   ```</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">4.</span> If no concerns: Create TodoWrite and proceed
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="gu">### Step 2: Execute Batch</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**Default: First 3 tasks**</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>For each task:
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">1.</span> Mark as in_progress
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="k">2.</span> Follow each step exactly (plan has bite-sized steps)
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">3.</span> Run verifications as specified
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">4.</span> Mark as completed
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gu">### Step 3: Report</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>When batch complete:
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>Show what was implemented
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span>Show verification output
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">-</span><span class="w"> </span>Say: &quot;Ready for feedback.&quot;
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">### Step 4: Continue</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>Based on feedback:
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Apply changes if needed
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Execute next batch
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>Repeat until complete
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="gu">### Step 5: Complete Development</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>After all tasks complete and verified:
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">-</span><span class="w"> </span>Announce: &quot;I&#39;m using the finishing-a-development-branch skill to complete this work.&quot;
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">-</span><span class="w"> </span><span class="gs">**REQUIRED SUB-SKILL:**</span> Use finishing-a-development-branch
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>Follow that skill to verify tests, present options, execute choice
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gu">## When to Stop and Ask for Help</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gs">**STOP executing immediately when:**</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">-</span><span class="w"> </span>Hit a blocker mid-batch (missing dependency, test fails, instruction unclear)
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>Plan has critical gaps preventing starting
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span>You don&#39;t understand an instruction
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>Verification fails repeatedly
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**Ask for clarification rather than guessing.**</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gu">## When to Revisit Earlier Steps</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="gs">**Return to Review (Step 1) when:**</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Partner updates the plan based on your feedback
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Fundamental approach needs rethinking
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="gs">**Don&#39;t force through blockers**</span> - stop and ask.
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="gu">## Remember</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Review plan critically first
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>Follow plan steps exactly
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">-</span><span class="w"> </span>Don&#39;t skip verifications
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">-</span><span class="w"> </span>Reference skills when plan says to
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">-</span><span class="w"> </span>Between batches: just report and wait
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>Stop when blocked, don&#39;t guess
+</code></pre></div>
 
 
 

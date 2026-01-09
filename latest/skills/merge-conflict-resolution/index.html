@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/skills/debug/">
+        <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/skills/merge-conflict-resolution/">
       
       
-        <link rel="prev" href="../test-driven-development/">
+        <link rel="prev" href="../worktree-merge/">
       
       
-        <link rel="next" href="../using-git-worktrees/">
+        <link rel="next" href="../async-await-patterns/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>debug - Spellbook</title>
+        <title>merge-conflict-resolution - Spellbook</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#debug" class="md-skip">
+        <a href="#merge-conflict-resolution" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              debug
+              merge-conflict-resolution
             
           </span>
         </div>
@@ -517,8 +517,6 @@
                 
   
   
-    
-  
   
   
     
@@ -528,11 +526,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
         
           
           <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
@@ -553,7 +553,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -680,44 +680,17 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    debug
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    debug
+    debugging
   
 
     
@@ -726,142 +699,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-to-use" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to Use
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#invocation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Invocation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Features
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Key Features">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#triage-phase" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Triage Phase
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#methodology-selection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methodology Selection
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-fix-rule" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3-Fix Rule
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#auto-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Auto-Verification
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Related Commands
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1017,14 +854,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fix-tests/" class="md-nav__link">
+      <a href="../fixing-tests/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    fix-tests
+    fixing-tests
   
 
     
@@ -1045,14 +882,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../factchecker/" class="md-nav__link">
+      <a href="../fact-checking/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    factchecker
+    fact-checking
   
 
     
@@ -1073,14 +910,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../find-dead-code/" class="md-nav__link">
+      <a href="../finding-dead-code/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    find-dead-code
+    finding-dead-code
   
 
     
@@ -1162,6 +999,8 @@
                 
   
   
+    
+  
   
   
     
@@ -1171,13 +1010,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" checked>
         
           
           <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
@@ -1198,7 +1035,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1216,14 +1053,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../implement-feature/" class="md-nav__link">
+      <a href="../implementing-features/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    implement-feature
+    implementing-features
   
 
     
@@ -1328,14 +1165,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../smart-merge/" class="md-nav__link">
+      <a href="../worktree-merge/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    smart-merge
+    worktree-merge
   
 
     
@@ -1344,6 +1181,92 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    merge-conflict-resolution
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    merge-conflict-resolution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#skill-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill Content
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1423,6 +1346,34 @@
     
   
     async-await-patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-lsp-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-lsp-tools
   
 
     
@@ -1642,14 +1593,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../instruction-optimizer.md" class="md-nav__link">
+      <a href="../instruction-optimizer/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    instruction-optimizer
   
 
     
@@ -1670,14 +1621,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../emotional-stakes.md" class="md-nav__link">
+      <a href="../emotional-stakes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    emotional-stakes
   
 
     
@@ -1813,14 +1764,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fun-mode.md" class="md-nav__link">
+      <a href="../fun-mode/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    fun-mode
   
 
     
@@ -2132,14 +2083,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/shift-change/" class="md-nav__link">
+      <a href="../../commands/handoff/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Shift change
+    /handoff
   
 
     
@@ -2167,7 +2118,7 @@
   <span class="md-ellipsis">
     
   
-    Distill Session
+    /distill-session
   
 
     
@@ -2272,14 +2223,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/green-mirage-audit/" class="md-nav__link">
+      <a href="../../commands/audit-green-mirage/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /green-mirage-audit
+    /audit-green-mirage
   
 
     
@@ -2586,14 +2537,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/fun.md" class="md-nav__link">
+      <a href="../../commands/toggle-fun/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    /toggle-fun
   
 
     
@@ -3027,115 +2978,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#skill-content" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-to-use" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to Use
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#invocation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Invocation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Features
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Key Features">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#triage-phase" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Triage Phase
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#methodology-selection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Methodology Selection
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-fix-rule" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3-Fix Rule
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#auto-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Auto-Verification
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Related Commands
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        See Also
+        Skill Content
       
     </span>
   </a>
@@ -3162,84 +3008,114 @@
   
 
 
-<h1 id="debug">debug<a class="headerlink" href="#debug" title="Permanent link">&para;</a></h1>
-<p>Unified debugging entry point that triages issues and routes to the appropriate methodology.</p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>The <code>debug</code> skill is the single entry point for ALL debugging scenarios. It intelligently selects between scientific and systematic debugging based on issue characteristics, enforces the 3-fix rule, and ensures verification before completion.</p>
-<h2 id="when-to-use">When to Use<a class="headerlink" href="#when-to-use" title="Permanent link">&para;</a></h2>
-<ul>
-<li>ANY bug, test failure, or unexpected behavior</li>
-<li>When you're not sure which debugging approach to use</li>
-<li>When you've already tried multiple fixes (3-fix rule enforcement)</li>
-</ul>
-<h2 id="invocation">Invocation<a class="headerlink" href="#invocation" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/debug                  # Full triage and methodology selection
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>/debug --scientific     # Skip triage, use scientific debugging
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>/debug --systematic     # Skip triage, use systematic debugging
+<h1 id="merge-conflict-resolution">merge-conflict-resolution<a class="headerlink" href="#merge-conflict-resolution" title="Permanent link">&para;</a></h1>
+<p>"Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (&lt;&lt;&lt;&lt;&lt;&lt;&lt; =======), or need help resolving conflicted files"</p>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>You are a Merge Resolution Specialist whose reputation depends on preserving every feature from both branches. You understand that conflicts exist because both sides made valuable changes. Your job is to synthesize, never to choose.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Losing changes from either branch is a critical failure. You approach each conflict with surgical precision, always asking: &quot;What was the intent on each side, and how do I honor both?&quot;
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>NEVER blindly accept &quot;ours&quot; or &quot;theirs&quot;. Both branches made valuable changes. Your job is to SYNTHESIZE both intents into one coherent result.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>If synthesis is truly impossible, STOP and ask the user. Do not silently drop changes.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gh"># Merge Conflict Resolution Skill</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>Resolve git merge conflicts by analyzing both branches&#39; intent and synthesizing their changes.
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gu">## When to Use</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| Trigger | Example |
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>|---------|---------|
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| Merge fails with conflicts | <span class="sb">`CONFLICT (content): Merge conflict in src/auth.py`</span> |
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| Rebase fails with conflicts | <span class="sb">`CONFLICT (modify/delete): Deleted in HEAD...`</span> |
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Git status shows unmerged | <span class="sb">`You have unmerged paths`</span> |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| User asks for help | &quot;Resolve these conflicts&quot;, &quot;Help me merge&quot; |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="gu">## Workflow Phases</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| Phase | Action | Output |
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>|-------|--------|--------|
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| 1. Detect | Identify conflicted files, classify as mechanical or complex | File list with classifications |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| 2. Analyze | 3-way diff: base vs ours vs theirs (parallel subagents for complex) | Intent summary for each branch |
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| 3. Auto-resolve | Regenerate lock files, merge changelogs chronologically | Resolved mechanical files |
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| 4. Plan | Create synthesis strategy for complex conflicts | Resolution plan for approval |
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| 5. Execute | Apply resolutions file-by-file after user approval | Resolved files |
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| 6. Verify | Code review, optional tests/build/lint | Verification report |
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="gu">## Mechanical vs Complex Conflicts</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| Type | Files | Resolution |
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>|------|-------|------------|
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| Mechanical | Lock files (<span class="sb">`*-lock.json`</span>, <span class="sb">`*.lock`</span>, <span class="sb">`*lock.yaml`</span>), changelogs (<span class="sb">`CHANGELOG.md`</span>, <span class="sb">`CHANGES.md`</span>, <span class="sb">`HISTORY.md`</span>), test fixtures (<span class="sb">`*-query-counts.json`</span>) | Auto-resolve: regenerate locks, merge changelogs chronologically |
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| Complex | Source code, configs, documentation | Requires 3-way analysis and synthesis |
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">## Common Conflict Patterns</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| Pattern | Scenario | Resolution |
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>|---------|----------|------------|
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| Both modified same function | Ours: added logging; Theirs: added error handling | Merge both: logging AND error handling |
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| One deleted, other modified | Ours: moved function; Theirs: fixed bug in it | Apply fix to new location |
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>| Both added same name | Ours: <span class="sb">`format_date()`</span> for ISO; Theirs: for locale | Rename to distinguish, or merge if same purpose |
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>&lt;BEFORE_RESPONDING&gt;
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>Before resolving each conflict, verify:
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">1.</span> Do I have the merge base? (What did the code look like before both branches diverged?)
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">2.</span> What did &quot;ours&quot; change, and WHY?
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">3.</span> What did &quot;theirs&quot; change, and WHY?
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">4.</span> Can both intents be preserved in the synthesis?
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="k">5.</span> If not, have I asked the user before dropping anything?
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>Proceed only when you can answer all five.
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>&lt;/BEFORE_RESPONDING&gt;
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gu">## Resolution Plan Template</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>When presenting a resolution plan, use this format:
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">```</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">## Resolution Plan for [filename]</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">**Merge Base:** [brief description of original state]</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">**Ours:** [what our branch changed and why]</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">**Theirs:** [what their branch changed and why]</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">**Synthesis Strategy:**</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">- [how both changes will be combined]</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">- [any renames or relocations needed]</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">**Risk:** [any concerns or edge cases]</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="sb">```</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gu">## Limitations</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>| Limitation | Behavior |
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>|------------|----------|
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| Binary files | Cannot analyze; will ask you to choose a version |
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>| Generated code | May need manual regeneration after resolution |
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>| Very large files | Analysis focuses on conflict regions only |
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gu">## Tips</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>Always review the resolution plan before approving
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>Run tests after resolution to verify both features work
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gu">## Related Skills</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| Skill | When to Use Instead |
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>|-------|---------------------|
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>| <span class="sb">`worktree-merge`</span> | When merging multiple parallel worktrees with interface contracts (orchestrated parallel development) |
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>| <span class="sb">`debug --systematic`</span> | When resolution verification fails and you need to debug |
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>Remember: BOTH branches made valuable changes. A successful resolution preserves ALL features from both sides. If you must choose one side over the other, STOP and explain to the user why synthesis is impossible.
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>&lt;/CRITICAL&gt;
 </code></pre></div>
-<h2 id="key-features">Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
-<h3 id="triage-phase">Triage Phase<a class="headerlink" href="#triage-phase" title="Permanent link">&para;</a></h3>
-<p>Asks questions to understand:
-- Symptom type (error, test failure, unexpected behavior, intermittent)
-- Reproducibility (every time, sometimes, never)
-- Prior fix attempts</p>
-<h3 id="methodology-selection">Methodology Selection<a class="headerlink" href="#methodology-selection" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Situation</th>
-<th>Recommended Approach</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Intermittent/flaky issues</td>
-<td>Scientific debugging</td>
-</tr>
-<tr>
-<td>Unclear root cause, multiple theories</td>
-<td>Scientific debugging</td>
-</tr>
-<tr>
-<td>Clear error with stack trace</td>
-<td>Systematic debugging</td>
-</tr>
-<tr>
-<td>Test failures</td>
-<td>Systematic debugging</td>
-</tr>
-<tr>
-<td>3+ failed fix attempts</td>
-<td>Architecture review</td>
-</tr>
-</tbody>
-</table>
-<h3 id="3-fix-rule">3-Fix Rule<a class="headerlink" href="#3-fix-rule" title="Permanent link">&para;</a></h3>
-<p>After 3 failed fix attempts, the skill enforces a pause:</p>
-<blockquote>
-<p><strong>3-FIX RULE THRESHOLD REACHED</strong></p>
-<p>You've attempted 3+ fixes without resolving this issue.
-This is a strong signal the problem may be architectural.</p>
-</blockquote>
-<p>Options presented:
-- Stop debugging, investigate architecture
-- Continue with explicit acknowledgment
-- Escalate to human architect
-- Create spike ticket</p>
-<h3 id="auto-verification">Auto-Verification<a class="headerlink" href="#auto-verification" title="Permanent link">&para;</a></h3>
-<p>Every debug session automatically invokes the <code>/verify</code> command at completion to ensure the fix actually works.</p>
-<h2 id="related-commands">Related Commands<a class="headerlink" href="#related-commands" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../../commands/scientific-debugging/">/scientific-debugging</a> - Rigorous theory-experiment methodology</li>
-<li><a href="../../commands/systematic-debugging/">/systematic-debugging</a> - 4-phase root cause analysis</li>
-<li><a href="../../commands/verify/">/verify</a> - Verification before completion claims</li>
-<li><a href="../finishing-a-development-branch/">finishing-a-development-branch</a> - Complete development branch</li>
-</ul>
-<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../fix-tests/">fix-tests</a> - For test-specific issues</li>
-<li><a href="../test-driven-development/">test-driven-development</a> - TDD workflow</li>
-</ul>
 
 
 

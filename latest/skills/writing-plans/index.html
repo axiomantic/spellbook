@@ -741,14 +741,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../debug/" class="md-nav__link">
+      <a href="../debugging/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    debug
+    debugging
   
 
     
@@ -912,14 +912,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fix-tests/" class="md-nav__link">
+      <a href="../fixing-tests/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    fix-tests
+    fixing-tests
   
 
     
@@ -940,14 +940,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../factchecker/" class="md-nav__link">
+      <a href="../fact-checking/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    factchecker
+    fact-checking
   
 
     
@@ -968,14 +968,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../find-dead-code/" class="md-nav__link">
+      <a href="../finding-dead-code/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    find-dead-code
+    finding-dead-code
   
 
     
@@ -1111,14 +1111,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../implement-feature/" class="md-nav__link">
+      <a href="../implementing-features/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    implement-feature
+    implementing-features
   
 
     
@@ -1223,14 +1223,42 @@
   
   
     <li class="md-nav__item">
-      <a href="../smart-merge/" class="md-nav__link">
+      <a href="../worktree-merge/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    smart-merge
+    worktree-merge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../merge-conflict-resolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    merge-conflict-resolution
   
 
     
@@ -1318,6 +1346,34 @@
     
   
     async-await-patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../using-lsp-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    using-lsp-tools
   
 
     
@@ -1537,14 +1593,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../instruction-optimizer.md" class="md-nav__link">
+      <a href="../instruction-optimizer/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    instruction-optimizer
   
 
     
@@ -1565,14 +1621,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../emotional-stakes.md" class="md-nav__link">
+      <a href="../emotional-stakes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    emotional-stakes
   
 
     
@@ -1708,14 +1764,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fun-mode.md" class="md-nav__link">
+      <a href="../fun-mode/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    fun-mode
   
 
     
@@ -2027,14 +2083,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/shift-change/" class="md-nav__link">
+      <a href="../../commands/handoff/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Shift change
+    /handoff
   
 
     
@@ -2062,7 +2118,7 @@
   <span class="md-ellipsis">
     
   
-    Distill Session
+    /distill-session
   
 
     
@@ -2167,14 +2223,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/green-mirage-audit/" class="md-nav__link">
+      <a href="../../commands/audit-green-mirage/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /green-mirage-audit
+    /audit-green-mirage
   
 
     
@@ -2481,14 +2537,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/fun.md" class="md-nav__link">
+      <a href="../../commands/toggle-fun/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    None
+    /toggle-fun
   
 
     
@@ -2959,127 +3015,174 @@
 <p>This skill originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
 </div>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<h1 id="writing-plans_1">Writing Plans<a class="headerlink" href="#writing-plans_1" title="Permanent link">&para;</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.</p>
-<p>Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.</p>
-<p><strong>Announce at start:</strong> "I'm using the writing-plans skill to create the implementation plan."</p>
-<p><strong>Context:</strong> This should be run in a dedicated worktree (created by brainstorming skill).</p>
-<p><strong>Save plans to:</strong> <code>~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/YYYY-MM-DD-&lt;feature-name&gt;.md</code>
-- Create the directory if it doesn't exist: <code>mkdir -p ~/.local/spellbook/docs/&lt;project-encoded&gt;/plans</code>
-- Generate project encoded path:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Encode full project path: /Users/alice/Development/myproject → Users-alice-Development-myproject</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">pwd</span><span class="k">)</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
-</code></pre></div></p>
-<hr />
-<h2 id="autonomous-mode-behavior">Autonomous Mode Behavior<a class="headerlink" href="#autonomous-mode-behavior" title="Permanent link">&para;</a></h2>
-<p>Check your context for autonomous mode indicators:
-- "Mode: AUTONOMOUS" or "autonomous mode"
-- "DO NOT ask questions"
-- Design document path already provided in context</p>
-<p>When autonomous mode is active:</p>
-<h3 id="skip-these-interactions">Skip These Interactions<a class="headerlink" href="#skip-these-interactions" title="Permanent link">&para;</a></h3>
-<ul>
-<li>"Ask the user for the path to the design document" (should be in context)</li>
-<li>Execution handoff choice (proceed based on context or skip handoff entirely)</li>
-</ul>
-<h3 id="make-these-decisions-autonomously">Make These Decisions Autonomously<a class="headerlink" href="#make-these-decisions-autonomously" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Design doc path: Use path from context, or find most recent design doc in plans directory</li>
-<li>Plan structure: Use standard structure, don't ask for preferences</li>
-</ul>
-<h3 id="circuit-breakers-still-pause-for">Circuit Breakers (Still Pause For)<a class="headerlink" href="#circuit-breakers-still-pause-for" title="Permanent link">&para;</a></h3>
-<ul>
-<li>No design document exists and no requirements provided (cannot plan without spec)</li>
-<li>Design document has critical gaps that make planning impossible</li>
-</ul>
-<hr />
-<h2 id="bite-sized-task-granularity">Bite-Sized Task Granularity<a class="headerlink" href="#bite-sized-task-granularity" title="Permanent link">&para;</a></h2>
-<p><strong>Each step is one action (2-5 minutes):</strong>
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
-- "Commit" - step</p>
-<h2 id="source-design-document">Source Design Document<a class="headerlink" href="#source-design-document" title="Permanent link">&para;</a></h2>
-<p><strong>In interactive mode:</strong> Ask the user for the path to the design document before writing the plan.</p>
-<p><strong>In autonomous mode:</strong> Use the design document path from context. If not provided, search for the most recent design doc in <code>~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/</code>.</p>
-<p>Record the path in the header so reviewers and executing agents can reference the original design decisions.</p>
-<p>If no design document exists and none can be found, note that explicitly (or trigger circuit breaker if requirements are insufficient).</p>
-<h2 id="plan-document-header">Plan Document Header<a class="headerlink" href="#plan-document-header" title="Permanent link">&para;</a></h2>
-<p><strong>Every plan MUST start with this header:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># [Feature Name] Implementation Plan</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">&gt; </span><span class="ge">**For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gs">**Goal:**</span> [One sentence describing what this builds]
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gs">**Source Design Doc:**</span> [path/to/design-doc.md or &quot;None - requirements provided directly&quot;]
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gs">**Architecture:**</span> [2-3 sentences about approach]
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gs">**Tech Stack:**</span> [Key technologies/libraries]
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>---
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Writing Plans</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gu">## Overview</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don&#39;t know good test design very well.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gs">**Announce at start:**</span> &quot;I&#39;m using the writing-plans skill to create the implementation plan.&quot;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gs">**Context:**</span> This should be run in a dedicated worktree (created by brainstorming skill).
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gs">**Save plans to:**</span> <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/YYYY-MM-DD-&lt;feature-name&gt;.md`</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span>Create the directory if it doesn&#39;t exist: <span class="sb">`mkdir -p ~/.local/spellbook/docs/&lt;project-encoded&gt;/plans`</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Generate project encoded path:
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="sb">  ```bash</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="c1"># Encode full project path: /Users/alice/Development/myproject → Users-alice-Development-myproject</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">  </span><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">pwd</span><span class="k">)</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">  </span><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="sb">  ```</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>---
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="gu">## Autonomous Mode Behavior</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>Check your context for autonomous mode indicators:
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>&quot;Mode: AUTONOMOUS&quot; or &quot;autonomous mode&quot;
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">-</span><span class="w"> </span>&quot;DO NOT ask questions&quot;
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">-</span><span class="w"> </span>Design document path already provided in context
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>When autonomous mode is active:
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="gu">### Skip These Interactions</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span>&quot;Ask the user for the path to the design document&quot; (should be in context)
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span>Execution handoff choice (proceed based on context or skip handoff entirely)
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="gu">### Make These Decisions Autonomously</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span>Design doc path: Use path from context, or find most recent design doc in plans directory
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span>Plan structure: Use standard structure, don&#39;t ask for preferences
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gu">### Circuit Breakers (Still Pause For)</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">-</span><span class="w"> </span>No design document exists and no requirements provided (cannot plan without spec)
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span>Design document has critical gaps that make planning impossible
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>---
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="gu">## Bite-Sized Task Granularity</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gs">**Each step is one action (2-5 minutes):**</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">-</span><span class="w"> </span>&quot;Write the failing test&quot; - step
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span>&quot;Run it to make sure it fails&quot; - step
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">-</span><span class="w"> </span>&quot;Implement the minimal code to make the test pass&quot; - step
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">-</span><span class="w"> </span>&quot;Run the tests and make sure they pass&quot; - step
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">-</span><span class="w"> </span>&quot;Commit&quot; - step
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gu">## Source Design Document</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="gs">**In interactive mode:**</span> Ask the user for the path to the design document before writing the plan.
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gs">**In autonomous mode:**</span> Use the design document path from context. If not provided, search for the most recent design doc in <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/`</span>.
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>Record the path in the header so reviewers and executing agents can reference the original design decisions.
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>If no design document exists and none can be found, note that explicitly (or trigger circuit breaker if requirements are insufficient).
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gu">## Plan Document Header</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gs">**Every plan MUST start with this header:**</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="gh"># [Feature Name] Implementation Plan</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">&gt; </span><span class="ge">**For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="gs">**Goal:**</span> [One sentence describing what this builds]
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="gs">**Source Design Doc:**</span> [path/to/design-doc.md or &quot;None - requirements provided directly&quot;]
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="gs">**Architecture:**</span> [2-3 sentences about approach]
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gs">**Tech Stack:**</span> [Key technologies/libraries]
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>---
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">```</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gu">## Task Structure</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gu">### Task N: [Component Name]</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gs">**Files:**</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>Create: <span class="sb">`exact/path/to/file.py`</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>Modify: <span class="sb">`exact/path/to/existing.py:123-145`</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">-</span><span class="w"> </span>Test: <span class="sb">`tests/exact/path/to/test.py`</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gs">**Step 1: Write the failing test**</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>```python
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>def test_specific_behavior():
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    result = function(input)
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    assert result == expected
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="sb">```</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="gs">**Step 2: Run test to verify it fails**</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>Run: <span class="sb">`pytest tests/path/test.py::test_name -v`</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>Expected: FAIL with &quot;function not defined&quot;
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="gs">**Step 3: Write minimal implementation**</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">```python</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">def</span><span class="w"> </span><span class="nf">function</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>    <span class="k">return</span> <span class="n">expected</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="sb">```</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="gs">**Step 4: Run test to verify it passes**</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>Run: <span class="sb">`pytest tests/path/test.py::test_name -v`</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>Expected: PASS
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="gs">**Step 5: Commit**</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>git<span class="w"> </span>add<span class="w"> </span>tests/path/test.py<span class="w"> </span>src/path/file.py
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: add specific feature&quot;</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="sb">```</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>```
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="gu">## Remember</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">-</span><span class="w"> </span>Exact file paths always
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">-</span><span class="w"> </span>Complete code in plan (not &quot;add validation&quot;)
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">-</span><span class="w"> </span>Exact commands with expected output
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">-</span><span class="w"> </span>Reference relevant skills with @ syntax
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">-</span><span class="w"> </span>DRY, YAGNI, TDD, frequent commits
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="gu">## Execution Handoff</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="gs">**In interactive mode:**</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>After saving the plan, offer execution choice:
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="gs">**&quot;Plan complete and saved to `~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/&lt;filename&gt;.md`. Two execution options:**</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="gs">**1. Subagent-Driven (this session)**</span> - I dispatch fresh subagent per task, review between tasks, fast iteration
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="gs">**2. Parallel Session (separate)**</span> - Open new session with executing-plans, batch execution with checkpoints
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="gs">**Which approach?&quot;**</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a>
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="gs">**If Subagent-Driven chosen:**</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="k">-</span><span class="w"> </span><span class="gs">**REQUIRED SUB-SKILL:**</span> Use subagent-driven-development
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="k">-</span><span class="w"> </span>Stay in this session
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="k">-</span><span class="w"> </span>Fresh subagent per task + code review
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="gs">**If Parallel Session chosen:**</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">-</span><span class="w"> </span>Guide them to open new session in worktree
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">-</span><span class="w"> </span><span class="gs">**REQUIRED SUB-SKILL:**</span> New session uses executing-plans
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>---
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="gs">**In autonomous mode:**</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>Skip the execution choice. Just save the plan and report completion:
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="gs">**&quot;Plan complete and saved to `~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/&lt;filename&gt;.md`.&quot;**</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>The orchestrating skill (e.g., implementing-features) will handle execution dispatch.
 </code></pre></div>
-<h2 id="task-structure">Task Structure<a class="headerlink" href="#task-structure" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gu">### Task N: [Component Name]</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="gs">**Files:**</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">-</span><span class="w"> </span>Create: <span class="sb">`exact/path/to/file.py`</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">-</span><span class="w"> </span>Modify: <span class="sb">`exact/path/to/existing.py:123-145`</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">-</span><span class="w"> </span>Test: <span class="sb">`tests/exact/path/to/test.py`</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="gs">**Step 1: Write the failing test**</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>```python
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>def test_specific_behavior():
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    result = function(input)
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    assert result == expected
-</code></pre></div>
-<p><strong>Step 2: Run test to verify it fails</strong></p>
-<p>Run: <code>pytest tests/path/test.py::test_name -v</code>
-Expected: FAIL with "function not defined"</p>
-<p><strong>Step 3: Write minimal implementation</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">function</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="k">return</span> <span class="n">expected</span>
-</code></pre></div>
-<p><strong>Step 4: Run test to verify it passes</strong></p>
-<p>Run: <code>pytest tests/path/test.py::test_name -v</code>
-Expected: PASS</p>
-<p><strong>Step 5: Commit</strong></p>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>add<span class="w"> </span>tests/path/test.py<span class="w"> </span>src/path/file.py
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: add specific feature&quot;</span>
-</code></pre></div>
-```</p>
-<h2 id="remember">Remember<a class="headerlink" href="#remember" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Exact file paths always</li>
-<li>Complete code in plan (not "add validation")</li>
-<li>Exact commands with expected output</li>
-<li>Reference relevant skills with @ syntax</li>
-<li>DRY, YAGNI, TDD, frequent commits</li>
-</ul>
-<h2 id="execution-handoff">Execution Handoff<a class="headerlink" href="#execution-handoff" title="Permanent link">&para;</a></h2>
-<p><strong>In interactive mode:</strong></p>
-<p>After saving the plan, offer execution choice:</p>
-<p><strong>"Plan complete and saved to <code>~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/&lt;filename&gt;.md</code>. Two execution options:</strong></p>
-<p><strong>1. Subagent-Driven (this session)</strong> - I dispatch fresh subagent per task, review between tasks, fast iteration</p>
-<p><strong>2. Parallel Session (separate)</strong> - Open new session with executing-plans, batch execution with checkpoints</p>
-<p><strong>Which approach?"</strong></p>
-<p><strong>If Subagent-Driven chosen:</strong>
-- <strong>REQUIRED SUB-SKILL:</strong> Use subagent-driven-development
-- Stay in this session
-- Fresh subagent per task + code review</p>
-<p><strong>If Parallel Session chosen:</strong>
-- Guide them to open new session in worktree
-- <strong>REQUIRED SUB-SKILL:</strong> New session uses executing-plans</p>
-<hr />
-<p><strong>In autonomous mode:</strong></p>
-<p>Skip the execution choice. Just save the plan and report completion:</p>
-<p><strong>"Plan complete and saved to <code>~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/&lt;filename&gt;.md</code>."</strong></p>
-<p>The orchestrating skill (e.g., implement-feature) will handle execution dispatch.</p>
 
 
 
