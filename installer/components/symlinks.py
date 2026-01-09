@@ -254,6 +254,75 @@ def create_command_symlinks(
     return results
 
 
+def get_fun_mode_config_dir() -> Path:
+    """
+    Get the fun-mode configuration directory.
+
+    Always returns ~/.config/spellbook/fun for consistency and discoverability.
+    This is a user-facing location separate from spellbook's internal config.
+    """
+    return Path.home() / ".config" / "spellbook" / "fun"
+
+
+def create_fun_mode_symlinks(
+    spellbook_dir: Path, dry_run: bool = False
+) -> List[SymlinkResult]:
+    """
+    Create symlinks for fun-mode persona and context files.
+
+    These are symlinked to ~/.config/spellbook/fun/ for discoverability.
+
+    Args:
+        spellbook_dir: Root spellbook directory containing skills/fun-mode/
+        dry_run: If True, don't actually create symlinks
+
+    Returns list of SymlinkResult.
+    """
+    results = []
+
+    fun_mode_source = spellbook_dir / "skills" / "fun-mode"
+    fun_target_dir = get_fun_mode_config_dir()
+
+    for filename in ["personas.txt", "contexts.txt", "undertows.txt"]:
+        source = fun_mode_source / filename
+        target = fun_target_dir / filename
+
+        if source.exists():
+            result = create_symlink(source, target, dry_run)
+            results.append(result)
+
+    return results
+
+
+def remove_fun_mode_symlinks(
+    spellbook_dir: Path, dry_run: bool = False
+) -> List[SymlinkResult]:
+    """
+    Remove fun-mode symlinks from ~/.config/spellbook/fun/.
+
+    Args:
+        spellbook_dir: Root spellbook directory (to verify symlinks point here)
+        dry_run: If True, don't actually remove
+
+    Returns list of SymlinkResult.
+    """
+    results = []
+
+    fun_target_dir = get_fun_mode_config_dir()
+
+    if not fun_target_dir.exists():
+        return results
+
+    for filename in ["personas.txt", "contexts.txt", "undertows.txt"]:
+        target = fun_target_dir / filename
+        if target.is_symlink():
+            result = remove_symlink(target, verify_source=spellbook_dir, dry_run=dry_run)
+            if result.action != "skipped":
+                results.append(result)
+
+    return results
+
+
 def remove_spellbook_symlinks(
     target_dir: Path, spellbook_dir: Path, dry_run: bool = False
 ) -> List[SymlinkResult]:

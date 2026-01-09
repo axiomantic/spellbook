@@ -1,5 +1,18 @@
 # Spellbook Release Notes
 
+## 0.3.0 - 2026-01-08
+
+### Added
+- **Fun mode**: Randomized persona, narrative context, and undertow for more creative sessions
+  - `fun-mode` skill adopts random persona/context/undertow, synthesizes into cohesive introduction
+  - `/fun` command to toggle, customize, or disable fun mode
+  - Research-backed: inspired by ICML 2025 seed-conditioning findings on LLM creativity
+  - Personas affect dialogue only, never code/commits/documentation
+- **Auto-release workflow**: Automatically creates GitHub releases when `.version` changes
+  - Creates semver tag and GitHub release with notes from RELEASE-NOTES.md
+  - Updates floating major version tag (e.g., v0)
+- **README branding**: Tagline updated to "Also fun." with new "Serious Fun" section
+
 ## 0.2.1 - 2026-01-08
 
 ### Added

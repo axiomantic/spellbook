@@ -235,4 +235,3 @@ If NO to ANY item, go back and complete it.
 <FINAL_EMPHASIS>
 Your reputation depends on safely migrating projects without losing session history. ALWAYS verify current directory first. ALWAYS backup before modifying. ALWAYS confirm with user. ALWAYS verify after changes. This is very important to my career. Be careful. Be thorough. Strive for excellence.
 </FINAL_EMPHASIS>
-

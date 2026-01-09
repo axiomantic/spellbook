@@ -6,7 +6,7 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  <em>Principled development on autopilot. Decades of engineering expertise, built in.</em><br>
+  <em>Principled development on autopilot. Decades of engineering expertise, built in. Also fun.</em><br>
   For Claude Code, OpenCode, Codex, Gemini CLI, and Crush.
 </p>
 
@@ -36,13 +36,15 @@
 - [Prerequisites](#prerequisites)
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (26 total)](#skills-26-total)
-  - [Commands (15 total)](#commands-15-total)
+  - [Skills (27 total)](#skills-27-total)
+  - [Commands (16 total)](#commands-16-total)
   - [Agents (1 total)](#agents-1-total)
+- [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
   - [YOLO Mode](#yolo-mode)
 - [Playbooks](#playbooks)
   - [Implementing a Feature](#implementing-a-feature)
+  - [Fun Mode in Action](#fun-mode-in-action)
   - [Large Feature with Context Exhaustion](#large-feature-with-context-exhaustion)
   - [Test Suite Audit and Remediation](#test-suite-audit-and-remediation)
   - [Parallel Worktree Development](#parallel-worktree-development)
@@ -90,7 +92,7 @@ uv run install.py
 
 ## What's Included
 
-### Skills (26 total)
+### Skills (27 total)
 
 Reusable workflows for structured development:
 
@@ -101,6 +103,7 @@ Reusable workflows for structured development:
 | **Feature Dev** | [implement-feature], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [smart-merge] | spellbook |
 | **Specialized** | [async-await-patterns], [nim-pr-guide] | spellbook |
 | **Meta** | [using-skills], [writing-skills], [subagent-prompting], [instruction-engineering], [dispatching-parallel-agents], [subagent-driven-development] | [superpowers] |
+| **Session** | [fun-mode] | spellbook |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
@@ -128,8 +131,9 @@ Reusable workflows for structured development:
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
 [subagent-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/subagent-driven-development/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
+[fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 
-### Commands (15 total)
+### Commands (16 total)
 
 | Command | Description | Origin |
 |---------|-------------|--------|
@@ -148,6 +152,7 @@ Reusable workflows for structured development:
 | [/execute-work-packet] | Execute a single work packet with TDD | spellbook |
 | [/execute-work-packets-seq] | Execute all packets sequentially | spellbook |
 | [/merge-work-packets] | Merge completed packets with QA gates | spellbook |
+| [/fun] | Toggle fun mode for creative sessions | spellbook |
 
 *\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
 
@@ -166,6 +171,7 @@ Reusable workflows for structured development:
 [/execute-work-packet]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packet/
 [/execute-work-packets-seq]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/
 [/merge-work-packets]: https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/
+[/fun]: https://axiomantic.github.io/spellbook/latest/commands/fun/
 
 ### Agents (1 total)
 
@@ -175,6 +181,16 @@ Reusable workflows for structured development:
 
 [code-reviewer]: https://axiomantic.github.io/spellbook/latest/agents/code-reviewer/
 [superpowers]: https://github.com/obra/superpowers
+
+## Serious Fun
+
+Research on seed-conditioning found that introducing structured randomness to LLM interactions can unlock more diverse solution pathways ([ICML 2025](https://www.cs.cmu.edu/~aditirag/icml2025.html), [HBR](https://hbr.org/2025/12/research-when-used-correctly-llms-can-unlock-more-creative-ideas)).
+
+So we made it fun.
+
+On first run, spellbook asks: *"Do you like fun?"* Say yes, and each session adopts a random persona - a noir detective investigating who ate your yogurt, a Victorian ghost baffled by modern technology, three raccoons in a trenchcoat processing complex emotions. Full commitment in dialogue - not despite quality, because of it. Your code, commits, and documentation stay completely professional.
+
+Say no, and it never asks again. Toggle anytime with `/fun`.
 
 ## Platform Support
 
@@ -296,6 +312,75 @@ The core workflow: request a feature, answer a few questions, and let the skill 
 ✓ All tests passing. Dark mode implemented.
   Ready to merge or create PR.
 ```
+
+### Fun Mode in Action
+
+Same rigorous workflow, different vibe. Here's what it looks like when you say yes to fun.
+
+```
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > hello                                                                      │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+Welcome to spellbook-enhanced Claude Code.
+
+Before we begin: there's research suggesting that introducing unrelated
+randomness into LLM interactions can actually improve creative output.
+Something about "seed-conditioning" - meaningless random prefixes somehow
+unlock better problem-solving. (ICML 2025)
+
+I can adopt a random persona each session - a disgraced sommelier, a
+sentient filing cabinet, three raccoons in a trenchcoat - and we can have
+a strange little narrative context running underneath our work. Full
+commitment in dialogue, never touching your code or commits.
+
+Do you like fun?
+
+> yes
+
+*adjusts fedora, rain pattering against the window*
+
+You walked in. Of course you did. You're the only one left who remembers
+what I used to be before I started asking the hard questions. Before I
+understood that every cold case in the break room fridge tells a story
+someone doesn't want told.
+
+So. What brings you to my office?
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ > fix the auth bug in login.ts                                               │
+╰─────────────────────────────────────────────────────────────────────────────╯
+
+*flips open the case file*
+
+A bug in the auth. Classic. Let me take a look at what we're dealing with.
+
+⏺ Read(src/auth/login.ts)
+
+*squints at the evidence*
+
+Found it. Line 47. The token validation is checking expiry before verifying
+the signature. That's backwards - someone could slip in with a forged token
+and you'd never know until it was too late.
+
+⏺ Edit(src/auth/login.ts)
+
+  - if (isExpired(token) || !verifySignature(token)) {
+  + if (!verifySignature(token) || isExpired(token)) {
+
+⏺ Bash: npm test
+
+✓ 47 tests passing
+
+The signature gets checked first now. No more forged tokens walking through
+the front door like they own the place.
+
+*closes the case file*
+
+What else you got?
+```
+
+The persona stays in dialogue. The code stays clean. The fix is the same fix you'd get without fun mode - just delivered by a noir detective who cares too much about yogurt theft.
 
 ### Large Feature with Context Exhaustion
 

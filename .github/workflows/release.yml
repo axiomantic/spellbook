@@ -1,0 +1,206 @@
+# Auto-Release Workflow
+#
+# Automatically creates tags and GitHub releases when .version file changes on main.
+#
+# When .version is bumped (e.g., 0.2.1 -> 0.3.0):
+# 1. Creates semver tag (v0.3.0)
+# 2. Creates GitHub release with notes from RELEASE-NOTES.md
+# 3. Force-updates floating major version tag (v0) to point to new release
+#
+# Usage:
+# 1. Update RELEASE-NOTES.md with new version section
+# 2. Update .version file with new version number
+# 3. Commit and push/merge to main
+# 4. Workflow automatically creates release
+
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .version
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version from .version file
+        id: version
+        run: |
+          VERSION=$(cat .version | tr -d '[:space:]')
+          if [[ -z "$VERSION" ]]; then
+            echo "::error::.version file is empty"
+            exit 1
+          fi
+
+          # Validate version format (semver: X.Y.Z)
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format: $VERSION (expected X.Y.Z)"
+            exit 1
+          fi
+
+          # Extract major version for floating tag
+          MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "major_tag=v$MAJOR_VERSION" >> "$GITHUB_OUTPUT"
+
+          echo "Detected version: $VERSION"
+          echo "Semver tag: v$VERSION"
+          echo "Major tag: v$MAJOR_VERSION"
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::notice::Tag $TAG already exists. Skipping release."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $TAG does not exist. Will create release."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract release notes from RELEASE-NOTES.md
+        if: steps.check_tag.outputs.exists == 'false'
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          MAJOR_TAG="${{ steps.version.outputs.major_tag }}"
+
+          # Extract the section for this version from RELEASE-NOTES.md
+          # Matches from "## X.Y.Z" until the next "## " or end of file
+          if [[ -f "RELEASE-NOTES.md" ]]; then
+            # Use awk to extract the version section
+            SECTION=$(awk -v ver="$VERSION" '
+              /^## / {
+                if (found) exit
+                if ($2 ~ "^"ver) found=1
+              }
+              found { print }
+            ' RELEASE-NOTES.md)
+
+            if [[ -n "$SECTION" ]]; then
+              echo "Found release notes for version $VERSION"
+              NOTES="$SECTION"
+            else
+              echo "No release notes found for version $VERSION in RELEASE-NOTES.md"
+              NOTES="## $VERSION
+
+No release notes provided for this version."
+            fi
+          else
+            echo "RELEASE-NOTES.md not found, using commit log"
+            PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
+            if [[ -n "$PREV_TAG" ]]; then
+              COMMITS=$(git log --oneline "$PREV_TAG"..HEAD --no-merges | head -20)
+            else
+              COMMITS=$(git log --oneline -20 --no-merges)
+            fi
+            NOTES="## What's Changed
+
+$COMMITS"
+          fi
+
+          # Append footer
+          PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
+          NOTES="$NOTES
+
+---
+
+**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-main}...$TAG
+
+---
+
+_This release was automatically created when .version was updated to $VERSION._
+
+The floating tag \`$MAJOR_TAG\` now points to this release."
+
+          # Write to file for gh release to read
+          echo "$NOTES" > /tmp/release_notes.md
+
+          echo "Release notes generated"
+
+      - name: Create semver tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "$TAG" -m "Release $VERSION"
+          git push origin "$TAG"
+
+          echo "Created and pushed tag: $TAG"
+
+      - name: Create GitHub release
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
+
+          gh release create "$TAG" \
+            --title "Release $VERSION" \
+            --notes-file /tmp/release_notes.md
+
+          echo "Created GitHub release: $TAG"
+
+      - name: Update floating major version tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          MAJOR_TAG="${{ steps.version.outputs.major_tag }}"
+          TAG="${{ steps.version.outputs.tag }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Delete local tag if exists
+          git tag -d "$MAJOR_TAG" 2>/dev/null || true
+
+          # Create new tag pointing to current commit
+          git tag -a "$MAJOR_TAG" -m "Latest $MAJOR_TAG release - points to $TAG"
+
+          # Force push to update remote
+          git push origin "$MAJOR_TAG" --force
+
+          echo "Updated floating tag $MAJOR_TAG to point to $TAG"
+
+      - name: Summary
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          MAJOR_TAG="${{ steps.version.outputs.major_tag }}"
+
+          echo "## Release Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Version**: ${{ steps.version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Semver Tag**: \`$TAG\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Floating Tag**: \`$MAJOR_TAG\` (updated)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/$TAG)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Skip summary
+        if: steps.check_tag.outputs.exists == 'true'
+        run: |
+          echo "## Release Skipped" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Tag ${{ steps.version.outputs.tag }} already exists." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "To create a new release, bump the version in .version file." >> "$GITHUB_STEP_SUMMARY"

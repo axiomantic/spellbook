@@ -9,11 +9,13 @@ from ..components.context_files import generate_claude_context
 from ..components.mcp import check_claude_cli_available, register_mcp_server, unregister_mcp_server
 from ..components.symlinks import (
     create_command_symlinks,
+    create_fun_mode_symlinks,
     create_skill_symlinks,
     create_symlink,
+    get_fun_mode_config_dir,
+    remove_fun_mode_symlinks,
     remove_spellbook_symlinks,
 )
-from ..config import get_platform_config_dir
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
@@ -135,6 +137,20 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     success=docs_result.success,
                     action=docs_result.action,
                     message=f"docs: {docs_result.action}",
+                )
+            )
+
+        # Install fun-mode symlinks to ~/.config/spellbook/fun/
+        fun_results = create_fun_mode_symlinks(self.spellbook_dir, dry_run=self.dry_run)
+        if fun_results:
+            fun_count = sum(1 for r in fun_results if r.success)
+            results.append(
+                InstallResult(
+                    component="fun-mode",
+                    platform=self.platform_id,
+                    success=fun_count > 0,
+                    action="installed" if fun_count > 0 else "skipped",
+                    message=f"fun-mode: {fun_count} files linked to {get_fun_mode_config_dir()}",
                 )
             )
 
@@ -296,6 +312,20 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Remove fun-mode symlinks
+        fun_results = remove_fun_mode_symlinks(self.spellbook_dir, dry_run=self.dry_run)
+        if fun_results:
+            removed_count = sum(1 for r in fun_results if r.action == "removed")
+            results.append(
+                InstallResult(
+                    component="fun-mode",
+                    platform=self.platform_id,
+                    success=True,
+                    action="removed",
+                    message=f"fun-mode: {removed_count} removed",
+                )
+            )
+
         # Unregister MCP server
         if check_claude_cli_available():
             success, msg = unregister_mcp_server("spellbook", dry_run=self.dry_run)
@@ -342,5 +372,12 @@ class ClaudeCodeInstaller(PlatformInstaller):
         docs = self.config_dir / "docs"
         if docs.is_symlink():
             symlinks.append(docs)
+
+        # Fun-mode symlinks in ~/.config/spellbook/fun/
+        fun_dir = get_fun_mode_config_dir()
+        if fun_dir.exists():
+            for item in fun_dir.iterdir():
+                if item.is_symlink():
+                    symlinks.append(item)
 
         return symlinks

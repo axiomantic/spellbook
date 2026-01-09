@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-08
+
+### Added
+- **Fun mode** - randomized persona, narrative context, and undertow for more creative sessions
+  - `fun-mode` skill: Adopts random persona/context/undertow, synthesizes into cohesive introduction
+  - `/fun` command: Toggle fun mode, customize element selection, or disable permanently
+  - Three element lists: personas (character voice), contexts (narrative frame), undertows (emotional current)
+  - Research-backed: inspired by ICML 2025 seed-conditioning findings on LLM creativity
+  - Personas affect dialogue only, never code/commits/documentation
+  - First-session opt-in prompt with persistence to `~/.config/spellbook/fun-mode`
+- **Auto-release workflow** - automatically creates GitHub releases when `.version` changes
+  - Triggers on push to main when `.version` file is modified
+  - Creates semver tag (e.g., v0.3.0) and GitHub release
+  - Extracts release notes from RELEASE-NOTES.md for the version
+  - Updates floating major version tag (e.g., v0) to point to latest
+- **README branding** - updated tagline and added "Serious Fun" section
+  - Tagline now ends with "Also fun."
+  - New section explains the research basis and opt-in flow for fun mode
+
 ### Changed
 - **porting-to-your-assistant guide** - rewritten as instruction-engineered prompt
   - Added fork/clone setup as mandatory first step
@@ -169,7 +188,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/elijahr/spellbook/compare/v0.2.1...HEAD
-[0.2.1]: https://github.com/elijahr/spellbook/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/elijahr/spellbook/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/elijahr/spellbook/releases/tag/v0.1.0
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/axiomantic/spellbook/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/axiomantic/spellbook/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/axiomantic/spellbook/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/axiomantic/spellbook/releases/tag/v0.1.0

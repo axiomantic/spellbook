@@ -98,6 +98,8 @@ nav:
       - skills/instruction-engineering.md
       - skills/dispatching-parallel-agents.md
       - skills/subagent-driven-development.md
+    - Session Skills:
+      - skills/fun-mode.md
   - Commands:
     - Overview: commands/index.md
     - Debugging Commands:
@@ -118,6 +120,8 @@ nav:
       - commands/execute-work-packet.md
       - commands/execute-work-packets-seq.md
       - commands/merge-work-packets.md
+    - Session Commands:
+      - commands/fun.md
   - Agents:
     - Overview: agents/index.md
     - agents/code-reviewer.md

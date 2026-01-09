@@ -40,6 +40,20 @@ SUPERPOWERS_COMMANDS = {"brainstorm", "execute-plan", "write-plan"}
 SUPERPOWERS_AGENTS = {"code-reviewer"}
 
 
+def write_if_changed(path: Path, content: str) -> bool:
+    """
+    Write content to file only if it differs from existing content.
+
+    Returns True if file was written, False if unchanged.
+    """
+    if path.exists():
+        existing = path.read_text()
+        if existing == content:
+            return False
+    path.write_text(content)
+    return True
+
+
 def extract_frontmatter(content: str) -> tuple[dict, str]:
     """Extract YAML frontmatter and body from markdown content."""
     if not content.startswith("---"):
@@ -76,17 +90,22 @@ def generate_skill_doc(skill_dir: Path) -> str:
     from_superpowers = skill_name in SUPERPOWERS_SKILLS
     attribution = ""
     if from_superpowers:
-        attribution = "\n!!! info \"Origin\"\n    This skill originated from [obra/superpowers](https://github.com/obra/superpowers).\n"
+        attribution = '!!! info "Origin"\n    This skill originated from [obra/superpowers](https://github.com/obra/superpowers).\n\n'
 
-    doc = f"""# {name}
+    # Build doc with proper spacing
+    parts = [f"# {name}\n"]
+    if description:
+        parts.append(f"\n{description}\n")
+    if attribution:
+        parts.append(f"\n{attribution}")
+        parts.append("## Skill Content\n\n")
+    else:
+        parts.append("\n## Skill Content\n\n")
+    parts.append(body)
+    if not body.endswith("\n"):
+        parts.append("\n")
 
-{description}
-{attribution}
-## Skill Content
-
-{body}
-"""
-    return doc
+    return "".join(parts)
 
 
 def generate_command_doc(command_file: Path) -> str:
@@ -99,15 +118,20 @@ def generate_command_doc(command_file: Path) -> str:
     from_superpowers = command_name in SUPERPOWERS_COMMANDS
     attribution = ""
     if from_superpowers:
-        attribution = "\n!!! info \"Origin\"\n    This command originated from [obra/superpowers](https://github.com/obra/superpowers).\n"
+        attribution = '!!! info "Origin"\n    This command originated from [obra/superpowers](https://github.com/obra/superpowers).\n\n'
 
-    doc = f"""# /{command_name}
-{attribution}
-## Command Content
+    # Build doc with proper spacing
+    parts = [f"# /{command_name}\n"]
+    if attribution:
+        parts.append(f"\n{attribution}")
+        parts.append("## Command Content\n\n")
+    else:
+        parts.append("\n## Command Content\n\n")
+    parts.append(body)
+    if not body.endswith("\n"):
+        parts.append("\n")
 
-{body}
-"""
-    return doc
+    return "".join(parts)
 
 
 def generate_agent_doc(agent_file: Path) -> str:
@@ -120,15 +144,20 @@ def generate_agent_doc(agent_file: Path) -> str:
     from_superpowers = agent_name in SUPERPOWERS_AGENTS
     attribution = ""
     if from_superpowers:
-        attribution = "\n!!! info \"Origin\"\n    This agent originated from [obra/superpowers](https://github.com/obra/superpowers).\n"
+        attribution = '!!! info "Origin"\n    This agent originated from [obra/superpowers](https://github.com/obra/superpowers).\n\n'
 
-    doc = f"""# {agent_name}
-{attribution}
-## Agent Content
+    # Build doc with proper spacing
+    parts = [f"# {agent_name}\n"]
+    if attribution:
+        parts.append(f"\n{attribution}")
+        parts.append("## Agent Content\n\n")
+    else:
+        parts.append("\n## Agent Content\n\n")
+    parts.append(body)
+    if not body.endswith("\n"):
+        parts.append("\n")
 
-{body}
-"""
-    return doc
+    return "".join(parts)
 
 
 def main():
@@ -139,14 +168,16 @@ def main():
 
     # Generate skill docs
     skill_count = 0
+    files_changed = 0
     for skill_dir in sorted(SKILLS_DIR.iterdir()):
         if skill_dir.is_dir() and (skill_dir / "SKILL.md").exists():
             doc = generate_skill_doc(skill_dir)
             if doc:
                 output_file = DOCS_DIR / "skills" / f"{skill_dir.name}.md"
-                output_file.write_text(doc)
+                if write_if_changed(output_file, doc):
+                    files_changed += 1
+                    print(f"Generated: skills/{skill_dir.name}.md")
                 skill_count += 1
-                print(f"Generated: skills/{skill_dir.name}.md")
 
     # Generate command docs
     command_count = 0
@@ -154,9 +185,10 @@ def main():
         doc = generate_command_doc(cmd_file)
         if doc:
             output_file = DOCS_DIR / "commands" / cmd_file.name
-            output_file.write_text(doc)
+            if write_if_changed(output_file, doc):
+                files_changed += 1
+                print(f"Generated: commands/{cmd_file.name}")
             command_count += 1
-            print(f"Generated: commands/{cmd_file.name}")
 
     # Generate agent docs
     agent_count = 0
@@ -164,9 +196,10 @@ def main():
         doc = generate_agent_doc(agent_file)
         if doc:
             output_file = DOCS_DIR / "agents" / agent_file.name
-            output_file.write_text(doc)
+            if write_if_changed(output_file, doc):
+                files_changed += 1
+                print(f"Generated: agents/{agent_file.name}")
             agent_count += 1
-            print(f"Generated: agents/{agent_file.name}")
 
     # Generate commands index
     commands_index = """# Commands Overview
@@ -193,8 +226,9 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
         origin = "[superpowers](https://github.com/obra/superpowers)" if name in SUPERPOWERS_COMMANDS else "spellbook"
         commands_index += f"| [/{name}]({name}.md) | {desc} | {origin} |\n"
 
-    (DOCS_DIR / "commands" / "index.md").write_text(commands_index)
-    print("Generated: commands/index.md")
+    if write_if_changed(DOCS_DIR / "commands" / "index.md", commands_index):
+        files_changed += 1
+        print("Generated: commands/index.md")
 
     # Generate agents index
     agents_index = """# Agents Overview
@@ -211,10 +245,15 @@ Agents are specialized reviewers that can be invoked for specific tasks.
         origin = "[superpowers](https://github.com/obra/superpowers)" if name in SUPERPOWERS_AGENTS else "spellbook"
         agents_index += f"| [{name}]({name}.md) | Specialized code review agent | {origin} |\n"
 
-    (DOCS_DIR / "agents" / "index.md").write_text(agents_index)
-    print("Generated: agents/index.md")
+    if write_if_changed(DOCS_DIR / "agents" / "index.md", agents_index):
+        files_changed += 1
+        print("Generated: agents/index.md")
 
-    print(f"\nGenerated {skill_count} skills, {command_count} commands, {agent_count} agents")
+    print(f"\nProcessed {skill_count} skills, {command_count} commands, {agent_count} agents")
+    if files_changed > 0:
+        print(f"Updated {files_changed} file(s)")
+    else:
+        print("All files up to date")
 
 
 if __name__ == "__main__":

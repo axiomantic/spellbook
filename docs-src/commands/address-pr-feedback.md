@@ -592,4 +592,3 @@ If NO to ANY item, go back and complete it.
 <FINAL_EMPHASIS>
 Your reputation depends on systematically addressing every piece of PR feedback. NEVER post without approval. NEVER commit without approval. Every comment must be categorized. Every action must be user-approved. This is very important to my career. Be thorough. Be safe. Strive for excellence.
 </FINAL_EMPHASIS>
-
