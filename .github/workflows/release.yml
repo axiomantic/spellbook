@@ -4,11 +4,11 @@
 #
 # When .version is bumped (e.g., 0.2.1 -> 0.3.0):
 # 1. Creates semver tag (v0.3.0)
-# 2. Creates GitHub release with notes from RELEASE-NOTES.md
+# 2. Creates GitHub release with notes extracted from CHANGELOG.md
 # 3. Force-updates floating major version tag (v0) to point to new release
 #
 # Usage:
-# 1. Update RELEASE-NOTES.md with new version section
+# 1. Update CHANGELOG.md with new version section (## [X.Y.Z] - YYYY-MM-DD)
 # 2. Update .version file with new version number
 # 3. Commit and push/merge to main
 # 4. Workflow automatically creates release
@@ -73,7 +73,7 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Extract release notes from RELEASE-NOTES.md
+      - name: Extract release notes from CHANGELOG.md
         if: steps.check_tag.outputs.exists == 'false'
         id: release_notes
         run: |
@@ -81,29 +81,30 @@ jobs:
           TAG="${{ steps.version.outputs.tag }}"
           MAJOR_TAG="${{ steps.version.outputs.major_tag }}"
 
-          # Extract the section for this version from RELEASE-NOTES.md
-          # Matches from "## X.Y.Z" until the next "## " or end of file
-          if [[ -f "RELEASE-NOTES.md" ]]; then
+          # Extract the section for this version from CHANGELOG.md
+          # Matches from "## [X.Y.Z]" until the next "## [" or end of file
+          if [[ -f "CHANGELOG.md" ]]; then
             # Use awk to extract the version section
+            # CHANGELOG format: ## [X.Y.Z] - YYYY-MM-DD
             SECTION=$(awk -v ver="$VERSION" '
-              /^## / {
+              /^## \[/ {
                 if (found) exit
-                if ($2 ~ "^"ver) found=1
+                if (index($0, "[" ver "]")) found=1
               }
               found { print }
-            ' RELEASE-NOTES.md)
+            ' CHANGELOG.md)
 
             if [[ -n "$SECTION" ]]; then
-              echo "Found release notes for version $VERSION"
+              echo "Found release notes for version $VERSION in CHANGELOG.md"
               NOTES="$SECTION"
             else
-              echo "No release notes found for version $VERSION in RELEASE-NOTES.md"
+              echo "No release notes found for version $VERSION in CHANGELOG.md"
               NOTES="## $VERSION
 
 No release notes provided for this version."
             fi
           else
-            echo "RELEASE-NOTES.md not found, using commit log"
+            echo "CHANGELOG.md not found, using commit log"
             PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
             if [[ -n "$PREV_TAG" ]]; then
               COMMITS=$(git log --oneline "$PREV_TAG"..HEAD --no-merges | head -20)

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Release workflow uses CHANGELOG.md** - eliminated redundant RELEASE-NOTES.md
+  - Auto-release workflow now extracts notes from CHANGELOG.md directly
+  - Deleted RELEASE-NOTES.md (was duplicate of CHANGELOG content)
+
 ## [0.4.0] - 2026-01-09
 
 ### Added
