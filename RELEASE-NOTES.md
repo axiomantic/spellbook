@@ -1,5 +1,28 @@
 # Spellbook Release Notes
 
+## 0.4.0 - 2026-01-09
+
+### Added
+- **Naming Consistency Agent** in spellbook-auditing: Validates naming conventions (skills use gerund/noun, commands use imperative)
+- **Reference Validation Agent**: Detects broken or mistyped skill/command references
+- **Orphaned Docs Agent**: Finds documentation without corresponding source files
+- **merge-conflict-resolution skill**: Systematic 3-way diff analysis for git conflicts
+- **Naming conventions section** in writing-skills: Comprehensive guide for skill/command/agent naming
+
+### Changed
+- **Renamed 9 skills/commands** for naming convention compliance:
+  - Skills: `debug`→`debugging`, `factchecker`→`fact-checking`, `find-dead-code`→`finding-dead-code`, `fix-tests`→`fixing-tests`, `implement-feature`→`implementing-features`
+  - Commands: `fun`→`toggle-fun`, `green-mirage-audit`→`audit-green-mirage`, `shift-change`→`handoff`
+  - Repo skill: `audit-spellbook`→`spellbook-auditing`
+- **Consolidated docs-src/ into docs/**: Single documentation directory, eliminated redundancy
+- **generate_docs.py**: Now handles nested command directories (systematic-debugging, etc.)
+- **smart-merge renamed to worktree-merge**: Clearer name for worktree-specific merging
+
+### Fixed
+- Missing `using-lsp-tools` skill in README and mkdocs.yml
+- `simplify` incorrectly listed as skill (is a command)
+- Duplicate section numbering in writing-skills
+
 ## 0.3.0 - 2026-01-08
 
 ### Added
