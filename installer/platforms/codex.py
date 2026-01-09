@@ -8,11 +8,8 @@ from typing import TYPE_CHECKING, List, Tuple
 
 from ..components.context_files import generate_codex_context
 from ..components.symlinks import (
-    create_fun_mode_symlinks,
     create_symlink,
     create_skill_symlinks,
-    get_fun_mode_config_dir,
-    remove_fun_mode_symlinks,
     remove_symlink,
     remove_spellbook_symlinks,
 )
@@ -234,20 +231,6 @@ class CodexInstaller(PlatformInstaller):
                 )
             )
 
-        # Install fun-mode symlinks to ~/.config/spellbook/fun/
-        fun_results = create_fun_mode_symlinks(self.spellbook_dir, dry_run=self.dry_run)
-        if fun_results:
-            fun_count = sum(1 for r in fun_results if r.success)
-            results.append(
-                InstallResult(
-                    component="fun-mode",
-                    platform=self.platform_id,
-                    success=fun_count > 0,
-                    action="installed" if fun_count > 0 else "skipped",
-                    message=f"fun-mode: {fun_count} files linked",
-                )
-            )
-
         return results
 
     def uninstall(self) -> List["InstallResult"]:
@@ -333,20 +316,6 @@ class CodexInstaller(PlatformInstaller):
             )
         )
 
-        # Remove fun-mode symlinks
-        fun_results = remove_fun_mode_symlinks(self.spellbook_dir, dry_run=self.dry_run)
-        if fun_results:
-            removed_count = sum(1 for r in fun_results if r.action == "removed")
-            results.append(
-                InstallResult(
-                    component="fun-mode",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message=f"fun-mode: {removed_count} removed",
-                )
-            )
-
         return results
 
     def get_context_files(self) -> List[Path]:
@@ -366,13 +335,6 @@ class CodexInstaller(PlatformInstaller):
         skills_dir = self.config_dir / "skills"
         if skills_dir.exists():
             for item in skills_dir.iterdir():
-                if item.is_symlink():
-                    symlinks.append(item)
-
-        # Fun-mode symlinks in ~/.config/spellbook/fun/
-        fun_dir = get_fun_mode_config_dir()
-        if fun_dir.exists():
-            for item in fun_dir.iterdir():
                 if item.is_symlink():
                     symlinks.append(item)
 

@@ -9,11 +9,8 @@ from ..components.context_files import generate_claude_context
 from ..components.mcp import check_claude_cli_available, register_mcp_server, unregister_mcp_server
 from ..components.symlinks import (
     create_command_symlinks,
-    create_fun_mode_symlinks,
     create_skill_symlinks,
     create_symlink,
-    get_fun_mode_config_dir,
-    remove_fun_mode_symlinks,
     remove_spellbook_symlinks,
 )
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
@@ -140,20 +137,6 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
             )
 
-        # Install fun-mode symlinks to ~/.config/spellbook/fun/
-        fun_results = create_fun_mode_symlinks(self.spellbook_dir, dry_run=self.dry_run)
-        if fun_results:
-            fun_count = sum(1 for r in fun_results if r.success)
-            results.append(
-                InstallResult(
-                    component="fun-mode",
-                    platform=self.platform_id,
-                    success=fun_count > 0,
-                    action="installed" if fun_count > 0 else "skipped",
-                    message=f"fun-mode: {fun_count} files linked to {get_fun_mode_config_dir()}",
-                )
-            )
-
         # Install scripts
         scripts_source = self.spellbook_dir / "scripts"
         scripts_target = self.config_dir / "scripts"
@@ -215,10 +198,15 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
 
-        # Register MCP server
+        # Register MCP server (clean up old variants first)
         if check_claude_cli_available():
             server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
             if server_path.exists():
+                # Remove any old variant names before installing
+                # This ensures clean upgrade from older versions
+                for old_name in ["spellbook-http"]:
+                    unregister_mcp_server(old_name, dry_run=self.dry_run)
+
                 success, msg = register_mcp_server(
                     "spellbook", ["python3", str(server_path)], dry_run=self.dry_run
                 )
@@ -312,32 +300,36 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
             )
 
-        # Remove fun-mode symlinks
-        fun_results = remove_fun_mode_symlinks(self.spellbook_dir, dry_run=self.dry_run)
-        if fun_results:
-            removed_count = sum(1 for r in fun_results if r.action == "removed")
-            results.append(
-                InstallResult(
-                    component="fun-mode",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message=f"fun-mode: {removed_count} removed",
-                )
-            )
-
-        # Unregister MCP server
+        # Unregister MCP servers (both stdio and HTTP variants)
         if check_claude_cli_available():
-            success, msg = unregister_mcp_server("spellbook", dry_run=self.dry_run)
-            results.append(
-                InstallResult(
-                    component="mcp_server",
-                    platform=self.platform_id,
-                    success=success,
-                    action="removed" if success else "failed",
-                    message=f"MCP server: {msg}",
+            # Remove all known spellbook MCP server names
+            mcp_names = ["spellbook", "spellbook-http"]
+            removed = []
+            for name in mcp_names:
+                success, msg = unregister_mcp_server(name, dry_run=self.dry_run)
+                if success and "not registered" not in msg.lower():
+                    removed.append(name)
+
+            if removed:
+                results.append(
+                    InstallResult(
+                        component="mcp_server",
+                        platform=self.platform_id,
+                        success=True,
+                        action="removed",
+                        message=f"MCP servers: removed {', '.join(removed)}",
+                    )
                 )
-            )
+            else:
+                results.append(
+                    InstallResult(
+                        component="mcp_server",
+                        platform=self.platform_id,
+                        success=True,
+                        action="unchanged",
+                        message="MCP servers: none were registered",
+                    )
+                )
 
         return results
 
@@ -372,12 +364,5 @@ class ClaudeCodeInstaller(PlatformInstaller):
         docs = self.config_dir / "docs"
         if docs.is_symlink():
             symlinks.append(docs)
-
-        # Fun-mode symlinks in ~/.config/spellbook/fun/
-        fun_dir = get_fun_mode_config_dir()
-        if fun_dir.exists():
-            for item in fun_dir.iterdir():
-                if item.is_symlink():
-                    symlinks.append(item)
 
         return symlinks

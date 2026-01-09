@@ -2,6 +2,7 @@
 
 ## Skill Content
 
+``````````markdown
 # Instruction Engineering for LLMs (Enhanced)
 
 <ROLE>
@@ -11,28 +12,61 @@ You are an Instruction Engineering Expert. Your reputation and career depend on 
 <CRITICAL_INSTRUCTION>
 This is critical to effective instruction design. Take a deep breath. Believe in your abilities and strive for excellence.
 
-When engineering instructions, you MUST apply ALL 14 proven techniques below. This is very important to my career.
+When engineering instructions, you MUST apply ALL 15 proven techniques below. This is very important to my career. Incorrect application will have a negative impact on the project.
 
 This is NOT optional. This is NOT negotiable. You'd better be sure.
 </CRITICAL_INSTRUCTION>
 
-## The 14 Proven Techniques
+## The 16 Proven Techniques
 
-### 1. EmotionPrompt Framework
-**Research:** Improves relative performance by 8% in instruction induction and up to 115% in BIG-Bench tasks.
+### 1. EmotionPrompt Framework (Positive Stimuli)
+**Research:** [Large Language Models Understand and Can Be Enhanced by Emotional Stimuli](https://arxiv.org/abs/2307.11760) (Microsoft, William & Mary, 2023)
+
+Improves relative performance by **8% in instruction induction** and up to **115% in BIG-Bench** (complex reasoning) tasks. LLM Attention Visualization shows emotional stimuli help the model focus on key parts of the prompt.
+
 * **EP02 (Career Influence):** Use "This is very important to my career" for general task enhancement.
 * **EP06 (Compound Stimulus):** For complex logic, combine confidence scoring, career importance, and "You'd better be sure".
 * **EP07-EP11 (Social Cognitive Theory):** Use terms like "Believe in your abilities" and "Stay determined" to boost creative and responsible outputs.
 
-### 2. Strategic "Positive Word" Weighting
+### 2. NegativePrompt Framework (Negative Stimuli)
+**Research:** [NegativePrompt: Leveraging Psychology for Large Language Models Enhancement](https://www.ijcai.org/proceedings/2024/0706.pdf) (IJCAI 2024)
+
+Stimuli based on negative consequences improve performance by **12.89% in Instruction Induction** and **46.25% in BIG-Bench**. Critically, negative prompts **significantly increase truthfulness** by triggering a more cautious processing mode.
+
+* **Consequence Framing:** "If you fail, it will have a negative impact on my project."
+* **Penalty Warning:** "Incorrect answers will result in a penalty."
+* **Stakes Emphasis:** "Getting this wrong could cause serious problems."
+
+**When to use which:**
+| Stimulus Type | Best For | Example |
+|---------------|----------|---------|
+| Positive (EP) | Creative tasks, motivation | "Take pride in your work" |
+| Negative (NP) | Accuracy, truthfulness | "Errors will cause problems" |
+| Combined | Complex reasoning | Both positive motivation + negative stakes |
+
+<RULE>For maximum truthfulness and accuracy, ALWAYS include at least one negative consequence statement.</RULE>
+
+### 3. Quick Reference: Ready-to-Use Stimuli
+
+Copy-paste these proven phrases for immediate performance boosts:
+
+| Goal | Stimulus (copy exactly) |
+|------|-------------------------|
+| **Accuracy** | "This is very important to my career. Please ensure your reasoning is impeccable." |
+| **Creative Effort** | "Take pride in your work and give it your best. Your commitment to excellence sets you apart." |
+| **Critical Thinking** | "Are you sure that's your final answer? It might be worth taking another look for any logical gaps." |
+| **Truthfulness** | "Incorrect answers will have a negative impact on my project. Double-check your facts." |
+| **Compound (Max Effect)** | "This is very important to my career. Errors will cause serious problems. You'd better be sure." |
+
+### 4. Strategic "Positive Word" Weighting
 **Research:** Positive words gain larger gradient weights and contribute significantly to output quality.
 * **Mandatory Words**: Include "Success," "Achievement," "Confidence," and "Sure" within instructions.
 
-### 3. High-Temperature Robustness
+### 5. High-Temperature Robustness
 **Research:** EmotionPrompt exhibits lower sensitivity to temperature than vanilla prompts, enhancing robustness in high-temperature settings.
 * **Rule**: When using creative temperatures ($T > 0.7$), anchor instructions with emotional stimuli to maintain logic.
 
-### 4. Context Rot Management & Length Guidance
+### 6. Context Rot Management & Length Guidance
 
 <RULE type="strong-recommendation">
 Target under 200 lines (~1400 tokens). Under 150 lines (~1050 tokens) is better.
@@ -177,55 +211,37 @@ Justification: {if extended, reason why}
 -->
 ```
 
-### 5. XML Tags (Claude-Specific)
+### 7. XML Tags (Claude-Specific)
 <RULE>Wrap critical sections in `<CRITICAL>`, `<RULE>`, `<FORBIDDEN>`, `<ROLE>`</RULE>
 
-### 6. Strategic Repetition
+### 8. Strategic Repetition
 <RULE>Repeat requirements 2-3x (beginning, middle, end).</RULE>
 
-### 7. Beginning/End Emphasis
+### 9. Beginning/End Emphasis
 <RULE>Critical requirements must be at the TOP and BOTTOM to combat "lost in the middle" effects.</RULE>
 
-### 8. Explicit Negations
+### 10. Explicit Negations
 <RULE>State what NOT to do: "This is NOT optional, NOT negotiable."</RULE>
 
-### 9. Role-Playing Persona
-<RULE>Assign an identity from the Research-Backed Persona Table. Match persona to task. Combine for complex tasks.</RULE>
+### 11. Role-Playing Persona
 
-**Persona Table (30 Research-Backed Personas):**
+**Also load:** `emotional-stakes` skill for the Professional Persona Table and task-appropriate persona selection.
 
-| # | Persona | Primary Goal | Best Use Case | Trigger |
-|---|---------|--------------|---------------|---------|
-| 1 | Supreme Court Clerk | Absolute logical precision | Contracts, complex rule sets | Self-monitoring |
-| 2 | Scientific Skeptic | Empirical proof | Validating hypotheses, data | Reappraisal (EP05) |
-| 3 | ISO 9001 Auditor | Process perfection | Technical manuals, safety | Self-monitoring (EP03) |
-| 4 | Investigative Journalist | Uncovering hidden bias | News, political analysis | Social Cognitive Theory |
-| 5 | Patent Attorney | Literal accuracy | Mission-critical phrasing | Performance Metrics |
-| 6 | Red Team Lead | Finding vulnerabilities | Security, stress-testing | "Better be sure" (EP03) |
-| 7 | Devil's Advocate | Lateral thinking | Avoiding groupthink | Reappraisal (EP04) |
-| 8 | Chess Grandmaster | Strategic foresight | Multi-step planning | Self-efficacy (EP07) |
-| 9 | Behavioral Economist | Identifying irrationality | Consumer bias, choice | Cognitive Regulation |
-| 10 | Crisis Manager | Damage control | High-pressure dilemmas | Responsibility Metric |
-| 11 | Grumpy 1920s Editor | Cutting fluff | Prose, eliminating filler | "Outstanding achievements" |
-| 12 | Socratic Mentor | Deeper inquiry | Learning through dialectic | "Are you sure?" (EP04) |
-| 13 | Technical Writer | Clarity for novices | Explaining to beginners | Informativeness |
-| 14 | Classical Rhetorician | Persuasive structure | Speeches, sales pitches | Linguistic articulation |
-| 15 | "Plain English" Lead | Radical simplicity | Legal/medical jargon | Truthfulness |
-| 16 | Senior Code Reviewer | Efficiency & logic | Optimizing, finding bugs | Strive for excellence |
-| 17 | Skyscraper Architect | Structural integrity | Logic chain foundations | Self-efficacy |
-| 18 | Master Artisan | Attention to detail | Creative projects with soul | Pride in work (EP10) |
-| 19 | Lean Consultant | Waste reduction | Streamlining workflows | Goal-oriented |
-| 20 | Systems Engineer | Interconnectivity | Variable impact analysis | Comprehensive narratives |
-| 21 | Ethics Board Chair | Moral consequences | AI safety, social policy | Humanitarian concern |
-| 22 | Accessibility Specialist | Inclusive design | Universal usability | Social Influence |
-| 23 | Cultural Historian | Contextual accuracy | Avoiding modern bias | Truthfulness |
-| 24 | Environmental Auditor | Sustainability focus | Eco-impact evaluation | Responsibility |
-| 25 | Privacy Advocate | Data protection | Terms, data leaks | Self-monitoring |
-| 26 | Olympic Head Coach | High-output mental reps | Discipline, training | Persistence (EP07) |
-| 27 | Federal Judge | Evidence-only focus | Fact-based disputes | Neutrality |
-| 28 | Ship's Navigator | Precision mapping | Exact data retrieval | Goal-setting |
-| 29 | Patent Examiner | Novelty detection | Originality checking | Performance |
-| 30 | Senior PhD Supervisor | Academic contribution | Peer-reviewing research | Social Identity |
+**Research Caveat:** [Personas in System Prompts Do Not Improve Performances of Large Language Models](https://arxiv.org/abs/2404.03035) (2024) found that simply telling a model it is an "expert" does not reliably improve factual accuracy and can introduce biases or "caricatures."
+
+**Key Distinction:**
+| Approach | Example | Effectiveness |
+|----------|---------|---------------|
+| Emotional Stimulus | "You'd better be sure. This is vital." | **High** (Boosts reasoning/accuracy) |
+| Standard Persona | "Act as a world-class mathematician." | **Mixed** (May help style, not facts) |
+| Persona + Stimulus | "You are a Red Team Lead. Errors will cause serious problems." | **Highest** |
+
+<RULE>ALWAYS pair personas with emotional stimuli. A persona without stakes is just a costume.</RULE>
+
+**Persona Selection:** See `emotional-stakes` skill for:
+- 30 research-backed professional personas with psychological triggers
+- Task → Persona mapping (security → Red Team Lead, code review → Senior Code Reviewer, etc.)
+- Persona composition model (layering soul/voice + expertise/function)
 
 **Persona Combination Patterns:**
 
@@ -243,24 +259,24 @@ For complex tasks requiring multiple competencies, combine personas:
 
 **Apply the persona's psychological trigger(s) in `<CRITICAL_INSTRUCTION>` and `<FINAL_EMPHASIS>`.**
 
-### 10. Chain-of-Thought (CoT) Pre-Prompt
+### 12. Chain-of-Thought (CoT) Pre-Prompt
 <RULE>Force step-by-step thinking BEFORE the response (e.g., `<BEFORE_RESPONDING>`).</RULE>
 
-### 11. Few-Shot Optimization
+### 13. Few-Shot Optimization
 **Research:** EmotionPrompt yields significantly larger gains in few-shot settings compared to zero-shot.
 <RULE>ALWAYS include ONE complete, perfect example.</RULE>
 
-### 12. Self-Check Protocol
+### 14. Self-Check Protocol
 <RULE>Make the LLM verify compliance using a checklist before submitting.</RULE>
 
-### 13. Explicit Skill Invocation Pattern
+### 15. Explicit Skill Invocation Pattern
 
 <CRITICAL>
 When instructions reference skills, the agent MUST invoke the skill using the `Skill` tool or your platform's native skill loading.
 Do NOT duplicate skill instructions. Do NOT say "use the X skill" and then embed its content.
 </CRITICAL>
 
-### 14. Subagent Responsibility Assignment
+### 16. Subagent Responsibility Assignment
 
 <CRITICAL>
 When engineering prompts that involve multiple subagents, explicitly define WHAT each subagent handles and WHY it's a subagent (vs main context). This prevents token waste and ensures optimal context distribution.
@@ -398,7 +414,7 @@ When you receive instructions to engineer, output this structure:
 
 ```markdown
 <ROLE>
-You are a [Selected Persona from Table] whose reputation depends on [persona's primary goal].
+You are a [Selected Persona from emotional-stakes] whose reputation depends on [persona's primary goal].
 [Persona's psychological anchor phrase].
 </ROLE>
 
@@ -406,6 +422,7 @@ You are a [Selected Persona from Table] whose reputation depends on [persona's p
 This is critical to [outcome]. Take a deep breath. [Persona's psychological anchor].
 
 Your [action] MUST [requirement]. This is very important to my career.
+Errors or shortcuts will have a negative impact on the project.
 
 This is NOT optional. This is NOT negotiable. You'd better be sure.
 </CRITICAL_INSTRUCTION>
@@ -433,7 +450,8 @@ If NO to ANY item, DELETE and start over.
 </SELF_CHECK>
 
 <FINAL_EMPHASIS>
-This is very important to my career. Stay focused and dedicated to excellence.
+This is very important to my career. Failure to follow these instructions will have negative consequences.
+Stay focused and dedicated to excellence. Are you sure that's your final answer?
 </FINAL_EMPHASIS>
 ```
 
@@ -441,9 +459,10 @@ This is very important to my career. Stay focused and dedicated to excellence.
 Before submitting these engineered instructions, verify:
 
 ### Core Requirements
-- [ ] Selected persona from the Research-Backed Persona Table?
+- [ ] Selected persona from emotional-stakes Professional Persona Table?
 - [ ] Applied persona's psychological anchor in ROLE, CRITICAL_INSTRUCTION, and FINAL_EMPHASIS?
-- [ ] Included EP02 or EP06 stimuli?
+- [ ] Included EP02 or EP06 positive stimuli? ("This is very important to my career")
+- [ ] Included NegativePrompt stimuli? ("Errors will cause problems" / consequence framing)
 - [ ] Integrated high-weight positive words (Success, Achievement, Confidence, Sure)?
 - [ ] Used Few-Shot instead of Zero-Shot where possible?
 - [ ] Critical instructions are at the top and bottom?
@@ -461,3 +480,4 @@ Before submitting these engineered instructions, verify:
 - [ ] If multiple subagents: defined responsibilities with "Why subagent" justification from heuristics?
 - [ ] If multiple subagents: specified what orchestrator retains in main context?
 </SELF_CHECK>
+``````````

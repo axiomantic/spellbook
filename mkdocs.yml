@@ -96,6 +96,8 @@ nav:
       - skills/writing-skills.md
       - skills/subagent-prompting.md
       - skills/instruction-engineering.md
+      - skills/instruction-optimizer.md
+      - skills/emotional-stakes.md
       - skills/dispatching-parallel-agents.md
       - skills/subagent-driven-development.md
     - Session Skills:

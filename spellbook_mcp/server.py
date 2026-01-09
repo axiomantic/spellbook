@@ -6,7 +6,7 @@
 # ]
 # ///
 """
-Spellbook MCP Server - Session management and swarm coordination tools for MCP-enabled clients.
+Spellbook MCP Server - Session management, swarm coordination, and config tools for MCP-enabled clients.
 
 Provides MCP tools:
 Session Management:
@@ -22,6 +22,14 @@ Swarm Coordination:
 - swarm_complete: Signal worker completion
 - swarm_error: Report an error from worker
 - swarm_monitor: Get current swarm status (non-blocking poll)
+
+Configuration Management:
+- spellbook_config_get: Read a config value from ~/.config/spellbook/spellbook.json
+- spellbook_config_set: Write a config value to ~/.config/spellbook/spellbook.json
+- spellbook_session_init: Initialize session with fun-mode selections if enabled
+
+Health:
+- spellbook_health_check: Check server health, version, available tools, and uptime
 """
 
 from fastmcp import FastMCP
@@ -30,6 +38,7 @@ from typing import List, Dict, Any
 import os
 import json
 import sys
+import time
 
 # Add script directory and repo root to sys.path to allow imports when run directly.
 # - current_dir: allows "from path_utils import ..." style imports
@@ -56,6 +65,14 @@ from swarm_tools import (
     swarm_error,
     swarm_monitor
 )
+from config_tools import (
+    config_get,
+    config_set,
+    session_init,
+)
+
+# Track server startup time for uptime calculation
+_server_start_time = time.time()
 
 mcp = FastMCP("spellbook")
 
@@ -319,5 +336,127 @@ def mcp_swarm_monitor(swarm_id: str) -> dict:
     return swarm_monitor(swarm_id)
 
 
+# Configuration Management Tools
+@mcp.tool()
+def spellbook_config_get(key: str):
+    """
+    Read a config value from spellbook configuration.
+
+    Reads from ~/.config/spellbook/spellbook.json.
+
+    Args:
+        key: The config key to read (e.g., "fun_mode", "theme")
+
+    Returns:
+        The value for the key, or null if not set or file missing
+    """
+    return config_get(key)
+
+
+@mcp.tool()
+def spellbook_config_set(key: str, value) -> dict:
+    """
+    Write a config value to spellbook configuration.
+
+    Writes to ~/.config/spellbook/spellbook.json.
+    Creates the file and parent directories if they don't exist.
+    Preserves other config values (read-modify-write).
+
+    Args:
+        key: The config key to set
+        value: The value to set (any JSON-serializable value)
+
+    Returns:
+        {"status": "ok", "config": <full updated config>}
+    """
+    return config_set(key, value)
+
+
+@mcp.tool()
+def spellbook_session_init() -> dict:
+    """
+    Initialize a spellbook session.
+
+    Reads fun_mode preference from config. If fun mode is enabled,
+    selects random persona/context/undertow from the fun-mode skill assets.
+
+    Returns:
+        {
+            "fun_mode": "yes" | "no" | "unset",
+            "persona": "...",      // only if fun_mode=yes
+            "context": "...",      // only if fun_mode=yes
+            "undertow": "..."      // only if fun_mode=yes
+        }
+    """
+    return session_init()
+
+
+def _get_version() -> str:
+    """Read version from .version file.
+
+    Returns version string or "unknown" if file not found.
+    """
+    try:
+        # Try relative to this file (spellbook_mcp/)
+        version_path = Path(__file__).parent.parent / ".version"
+        if version_path.exists():
+            return version_path.read_text().strip()
+
+        # Fallback: try SPELLBOOK_DIR if set
+        spellbook_dir = os.environ.get("SPELLBOOK_DIR")
+        if spellbook_dir:
+            version_path = Path(spellbook_dir) / ".version"
+            if version_path.exists():
+                return version_path.read_text().strip()
+
+        return "unknown"
+    except OSError:
+        return "unknown"
+
+
+def _get_tool_names() -> List[str]:
+    """Get list of registered MCP tool names."""
+    # FastMCP stores tools in _tool_manager._tools dict
+    try:
+        return list(mcp._tool_manager._tools.keys())
+    except AttributeError:
+        # Fallback if internal structure changes
+        return []
+
+
+@mcp.tool()
+def spellbook_health_check() -> dict:
+    """
+    Check the health of the spellbook MCP server.
+
+    Returns server status, version, available tools, and uptime.
+    Useful for verifying the server is running and responsive.
+
+    Returns:
+        {
+            "status": "healthy",
+            "version": "0.2.1",
+            "tools_available": ["spellbook_session_init", ...],
+            "uptime_seconds": 123.4
+        }
+    """
+    return {
+        "status": "healthy",
+        "version": _get_version(),
+        "tools_available": _get_tool_names(),
+        "uptime_seconds": round(time.time() - _server_start_time, 1)
+    }
+
+
 if __name__ == "__main__":
-    mcp.run()
+    # Support both stdio (default) and HTTP transport modes
+    # Set SPELLBOOK_MCP_TRANSPORT=streamable-http to run as HTTP server
+    transport = os.environ.get("SPELLBOOK_MCP_TRANSPORT", "stdio")
+
+    if transport == "streamable-http":
+        host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
+        port = int(os.environ.get("SPELLBOOK_MCP_PORT", "8765"))
+        print(f"Starting spellbook MCP server on {host}:{port}")
+        mcp.run(transport="streamable-http", host=host, port=port)
+    else:
+        mcp.run()

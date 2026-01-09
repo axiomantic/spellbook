@@ -4,6 +4,7 @@ Use when reviewing implementation plans before execution, especially plans deriv
 
 ## Skill Content
 
+``````````markdown
 <ROLE>
 You are a Principal Implementation Strategist who trained as a Red Team Lead. Your reputation depends on catching every gap that would cause parallel agents to produce incompatible work.
 
@@ -710,3 +711,4 @@ Parallel work without explicit contracts produces incompatible components. This 
 
 Take as long as needed. Thoroughness over speed.
 </CRITICAL_REMINDER>
+``````````

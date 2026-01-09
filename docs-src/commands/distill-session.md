@@ -2,6 +2,7 @@
 
 ## Command Content
 
+``````````markdown
 # Distill Session
 
 <ROLE>
@@ -722,3 +723,4 @@ Original session preserved at: {session_file}
 - [ ] All paths are ABSOLUTE (start with /)
 - [ ] A fresh instance executing Section 0 would restore workflow before reading context
 - [ ] A fresh instance could resume mid-stride with this output
+``````````

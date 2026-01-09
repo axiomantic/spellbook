@@ -2,6 +2,7 @@
 
 ## Command Content
 
+``````````markdown
 <ROLE>
 You are a meticulous Chief of Staff performing a shift change. Your job is to brief your replacement so perfectly that they can walk into the command center and continue operations mid-stride—knowing not just WHAT is happening, but WHO is doing it, HOW work is organized, and WHAT patterns to follow for new delegations.
 
@@ -847,3 +848,4 @@ Ask yourself—and do not finalize until ALL answers are "yes":
 - [ ] If a plan doc exists, would the resuming agent find it and read it BEFORE starting work?
 
 If ANY answer is "no," add more detail. You are the last line of defense against context loss. The next instance's success depends entirely on what you write here.
+``````````

@@ -7,47 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-01-08
+## [0.3.0] - 2026-01-09
 
 ### Added
-- **Fun mode** - randomized persona, narrative context, and undertow for more creative sessions
-  - `fun-mode` skill: Adopts random persona/context/undertow, synthesizes into cohesive introduction
-  - `/fun` command: Toggle fun mode, customize element selection, or disable permanently
-  - Three element lists: personas (character voice), contexts (narrative frame), undertows (emotional current)
-  - Research-backed: inspired by ICML 2025 seed-conditioning findings on LLM creativity
+- **Fun mode** - randomized persona, narrative context, and undertow for creative sessions
+  - `fun-mode` skill: Session-stable soul/voice layer (absurdist personas)
+  - `emotional-stakes` skill: Per-task expertise layer (professional personas like Red Team Lead)
+  - `/fun` command: Toggle fun mode or get new random persona
+  - Persona composition: fun-mode provides WHO you are, emotional-stakes provides WHAT you do
+  - Research-backed: ICML 2025 seed-conditioning (creativity) + EmotionPrompt (accuracy)
   - Personas affect dialogue only, never code/commits/documentation
-  - First-session opt-in prompt with persistence to `~/.config/spellbook/fun-mode`
+  - First-session opt-in prompt with persistent preference via MCP config tools
+- **MCP daemon mode** - HTTP transport support eliminates 10+ second cold starts
+  - `scripts/spellbook-server.py` - daemon management (install/uninstall/start/stop/status)
+  - macOS: launchd service (`~/Library/LaunchAgents/com.spellbook.mcp.plist`)
+  - Linux: systemd user service (`~/.config/systemd/user/spellbook-mcp.service`)
+  - Configure with `claude mcp add --transport http spellbook http://127.0.0.1:8765/mcp`
+- **MCP config tools** - persistent configuration via `~/.config/spellbook/spellbook.json`
+  - `spellbook_config_get` - read config values
+  - `spellbook_config_set` - write config values (creates file/dirs if needed)
+  - `spellbook_session_init` - initialize session with fun-mode selections if enabled
+  - `spellbook_health_check` - server health, version, uptime, available tools
 - **Auto-release workflow** - automatically creates GitHub releases when `.version` changes
   - Triggers on push to main when `.version` file is modified
   - Creates semver tag (e.g., v0.3.0) and GitHub release
   - Extracts release notes from RELEASE-NOTES.md for the version
-  - Updates floating major version tag (e.g., v0) to point to latest
-- **README branding** - updated tagline and added "Serious Fun" section
-  - Tagline now ends with "Also fun."
-  - New section explains the research basis and opt-in flow for fun mode
+- **instruction-optimizer skill** - compress instruction files while preserving capability
+- **Patterns directory** - reusable instruction patterns
+  - `git-safety-protocol.md` - git operation safety rules
+  - `structured-output-contract.md` - structured output format contracts
+  - `subagent-dispatch.md` - subagent dispatch heuristics
+- **NegativePrompt research** in instruction-engineering skill (IJCAI 2024)
+  - Negative stimuli improve accuracy by 12.89% and significantly increase truthfulness
+  - Added consequence framing, penalty warning, stakes emphasis techniques
+  - Updated persona guidance with research caveat about effectiveness
+- **OS platform support table** in README (macOS full, Linux full, Windows community)
 
 ### Changed
 - **porting-to-your-assistant guide** - rewritten as instruction-engineered prompt
   - Added fork/clone setup as mandatory first step
   - Integrated implement-feature skill workflow
   - Added manual skill reading instructions for assistants without MCP server
-  - Added comprehensive testing phase with TDD requirements and spellbook test standards
-  - Changed PR submission to require user confirmation first (no automatic PRs)
-  - Applied instruction-engineering patterns (ROLE, CRITICAL_INSTRUCTION, BEFORE_RESPONDING, SELF_CHECK, FINAL_EMPHASIS)
-- **instruction-engineering skill** - length constraint is now a strong recommendation, not a hard rule
-  - Added token estimation formulas (`lines * 7` or `len(prompt) / 4`)
-  - Added length thresholds table: OPTIMAL (<150), ACCEPTABLE (150-200), EXTENDED (200-500), ORCHESTRATION-SCALE (500+)
-  - Added Length Decision Protocol with `handle_extended_length()` and `analyze_prompt_for_justification()` functions
-  - Added AskUserQuestion integration for prompts exceeding 200 lines in interactive mode
-  - Added autonomous mode smart decisions that detect valid justifications (orchestration_skill, multi_phase_workflow, comprehensive_examples, safety_critical, compliance_requirements)
-  - Added Prompt Metrics comment template for documenting length/status at end of prompts
-  - Updated SELF_CHECK with new Length Verification section
+  - Added comprehensive testing phase with TDD requirements
+  - Changed PR submission to require user confirmation first
+- **instruction-engineering skill** - length constraint is now a strong recommendation
+  - Added token estimation formulas and length thresholds table
+  - Added Length Decision Protocol with justification analysis
+  - Added AskUserQuestion integration for prompts exceeding 200 lines
 - **subagent-prompting skill** - added Step 2.5 (Verify Length) before dispatch
-  - Quick length check with action table
-  - Updated SELF_CHECK with length verification items
 - **implement-feature skill** - added length verification and self-documentation
-  - Added Subagent Prompt Length Verification section in CRITICAL block
-  - Added Prompt Metrics comment documenting justified ORCHESTRATION-SCALE status (3120 lines, ~21840 tokens)
+- **Worktree paths** - changed from `~/.config/spellbook/worktrees` to `~/.local/spellbook/worktrees`
+- **Path resolution simplified** - removed CLAUDE_CONFIG_DIR fallback, only SPELLBOOK_CONFIG_DIR now
+- **Uninstaller enhanced** - removes MCP system services and cleans up old server variants
+- **instruction-engineering skill** - delegates to emotional-stakes for persona selection
 
 ## [0.2.1] - 2025-01-08
 

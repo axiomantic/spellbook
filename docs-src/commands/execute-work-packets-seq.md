@@ -2,6 +2,7 @@
 
 ## Command Content
 
+``````````markdown
 # Execute Work Packets Sequentially
 
 Execute all work packets from a manifest in dependency order, ensuring each track completes before starting dependent tracks.
@@ -322,3 +323,4 @@ Next: /merge-work-packets /Users/me/.claude/docs/myproject/packets
 - Each track isolated in its own worktree
 - Skills (TDD, code review, factcheck) invoked via Skill tool
 - Integration testing deferred to merge phase
+``````````

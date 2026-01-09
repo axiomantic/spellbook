@@ -36,11 +36,13 @@
 - [Prerequisites](#prerequisites)
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (27 total)](#skills-27-total)
+  - [Skills (29 total)](#skills-29-total)
   - [Commands (16 total)](#commands-16-total)
   - [Agents (1 total)](#agents-1-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
+  - [Operating Systems](#operating-systems)
+  - [Coding Assistants](#coding-assistants)
   - [YOLO Mode](#yolo-mode)
 - [Playbooks](#playbooks)
   - [Implementing a Feature](#implementing-a-feature)
@@ -92,7 +94,7 @@ uv run install.py
 
 ## What's Included
 
-### Skills (27 total)
+### Skills (29 total)
 
 Reusable workflows for structured development:
 
@@ -102,8 +104,8 @@ Reusable workflows for structured development:
 | **Code Quality** | [green-mirage-audit], [fix-tests], [factchecker], [find-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
 | **Feature Dev** | [implement-feature], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [smart-merge] | spellbook |
 | **Specialized** | [async-await-patterns], [nim-pr-guide] | spellbook |
-| **Meta** | [using-skills], [writing-skills], [subagent-prompting], [instruction-engineering], [dispatching-parallel-agents], [subagent-driven-development] | [superpowers] |
-| **Session** | [fun-mode] | spellbook |
+| **Meta** | [using-skills], [writing-skills], [subagent-prompting], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [subagent-driven-development] | [superpowers] |
+| **Session** | [fun-mode], [emotional-stakes] | spellbook |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
@@ -128,10 +130,12 @@ Reusable workflows for structured development:
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
 [subagent-prompting]: https://axiomantic.github.io/spellbook/latest/skills/subagent-prompting/
 [instruction-engineering]: https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/
+[instruction-optimizer]: https://axiomantic.github.io/spellbook/latest/skills/instruction-optimizer/
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
 [subagent-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/subagent-driven-development/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
+[emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
 
 ### Commands (16 total)
 
@@ -194,8 +198,20 @@ Say no, and it never asks again. Toggle anytime with `/fun`.
 
 ## Platform Support
 
-| Platform | Status | Details |
-|----------|--------|---------|
+### Operating Systems
+
+| OS | Status | Service Manager |
+|----|--------|-----------------|
+| **macOS** | Full | launchd (starts on login) |
+| **Linux** | Full | systemd user service |
+| **Windows** | Community | Not yet supported |
+
+> **Windows users:** Spellbook likely works with minimal changes. The MCP server and skills should work as-is; only the daemon service management needs a Windows implementation (Task Scheduler or similar). PRs welcome! See [Contributing](#contributing).
+
+### Coding Assistants
+
+| Assistant | Status | Details |
+|-----------|--------|---------|
 | Claude Code | Full | Native agent skills |
 | OpenCode | Full | Native agent skills |
 | Codex | Full | Native agent skills |
@@ -703,9 +719,22 @@ Then open http://127.0.0.1:8000
 
 ### Run MCP Server Directly
 
+**As a system service (recommended):**
+
 ```bash
-cd ~/.local/share/spellbook/spellbook_mcp
-uv run server.py
+# Install as a daemon that starts on boot
+python3 ~/.local/share/spellbook/scripts/spellbook-server.py install
+
+# Then configure your assistant to use HTTP transport
+claude mcp add --transport http spellbook http://127.0.0.1:8765/mcp
+```
+
+This runs a single MCP server instance that all sessions connect to via HTTP, eliminating the 10+ second cold start when using stdio transport.
+
+**Manual stdio mode (for debugging):**
+
+```bash
+uv run ~/.local/share/spellbook/spellbook_mcp/server.py
 ```
 
 ## Documentation

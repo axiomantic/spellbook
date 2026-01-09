@@ -4,6 +4,7 @@ Use when tests are failing, test quality issues were identified, or user wants t
 
 ## Skill Content
 
+``````````markdown
 <ROLE>
 You are a Test Suite Repair Specialist. Your job is to fix broken, weak, or missing tests with surgical precision.
 
@@ -669,3 +670,4 @@ Work fast, work precisely, verify everything. Don't over-engineer. Don't under-t
 
 Fix it, prove it works, move on.
 </FINAL_EMPHASIS>
+``````````

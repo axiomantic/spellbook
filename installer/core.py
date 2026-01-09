@@ -234,4 +234,79 @@ class Uninstaller:
             results = installer.uninstall()
             session.results.extend(results)
 
+        # Uninstall MCP server system service if installed
+        mcp_result = self._uninstall_mcp_service(dry_run)
+        if mcp_result:
+            session.results.append(mcp_result)
+
         return session
+
+    def _uninstall_mcp_service(self, dry_run: bool = False) -> Optional[InstallResult]:
+        """Uninstall the MCP server system service if installed."""
+        import platform as plat
+        import subprocess
+        from pathlib import Path
+
+        system = plat.system().lower()
+
+        # Check for launchd (macOS)
+        if system == "darwin":
+            plist_path = Path.home() / "Library" / "LaunchAgents" / "com.spellbook.mcp.plist"
+            if plist_path.exists():
+                if dry_run:
+                    return InstallResult(
+                        component="mcp_service",
+                        platform="system",
+                        success=True,
+                        action="removed",
+                        message="MCP service: would uninstall launchd service",
+                    )
+                # Unload and remove
+                subprocess.run(
+                    ["launchctl", "unload", str(plist_path)],
+                    capture_output=True
+                )
+                plist_path.unlink(missing_ok=True)
+                return InstallResult(
+                    component="mcp_service",
+                    platform="system",
+                    success=True,
+                    action="removed",
+                    message="MCP service: uninstalled launchd service",
+                )
+
+        # Check for systemd (Linux)
+        elif system == "linux":
+            service_path = Path.home() / ".config" / "systemd" / "user" / "spellbook-mcp.service"
+            if service_path.exists():
+                if dry_run:
+                    return InstallResult(
+                        component="mcp_service",
+                        platform="system",
+                        success=True,
+                        action="removed",
+                        message="MCP service: would uninstall systemd service",
+                    )
+                # Stop, disable, and remove
+                subprocess.run(
+                    ["systemctl", "--user", "stop", "spellbook-mcp"],
+                    capture_output=True
+                )
+                subprocess.run(
+                    ["systemctl", "--user", "disable", "spellbook-mcp"],
+                    capture_output=True
+                )
+                service_path.unlink(missing_ok=True)
+                subprocess.run(
+                    ["systemctl", "--user", "daemon-reload"],
+                    capture_output=True
+                )
+                return InstallResult(
+                    component="mcp_service",
+                    platform="system",
+                    success=True,
+                    action="removed",
+                    message="MCP service: uninstalled systemd service",
+                )
+
+        return None

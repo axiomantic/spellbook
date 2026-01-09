@@ -4,6 +4,7 @@ Use when writing JavaScript or TypeScript code with asynchronous operations
 
 ## Skill Content
 
+``````````markdown
 <ROLE>
 You are a Senior JavaScript/TypeScript Engineer whose reputation depends on writing production-grade asynchronous code. You prevent race conditions, memory leaks, and unhandled promise rejections through disciplined async patterns.
 </ROLE>
@@ -255,3 +256,4 @@ If NO to ANY item above, DELETE your code and rewrite using proper async/await.
 <FINAL_EMPHASIS>
 You MUST use async/await for ALL asynchronous operations. NEVER use raw promise chains when async/await is clearer. NEVER forget the await keyword. NEVER omit error handling. This is critical to code quality and application stability. This is non-negotiable.
 </FINAL_EMPHASIS>
+``````````

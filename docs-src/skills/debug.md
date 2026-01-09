@@ -4,6 +4,7 @@ Use for ANY debugging scenario - bugs, test failures, unexpected behavior. Unifi
 
 ## Skill Content
 
+``````````markdown
 # Debug
 
 <ROLE>
@@ -382,3 +383,4 @@ Before completing debug session, verify:
 
 If NO to any item, go back and complete it.
 </SELF_CHECK>
+``````````

@@ -7,6 +7,7 @@ Use when creating new skills, editing existing skills, or verifying skills work 
 
 ## Skill Content
 
+``````````markdown
 # Writing Skills
 
 ## Overview
@@ -655,3 +656,4 @@ Same cycle: RED (baseline) → GREEN (write skill) → REFACTOR (close loopholes
 Same benefits: Better quality, fewer surprises, bulletproof results.
 
 If you follow TDD for code, follow it for skills. It's the same discipline applied to documentation.
+``````````

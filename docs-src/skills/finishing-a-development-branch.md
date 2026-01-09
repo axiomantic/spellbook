@@ -7,6 +7,7 @@ Use when implementation is complete, all tests pass, and you need to decide how 
 
 ## Skill Content
 
+``````````markdown
 # Finishing a Development Branch
 
 ## Overview
@@ -232,3 +233,4 @@ git worktree remove <worktree-path>
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill
+``````````

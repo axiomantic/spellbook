@@ -43,12 +43,12 @@ def test_get_project_dir_with_cwd(monkeypatch):
     assert result == expected
 
 
-def test_get_project_dir_respects_claude_config_dir(monkeypatch):
-    """Test that CLAUDE_CONFIG_DIR environment variable is respected."""
+def test_get_project_dir_respects_spellbook_config_dir(monkeypatch):
+    """Test that SPELLBOOK_CONFIG_DIR environment variable is respected."""
     from spellbook_mcp.path_utils import get_project_dir
 
     monkeypatch.setattr(os, 'getcwd', lambda: '/Users/test/project')
-    monkeypatch.setenv('CLAUDE_CONFIG_DIR', '/custom/config')
+    monkeypatch.setenv('SPELLBOOK_CONFIG_DIR', '/custom/config')
 
     result = get_project_dir()
     expected = Path('/custom/config/projects/Users-test-project')

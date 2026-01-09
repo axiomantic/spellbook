@@ -27,23 +27,15 @@ def get_spellbook_config_dir() -> Path:
 
     Resolution order:
     1. SPELLBOOK_CONFIG_DIR environment variable
-    2. CLAUDE_CONFIG_DIR environment variable (backward compatibility)
-    3. ~/.local/spellbook (portable default)
+    2. ~/.local/spellbook (default)
 
     Returns:
         Path to spellbook config directory
     """
-    # Check SPELLBOOK_CONFIG_DIR first (preferred)
     config_dir = os.environ.get('SPELLBOOK_CONFIG_DIR')
     if config_dir:
         return Path(config_dir)
 
-    # Fall back to CLAUDE_CONFIG_DIR for backward compatibility
-    claude_config = os.environ.get('CLAUDE_CONFIG_DIR')
-    if claude_config:
-        return Path(claude_config)
-
-    # Default to portable location
     return Path.home() / '.local' / 'spellbook'
 
 
@@ -56,8 +48,7 @@ def get_project_dir() -> Path:
 
     Resolution order for base directory:
     1. $SPELLBOOK_CONFIG_DIR/projects/
-    2. $CLAUDE_CONFIG_DIR/projects/ (backward compatibility)
-    3. ~/.local/spellbook/projects/ (portable default)
+    2. ~/.local/spellbook/projects/ (default)
 
     Returns:
         Path to project's session directory

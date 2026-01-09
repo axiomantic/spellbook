@@ -12,7 +12,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/execute-plan](execute-plan.md) | description: Execute plan in batches with review checkpoints | [superpowers](https://github.com/obra/superpowers) |
 | [/execute-work-packet](execute-work-packet.md) | description: Execute a single work packet - read packet, check dependencies, run... | spellbook |
 | [/execute-work-packets-seq](execute-work-packets-seq.md) | description: Execute all work packets in dependency order, one at a time, with c... | spellbook |
-| [/fun](fun.md) | description: "Toggle fun mode or customize persona/context/undertow selection fo... | spellbook |
+| [/fun](fun.md) | description: "Toggle fun mode or get a new random persona for creative sessions" | spellbook |
 | [/green-mirage-audit](green-mirage-audit.md) | <ROLE> | spellbook |
 | [/merge-work-packets](merge-work-packets.md) | description: Verify all tracks complete, invoke smart-merge, run QA gates, repor... | spellbook |
 | [/move-project](move-project.md) | <ROLE> | spellbook |

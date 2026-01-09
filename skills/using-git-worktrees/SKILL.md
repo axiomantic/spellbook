@@ -69,7 +69,7 @@ If no directory exists and no CLAUDE.md preference:
 No worktree directory found. Where should I create worktrees?
 
 1. .worktrees/ (project-local, hidden)
-2. ~/.config/spellbook/worktrees/<project-name>/ (global location)
+2. ~/.local/spellbook/worktrees/<project-name>/ (global location)
 
 Which would you prefer?
 ```
@@ -94,7 +94,7 @@ Per Jesse's rule "Fix broken things immediately":
 
 **Why critical:** Prevents accidentally committing worktree contents to repository.
 
-### For Global Directory (~/.config/spellbook/worktrees)
+### For Global Directory (~/.local/spellbook/worktrees)
 
 No .gitignore verification needed - outside project entirely.
 
@@ -114,8 +114,8 @@ case $LOCATION in
   .worktrees|worktrees)
     path="$LOCATION/$BRANCH_NAME"
     ;;
-  ~/.config/spellbook/worktrees/*)
-    path="~/.config/spellbook/worktrees/$project/$BRANCH_NAME"
+  ~/.local/spellbook/worktrees/*)
+    path="~/.local/spellbook/worktrees/$project/$BRANCH_NAME"
     ;;
 esac
 

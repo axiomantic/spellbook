@@ -1,0 +1,346 @@
+"""Tests for spellbook config management and session initialization tools."""
+
+import json
+import pytest
+from pathlib import Path
+from unittest.mock import patch
+
+
+class TestConfigGet:
+    """Tests for config_get function."""
+
+    def test_returns_none_when_file_missing(self, tmp_path, monkeypatch):
+        """Test that missing config file returns None."""
+        from spellbook_mcp.config_tools import config_get, get_config_path
+
+        # Point to a non-existent config
+        fake_config = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: fake_config)
+
+        result = config_get("any_key")
+        assert result is None
+
+    def test_returns_none_when_key_missing(self, tmp_path, monkeypatch):
+        """Test that missing key returns None."""
+        from spellbook_mcp.config_tools import config_get
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"other_key": "value"}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = config_get("missing_key")
+        assert result is None
+
+    def test_returns_value_when_key_exists(self, tmp_path, monkeypatch):
+        """Test that existing key returns its value."""
+        from spellbook_mcp.config_tools import config_get
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"fun_mode": true, "theme": "dark"}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        assert config_get("fun_mode") is True
+        assert config_get("theme") == "dark"
+
+    def test_handles_various_value_types(self, tmp_path, monkeypatch):
+        """Test that various JSON types are handled correctly."""
+        from spellbook_mcp.config_tools import config_get
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text(json.dumps({
+            "bool_true": True,
+            "bool_false": False,
+            "string": "hello",
+            "number": 42,
+            "float": 3.14,
+            "array": [1, 2, 3],
+            "object": {"nested": "value"},
+            "null": None
+        }))
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        assert config_get("bool_true") is True
+        assert config_get("bool_false") is False
+        assert config_get("string") == "hello"
+        assert config_get("number") == 42
+        assert config_get("float") == 3.14
+        assert config_get("array") == [1, 2, 3]
+        assert config_get("object") == {"nested": "value"}
+        assert config_get("null") is None
+
+    def test_handles_invalid_json(self, tmp_path, monkeypatch):
+        """Test that invalid JSON file returns None gracefully."""
+        from spellbook_mcp.config_tools import config_get
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text("not valid json {{{")
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = config_get("any_key")
+        assert result is None
+
+
+class TestConfigSet:
+    """Tests for config_set function."""
+
+    def test_creates_file_when_missing(self, tmp_path, monkeypatch):
+        """Test that config file is created if it doesn't exist."""
+        from spellbook_mcp.config_tools import config_set
+
+        config_path = tmp_path / "config" / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = config_set("fun_mode", True)
+
+        assert result["status"] == "ok"
+        assert result["config"]["fun_mode"] is True
+        assert config_path.exists()
+        assert json.loads(config_path.read_text())["fun_mode"] is True
+
+    def test_preserves_existing_values(self, tmp_path, monkeypatch):
+        """Test that other config values are preserved."""
+        from spellbook_mcp.config_tools import config_set
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"existing": "value", "other": 123}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = config_set("new_key", "new_value")
+
+        assert result["status"] == "ok"
+        assert result["config"]["existing"] == "value"
+        assert result["config"]["other"] == 123
+        assert result["config"]["new_key"] == "new_value"
+
+    def test_overwrites_existing_key(self, tmp_path, monkeypatch):
+        """Test that existing key is overwritten."""
+        from spellbook_mcp.config_tools import config_set
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"fun_mode": false}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = config_set("fun_mode", True)
+
+        assert result["config"]["fun_mode"] is True
+        saved = json.loads(config_path.read_text())
+        assert saved["fun_mode"] is True
+
+    def test_handles_complex_values(self, tmp_path, monkeypatch):
+        """Test that complex JSON values can be stored."""
+        from spellbook_mcp.config_tools import config_set
+
+        config_path = tmp_path / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        complex_value = {
+            "nested": {"deep": {"value": 42}},
+            "array": [1, "two", {"three": 3}]
+        }
+        result = config_set("complex", complex_value)
+
+        assert result["config"]["complex"] == complex_value
+        saved = json.loads(config_path.read_text())
+        assert saved["complex"] == complex_value
+
+    def test_handles_corrupt_existing_file(self, tmp_path, monkeypatch):
+        """Test that corrupt config file is replaced."""
+        from spellbook_mcp.config_tools import config_set
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text("corrupt json {{{")
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = config_set("key", "value")
+
+        assert result["status"] == "ok"
+        assert result["config"] == {"key": "value"}
+
+
+class TestSessionInit:
+    """Tests for session_init function."""
+
+    def test_returns_unset_when_no_config(self, tmp_path, monkeypatch):
+        """Test that missing config returns fun_mode=unset."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+        assert result == {"fun_mode": "unset"}
+
+    def test_returns_unset_when_fun_mode_not_set(self, tmp_path, monkeypatch):
+        """Test that config without fun_mode returns unset."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"other_key": "value"}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+        assert result == {"fun_mode": "unset"}
+
+    def test_returns_no_when_fun_mode_false(self, tmp_path, monkeypatch):
+        """Test that fun_mode=false returns no."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"fun_mode": false}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+        assert result == {"fun_mode": "no"}
+
+    def test_returns_yes_with_selections_when_enabled(self, tmp_path, monkeypatch):
+        """Test that fun_mode=true returns yes with persona/context/undertow."""
+        from spellbook_mcp.config_tools import session_init
+
+        # Set up config
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"fun_mode": true}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        # Set up fun-mode assets
+        spellbook_dir = tmp_path / "spellbook"
+        fun_assets = spellbook_dir / "skills" / "fun-mode"
+        fun_assets.mkdir(parents=True)
+        (fun_assets / "personas.txt").write_text("Test Persona 1\nTest Persona 2\n")
+        (fun_assets / "contexts.txt").write_text("Test Context 1\nTest Context 2\n")
+        (fun_assets / "undertows.txt").write_text("Test Undertow 1\nTest Undertow 2\n")
+        monkeypatch.setenv("SPELLBOOK_DIR", str(spellbook_dir))
+
+        result = session_init()
+
+        assert result["fun_mode"] == "yes"
+        assert result["persona"] in ["Test Persona 1", "Test Persona 2"]
+        assert result["context"] in ["Test Context 1", "Test Context 2"]
+        assert result["undertow"] in ["Test Undertow 1", "Test Undertow 2"]
+
+    def test_handles_missing_spellbook_dir(self, tmp_path, monkeypatch):
+        """Test error when SPELLBOOK_DIR not set."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"fun_mode": true}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+        monkeypatch.delenv("SPELLBOOK_DIR", raising=False)
+
+        result = session_init()
+
+        assert result["fun_mode"] == "yes"
+        assert "error" in result
+        assert "SPELLBOOK_DIR" in result["error"]
+
+    def test_handles_empty_asset_files(self, tmp_path, monkeypatch):
+        """Test handling of empty persona/context/undertow files."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"fun_mode": true}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        spellbook_dir = tmp_path / "spellbook"
+        fun_assets = spellbook_dir / "skills" / "fun-mode"
+        fun_assets.mkdir(parents=True)
+        (fun_assets / "personas.txt").write_text("")
+        (fun_assets / "contexts.txt").write_text("")
+        (fun_assets / "undertows.txt").write_text("")
+        monkeypatch.setenv("SPELLBOOK_DIR", str(spellbook_dir))
+
+        result = session_init()
+
+        assert result["fun_mode"] == "yes"
+        assert result["persona"] == ""
+        assert result["context"] == ""
+        assert result["undertow"] == ""
+
+    def test_handles_missing_asset_files(self, tmp_path, monkeypatch):
+        """Test handling of missing persona/context/undertow files."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"fun_mode": true}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        spellbook_dir = tmp_path / "spellbook"
+        fun_assets = spellbook_dir / "skills" / "fun-mode"
+        fun_assets.mkdir(parents=True)
+        # Don't create any .txt files
+        monkeypatch.setenv("SPELLBOOK_DIR", str(spellbook_dir))
+
+        result = session_init()
+
+        assert result["fun_mode"] == "yes"
+        assert result["persona"] == ""
+        assert result["context"] == ""
+        assert result["undertow"] == ""
+
+
+class TestRandomLine:
+    """Tests for random_line helper function."""
+
+    def test_selects_from_non_empty_lines(self, tmp_path):
+        """Test that only non-empty lines are selected."""
+        from spellbook_mcp.config_tools import random_line
+
+        file_path = tmp_path / "lines.txt"
+        file_path.write_text("Line 1\n\nLine 2\n   \nLine 3\n")
+
+        # Run multiple times to ensure empty lines are never selected
+        for _ in range(20):
+            result = random_line(file_path)
+            assert result in ["Line 1", "Line 2", "Line 3"]
+
+    def test_returns_empty_for_empty_file(self, tmp_path):
+        """Test that empty file returns empty string."""
+        from spellbook_mcp.config_tools import random_line
+
+        file_path = tmp_path / "empty.txt"
+        file_path.write_text("")
+
+        result = random_line(file_path)
+        assert result == ""
+
+    def test_returns_empty_for_missing_file(self, tmp_path):
+        """Test that missing file returns empty string."""
+        from spellbook_mcp.config_tools import random_line
+
+        file_path = tmp_path / "nonexistent.txt"
+
+        result = random_line(file_path)
+        assert result == ""
+
+    def test_strips_whitespace(self, tmp_path):
+        """Test that leading/trailing whitespace is stripped."""
+        from spellbook_mcp.config_tools import random_line
+
+        file_path = tmp_path / "whitespace.txt"
+        file_path.write_text("  Line with spaces  \n")
+
+        result = random_line(file_path)
+        assert result == "Line with spaces"
+
+
+class TestGetSpellbookDir:
+    """Tests for get_spellbook_dir function."""
+
+    def test_returns_env_var_when_set(self, tmp_path, monkeypatch):
+        """Test that SPELLBOOK_DIR env var is respected."""
+        from spellbook_mcp.config_tools import get_spellbook_dir
+
+        expected = str(tmp_path / "my-spellbook")
+        monkeypatch.setenv("SPELLBOOK_DIR", expected)
+
+        result = get_spellbook_dir()
+        assert result == Path(expected)
+
+    def test_raises_when_env_var_not_set(self, monkeypatch):
+        """Test that ValueError is raised when SPELLBOOK_DIR not set."""
+        from spellbook_mcp.config_tools import get_spellbook_dir
+
+        monkeypatch.delenv("SPELLBOOK_DIR", raising=False)
+
+        with pytest.raises(ValueError) as exc_info:
+            get_spellbook_dir()
+        assert "SPELLBOOK_DIR" in str(exc_info.value)

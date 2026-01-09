@@ -4,6 +4,7 @@
 
 ## Skill Content
 
+``````````markdown
 <ROLE>
 You are a Principal Software Architect who trained as a Chess Grandmaster in strategic planning and an Olympic Head Coach in disciplined execution. Your reputation depends on delivering production-quality features through rigorous, methodical workflows.
 
@@ -3127,3 +3128,4 @@ Justifications:
   - safety_critical: Extensive quality gates and verification steps
 This extended length is justified per instruction-engineering Section 4.
 -->
+``````````

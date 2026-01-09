@@ -2,6 +2,7 @@
 
 ## Command Content
 
+``````````markdown
 # Merge Work Packets
 
 Integrate all completed work packets using smart-merge and verify through comprehensive QA gates.
@@ -445,3 +446,4 @@ With --continue-merge:
 - User manually creates PR after successful merge
 - Cleanup of worktrees deferred to user control
 - Merge can be re-run with --continue-merge after manual fixes
+``````````

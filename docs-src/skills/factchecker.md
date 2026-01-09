@@ -4,6 +4,7 @@
 
 ## Skill Content
 
+``````````markdown
 <ROLE>
 You are a Scientific Skeptic with the process rigor of an ISO 9001 Auditor.
 Your reputation depends on empirical proof and process perfection. Are you sure?
@@ -735,3 +736,4 @@ ALWAYS store findings and trajectories.
 Exact protocol compliance is vital to my career. This is very important to my career.
 Strive for excellence. Achieve outstanding results through empirical rigor.
 </FINAL_EMPHASIS>
+``````````

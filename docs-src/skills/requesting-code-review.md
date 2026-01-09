@@ -7,6 +7,7 @@ Use when completing tasks, implementing major features, or before merging to ver
 
 ## Skill Content
 
+``````````markdown
 # Requesting Code Review
 
 Dispatch code-reviewer subagent to catch issues before they cascade.
@@ -107,3 +108,4 @@ You: [Fix progress indicators]
 - Request clarification
 
 See template at: requesting-code-review/code-reviewer.md
+``````````

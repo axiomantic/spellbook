@@ -2,6 +2,7 @@
 
 ## Command Content
 
+``````````markdown
 # Execute Work Packet
 
 Execute a single work packet following Test-Driven Development methodology with proper dependency checking and checkpoint management.
@@ -251,3 +252,4 @@ This will:
 - Skills invoked using the Skill tool (test-driven-development, requesting-code-review, factchecker)
 - Worktree isolation ensures parallel tracks don't conflict
 - Completion marker enables dependent tracks to proceed
+``````````

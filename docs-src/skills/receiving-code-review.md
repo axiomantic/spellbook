@@ -7,6 +7,7 @@ Use when receiving code review feedback, before implementing suggestions, especi
 
 ## Skill Content
 
+``````````markdown
 # Code Review Reception
 
 ## Overview
@@ -215,3 +216,4 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+``````````

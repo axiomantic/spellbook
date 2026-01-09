@@ -7,6 +7,7 @@ Use when starting any conversation - establishes how to find and use skills, req
 
 ## Skill Content
 
+``````````markdown
 <EXTREMELY-IMPORTANT>
 If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
 
@@ -89,3 +90,4 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+``````````

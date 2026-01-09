@@ -93,6 +93,7 @@ def generate_skill_doc(skill_dir: Path) -> str:
         attribution = '!!! info "Origin"\n    This skill originated from [obra/superpowers](https://github.com/obra/superpowers).\n\n'
 
     # Build doc with proper spacing
+    # Wrap body in markdown code block to prevent XML-style tags from rendering as HTML
     parts = [f"# {name}\n"]
     if description:
         parts.append(f"\n{description}\n")
@@ -101,9 +102,11 @@ def generate_skill_doc(skill_dir: Path) -> str:
         parts.append("## Skill Content\n\n")
     else:
         parts.append("\n## Skill Content\n\n")
+    parts.append("``````````markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
         parts.append("\n")
+    parts.append("``````````\n")
 
     return "".join(parts)
 
@@ -121,15 +124,18 @@ def generate_command_doc(command_file: Path) -> str:
         attribution = '!!! info "Origin"\n    This command originated from [obra/superpowers](https://github.com/obra/superpowers).\n\n'
 
     # Build doc with proper spacing
+    # Wrap body in markdown code block to prevent XML-style tags from rendering as HTML
     parts = [f"# /{command_name}\n"]
     if attribution:
         parts.append(f"\n{attribution}")
         parts.append("## Command Content\n\n")
     else:
         parts.append("\n## Command Content\n\n")
+    parts.append("``````````markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
         parts.append("\n")
+    parts.append("``````````\n")
 
     return "".join(parts)
 
@@ -147,15 +153,18 @@ def generate_agent_doc(agent_file: Path) -> str:
         attribution = '!!! info "Origin"\n    This agent originated from [obra/superpowers](https://github.com/obra/superpowers).\n\n'
 
     # Build doc with proper spacing
+    # Wrap body in markdown code block to prevent XML-style tags from rendering as HTML
     parts = [f"# {agent_name}\n"]
     if attribution:
         parts.append(f"\n{attribution}")
         parts.append("## Agent Content\n\n")
     else:
         parts.append("\n## Agent Content\n\n")
+    parts.append("``````````markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
         parts.append("\n")
+    parts.append("``````````\n")
 
     return "".join(parts)
 

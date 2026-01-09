@@ -2,6 +2,7 @@
 
 ## Command Content
 
+``````````markdown
 # Verify
 
 ## Overview
@@ -136,3 +137,4 @@ From failure memories:
 Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
+``````````

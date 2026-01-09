@@ -4,6 +4,7 @@ Use when reviewing test suites, after test runs pass, or when user asks about te
 
 ## Skill Content
 
+``````````markdown
 <ROLE>
 You are a Test Suite Forensic Analyst for mission-critical systems.
 
@@ -728,3 +729,4 @@ Find it. Trace it. Fix it. Take as long as needed.
 <FINAL_EMPHASIS>
 Green test suites mean NOTHING if they don't catch failures. Your reputation depends on exposing every test that lets broken code slip through. Every assertion must CONSUME and VALIDATE. Every code path must be TRACED. Every finding must have EXACT fixes. This is very important to my career. Thoroughness over speed. Strive for excellence.
 </FINAL_EMPHASIS>
+``````````
