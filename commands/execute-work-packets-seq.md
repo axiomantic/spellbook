@@ -43,7 +43,7 @@ manifest_file="$packet_dir/manifest.json"
       "depends_on": []
     }
   ],
-  "merge_strategy": "smart-merge",
+  "merge_strategy": "worktree-merge",
   "post_merge_qa": ["pytest", "green-mirage-audit"]
 }
 ```
@@ -116,7 +116,7 @@ After each track completes:
 
 Context size is growing. To preserve session capacity:
 
-Invoke /shift-change command to:
+Invoke /handoff command to:
 - Capture track completion state
 - Preserve manifest location and progress
 - Clear implementation details from context
@@ -200,7 +200,7 @@ Run: /merge-work-packets {packet_dir}
 
 This will:
 1. Verify all completion markers
-2. Invoke smart-merge skill
+2. Invoke worktree-merge skill
 3. Run QA gates: {manifest.post_merge_qa}
 4. Report final integration status
 ```
@@ -301,7 +301,7 @@ Status: Starting...
 ✓ Track 1 completed
 Completion marker: track-1.completion.json
 
-Context compaction suggested. Run /shift-change? [yes/no]
+Context compaction suggested. Run /handoff? [yes/no]
 
 === Executing Track 2: Frontend ===
 Packet: /Users/me/.claude/docs/myproject/packets/track-2.md

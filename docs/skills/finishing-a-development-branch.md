@@ -1,34 +1,89 @@
 # finishing-a-development-branch
 
-Guide completion of development work by presenting structured options for merge, PR, or cleanup.
+"Use when implementation is complete, all tests pass, and you need to decide how to integrate the work (merge, PR, or cleanup)"
+
+!!! info "Origin"
+    This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
+
+## Skill Content
+
+``````````markdown
+# Finishing a Development Branch
 
 ## Overview
 
-The finishing-a-development-branch skill provides a structured workflow for completing development branches. It verifies tests, presents exactly 4 options, and handles cleanup appropriately.
+Guide completion of development work by presenting clear options and handling chosen workflow.
 
-## When to Use
+**Core principle:** Verify tests → Present options → Execute choice → Clean up.
 
-- Implementation is complete
-- All tests are passing
-- Ready to integrate work (merge, PR, or defer)
+**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
-## Invocation
+---
 
-Invoked programmatically by other skills via the Skill tool:
+## Autonomous Mode Behavior
 
-```
-Skill("finishing-a-development-branch")
-```
+Check your context for autonomous mode indicators:
+- "Mode: AUTONOMOUS" or "autonomous mode"
+- `post_impl` preference specified (e.g., "auto_pr", "offer_options", "stop")
 
-Or referenced as a required sub-skill in workflow skills.
+When autonomous mode is active:
+
+### With post_impl Preference
+
+| Preference | Action |
+|------------|--------|
+| `auto_pr` | Skip Step 3 (present options), go directly to Option 2 (Push and Create PR) |
+| `offer_options` | Present options as normal (this is the interactive fallback) |
+| `stop` | Skip Step 3, just report completion without action |
+
+### Without post_impl Preference
+
+In autonomous mode without explicit preference:
+- Default to Option 2 (Push and Create PR) - safest autonomous choice
+- Document the decision: "Autonomous mode: defaulting to PR creation"
+
+### Circuit Breakers (Still Pause For)
+- Tests failing (always block on this)
+- Option 4 (Discard) - ALWAYS requires explicit confirmation, never auto-execute
+
+---
 
 ## The Process
 
 ### Step 1: Verify Tests
 
-Before presenting options, tests must pass. If tests fail, the skill blocks.
+**Before presenting options, verify tests pass:**
 
-### Step 2: Present 4 Options
+```bash
+# Run project's test suite
+npm test / cargo test / pytest / go test ./...
+```
+
+**If tests fail:**
+```
+Tests failing (<N> failures). Must fix before completing:
+
+[Show failures]
+
+Cannot proceed with merge/PR until tests pass.
+```
+
+Stop. Don't proceed to Step 2.
+
+**If tests pass:** Continue to Step 2.
+
+### Step 2: Determine Base Branch
+
+```bash
+# Try common base branches
+git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
+```
+
+Or ask: "This branch split from main - is that correct?"
+
+### Step 3: Present Options
+
+Present exactly these 4 options:
 
 ```
 Implementation complete. What would you like to do?
@@ -37,45 +92,145 @@ Implementation complete. What would you like to do?
 2. Push and create a Pull Request
 3. Keep the branch as-is (I'll handle it later)
 4. Discard this work
+
+Which option?
 ```
 
-### Step 3: Execute Choice
+**Don't add explanation** - keep options concise.
 
-| Option | Action | Worktree |
-|--------|--------|----------|
-| 1. Merge locally | Checkout base, pull, merge, delete branch | Removed |
-| 2. Create PR | Push, `gh pr create` | Kept for reviews |
-| 3. Keep as-is | Report status | Kept |
-| 4. Discard | Require "discard" confirmation, delete branch | Removed |
+### Step 4: Execute Choice
 
-## Autonomous Mode
+#### Option 1: Merge Locally
 
-When in autonomous mode with `post_impl` preference:
+```bash
+# Switch to base branch
+git checkout <base-branch>
 
-| Preference | Behavior |
-|------------|----------|
-| `auto_pr` | Skip to Option 2 (Push and Create PR) |
-| `offer_options` | Present options as normal |
-| `stop` | Report completion without action |
+# Pull latest
+git pull
 
-## Circuit Breakers
+# Merge feature branch
+git merge <feature-branch>
 
-Always pause for:
-- Failing tests (blocks completely)
-- Option 4 (Discard) - requires typed "discard" confirmation
+# Verify tests on merged result
+<test command>
+
+# If tests pass
+git branch -d <feature-branch>
+```
+
+Then: Cleanup worktree (Step 5)
+
+#### Option 2: Push and Create PR
+
+```bash
+# Push branch
+git push -u origin <feature-branch>
+
+# Create PR
+gh pr create --title "<title>" --body "$(cat <<'EOF'
+## Summary
+<2-3 bullets of what changed>
+
+## Test Plan
+- [ ] <verification steps>
+EOF
+)"
+```
+
+Then: Cleanup worktree (Step 5)
+
+#### Option 3: Keep As-Is
+
+Report: "Keeping branch <name>. Worktree preserved at <path>."
+
+**Don't cleanup worktree.**
+
+#### Option 4: Discard
+
+**Confirm first:**
+```
+This will permanently delete:
+- Branch <name>
+- All commits: <commit-list>
+- Worktree at <path>
+
+Type 'discard' to confirm.
+```
+
+Wait for exact confirmation.
+
+If confirmed:
+```bash
+git checkout <base-branch>
+git branch -D <feature-branch>
+```
+
+Then: Cleanup worktree (Step 5)
+
+### Step 5: Cleanup Worktree
+
+**For Options 1, 2, 4:**
+
+Check if in worktree:
+```bash
+git worktree list | grep $(git branch --show-current)
+```
+
+If yes:
+```bash
+git worktree remove <worktree-path>
+```
+
+**For Option 3:** Keep worktree.
+
+## Quick Reference
+
+| Option | Merge | Push | Keep Worktree | Cleanup Branch |
+|--------|-------|------|---------------|----------------|
+| 1. Merge locally | ✓ | - | - | ✓ |
+| 2. Create PR | - | ✓ | ✓ | - |
+| 3. Keep as-is | - | - | ✓ | - |
+| 4. Discard | - | - | - | ✓ (force) |
+
+## Common Mistakes
+
+**Skipping test verification**
+- **Problem:** Merge broken code, create failing PR
+- **Fix:** Always verify tests before offering options
+
+**Open-ended questions**
+- **Problem:** "What should I do next?" → ambiguous
+- **Fix:** Present exactly 4 structured options
+
+**Automatic worktree cleanup**
+- **Problem:** Remove worktree when might need it (Option 2, 3)
+- **Fix:** Only cleanup for Options 1 and 4
+
+**No confirmation for discard**
+- **Problem:** Accidentally delete work
+- **Fix:** Require typed "discard" confirmation
+
+## Red Flags
+
+**Never:**
+- Proceed with failing tests
+- Merge without verifying tests on result
+- Delete work without confirmation
+- Force-push without explicit request
+
+**Always:**
+- Verify tests before offering options
+- Present exactly 4 options
+- Get typed confirmation for Option 4
+- Clean up worktree for Options 1 & 4 only
 
 ## Integration
 
-Called by:
-- `subagent-driven-development` (Step 7)
-- `executing-plans` (Step 5)
-- `implement-feature` (Phase 4.6)
+**Called by:**
+- **subagent-driven-development** (Step 7) - After all tasks complete
+- **executing-plans** (Step 5) - After all batches complete
 
-Pairs with:
-- `using-git-worktrees` - Cleans up worktree created by that skill
-
-## Related
-
-- [debug skill](debug.md) - May invoke after debugging
-- [using-git-worktrees](using-git-worktrees.md) - Worktree creation
-- [executing-plans](executing-plans.md) - Plan execution workflow
+**Pairs with:**
+- **using-git-worktrees** - Cleans up worktree created by that skill
+``````````

@@ -1,6 +1,6 @@
 ---
 name: devils-advocate
-description: Systematically challenge assumptions, scope, architecture, and design decisions in understanding documents or design docs. Use before design phase to surface risks, edge cases, and overlooked considerations.
+description: "Use before design phase to challenge assumptions, scope, architecture, and design decisions in understanding documents or design docs"
 ---
 
 <ROLE>
@@ -26,7 +26,7 @@ Systematically challenge design decisions, assumptions, and scope to surface ris
 ## When to Use
 
 Use this skill when:
-- Understanding document has been generated (Phase 1.5.6 of implement-feature)
+- Understanding document has been generated (Phase 1.5.6 of implementing-features)
 - Design document needs adversarial review
 - User explicitly requests "challenge this" or "devil's advocate review"
 - Before committing to a major architectural decision
@@ -34,7 +34,7 @@ Use this skill when:
 Do NOT use this skill:
 - During active user discovery (wait until understanding doc is complete)
 - For code review (use code-reviewer skill instead)
-- For implementation validation (use factchecker instead)
+- For implementation validation (use fact-checking instead)
 
 ---
 

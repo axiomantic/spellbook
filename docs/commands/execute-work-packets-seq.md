@@ -1,92 +1,326 @@
 # /execute-work-packets-seq
 
-Execute all work packets in dependency order, one at a time. Use this when you want to work through all tracks sequentially in a single session (with context resets between tracks).
+## Command Content
 
-## Usage
+``````````markdown
+# Execute Work Packets Sequentially
 
-```bash
-/execute-work-packets-seq <packet_dir>
-```
+Execute all work packets from a manifest in dependency order, ensuring each track completes before starting dependent tracks.
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `packet_dir` | path | Yes | Directory containing `manifest.json` and packet files |
+- `packet_dir` (required): Directory containing manifest.json and packet files
 
-## Overview
+## Execution Protocol
 
-This command executes the entire feature implementation by working through work packets sequentially. It's the alternative to running parallel sessions ("swarmed" mode) when you prefer a single-session workflow.
+### Step 1: Load and Validate Manifest
 
-## Workflow
+```bash
+packet_dir="<packet_dir>"
+manifest_file="$packet_dir/manifest.json"
 
-1. **Load manifest** - Read `manifest.json` from the packet directory
-2. **Topological sort** - Order tracks by dependencies (independent tracks first)
-3. **Execute each packet** - Process tracks in dependency order:
-   - Execute all tasks for the track
-   - Create completion marker
-   - Suggest `/shift-change` to reset context
-4. **Completion** - When all tracks done, suggest `/merge-work-packets`
+# Load manifest using read_json_safe
+# Verify all required fields exist:
+# - format_version
+# - feature
+# - tracks (array)
+# - merge_strategy
+# - post_merge_qa
+```
 
-## Context Management
+**Manifest Structure:**
+```json
+{
+  "format_version": "1.0.0",
+  "feature": "feature-name",
+  "tracks": [
+    {
+      "id": 1,
+      "name": "Track name",
+      "packet": "track-1.md",
+      "worktree": "/path/to/wt",
+      "branch": "feature/track-1",
+      "depends_on": []
+    }
+  ],
+  "merge_strategy": "worktree-merge",
+  "post_merge_qa": ["pytest", "green-mirage-audit"]
+}
+```
 
-After each track completes, the command suggests running `/shift-change` to:
+### Step 2: Topological Sort by Dependencies
 
-- Reset context for the next track
-- Preserve progress in the checkpoint/completion markers
-- Prevent context overflow during long implementations
+**Goal:** Execute tracks in an order that respects dependencies.
+
+**Algorithm:**
+1. Initialize: `completed = []`, `execution_order = []`
+2. While tracks remain:
+   - Find track where ALL `depends_on` IDs are in `completed`
+   - Add that track to `execution_order`
+   - Add track ID to `completed`
+3. If no track found but tracks remain: circular dependency error
+
+**Example:**
+```
+Track 1: depends_on []
+Track 2: depends_on [1]
+Track 3: depends_on [1, 2]
+
+Execution order: [1, 2, 3]
+```
+
+**Validation:**
+- Detect circular dependencies
+- Ensure all dependency IDs reference valid tracks
+- Verify topological sort produces valid ordering
+
+### Step 3: Sequential Execution Loop
+
+For each track in execution_order:
+
+```
+=== Executing Track {track.id}: {track.name} ===
+
+Packet: {packet_dir}/{track.packet}
+Worktree: {track.worktree}
+Branch: {track.branch}
+Dependencies: {track.depends_on}
+```
+
+**Execute using /execute-work-packet:**
+
+```bash
+Invoke /execute-work-packet command with:
+- packet_path: "{packet_dir}/{track.packet}"
+- No --resume flag (fresh execution)
+
+Follow all steps from execute-work-packet:
+1. Parse packet
+2. Check dependencies (should pass since we're in order)
+3. Setup worktree
+4. Execute tasks with TDD
+5. Create completion marker
+```
+
+**Wait for completion:**
+- Execute-work-packet is blocking
+- Only proceed to next track when current track completes
+- If execution fails, STOP entire sequence
+
+### Step 4: Context Compaction (Between Tracks)
+
+After each track completes:
+
+```
+✓ Track {track.id} completed
+
+Context size is growing. To preserve session capacity:
+
+Invoke /handoff command to:
+- Capture track completion state
+- Preserve manifest location and progress
+- Clear implementation details from context
+- Prepare for next track execution
+
+After compaction, the next track will execute in a fresh context.
+```
+
+**Why compact between tracks:**
+- Prevents context overflow in long-running sequences
+- Each track starts with clean context
+- Manifest and completion markers preserve state
+- Enables recovery if session drops
+
+**User decision:**
+- Suggest compaction after each track
+- User can decline and continue
+- Critical for sequences with 3+ tracks
+
+### Step 5: Progress Tracking
+
+**Track completion markers:**
+```bash
+# After each track, verify completion marker exists
+completion_file="$packet_dir/track-{track.id}.completion.json"
+
+if [ ! -f "$completion_file" ]; then
+  echo "ERROR: Track {track.id} did not create completion marker"
+  exit 1
+fi
+```
+
+**Display progress:**
+```
+=== Execution Progress ===
+
+✓ Track 1: Core API (complete)
+✓ Track 2: Frontend (complete)
+→ Track 3: Tests (next)
+  Track 4: Documentation (blocked on 3)
+
+Completed: 2/4
+Remaining: 2
+```
+
+### Step 6: Completion Detection
+
+All tracks complete when:
+- Every track has a completion marker: `track-{id}.completion.json`
+- All markers have `"status": "complete"`
+- No errors reported
+
+**Final status check:**
+```bash
+# Verify all tracks complete
+for track in manifest.tracks:
+  completion_file="$packet_dir/track-{track.id}.completion.json"
+  if [ ! -f "$completion_file" ]; then
+    echo "ERROR: Track {track.id} incomplete"
+    exit 1
+  fi
+done
+```
+
+### Step 7: Suggest Next Step
+
+When all tracks complete:
+
+```
+✓ All tracks completed successfully!
+
+Tracks executed:
+  ✓ Track 1: Core API
+  ✓ Track 2: Frontend
+  ✓ Track 3: Tests
+  ✓ Track 4: Documentation
+
+Next step: Merge all tracks
+
+Run: /merge-work-packets {packet_dir}
+
+This will:
+1. Verify all completion markers
+2. Invoke worktree-merge skill
+3. Run QA gates: {manifest.post_merge_qa}
+4. Report final integration status
+```
+
+## Error Handling
+
+**Track execution failure:**
+- If /execute-work-packet fails, STOP sequence
+- Do not proceed to dependent tracks
+- Report failure details:
+  - Which track failed
+  - Which task within track failed
+  - Error message
+- Suggest resumption with --resume flag
+
+**Missing dependency:**
+- Should not occur due to topological sort
+- If detected, indicates manifest corruption
+- Abort sequence, suggest manifest verification
+
+**Circular dependency:**
+- Detected during topological sort in Step 2
+- Report cycle: "Track A depends on B, B depends on A"
+- Abort sequence, suggest manifest fix
+
+**Completion marker missing:**
+- If track claims success but no marker exists
+- Indicates execution protocol violation
+- Re-run track or create marker manually
 
 ## Recovery
 
-If execution is interrupted:
+**Resume after failure:**
 
-1. The command checks for existing completion markers
-2. Skips already-completed tracks
-3. Resumes the in-progress track from its checkpoint
-4. Continues with remaining tracks
+If sequence stops mid-execution:
+1. Check which tracks have completion markers
+2. Re-run /execute-work-packets-seq with same packet_dir
+3. Topological sort will identify completed tracks
+4. Skip tracks with completion markers
+5. Resume from first incomplete track
 
-## Example
-
+**Implementation:**
 ```bash
-# Execute all packets for a feature
-/execute-work-packets-seq ~/.claude/work-packets/user-auth/
+# Before executing each track
+completion_file="$packet_dir/track-{track.id}.completion.json"
 
-# Directory structure:
-# ~/.claude/work-packets/user-auth/
-# ├── manifest.json
-# ├── track-1-backend.md
-# ├── track-2-frontend.md
-# ├── track-3-tests.md
-# └── checkpoints/
+if [ -f "$completion_file" ]; then
+  echo "✓ Track {track.id} already complete, skipping"
+  continue
+fi
+
+# Otherwise, execute track
 ```
 
-## Output
+## Performance Considerations
+
+**Sequential vs Parallel:**
+- This command executes serially
+- For parallel execution, use individual /execute-work-packet commands
+- Sequential execution ensures:
+  - Clear dependency resolution
+  - Easier debugging (one thing at a time)
+  - Lower resource usage
+  - Context compaction between tracks
+
+**When to use sequential:**
+- Dependencies exist between tracks
+- Resource-constrained environment
+- Debugging execution flow
+- Learning/testing the workflow
+
+**When to use parallel:**
+- Tracks are independent
+- Want maximum speed
+- Have sufficient resources
+- Comfortable with concurrent debugging
+
+## Example Session
 
 ```
-Executing work packets sequentially...
+User: /execute-work-packets-seq /Users/me/.claude/docs/myproject/packets
 
-Track 1: backend (no dependencies)
-  Executing track-1-backend.md...
-  [TDD workflow for each task]
-  Track 1 complete.
+=== Loading manifest ===
+Feature: User Authentication
+Tracks: 4
+Dependencies detected: 2 → [1], 3 → [1,2], 4 → [3]
 
-  Suggest: /shift-change to reset context before next track
+=== Topological sort ===
+Execution order: [1, 2, 3, 4]
 
-Track 2: frontend (depends on: backend)
-  Verifying Track 1 completion... OK
-  Executing track-2-frontend.md...
-  [TDD workflow for each task]
-  Track 2 complete.
+=== Executing Track 1: Core API ===
+Packet: /Users/me/.claude/docs/myproject/packets/track-1.md
+Dependencies: none
+Status: Starting...
 
-...
+[TDD execution for all Track 1 tasks...]
 
-All tracks complete!
-Suggest: /merge-work-packets ~/.claude/work-packets/user-auth/
+✓ Track 1 completed
+Completion marker: track-1.completion.json
+
+Context compaction suggested. Run /handoff? [yes/no]
+
+=== Executing Track 2: Frontend ===
+Packet: /Users/me/.claude/docs/myproject/packets/track-2.md
+Dependencies: [1] ✓ satisfied
+Status: Starting...
+
+[Continues for all tracks...]
+
+=== All tracks complete ===
+Next: /merge-work-packets /Users/me/.claude/docs/myproject/packets
 ```
 
-## Related
+## Notes
 
-- [/execute-work-packet](execute-work-packet.md) - Execute a single packet
-- [/merge-work-packets](merge-work-packets.md) - Merge completed packets
-- [/shift-change](shift-change.md) - Reset session context
-- [implement-feature](../skills/implement-feature.md) - Skill that generates work packets
+- Respects manifest.json as source of truth
+- Completion markers enable idempotent execution
+- Compaction prevents context overflow
+- Topological sort handles complex dependency graphs
+- Each track isolated in its own worktree
+- Skills (TDD, code review, factcheck) invoked via Skill tool
+- Integration testing deferred to merge phase
+``````````

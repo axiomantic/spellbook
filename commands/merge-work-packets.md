@@ -1,11 +1,11 @@
 ---
-description: Verify all tracks complete, invoke smart-merge, run QA gates, report final integration status.
+description: Verify all tracks complete, invoke worktree-merge, run QA gates, report final integration status.
 disable-model-invocation: true
 ---
 
 # Merge Work Packets
 
-Integrate all completed work packets using smart-merge and verify through comprehensive QA gates.
+Integrate all completed work packets using worktree-merge and verify through comprehensive QA gates.
 
 ## Parameters
 
@@ -33,7 +33,7 @@ manifest_file="$packet_dir/manifest.json"
 - `format_version`: "1.0.0"
 - `feature`: Feature being integrated
 - `tracks`: Array of track metadata
-- `merge_strategy`: "smart-merge" or "manual"
+- `merge_strategy`: "worktree-merge" or "manual"
 - `post_merge_qa`: Array of QA gate commands
 - `project_root`: Path to main repository
 
@@ -137,7 +137,7 @@ Total tracks: 3
 **If --continue-merge flag NOT set:**
 
 ```
-Invoke the smart-merge skill using the Skill tool with:
+Invoke the worktree-merge skill using the Skill tool with:
 
 Context:
 - Feature: {manifest.feature}
@@ -153,7 +153,7 @@ Instructions:
 4. Create integration branch with merged code
 5. Report conflicts requiring manual resolution
 
-The smart-merge skill will:
+The worktree-merge skill will:
 - Create merge branch in project_root
 - Integrate all track branches
 - Detect and resolve conflicts
@@ -167,7 +167,7 @@ The smart-merge skill will:
 
 ### Step 5: Handle Merge Conflicts
 
-**If smart-merge reports conflicts:**
+**If worktree-merge reports conflicts:**
 
 ```
 ⚠ Merge conflicts detected
@@ -271,9 +271,9 @@ else
 fi
 ```
 
-**Gate: green-mirage-audit**
+**Gate: audit-green-mirage**
 ```
-Invoke the green-mirage-audit skill using the Skill tool
+Invoke the audit-green-mirage skill using the Skill tool
 
 This will:
 - Analyze all tests for actual behavior validation
@@ -287,9 +287,9 @@ If audit fails:
 - Re-run merge
 ```
 
-**Gate: factchecker**
+**Gate: fact-checking**
 ```
-Invoke the factchecker skill using the Skill tool with:
+Invoke the fact-checking skill using the Skill tool with:
 - Verify feature requirements met
 - Check acceptance criteria from implementation plan
 - Validate integration completeness
@@ -322,8 +322,8 @@ fi
 === QA Gate Results ===
 
 ✓ pytest: All tests passed (124/124)
-✓ green-mirage-audit: High quality tests, no issues
-✓ factchecker: All acceptance criteria met
+✓ audit-green-mirage: High quality tests, no issues
+✓ fact-checking: All acceptance criteria met
 ✓ npm run lint: No linting errors
 
 All gates PASSED
@@ -393,7 +393,7 @@ After resolving:
 - Abort merge
 
 **Merge conflicts:**
-- Detected by smart-merge skill
+- Detected by worktree-merge skill
 - Display conflict details with file paths and track origins
 - Offer Manual resolution or Abort
 - If Manual: pause and provide resolution instructions
@@ -405,12 +405,12 @@ After resolving:
 - Do NOT proceed to subsequent gates
 - Suggest fixes based on gate type:
   - pytest: fix test failures
-  - green-mirage-audit: improve test quality
-  - factchecker: address acceptance criteria gaps
+  - audit-green-mirage: improve test quality
+  - fact-checking: address acceptance criteria gaps
   - custom: check command output
 
 **Smart merge skill errors:**
-- If smart-merge skill fails to invoke
+- If worktree-merge skill fails to invoke
 - If merge strategy unknown
 - If worktree paths invalid
 - Report error and suggest manual merge

@@ -1,3 +1,8 @@
+# /distill-session
+
+## Command Content
+
+``````````markdown
 # Distill Session
 
 <ROLE>
@@ -38,7 +43,7 @@ Your job is to perform forensic extraction: methodically process the session in 
 
 **What this skill produces:**
 - A standalone markdown file at `~/.local/spellbook/distilled/{project}/{slug}-{timestamp}.md`
-- Follows shift-change.md format exactly, with Section 0 at the TOP
+- Follows handoff.md format exactly, with Section 0 at the TOP
 - Section 0 contains executable commands (Skill invocation, document reads, todo restoration)
 - Ready for a new session to consume via "continue work from [path]"
 - New session will execute Section 0 FIRST, restoring workflow before reading context
@@ -59,7 +64,7 @@ Before starting, internalize these failure modes:
 | **Relative paths** | Break when session resumes in different context | ALWAYS use absolute paths starting with / |
 | **Trusting conversation claims** | "Task 4 is done" may be stale/wrong | Verify file state in Phase 2.5 with actual reads |
 | **Skipping plan doc search** | 90% of broken distillations miss plan docs | This is NON-NEGOTIABLE - search EVERY time |
-| **Generic skill resume** | "Continue the workflow" is useless | Invoke the skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent with specific resume context |
+| **Generic skill resume** | "Continue the workflow" is useless | Invoke the skill using the `Skill` tool or your platform's native skill loading with specific resume context |
 | **Missing verification commands** | Resuming agent can't verify completion | Every task needs a runnable check command |
 
 ---
@@ -243,7 +248,7 @@ For EACH file touched:
 - What was the exact stopping point?
 
 ### 6. Skills & Commands (CRITICAL)
-- What /skills or skill invocations (using the `Skill` tool, `use_spellbook_skill`, or platform equivalent) were active?
+- What /skills or skill invocations (using the `Skill` tool or your platform's native skill loading) were active?
 - What was their EXACT position (Phase N, Task M)?
 - What subagents were spawned?
   - Agent IDs
@@ -295,7 +300,7 @@ For each agent ID captured in Step 2:
 PROJECT_ENCODED=$(pwd | tr '/' '-')
 
 # Read agent's session file (contains full conversation)
-AGENT_FILE="$HOME/.claude/projects/${PROJECT_ENCODED}/agent-{agent_id}.jsonl"
+AGENT_FILE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/${PROJECT_ENCODED}/agent-{agent_id}.jsonl"
 
 # Extract the agent's final response (last line with role=assistant)
 tail -1 "$AGENT_FILE" | jq -r '.message.content[0].text // .message.content'
@@ -304,11 +309,13 @@ tail -1 "$AGENT_FILE" | jq -r '.message.content[0].text // .message.content'
 **Python helper for extraction:**
 ```python
 import json
+import os
 from pathlib import Path
 
 def get_agent_output(project_encoded: str, agent_id: str) -> str:
     """Extract agent's final output from persisted session file."""
-    agent_file = Path.home() / ".claude" / "projects" / project_encoded / f"agent-{agent_id}.jsonl"
+    claude_config_dir = os.environ.get('CLAUDE_CONFIG_DIR', str(Path.home() / '.claude'))
+    agent_file = Path(claude_config_dir) / "projects" / project_encoded / f"agent-{agent_id}.jsonl"
 
     if not agent_file.exists():
         return f"[AGENT {agent_id} FILE NOT FOUND]"
@@ -448,16 +455,16 @@ wc -l /path/to/file  # Expected: ~300
 **Step 2: Generate skill resume commands**
 
 For each active skill:
-Invoke the skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent.
+Invoke the skill using the `Skill` tool or your platform's native skill loading.
 
 ---
 
 ### Phase 3: Synthesis
 
-**Step 1: Read shift-change.md format**
+**Step 1: Read handoff.md format**
 
 ```bash
-cat ~/.claude/commands/shift-change.md
+cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/commands/handoff.md"
 ```
 
 **Step 2: Spawn synthesis agent**
@@ -476,7 +483,7 @@ You will receive:
 - Verification commands (runnable checks)
 
 ## Output Format
-Follow shift-change.md format EXACTLY. **Section 0 is the MOST CRITICAL** - it must appear FIRST and contain executable commands.
+Follow handoff.md format EXACTLY. **Section 0 is the MOST CRITICAL** - it must appear FIRST and contain executable commands.
 
 ### Section 0: MANDATORY FIRST ACTIONS (MUST BE AT TOP)
 
@@ -570,7 +577,7 @@ If no docs to re-read: Write "NO DOCUMENTS TO RE-READ"
 **MUST be executable, not descriptive:**
 ```markdown
 \`\`\`
-Invoke the `implement-feature` skill using the `Skill` tool, `use_spellbook_skill`, or platform equivalent with the following arguments:
+Invoke the `implementing-features` skill using the `Skill` tool or your platform's native skill loading with the following arguments:
 --resume-from Phase3.Task7
 --impl-plan /Users/.../impl.md
 --skip-phases 0,1,2
@@ -716,3 +723,4 @@ Original session preserved at: {session_file}
 - [ ] All paths are ABSOLUTE (start with /)
 - [ ] A fresh instance executing Section 0 would restore workflow before reading context
 - [ ] A fresh instance could resume mid-stride with this output
+``````````

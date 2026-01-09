@@ -3,6 +3,15 @@
 This file contains instructions for working on the spellbook codebase itself.
 For the installable template that gets inserted into user configs, see `CLAUDE.spellbook.md`.
 
+## Glossary
+
+| Term | Location | Purpose |
+|------|----------|---------|
+| **Library skill** | `skills/*/SKILL.md` | Installed by spellbook for end users. Changes require CHANGELOG, README, and docs updates. |
+| **Library command** | `commands/*.md` | Installed by spellbook for end users. Changes require CHANGELOG, README, and docs updates. |
+| **Repo skill** | `.claude/skills/*/SKILL.md` | Internal tooling for spellbook development only. NOT installed for users. No external documentation needed. |
+| **Installable template** | `CLAUDE.spellbook.md`, `AGENTS.spellbook.md` | Content inserted into user config files during installation. |
+
 ## Project Overview
 
 Spellbook provides AI assistant skills and workflows for Claude Code, Gemini CLI, OpenCode, and Codex.
@@ -11,8 +20,9 @@ Spellbook provides AI assistant skills and workflows for Claude Code, Gemini CLI
 
 ```
 spellbook/
-├── skills/              # Skill definitions (SKILL.md files)
-├── commands/            # Slash command definitions (*.md)
+├── .claude/skills/      # Repo skills (internal tooling, NOT installed for users)
+├── skills/              # Library skills (installed for users)
+├── commands/            # Library commands (installed for users)
 ├── agents/              # Agent definitions
 ├── installer/           # Multi-platform installer
 │   ├── platforms/       # Platform-specific installers (claude_code, gemini, opencode, codex)
@@ -20,8 +30,7 @@ spellbook/
 ├── spellbook_mcp/       # MCP server for skill discovery/loading
 ├── scripts/             # Build and maintenance scripts
 ├── tests/               # Test suites (unit, integration)
-├── docs/                # Generated documentation (do not edit directly)
-├── docs-src/            # Documentation source files
+├── docs/                # Documentation (skills/commands/agents generated, other content manual)
 ├── lib/                 # Shared JavaScript libraries
 └── extensions/          # Platform extension manifests
 ```

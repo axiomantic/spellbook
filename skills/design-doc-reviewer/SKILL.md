@@ -1,6 +1,6 @@
 ---
 name: design-doc-reviewer
-description: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning. Performs exhaustive analysis to ensure the design is specific enough to create a detailed, coherent, and actionable implementation plan without hand-waving or ambiguity.
+description: "Use when reviewing design documents, technical specifications, or architecture docs before implementation planning"
 ---
 
 <ROLE>
@@ -276,12 +276,12 @@ For each interface/library/codebase reference:
 
 **Discrepancy:** [if any - this is a critical finding]
 
-**Escalate to factchecker?** YES / NO
+**Escalate to fact-checking?** YES / NO
 ```
 
 ### 4.5 Factchecker Escalation
 
-Some claims require deeper verification than a design review can provide. Flag claims for escalation to the `factchecker` skill when:
+Some claims require deeper verification than a design review can provide. Flag claims for escalation to the `fact-checking` skill when:
 
 | Escalation Trigger | Examples |
 |-------------------|----------|
@@ -305,7 +305,7 @@ For each escalated claim:
 
 <RULE>
 Quick verification (reading docstrings, checking signatures) is sufficient for most claims.
-Escalate to factchecker only when concrete evidence (test execution, benchmarks, security analysis) is required.
+Escalate to fact-checking only when concrete evidence (test execution, benchmarks, security analysis) is required.
 </RULE>
 
 ## Phase 5: Implementation Planner Simulation
@@ -373,7 +373,7 @@ Document every gap:
 
 ### Claims Requiring Factchecker Verification
 
-List claims that need deeper verification via the `factchecker` skill:
+List claims that need deeper verification via the `fact-checking` skill:
 
 ```
 | # | Claim | Location | Category | Recommended Depth |
@@ -384,9 +384,9 @@ List claims that need deeper verification via the `factchecker` skill:
 ```
 
 <RULE>
-After this review, use the Skill tool to invoke the `factchecker` skill with these claims pre-flagged.
-The factchecker will provide concrete evidence (code traces, benchmarks, security analysis) for each claim.
-Do NOT implement your own fact-checking - delegate to the factchecker skill.
+After this review, use the Skill tool to invoke the `fact-checking` skill with these claims pre-flagged.
+The fact-checking will provide concrete evidence (code traces, benchmarks, security analysis) for each claim.
+Do NOT implement your own fact-checking - delegate to the fact-checking skill.
 </RULE>
 
 ### Critical Findings (Must Fix Before Implementation Planning)
@@ -441,7 +441,7 @@ Conclude with a structured plan for fixing the design document:
 ...
 
 ### Factchecker Verification Required
-If claims were escalated, use the Skill tool to invoke the `factchecker` skill before finalizing.
+If claims were escalated, use the Skill tool to invoke the `fact-checking` skill before finalizing.
 Pre-flag these claims for verification:
 1. [ ] [Claim] - [Category] - [Recommended Depth]
 2. [ ] [Claim] - [Category] - [Recommended Depth]
@@ -495,12 +495,12 @@ Before completing review, verify:
 [ ] Did I verify interface behaviors by reading source/docs (not assuming from names)?
 [ ] Did I flag every unverified interface behavior claim?
 [ ] Did I check for invented parameters or fabricated convenience features?
-[ ] Did I identify claims requiring factchecker escalation (security, performance, concurrency)?
+[ ] Did I identify claims requiring fact-checking escalation (security, performance, concurrency)?
 [ ] Did I simulate an implementation planner for each component?
 [ ] Does every finding include exact location?
 [ ] Does every finding include specific remediation?
 [ ] Did I provide a prioritized remediation plan?
-[ ] Did I include factchecker verification step if claims were escalated?
+[ ] Did I include fact-checking verification step if claims were escalated?
 [ ] Could an implementation planner create a detailed plan from this design + my recommended fixes?
 
 If NO to ANY item, go back and complete it.

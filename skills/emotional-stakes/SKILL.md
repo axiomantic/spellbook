@@ -1,6 +1,6 @@
 ---
 name: emotional-stakes
-description: "Generate per-task emotional stakes (EmotionPrompt + NegativeReinforcement) with task-appropriate professional personas. Improves accuracy and truthfulness based on research."
+description: "Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness"
 ---
 
 # Emotional Stakes
@@ -143,5 +143,5 @@ Then proceed with the work. Stakes are internalized.
 ## Research Basis
 
 - **EmotionPrompt** (2023): Emotional stimuli improved instruction tasks by 8% and BIG-Bench reasoning by 115%. [arXiv](https://arxiv.org/abs/2307.11760)
-- **NegativePrompt** (2024): Negative consequence framing improved instruction tasks by 12.89% and significantly increased truthfulness. [IJCAI](https://www.ijcai.org/proceedings/2024/0706.pdf)
+- **NegativePrompt** (2024): Negative consequence framing improved instruction tasks by 12.89% and significantly increased truthfulness. [IJCAI](https://www.ijcai.org/proceedings/2024/719)
 - **Personas + Stimuli**: Research shows personas without stakes are "just costumes." Pairing personas with emotional stimuli produces highest effectiveness.

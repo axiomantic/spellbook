@@ -230,11 +230,11 @@ PROGRESS TRACKING:
 ### 5. Integration Points
 
 **Skills Using ARH:**
-- implement-feature (Phase 1.5.0, 1.5.2)
-- factchecker (evidence validation questions)
-- find-dead-code (usage confirmation questions)
+- implementing-features (Phase 1.5.0, 1.5.2)
+- fact-checking (evidence validation questions)
+- finding-dead-code (usage confirmation questions)
 - scientific-debugging (hypothesis validation questions)
-- smart-merge (conflict resolution questions)
+- worktree-merge (conflict resolution questions)
 
 **How to Reference:**
 ```markdown

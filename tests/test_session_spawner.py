@@ -22,7 +22,6 @@ def mock_env_vars():
     return {
         "SPELLBOOK_SWARM_ID": "test-swarm-123",
         "SPELLBOOK_PACKET_ID": "packet-456",
-        "ANTHROPIC_API_KEY": "test-api-key-789",
         "SPELLBOOK_COORDINATION_BACKEND": "filesystem",
         "SPELLBOOK_CONFIG_PATH": "/test/config/path",
     }
@@ -82,18 +81,6 @@ class TestSessionSpawner:
             == mock_env_vars["SPELLBOOK_CONFIG_PATH"]
         )
 
-        # ANTHROPIC_API_KEY should be inherited from current environment
-        with patch.dict(
-            os.environ, {"ANTHROPIC_API_KEY": mock_env_vars["ANTHROPIC_API_KEY"]}
-        ):
-            env_vars = spawner.build_env_vars(
-                swarm_id=mock_env_vars["SPELLBOOK_SWARM_ID"],
-                packet_id=mock_env_vars["SPELLBOOK_PACKET_ID"],
-            )
-            assert (
-                env_vars.get("ANTHROPIC_API_KEY") == mock_env_vars["ANTHROPIC_API_KEY"]
-            )
-
     def test_build_env_vars_inherits_current_env(self, spawner):
         """Test that build_env_vars inherits current environment."""
         with patch.dict(
@@ -101,7 +88,7 @@ class TestSessionSpawner:
             {
                 "PATH": "/usr/bin:/bin",
                 "HOME": "/home/test",
-                "ANTHROPIC_API_KEY": "inherited-key",
+                "CUSTOM_VAR": "inherited-value",
             },
         ):
             env_vars = spawner.build_env_vars(
@@ -110,7 +97,7 @@ class TestSessionSpawner:
 
             assert env_vars["PATH"] == "/usr/bin:/bin"
             assert env_vars["HOME"] == "/home/test"
-            assert env_vars["ANTHROPIC_API_KEY"] == "inherited-key"
+            assert env_vars["CUSTOM_VAR"] == "inherited-value"
             assert env_vars["SPELLBOOK_SWARM_ID"] == "test-swarm"
             assert env_vars["SPELLBOOK_PACKET_ID"] == "test-packet"
 

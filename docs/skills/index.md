@@ -9,7 +9,7 @@ Skills are reusable workflows that provide structured approaches to common devel
 Skills are invoked automatically when relevant, or explicitly:
 
 ```
-Use the debug skill to investigate this issue
+Use the debugging skill to investigate this issue
 ```
 
 ### In Other Platforms
@@ -28,7 +28,7 @@ Foundational skills for structured development (from [obra/superpowers](https://
 | [writing-plans](writing-plans.md) | After brainstorming - create implementation plan |
 | [executing-plans](executing-plans.md) | Execute a written plan systematically |
 | [test-driven-development](test-driven-development.md) | Implementing any feature or fix |
-| [debug](debug.md) | **Unified debugging entry point** - routes to appropriate methodology |
+| [debugging](debugging.md) | **Unified debugging entry point** - routes to appropriate methodology |
 | [using-git-worktrees](using-git-worktrees.md) | Isolating feature work from main codebase |
 | [finishing-a-development-branch](finishing-a-development-branch.md) | Complete development work with merge/PR/cleanup options |
 
@@ -39,9 +39,9 @@ Skills for maintaining and improving code quality:
 | Skill | When to Use |
 |-------|-------------|
 | [green-mirage-audit](green-mirage-audit.md) | Auditing test suite quality |
-| [fix-tests](fix-tests.md) | Fixing failing or weak tests |
-| [factchecker](factchecker.md) | Verifying claims and assumptions |
-| [find-dead-code](find-dead-code.md) | Identifying unused code |
+| [fixing-tests](fixing-tests.md) | Fixing failing or weak tests |
+| [fact-checking](fact-checking.md) | Verifying claims and assumptions |
+| [finding-dead-code](finding-dead-code.md) | Identifying unused code |
 | [receiving-code-review](receiving-code-review.md) | Processing code review feedback |
 | [requesting-code-review](requesting-code-review.md) | Requesting structured code review |
 
@@ -51,11 +51,11 @@ Skills for building and reviewing features:
 
 | Skill | When to Use |
 |-------|-------------|
-| [implement-feature](implement-feature.md) | End-to-end feature implementation |
+| [implementing-features](implementing-features.md) | End-to-end feature implementation |
 | [design-doc-reviewer](design-doc-reviewer.md) | Reviewing design documents |
 | [implementation-plan-reviewer](implementation-plan-reviewer.md) | Reviewing implementation plans |
 | [devils-advocate](devils-advocate.md) | Challenging assumptions and decisions |
-| [smart-merge](smart-merge.md) | Merging parallel worktrees |
+| [worktree-merge](worktree-merge.md) | Merging parallel worktrees |
 
 ### Specialized Skills
 

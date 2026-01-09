@@ -33,10 +33,9 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Prerequisites](#prerequisites)
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (29 total)](#skills-29-total)
+  - [Skills (31 total)](#skills-31-total)
   - [Commands (16 total)](#commands-16-total)
   - [Agents (1 total)](#agents-1-total)
 - [Serious Fun](#serious-fun)
@@ -66,44 +65,32 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 ---
 
-## Prerequisites
-
-Install [uv](https://docs.astral.sh/uv/) (fast Python package manager):
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
 ## Quick Install
 
-One-liner:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.sh | bash
 ```
 
-Or manually:
-```bash
-git clone https://github.com/axiomantic/spellbook.git ~/.local/share/spellbook
-cd ~/.local/share/spellbook
-uv run install.py
-```
+The installer requires Python 3.10+ and git, then automatically installs uv and configures skills for detected platforms.
 
-**Upgrade:** `cd ~/.local/share/spellbook && git pull && uv run install.py`
+**Upgrade:** `cd ~/.local/share/spellbook && git pull && python3 install.py`
 
-**Uninstall:** `uv run ~/.local/share/spellbook/uninstall.py`
+**Uninstall:** `python3 ~/.local/share/spellbook/uninstall.py`
+
+See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/installation/) for advanced options.
 
 ## What's Included
 
-### Skills (29 total)
+### Skills (31 total)
 
 Reusable workflows for structured development:
 
 | Category | Skills | Origin |
 |----------|--------|--------|
-| **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [debug], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
-| **Code Quality** | [green-mirage-audit], [fix-tests], [factchecker], [find-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
-| **Feature Dev** | [implement-feature], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [smart-merge] | spellbook |
-| **Specialized** | [async-await-patterns], [nim-pr-guide] | spellbook |
+| **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [debugging], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
+| **Code Quality** | [green-mirage-audit], [fixing-tests], [fact-checking], [finding-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
+| **Feature Dev** | [implementing-features], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [worktree-merge], [merge-conflict-resolution] | spellbook |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
 | **Meta** | [using-skills], [writing-skills], [subagent-prompting], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [subagent-driven-development] | [superpowers] |
 | **Session** | [fun-mode], [emotional-stakes] | spellbook |
 
@@ -111,20 +98,22 @@ Reusable workflows for structured development:
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
 [executing-plans]: https://axiomantic.github.io/spellbook/latest/skills/executing-plans/
 [test-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/
-[debug]: https://axiomantic.github.io/spellbook/latest/skills/debug/
+[debugging]: https://axiomantic.github.io/spellbook/latest/skills/debugging/
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
 [green-mirage-audit]: https://axiomantic.github.io/spellbook/latest/skills/green-mirage-audit/
-[fix-tests]: https://axiomantic.github.io/spellbook/latest/skills/fix-tests/
-[factchecker]: https://axiomantic.github.io/spellbook/latest/skills/factchecker/
-[find-dead-code]: https://axiomantic.github.io/spellbook/latest/skills/find-dead-code/
+[fixing-tests]: https://axiomantic.github.io/spellbook/latest/skills/fixing-tests/
+[fact-checking]: https://axiomantic.github.io/spellbook/latest/skills/fact-checking/
+[finding-dead-code]: https://axiomantic.github.io/spellbook/latest/skills/finding-dead-code/
 [receiving-code-review]: https://axiomantic.github.io/spellbook/latest/skills/receiving-code-review/
 [requesting-code-review]: https://axiomantic.github.io/spellbook/latest/skills/requesting-code-review/
-[implement-feature]: https://axiomantic.github.io/spellbook/latest/skills/implement-feature/
+[implementing-features]: https://axiomantic.github.io/spellbook/latest/skills/implementing-features/
 [design-doc-reviewer]: https://axiomantic.github.io/spellbook/latest/skills/design-doc-reviewer/
 [implementation-plan-reviewer]: https://axiomantic.github.io/spellbook/latest/skills/implementation-plan-reviewer/
 [devils-advocate]: https://axiomantic.github.io/spellbook/latest/skills/devils-advocate/
-[smart-merge]: https://axiomantic.github.io/spellbook/latest/skills/smart-merge/
+[worktree-merge]: https://axiomantic.github.io/spellbook/latest/skills/worktree-merge/
+[merge-conflict-resolution]: https://axiomantic.github.io/spellbook/latest/skills/merge-conflict-resolution/
 [async-await-patterns]: https://axiomantic.github.io/spellbook/latest/skills/async-await-patterns/
+[using-lsp-tools]: https://axiomantic.github.io/spellbook/latest/skills/using-lsp-tools/
 [nim-pr-guide]: https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
@@ -141,12 +130,12 @@ Reusable workflows for structured development:
 
 | Command | Description | Origin |
 |---------|-------------|--------|
-| [/shift-change] | Custom session compaction | spellbook |
+| [/handoff] | Custom session compaction | spellbook |
 | [/distill-session] | Extract knowledge from sessions | spellbook |
 | [/simplify] | Code complexity reduction | spellbook |
 | [/address-pr-feedback] | Handle PR review comments | spellbook |
 | [/move-project] | Relocate projects safely | spellbook |
-| [/green-mirage-audit] | Test suite audit | spellbook |
+| [/audit-green-mirage] | Test suite audit | spellbook |
 | [/verify] | Verification before completion | [superpowers]* |
 | [/systematic-debugging] | Methodical debugging workflow | [superpowers]* |
 | [/scientific-debugging] | Hypothesis-driven debugging | spellbook |
@@ -156,16 +145,16 @@ Reusable workflows for structured development:
 | [/execute-work-packet] | Execute a single work packet with TDD | spellbook |
 | [/execute-work-packets-seq] | Execute all packets sequentially | spellbook |
 | [/merge-work-packets] | Merge completed packets with QA gates | spellbook |
-| [/fun] | Toggle fun mode for creative sessions | spellbook |
+| [/toggle-fun] | Toggle fun mode for creative sessions | spellbook |
 
 *\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
 
-[/shift-change]: https://axiomantic.github.io/spellbook/latest/commands/shift-change/
+[/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
 [/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/
 [/address-pr-feedback]: https://axiomantic.github.io/spellbook/latest/commands/address-pr-feedback/
 [/move-project]: https://axiomantic.github.io/spellbook/latest/commands/move-project/
-[/green-mirage-audit]: https://axiomantic.github.io/spellbook/latest/commands/green-mirage-audit/
+[/audit-green-mirage]: https://axiomantic.github.io/spellbook/latest/commands/audit-green-mirage/
 [/verify]: https://axiomantic.github.io/spellbook/latest/commands/verify/
 [/systematic-debugging]: https://axiomantic.github.io/spellbook/latest/commands/systematic-debugging/
 [/scientific-debugging]: https://axiomantic.github.io/spellbook/latest/commands/scientific-debugging/
@@ -175,7 +164,7 @@ Reusable workflows for structured development:
 [/execute-work-packet]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packet/
 [/execute-work-packets-seq]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/
 [/merge-work-packets]: https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/
-[/fun]: https://axiomantic.github.io/spellbook/latest/commands/fun/
+[/toggle-fun]: https://axiomantic.github.io/spellbook/latest/commands/toggle-fun/
 
 ### Agents (1 total)
 
@@ -194,7 +183,7 @@ So we made it fun.
 
 On first run, spellbook asks: *"Do you like fun?"* Say yes, and each session adopts a random persona - a noir detective investigating who ate your yogurt, a Victorian ghost baffled by modern technology, three raccoons in a trenchcoat processing complex emotions. Full commitment in dialogue - not despite quality, because of it. Your code, commits, and documentation stay completely professional.
 
-Say no, and it never asks again. Toggle anytime with `/fun`.
+Say no, and it never asks again. Toggle anytime with `/toggle-fun`.
 
 ## Platform Support
 
@@ -278,7 +267,7 @@ The core workflow: request a feature, answer a few questions, and let the skill 
 │ > Add dark mode toggle to settings                                          │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
-⏺ Skill(implement-feature)
+⏺ Skill(implementing-features)
 
   I'll help implement dark mode. First, let me gather preferences.
 
@@ -407,7 +396,7 @@ When implementing a complex feature, context can fill up before work completes. 
 │ > Implement webhook delivery with retry logic and dead letter queue         │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
-⏺ Skill(implement-feature)
+⏺ Skill(implementing-features)
 
   I'll help you implement the webhook delivery system. Let me first
   understand the current codebase architecture and gather requirements.
@@ -527,7 +516,7 @@ Discover tests that pass but don't actually verify behavior, then fix them.
 
 ```
 ╭─────────────────────────────────────────────────────────────────────────────╮
-│ > /green-mirage-audit                                                       │
+│ > /audit-green-mirage                                                       │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
 ⏺ Skill(green-mirage-audit)
@@ -559,7 +548,7 @@ Discover tests that pass but don't actually verify behavior, then fix them.
 │ > Fix the critical issues from the audit                                    │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
-⏺ Skill(fix-tests)
+⏺ Skill(fixing-tests)
 
   Loading audit report...
   Found 58 tests requiring remediation.
@@ -625,7 +614,7 @@ Split work across isolated branches, merge when complete.
 │ > Merge the worktrees back together                                         │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
-⏺ Skill(smart-merge)
+⏺ Skill(worktree-merge)
 
   Analyzing 3 worktrees for merge:
 

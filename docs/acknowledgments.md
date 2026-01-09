@@ -62,16 +62,16 @@ The following skills were developed specifically for Spellbook:
 | [async-await-patterns](skills/async-await-patterns.md) | JavaScript/TypeScript async/await best practices |
 | [design-doc-reviewer](skills/design-doc-reviewer.md) | Design document completeness review |
 | [devils-advocate](skills/devils-advocate.md) | Adversarial review of assumptions |
-| [debug](skills/debug.md) | Unified debugging entry point (routes to debugging commands) |
-| [factchecker](skills/factchecker.md) | Systematic claim verification |
-| [find-dead-code](skills/find-dead-code.md) | Unused code detection |
-| [fix-tests](skills/fix-tests.md) | Test remediation and quality improvement |
+| [debugging](skills/debugging.md) | Unified debugging entry point (routes to debugging commands) |
+| [fact-checking](skills/fact-checking.md) | Systematic claim verification |
+| [finding-dead-code](skills/finding-dead-code.md) | Unused code detection |
+| [fixing-tests](skills/fixing-tests.md) | Test remediation and quality improvement |
 | [green-mirage-audit](skills/green-mirage-audit.md) | Test suite quality audit |
-| [implement-feature](skills/implement-feature.md) | End-to-end feature implementation |
+| [implementing-features](skills/implementing-features.md) | End-to-end feature implementation |
 | [implementation-plan-reviewer](skills/implementation-plan-reviewer.md) | Implementation plan review |
 | [instruction-engineering](skills/instruction-engineering.md) | LLM prompt optimization |
 | [nim-pr-guide](skills/nim-pr-guide.md) | Nim language PR contribution guide |
-| [smart-merge](skills/smart-merge.md) | Intelligent worktree merging |
+| [worktree-merge](skills/worktree-merge.md) | Intelligent worktree merging |
 | [subagent-prompting](skills/subagent-prompting.md) | Effective subagent instruction patterns |
 
 ### Original Commands (Spellbook)
@@ -79,12 +79,12 @@ The following skills were developed specifically for Spellbook:
 | Command | Description |
 |---------|-------------|
 | [/scientific-debugging](commands/scientific-debugging.md) | Rigorous hypothesis-driven debugging methodology |
-| [/shift-change](commands/shift-change.md) | Custom session compaction |
+| [/handoff](commands/handoff.md) | Custom session compaction |
 | [/distill-session](commands/distill-session.md) | Extract knowledge from sessions |
 | [/simplify](commands/simplify.md) | Code complexity reduction |
 | [/address-pr-feedback](commands/address-pr-feedback.md) | Handle PR review comments |
 | [/move-project](commands/move-project.md) | Relocate projects safely |
-| [/green-mirage-audit](commands/green-mirage-audit.md) | Test suite audit command |
+| [/audit-green-mirage](commands/audit-green-mirage.md) | Test suite audit command |
 
 ## License
 

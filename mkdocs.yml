@@ -72,24 +72,26 @@ nav:
       - skills/writing-plans.md
       - skills/executing-plans.md
       - skills/test-driven-development.md
-      - skills/debug.md
+      - skills/debugging.md
       - skills/using-git-worktrees.md
       - skills/finishing-a-development-branch.md
     - Code Quality Skills:
       - skills/green-mirage-audit.md
-      - skills/fix-tests.md
-      - skills/factchecker.md
-      - skills/find-dead-code.md
+      - skills/fixing-tests.md
+      - skills/fact-checking.md
+      - skills/finding-dead-code.md
       - skills/receiving-code-review.md
       - skills/requesting-code-review.md
     - Feature Development:
-      - skills/implement-feature.md
+      - skills/implementing-features.md
       - skills/design-doc-reviewer.md
       - skills/implementation-plan-reviewer.md
       - skills/devils-advocate.md
-      - skills/smart-merge.md
+      - skills/worktree-merge.md
+      - skills/merge-conflict-resolution.md
     - Specialized Skills:
       - skills/async-await-patterns.md
+      - skills/using-lsp-tools.md
       - skills/nim-pr-guide.md
     - Meta Skills:
       - skills/using-skills.md
@@ -109,12 +111,12 @@ nav:
       - commands/systematic-debugging.md
       - commands/verify.md
     - Workflow Commands:
-      - commands/shift-change.md
+      - commands/handoff.md
       - commands/distill-session.md
       - commands/simplify.md
       - commands/address-pr-feedback.md
       - commands/move-project.md
-      - commands/green-mirage-audit.md
+      - commands/audit-green-mirage.md
       - commands/brainstorm.md
       - commands/write-plan.md
       - commands/execute-plan.md
@@ -123,7 +125,7 @@ nav:
       - commands/execute-work-packets-seq.md
       - commands/merge-work-packets.md
     - Session Commands:
-      - commands/fun.md
+      - commands/toggle-fun.md
   - Agents:
     - Overview: agents/index.md
     - agents/code-reviewer.md

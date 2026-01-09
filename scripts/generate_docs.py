@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).parent.parent
 SKILLS_DIR = REPO_ROOT / "skills"
 COMMANDS_DIR = REPO_ROOT / "commands"
 AGENTS_DIR = REPO_ROOT / "agents"
-DOCS_DIR = REPO_ROOT / "docs-src"
+DOCS_DIR = REPO_ROOT / "docs"
 
 # Skills that came from superpowers
 SUPERPOWERS_SKILLS = {
@@ -188,7 +188,7 @@ def main():
                     print(f"Generated: skills/{skill_dir.name}.md")
                 skill_count += 1
 
-    # Generate command docs
+    # Generate command docs (flat files)
     command_count = 0
     for cmd_file in sorted(COMMANDS_DIR.glob("*.md")):
         doc = generate_command_doc(cmd_file)
@@ -198,6 +198,20 @@ def main():
                 files_changed += 1
                 print(f"Generated: commands/{cmd_file.name}")
             command_count += 1
+
+    # Generate command docs (nested directories like commands/systematic-debugging/)
+    for cmd_dir in sorted(COMMANDS_DIR.iterdir()):
+        if cmd_dir.is_dir():
+            # Look for main command file (same name as directory)
+            main_cmd = cmd_dir / f"{cmd_dir.name}.md"
+            if main_cmd.exists():
+                doc = generate_command_doc(main_cmd)
+                if doc:
+                    output_file = DOCS_DIR / "commands" / f"{cmd_dir.name}.md"
+                    if write_if_changed(output_file, doc):
+                        files_changed += 1
+                        print(f"Generated: commands/{cmd_dir.name}.md")
+                    command_count += 1
 
     # Generate agent docs
     agent_count = 0
@@ -220,8 +234,17 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | Command | Description | Origin |
 |---------|-------------|--------|
 """
-    for cmd_file in sorted(COMMANDS_DIR.glob("*.md")):
-        name = cmd_file.stem
+    # Collect all command files (flat and nested)
+    all_cmd_files = []
+    for cmd_file in COMMANDS_DIR.glob("*.md"):
+        all_cmd_files.append((cmd_file.stem, cmd_file))
+    for cmd_dir in COMMANDS_DIR.iterdir():
+        if cmd_dir.is_dir():
+            main_cmd = cmd_dir / f"{cmd_dir.name}.md"
+            if main_cmd.exists():
+                all_cmd_files.append((cmd_dir.name, main_cmd))
+
+    for name, cmd_file in sorted(all_cmd_files, key=lambda x: x[0]):
         content = cmd_file.read_text()
         # Try to extract a description from the first paragraph
         lines = content.split("\n")

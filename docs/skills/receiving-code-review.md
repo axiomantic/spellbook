@@ -1,12 +1,13 @@
 # receiving-code-review
 
-Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+"Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable"
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Skill Content
 
+``````````markdown
 # Code Review Reception
 
 ## Overview
@@ -215,3 +216,4 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+``````````

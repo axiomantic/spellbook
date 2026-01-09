@@ -1,11 +1,8 @@
 ---
 name: subagent-prompting
 description: >
-  Apply instruction-engineering to all subagent prompts. Use BEFORE invoking
-  the Task tool, spawning agents, or dispatching parallel workers. Ensures
-  subagents receive persona-driven, research-backed prompts that maximize
-  compliance and output quality. Triggers on: "use a subagent", "spawn agent",
-  "dispatch", "Task tool", parallel agent work, or any multi-agent orchestration.
+  Use BEFORE invoking the Task tool, spawning agents, or dispatching parallel workers.
+  Triggers on: "use a subagent", "spawn agent", "dispatch", "Task tool", or any multi-agent orchestration.
 ---
 
 <ROLE>

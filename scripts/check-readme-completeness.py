@@ -8,7 +8,7 @@ Check that all commands, skills, and agents are documented.
 
 Validates:
 1. README.md mentions all skills/commands/agents
-2. docs-src/ has documentation pages for all items
+2. docs/ has documentation pages for all items
 3. mkdocs.yml nav includes all items
 
 Exits with code 0 if all are documented, code 1 if any are missing.
@@ -26,9 +26,9 @@ def main():
     commands_dir = repo_root / "commands"
     skills_dir = repo_root / "skills"
     agents_dir = repo_root / "agents"
-    docs_skills_dir = repo_root / "docs-src" / "skills"
-    docs_commands_dir = repo_root / "docs-src" / "commands"
-    docs_agents_dir = repo_root / "docs-src" / "agents"
+    docs_skills_dir = repo_root / "docs" / "skills"
+    docs_commands_dir = repo_root / "docs" / "commands"
+    docs_agents_dir = repo_root / "docs" / "agents"
 
     # Read files
     readme_content = readme_path.read_text()
@@ -75,17 +75,17 @@ def main():
     for skill in skills:
         doc_file = docs_skills_dir / f"{skill}.md"
         if not doc_file.exists():
-            issues.append(f"Missing docs page: docs-src/skills/{skill}.md")
+            issues.append(f"Missing docs page: docs/skills/{skill}.md")
 
     for cmd in commands:
         doc_file = docs_commands_dir / f"{cmd}.md"
         if not doc_file.exists():
-            issues.append(f"Missing docs page: docs-src/commands/{cmd}.md")
+            issues.append(f"Missing docs page: docs/commands/{cmd}.md")
 
     for agent in agents:
         doc_file = docs_agents_dir / f"{agent}.md"
         if not doc_file.exists():
-            issues.append(f"Missing docs page: docs-src/agents/{agent}.md")
+            issues.append(f"Missing docs page: docs/agents/{agent}.md")
 
     # Check mkdocs.yml nav includes items
     for skill in skills:

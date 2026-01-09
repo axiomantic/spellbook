@@ -12,16 +12,67 @@ def get_config_path() -> Path:
     return Path.home() / ".config" / "spellbook" / "spellbook.json"
 
 
-def get_spellbook_dir() -> Path:
-    """Get spellbook source directory from environment.
+def _is_spellbook_root(path: Path) -> bool:
+    """Check if a directory is the spellbook root by looking for key indicators.
 
-    Returns SPELLBOOK_DIR environment variable if set, otherwise
-    raises ValueError since we need it to find skill assets.
+    Args:
+        path: Directory to check
+
+    Returns:
+        True if the directory contains spellbook indicators
     """
+    # Key indicators: skills/ directory and CLAUDE.spellbook.md file
+    skills_dir = path / "skills"
+    spellbook_md = path / "CLAUDE.spellbook.md"
+    return skills_dir.is_dir() and spellbook_md.is_file()
+
+
+def _find_spellbook_root_from_file() -> Optional[Path]:
+    """Find spellbook root by walking up from this file's directory.
+
+    Returns:
+        Path to spellbook root if found, None otherwise
+    """
+    # Start from this file's directory (spellbook_mcp/)
+    current = Path(__file__).resolve().parent
+
+    # Walk up the directory tree looking for spellbook indicators
+    # Limit to reasonable depth to avoid infinite loops
+    for _ in range(10):
+        if _is_spellbook_root(current):
+            return current
+        parent = current.parent
+        if parent == current:
+            # Reached filesystem root
+            break
+        current = parent
+
+    return None
+
+
+def get_spellbook_dir() -> Path:
+    """Get spellbook source directory.
+
+    Resolution order:
+    1. SPELLBOOK_DIR environment variable (if set)
+    2. Derive from __file__ by walking up to find spellbook root
+    3. Default to ~/.local/spellbook
+
+    Returns:
+        Path to the spellbook directory
+    """
+    # 1. Check environment variable first
     spellbook_dir = os.environ.get("SPELLBOOK_DIR")
     if spellbook_dir:
         return Path(spellbook_dir)
-    raise ValueError("SPELLBOOK_DIR environment variable not set")
+
+    # 2. Try to find by walking up from this file
+    found_root = _find_spellbook_root_from_file()
+    if found_root:
+        return found_root
+
+    # 3. Default to ~/.local/spellbook
+    return Path.home() / ".local" / "spellbook"
 
 
 def config_get(key: str) -> Optional[Any]:
@@ -117,16 +168,15 @@ def session_init() -> dict:
         return {"fun_mode": "no"}
 
     # Fun mode enabled - select random persona/context/undertow
-    try:
-        spellbook_dir = get_spellbook_dir()
-    except ValueError:
-        # SPELLBOOK_DIR not set, can't find assets
+    spellbook_dir = get_spellbook_dir()
+    fun_assets = spellbook_dir / "skills" / "fun-mode"
+
+    # Verify the assets directory exists
+    if not fun_assets.is_dir():
         return {
             "fun_mode": "yes",
-            "error": "SPELLBOOK_DIR not set, cannot load fun-mode assets"
+            "error": f"fun-mode assets not found at {fun_assets}",
         }
-
-    fun_assets = spellbook_dir / "skills" / "fun-mode"
 
     return {
         "fun_mode": "yes",

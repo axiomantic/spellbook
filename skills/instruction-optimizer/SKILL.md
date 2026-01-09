@@ -1,6 +1,6 @@
 ---
 name: instruction-optimizer
-description: "Compress instruction files (skills, prompts, CLAUDE.md) to reduce tokens while preserving semantics, clarity, and capability. Smarter AND smaller."
+description: "Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability"
 ---
 
 # Instruction Optimizer

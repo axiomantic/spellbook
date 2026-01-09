@@ -1,3 +1,8 @@
+---
+name: instruction-engineering
+description: "Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts for maximum effectiveness"
+---
+
 # Instruction Engineering for LLMs (Enhanced)
 
 <ROLE>
@@ -24,7 +29,7 @@ Improves relative performance by **8% in instruction induction** and up to **115
 * **EP07-EP11 (Social Cognitive Theory):** Use terms like "Believe in your abilities" and "Stay determined" to boost creative and responsible outputs.
 
 ### 2. NegativePrompt Framework (Negative Stimuli)
-**Research:** [NegativePrompt: Leveraging Psychology for Large Language Models Enhancement](https://www.ijcai.org/proceedings/2024/0706.pdf) (IJCAI 2024)
+**Research:** [NegativePrompt: Leveraging Psychology for Large Language Models Enhancement](https://www.ijcai.org/proceedings/2024/719) (IJCAI 2024)
 
 Stimuli based on negative consequences improve performance by **12.89% in Instruction Induction** and **46.25% in BIG-Bench**. Critically, negative prompts **significantly increase truthfulness** by triggering a more cautious processing mode.
 
@@ -222,7 +227,7 @@ Justification: {if extended, reason why}
 
 **Also load:** `emotional-stakes` skill for the Professional Persona Table and task-appropriate persona selection.
 
-**Research Caveat:** [Personas in System Prompts Do Not Improve Performances of Large Language Models](https://arxiv.org/abs/2404.03035) (2024) found that simply telling a model it is an "expert" does not reliably improve factual accuracy and can introduce biases or "caricatures."
+**Research Caveat:** [When A Helpful Assistant Is Not Really Helpful](https://arxiv.org/abs/2311.10054) (2023) found that simply telling a model it is an "expert" does not reliably improve factual accuracy and can introduce biases or "caricatures."
 
 **Key Distinction:**
 | Approach | Example | Effectiveness |
@@ -342,7 +347,7 @@ When the engineered prompt will dispatch multiple subagents, include this struct
 **Expected output:** Files changed, test results, commit hash
 **Constraints:** Work only on assigned task, invoke TDD skill
 
-### Verification Agents (code review, factchecker)
+### Verification Agents (code review, fact-checking)
 **Scope:** Review specific commits/changes
 **Why subagent:** Self-contained verification, fresh eyes
 **Expected output:** Findings report with severity
@@ -450,6 +455,71 @@ Stay focused and dedicated to excellence. Are you sure that's your final answer?
 </FINAL_EMPHASIS>
 ```
 
+---
+
+## Skill-Specific: Claude Search Optimization (CSO)
+
+When engineering instructions FOR A SKILL (SKILL.md), apply these additional requirements.
+
+**Reference:** See `writing-skills` skill for comprehensive CSO guidance.
+
+### The Description Field is Critical
+
+The `description` in YAML frontmatter is how Claude decides whether to load your skill. This is pure language model reasoning (no regex, no ML classifiers).
+
+**The Workflow Leak Bug (Documented):**
+
+If your description summarizes workflow (steps, phases, process), Claude may follow the description instead of reading the full skill. This caused real failures:
+- Description: "dispatches subagent per task with code review between tasks"
+- Result: Claude did ONE review (from description) instead of TWO (from actual skill)
+
+**CSO-Compliant Description Formula:**
+
+```yaml
+# ✅ CORRECT: Trigger conditions only
+description: "Use when [triggering conditions, symptoms, situations]"
+
+# ❌ WRONG: Contains workflow that Claude might follow
+description: "Use when X - does Y then Z then W"
+```
+
+**Checklist for Skill Descriptions:**
+
+| Requirement | Check |
+|-------------|-------|
+| Starts with "Use when..." | Required |
+| Describes ONLY when to use | Required |
+| Contains NO workflow/steps/phases | Required |
+| Includes keywords users would naturally say | Recommended |
+| Under 500 characters | Recommended |
+| Third person (injected into system prompt) | Required |
+| Technology-agnostic (unless skill is tech-specific) | Recommended |
+
+**Examples:**
+
+```yaml
+# ❌ BAD: Workflow leak - Claude may skip reading skill
+description: "Use for TDD - write test first, watch it fail, write minimal code, refactor"
+
+# ✅ GOOD: Trigger conditions only
+description: "Use when implementing any feature or bugfix, before writing implementation code"
+
+# ❌ BAD: Too vague, no "Use when"
+description: "For async testing"
+
+# ✅ GOOD: Specific symptoms and contexts
+description: "Use when tests have race conditions, timing dependencies, or pass/fail inconsistently"
+```
+
+**When to Apply CSO:**
+
+- When creating new skills
+- When editing skill descriptions
+- When auditing skill discovery issues
+- When a skill isn't triggering when expected
+
+---
+
 <SELF_CHECK>
 Before submitting these engineered instructions, verify:
 
@@ -474,4 +544,11 @@ Before submitting these engineered instructions, verify:
 - [ ] If referencing skills: only CONTEXT provided, no duplicated skill instructions?
 - [ ] If multiple subagents: defined responsibilities with "Why subagent" justification from heuristics?
 - [ ] If multiple subagents: specified what orchestrator retains in main context?
+
+### CSO Compliance (if engineering a SKILL.md)
+- [ ] Description starts with "Use when..."?
+- [ ] Description contains NO workflow/steps/phases (workflow leak prevention)?
+- [ ] Description includes keywords users would naturally say?
+- [ ] Description is under 500 characters?
+- [ ] Description is third person?
 </SELF_CHECK>

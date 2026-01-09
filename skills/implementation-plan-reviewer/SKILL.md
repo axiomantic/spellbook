@@ -1,6 +1,6 @@
 ---
 name: implementation-plan-reviewer
-description: Use when reviewing implementation plans before execution, especially plans derived from design documents. Performs exhaustive analysis to ensure the plan is detailed enough for agents to execute without guessing interfaces, data shapes, or dependencies. Verifies timeline structure, parallel/sequential work organization, QA checkpoints, and agent responsibilities.
+description: "Use when reviewing implementation plans before execution, especially plans derived from design documents"
 ---
 
 <ROLE>
@@ -320,7 +320,7 @@ This is a RED FLAG that the plan author did not verify behavior. The plan should
 
 ### 5.6 Factchecker Escalation
 
-Some claims in implementation plans require deeper verification than plan review can provide. Flag claims for escalation to the `factchecker` skill when:
+Some claims in implementation plans require deeper verification than plan review can provide. Flag claims for escalation to the `fact-checking` skill when:
 
 | Escalation Trigger | Examples |
 |-------------------|----------|
@@ -340,12 +340,12 @@ For each escalated claim:
 **Category:** [Security / Performance / Test Utility / etc.]
 **Why escalation needed:** [quick verification insufficient because...]
 **Factchecker depth recommended:** SHALLOW / MEDIUM / DEEP
-**Escalate to factchecker?** YES / NO
+**Escalate to fact-checking?** YES / NO
 ```
 
 <RULE>
 Quick verification (reading docstrings, checking signatures) is sufficient for most claims.
-Escalate to factchecker only when concrete evidence (test execution, benchmarks, security analysis) is required.
+Escalate to fact-checking only when concrete evidence (test execution, benchmarks, security analysis) is required.
 </RULE>
 
 ## Phase 6: Definition of Done Verification
@@ -545,7 +545,7 @@ Agent D (Tests) ← ─ ─ ─ ┘
 
 ### Claims Requiring Factchecker Verification
 
-List claims that need deeper verification via the `factchecker` skill:
+List claims that need deeper verification via the `fact-checking` skill:
 
 ```
 | # | Claim | Location | Category | Recommended Depth |
@@ -556,9 +556,9 @@ List claims that need deeper verification via the `factchecker` skill:
 ```
 
 <RULE>
-After this review, use the Skill tool to invoke the `factchecker` skill with these claims pre-flagged.
-The factchecker will provide concrete evidence (code traces, test execution, benchmarks) for each claim.
-Do NOT implement your own fact-checking - delegate to the factchecker skill.
+After this review, use the Skill tool to invoke the `fact-checking` skill with these claims pre-flagged.
+The fact-checking will provide concrete evidence (code traces, test execution, benchmarks) for each claim.
+Do NOT implement your own fact-checking - delegate to the fact-checking skill.
 </RULE>
 
 ### Critical Findings (Must Fix Before Execution)
@@ -615,7 +615,7 @@ Same format, lowest priority.
 ...
 
 ### Factchecker Verification Required
-If claims were escalated, use the Skill tool to invoke the `factchecker` skill before finalizing.
+If claims were escalated, use the Skill tool to invoke the `fact-checking` skill before finalizing.
 Pre-flag these claims for verification:
 1. [ ] [Claim] - [Category] - [Recommended Depth]
 2. [ ] [Claim] - [Category] - [Recommended Depth]
@@ -624,7 +624,7 @@ Pre-flag these claims for verification:
 ### Required Skill Integrations
 - [ ] Add explicit instruction: "Use green-mirage-audit after test runs"
 - [ ] Add explicit instruction: "Use systematic-debugging for failures"
-- [ ] Add explicit instruction: "Use factchecker for security/performance/behavior claims"
+- [ ] Add explicit instruction: "Use fact-checking for security/performance/behavior claims"
 
 ### Recommended Structure Additions
 - [ ] Add section: [Interface Contracts] with [content]
@@ -679,7 +679,7 @@ Before completing review, verify:
 [ ] Did I verify existing interface behaviors are based on source reading, not assumptions?
 [ ] Did I flag any invented parameters or fabricated convenience features?
 [ ] Did I flag any "try X, if that fails try Y" patterns as unverified behavior?
-[ ] Did I identify claims requiring factchecker escalation (security, performance, test utilities)?
+[ ] Did I identify claims requiring fact-checking escalation (security, performance, test utilities)?
 [ ] Did I check definition of done for each work item?
 [ ] Did I verify risk assessment exists?
 [ ] Did I verify integration testing strategy?
@@ -690,7 +690,7 @@ Before completing review, verify:
 [ ] Does every finding include exact location?
 [ ] Does every finding include specific remediation?
 [ ] Did I provide a prioritized remediation plan?
-[ ] Did I include factchecker verification step if claims were escalated?
+[ ] Did I include fact-checking verification step if claims were escalated?
 [ ] Could parallel agents execute this plan without guessing interfaces OR behaviors?
 
 If NO to ANY item, go back and complete it.

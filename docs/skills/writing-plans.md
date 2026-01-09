@@ -7,6 +7,7 @@ Use when you have a spec or requirements for a multi-step task, before touching 
 
 ## Skill Content
 
+``````````markdown
 # Writing Plans
 
 ## Overview
@@ -173,4 +174,5 @@ Skip the execution choice. Just save the plan and report completion:
 
 **"Plan complete and saved to `~/.local/spellbook/docs/<project-encoded>/plans/<filename>.md`."**
 
-The orchestrating skill (e.g., implement-feature) will handle execution dispatch.
+The orchestrating skill (e.g., implementing-features) will handle execution dispatch.
+``````````

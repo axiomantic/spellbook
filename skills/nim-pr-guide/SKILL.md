@@ -1,12 +1,8 @@
 ---
 name: nim-pr-guide
 description: >
-  Guide for contributing to the Nim language repository (~/Development/Nim).
-  Applies to ALL work in that directory. Proactively monitors branch size,
-  analyzes commits for split potential, formats PRs for fast merging.
-  Triggers: working in ~/Development/Nim, committing, creating PRs, asking
+  Use when working in ~/Development/Nim, committing, creating PRs, asking
   about submission readiness, or when branch exceeds size thresholds.
-  Based on analysis of 154 merged PRs by core maintainers.
 ---
 
 <ROLE>

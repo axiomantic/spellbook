@@ -202,11 +202,41 @@ Use words Claude would search for:
 - Synonyms: "timeout/hang/freeze", "cleanup/teardown/afterEach"
 - Tools: Actual commands, library names, file types
 
-### 3. Descriptive Naming
+### 3. Naming Conventions
 
-**Use active voice, verb-first:**
-- ✅ `creating-skills` not `skill-creation`
-- ✅ `condition-based-waiting` not `async-test-helpers`
+**Different types have different naming semantics:**
+
+| Type | Pattern | Rationale | Examples |
+|------|---------|-----------|----------|
+| **Skills** | Gerund (-ing) OR noun-phrase | Describes WHAT you're doing/learning | `debugging`, `test-driven-development` |
+| **Commands** | Imperative verb(-noun) | Tells system to DO something | `execute-plan`, `verify`, `write-plan` |
+| **Agents** | Noun-agent (role) | Describes WHAT the agent IS | `code-reviewer`, `fact-checker` |
+
+**Skill naming:**
+- ✅ `brainstorming` not `brainstorm` (gerund for activities)
+- ✅ `debugging` not `debug` (gerund, not imperative)
+- ✅ `test-driven-development` (noun-phrase for methodologies)
+- ✅ `condition-based-waiting` not `async-test-helpers` (describes core insight)
+- ✅ `fixing-tests` not `fix-tests` (gerund for activities)
+- ✅ `implementing-features` not `implement-feature` (gerund for activities)
+
+**Command naming:**
+- ✅ `execute-plan` (imperative verb-noun)
+- ✅ `verify` (imperative verb)
+- ✅ `brainstorm` (imperative verb - correct for commands!)
+- ✅ `audit-green-mirage` (imperative verb-noun)
+- ✅ `handoff` (imperative verb - commands action)
+
+**Agent naming:**
+- ✅ `code-reviewer` (noun-agent role)
+- ✅ `fact-checker` (compound noun-agent)
+- ❌ `review-code` (imperative - sounds like a command)
+
+**General principles:**
+- Name by what you DO or core insight, not generic category
+- ✅ `root-cause-tracing` > `debugging-techniques`
+- ✅ `using-skills` not `skill-usage`
+- Gerunds (-ing) work well for process-oriented skills
 
 ### 4. Token Efficiency (Critical)
 
@@ -263,17 +293,7 @@ wc -w skills/path/SKILL.md
 # Other frequently-loaded: aim for <200 total
 ```
 
-**Name by what you DO or core insight:**
-- ✅ `condition-based-waiting` > `async-test-helpers`
-- ✅ `using-skills` not `skill-usage`
-- ✅ `flatten-with-flags` > `data-structure-refactoring`
-- ✅ `root-cause-tracing` > `debugging-techniques`
-
-**Gerunds (-ing) work well for processes:**
-- `creating-skills`, `testing-skills`, `debugging-with-logs`
-- Active, describes the action you're taking
-
-### 4. Cross-Referencing Other Skills
+### 5. Cross-Referencing Other Skills
 
 **When writing documentation that references other skills:**
 

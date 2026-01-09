@@ -1,3 +1,7 @@
+---
+description: "Distill oversized session: extract context, workflow, pending work into resumable boot prompt"
+---
+
 # Distill Session
 
 <ROLE>
@@ -38,7 +42,7 @@ Your job is to perform forensic extraction: methodically process the session in 
 
 **What this skill produces:**
 - A standalone markdown file at `~/.local/spellbook/distilled/{project}/{slug}-{timestamp}.md`
-- Follows shift-change.md format exactly, with Section 0 at the TOP
+- Follows handoff.md format exactly, with Section 0 at the TOP
 - Section 0 contains executable commands (Skill invocation, document reads, todo restoration)
 - Ready for a new session to consume via "continue work from [path]"
 - New session will execute Section 0 FIRST, restoring workflow before reading context
@@ -456,10 +460,10 @@ Invoke the skill using the `Skill` tool or your platform's native skill loading.
 
 ### Phase 3: Synthesis
 
-**Step 1: Read shift-change.md format**
+**Step 1: Read handoff.md format**
 
 ```bash
-cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/commands/shift-change.md"
+cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/commands/handoff.md"
 ```
 
 **Step 2: Spawn synthesis agent**
@@ -478,7 +482,7 @@ You will receive:
 - Verification commands (runnable checks)
 
 ## Output Format
-Follow shift-change.md format EXACTLY. **Section 0 is the MOST CRITICAL** - it must appear FIRST and contain executable commands.
+Follow handoff.md format EXACTLY. **Section 0 is the MOST CRITICAL** - it must appear FIRST and contain executable commands.
 
 ### Section 0: MANDATORY FIRST ACTIONS (MUST BE AT TOP)
 
@@ -572,7 +576,7 @@ If no docs to re-read: Write "NO DOCUMENTS TO RE-READ"
 **MUST be executable, not descriptive:**
 ```markdown
 \`\`\`
-Invoke the `implement-feature` skill using the `Skill` tool or your platform's native skill loading with the following arguments:
+Invoke the `implementing-features` skill using the `Skill` tool or your platform's native skill loading with the following arguments:
 --resume-from Phase3.Task7
 --impl-plan /Users/.../impl.md
 --skip-phases 0,1,2

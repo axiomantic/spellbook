@@ -7,6 +7,7 @@ Use when executing implementation plans with independent tasks in the current se
 
 ## Skill Content
 
+``````````markdown
 # Subagent-Driven Development
 
 Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
@@ -285,3 +286,4 @@ Done!
 
 **Alternative workflow:**
 - **executing-plans** - Use for parallel session instead of same-session execution
+``````````

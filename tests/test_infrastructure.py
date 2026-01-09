@@ -56,8 +56,8 @@ def test_manifest_dataclass():
         execution_mode="swarmed",
         tracks=[track],
         shared_setup_commit="abc123",
-        merge_strategy="smart-merge",
-        post_merge_qa=["tests", "green-mirage-audit", "factchecker"]
+        merge_strategy="worktree-merge",
+        post_merge_qa=["tests", "audit-green-mirage", "fact-checking"]
     )
 
     assert manifest.format_version == "1.0.0"

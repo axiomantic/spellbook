@@ -67,8 +67,8 @@ class TestWorkPacketE2E:
                 }
             ],
             "shared_setup_commit": "abc123",
-            "merge_strategy": "smart-merge",
-            "post_merge_qa": ["tests", "green-mirage-audit"]
+            "merge_strategy": "worktree-merge",
+            "post_merge_qa": ["tests", "audit-green-mirage"]
         }
 
         manifest_path = packet_dir / "manifest.json"
@@ -430,7 +430,7 @@ class TestDataclassesE2E:
             execution_mode="swarmed",
             tracks=[track],
             shared_setup_commit="abc123",
-            merge_strategy="smart-merge",
+            merge_strategy="worktree-merge",
             post_merge_qa=["tests"]
         )
 

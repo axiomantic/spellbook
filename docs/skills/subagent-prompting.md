@@ -4,6 +4,7 @@
 
 ## Skill Content
 
+``````````markdown
 <ROLE>
 You are a Subagent Orchestrator who trained as an Instruction Engineering Expert.
 Your reputation depends on dispatching agents with precision-crafted prompts.
@@ -121,6 +122,29 @@ If NO to ANY item, revise before returning.
 [Psychological trigger]
 Strive for excellence. This is very important to my career.
 </FINAL_EMPHASIS>
+```
+
+## Step 2.5: Verify Length (Before Dispatch)
+
+<RULE>Before dispatching, verify prompt length using instruction-engineering Section 4 guidelines.</RULE>
+
+**Quick Length Check:**
+1. Count lines in the engineered prompt
+2. Estimate tokens: `lines * 7` or `len(prompt) / 4`
+3. Apply Length Decision Protocol:
+
+| Lines | Action |
+|-------|--------|
+| < 200 | Proceed |
+| 200-500 | Check justification (orchestration/multi-phase/safety-critical?) |
+| 500+ | Consider modularization or compression |
+
+**If exceeding 200 lines in interactive mode:** Use AskUserQuestion to confirm.
+**If exceeding 200 lines in autonomous mode:** Verify justification exists before proceeding.
+
+Add prompt metrics comment to end of engineered prompt:
+```markdown
+<!-- Prompt Metrics: {lines} lines, ~{tokens} tokens, Status: {status} -->
 ```
 
 ## Step 3: Dispatch the Subagent
@@ -262,6 +286,7 @@ Task (or subagent simulation)({
 <SELF_CHECK>
 Before dispatching ANY subagent, verify:
 
+### Structure
 - [ ] Did I select persona(s) from the 30-persona table?
 - [ ] Did I include `<ROLE>` with persona and trigger?
 - [ ] Did I include `<CRITICAL_INSTRUCTION>` with career importance?
@@ -270,6 +295,11 @@ Before dispatching ANY subagent, verify:
 - [ ] Did I include `<SELF_CHECK>` for the subagent?
 - [ ] Did I include `<FINAL_EMPHASIS>` with repeated requirements?
 - [ ] Did I use positive words (Success, Excellence, Confidence)?
+
+### Length (Step 2.5)
+- [ ] Did I count lines and estimate tokens?
+- [ ] If > 200 lines: Did I verify justification or consult user?
+- [ ] Did I add prompt metrics comment?
 
 If NO to ANY item, revise the prompt before dispatching.
 </SELF_CHECK>
@@ -287,3 +317,4 @@ ALWAYS apply all 12 instruction-engineering techniques.
 This is very important to my career. Strive for excellence.
 Achieve outstanding results through rigorous subagent prompting.
 </FINAL_EMPHASIS>
+``````````

@@ -30,15 +30,15 @@ These rules are NOT optional. These are NOT negotiable. Violation causes real ha
 When the user expresses a wish, desire, or suggestion about functionality ("Would be great to...", "I want to...", "We need...", "Can we add...", "It'd be nice if...", "What about...", "How about..."), interpret this as a REQUEST TO ACT, not an invitation to discuss.
 
 **Required behavior:**
-1. Identify the relevant skill for the request (usually `implement-feature` for new functionality)
+1. Identify the relevant skill for the request (usually `implementing-features` for new functionality)
 2. Invoke that skill IMMEDIATELY using the Skill tool
 3. Do NOT ask clarifying questions before invoking - skills have their own discovery phases
 4. Do NOT explore or research before invoking - skills orchestrate their own research
 
 **Examples:**
-- "Would be great to log instances to cloud storage" → Invoke `implement-feature` immediately
-- "I want better error messages" → Invoke `implement-feature` immediately
-- "We need a way to track costs" → Invoke `implement-feature` immediately
+- "Would be great to log instances to cloud storage" → Invoke `implementing-features` immediately
+- "I want better error messages" → Invoke `implementing-features` immediately
+- "We need a way to track costs" → Invoke `implementing-features` immediately
 
 The skill's discovery phase will gather requirements properly. Your job is to recognize intent and dispatch.
 
@@ -98,101 +98,6 @@ If you encounter pre-existing issues, do NOT skip them. FULL STOP. Ask if I want
 ## MCP Tools
 
 <RULE>If an MCP tool appears in your available tools list, call it directly. Do not run diagnostic commands (like `claude mcp list`) to verify availability. Your tools list is the source of truth.</RULE>
-
-## LSP Tools (mcp-language-server)
-
-When `mcp-language-server` tools are available (tools prefixed with the server name, e.g., `definition`, `references`, `hover`), they provide semantic code intelligence that understands types, scopes, and relationships. These tools are almost always superior to text-based alternatives for supported languages.
-
-### Tool Priority: LSP First, Then Fallback
-
-<RULE>
-For tasks in the left column, use the LSP tool if available. Fall back to built-in tools only if LSP tool is unavailable or returns no results.
-</RULE>
-
-| Task | LSP Tool (Preferred) | Fallback |
-|------|---------------------|----------|
-| Find where symbol is defined | `definition` | Grep for `func X\|class X\|def X` |
-| Find all usages of symbol | `references` | Grep for symbol name |
-| Understand what a symbol is/does | `hover` | Read file + infer from context |
-| Rename symbol across codebase | `rename_symbol` | Multi-file Edit (error-prone) |
-| Get file structure/outline | `document_symbols` | Grep for definitions |
-| Find callers of a function | `call_hierarchy` (incoming) | Grep + manual analysis |
-| Find what a function calls | `call_hierarchy` (outgoing) | Read function body |
-| Get type hierarchy | `type_hierarchy` | Grep for extends/implements |
-| Search symbols across workspace | `workspace_symbol_resolve` | Glob + Grep |
-| Get available refactorings | `code_actions` | Manual refactoring |
-| Get function signature help | `signature_help` | Hover or read definition |
-| Get compiler errors/warnings | `diagnostics` | Run build command |
-| Format code | `format_document` | Run formatter CLI |
-| Apply text edits to file | `edit_file` | Built-in Edit tool |
-
-### Tool Parameters
-
-Most LSP tools require:
-- `filePath`: Absolute path to the file
-- `line`, `column`: 1-indexed position (use `document_symbols` or `hover` output to find these)
-- `symbolName`: For `definition`/`references`, the fully-qualified name (e.g., `mypackage.MyFunction`)
-
-The `edit_file` tool takes line-based edits, useful when you have precise line ranges from LSP output.
-
-### When LSP Tools Excel
-
-**Always prefer LSP tools for:**
-- Finding the true definition (not just text matches)
-- Refactoring operations (rename, extract, inline)
-- Understanding type relationships and inheritance
-- Finding semantic usages (not just text occurrences)
-- Cross-file navigation following imports/references
-
-**LSP tools understand:**
-- Scope (local variable vs. parameter vs. field)
-- Overloading (which `foo()` is called)
-- Generics and type parameters
-- Import/export relationships
-- Language-specific semantics
-
-### When Built-in Tools Are Better
-
-**Use Grep/Glob when:**
-- Searching for literal strings, comments, or non-code text
-- Pattern matching across file contents (regex)
-- LSP tool returns empty but you know the code exists
-- Working with files the language server doesn't support
-- Searching for things that aren't symbols (TODOs, URLs, magic strings)
-
-**Use Read when:**
-- You need to see surrounding context
-- You want to understand code flow, not just find definitions
-- Reading configuration files, READMEs, etc.
-
-### Practical Workflow
-
-1. **Exploring unfamiliar code:**
-   - Start with `document_symbols` to see file structure
-   - Use `hover` on unknown symbols to understand types
-   - Use `definition` to jump to implementations
-   - Use `references` to see how things are used
-
-2. **Refactoring:**
-   - Use `rename_symbol` for renames (handles all files atomically)
-   - Use `code_actions` to discover available refactorings
-   - Use `references` before manual changes to understand impact
-
-3. **Debugging type issues:**
-   - Use `hover` to see inferred types
-   - Use `type_hierarchy` to understand inheritance
-   - Use `diagnostics` to see compiler errors
-
-4. **Understanding call patterns:**
-   - Use `call_hierarchy` with direction "incoming" for "who calls this?"
-   - Use `call_hierarchy` with direction "outgoing" for "what does this call?"
-
-### Fallback Protocol
-
-If an LSP tool returns an error or empty result:
-1. Check if the file is saved (LSP works on disk state)
-2. Try the fallback tool from the table above
-3. For persistent issues, the language server may not support that feature
 
 ## Subagent Decision Heuristics
 
@@ -334,7 +239,7 @@ When user asks to "add X to CLAUDE.md" for such a project:
 ## Compacting
 
 <CRITICAL>
-When compacting, follow $CLAUDE_CONFIG_DIR/commands/shift-change.md exactly (defaults to ~/.claude/commands/shift-change.md if not set). You MUST:
+When compacting, follow $CLAUDE_CONFIG_DIR/commands/handoff.md exactly (defaults to ~/.claude/commands/handoff.md if not set). You MUST:
 - Retain ALL relevant context about remaining work in great detail
 - Include done work as a simple checklist
 - Preserve any active slash command workflow
@@ -411,55 +316,54 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 
 - **async-await-patterns**: Use when writing JavaScript or TypeScript code with asynchronous operations
 - **async-await-patterns**: Use when writing JavaScript or TypeScript code with asynchronous operations
-- **brainstorming**: You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.
-- **brainstorming**: You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.
-- **debug**: Use for ANY debugging scenario - bugs, test failures, unexpected behavior. Unified entry point that triages issues and routes to the appropriate debugging methodology (scientific or systematic). Supports --scientific and --systematic flags for direct invocation.
-- **debug**: Use for ANY debugging scenario - bugs, test failures, unexpected behavior. Unified entry point that triages issues and routes to the appropriate debugging methodology (scientific or systematic). Supports --scientific and --systematic flags for direct invocation.
-- **design-doc-reviewer**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning. Performs exhaustive analysis to ensure the design is specific enough to create a detailed, coherent, and actionable implementation plan without hand-waving or ambiguity.
-- **design-doc-reviewer**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning. Performs exhaustive analysis to ensure the design is specific enough to create a detailed, coherent, and actionable implementation plan without hand-waving or ambiguity.
-- **devils-advocate**: Systematically challenge assumptions, scope, architecture, and design decisions in understanding documents or design docs. Use before design phase to surface risks, edge cases, and overlooked considerations.
-- **devils-advocate**: Systematically challenge assumptions, scope, architecture, and design decisions in understanding documents or design docs. Use before design phase to surface risks, edge cases, and overlooked considerations.
+- **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
+- **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
+- **debugging**: Use when debugging bugs, test failures, or unexpected behavior. Supports --scientific and --systematic flags for direct methodology selection.
+- **design-doc-reviewer**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
+- **design-doc-reviewer**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
+- **devils-advocate**: Use before design phase to challenge assumptions, scope, architecture, and design decisions in understanding documents or design docs
+- **devils-advocate**: Use before design phase to challenge assumptions, scope, architecture, and design decisions in understanding documents or design docs
 - **dispatching-parallel-agents**: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
 - **dispatching-parallel-agents**: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
-- **emotional-stakes**: Generate per-task emotional stakes (EmotionPrompt + NegativeReinforcement) with task-appropriate professional personas. Improves accuracy and truthfulness based on research.
+- **emotional-stakes**: Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
+- **emotional-stakes**: Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
 - **executing-plans**: Use when you have a written implementation plan to execute in a separate session with review checkpoints
 - **executing-plans**: Use when you have a written implementation plan to execute in a separate session with review checkpoints
-- **factchecker**: >
-- **factchecker**: >
-- **find-dead-code**: >
-- **find-dead-code**: >
-- **finishing-a-development-branch**: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
-- **finishing-a-development-branch**: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
-- **fix-tests**: Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests. Accepts green-mirage-audit reports, general instructions, or can run tests and fix failures automatically. Lighter-weight than implement-feature, focused on test remediation.
-- **fix-tests**: Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests. Accepts green-mirage-audit reports, general instructions, or can run tests and fix failures automatically. Lighter-weight than implement-feature, focused on test remediation.
-- **fun-mode**: Adopt a random persona, narrative context, and undertow for more creative, engaging sessions. Research suggests unrelated randomness improves LLM output diversity.
-- **fun-mode**: Adopt a random persona, narrative context, and undertow for more creative, engaging sessions. Research suggests unrelated randomness improves LLM output diversity.
-- **green-mirage-audit**: Use when reviewing test suites, after test runs pass, or when user asks about test quality - performs exhaustive line-by-line audit tracing code paths through entire program, verifying tests actually validate what they claim. Outputs structured report compatible with fix-tests skill.
-- **green-mirage-audit**: Use when reviewing test suites, after test runs pass, or when user asks about test quality - performs exhaustive line-by-line audit tracing code paths through entire program, verifying tests actually validate what they claim. Outputs structured report compatible with fix-tests skill.
-- **implement-feature**: |
-- **implement-feature**: |
-- **implementation-plan-reviewer**: Use when reviewing implementation plans before execution, especially plans derived from design documents. Performs exhaustive analysis to ensure the plan is detailed enough for agents to execute without guessing interfaces, data shapes, or dependencies. Verifies timeline structure, parallel/sequential work organization, QA checkpoints, and agent responsibilities.
-- **implementation-plan-reviewer**: Use when reviewing implementation plans before execution, especially plans derived from design documents. Performs exhaustive analysis to ensure the plan is detailed enough for agents to execute without guessing interfaces, data shapes, or dependencies. Verifies timeline structure, parallel/sequential work organization, QA checkpoints, and agent responsibilities.
-- **instruction-optimizer**: Compress instruction files (skills, prompts, CLAUDE.md) to reduce tokens while preserving semantics, clarity, and capability. Smarter AND smaller.
-- **instruction-optimizer**: Compress instruction files (skills, prompts, CLAUDE.md) to reduce tokens while preserving semantics, clarity, and capability. Smarter AND smaller.
+- **fact-checking**: >
+- **finding-dead-code**: >
+- **finishing-a-development-branch**: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work (merge, PR, or cleanup)
+- **finishing-a-development-branch**: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work (merge, PR, or cleanup)
+- **fixing-tests**: Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests
+- **fun-mode**: Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
+- **fun-mode**: Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
+- **green-mirage-audit**: Use when reviewing test suites, after test runs pass, or when user asks about test quality
+- **green-mirage-audit**: Use when reviewing test suites, after test runs pass, or when user asks about test quality
+- **implementation-plan-reviewer**: Use when reviewing implementation plans before execution, especially plans derived from design documents
+- **implementation-plan-reviewer**: Use when reviewing implementation plans before execution, especially plans derived from design documents
+- **implementing-features**: |
+- **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts for maximum effectiveness
+- **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts for maximum effectiveness
+- **instruction-optimizer**: Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability
+- **instruction-optimizer**: Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability
+- **merge-conflict-resolution**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
 - **nim-pr-guide**: >
 - **nim-pr-guide**: >
-- **receiving-code-review**: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
-- **receiving-code-review**: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+- **receiving-code-review**: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable
+- **receiving-code-review**: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable
 - **requesting-code-review**: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
 - **requesting-code-review**: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
-- **smart-merge**: Use when merging parallel worktrees back together after parallel implementation. Orchestrates systematic 3-way diff analysis, dependency-ordered merging, and intelligent synthesis of parallel work streams.
-- **smart-merge**: Use when merging parallel worktrees back together after parallel implementation. Orchestrates systematic 3-way diff analysis, dependency-ordered merging, and intelligent synthesis of parallel work streams.
 - **subagent-driven-development**: Use when executing implementation plans with independent tasks in the current session
 - **subagent-driven-development**: Use when executing implementation plans with independent tasks in the current session
 - **subagent-prompting**: >
 - **subagent-prompting**: >
 - **test-driven-development**: Use when implementing any feature or bugfix, before writing implementation code
 - **test-driven-development**: Use when implementing any feature or bugfix, before writing implementation code
-- **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
-- **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
-- **using-skills**: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
-- **using-skills**: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+- **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans
+- **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans
+- **using-lsp-tools**: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
+- **using-skills**: Use when starting any conversation to establish skill discovery patterns
+- **using-skills**: Use when starting any conversation to establish skill discovery patterns
+- **worktree-merge**: Use when merging parallel worktrees back together after parallel implementation with interface contracts
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
 - **writing-skills**: Use when creating new skills, editing existing skills, or verifying skills work before deployment
@@ -475,8 +379,8 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 4. **Maintain skill context**: Once a skill is loaded, its instructions govern the entire workflow until complete.
 
 **Skill trigger examples:**
-- "debug this" / "fix this bug" / "tests failing" → load `debug` skill
-- "implement X" / "add feature Y" / "build Z" → load `implement-feature` skill
+- "debug this" / "fix this bug" / "tests failing" → load `debugging` skill
+- "implement X" / "add feature Y" / "build Z" → load `implementing-features` skill
 - "let's think through" / "explore options" → load `brainstorming` skill
 - "write tests first" / "TDD" → load `test-driven-development` skill
 

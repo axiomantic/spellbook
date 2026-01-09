@@ -217,20 +217,24 @@ class TestSessionInit:
         assert result["context"] in ["Test Context 1", "Test Context 2"]
         assert result["undertow"] in ["Test Undertow 1", "Test Undertow 2"]
 
-    def test_handles_missing_spellbook_dir(self, tmp_path, monkeypatch):
-        """Test error when SPELLBOOK_DIR not set."""
+    def test_handles_missing_assets_dir(self, tmp_path, monkeypatch):
+        """Test error when fun-mode assets directory doesn't exist."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"fun_mode": true}')
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
-        monkeypatch.delenv("SPELLBOOK_DIR", raising=False)
+
+        # Point to a directory that exists but doesn't have fun-mode assets
+        fake_spellbook = tmp_path / "fake_spellbook"
+        fake_spellbook.mkdir()
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_spellbook_dir", lambda: fake_spellbook)
 
         result = session_init()
 
         assert result["fun_mode"] == "yes"
         assert "error" in result
-        assert "SPELLBOOK_DIR" in result["error"]
+        assert "fun-mode assets not found" in result["error"]
 
     def test_handles_empty_asset_files(self, tmp_path, monkeypatch):
         """Test handling of empty persona/context/undertow files."""
@@ -335,12 +339,14 @@ class TestGetSpellbookDir:
         result = get_spellbook_dir()
         assert result == Path(expected)
 
-    def test_raises_when_env_var_not_set(self, monkeypatch):
-        """Test that ValueError is raised when SPELLBOOK_DIR not set."""
+    def test_falls_back_when_env_var_not_set(self, monkeypatch):
+        """Test fallback when SPELLBOOK_DIR not set - finds via __file__ or defaults."""
         from spellbook_mcp.config_tools import get_spellbook_dir
 
         monkeypatch.delenv("SPELLBOOK_DIR", raising=False)
 
-        with pytest.raises(ValueError) as exc_info:
-            get_spellbook_dir()
-        assert "SPELLBOOK_DIR" in str(exc_info.value)
+        # Should not raise - falls back to finding via __file__ or default
+        result = get_spellbook_dir()
+        assert isinstance(result, Path)
+        # Should find the actual spellbook dir (running from repo) or default
+        assert result.name in ("spellbook", "spellbook")

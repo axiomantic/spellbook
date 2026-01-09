@@ -55,8 +55,8 @@ def sample_manifest(tmp_path):
             }
         ],
         "shared_setup_commit": "abc123",
-        "merge_strategy": "smart-merge",
-        "post_merge_qa": ["pytest", "green-mirage-audit", "factchecker"]
+        "merge_strategy": "worktree-merge",
+        "post_merge_qa": ["pytest", "audit-green-mirage", "fact-checking"]
     }
 
     packet_dir = tmp_path / "packets"
@@ -351,5 +351,5 @@ class TestMergeWorkPackets:
         qa_gates = manifest["post_merge_qa"]
 
         assert "pytest" in qa_gates
-        assert "green-mirage-audit" in qa_gates
-        assert "factchecker" in qa_gates
+        assert "audit-green-mirage" in qa_gates
+        assert "fact-checking" in qa_gates

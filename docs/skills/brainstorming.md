@@ -1,12 +1,13 @@
 # brainstorming
 
-"You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+"Use before any creative work - creating features, building components, adding functionality, or modifying behavior"
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Skill Content
 
+``````````markdown
 # Brainstorming Ideas Into Designs
 
 ## Overview
@@ -120,3 +121,4 @@ Use the Circuit Breaker Format from patterns/autonomous-mode-protocol.md if paus
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
+``````````

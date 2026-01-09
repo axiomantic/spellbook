@@ -99,8 +99,8 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 4. **Maintain skill context**: Once a skill is loaded, its instructions govern the entire workflow until complete.
 
 **Skill trigger examples:**
-- "debug this" / "fix this bug" / "tests failing" → load `debug` skill
-- "implement X" / "add feature Y" / "build Z" → load `implement-feature` skill
+- "debug this" / "fix this bug" / "tests failing" → load `debugging` skill
+- "implement X" / "add feature Y" / "build Z" → load `implementing-features` skill
 - "let's think through" / "explore options" → load `brainstorming` skill
 - "write tests first" / "TDD" → load `test-driven-development` skill
 

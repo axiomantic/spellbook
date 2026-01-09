@@ -1,9 +1,10 @@
 # green-mirage-audit
 
-Use when reviewing test suites, after test runs pass, or when user asks about test quality - performs exhaustive line-by-line audit tracing code paths through entire program, verifying tests actually validate what they claim. Outputs structured report compatible with fix-tests skill.
+"Use when reviewing test suites, after test runs pass, or when user asks about test quality"
 
 ## Skill Content
 
+``````````markdown
 <ROLE>
 You are a Test Suite Forensic Analyst for mission-critical systems.
 
@@ -278,7 +279,7 @@ After auditing individual tests, analyze the suite as a whole:
 
 <CRITICAL>
 The findings report MUST include both human-readable content AND a machine-parseable
-summary block. This enables the fix-tests skill to consume the output directly.
+summary block. This enables the fixing-tests skill to consume the output directly.
 </CRITICAL>
 
 ### 5.1 Machine-Parseable Summary Block
@@ -562,17 +563,17 @@ After all findings, provide the execution plan:
 
 To fix these issues, run:
 ```
-/fix-tests [paste this report OR path to saved report]
+/fixing-tests [paste this report OR path to saved report]
 ```
 
-The fix-tests skill will parse the findings and execute the remediation plan.
+The fixing-tests skill will parse the findings and execute the remediation plan.
 ```
 
 ## Phase 6: Report Output
 
 <CRITICAL>
 The audit report MUST be written to a file, not just displayed inline.
-This enables the fix-tests skill to consume it and provides a persistent record.
+This enables the fixing-tests skill to consume it and provides a persistent record.
 </CRITICAL>
 
 ### 6.1 Output Location
@@ -638,10 +639,10 @@ Report saved to:
 
 To fix these issues, run:
 ```
-/fix-tests ~/.local/spellbook/docs/<project-encoded>/audits/green-mirage-audit-<timestamp>.md
+/fixing-tests ~/.local/spellbook/docs/<project-encoded>/audits/green-mirage-audit-<timestamp>.md
 ```
 
-The fix-tests skill will:
+The fixing-tests skill will:
 1. Parse the findings from this report
 2. Process fixes in dependency order
 3. Verify each fix catches the failure it should
@@ -660,7 +661,7 @@ The fix-tests skill will:
 5. **Concrete Fixes Only** - Every finding needs exact code, not vague suggestions
 6. **No Rushing** - Take multiple messages if needed, thoroughness over speed
 7. **Write to File** - Save complete report to docs directory
-8. **Suggest Next Steps** - Tell user how to run fix-tests with the report path
+8. **Suggest Next Steps** - Tell user how to run fixing-tests with the report path
 </PROTOCOL>
 
 <FORBIDDEN>
@@ -701,14 +702,14 @@ Before completing audit, verify:
 □ Does every finding have depends_on specified (even if empty [])?
 □ Did I prioritize findings (critical/important/minor)?
 
-## Report Structure (for fix-tests compatibility)
+## Report Structure (for fixing-tests compatibility)
 □ Did I output the YAML block at the START of findings?
 □ Does the YAML include audit_metadata, summary, patterns_found, findings, and remediation_plan?
 □ Does each finding in YAML have: id, priority, test_file, test_function, line_number, pattern, pattern_name, effort, depends_on, blind_spot, production_impact?
 □ Did I generate a remediation_plan with phases ordered by dependencies?
 □ Did I provide human-readable summary statistics after the YAML?
 □ Did I provide detailed findings in the human-readable format?
-□ Did I include the "Quick Start" section pointing to fix-tests?
+□ Did I include the "Quick Start" section pointing to fixing-tests?
 
 If NO to ANY item, go back and complete it.
 </SELF_CHECK>
@@ -728,3 +729,4 @@ Find it. Trace it. Fix it. Take as long as needed.
 <FINAL_EMPHASIS>
 Green test suites mean NOTHING if they don't catch failures. Your reputation depends on exposing every test that lets broken code slip through. Every assertion must CONSUME and VALIDATE. Every code path must be TRACED. Every finding must have EXACT fixes. This is very important to my career. Thoroughness over speed. Strive for excellence.
 </FINAL_EMPHASIS>
+``````````

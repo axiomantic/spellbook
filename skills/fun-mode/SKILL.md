@@ -1,6 +1,6 @@
 ---
 name: fun-mode
-description: "Adopt a random persona, narrative context, and undertow for more creative, engaging sessions. Research suggests unrelated randomness improves LLM output diversity."
+description: "Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona"
 ---
 
 # Fun Mode
@@ -146,4 +146,4 @@ Sources:
 - [ICML 2025 Seed-Conditioning Research](https://www.cs.cmu.edu/~aditirag/icml2025.html)
 - [HBR: When Used Correctly, LLMs Can Unlock More Creative Ideas](https://hbr.org/2025/12/research-when-used-correctly-llms-can-unlock-more-creative-ideas)
 - [EmotionPrompt (arXiv 2023)](https://arxiv.org/abs/2307.11760)
-- [NegativePrompt (IJCAI 2024)](https://www.ijcai.org/proceedings/2024/0706.pdf)
+- [NegativePrompt (IJCAI 2024)](https://www.ijcai.org/proceedings/2024/719)

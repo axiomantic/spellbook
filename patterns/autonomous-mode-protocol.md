@@ -72,7 +72,7 @@ C) [Option 3 - description]
 
 **Type:** Contradiction
 
-**Skill:** implement-feature
+**Skill:** implementing-features
 
 **Phase:** Phase 2.1 - Design Document Creation
 
@@ -143,7 +143,7 @@ Use the Circuit Breaker Format from patterns/autonomous-mode-protocol.md if paus
 - [Adaptive Response Handler](adaptive-response-handler.md) - For processing user responses
 - Skills using this protocol:
   - `brainstorming`
-  - `implement-feature`
+  - `implementing-features`
   - `executing-plans`
   - `writing-plans`
   - `subagent-driven-development`

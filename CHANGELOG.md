@@ -7,13 +7,101 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-01-09
+
+### Added
+- **merge-conflict-resolution skill** - systematic 3-way diff analysis for git conflicts
+  - Synthesizes both branches' changes instead of choosing one side
+  - Auto-resolves mechanical conflicts (lock files, changelogs)
+  - Provides resolution plan template for complex conflicts
+  - Cross-references worktree-merge for worktree scenarios
+- **audit-spellbook: Naming Consistency Agent** - validates naming conventions across spellbook
+  - Skills should use gerund (-ing) or noun-phrase patterns
+  - Commands should use imperative verb(-noun) patterns
+  - Agents should use noun-agent (role) patterns
+  - Reports violations with suggested renames
+- **audit-spellbook: Reference Validation Agent** - checks for broken skill/command references
+  - Validates backtick references, prose mentions, and table entries
+  - Detects type mismatches (skill referenced as command or vice versa)
+- **audit-spellbook: Orphaned Docs Agent** - finds documentation without source files
+  - Checks docs/ against skills/ and commands/
+  - Reports orphaned docs and missing source documentation
+- **writing-skills: Naming Conventions section** - comprehensive naming guidance
+  - Table of patterns by type (skills, commands, agents) with rationale
+  - Good/bad examples for each category
+  - Explains semantic distinction between types
+- **documentation-updates repo skill** - enforces changelog/readme/docs updates for library changes
+  - Checklist for required updates when modifying library skills/commands
+  - CHANGELOG format template and README update pattern
+- **CLAUDE.md glossary** - distinguishes library vs repo terminology
+  - Library skills (`skills/`) - installed for users, require docs
+  - Repo skills (`.claude/skills/`) - internal tooling, no external docs
+
 ### Changed
+- **smart-merge renamed to worktree-merge** - clearer name for worktree-specific merging
+  - Now delegates to merge-conflict-resolution for conflict handling
+  - Phase 3 simplified to invoke merge-conflict-resolution with interface contract context
+  - Reduces duplication between the two skills
+- **Self-bootstrapping installer** - `install.py` now handles all prerequisites automatically
+  - Installs uv if missing, re-executes under uv for dependency management
+  - Uses PEP 723 inline script metadata for Python version requirements
+  - Works via curl-pipe (`curl ... | python3`) or from repo (`python3 install.py`)
+  - Auto-detects spellbook repo from script location, cwd, or default install path
+  - Clones repository to `~/.local/share/spellbook` if not found; re-execs to use latest version
+  - Running from existing repo uses that repo directly (no cloning) for development installs
+  - Added `--yes` flag for non-interactive installation (accepts all defaults)
+  - Gracefully handles pipe execution where `__file__` is unavailable
+- **Simplified bootstrap.sh** - reduced from 605 lines to 77 lines
+  - Now just a thin wrapper that finds Python and curls install.py
+  - Only needed for systems without Python pre-installed
+- **Installation documentation** - clarified Standard vs Development install modes
+  - Standard: bootstrap clones to `~/.local/share/spellbook`
+  - Development: clone anywhere, run `install.py` from there, symlinks point to your repo
+  - Upgrade process: `git pull && python3 install.py` (re-run to sync generated files)
+- **SPELLBOOK_DIR auto-detection** - MCP server no longer requires environment variable
+  - Derives path from `__file__` by walking up to find spellbook indicators
+  - Falls back to `~/.local/spellbook` if not in a spellbook repo
+  - Fixes fun-mode asset loading when SPELLBOOK_DIR env var is not set
 - **fun-mode announcement structure** - explicit checklist for richer introductions
   - Must include: greeting, invented name, persona description, undertow history, context, characteristic action
   - Updated example with "Aldous Pemberton" showing full structure
 - **docs generation** - skill/command/agent content wrapped in 10-backtick code blocks
   - Prevents XML-style tags (`<ROLE>`, `<CRITICAL>`, etc.) from rendering as HTML
   - Nested triple-backtick code blocks now display correctly
+- **instruction-engineering description** - clearer either/or trigger conditions
+  - Now uses numbered list: "(1) constructing prompts for subagents, (2) invoking the Task tool, or (3)..."
+- **audit-spellbook skill** - added AMBIGUOUS_TRIGGERS check to CSO compliance audit
+  - Flags skill descriptions with unclear "or" chains that should use explicit enumeration
+  - Added principle #8: "Clear either/or delineation" with good/bad examples
+- **audit-spellbook: Helper table** - now distinguishes skills from commands
+  - Added Type column to clarify each helper's type
+  - Fixed `simplify` entry (was listed as skill, is actually a command)
+- **Consolidated docs-src/ into docs/** - single documentation directory
+  - Eliminated redundant `docs-src/` folder
+  - All generated docs now write directly to `docs/`
+  - Updated `generate_docs.py`, workflows, and all references
+- **generate_docs.py nested command support** - handles `commands/*/` directories
+  - Nested commands like `systematic-debugging/` now generate proper docs
+  - Command index includes both flat and nested commands
+- **Skill/command naming convention compliance** - renamed 9 items
+  - Skills: `debug` → `debugging`, `factchecker` → `fact-checking`, `find-dead-code` → `finding-dead-code`, `fix-tests` → `fixing-tests`, `implement-feature` → `implementing-features`
+  - Commands: `fun` → `toggle-fun`, `green-mirage-audit` → `audit-green-mirage`, `shift-change` → `handoff`
+  - Repo skill: `audit-spellbook` → `spellbook-auditing`
+  - Updated 100+ references across codebase
+
+### Fixed
+- **mkdocs.yml missing skill** - added `using-lsp-tools` to Specialized Skills section
+- **README command count** - TOC and header said "14 total" but 16 commands exist
+- **README prerequisites claim** - Clarified that Python 3.8+ and git are required
+- **CHANGELOG duplicate section** - Removed duplicate `## [0.2.0]` entry
+- **audit-spellbook simplify reference** - was incorrectly listed as skill, now correctly marked as command
+- **writing-skills section numbering** - fixed duplicate "### 4" section headers
+- **Outdated config_tools tests** - updated tests for `get_spellbook_dir()` fallback behavior
+  - `test_handles_missing_spellbook_dir` renamed to `test_handles_missing_assets_dir`
+  - `test_raises_when_env_var_not_set` renamed to `test_falls_back_when_env_var_not_set`
+- **Removed ANTHROPIC_API_KEY references** - Claude Code uses subscription auth, not API keys
+  - Removed misleading comment from session spawner
+  - Updated tests to use generic env var for inheritance testing
 
 ## [0.3.0] - 2026-01-09
 
@@ -171,23 +259,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `repair-session.py` script (not needed by distill-session)
 - Static skill registries (replaced by MCP runtime discovery)
 - `.opencode/plugin/spellbook.js` (replaced by native AGENTS.md + MCP support)
-
-## [0.2.0] - 2025-12-31
-
-### Added
-- `distill-session` command for extracting knowledge from oversized Claude Code sessions
-  - Phase 0: Session discovery with AI-generated descriptions
-  - Phase 1: Analyze & chunk large sessions (300k char limit per chunk)
-  - Phase 2: Parallel summarization via subagents
-  - Phase 3: Synthesis following shift-change.md format
-  - Phase 4: Output to `~/.local/spellbook/distilled/{project}/` directory
-- `distill_session.py` helper script with CLI interface
-- Integration test suite for distill-session
-- Error handling documentation for distill-session edge cases
-- `simplify` command for systematic code complexity reduction
-
-### Changed
-- Updated shift-change.md (formerly compact.md) to capture subagent responsibilities, skills/commands, and workflow patterns
 
 ## [0.1.0] - 2025-12-15
 

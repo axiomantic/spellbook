@@ -64,9 +64,6 @@ class SessionSpawner:
         if config_path:
             env_vars["SPELLBOOK_CONFIG_PATH"] = str(config_path)
 
-        # ANTHROPIC_API_KEY is inherited from current environment if present
-        # (already included via dict(os.environ))
-
         return env_vars
 
     def _escape_applescript(self, text: str) -> str:

@@ -136,9 +136,9 @@ For each task in the packet's task list:
    Address any issues found before proceeding.
    ```
 
-4. **Invoke factchecker for verification:**
+4. **Invoke fact-checking for verification:**
    ```
-   Invoke the factchecker skill using the Skill tool with:
+   Invoke the fact-checking skill using the Skill tool with:
    - Verify acceptance criteria met
    - Check test coverage for task files
    - Confirm no regressions introduced
@@ -249,6 +249,6 @@ This will:
 
 - All file operations use atomic writes (atomic_write_json) to prevent corruption
 - Checkpoints created after each task for fine-grained recovery
-- Skills invoked using the Skill tool (test-driven-development, requesting-code-review, factchecker)
+- Skills invoked using the Skill tool (test-driven-development, requesting-code-review, fact-checking)
 - Worktree isolation ensures parallel tracks don't conflict
 - Completion marker enables dependent tracks to proceed
