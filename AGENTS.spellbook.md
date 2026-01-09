@@ -319,6 +319,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
 - **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
 - **debugging**: Use when debugging bugs, test failures, or unexpected behavior. Supports --scientific and --systematic flags for direct methodology selection.
+- **debugging**: Use when debugging bugs, test failures, or unexpected behavior. Supports --scientific and --systematic flags for direct methodology selection.
 - **design-doc-reviewer**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
 - **design-doc-reviewer**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
 - **devils-advocate**: Use before design phase to challenge assumptions, scope, architecture, and design decisions in understanding documents or design docs
@@ -330,9 +331,12 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **executing-plans**: Use when you have a written implementation plan to execute in a separate session with review checkpoints
 - **executing-plans**: Use when you have a written implementation plan to execute in a separate session with review checkpoints
 - **fact-checking**: >
+- **fact-checking**: >
+- **finding-dead-code**: >
 - **finding-dead-code**: >
 - **finishing-a-development-branch**: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work (merge, PR, or cleanup)
 - **finishing-a-development-branch**: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work (merge, PR, or cleanup)
+- **fixing-tests**: Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests
 - **fixing-tests**: Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests
 - **fun-mode**: Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
 - **fun-mode**: Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
@@ -341,10 +345,12 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **implementation-plan-reviewer**: Use when reviewing implementation plans before execution, especially plans derived from design documents
 - **implementation-plan-reviewer**: Use when reviewing implementation plans before execution, especially plans derived from design documents
 - **implementing-features**: |
+- **implementing-features**: |
 - **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts for maximum effectiveness
 - **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts for maximum effectiveness
 - **instruction-optimizer**: Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability
 - **instruction-optimizer**: Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability
+- **merge-conflict-resolution**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
 - **merge-conflict-resolution**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
 - **nim-pr-guide**: >
 - **nim-pr-guide**: >
@@ -361,8 +367,10 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans
 - **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans
 - **using-lsp-tools**: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
+- **using-lsp-tools**: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
 - **using-skills**: Use when starting any conversation to establish skill discovery patterns
 - **using-skills**: Use when starting any conversation to establish skill discovery patterns
+- **worktree-merge**: Use when merging parallel worktrees back together after parallel implementation with interface contracts
 - **worktree-merge**: Use when merging parallel worktrees back together after parallel implementation with interface contracts
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code

@@ -177,7 +177,7 @@ Reusable workflows for structured development:
 
 ## Serious Fun
 
-Research on seed-conditioning found that introducing structured randomness to LLM interactions can unlock more diverse solution pathways ([ICML 2025](https://www.cs.cmu.edu/~aditirag/icml2025.html), [HBR](https://hbr.org/2025/12/research-when-used-correctly-llms-can-unlock-more-creative-ideas)).
+Research on seed-conditioning found that introducing structured randomness to LLM interactions can unlock more diverse solution pathways ([ICML 2025](https://www.cs.cmu.edu/~aditirag/icml2025.html)).
 
 So we made it fun.
 

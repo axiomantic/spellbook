@@ -146,7 +146,6 @@ See `emotional-stakes` skill for the full composition model and professional per
 
 Sources:
 - [ICML 2025 Seed-Conditioning Research](https://www.cs.cmu.edu/~aditirag/icml2025.html)
-- [HBR: When Used Correctly, LLMs Can Unlock More Creative Ideas](https://hbr.org/2025/12/research-when-used-correctly-llms-can-unlock-more-creative-ideas)
 - [EmotionPrompt (arXiv 2023)](https://arxiv.org/abs/2307.11760)
 - [NegativePrompt (IJCAI 2024)](https://www.ijcai.org/proceedings/2024/719)
 ``````````
