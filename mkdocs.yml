@@ -96,12 +96,11 @@ nav:
     - Meta Skills:
       - skills/using-skills.md
       - skills/writing-skills.md
-      - skills/subagent-prompting.md
       - skills/instruction-engineering.md
       - skills/instruction-optimizer.md
       - skills/emotional-stakes.md
       - skills/dispatching-parallel-agents.md
-      - skills/subagent-driven-development.md
+      - skills/smart-reading.md
     - Session Skills:
       - skills/fun-mode.md
   - Commands:
@@ -132,6 +131,7 @@ nav:
   - Reference:
     - Architecture: reference/architecture.md
     - Patterns: reference/patterns.md
+    - Citations: reference/citations.md
     - Contributing: reference/contributing.md
   - Contributing:
     - Porting to Your Assistant: contributing/porting-to-your-assistant.md

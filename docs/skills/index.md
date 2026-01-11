@@ -56,6 +56,7 @@ Skills for building and reviewing features:
 | [implementation-plan-reviewer](implementation-plan-reviewer.md) | Reviewing implementation plans |
 | [devils-advocate](devils-advocate.md) | Challenging assumptions and decisions |
 | [worktree-merge](worktree-merge.md) | Merging parallel worktrees |
+| [merge-conflict-resolution](merge-conflict-resolution.md) | Resolving git merge conflicts with synthesis |
 
 ### Specialized Skills
 
@@ -64,7 +65,6 @@ Domain-specific skills:
 | Skill | When to Use |
 |-------|-------------|
 | [async-await-patterns](async-await-patterns.md) | Writing async JavaScript/TypeScript |
-| [nim-pr-guide](nim-pr-guide.md) | Contributing to Nim repositories |
 
 ### Meta Skills
 
@@ -74,10 +74,9 @@ Skills about skills and subagent orchestration:
 |-------|-------------|
 | [using-skills](using-skills.md) | Understanding how to invoke and use skills |
 | [writing-skills](writing-skills.md) | Creating new skills |
-| [subagent-prompting](subagent-prompting.md) | Effective subagent instructions |
-| [instruction-engineering](instruction-engineering.md) | Optimizing LLM prompts |
+| [instruction-engineering](instruction-engineering.md) | Effective prompt engineering for subagents and LLMs |
 | [dispatching-parallel-agents](dispatching-parallel-agents.md) | Parallel subagent orchestration |
-| [subagent-driven-development](subagent-driven-development.md) | Delegating to subagents |
+| [smart-reading](smart-reading.md) | Reading files/output without blind truncation |
 
 ## Creating Custom Skills
 

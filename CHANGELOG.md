@@ -7,10 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-01-11
+
+### Breaking Changes
+- **`subagent-driven-development` merged into `executing-plans`** - use `--mode subagent` flag
+  - `executing-plans` now supports two modes: `batch` (human-in-loop) and `subagent` (automated two-stage review)
+  - Prompt template files moved to `skills/executing-plans/`
+  - Users should replace `subagent-driven-development` with `executing-plans --mode subagent`
+- **`subagent-prompting` merged into `instruction-engineering`** - consolidated prompt engineering
+  - New "Applying to Subagent Prompts" section with task-to-persona mapping and templates
+  - Users should use `instruction-engineering` for all prompt construction
+- **`nim-pr-guide` moved to personal skills** - no longer installed by default
+  - Personal workflow skill for Nim language PRs
+  - Move to `~/.claude/skills/nim-pr-guide/` if needed
+
+### Added
+- **`smart-reading` skill** - protocol for reading files and command output without blind truncation
+  - Mandates line count check (`wc -l`) before reading unknown files
+  - Decision tree: ≤200 lines read directly, >200 lines delegate to subagent
+  - Intent-based delegation: error extraction, technical summary, presence check, structure overview
+  - Command output capture: `tee` to temp file, check size, cleanup after
+  - Prevents silent data loss from `head -100` and similar truncation
+- **Shared glossary in CLAUDE.spellbook.md** - common term definitions
+  - `project-encoded path`, `autonomous mode`, `circuit breaker`
+  - `EmotionPrompt`, `NegativePrompt`, `plans directory`, `subagent`
+- **Documentation for debugging commands** - scientific-debugging and systematic-debugging
+- **Comprehensive skill merge specifications** - `executing-plans` now documents both execution modes
+- **Command tests** - 38 new tests for handoff and verify commands
+  - 18 tests verifying handoff command structure and anti-patterns
+  - 20 tests verifying verify command structure and rationalizations
+
+### Optimized
+- **Token reduction across key files** - ~7,455 tokens saved
+  - `commands/handoff.md`: 44.6% reduction (~2,653 tokens)
+  - `skills/design-doc-reviewer/SKILL.md`: ~1,638 tokens
+  - `skills/devils-advocate/SKILL.md`: ~3,164 tokens
+
+### Fixed
+- **Auto-release workflow YAML syntax error** - multiline strings with `---` broke YAML parsing
+  - Rewrote release note generation to use echo statements instead of multiline assignment
+  - Workflow was failing silently since v0.4.0, preventing automated releases
+- All `implement-feature` references updated to `implementing-features`
+- All `fix-tests` references updated to `fixing-tests`
+- Skill description workflow leaks removed from frontmatter
+- `/rename-session` command reference in README fixed to `/rename`
+- Debugging skill `/debugging` references clarified as skill invocations
+
 ### Changed
 - **Release workflow uses CHANGELOG.md** - eliminated redundant RELEASE-NOTES.md
   - Auto-release workflow now extracts notes from CHANGELOG.md directly
   - Deleted RELEASE-NOTES.md (was duplicate of CHANGELOG content)
+- **`merge-conflict-resolution` skill enhanced** - "Code Surgeon" persona and golden rule
+  - New persona: "Code Surgeon" with operating room/scalpel metaphor
+  - Golden Rule: `git checkout --ours/--theirs` is amputation, not surgery
+  - Emphasizes creating a chimera of both branches, not choosing sides
+- **`merge-conflict-resolution` skill: Stealth Amputation Trap** - documents critical failure mode
+  - New CRITICAL section warning against "stealth `--theirs`" through incremental approvals
+  - Real example: binary questions led to 100-line function replaced with 15-line version
+  - "Simplify X" means synthesize BOTH into something new, not pick a side
+  - Added "Asking Questions Right" table (bad binary vs good open-ended questions)
+  - Added "Red Flags" table for dangerous thoughts that should trigger STOP
+  - BEFORE_RESPONDING checklist expanded: test awareness, >20 line replacement approval
+  - New tip: "If you're deleting more than you're adding, you're probably amputating"
 
 ## [0.4.0] - 2026-01-09
 
@@ -284,7 +342,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/axiomantic/spellbook/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/axiomantic/spellbook/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/axiomantic/spellbook/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/axiomantic/spellbook/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/axiomantic/spellbook/compare/v0.1.0...v0.2.0

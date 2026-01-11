@@ -1,6 +1,6 @@
 # requesting-code-review
 
-Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+Use when completing tasks, implementing major features, or before merging
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

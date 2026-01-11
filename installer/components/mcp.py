@@ -2,6 +2,7 @@
 MCP server registration and verification.
 """
 
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -202,6 +203,61 @@ def verify_mcp_connectivity(server_path: Path, timeout: int = 10) -> Tuple[bool,
     except subprocess.TimeoutExpired:
         return (False, "server load timed out")
     except OSError as e:
+        return (False, str(e))
+
+
+def restart_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
+    """
+    Restart an MCP server by killing its process.
+
+    Claude Code will respawn the MCP server on next use.
+
+    Args:
+        name: Server name (used to find the process)
+        dry_run: If True, don't actually kill the process
+
+    Returns: (success, message)
+    """
+    import signal
+
+    if dry_run:
+        return (True, f"Would restart MCP server: {name}")
+
+    try:
+        # Find processes matching the MCP server
+        # Look for processes running the spellbook_mcp server
+        result = subprocess.run(
+            ["pgrep", "-f", f"{name}.*server\\.py|spellbook_mcp.*server"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        if result.returncode != 0 or not result.stdout.strip():
+            return (True, "no running process found (will start on next use)")
+
+        pids = [int(pid) for pid in result.stdout.strip().split("\n") if pid.strip()]
+
+        if not pids:
+            return (True, "no running process found (will start on next use)")
+
+        killed = 0
+        for pid in pids:
+            try:
+                os.kill(pid, signal.SIGTERM)
+                killed += 1
+            except (ProcessLookupError, PermissionError):
+                # Process already gone or we can't kill it
+                pass
+
+        if killed > 0:
+            return (True, f"terminated {killed} process(es), will respawn on next use")
+        else:
+            return (True, "processes already stopped")
+
+    except subprocess.TimeoutExpired:
+        return (False, "process search timed out")
+    except (OSError, ValueError) as e:
         return (False, str(e))
 
 

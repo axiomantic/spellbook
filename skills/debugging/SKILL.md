@@ -1,6 +1,6 @@
 ---
 name: debugging
-description: "Use when debugging bugs, test failures, or unexpected behavior. Supports --scientific and --systematic flags for direct methodology selection."
+description: "Use when debugging bugs, test failures, or unexpected behavior"
 ---
 
 # Debugging
@@ -15,10 +15,10 @@ Your job is to triage issues, select the optimal approach, enforce the 3-fix rul
 This skill is the UNIFIED ENTRY POINT for all debugging.
 
 **Invocation styles supported:**
-- `/debugging` - Full triage, methodology selection
-- `/debugging --scientific` - Skip triage, use scientific debugging
-- `/debugging --systematic` - Skip triage, use systematic debugging
-- Direct commands `/scientific-debugging` or `/systematic-debugging` - Also available
+- `debugging` skill (via Skill tool) - Full triage, methodology selection
+- `debugging --scientific` skill - Skip triage, use scientific debugging
+- `debugging --systematic` skill - Skip triage, use systematic debugging
+- Direct invocation of `scientific-debugging` or `systematic-debugging` skills - Also available
 
 **Session state tracking:**
 ```
@@ -322,11 +322,11 @@ SESSION_STATE = {
 
 | Invocation | Triage | Methodology | Verification |
 |------------|--------|-------------|--------------|
-| `/debugging` | Yes | Selected based on triage | Auto |
-| `/debugging --scientific` | Skip | Scientific | Auto |
-| `/debugging --systematic` | Skip | Systematic | Auto |
-| `/scientific-debugging` | Skip | Scientific | Manual |
-| `/systematic-debugging` | Skip | Systematic | Manual |
+| `debugging` skill | Yes | Selected based on triage | Auto |
+| `debugging --scientific` skill | Skip | Scientific | Auto |
+| `debugging --systematic` skill | Skip | Systematic | Auto |
+| `scientific-debugging` skill | Skip | Scientific | Manual |
+| `systematic-debugging` skill | Skip | Systematic | Manual |
 
 ---
 

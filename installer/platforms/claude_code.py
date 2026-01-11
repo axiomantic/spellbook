@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..components.context_files import generate_claude_context
-from ..components.mcp import check_claude_cli_available, register_mcp_server, unregister_mcp_server
+from ..components.mcp import check_claude_cli_available, register_mcp_server, restart_mcp_server, unregister_mcp_server
 from ..components.symlinks import (
     create_command_symlinks,
     create_skill_symlinks,
@@ -219,6 +219,21 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         message=f"MCP server: {msg}",
                     )
                 )
+
+                # Restart the MCP server so changes take effect immediately
+                if success:
+                    restart_success, restart_msg = restart_mcp_server(
+                        "spellbook", dry_run=self.dry_run
+                    )
+                    results.append(
+                        InstallResult(
+                            component="mcp_restart",
+                            platform=self.platform_id,
+                            success=restart_success,
+                            action="restarted" if restart_success else "failed",
+                            message=f"MCP restart: {restart_msg}",
+                        )
+                    )
         else:
             results.append(
                 InstallResult(

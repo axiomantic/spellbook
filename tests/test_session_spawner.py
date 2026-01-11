@@ -312,18 +312,21 @@ class TestSessionSpawner:
 
     def test_working_dir_validation(self, spawner, mock_env_vars):
         """Test that working directory is validated."""
-        # Should not raise for strings
-        result = spawner.spawn_iterm2(
-            command="echo 'test'",
-            working_dir="/valid/path",
-            env_vars=mock_env_vars,
-        )
-        # Will fail because path doesn't exist, but shouldn't raise ValueError
+        mock_run = Mock(return_value=subprocess.CompletedProcess(args=[], returncode=0))
 
-        # Path objects should also work
-        result = spawner.spawn_iterm2(
-            command="echo 'test'",
-            working_dir=Path("/valid/path"),
-            env_vars=mock_env_vars,
-        )
-        # Will fail because path doesn't exist, but shouldn't raise ValueError
+        with patch("subprocess.run", mock_run):
+            # Should not raise for strings
+            result = spawner.spawn_iterm2(
+                command="echo 'test'",
+                working_dir="/valid/path",
+                env_vars=mock_env_vars,
+            )
+            # Will fail because path doesn't exist, but shouldn't raise ValueError
+
+            # Path objects should also work
+            result = spawner.spawn_iterm2(
+                command="echo 'test'",
+                working_dir=Path("/valid/path"),
+                env_vars=mock_env_vars,
+            )
+            # Will fail because path doesn't exist, but shouldn't raise ValueError

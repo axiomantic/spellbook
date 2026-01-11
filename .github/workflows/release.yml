@@ -80,58 +80,53 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           TAG="${{ steps.version.outputs.tag }}"
           MAJOR_TAG="${{ steps.version.outputs.major_tag }}"
+          REPO="${{ github.repository }}"
 
           # Extract the section for this version from CHANGELOG.md
-          # Matches from "## [X.Y.Z]" until the next "## [" or end of file
           if [[ -f "CHANGELOG.md" ]]; then
-            # Use awk to extract the version section
-            # CHANGELOG format: ## [X.Y.Z] - YYYY-MM-DD
-            SECTION=$(awk -v ver="$VERSION" '
+            awk -v ver="$VERSION" '
               /^## \[/ {
                 if (found) exit
                 if (index($0, "[" ver "]")) found=1
               }
               found { print }
-            ' CHANGELOG.md)
+            ' CHANGELOG.md > /tmp/release_notes.md
 
-            if [[ -n "$SECTION" ]]; then
+            if [[ -s /tmp/release_notes.md ]]; then
               echo "Found release notes for version $VERSION in CHANGELOG.md"
-              NOTES="$SECTION"
             else
               echo "No release notes found for version $VERSION in CHANGELOG.md"
-              NOTES="## $VERSION
-
-No release notes provided for this version."
+              echo "## $VERSION" > /tmp/release_notes.md
+              echo "" >> /tmp/release_notes.md
+              echo "No release notes provided for this version." >> /tmp/release_notes.md
             fi
           else
             echo "CHANGELOG.md not found, using commit log"
             PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
+            echo "## What's Changed" > /tmp/release_notes.md
+            echo "" >> /tmp/release_notes.md
             if [[ -n "$PREV_TAG" ]]; then
-              COMMITS=$(git log --oneline "$PREV_TAG"..HEAD --no-merges | head -20)
+              git log --oneline "$PREV_TAG"..HEAD --no-merges | head -20 >> /tmp/release_notes.md
             else
-              COMMITS=$(git log --oneline -20 --no-merges)
+              git log --oneline -20 --no-merges >> /tmp/release_notes.md
             fi
-            NOTES="## What's Changed
-
-$COMMITS"
           fi
 
-          # Append footer
+          # Append footer using heredoc (written to separate file, then appended)
           PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
-          NOTES="$NOTES
-
----
-
-**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-main}...$TAG
-
----
-
-_This release was automatically created when .version was updated to $VERSION._
-
-The floating tag \`$MAJOR_TAG\` now points to this release."
-
-          # Write to file for gh release to read
-          echo "$NOTES" > /tmp/release_notes.md
+          PREV_TAG="${PREV_TAG:-main}"
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Full Changelog**: https://github.com/${REPO}/compare/${PREV_TAG}...${TAG}"
+            echo ""
+            echo "---"
+            echo ""
+            echo "_This release was automatically created when .version was updated to ${VERSION}._"
+            echo ""
+            echo "The floating tag \`${MAJOR_TAG}\` now points to this release."
+          } >> /tmp/release_notes.md
 
           echo "Release notes generated"
 

@@ -387,7 +387,7 @@ class TestMetricsE2E:
         )
 
         # Verify metrics file exists at portable default location
-        metrics_file = tmp_path / ".local" / "spellbook" / "logs" / "test-project" / "implement-feature-metrics.jsonl"
+        metrics_file = tmp_path / ".local" / "spellbook" / "logs" / "test-project" / "implementing-features-metrics.jsonl"
         assert metrics_file.exists()
 
         # Verify content

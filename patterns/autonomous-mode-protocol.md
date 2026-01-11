@@ -146,5 +146,4 @@ Use the Circuit Breaker Format from patterns/autonomous-mode-protocol.md if paus
   - `implementing-features`
   - `executing-plans`
   - `writing-plans`
-  - `subagent-driven-development`
   - `using-git-worktrees`

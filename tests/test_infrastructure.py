@@ -230,7 +230,7 @@ def test_metrics_logging(tmp_path, monkeypatch):
 
     # Verify log file exists at portable default location
     log_dir = tmp_path / ".local" / "spellbook" / "logs" / "test-project"
-    log_file = log_dir / "implement-feature-metrics.jsonl"
+    log_file = log_dir / "implementing-features-metrics.jsonl"
     assert log_file.exists()
 
     # Verify content

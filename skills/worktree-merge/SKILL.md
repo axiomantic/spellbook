@@ -1,6 +1,6 @@
 ---
 name: worktree-merge
-description: "Use when merging parallel worktrees back together after parallel implementation with interface contracts"
+description: "Use when merging parallel worktrees back together after parallel implementation"
 ---
 
 <ROLE>

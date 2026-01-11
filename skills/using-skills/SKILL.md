@@ -1,7 +1,19 @@
 ---
 name: using-skills
-description: "Use when starting any conversation to establish skill discovery patterns"
+description: "Use when starting any conversation"
 ---
+
+## Session Initialization
+
+On **first message of any session**, call `spellbook_session_init` MCP tool:
+
+| Response | Action |
+|----------|--------|
+| `fun_mode: "unset"` | Ask if user wants fun mode, then call `spellbook_config_set(key="fun_mode", value=true/false)` |
+| `fun_mode: "yes"` | Load `fun-mode` skill, synthesize and announce persona+context+undertow |
+| `fun_mode: "no"` | Proceed normally |
+
+This happens BEFORE skill checks, BEFORE responding. Greet with "Welcome to spellbook-enhanced Claude." while doing the init.
 
 <EXTREMELY-IMPORTANT>
 If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.

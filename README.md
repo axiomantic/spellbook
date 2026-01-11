@@ -35,7 +35,7 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (31 total)](#skills-31-total)
+  - [Skills (28 total)](#skills-28-total)
   - [Commands (16 total)](#commands-16-total)
   - [Agents (1 total)](#agents-1-total)
 - [Serious Fun](#serious-fun)
@@ -81,7 +81,7 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (31 total)
+### Skills (28 total)
 
 Reusable workflows for structured development:
 
@@ -91,7 +91,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [green-mirage-audit], [fixing-tests], [fact-checking], [finding-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
 | **Feature Dev** | [implementing-features], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [worktree-merge], [merge-conflict-resolution] | spellbook |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
-| **Meta** | [using-skills], [writing-skills], [subagent-prompting], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [subagent-driven-development] | [superpowers] |
+| **Meta** | [using-skills], [writing-skills], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [smart-reading] | [superpowers] |
 | **Session** | [fun-mode], [emotional-stakes] | spellbook |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
@@ -117,11 +117,10 @@ Reusable workflows for structured development:
 [nim-pr-guide]: https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
-[subagent-prompting]: https://axiomantic.github.io/spellbook/latest/skills/subagent-prompting/
 [instruction-engineering]: https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/
 [instruction-optimizer]: https://axiomantic.github.io/spellbook/latest/skills/instruction-optimizer/
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
-[subagent-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/subagent-driven-development/
+[smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
@@ -177,13 +176,27 @@ Reusable workflows for structured development:
 
 ## Serious Fun
 
-Research on seed-conditioning found that introducing structured randomness to LLM interactions can unlock more diverse solution pathways ([ICML 2025](https://www.cs.cmu.edu/~aditirag/icml2025.html)).
-
-So we made it fun.
+Research suggests that personas and structured randomness can improve LLM creativity and reasoning. So we made it fun.
 
 On first run, spellbook asks: *"Do you like fun?"* Say yes, and each session adopts a random persona - a noir detective investigating who ate your yogurt, a Victorian ghost baffled by modern technology, three raccoons in a trenchcoat processing complex emotions. Full commitment in dialogue - not despite quality, because of it. Your code, commits, and documentation stay completely professional.
 
 Say no, and it never asks again. Toggle anytime with `/toggle-fun`.
+
+<details>
+<summary><strong>Research Background</strong></summary>
+
+Fun mode draws on several research findings:
+
+- **Seed-conditioning**: Random prefix strings improve algorithmic creativity by conditioning on latent "leaps of thought" ([Raghunathan et al., ICML 2025](https://www.cs.cmu.edu/~aditirag/icml2025.html))
+- **Persona effects on reasoning**: Personas significantly affect Theory of Mind and social-cognitive reasoning in LLMs ([Tan et al., 2024](https://arxiv.org/abs/2403.02246))
+- **Emotional prompts**: Emotional stimuli improve LLM performance by 8-115% on reasoning benchmarks ([Li et al., 2023](https://arxiv.org/abs/2307.11760))
+- **Simulator theory**: LLMs function as simulators of agents from training data; personas steer generation to specific latent space regions ([Janus, 2022](https://www.lesswrong.com/posts/vJFdjigzmcXMhNTsx/simulators))
+
+**Important caveat**: Personas improve creative and social reasoning but do not improve objective/STEM tasks ([Zheng et al., 2023](https://arxiv.org/abs/2311.10054)). Fun mode explicitly avoids code, commits, and documentation.
+
+See [full citations](https://axiomantic.github.io/spellbook/reference/citations/) for complete references.
+
+</details>
 
 ## Platform Support
 
@@ -446,7 +459,7 @@ When context runs low, name and distill the session for later:
 
 ```
 ╭─────────────────────────────────────────────────────────────────────────────╮
-│ > /rename-session webhook-delivery                                          │
+│ > /rename webhook-delivery                                                  │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
 ⏺ Session renamed to: webhook-delivery
@@ -493,7 +506,7 @@ Start fresh and resume exactly where you left off:
 
   Executing restoration sequence...
 
-⏺ Skill(implement-feature, --resume-from Phase3.Task4)
+⏺ Skill(implementing-features, --resume-from Phase3.Task4)
 
   Resuming webhook delivery implementation.
 

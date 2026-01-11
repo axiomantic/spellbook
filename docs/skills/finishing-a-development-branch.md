@@ -1,6 +1,6 @@
 # finishing-a-development-branch
 
-"Use when implementation is complete, all tests pass, and you need to decide how to integrate the work (merge, PR, or cleanup)"
+"Use when implementation is complete, all tests pass, and you need to decide how to integrate the work"
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
@@ -228,8 +228,8 @@ git worktree remove <worktree-path>
 ## Integration
 
 **Called by:**
-- **subagent-driven-development** (Step 7) - After all tasks complete
 - **executing-plans** (Step 5) - After all batches complete
+- **executing-plans --mode subagent** (Step 7) - After all tasks complete in subagent mode
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill

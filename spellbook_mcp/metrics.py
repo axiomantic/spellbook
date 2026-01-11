@@ -57,7 +57,7 @@ def log_feature_metrics(
     """
     log_dir = get_spellbook_config_dir() / "logs" / project_encoded
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / "implement-feature-metrics.jsonl"
+    log_file = log_dir / "implementing-features-metrics.jsonl"
 
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),

@@ -140,12 +140,17 @@ See `emotional-stakes` skill for the full composition model and professional per
 
 ## Research Basis
 
-**Creativity (personas):** Research on seed-conditioning found that random, meaningless prefix strings improve algorithmic creativity. Structured randomness unlocks more diverse solution pathways.
+**Creativity (personas):** Random prefixes improve algorithmic creativity by conditioning on latent "leaps of thought" (Raghunathan et al., ICML 2025). Personas significantly affect Theory of Mind reasoning (Tan et al., PHAnToM 2024). Simulator theory explains personas as steering generation to specific latent space regions (Janus, 2022).
 
-**Accuracy (emotional-stakes):** EmotionPrompt research showed emotional stimuli improve reasoning by up to 115%. NegativePrompt research found consequence framing increases truthfulness and accuracy.
+**Accuracy (emotional-stakes):** Emotional stimuli improve reasoning by 8-115% (Li et al., EmotionPrompt 2023). Negative emotional framing improves performance by 12-46% (Wang et al., NegativePrompt 2024).
+
+**Important caveat:** Personas do NOT improve objective/STEM tasks (Zheng et al., 2023). Fun mode restricts personas to dialogue only, never code or documentation.
 
 Sources:
-- [ICML 2025 Seed-Conditioning Research](https://www.cs.cmu.edu/~aditirag/icml2025.html)
-- [EmotionPrompt (arXiv 2023)](https://arxiv.org/abs/2307.11760)
-- [NegativePrompt (IJCAI 2024)](https://www.ijcai.org/proceedings/2024/719)
+- [Raghunathan et al. - Seed-Conditioning (ICML 2025)](https://www.cs.cmu.edu/~aditirag/icml2025.html)
+- [Tan et al. - PHAnToM: Persona Effects on ToM (arXiv 2024)](https://arxiv.org/abs/2403.02246)
+- [Janus - Simulator Theory (LessWrong 2022)](https://www.lesswrong.com/posts/vJFdjigzmcXMhNTsx/simulators)
+- [Li et al. - EmotionPrompt (arXiv 2023)](https://arxiv.org/abs/2307.11760)
+- [Wang et al. - NegativePrompt (IJCAI 2024)](https://www.ijcai.org/proceedings/2024/719)
+- [Zheng et al. - Personas Don't Help Factual Tasks (arXiv 2023)](https://arxiv.org/abs/2311.10054)
 ``````````

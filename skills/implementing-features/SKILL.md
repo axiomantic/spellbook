@@ -2273,7 +2273,7 @@ For each worktree in SESSION_PREFERENCES.worktree_paths:
     description: "Execute tasks in [worktree.path]"
     run_in_background: true  # Run parallel worktrees concurrently
     prompt: |
-      First, invoke the subagent-driven-development skill using the Skill tool.
+      First, invoke the executing-plans skill with --mode subagent using the Skill tool.
       Execute the assigned tasks in this worktree.
 
       ## Context for the Skill
@@ -2326,7 +2326,7 @@ Sequential execution:
 Task (or subagent simulation):
   description: "Execute sequential implementation"
   prompt: |
-    First, invoke the subagent-driven-development skill using the Skill tool.
+    First, invoke the executing-plans skill with --mode subagent using the Skill tool.
     Then use its workflow to execute the implementation plan sequentially.
 
     ## Context for the Skill
@@ -2947,7 +2947,7 @@ Subagent prompts provide CONTEXT for the skill, not duplicated instructions.
 | 3.4 | executing-plans | Fix impl plan |
 | 4.1 | using-git-worktrees | Create isolated workspace(s) |
 | 4.2 | dispatching-parallel-agents | Parallel execution (single worktree) |
-| 4.2 | subagent-driven-development | Sequential or per-worktree execution |
+| 4.2 | executing-plans --mode subagent | Sequential or per-worktree execution |
 | 4.2.5 | worktree-merge | Merge parallel worktrees (if per_parallel_track) |
 | 4.3 | test-driven-development | TDD for each task |
 | 4.4 | (embedded) | Implementation completion verification per task |

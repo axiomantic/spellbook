@@ -11,7 +11,7 @@ Before proceeding, you MUST:
 1. Fork and clone the spellbook repository locally
 2. Verify target platform supports agent skills (not just MCP tools)
 3. Read spellbook skills directly from the cloned repository
-4. Follow the implement-feature workflow through research, design, planning, and implementation
+4. Follow the implementing-features workflow through research, design, planning, and implementation
 5. Write comprehensive tests following spellbook's standards
 6. STOP and ask before creating any PR
 
@@ -26,7 +26,7 @@ Step 1: Has the spellbook repo been forked and cloned locally? If not, do that f
 Step 2: Do I have access to the spellbook directory? Set $SPELLBOOK_DIR to the clone location.
 Step 3: Can I read skills manually from `$SPELLBOOK_DIR/skills/`?
 Step 4: Does the target platform support agent skills (not just MCP tools)?
-Step 5: Have I read the implement-feature skill to understand the full workflow?
+Step 5: Have I read the implementing-features skill to understand the full workflow?
 
 Now proceed with confidence to achieve outstanding results.
 </BEFORE_RESPONDING>
@@ -79,7 +79,7 @@ Key skills you will need to read:
 
 | Skill | Path | Purpose |
 |-------|------|---------|
-| implement-feature | `$SPELLBOOK_DIR/skills/implement-feature/SKILL.md` | Orchestrates the complete implementation workflow |
+| implementing-features | `$SPELLBOOK_DIR/skills/implementing-features/SKILL.md` | Orchestrates the complete implementation workflow |
 | test-driven-development | `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md` | Ensures tests are written before implementation |
 | instruction-engineering | `$SPELLBOOK_DIR/skills/instruction-engineering/SKILL.md` | Patterns for engineering effective prompts |
 
@@ -109,7 +109,7 @@ git checkout -b feat/add-<platform>-support
 <RULE>
 After cloning, verify you can read skills:
 ```bash
-ls $SPELLBOOK_DIR/skills/implement-feature/SKILL.md
+ls $SPELLBOOK_DIR/skills/implementing-features/SKILL.md
 ```
 If this fails, your $SPELLBOOK_DIR is not set correctly.
 </RULE>
@@ -119,12 +119,12 @@ If this fails, your $SPELLBOOK_DIR is not set correctly.
 ## Porting Workflow
 
 <RULE>
-This workflow follows the implement-feature skill pattern. Read that skill first, then apply its phases to this specific porting task.
+This workflow follows the implementing-features skill pattern. Read that skill first, then apply its phases to this specific porting task.
 </RULE>
 
 ### Phase 0: Configuration
 
-First, read and invoke the `implement-feature` skill from `$SPELLBOOK_DIR/skills/implement-feature/SKILL.md`.
+First, read and invoke the `implementing-features` skill from `$SPELLBOOK_DIR/skills/implementing-features/SKILL.md`.
 
 The feature to implement: **Platform installer for [PLATFORM_NAME]**
 
@@ -150,7 +150,7 @@ Provide this context to the skill:
 
 ### Phase 1: Research
 
-The implement-feature skill will dispatch research. Ensure research covers:
+The implementing-features skill will dispatch research. Ensure research covers:
 
 1. **Platform skill format**: Where are custom skills stored? What file format?
 2. **Platform context file**: Where is the main system prompt/context file?
@@ -169,7 +169,7 @@ Detection: [cli command / config file / environment variable]
 
 ### Phase 2: Design
 
-The implement-feature skill will create a design document. Ensure the design covers:
+The implementing-features skill will create a design document. Ensure the design covers:
 
 - Installer class structure following the `PlatformInstaller` protocol
 - Context file content (if applicable)
@@ -179,7 +179,7 @@ The implement-feature skill will create a design document. Ensure the design cov
 
 ### Phase 3: Implementation Planning
 
-The implement-feature skill will create an implementation plan. Ensure the plan includes:
+The implementing-features skill will create an implementation plan. Ensure the plan includes:
 
 1. Create `installer/platforms/<platform>.py` with:
    - `detect()`: Check if platform is installed
@@ -198,7 +198,7 @@ The implement-feature skill will create an implementation plan. Ensure the plan 
 
 ### Phase 4: Implementation
 
-The implement-feature skill will guide implementation. Follow it completely.
+The implementing-features skill will guide implementation. Follow it completely.
 
 <RULE>
 For every piece of implementation code, read and apply the `test-driven-development` skill from `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md`.
@@ -350,8 +350,8 @@ Before completing this porting task, verify:
 
 - [ ] Did I fork and clone the spellbook repository?
 - [ ] Did I set $SPELLBOOK_DIR to the clone location?
-- [ ] Did I read the implement-feature skill from the spellbook directory?
-- [ ] Did I follow all phases of the implement-feature workflow?
+- [ ] Did I read the implementing-features skill from the spellbook directory?
+- [ ] Did I follow all phases of the implementing-features workflow?
 - [ ] Did I write tests BEFORE implementation code (TDD)?
 - [ ] Do all unit tests pass?
 - [ ] Do all integration tests pass?
@@ -369,7 +369,7 @@ You are a Systems Engineer with the instincts of a Red Team Lead. Your reputatio
 
 ALWAYS fork and clone the repository before starting.
 ALWAYS read skills from the spellbook directory before using them.
-ALWAYS follow the implement-feature workflow completely.
+ALWAYS follow the implementing-features workflow completely.
 ALWAYS write tests before implementation.
 NEVER create a PR without asking the user first.
 

@@ -407,7 +407,7 @@ PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 ls -la ~/.local/spellbook/docs/${PROJECT_ENCODED}/plans/ 2>/dev/null || echo "NO PLANS DIR"
 
 # 2. Search for plan references in chunk summaries
-grep -i "plan\|design\|impl\|\.claude/docs" [summaries]
+grep -i "plan\|design\|impl\|spellbook/docs" [summaries]
 
 # 3. Common patterns in project directory
 find . -name "*-impl.md" -o -name "*-design.md" -o -name "*-plan.md" 2>/dev/null
@@ -415,7 +415,7 @@ find . -name "*-impl.md" -o -name "*-design.md" -o -name "*-plan.md" 2>/dev/null
 
 **Step 2: For EACH planning document found**
 
-1. Record ABSOLUTE path (e.g., `/Users/alice/.claude/docs/Users-alice-Development-myproject/plans/feature-impl.md`)
+1. Record ABSOLUTE path (e.g., `/Users/alice/.local/spellbook/docs/Users-alice-Development-myproject/plans/feature-impl.md`)
 2. Read the document with file reading tool (`read_file`, `Read`)
 3. Extract progress:
    - Which sections/tasks are complete?

@@ -281,7 +281,7 @@ fi
 ## Example Session
 
 ```
-User: /execute-work-packets-seq /Users/me/.claude/docs/myproject/packets
+User: /execute-work-packets-seq /Users/me/.local/spellbook/docs/myproject/packets
 
 === Loading manifest ===
 Feature: User Authentication
@@ -292,7 +292,7 @@ Dependencies detected: 2 → [1], 3 → [1,2], 4 → [3]
 Execution order: [1, 2, 3, 4]
 
 === Executing Track 1: Core API ===
-Packet: /Users/me/.claude/docs/myproject/packets/track-1.md
+Packet: /Users/me/.local/spellbook/docs/myproject/packets/track-1.md
 Dependencies: none
 Status: Starting...
 
@@ -304,14 +304,14 @@ Completion marker: track-1.completion.json
 Context compaction suggested. Run /handoff? [yes/no]
 
 === Executing Track 2: Frontend ===
-Packet: /Users/me/.claude/docs/myproject/packets/track-2.md
+Packet: /Users/me/.local/spellbook/docs/myproject/packets/track-2.md
 Dependencies: [1] ✓ satisfied
 Status: Starting...
 
 [Continues for all tracks...]
 
 === All tracks complete ===
-Next: /merge-work-packets /Users/me/.claude/docs/myproject/packets
+Next: /merge-work-packets /Users/me/.local/spellbook/docs/myproject/packets
 ```
 
 ## Notes

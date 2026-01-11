@@ -153,7 +153,7 @@ After saving the plan, offer execution choice:
 **Which approach?"**
 
 **If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use subagent-driven-development
+- **REQUIRED SUB-SKILL:** Use executing-plans --mode subagent
 - Stay in this session
 - Fresh subagent per task + code review
 
