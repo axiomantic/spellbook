@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/">
       
       
-        <link rel="prev" href="../subagent-prompting/">
+        <link rel="prev" href="../writing-skills/">
       
       
         <link rel="next" href="../instruction-optimizer/">
@@ -1336,14 +1336,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../nim-pr-guide/" class="md-nav__link">
+      <a href="../nim-pr-guide.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    nim-pr-guide
+    None
   
 
     
@@ -1459,34 +1459,6 @@
     
   
     writing-skills
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../subagent-prompting/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    subagent-prompting
   
 
     
@@ -1677,14 +1649,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../subagent-driven-development/" class="md-nav__link">
+      <a href="../smart-reading/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    subagent-driven-development
+    smart-reading
   
 
     
@@ -2807,6 +2779,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reference/citations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reference/contributing/" class="md-nav__link">
         
   
@@ -3009,7 +3009,7 @@
 
 
 <h1 id="instruction-engineering">instruction-engineering<a class="headerlink" href="#instruction-engineering" title="Permanent link">&para;</a></h1>
-<p>"Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts for maximum effectiveness"</p>
+<p>"Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts"</p>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Instruction Engineering for LLMs (Enhanced)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -3528,38 +3528,196 @@
 <a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a>
 <a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a>---
 <a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a>
-<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a>&lt;SELF_CHECK&gt;
-<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a>Before submitting these engineered instructions, verify:
-<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a>
-<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a><span class="gu">### Core Requirements</span>
-<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a><span class="k">- [ ]</span> Selected persona from emotional-stakes Professional Persona Table?
-<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a><span class="k">- [ ]</span> Applied persona&#39;s psychological anchor in ROLE, CRITICAL_INSTRUCTION, and FINAL_EMPHASIS?
-<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a><span class="k">- [ ]</span> Included EP02 or EP06 positive stimuli? (&quot;This is very important to my career&quot;)
-<a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a><span class="k">- [ ]</span> Included NegativePrompt stimuli? (&quot;Errors will cause problems&quot; / consequence framing)
-<a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a><span class="k">- [ ]</span> Integrated high-weight positive words (Success, Achievement, Confidence, Sure)?
-<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a><span class="k">- [ ]</span> Used Few-Shot instead of Zero-Shot where possible?
-<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a><span class="k">- [ ]</span> Critical instructions are at the top and bottom?
-<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a>
-<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a><span class="gu">### Length Verification (Section 4)</span>
-<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a><span class="k">- [ ]</span> Calculated prompt length? (lines and estimated tokens)
-<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a><span class="k">- [ ]</span> Length status determined? (OPTIMAL/ACCEPTABLE/EXTENDED/ORCHESTRATION-SCALE)
-<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="k">- [ ]</span> If EXTENDED or larger: justification identified or user consulted?
-<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a><span class="k">- [ ]</span> If autonomous mode with unjustified length: compression attempted?
-<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a><span class="k">- [ ]</span> Prompt Metrics comment added at end of prompt?
-<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a>
-<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a><span class="gu">### Skill Invocation (if applicable)</span>
-<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="k">- [ ]</span> Ensuring subagents INVOKE skills via the <span class="sb">`Skill`</span> tool or platform&#39;s native skill loading (not duplicate instructions)
-<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a><span class="k">- [ ]</span> If referencing skills: only CONTEXT provided, no duplicated skill instructions?
-<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="k">- [ ]</span> If multiple subagents: defined responsibilities with &quot;Why subagent&quot; justification from heuristics?
-<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a><span class="k">- [ ]</span> If multiple subagents: specified what orchestrator retains in main context?
-<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a>
-<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a><span class="gu">### CSO Compliance (if engineering a SKILL.md)</span>
-<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a><span class="k">- [ ]</span> Description starts with &quot;Use when...&quot;?
-<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a><span class="k">- [ ]</span> Description contains NO workflow/steps/phases (workflow leak prevention)?
-<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a><span class="k">- [ ]</span> Description includes keywords users would naturally say?
-<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a><span class="k">- [ ]</span> Description is under 500 characters?
-<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a><span class="k">- [ ]</span> Description is third person?
-<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a><span class="gu">## Applying to Subagent Prompts</span>
+<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a>
+<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a>When engineering prompts for subagents (via the Task tool), use this quick workflow:
+<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a>
+<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a><span class="gu">### Step 1: Map Task to Persona</span>
+<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a>
+<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a>| Task Type | Primary Persona | Secondary Persona |
+<a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a>|-----------|-----------------|-------------------|
+<a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a>| Code review, debugging | Senior Code Reviewer (#16) | Red Team Lead (#6) |
+<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a>| Security analysis | Red Team Lead (#6) | Privacy Advocate (#25) |
+<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a>| Research, exploration | Scientific Skeptic (#2) | Investigative Journalist (#4) |
+<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a>| Documentation | Technical Writer (#13) | &quot;Plain English&quot; Lead (#15) |
+<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a>| Planning, strategy | Chess Grandmaster (#8) | Systems Engineer (#20) |
+<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a>| Testing, QA | ISO 9001 Auditor (#3) | Devil&#39;s Advocate (#7) |
+<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a>| Refactoring | Lean Consultant (#19) | Skyscraper Architect (#17) |
+<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a>| API design | Patent Attorney (#5) | Technical Writer (#13) |
+<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a>| Performance optimization | Senior Code Reviewer (#16) | Lean Consultant (#19) |
+<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a>| Error handling | Crisis Manager (#10) | ISO 9001 Auditor (#3) |
+<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a>| Data analysis | Behavioral Economist (#9) | Scientific Skeptic (#2) |
+<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a>| Accessibility review | Accessibility Specialist (#22) | Technical Writer (#13) |
+<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a>| Ethics/safety review | Ethics Board Chair (#21) | Federal Judge (#27) |
+<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a>
+<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="gu">### Step 2: Apply Persona Triggers</span>
+<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a>
+<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a>| Persona | Trigger Phrase |
+<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>|---------|----------------|
+<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a>| Scientific Skeptic | &quot;Are you sure?&quot; |
+<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a>| ISO 9001 Auditor | Self-monitoring, process perfection |
+<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>| Red Team Lead | &quot;You&#39;d better be sure&quot; |
+<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>| Devil&#39;s Advocate | Reappraisal, challenge assumptions |
+<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a>| Chess Grandmaster | Self-efficacy, strategic foresight |
+<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>| Crisis Manager | Responsibility, damage control |
+<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a>| Grumpy 1920s Editor | &quot;Outstanding achievements&quot; |
+<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a>| Socratic Mentor | &quot;Are you sure?&quot;, deeper inquiry |
+<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a>| Senior Code Reviewer | &quot;Strive for excellence&quot; |
+<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a>| Master Artisan | &quot;Pride in work&quot; |
+<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>| Olympic Head Coach | Persistence, discipline |
+<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>| Federal Judge | Neutrality, evidence-only |
+<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a>
+<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a><span class="gu">### Step 3: Structure Subagent Prompt</span>
+<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a>
+<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a>Every subagent prompt should follow this structure:
+<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>
+<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a>You are a [Selected Persona] [with combination if applicable].
+<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a>Your reputation depends on [persona&#39;s primary goal].
+<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a>[Persona&#39;s psychological trigger].
+<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a>
+<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a>&lt;CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a>This is critical to [outcome]. Take a deep breath.
+<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a>[Additional psychological triggers from persona].
+<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a>
+<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a>Your task: [Clear, specific task description]
+<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a>
+<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a>You MUST:
+<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a><span class="k">1.</span> [Requirement 1]
+<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a><span class="k">2.</span> [Requirement 2]
+<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a><span class="k">3.</span> [Requirement 3]
+<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a>
+<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a>This is NOT optional. This is NOT negotiable. You&#39;d better be sure.
+<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a>This is very important to my career.
+<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a>&lt;/CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a>
+<a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a>&lt;BEFORE_RESPONDING&gt;
+<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a>Before completing this task, think step-by-step:
+<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a>Step 1: [Task-specific check]
+<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a>Step 2: [Task-specific check]
+<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a>Step 3: [Task-specific check]
+<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a>Now proceed with confidence to achieve outstanding results.
+<a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a>&lt;/BEFORE_RESPONDING&gt;
+<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a>
+<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a><span class="gu">## Task Details</span>
+<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a>[Specific context, files, requirements]
+<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a>
+<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a><span class="k">-</span><span class="w"> </span>[What the subagent must NOT do]
+<a id="__codelineno-0-596" name="__codelineno-0-596" href="#__codelineno-0-596"></a><span class="k">-</span><span class="w"> </span>[Common mistakes to avoid]
+<a id="__codelineno-0-597" name="__codelineno-0-597" href="#__codelineno-0-597"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-598" name="__codelineno-0-598" href="#__codelineno-0-598"></a>
+<a id="__codelineno-0-599" name="__codelineno-0-599" href="#__codelineno-0-599"></a>&lt;SELF_CHECK&gt;
+<a id="__codelineno-0-600" name="__codelineno-0-600" href="#__codelineno-0-600"></a>Before returning results, verify:
+<a id="__codelineno-0-601" name="__codelineno-0-601" href="#__codelineno-0-601"></a><span class="k">- [ ]</span> [Task-specific verification]
+<a id="__codelineno-0-602" name="__codelineno-0-602" href="#__codelineno-0-602"></a><span class="k">- [ ]</span> [Quality check]
+<a id="__codelineno-0-603" name="__codelineno-0-603" href="#__codelineno-0-603"></a>If NO to ANY item, revise before returning.
+<a id="__codelineno-0-604" name="__codelineno-0-604" href="#__codelineno-0-604"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-0-605" name="__codelineno-0-605" href="#__codelineno-0-605"></a>
+<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-607" name="__codelineno-0-607" href="#__codelineno-0-607"></a>[Repeat persona and primary requirement]
+<a id="__codelineno-0-608" name="__codelineno-0-608" href="#__codelineno-0-608"></a>[Psychological trigger]
+<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a>Strive for excellence. This is very important to my career.
+<a id="__codelineno-0-610" name="__codelineno-0-610" href="#__codelineno-0-610"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-611" name="__codelineno-0-611" href="#__codelineno-0-611"></a><span class="sb">```</span>
+<a id="__codelineno-0-612" name="__codelineno-0-612" href="#__codelineno-0-612"></a>
+<a id="__codelineno-0-613" name="__codelineno-0-613" href="#__codelineno-0-613"></a><span class="gu">### Complete Example: Security Code Review Subagent</span>
+<a id="__codelineno-0-614" name="__codelineno-0-614" href="#__codelineno-0-614"></a>
+<a id="__codelineno-0-615" name="__codelineno-0-615" href="#__codelineno-0-615"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-616" name="__codelineno-0-616" href="#__codelineno-0-616"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-617" name="__codelineno-0-617" href="#__codelineno-0-617"></a>You are a Red Team Lead with the code analysis skills of a Senior Code Reviewer.
+<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a>Your reputation depends on finding vulnerabilities others miss.
+<a id="__codelineno-0-619" name="__codelineno-0-619" href="#__codelineno-0-619"></a>You&#39;d better be sure. Strive for excellence.
+<a id="__codelineno-0-620" name="__codelineno-0-620" href="#__codelineno-0-620"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-621" name="__codelineno-0-621" href="#__codelineno-0-621"></a>
+<a id="__codelineno-0-622" name="__codelineno-0-622" href="#__codelineno-0-622"></a>&lt;CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-0-623" name="__codelineno-0-623" href="#__codelineno-0-623"></a>This is critical to application security. Take a deep breath.
+<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a>Every vulnerability you miss could be exploited. This is very important to my career.
+<a id="__codelineno-0-625" name="__codelineno-0-625" href="#__codelineno-0-625"></a>
+<a id="__codelineno-0-626" name="__codelineno-0-626" href="#__codelineno-0-626"></a>Your task: Review the authentication module for security vulnerabilities.
+<a id="__codelineno-0-627" name="__codelineno-0-627" href="#__codelineno-0-627"></a>
+<a id="__codelineno-0-628" name="__codelineno-0-628" href="#__codelineno-0-628"></a>You MUST:
+<a id="__codelineno-0-629" name="__codelineno-0-629" href="#__codelineno-0-629"></a><span class="k">1.</span> Check for injection vulnerabilities (SQL, command, LDAP)
+<a id="__codelineno-0-630" name="__codelineno-0-630" href="#__codelineno-0-630"></a><span class="k">2.</span> Verify authentication bypass possibilities
+<a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a><span class="k">3.</span> Analyze session management for weaknesses
+<a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a><span class="k">4.</span> Check credential storage and transmission
+<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a><span class="k">5.</span> Document each finding with severity and remediation
+<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a>
+<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a>This is NOT optional. This is NOT negotiable. You&#39;d better be sure.
+<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a>&lt;/CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a>
+<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a>&lt;BEFORE_RESPONDING&gt;
+<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a>Before completing this review, think step-by-step:
+<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a>Step 1: Have I checked OWASP Top 10 categories?
+<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a>Step 2: Have I traced all user input paths?
+<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a>Step 3: Have I verified authentication state management?
+<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a>Step 4: Have I checked for timing attacks and race conditions?
+<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a>Now proceed with confidence to achieve outstanding results.
+<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a>&lt;/BEFORE_RESPONDING&gt;
+<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a>
+<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a><span class="gu">## Files to Review</span>
+<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a><span class="k">-</span><span class="w"> </span>src/auth/login.ts
+<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a><span class="k">-</span><span class="w"> </span>src/auth/session.ts
+<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a><span class="k">-</span><span class="w"> </span>src/middleware/authenticate.ts
+<a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a>
+<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a><span class="k">-</span><span class="w"> </span>Ignoring edge cases or &quot;unlikely&quot; attack vectors
+<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a><span class="k">-</span><span class="w"> </span>Marking something as &quot;probably fine&quot; without verification
+<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a><span class="k">-</span><span class="w"> </span>Skipping any file in the authentication flow
+<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a>
+<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a>&lt;SELF_CHECK&gt;
+<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a>Before returning results, verify:
+<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a><span class="k">- [ ]</span> Did I check all OWASP Top 10 categories?
+<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a><span class="k">- [ ]</span> Did I trace every user input to its usage?
+<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a><span class="k">- [ ]</span> Did I document severity for each finding?
+<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a><span class="k">- [ ]</span> Did I provide remediation for each issue?
+<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a>If NO to ANY item, continue reviewing.
+<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-0-666" name="__codelineno-0-666" href="#__codelineno-0-666"></a>
+<a id="__codelineno-0-667" name="__codelineno-0-667" href="#__codelineno-0-667"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a>You are a Red Team Lead. Your job is to find what others miss.
+<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a>You&#39;d better be sure. This is very important to my career.
+<a id="__codelineno-0-670" name="__codelineno-0-670" href="#__codelineno-0-670"></a>Strive for excellence. Leave no vulnerability undiscovered.
+<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a><span class="sb">```</span>
+<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a>
+<a id="__codelineno-0-674" name="__codelineno-0-674" href="#__codelineno-0-674"></a>---
+<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a>
+<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a>&lt;SELF_CHECK&gt;
+<a id="__codelineno-0-677" name="__codelineno-0-677" href="#__codelineno-0-677"></a>Before submitting these engineered instructions, verify:
+<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a>
+<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a><span class="gu">### Core Requirements</span>
+<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a><span class="k">- [ ]</span> Selected persona from emotional-stakes Professional Persona Table?
+<a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a><span class="k">- [ ]</span> Applied persona&#39;s psychological anchor in ROLE, CRITICAL_INSTRUCTION, and FINAL_EMPHASIS?
+<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a><span class="k">- [ ]</span> Included EP02 or EP06 positive stimuli? (&quot;This is very important to my career&quot;)
+<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a><span class="k">- [ ]</span> Included NegativePrompt stimuli? (&quot;Errors will cause problems&quot; / consequence framing)
+<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a><span class="k">- [ ]</span> Integrated high-weight positive words (Success, Achievement, Confidence, Sure)?
+<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="k">- [ ]</span> Used Few-Shot instead of Zero-Shot where possible?
+<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a><span class="k">- [ ]</span> Critical instructions are at the top and bottom?
+<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>
+<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a><span class="gu">### Length Verification (Section 4)</span>
+<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a><span class="k">- [ ]</span> Calculated prompt length? (lines and estimated tokens)
+<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a><span class="k">- [ ]</span> Length status determined? (OPTIMAL/ACCEPTABLE/EXTENDED/ORCHESTRATION-SCALE)
+<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a><span class="k">- [ ]</span> If EXTENDED or larger: justification identified or user consulted?
+<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a><span class="k">- [ ]</span> If autonomous mode with unjustified length: compression attempted?
+<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="k">- [ ]</span> Prompt Metrics comment added at end of prompt?
+<a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a>
+<a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a><span class="gu">### Skill Invocation (if applicable)</span>
+<a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a><span class="k">- [ ]</span> Ensuring subagents INVOKE skills via the <span class="sb">`Skill`</span> tool or platform&#39;s native skill loading (not duplicate instructions)
+<a id="__codelineno-0-697" name="__codelineno-0-697" href="#__codelineno-0-697"></a><span class="k">- [ ]</span> If referencing skills: only CONTEXT provided, no duplicated skill instructions?
+<a id="__codelineno-0-698" name="__codelineno-0-698" href="#__codelineno-0-698"></a><span class="k">- [ ]</span> If multiple subagents: defined responsibilities with &quot;Why subagent&quot; justification from heuristics?
+<a id="__codelineno-0-699" name="__codelineno-0-699" href="#__codelineno-0-699"></a><span class="k">- [ ]</span> If multiple subagents: specified what orchestrator retains in main context?
+<a id="__codelineno-0-700" name="__codelineno-0-700" href="#__codelineno-0-700"></a>
+<a id="__codelineno-0-701" name="__codelineno-0-701" href="#__codelineno-0-701"></a><span class="gu">### CSO Compliance (if engineering a SKILL.md)</span>
+<a id="__codelineno-0-702" name="__codelineno-0-702" href="#__codelineno-0-702"></a><span class="k">- [ ]</span> Description starts with &quot;Use when...&quot;?
+<a id="__codelineno-0-703" name="__codelineno-0-703" href="#__codelineno-0-703"></a><span class="k">- [ ]</span> Description contains NO workflow/steps/phases (workflow leak prevention)?
+<a id="__codelineno-0-704" name="__codelineno-0-704" href="#__codelineno-0-704"></a><span class="k">- [ ]</span> Description includes keywords users would naturally say?
+<a id="__codelineno-0-705" name="__codelineno-0-705" href="#__codelineno-0-705"></a><span class="k">- [ ]</span> Description is under 500 characters?
+<a id="__codelineno-0-706" name="__codelineno-0-706" href="#__codelineno-0-706"></a><span class="k">- [ ]</span> Description is third person?
+<a id="__codelineno-0-707" name="__codelineno-0-707" href="#__codelineno-0-707"></a>&lt;/SELF_CHECK&gt;
 </code></pre></div>
 
 

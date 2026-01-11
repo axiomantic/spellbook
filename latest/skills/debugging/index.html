@@ -1394,14 +1394,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../nim-pr-guide/" class="md-nav__link">
+      <a href="../nim-pr-guide.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    nim-pr-guide
+    None
   
 
     
@@ -1537,34 +1537,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../subagent-prompting/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    subagent-prompting
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../instruction-engineering/" class="md-nav__link">
         
   
@@ -1677,14 +1649,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../subagent-driven-development/" class="md-nav__link">
+      <a href="../smart-reading/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    subagent-driven-development
+    smart-reading
   
 
     
@@ -2807,6 +2779,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reference/citations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reference/contributing/" class="md-nav__link">
         
   
@@ -3009,7 +3009,7 @@
 
 
 <h1 id="debugging">debugging<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h1>
-<p>"Use when debugging bugs, test failures, or unexpected behavior. Supports --scientific and --systematic flags for direct methodology selection."</p>
+<p>"Use when debugging bugs, test failures, or unexpected behavior"</p>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Debugging</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -3023,10 +3023,10 @@
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>This skill is the UNIFIED ENTRY POINT for all debugging.
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gs">**Invocation styles supported:**</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span><span class="sb">`/debugging`</span> - Full triage, methodology selection
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span><span class="sb">`/debugging --scientific`</span> - Skip triage, use scientific debugging
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span><span class="sb">`/debugging --systematic`</span> - Skip triage, use systematic debugging
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>Direct commands <span class="sb">`/scientific-debugging`</span> or <span class="sb">`/systematic-debugging`</span> - Also available
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span><span class="sb">`debugging`</span> skill (via Skill tool) - Full triage, methodology selection
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span><span class="sb">`debugging --scientific`</span> skill - Skip triage, use scientific debugging
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span><span class="sb">`debugging --systematic`</span> skill - Skip triage, use systematic debugging
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>Direct invocation of <span class="sb">`scientific-debugging`</span> or <span class="sb">`systematic-debugging`</span> skills - Also available
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gs">**Session state tracking:**</span>
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="sb">```</span>
@@ -3330,11 +3330,11 @@
 <a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
 <a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>| Invocation | Triage | Methodology | Verification |
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>|------------|--------|-------------|--------------|
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>| <span class="sb">`/debugging`</span> | Yes | Selected based on triage | Auto |
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>| <span class="sb">`/debugging --scientific`</span> | Skip | Scientific | Auto |
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>| <span class="sb">`/debugging --systematic`</span> | Skip | Systematic | Auto |
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>| <span class="sb">`/scientific-debugging`</span> | Skip | Scientific | Manual |
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>| <span class="sb">`/systematic-debugging`</span> | Skip | Systematic | Manual |
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>| <span class="sb">`debugging`</span> skill | Yes | Selected based on triage | Auto |
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>| <span class="sb">`debugging --scientific`</span> skill | Skip | Scientific | Auto |
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>| <span class="sb">`debugging --systematic`</span> skill | Skip | Systematic | Auto |
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>| <span class="sb">`scientific-debugging`</span> skill | Skip | Scientific | Manual |
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>| <span class="sb">`systematic-debugging`</span> skill | Skip | Systematic | Manual |
 <a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>
 <a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>---
 <a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>

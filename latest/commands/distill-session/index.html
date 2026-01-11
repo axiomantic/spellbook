@@ -1336,14 +1336,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/nim-pr-guide/" class="md-nav__link">
+      <a href="../../skills/nim-pr-guide.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    nim-pr-guide
+    None
   
 
     
@@ -1479,34 +1479,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/subagent-prompting/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    subagent-prompting
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../skills/instruction-engineering/" class="md-nav__link">
         
   
@@ -1619,14 +1591,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/subagent-driven-development/" class="md-nav__link">
+      <a href="../../skills/smart-reading/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    subagent-driven-development
+    smart-reading
   
 
     
@@ -2807,6 +2779,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reference/citations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reference/contributing/" class="md-nav__link">
         
   
@@ -3414,7 +3414,7 @@
 <a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>ls<span class="w"> </span>-la<span class="w"> </span>~/.local/spellbook/docs/<span class="si">${</span><span class="nv">PROJECT_ENCODED</span><span class="si">}</span>/plans/<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO PLANS DIR&quot;</span>
 <a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>
 <a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a><span class="c1"># 2. Search for plan references in chunk summaries</span>
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;plan\|design\|impl\|\.claude/docs&quot;</span><span class="w"> </span><span class="o">[</span>summaries<span class="o">]</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;plan\|design\|impl\|spellbook/docs&quot;</span><span class="w"> </span><span class="o">[</span>summaries<span class="o">]</span>
 <a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>
 <a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a><span class="c1"># 3. Common patterns in project directory</span>
 <a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>find<span class="w"> </span>.<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-impl.md&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-design.md&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*-plan.md&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null
@@ -3422,7 +3422,7 @@
 <a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>
 <a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="gs">**Step 2: For EACH planning document found**</span>
 <a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a><span class="k">1.</span> Record ABSOLUTE path (e.g., <span class="sb">`/Users/alice/.claude/docs/Users-alice-Development-myproject/plans/feature-impl.md`</span>)
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a><span class="k">1.</span> Record ABSOLUTE path (e.g., <span class="sb">`/Users/alice/.local/spellbook/docs/Users-alice-Development-myproject/plans/feature-impl.md`</span>)
 <a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="k">2.</span> Read the document with file reading tool (<span class="sb">`read_file`</span>, <span class="sb">`Read`</span>)
 <a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="k">3.</span> Extract progress:
 <a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Which sections/tasks are complete?

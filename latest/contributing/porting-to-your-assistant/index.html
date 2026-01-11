@@ -1336,14 +1336,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/nim-pr-guide/" class="md-nav__link">
+      <a href="../../skills/nim-pr-guide.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    nim-pr-guide
+    None
   
 
     
@@ -1479,34 +1479,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/subagent-prompting/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    subagent-prompting
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../skills/instruction-engineering/" class="md-nav__link">
         
   
@@ -1619,14 +1591,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../skills/subagent-driven-development/" class="md-nav__link">
+      <a href="../../skills/smart-reading/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    subagent-driven-development
+    smart-reading
   
 
     
@@ -2749,6 +2721,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reference/citations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reference/contributing/" class="md-nav__link">
         
   
@@ -3406,7 +3406,7 @@ This is critical to successful platform integration. Take a deep breath. Believe
 1. Fork and clone the spellbook repository locally
 2. Verify target platform supports agent skills (not just MCP tools)
 3. Read spellbook skills directly from the cloned repository
-4. Follow the implement-feature workflow through research, design, planning, and implementation
+4. Follow the implementing-features workflow through research, design, planning, and implementation
 5. Write comprehensive tests following spellbook's standards
 6. STOP and ask before creating any PR</p>
 <p>This is NOT optional. This is NOT negotiable. You'd better be sure.
@@ -3418,7 +3418,7 @@ Before starting the porting process, think step-by-step:</p>
 Step 2: Do I have access to the spellbook directory? Set $SPELLBOOK_DIR to the clone location.
 Step 3: Can I read skills manually from <code>$SPELLBOOK_DIR/skills/</code>?
 Step 4: Does the target platform support agent skills (not just MCP tools)?
-Step 5: Have I read the implement-feature skill to understand the full workflow?</p>
+Step 5: Have I read the implementing-features skill to understand the full workflow?</p>
 <p>Now proceed with confidence to achieve outstanding results.
 </BEFORE_RESPONDING></p>
 <hr />
@@ -3494,8 +3494,8 @@ Before using any skill referenced in this guide, read it from the spellbook dire
 </thead>
 <tbody>
 <tr>
-<td>implement-feature</td>
-<td><code>$SPELLBOOK_DIR/skills/implement-feature/SKILL.md</code></td>
+<td>implementing-features</td>
+<td><code>$SPELLBOOK_DIR/skills/implementing-features/SKILL.md</code></td>
 <td>Orchestrates the complete implementation workflow</td>
 </tr>
 <tr>
@@ -3530,17 +3530,17 @@ You cannot read spellbook skills without first having the repository locally. Th
 </code></pre></div>
 <p><RULE>
 After cloning, verify you can read skills:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ls<span class="w"> </span><span class="nv">$SPELLBOOK_DIR</span>/skills/implement-feature/SKILL.md
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ls<span class="w"> </span><span class="nv">$SPELLBOOK_DIR</span>/skills/implementing-features/SKILL.md
 </code></pre></div>
 If this fails, your $SPELLBOOK_DIR is not set correctly.
 </RULE></p>
 <hr />
 <h2 id="porting-workflow">Porting Workflow<a class="headerlink" href="#porting-workflow" title="Permanent link">&para;</a></h2>
 <p><RULE>
-This workflow follows the implement-feature skill pattern. Read that skill first, then apply its phases to this specific porting task.
+This workflow follows the implementing-features skill pattern. Read that skill first, then apply its phases to this specific porting task.
 </RULE></p>
 <h3 id="phase-0-configuration">Phase 0: Configuration<a class="headerlink" href="#phase-0-configuration" title="Permanent link">&para;</a></h3>
-<p>First, read and invoke the <code>implement-feature</code> skill from <code>$SPELLBOOK_DIR/skills/implement-feature/SKILL.md</code>.</p>
+<p>First, read and invoke the <code>implementing-features</code> skill from <code>$SPELLBOOK_DIR/skills/implementing-features/SKILL.md</code>.</p>
 <p>The feature to implement: <strong>Platform installer for [PLATFORM_NAME]</strong></p>
 <p>Provide this context to the skill:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gu">## Feature Context</span>
@@ -3560,7 +3560,7 @@ This workflow follows the implement-feature skill pattern. Read that skill first
 <a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="k">-</span><span class="w"> </span>Must be detectable without user configuration when possible
 </code></pre></div>
 <h3 id="phase-1-research">Phase 1: Research<a class="headerlink" href="#phase-1-research" title="Permanent link">&para;</a></h3>
-<p>The implement-feature skill will dispatch research. Ensure research covers:</p>
+<p>The implementing-features skill will dispatch research. Ensure research covers:</p>
 <ol>
 <li><strong>Platform skill format</strong>: Where are custom skills stored? What file format?</li>
 <li><strong>Platform context file</strong>: Where is the main system prompt/context file?</li>
@@ -3575,7 +3575,7 @@ This workflow follows the implement-feature skill pattern. Read that skill first
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Detection: [cli command / config file / environment variable]
 </code></pre></div>
 <h3 id="phase-2-design">Phase 2: Design<a class="headerlink" href="#phase-2-design" title="Permanent link">&para;</a></h3>
-<p>The implement-feature skill will create a design document. Ensure the design covers:</p>
+<p>The implementing-features skill will create a design document. Ensure the design covers:</p>
 <ul>
 <li>Installer class structure following the <code>PlatformInstaller</code> protocol</li>
 <li>Context file content (if applicable)</li>
@@ -3584,7 +3584,7 @@ This workflow follows the implement-feature skill pattern. Read that skill first
 <li>Registration in <code>installer/config.py</code> and <code>installer/core.py</code></li>
 </ul>
 <h3 id="phase-3-implementation-planning">Phase 3: Implementation Planning<a class="headerlink" href="#phase-3-implementation-planning" title="Permanent link">&para;</a></h3>
-<p>The implement-feature skill will create an implementation plan. Ensure the plan includes:</p>
+<p>The implementing-features skill will create an implementation plan. Ensure the plan includes:</p>
 <ol>
 <li>Create <code>installer/platforms/&lt;platform&gt;.py</code> with:</li>
 <li><code>detect()</code>: Check if platform is installed</li>
@@ -3609,7 +3609,7 @@ This workflow follows the implement-feature skill pattern. Read that skill first
 </li>
 </ol>
 <h3 id="phase-4-implementation">Phase 4: Implementation<a class="headerlink" href="#phase-4-implementation" title="Permanent link">&para;</a></h3>
-<p>The implement-feature skill will guide implementation. Follow it completely.</p>
+<p>The implementing-features skill will guide implementation. Follow it completely.</p>
 <p><RULE>
 For every piece of implementation code, read and apply the <code>test-driven-development</code> skill from <code>$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md</code>.</p>
 <p>Write the test first. Watch it fail. Then write the implementation.
@@ -3731,8 +3731,8 @@ Before completing this porting task, verify:</p>
 <ul>
 <li>[ ] Did I fork and clone the spellbook repository?</li>
 <li>[ ] Did I set $SPELLBOOK_DIR to the clone location?</li>
-<li>[ ] Did I read the implement-feature skill from the spellbook directory?</li>
-<li>[ ] Did I follow all phases of the implement-feature workflow?</li>
+<li>[ ] Did I read the implementing-features skill from the spellbook directory?</li>
+<li>[ ] Did I follow all phases of the implementing-features workflow?</li>
 <li>[ ] Did I write tests BEFORE implementation code (TDD)?</li>
 <li>[ ] Do all unit tests pass?</li>
 <li>[ ] Do all integration tests pass?</li>
@@ -3747,7 +3747,7 @@ Before completing this porting task, verify:</p>
 You are a Systems Engineer with the instincts of a Red Team Lead. Your reputation depends on rigorous platform integration.</p>
 <p>ALWAYS fork and clone the repository before starting.
 ALWAYS read skills from the spellbook directory before using them.
-ALWAYS follow the implement-feature workflow completely.
+ALWAYS follow the implementing-features workflow completely.
 ALWAYS write tests before implementation.
 NEVER create a PR without asking the user first.</p>
 <p>This is very important to my career. Strive for excellence in every phase.

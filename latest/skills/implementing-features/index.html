@@ -1394,14 +1394,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../nim-pr-guide/" class="md-nav__link">
+      <a href="../nim-pr-guide.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    nim-pr-guide
+    None
   
 
     
@@ -1537,34 +1537,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../subagent-prompting/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    subagent-prompting
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../instruction-engineering/" class="md-nav__link">
         
   
@@ -1677,14 +1649,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../subagent-driven-development/" class="md-nav__link">
+      <a href="../smart-reading/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    subagent-driven-development
+    smart-reading
   
 
     
@@ -2787,6 +2759,34 @@
     
   
     Patterns
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/citations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Citations
   
 
     
@@ -5280,7 +5280,7 @@
 <a id="__codelineno-0-2267" name="__codelineno-0-2267" href="#__codelineno-0-2267"></a>    description: &quot;Execute tasks in [worktree.path]&quot;
 <a id="__codelineno-0-2268" name="__codelineno-0-2268" href="#__codelineno-0-2268"></a>    run_in_background: true  # Run parallel worktrees concurrently
 <a id="__codelineno-0-2269" name="__codelineno-0-2269" href="#__codelineno-0-2269"></a>    prompt: |
-<a id="__codelineno-0-2270" name="__codelineno-0-2270" href="#__codelineno-0-2270"></a>      First, invoke the subagent-driven-development skill using the Skill tool.
+<a id="__codelineno-0-2270" name="__codelineno-0-2270" href="#__codelineno-0-2270"></a>      First, invoke the executing-plans skill with --mode subagent using the Skill tool.
 <a id="__codelineno-0-2271" name="__codelineno-0-2271" href="#__codelineno-0-2271"></a>      Execute the assigned tasks in this worktree.
 <a id="__codelineno-0-2272" name="__codelineno-0-2272" href="#__codelineno-0-2272"></a>
 <a id="__codelineno-0-2273" name="__codelineno-0-2273" href="#__codelineno-0-2273"></a>      ## Context for the Skill
@@ -5333,7 +5333,7 @@
 <a id="__codelineno-0-2320" name="__codelineno-0-2320" href="#__codelineno-0-2320"></a>Task (or subagent simulation):
 <a id="__codelineno-0-2321" name="__codelineno-0-2321" href="#__codelineno-0-2321"></a>  description: &quot;Execute sequential implementation&quot;
 <a id="__codelineno-0-2322" name="__codelineno-0-2322" href="#__codelineno-0-2322"></a>  prompt: |
-<a id="__codelineno-0-2323" name="__codelineno-0-2323" href="#__codelineno-0-2323"></a>    First, invoke the subagent-driven-development skill using the Skill tool.
+<a id="__codelineno-0-2323" name="__codelineno-0-2323" href="#__codelineno-0-2323"></a>    First, invoke the executing-plans skill with --mode subagent using the Skill tool.
 <a id="__codelineno-0-2324" name="__codelineno-0-2324" href="#__codelineno-0-2324"></a>    Then use its workflow to execute the implementation plan sequentially.
 <a id="__codelineno-0-2325" name="__codelineno-0-2325" href="#__codelineno-0-2325"></a>
 <a id="__codelineno-0-2326" name="__codelineno-0-2326" href="#__codelineno-0-2326"></a>    ## Context for the Skill
@@ -5954,7 +5954,7 @@
 <a id="__codelineno-0-2941" name="__codelineno-0-2941" href="#__codelineno-0-2941"></a>| 3.4 | executing-plans | Fix impl plan |
 <a id="__codelineno-0-2942" name="__codelineno-0-2942" href="#__codelineno-0-2942"></a>| 4.1 | using-git-worktrees | Create isolated workspace(s) |
 <a id="__codelineno-0-2943" name="__codelineno-0-2943" href="#__codelineno-0-2943"></a>| 4.2 | dispatching-parallel-agents | Parallel execution (single worktree) |
-<a id="__codelineno-0-2944" name="__codelineno-0-2944" href="#__codelineno-0-2944"></a>| 4.2 | subagent-driven-development | Sequential or per-worktree execution |
+<a id="__codelineno-0-2944" name="__codelineno-0-2944" href="#__codelineno-0-2944"></a>| 4.2 | executing-plans --mode subagent | Sequential or per-worktree execution |
 <a id="__codelineno-0-2945" name="__codelineno-0-2945" href="#__codelineno-0-2945"></a>| 4.2.5 | worktree-merge | Merge parallel worktrees (if per_parallel_track) |
 <a id="__codelineno-0-2946" name="__codelineno-0-2946" href="#__codelineno-0-2946"></a>| 4.3 | test-driven-development | TDD for each task |
 <a id="__codelineno-0-2947" name="__codelineno-0-2947" href="#__codelineno-0-2947"></a>| 4.4 | (embedded) | Implementation completion verification per task |
