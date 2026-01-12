@@ -9,6 +9,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/address-pr-feedback](address-pr-feedback.md) | <ROLE> | spellbook |
 | [/audit-green-mirage](audit-green-mirage.md) | description: "Audit test suites for Green Mirage anti-patterns: tests that pass ... | spellbook |
 | [/brainstorm](brainstorm.md) | description: "You MUST use this before any creative work - creating features, bu... | [superpowers](https://github.com/obra/superpowers) |
+| [/crystallize](crystallize.md) | <ROLE> | spellbook |
 | [/distill-session](distill-session.md) | description: "Distill oversized session: extract context, workflow, pending work... | spellbook |
 | [/execute-plan](execute-plan.md) | description: Execute plan in batches with review checkpoints | [superpowers](https://github.com/obra/superpowers) |
 | [/execute-work-packet](execute-work-packet.md) | description: Execute a single work packet - read packet, check dependencies, run... | spellbook |

@@ -112,6 +112,7 @@ nav:
     - Workflow Commands:
       - commands/handoff.md
       - commands/distill-session.md
+      - commands/crystallize.md
       - commands/simplify.md
       - commands/address-pr-feedback.md
       - commands/move-project.md

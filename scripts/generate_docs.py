@@ -96,7 +96,7 @@ def generate_skill_doc(skill_dir: Path) -> str:
     # Wrap body in markdown code block to prevent XML-style tags from rendering as HTML
     parts = [f"# {name}\n"]
     if description:
-        parts.append(f"\n{description}\n")
+        parts.append(f"\n{description.rstrip()}\n")
     if attribution:
         parts.append(f"\n{attribution}")
         parts.append("## Skill Content\n\n")

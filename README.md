@@ -36,7 +36,7 @@
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
   - [Skills (28 total)](#skills-28-total)
-  - [Commands (16 total)](#commands-16-total)
+  - [Commands (17 total)](#commands-17-total)
   - [Agents (1 total)](#agents-1-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -125,10 +125,11 @@ Reusable workflows for structured development:
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
 
-### Commands (16 total)
+### Commands (17 total)
 
 | Command | Description | Origin |
 |---------|-------------|--------|
+| [/crystallize] | Transform SOPs into agentic CoT prompts | spellbook |
 | [/handoff] | Custom session compaction | spellbook |
 | [/distill-session] | Extract knowledge from sessions | spellbook |
 | [/simplify] | Code complexity reduction | spellbook |
@@ -148,6 +149,7 @@ Reusable workflows for structured development:
 
 *\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
 
+[/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
 [/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/

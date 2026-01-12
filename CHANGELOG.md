@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`/crystallize` command** - transform verbose SOPs into concise agentic CoT prompts
+  - Applies Step-Back Abstraction, Plan-and-Solve Logic, Telegraphic Semantic Compression
+  - Targets >50% token reduction while increasing reasoning depth
+  - Enforces Reflexion steps and prevents "Green Mirage" tautological compliance
+
 ## [0.5.0] - 2026-01-11
 
 ### Breaking Changes
