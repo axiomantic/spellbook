@@ -1,6 +1,6 @@
 # fact-checking
 
->
+Use when reviewing code changes, auditing documentation accuracy, validating technical claims before merge, or user says "verify claims", "factcheck", "audit documentation", "validate comments", "are these claims accurate".
 
 ## Skill Content
 

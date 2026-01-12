@@ -1,6 +1,6 @@
 # implementation-plan-reviewer
 
-"Use when reviewing implementation plans before execution, especially plans derived from design documents"
+Use when reviewing implementation plans before execution, especially plans derived from design documents
 
 ## Skill Content
 

@@ -1,6 +1,6 @@
 # finishing-a-development-branch
 
-"Use when implementation is complete, all tests pass, and you need to decide how to integrate the work"
+Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

@@ -1,6 +1,6 @@
 # debugging
 
-"Use when debugging bugs, test failures, or unexpected behavior"
+Use when debugging bugs, test failures, or unexpected behavior
 
 ## Skill Content
 

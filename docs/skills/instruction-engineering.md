@@ -1,6 +1,6 @@
 # instruction-engineering
 
-"Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts"
+Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts
 
 ## Skill Content
 

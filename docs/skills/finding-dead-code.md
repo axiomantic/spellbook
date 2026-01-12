@@ -1,6 +1,6 @@
 # finding-dead-code
 
->
+Use when reviewing code changes, auditing new features, cleaning up PRs, or user says "find dead code", "find unused code", "check for unnecessary additions", "what can I remove".
 
 ## Skill Content
 

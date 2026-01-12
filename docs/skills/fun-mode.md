@@ -1,6 +1,6 @@
 # fun-mode
 
-"Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona"
+Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
 
 ## Skill Content
 

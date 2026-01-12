@@ -1,6 +1,6 @@
 # brainstorming
 
-"Use before any creative work - creating features, building components, adding functionality, or modifying behavior"
+Use before any creative work - creating features, building components, adding functionality, or modifying behavior
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

@@ -1,6 +1,6 @@
 # worktree-merge
 
-"Use when merging parallel worktrees back together after parallel implementation"
+Use when merging parallel worktrees back together after parallel implementation
 
 ## Skill Content
 

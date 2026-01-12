@@ -1,6 +1,6 @@
 # design-doc-reviewer
 
-"Use when reviewing design documents, technical specifications, or architecture docs before implementation planning"
+Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
 
 ## Skill Content
 

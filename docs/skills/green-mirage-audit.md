@@ -1,6 +1,6 @@
 # green-mirage-audit
 
-"Use when reviewing test suites, after test runs pass, or when user asks about test quality"
+Use when reviewing test suites, after test runs pass, or when user asks about test quality
 
 ## Skill Content
 

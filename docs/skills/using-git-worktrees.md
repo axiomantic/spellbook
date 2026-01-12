@@ -1,6 +1,6 @@
 # using-git-worktrees
 
-"Use when starting feature work that needs isolation from current workspace or before executing implementation plans"
+Use when starting feature work that needs isolation from current workspace or before executing implementation plans
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

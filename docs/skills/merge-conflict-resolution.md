@@ -1,6 +1,6 @@
 # merge-conflict-resolution
 
-"Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files"
+Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
 
 ## Skill Content
 

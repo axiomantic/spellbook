@@ -1,6 +1,6 @@
 # instruction-optimizer
 
-"Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability"
+Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability
 
 ## Skill Content
 

@@ -1,6 +1,6 @@
 # receiving-code-review
 
-"Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable"
+Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

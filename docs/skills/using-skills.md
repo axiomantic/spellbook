@@ -1,6 +1,6 @@
 # using-skills
 
-"Use when starting any conversation"
+Use when starting any conversation
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

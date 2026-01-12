@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = []
+# dependencies = ["pyyaml"]
 # ///
 """
 Generate documentation pages from SKILL.md, command, and agent files.
 """
-import os
 import re
 import sys
 from pathlib import Path
+
+import yaml
 
 REPO_ROOT = Path(__file__).parent.parent
 SKILLS_DIR = REPO_ROOT / "skills"
@@ -63,11 +64,10 @@ def extract_frontmatter(content: str) -> tuple[dict, str]:
     if len(parts) < 3:
         return {}, content
 
-    frontmatter = {}
-    for line in parts[1].strip().split("\n"):
-        if ":" in line:
-            key, value = line.split(":", 1)
-            frontmatter[key.strip()] = value.strip()
+    try:
+        frontmatter = yaml.safe_load(parts[1]) or {}
+    except yaml.YAMLError:
+        frontmatter = {}
 
     return frontmatter, parts[2].strip()
 

@@ -1,6 +1,6 @@
 # fixing-tests
 
-"Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests"
+Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests
 
 ## Skill Content
 

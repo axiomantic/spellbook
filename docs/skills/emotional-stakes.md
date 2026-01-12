@@ -1,6 +1,6 @@
 # emotional-stakes
 
-"Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness"
+Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
 
 ## Skill Content
 

@@ -1,6 +1,6 @@
 # devils-advocate
 
-"Use before design phase to challenge assumptions and surface risks"
+Use before design phase to challenge assumptions and surface risks
 
 ## Skill Content
 

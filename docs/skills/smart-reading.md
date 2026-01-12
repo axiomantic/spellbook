@@ -1,6 +1,6 @@
 # smart-reading
 
-"Use when reading files or command output of unknown size to avoid blind truncation and context loss"
+Use when reading files or command output of unknown size to avoid blind truncation and context loss
 
 ## Skill Content
 
