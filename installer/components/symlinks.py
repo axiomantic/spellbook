@@ -279,3 +279,94 @@ def remove_spellbook_symlinks(
                 results.append(result)
 
     return results
+
+
+def cleanup_spellbook_symlinks(
+    target_dir: Path, dry_run: bool = False
+) -> List[SymlinkResult]:
+    """
+    Remove symlinks that were created by spellbook (point to spellbook or are broken).
+
+    Use this before reinstalling to clean up orphaned symlinks from
+    renamed or removed skills/commands. This handles:
+    - Symlinks pointing to any path containing "spellbook"
+    - Broken symlinks (targets no longer exist)
+
+    User-created symlinks pointing to non-spellbook locations are preserved.
+
+    Args:
+        target_dir: Directory to clean up (e.g., ~/.claude/skills)
+        dry_run: If True, don't actually remove
+
+    Returns list of SymlinkResult for removed symlinks.
+    """
+    results = []
+
+    if not target_dir.exists():
+        return results
+
+    for item in target_dir.iterdir():
+        if not item.is_symlink():
+            continue
+
+        # Check if symlink target exists
+        try:
+            target_path = item.resolve(strict=True)
+            target_exists = True
+        except (OSError, FileNotFoundError):
+            target_exists = False
+            target_path = None
+
+        # Get the raw link target for logging
+        try:
+            raw_target = Path(item.readlink())
+        except OSError:
+            raw_target = Path("(unreadable)")
+
+        # Decide whether to remove this symlink
+        should_remove = False
+        reason = ""
+
+        if not target_exists:
+            # Broken symlink - always remove
+            should_remove = True
+            reason = "broken"
+        else:
+            # Check if it points to a spellbook directory
+            target_str = str(target_path).lower()
+            if "spellbook" in target_str:
+                should_remove = True
+                reason = "spellbook"
+
+        if not should_remove:
+            # Skip user symlinks
+            continue
+
+        if dry_run:
+            results.append(SymlinkResult(
+                source=raw_target,
+                target=item,
+                success=True,
+                action="removed",
+                message=f"Would remove {reason} symlink: {item.name}",
+            ))
+        else:
+            try:
+                item.unlink()
+                results.append(SymlinkResult(
+                    source=raw_target,
+                    target=item,
+                    success=True,
+                    action="removed",
+                    message=f"Removed {reason} symlink: {item.name}",
+                ))
+            except OSError as e:
+                results.append(SymlinkResult(
+                    source=raw_target,
+                    target=item,
+                    success=False,
+                    action="failed",
+                    message=f"Failed to remove symlink: {e}",
+                ))
+
+    return results

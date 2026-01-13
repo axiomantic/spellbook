@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-01-13
+
+### Added
+- **Tarot mode** - collaborative roundtable with 10 tarot archetypes for software engineering
+  - `tarot-mode` skill: Four core personas (Magician, Priestess, Hermit, Fool) plus six specialized agents
+  - Embeds EmotionPrompt (+8% accuracy) and NegativePrompt (+12.89% induction) in persona dialogue
+  - Stakes-driven quality: "Do NOT skip X", "Users depend on Y" in all exchanges
+  - Visible collaboration: personas talk TO each other, challenge, synthesize
+  - Personas affect dialogue only, never code/commits/documentation
+- **`/mode` command** - unified session mode switching
+  - `/mode` shows current mode status with source (session vs config)
+  - `/mode fun` switches to fun mode with random persona
+  - `/mode tarot` switches to tarot roundtable mode
+  - `/mode off` disables any active mode
+  - Asks about permanence: save to config or session-only
+- **6 tarot archetype agents** for roundtable dispatch
+  - `chariot-implementer` - Implementation specialist, "Do NOT add features"
+  - `emperor-governor` - Resource governor, "Do NOT editorialize"
+  - `hierophant-distiller` - Wisdom distiller, "Find THE pattern"
+  - `justice-resolver` - Conflict synthesizer, "Do NOT dismiss either"
+  - `lovers-integrator` - Integration specialist, "Do NOT assume alignment"
+  - `queen-affective` - Emotional state monitor, "Do NOT dismiss signals"
+- **Session mode API** - new MCP tools for mode management
+  - `spellbook_session_mode_set(mode, permanent)` - set mode with permanence option
+  - `spellbook_session_mode_get()` - get current mode, source, and permanence
+  - Session-only mode (in-memory, resets on MCP server restart)
+  - Backward compatible with legacy `fun_mode` config key
+- **Installer symlinks component** - modular symlink management in `installer/components/symlinks.py`
+
+### Changed
+- **`/toggle-fun` replaced by `/mode`** - unified command handles fun, tarot, and off states
+  - `/toggle-fun` file removed
+  - Use `/mode fun` for same functionality with permanence option
+- **Session mode resolution** - priority order: session state > `session_mode` config > `fun_mode` legacy > unset
+- **CLAUDE.spellbook.md** - added tarot mode documentation to Session Mode table
+
+### Enhanced
+- **`instruction-engineering` skill** - added content for tarot mode prompt construction
+
 ## [0.6.0] - 2026-01-12
 
 ### Fixed
@@ -418,7 +457,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/axiomantic/spellbook/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/axiomantic/spellbook/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/axiomantic/spellbook/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/axiomantic/spellbook/compare/v0.3.0...v0.4.0

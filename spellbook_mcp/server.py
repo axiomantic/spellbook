@@ -69,6 +69,8 @@ from config_tools import (
     config_get,
     config_set,
     session_init,
+    session_mode_set,
+    session_mode_get,
 )
 
 # Track server startup time for uptime calculation
@@ -377,18 +379,46 @@ def spellbook_session_init() -> dict:
     """
     Initialize a spellbook session.
 
-    Reads fun_mode preference from config. If fun mode is enabled,
-    selects random persona/context/undertow from the fun-mode skill assets.
+    Checks session state first (in-memory), then config file.
+    Returns mode information for fun-mode or tarot-mode if enabled.
 
     Returns:
         {
-            "fun_mode": "yes" | "no" | "unset",
-            "persona": "...",      // only if fun_mode=yes
-            "context": "...",      // only if fun_mode=yes
-            "undertow": "..."      // only if fun_mode=yes
+            "mode": {"type": "fun"|"tarot"|"none"|"unset", ...mode-specific data},
+            "fun_mode": "yes"|"no"|"unset"  // legacy key
         }
     """
     return session_init()
+
+
+@mcp.tool()
+def spellbook_session_mode_set(mode: str, permanent: bool = False) -> dict:
+    """
+    Set session mode, optionally persisting to config.
+
+    Args:
+        mode: Mode to set ("fun", "tarot", "none")
+        permanent: If True, save to config file. If False, session-only (resets on server restart).
+
+    Returns:
+        {"status": "ok", "mode": str, "permanent": bool}
+    """
+    return session_mode_set(mode, permanent)
+
+
+@mcp.tool()
+def spellbook_session_mode_get() -> dict:
+    """
+    Get current session mode state.
+
+    Returns:
+        {
+            "mode": "fun"|"tarot"|"none"|null,
+            "source": "session"|"config"|"config_legacy"|"unset",
+            "permanent": bool
+        }
+    """
+    return session_mode_get()
 
 
 def _get_version() -> str:

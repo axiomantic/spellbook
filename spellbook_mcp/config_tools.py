@@ -6,6 +6,12 @@ import random
 from pathlib import Path
 from typing import Any, Optional
 
+# Session-specific state (in-memory, resets on MCP server restart)
+# This allows session-only mode changes that don't persist to config
+_session_state: dict = {
+    "mode": None,  # None = use config file, string = session override
+}
+
 
 def get_config_path() -> Path:
     """Get path to spellbook config file."""
@@ -129,6 +135,55 @@ def config_set(key: str, value: Any) -> dict:
     return {"status": "ok", "config": config}
 
 
+def session_mode_set(mode: str, permanent: bool = False) -> dict:
+    """Set session mode, optionally persisting to config.
+
+    Args:
+        mode: Mode to set ("fun", "tarot", "none")
+        permanent: If True, save to config file. If False, session-only.
+
+    Returns:
+        Dict with status and current mode state
+    """
+    if mode not in ("fun", "tarot", "none"):
+        return {"status": "error", "message": f"Invalid mode: {mode}. Use 'fun', 'tarot', or 'none'."}
+
+    if permanent:
+        # Save to config file
+        config_set("session_mode", mode)
+        # Clear session override so config takes effect
+        _session_state["mode"] = None
+        return {"status": "ok", "mode": mode, "permanent": True}
+    else:
+        # Session-only: store in memory
+        _session_state["mode"] = mode
+        return {"status": "ok", "mode": mode, "permanent": False}
+
+
+def session_mode_get() -> dict:
+    """Get current session mode state.
+
+    Returns:
+        Dict with mode, source (session or config), and permanent flag
+    """
+    if _session_state["mode"] is not None:
+        return {
+            "mode": _session_state["mode"],
+            "source": "session",
+            "permanent": False,
+        }
+
+    config_mode = config_get("session_mode")
+    legacy_mode = config_get("fun_mode")
+
+    if config_mode is not None:
+        return {"mode": config_mode, "source": "config", "permanent": True}
+    elif legacy_mode is not None:
+        return {"mode": "fun" if legacy_mode else "none", "source": "config_legacy", "permanent": True}
+    else:
+        return {"mode": None, "source": "unset", "permanent": False}
+
+
 def random_line(file_path: Path) -> str:
     """Select a random non-empty line from a file.
 
@@ -148,39 +203,85 @@ def random_line(file_path: Path) -> str:
 def session_init() -> dict:
     """Initialize a spellbook session.
 
-    Reads fun_mode preference from config and selects random
-    persona/context/undertow if fun mode is enabled.
+    Resolution order:
+    1. Session state (in-memory, session-only override)
+    2. session_mode config key
+    3. fun_mode legacy config key
+    4. Unset
 
     Returns:
         Dict with:
-        - fun_mode: "yes" | "no" | "unset"
-        - persona: str (only if fun_mode=yes)
-        - context: str (only if fun_mode=yes)
-        - undertow: str (only if fun_mode=yes)
+        - mode: {"type": "fun"|"tarot"|"none"|"unset", ...mode-specific data}
+        - fun_mode: "yes"|"no"|"unset" (legacy key for backward compatibility)
     """
-    fun_mode_value = config_get("fun_mode")
+    # Check session state first (in-memory override)
+    session_override = _session_state.get("mode")
 
-    # Determine fun_mode status
-    if fun_mode_value is None:
-        return {"fun_mode": "unset"}
+    # Then check config
+    config_mode = config_get("session_mode")
+    legacy_fun_mode = config_get("fun_mode")
 
-    if not fun_mode_value:
-        return {"fun_mode": "no"}
+    # Resolve effective mode with priority: session > config > legacy > unset
+    effective_mode: Optional[str] = None
 
-    # Fun mode enabled - select random persona/context/undertow
+    if session_override is not None:
+        # Session override takes highest priority
+        effective_mode = session_override if session_override in ("fun", "tarot", "none") else None
+    elif config_mode is not None:
+        # New config key
+        effective_mode = config_mode if config_mode in ("fun", "tarot", "none") else None
+    elif legacy_fun_mode is not None:
+        # Fall back to legacy boolean
+        effective_mode = "fun" if legacy_fun_mode else "none"
+
+    # Handle unset
+    if effective_mode is None:
+        return {
+            "mode": {"type": "unset"},
+            "fun_mode": "unset",  # Legacy key
+        }
+
+    # Handle explicitly disabled
+    if effective_mode == "none":
+        return {
+            "mode": {"type": "none"},
+            "fun_mode": "no",  # Legacy key
+        }
+
+    # Handle tarot mode
+    if effective_mode == "tarot":
+        return {
+            "mode": {"type": "tarot"},
+            "fun_mode": "no",  # Legacy key - tarot is not fun-mode
+        }
+
+    # Handle fun mode
     spellbook_dir = get_spellbook_dir()
     fun_assets = spellbook_dir / "skills" / "fun-mode"
 
     # Verify the assets directory exists
     if not fun_assets.is_dir():
         return {
+            "mode": {"type": "fun", "error": f"fun-mode assets not found at {fun_assets}"},
             "fun_mode": "yes",
             "error": f"fun-mode assets not found at {fun_assets}",
         }
 
+    # Select random values once to ensure consistency
+    persona = random_line(fun_assets / "personas.txt")
+    context = random_line(fun_assets / "contexts.txt")
+    undertow = random_line(fun_assets / "undertows.txt")
+
     return {
+        "mode": {
+            "type": "fun",
+            "persona": persona,
+            "context": context,
+            "undertow": undertow,
+        },
+        # Legacy keys for backward compatibility
         "fun_mode": "yes",
-        "persona": random_line(fun_assets / "personas.txt"),
-        "context": random_line(fun_assets / "contexts.txt"),
-        "undertow": random_line(fun_assets / "undertows.txt"),
+        "persona": persona,
+        "context": context,
+        "undertow": undertow,
     }

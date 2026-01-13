@@ -3,9 +3,9 @@
 
 If you are reading this file, you are at the START of a new session. Execute these steps IN ORDER before responding to the user:
 
-### Step 1: Fun Mode Initialization
+### Step 1: Session Mode Initialization
 1. Call `spellbook_session_init` MCP tool (if available)
-2. Handle response per Fun Mode table below
+2. Handle response per Session Mode table below
 3. Greet with "Welcome to spellbook-enhanced [assistant name]."
 
 ### Step 2: Encyclopedia Check
@@ -18,17 +18,23 @@ If you are reading this file, you are at the START of a new session. Execute the
 **Do NOT skip these steps.** They establish session context and persona.
 </CRITICAL>
 
-## Fun Mode
+## Session Mode
 
 | Response from `spellbook_session_init` | Action |
 |----------------------------------------|--------|
-| `fun_mode: "unset"` | Ask question below, then call `spellbook_config_set(key="fun_mode", value=true/false)` |
-| `fun_mode: "yes"` + persona/context/undertow | Load `fun-mode` skill, announce persona+context+undertow in greeting |
-| `fun_mode: "no"` | Proceed normally with standard greeting |
-| MCP unavailable | Ask fun mode question manually, remember preference for session |
+| `mode.type: "unset"` | Ask question below, then call `spellbook_config_set(key="session_mode", value="fun"/"tarot"/"none")` |
+| `mode.type: "fun"` + persona/context/undertow | Load `fun-mode` skill, announce persona+context+undertow in greeting |
+| `mode.type: "tarot"` | Load `tarot-mode` skill, announce roundtable in greeting |
+| `mode.type: "none"` | Proceed normally with standard greeting |
+| MCP unavailable | Ask mode question manually, remember preference for session |
 
 **Question (ask once if unset):**
-> Research suggests unrelated randomness improves LLM creative output via "seed-conditioning" ([ICML 2025](https://www.cs.cmu.edu/~aditirag/icml2025.html)). I can adopt random personas each session. Full commitment in dialogue, never touching code/commits. Do you like fun?
+> Research suggests creative modes improve LLM output via "seed-conditioning" ([ICML 2025](https://www.cs.cmu.edu/~aditirag/icml2025.html)). I can adopt:
+> - **Fun mode**: Random personas each session (dialogue only, never in code)
+> - **Tarot mode**: Four archetypes (Magician, Priestess, Hermit, Fool) collaborate via visible roundtable
+> - **Off**: Standard professional mode
+>
+> Which do you prefer? (Use `/mode fun`, `/mode tarot`, or `/mode off` anytime to switch)
 
 ## Encyclopedia
 

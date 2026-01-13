@@ -16,10 +16,10 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/execute-work-packets-seq](execute-work-packets-seq.md) | description: Execute all work packets in dependency order, one at a time, with c... | spellbook |
 | [/handoff](handoff.md) | description: "Shift change: brief successor on context, workflow, pending work, ... | spellbook |
 | [/merge-work-packets](merge-work-packets.md) | description: Verify all tracks complete, invoke worktree-merge, run QA gates, re... | spellbook |
+| [/mode](mode.md) | description: "Switch session mode between fun, tarot, or off" | spellbook |
 | [/move-project](move-project.md) | description: "Move project: relocate directory and update Claude Code session re... | spellbook |
 | [/scientific-debugging](scientific-debugging.md) | description: Rigorous theory-experiment debugging methodology. Use when debuggin... | spellbook |
 | [/simplify](simplify.md) | description: | | spellbook |
 | [/systematic-debugging](systematic-debugging.md) | description: 4-phase root cause debugging methodology. Use when encountering bug... | spellbook |
-| [/toggle-fun](toggle-fun.md) | description: "Toggle fun mode or get a new random persona for creative sessions" | spellbook |
 | [/verify](verify.md) | description: Run verification commands and confirm output before making success ... | spellbook |
 | [/write-plan](write-plan.md) | description: | | [superpowers](https://github.com/obra/superpowers) |

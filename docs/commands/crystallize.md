@@ -31,7 +31,9 @@ Before transforming:
 ### Step 1: Destination
 
 AskUserQuestion: "Where should I deliver the crystallized prompt?"
-Options: Replace source (default) | New file | Output here
+Options: New file (Recommended) | Replace source | Output here
+
+Note: "New file" recommended—enables side-by-side comparison to verify no capability loss. Replacing source requires pre-crystallized state committed to git first.
 
 ### Step 2: Transformation
 

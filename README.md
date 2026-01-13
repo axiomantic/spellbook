@@ -35,9 +35,9 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (28 total)](#skills-28-total)
+  - [Skills (29 total)](#skills-29-total)
   - [Commands (17 total)](#commands-17-total)
-  - [Agents (1 total)](#agents-1-total)
+  - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
   - [Operating Systems](#operating-systems)
@@ -81,7 +81,7 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (28 total)
+### Skills (29 total)
 
 Reusable workflows for structured development:
 
@@ -92,7 +92,7 @@ Reusable workflows for structured development:
 | **Feature Dev** | [implementing-features], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [worktree-merge], [merge-conflict-resolution] | spellbook |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
 | **Meta** | [using-skills], [writing-skills], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia] | [superpowers] |
-| **Session** | [fun-mode], [emotional-stakes] | spellbook |
+| **Session** | [fun-mode], [tarot-mode], [emotional-stakes] | spellbook |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
@@ -125,6 +125,7 @@ Reusable workflows for structured development:
 [project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
+[tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
 
 ### Commands (17 total)
@@ -147,7 +148,7 @@ Reusable workflows for structured development:
 | [/execute-work-packet] | Execute a single work packet with TDD | spellbook |
 | [/execute-work-packets-seq] | Execute all packets sequentially | spellbook |
 | [/merge-work-packets] | Merge completed packets with QA gates | spellbook |
-| [/toggle-fun] | Toggle fun mode for creative sessions | spellbook |
+| [/mode] | Switch session mode (fun/tarot/off) | spellbook |
 
 *\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
 
@@ -167,24 +168,40 @@ Reusable workflows for structured development:
 [/execute-work-packet]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packet/
 [/execute-work-packets-seq]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/
 [/merge-work-packets]: https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/
-[/toggle-fun]: https://axiomantic.github.io/spellbook/latest/commands/toggle-fun/
+[/mode]: https://axiomantic.github.io/spellbook/latest/commands/mode/
 
-### Agents (1 total)
+### Agents (7 total)
 
 | Agent | Description | Origin |
 |-------|-------------|--------|
 | [code-reviewer] | Specialized code review | [superpowers] |
+| [chariot-implementer] | Tarot: Implementation specialist | spellbook |
+| [emperor-governor] | Tarot: Resource governor | spellbook |
+| [hierophant-distiller] | Tarot: Wisdom distiller | spellbook |
+| [justice-resolver] | Tarot: Conflict synthesizer | spellbook |
+| [lovers-integrator] | Tarot: Integration specialist | spellbook |
+| [queen-affective] | Tarot: Emotional state monitor | spellbook |
 
 [code-reviewer]: https://axiomantic.github.io/spellbook/latest/agents/code-reviewer/
+[chariot-implementer]: https://axiomantic.github.io/spellbook/latest/agents/chariot-implementer/
+[emperor-governor]: https://axiomantic.github.io/spellbook/latest/agents/emperor-governor/
+[hierophant-distiller]: https://axiomantic.github.io/spellbook/latest/agents/hierophant-distiller/
+[justice-resolver]: https://axiomantic.github.io/spellbook/latest/agents/justice-resolver/
+[lovers-integrator]: https://axiomantic.github.io/spellbook/latest/agents/lovers-integrator/
+[queen-affective]: https://axiomantic.github.io/spellbook/latest/agents/queen-affective/
 [superpowers]: https://github.com/obra/superpowers
 
 ## Serious Fun
 
 Research suggests that personas and structured randomness can improve LLM creativity and reasoning. So we made it fun.
 
-On first run, spellbook asks: *"Do you like fun?"* Say yes, and each session adopts a random persona - a noir detective investigating who ate your yogurt, a Victorian ghost baffled by modern technology, three raccoons in a trenchcoat processing complex emotions. Full commitment in dialogue - not despite quality, because of it. Your code, commits, and documentation stay completely professional.
+On first run, spellbook asks about creative modes:
+- **Fun mode**: Random personas each session - a noir detective investigating who ate your yogurt, a Victorian ghost baffled by modern technology, three raccoons in a trenchcoat processing complex emotions
+- **Tarot mode**: Four archetypes (Magician, Priestess, Hermit, Fool) collaborate via visible roundtable dialogue, with specialized agents for implementation, integration, and conflict resolution
 
-Say no, and it never asks again. Toggle anytime with `/toggle-fun`.
+Full commitment in dialogue - not despite quality, because of it. Your code, commits, and documentation stay completely professional.
+
+Say no, and it never asks again. Switch anytime with `/mode fun`, `/mode tarot`, or `/mode off`.
 
 <details>
 <summary><strong>Research Background</strong></summary>

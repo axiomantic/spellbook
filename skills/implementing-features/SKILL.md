@@ -259,6 +259,32 @@ IF tasks > 10 OR context_usage > 40%: delegated (heavy subagent use)
 ELSE: direct (minimal delegation)
 ```
 
+## Phase 4 Delegation Rules
+
+<CRITICAL>
+During Phase 4 (Implementation), delegate actual work to subagents. Main context is for ORCHESTRATION ONLY.
+</CRITICAL>
+
+**Main context handles:**
+- Task sequencing and dependency management
+- Quality gate verification
+- User interaction and approvals
+- Synthesizing subagent results
+- Session state management
+
+**Subagents handle:**
+- Writing code (invoke test-driven-development skill)
+- Running tests (Bash subagent)
+- Code review (invoke requesting-code-review skill)
+- Fact-checking (invoke fact-checking skill)
+- File exploration and research (Explore subagent)
+
+<RULE>
+If you find yourself using Write, Edit, or Bash tools directly in main context during Phase 4, STOP. Delegate to a subagent instead.
+</RULE>
+
+**Why:** Main context accumulates tokens rapidly. Subagents operate in isolated contexts, preserving main context for orchestration across the entire feature lifecycle.
+
 ## Completion Verification Protocol
 
 Per-task (4.4): Trace each acceptance criterion through code
@@ -301,6 +327,8 @@ Comprehensive (4.6.1): After all tasks
 - Trusting file names instead of tracing behavior
 - Treating suggestions as optional in autonomous mode
 - Proceeding with incomplete verification gates
+- **Using Write/Edit/Bash directly in main context during Phase 4** - delegate to subagents
+- Accumulating implementation details in main context instead of delegating
 
 ## Self-Check Before Completion
 

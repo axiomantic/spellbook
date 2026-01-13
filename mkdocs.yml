@@ -105,6 +105,7 @@ nav:
       - skills/project-encyclopedia.md
     - Session Skills:
       - skills/fun-mode.md
+      - skills/tarot-mode.md
   - Commands:
     - Overview: commands/index.md
     - Debugging Commands:
@@ -127,10 +128,17 @@ nav:
       - commands/execute-work-packets-seq.md
       - commands/merge-work-packets.md
     - Session Commands:
-      - commands/toggle-fun.md
+      - commands/mode.md
   - Agents:
     - Overview: agents/index.md
     - agents/code-reviewer.md
+    - Tarot Agents:
+      - agents/chariot-implementer.md
+      - agents/emperor-governor.md
+      - agents/hierophant-distiller.md
+      - agents/justice-resolver.md
+      - agents/lovers-integrator.md
+      - agents/queen-affective.md
   - Reference:
     - Architecture: reference/architecture.md
     - Patterns: reference/patterns.md

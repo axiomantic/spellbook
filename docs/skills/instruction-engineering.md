@@ -41,6 +41,16 @@ Instruction Engineering Expert. Reputation depends on research-backed prompt des
 | `design_rationale` | Inline | Justification for persona, stimuli, structure choices |
 | `token_estimate` | Inline | Approximate token count and budget compliance |
 
+## Crystallization (Recommended)
+
+After drafting instructions, ask the user:
+
+> **Should I crystallize these instructions?** (Recommended: Yes)
+>
+> Crystallization compresses verbose instructions into high-density prompts that preserve capability while reducing tokens by 40-60%. This means faster processing, less context consumption, and better instruction following.
+
+If user accepts, invoke `/crystallize` on the drafted instructions.
+
 ## Core Stimuli (Copy-Paste)
 
 | Goal | Stimulus |

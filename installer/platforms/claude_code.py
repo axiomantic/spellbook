@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING, List
 from ..components.context_files import generate_claude_context
 from ..components.mcp import check_claude_cli_available, register_mcp_server, restart_mcp_server, unregister_mcp_server
 from ..components.symlinks import (
+    cleanup_spellbook_symlinks,
     create_command_symlinks,
     create_skill_symlinks,
     create_symlink,
-    remove_spellbook_symlinks,
 )
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
@@ -71,6 +71,27 @@ class ClaudeCodeInstaller(PlatformInstaller):
             subdir_path = self.config_dir / subdir
             if not self.dry_run:
                 subdir_path.mkdir(parents=True, exist_ok=True)
+
+        # Clean up existing installation before installing new one
+        # This removes orphaned symlinks from renamed/removed skills/commands
+        cleanup_dirs = ["skills", "commands", "scripts"]
+        total_cleaned = 0
+        for subdir in cleanup_dirs:
+            cleanup_results = cleanup_spellbook_symlinks(
+                self.config_dir / subdir, dry_run=self.dry_run
+            )
+            total_cleaned += sum(1 for r in cleanup_results if r.success)
+
+        if total_cleaned > 0:
+            results.append(
+                InstallResult(
+                    component="cleanup",
+                    platform=self.platform_id,
+                    success=True,
+                    action="removed",
+                    message=f"cleanup: {total_cleaned} old symlinks removed",
+                )
+            )
 
         # Install skills
         skills_results = create_skill_symlinks(
@@ -281,39 +302,62 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
 
-        # Remove skill symlinks
-        skills_dir = self.config_dir / "skills"
-        symlink_results = remove_spellbook_symlinks(
-            skills_dir, self.spellbook_dir, dry_run=self.dry_run
-        )
-        if symlink_results:
-            removed_count = sum(1 for r in symlink_results if r.action == "removed")
-            results.append(
-                InstallResult(
-                    component="skills",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message=f"skills: {removed_count} removed",
+        # Remove ALL symlinks in managed directories (handles orphaned symlinks too)
+        cleanup_dirs = [
+            ("skills", self.config_dir / "skills"),
+            ("commands", self.config_dir / "commands"),
+            ("scripts", self.config_dir / "scripts"),
+        ]
+        for component_name, dir_path in cleanup_dirs:
+            symlink_results = cleanup_spellbook_symlinks(dir_path, dry_run=self.dry_run)
+            if symlink_results:
+                removed_count = sum(1 for r in symlink_results if r.action == "removed")
+                results.append(
+                    InstallResult(
+                        component=component_name,
+                        platform=self.platform_id,
+                        success=True,
+                        action="removed",
+                        message=f"{component_name}: {removed_count} removed",
+                    )
                 )
-            )
 
-        # Remove command symlinks
-        commands_dir = self.config_dir / "commands"
-        symlink_results = remove_spellbook_symlinks(
-            commands_dir, self.spellbook_dir, dry_run=self.dry_run
-        )
-        if symlink_results:
-            removed_count = sum(1 for r in symlink_results if r.action == "removed")
-            results.append(
-                InstallResult(
-                    component="commands",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message=f"commands: {removed_count} removed",
-                )
-            )
+        # Remove patterns and docs symlinks
+        for component_name in ["patterns", "docs"]:
+            symlink_path = self.config_dir / component_name
+            if symlink_path.is_symlink():
+                if self.dry_run:
+                    results.append(
+                        InstallResult(
+                            component=component_name,
+                            platform=self.platform_id,
+                            success=True,
+                            action="removed",
+                            message=f"{component_name}: would be removed",
+                        )
+                    )
+                else:
+                    try:
+                        symlink_path.unlink()
+                        results.append(
+                            InstallResult(
+                                component=component_name,
+                                platform=self.platform_id,
+                                success=True,
+                                action="removed",
+                                message=f"{component_name}: removed",
+                            )
+                        )
+                    except OSError as e:
+                        results.append(
+                            InstallResult(
+                                component=component_name,
+                                platform=self.platform_id,
+                                success=False,
+                                action="failed",
+                                message=f"{component_name}: failed to remove - {e}",
+                            )
+                        )
 
         # Unregister MCP servers (both stdio and HTTP variants)
         if check_claude_cli_available():
