@@ -115,8 +115,8 @@ Crush (by Charmbracelet) integration via AGENTS.md, MCP server, and native Agent
 
 1. Run the installer: `python3 install.py`
 2. The installer:
-   - Creates `~/.config/crush/AGENTS.md` with spellbook context
-   - Registers spellbook MCP server in `~/.config/crush/crush.json`
+   - Creates `~/.local/share/crush/AGENTS.md` with spellbook context
+   - Registers spellbook MCP server in `~/.local/share/crush/crush.json`
    - Adds `~/.claude/skills` to `options.skills_paths` for shared skills
    - Adds the context file to `options.context_paths`
 
@@ -133,13 +133,13 @@ Crush has native support for the Agent Skills open standard (the same format use
 
 ### Configuration
 
-Crush stores its configuration in `~/.config/crush/crush.json`. The installer adds:
+Crush stores its configuration in `~/.local/share/crush/crush.json`. The installer adds:
 
 ```json
 {
   "options": {
     "skills_paths": ["~/.claude/skills"],
-    "context_paths": ["~/.config/crush/AGENTS.md"]
+    "context_paths": ["~/.local/share/crush/AGENTS.md"]
   },
   "mcp": {
     "spellbook": {

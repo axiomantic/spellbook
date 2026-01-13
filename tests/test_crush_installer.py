@@ -28,7 +28,7 @@ def spellbook_dir(tmp_path):
 @pytest.fixture
 def crush_config_dir(tmp_path):
     """Create a mock Crush config directory."""
-    config_dir = tmp_path / ".config" / "crush"
+    config_dir = tmp_path / ".local" / "share" / "crush"
     config_dir.mkdir(parents=True)
     return config_dir
 
@@ -374,10 +374,10 @@ class TestCrushInConfig:
         # Clear any existing env var first
         monkeypatch.delenv("CRUSH_GLOBAL_CONFIG", raising=False)
 
-        # Without env var, should return default (contains .config/crush)
+        # Without env var, should return default (contains .local/share/crush)
         config_dir = get_platform_config_dir("crush")
         assert config_dir.name == "crush"
-        assert config_dir.parent.name == ".config"
+        assert config_dir.parent.name == "share"
 
         # With env var, should return that
         monkeypatch.setenv("CRUSH_GLOBAL_CONFIG", str(tmp_path / "custom"))

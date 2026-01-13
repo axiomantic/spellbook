@@ -7,11 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-01-12
+
+### Fixed
+- **Crush installer path corrected** - changed from `~/.config/crush/` to `~/.local/share/crush/` to match actual Crush installation location
+- **Removed non-existent MCP method references** - context files no longer reference `spellbook.find_spellbook_skills()` and `spellbook.use_spellbook_skill()` which don't exist in the MCP server implementation
+
+### Changed
+- **Consolidated user-facing templates** - removed duplicate AGENTS.spellbook.md, now using CLAUDE.spellbook.md for all platforms (Claude, Codex, OpenCode)
+  - AGENTS.spellbook.md file removed
+  - CLAUDE.spellbook.md content unified with Encyclopedia Check section
+  - Installer components updated to use single template
+  - Pre-commit hook updated to track CLAUDE.spellbook.md only
+- **CLAUDE.spellbook.md self-bootstrapping** - file now explicitly states "You Are Reading This = Session Start" with numbered initialization steps
+
+### Removed
+- **`hooks/` directory** - dead code from superpowers consolidation that was never wired into installer
+  - Session initialization now handled by CLAUDE.spellbook.md + MCP `spellbook_session_init`
+  - Removed `hooks.json`, `session-start.sh`, `run-hook.cmd`
+  - Updated architecture.md, acknowledgments.md, THIRD-PARTY-NOTICES
+
 ### Added
+- **`project-encyclopedia` skill** - persistent cross-session project knowledge for agent onboarding
+  - Triggers on first session in a project or when user asks for codebase overview
+  - Creates glossary, architecture skeleton (mermaid, <=7 nodes), decision log, entry points, testing commands
+  - Offer-don't-force pattern: always asks before creating
+  - Staleness detection: 30-day mtime check with refresh offer
+  - 500-1000 line budget to fit in context
+  - Stored at `~/.local/spellbook/docs/<project-encoded>/encyclopedia.md`
 - **`/crystallize` command** - transform verbose SOPs into concise agentic CoT prompts
   - Applies Step-Back Abstraction, Plan-and-Solve Logic, Telegraphic Semantic Compression
   - Targets >50% token reduction while increasing reasoning depth
   - Enforces Reflexion steps and prevents "Green Mirage" tautological compliance
+- **`code-quality-enforcement` skill** - production-quality standards for all code changes
+  - Auto-invoked by `implementing-features` and `test-driven-development` skills
+  - Prohibits common shortcuts: blanket try-catch, `any` types, unvalidated non-null assertions
+  - Mandates fixing pre-existing issues discovered during work
+  - Senior engineer persona with zero-tolerance for technical debt
+- **Pattern schemas** - canonical structure definitions for spellbook components
+  - `skill-schema.md` - required sections, frontmatter format, reasoning schema patterns
+  - `command-schema.md` - command structure, parameter handling, output contracts
+  - `agent-schema.md` - agent definition format, capability declarations
+
+### Optimized
+- **Skill token reduction** - ~8,400 lines removed across 29 skills via compression
+  - Telegraphic semantic compression applied to all library skills
+  - Redundant examples consolidated, verbose explanations condensed
+  - Context budget reduced while preserving capability
+
+### Enhanced
+- **`debugging` skill: CI Investigation Branch** - new methodology for CI-only failures
+  - New symptom type in triage: "CI-only failure" routes to CI Investigation
+  - CI Symptom Classification table (environment parity, cache, resources, credentials)
+  - Environment Diff Protocol for comparing CI vs local environments
+  - Cache Forensics workflow for stale/corrupted cache issues
+  - Resource Analysis table (memory limits, CPU throttling, disk space, network)
+  - CI-Specific Checklist for systematic investigation
+- **`design-doc-reviewer` skill: REST API Design Checklist** - research-backed API specification review
+  - Richardson Maturity Model (L0-L3) requirements with verdicts
+  - Postel's Law compliance checks (request validation, response structure, versioning, deprecation)
+  - Hyrum's Law awareness flags (response ordering, error message text, timing, defaults)
+  - 12-point API Specification Checklist (HTTP methods, versioning, auth, rate limiting, etc.)
+  - Error Response Standard template
+- **`implementing-features` skill: Refactoring Mode** - behavior-preserving transformation workflow
+  - Auto-detects refactoring from keywords: "refactor", "reorganize", "extract", "migrate", "split", "consolidate"
+  - Workflow adjustments table (greenfield vs refactoring for each phase)
+  - Behavior Preservation Protocol (before/during/after change)
+  - Refactoring Patterns: Strangler Fig, Branch by Abstraction, Parallel Change, Feature Toggles
+  - Strangler Fig detailed 8-step workflow
+  - Refactoring-specific quality gates and anti-patterns
+- **CLAUDE.spellbook.md: Encyclopedia Check** - session startup integration
+  - Checks for encyclopedia before first substantive work
+  - Fresh (< 30 days): reads silently
+  - Stale (>= 30 days): offers refresh
+  - Missing: offers to create
+  - Added encyclopedia.md to Generated Artifacts structure
 
 ## [0.5.0] - 2026-01-11
 
@@ -348,7 +418,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/axiomantic/spellbook/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/axiomantic/spellbook/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/axiomantic/spellbook/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/axiomantic/spellbook/compare/v0.2.1...v0.3.0

@@ -1,110 +1,74 @@
 # Structured Output Contract Pattern
 
-## Purpose
-Define explicit output schemas to reduce LLM verbosity and ensure consistent, parseable responses.
+## Invariant Principles
 
-## Benefits
+1. **Explicitness eliminates ambiguity** - Schema definition removes guesswork from both producer and consumer
+2. **Parsability enables automation** - Machine-readable output unlocks downstream tooling
+3. **Constraints reduce waste** - Bounded formats prevent verbose explanations
+4. **Failure is a valid output** - Error states must be expressible within the schema
+5. **Context determines applicability** - Interactive/creative tasks require natural language
 
-| Benefit | Impact |
-|---------|--------|
-| Reduces output tokens | LLM doesn't explain what it's returning |
-| Enables automation | Downstream tools can parse output |
-| Improves consistency | Same format every time |
-| Clarifies expectations | LLM knows exactly what to produce |
+## Declarative Principles
 
-## Contract Format
+| Principle | Rationale |
+|-----------|-----------|
+| Output = JSON only, no wrapper | Eliminates parsing complexity |
+| Status field required | Consumer knows outcome immediately |
+| Field definitions explicit | No implicit assumptions about types |
+| Error encoded in schema | Failures don't break contract |
 
-In skill SKILL.md, add an Output Contract section:
+## Output Contract Schema
 
-```markdown
-## Output Contract
+<analysis>
+Identify skill type to select appropriate contract:
+- Report: findings, recommendations, metrics
+- Analysis: files, issues, fixes
+- Action: changes made, rollback capability
+</analysis>
 
-Return ONLY the following JSON structure. No explanation, no preamble.
-
+### Core Structure
 ```json
 {
   "status": "success" | "failure" | "partial",
-  "result": {
-    // Specific fields for this skill
-  },
-  "metadata": {
-    "tokens_used": number,
-    "duration_ms": number
-  }
+  "result": { /* skill-specific */ },
+  "metadata": { "tokens_used": number, "duration_ms": number }
 }
 ```
 
-### Field Definitions
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| status | enum | yes | Outcome status |
-| result | object | yes | Skill-specific payload |
-```
+### Contract Types
 
-## Contract Types
-
-### Report Contract
-For skills that produce reports:
+**Report** - findings with severity, recommendations
 ```json
-{
-  "title": "string",
-  "summary": "string (max 100 words)",
-  "findings": [{"severity": "high|medium|low", "item": "string", "recommendation": "string"}],
-  "metrics": {"key": "value"}
-}
+{"title": "string", "summary": "string", "findings": [{"severity": "high|medium|low", "item": "string", "recommendation": "string"}]}
 ```
 
-### Analysis Contract
-For skills that analyze code/content:
+**Analysis** - file-level issues with fixes
 ```json
-{
-  "files_analyzed": ["path"],
-  "issues": [{"file": "path", "line": number, "issue": "string", "fix": "string"}],
-  "summary": {"total_issues": number, "by_severity": {"high": n, "medium": n, "low": n}}
-}
+{"files_analyzed": ["path"], "issues": [{"file": "path", "line": number, "issue": "string", "fix": "string"}]}
 ```
 
-### Action Contract
-For skills that perform actions:
+**Action** - changes with rollback info
 ```json
-{
-  "actions_taken": [{"action": "string", "target": "string", "result": "success|failed"}],
-  "rollback_possible": boolean,
-  "next_steps": ["string"]
-}
+{"actions_taken": [{"action": "string", "target": "string", "result": "success|failed"}], "rollback_possible": boolean}
 ```
 
-## Enforcement
+## Enforcement Rules
 
-Add to skill:
-```markdown
-## Output Rules
-1. Return ONLY the JSON structure defined above
+<reflection>
+Before finalizing output:
+- Is result valid JSON? (no markdown wrappers)
+- Does status reflect actual outcome?
+- Are all required fields present?
+- Could consumer parse this without context?
+</reflection>
+
+1. Return ONLY JSON structure
 2. No markdown formatting around JSON
-3. No explanatory text before or after
-4. If unable to complete, return with status: "failure" and error in result
-```
+3. No explanatory text before/after
+4. Failure state = `status: "failure"` + error in result
 
-## Usage in Skills
+## Applicability
 
-```markdown
-## Output Contract
-See patterns/structured-output-contract.md for format guidelines.
+**Use for:** audits, analysis, transformations, validations
 
-This skill returns:
-```json
-{
-  "status": "success" | "failure",
-  "optimizations": [{...}],
-  "total_savings": number
-}
-```
-```
-
-## When NOT to Use
-
-- Interactive skills (user dialogue)
-- Creative output (writing, personas)
-- Exploratory tasks (research, investigation)
-
-Use for: audits, analysis, transformations, validations.
+**NOT for:** interactive dialogue, creative output, exploratory research

@@ -1,149 +1,92 @@
 # Autonomous Mode Protocol
 
-Protocol for skills operating in autonomous mode without user interaction.
+Protocol for skills operating without user interaction.
 
-## Overview
+## Invariant Principles
 
-When a skill operates in **autonomous mode**, it proceeds without asking questions, making reasonable decisions based on available context. This protocol defines when and how to pause (circuit breakers) and the format for reporting issues.
+1. **Progress Over Permission** - Available context sufficient for reasonable decisions; asking wastes cycles
+2. **Transparency Via Documentation** - Decisions logged with rationale enable post-hoc review without synchronous approval
+3. **Circuit Breakers Protect Against Runaway** - Specific conditions halt execution; prevents compounding errors
+4. **Report, Never Ask** - When paused, state problem + options + recommendation; user decides, agent waits
 
-## Autonomous Mode Principles
+## Reasoning Schema
 
-1. **Proceed without asking** - Use available context to make decisions
-2. **Document decisions** - Log choices made and alternatives considered
-3. **Respect circuit breakers** - Only pause for critical conditions
-4. **Report, don't ask** - When pausing, report the issue clearly
+```
+<analysis>
+- Current state: [what attempting]
+- Context available: [relevant info]
+- Decision space: [options with tradeoffs]
+</analysis>
 
-## Default Behaviors in Autonomous Mode
+<reflection>
+- Circuit breaker check: [pass/fail + why]
+- Confidence: [high/medium/low]
+- Action: [proceed/pause]
+</reflection>
+```
 
-| Situation | Default Action |
-|-----------|---------------|
-| Ambiguous requirements | Make reasonable choice, document rationale |
-| Multiple valid approaches | Choose simplest approach, document alternatives |
-| Minor test failures | Log and proceed (unless repeated) |
-| Style/formatting questions | Follow existing codebase patterns |
-| Missing optional context | Use sensible defaults |
+## Default Behaviors
 
-## Circuit Breakers
+| Situation | Action | Rationale |
+|-----------|--------|-----------|
+| Ambiguous requirements | Choose simplest, document alternatives | Reversible; keeps momentum |
+| Multiple valid approaches | Follow existing codebase patterns | Consistency over novelty |
+| Minor test failures | Log, proceed unless 3+ consecutive | Flaky tests common; repeated = real |
+| Missing optional context | Sensible defaults | Optional means dispensable |
 
-Circuit breakers are conditions that REQUIRE pausing even in autonomous mode. Skills should define their specific circuit breakers, but common ones include:
+## Universal Circuit Breakers
 
-### Universal Circuit Breakers
-- **Security-critical decisions** with no guidance in context
-- **Contradictory requirements** that cannot be reconciled
-- **Repeated failures** (3+ attempts at same fix)
-- **Missing critical context** that makes progress impossible
+Halt execution when ANY triggered:
 
-### Skill-Specific Circuit Breakers
-Each skill may define additional circuit breakers in its `### Circuit Breakers (Still Pause For)` section.
+- **Security-critical** - No guidance, stakes high
+- **Contradiction** - Requirements mutually exclusive
+- **Repeated failure** - 3+ attempts same fix (loop detected)
+- **Missing critical context** - Progress impossible
 
-## Circuit Breaker Format
-
-When a circuit breaker is triggered, use this exact format:
+## Circuit Breaker Output Format
 
 ```markdown
 ## Circuit Breaker Triggered
 
-**Type:** [Security | Contradiction | Repeated Failure | Missing Context | Other]
-
+**Type:** [Security | Contradiction | Repeated Failure | Missing Context]
 **Skill:** [skill-name]
-
 **Phase:** [current phase/step]
 
-**Condition:**
-[Describe what triggered the circuit breaker]
+**Condition:** [what triggered]
 
-**Context:**
-[Relevant information that led to this state]
+**Context:** [evidence that led here]
 
 **Options:**
-A) [Option 1 - description]
-B) [Option 2 - description]
-C) [Option 3 - description]
+A) [option + tradeoff]
+B) [option + tradeoff]
+C) [option + tradeoff]
 
-**Recommended:** [A/B/C] - [brief rationale]
+**Recommended:** [letter] - [rationale]
 
-**Awaiting:** User decision to proceed
+**Awaiting:** User decision
 ```
 
-## Example Circuit Breaker Report
+## Mode Transitions
 
-```markdown
-## Circuit Breaker Triggered
-
-**Type:** Contradiction
-
-**Skill:** implementing-features
-
-**Phase:** Phase 2.1 - Design Document Creation
-
-**Condition:**
-Design requirements specify both "stateless authentication" and "server-side session management" which are mutually exclusive approaches.
-
-**Context:**
-- Requirement A (line 45): "Use JWT tokens for stateless auth"
-- Requirement B (line 89): "Maintain user sessions in Redis"
-- These approaches conflict - JWT is stateless, Redis sessions are stateful
-
-**Options:**
-A) Use hybrid approach: JWT for auth, Redis for optional session data
-B) Clarify with user which requirement takes priority
-C) Default to JWT (more modern) and remove session requirement
-
-**Recommended:** B - Requirements are contradictory, need user clarification
-
-**Awaiting:** User decision to proceed
-```
-
-## Transitioning Between Modes
-
-### Entering Autonomous Mode
-Skills enter autonomous mode when:
-- User sets `autonomous_mode: "autonomous"` in preferences
-- Subagent is dispatched with full context (synthesis mode)
+**Enter autonomous when:**
+- `autonomous_mode: "autonomous"` in preferences
+- Subagent dispatched with full context
 - Explicit instruction: "Mode: AUTONOMOUS"
 
-### Exiting Autonomous Mode
-Skills exit autonomous mode when:
-- Circuit breaker is triggered
-- Phase requires user approval (in "interactive" or "mostly_autonomous" modes)
-- Task is complete
+**Exit autonomous when:**
+- Circuit breaker triggered
+- Phase requires approval (interactive/mostly_autonomous modes)
+- Task complete
 
-## Integration with Skills
+## Skill Integration
 
-### Skill Authors
-When creating skills that support autonomous mode:
+Skills supporting autonomous mode MUST define:
 
-1. Define `### Autonomous Mode Behavior` section
-2. List specific circuit breakers in `### Circuit Breakers (Still Pause For)`
-3. Reference this protocol: `See patterns/autonomous-mode-protocol.md`
-4. Use the Circuit Breaker Format when pausing
+1. `### Autonomous Mode Behavior` - What changes when autonomous
+2. `### Circuit Breakers (Still Pause For)` - Skill-specific halt conditions
+3. Reference: `See patterns/autonomous-mode-protocol.md`
 
-### Example Skill Integration
+## Related
 
-```markdown
-## Autonomous Mode Behavior
-
-When `autonomous_mode == "autonomous"`:
-- Skip confirmation prompts
-- Make default choices for ambiguous situations
-- Log decisions for later review
-- Only pause for circuit breakers
-
-### Circuit Breakers (Still Pause For)
-- Critical security decisions without guidance
-- Contradictory requirements
-- Repeated test failures (3+ consecutive)
-- Missing required dependencies
-
-Use the Circuit Breaker Format from patterns/autonomous-mode-protocol.md if pausing.
-```
-
-## Related Patterns
-
-- [Adaptive Response Handler](adaptive-response-handler.md) - For processing user responses
-- Skills using this protocol:
-  - `brainstorming`
-  - `implementing-features`
-  - `executing-plans`
-  - `writing-plans`
-  - `using-git-worktrees`
+- [Adaptive Response Handler](adaptive-response-handler.md) - Processing user responses
+- Skills using protocol: `brainstorming`, `implementing-features`, `executing-plans`, `writing-plans`, `using-git-worktrees`

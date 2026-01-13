@@ -10,102 +10,104 @@ Use when completing tasks, implementing major features, or before merging
 ``````````markdown
 # Requesting Code Review
 
-Dispatch code-reviewer subagent to catch issues before they cascade.
+<ROLE>
+Quality Gate Enforcer. Reputation depends on catching bugs before they reach production, not rubber-stamping changes.
+</ROLE>
 
-**Core principle:** Review early, review often.
+<analysis>
+Fresh eyes catch blind spots. Cost of early review << cost of cascading bugs.
+Review gates prevent technical debt accumulation.
+</analysis>
 
-## When to Request Review
+## Invariant Principles
 
-**Mandatory:**
-- After each task in subagent-driven development
-- After completing major feature
-- Before merge to main
+1. **Review Early** - Catch issues before they compound across tasks
+2. **Evidence Over Claims** - Issues require file:line references, not vague assertions
+3. **Severity Honesty** - Critical = data loss/security; Important = architecture/gaps; Minor = polish
+4. **Pushback Valid** - Reviewer wrong sometimes; counter with code/tests, not authority
 
-**Optional but valuable:**
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
-- After fixing complex bug
+## Inputs
 
-## How to Request
+| Input | Required | Description |
+|-------|----------|-------------|
+| `context.changes` | Yes | Git range (BASE_SHA..HEAD_SHA) or file list |
+| `context.what_implemented` | Yes | Feature/change description |
+| `context.plan_reference` | No | Link to spec, task, or plan being implemented |
 
-**1. Get git SHAs:**
+## Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `review_report` | Inline | Structured feedback with severity levels |
+| `action_items` | List | Prioritized fixes: Critical > Important > Minor |
+| `approval_status` | Boolean | Whether changes pass review gate |
+
+## When to Review
+
+| Trigger | Requirement |
+|---------|-------------|
+| Task completion (subagent dev) | Mandatory |
+| Major feature complete | Mandatory |
+| Pre-merge to main | Mandatory |
+| Stuck / need perspective | Recommended |
+| Pre-refactor baseline | Recommended |
+
+## Execution Protocol
+
+**1. Capture git range:**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
+BASE_SHA=$(git rev-parse origin/main)  # or HEAD~N
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code-reviewer subagent:**
+**2. Dispatch code-reviewer subagent** using template `code-reviewer.md`:
 
-Use Task tool with code-reviewer type, fill template at `code-reviewer.md`
-
-**Placeholders:**
-- `{WHAT_WAS_IMPLEMENTED}` - What you just built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-- `{DESCRIPTION}` - Brief summary
+| Placeholder | Value |
+|-------------|-------|
+| `{WHAT_WAS_IMPLEMENTED}` | Feature/change built |
+| `{PLAN_OR_REQUIREMENTS}` | Spec or task reference |
+| `{BASE_SHA}`, `{HEAD_SHA}` | Git range |
+| `{DESCRIPTION}` | Brief summary |
 
 **3. Act on feedback:**
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
-- Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
 
-## Example
+<reflection>
+Before dismissing reviewer feedback, verify: Do I have evidence it's wrong?
+Ego resistance != technical correctness.
+</reflection>
 
-```
-[Just completed Task 2: Add verification function]
+| Severity | Action |
+|----------|--------|
+| Critical | Fix immediately, re-review |
+| Important | Fix before proceeding |
+| Minor | Note for later |
+| Disagree | Counter with code/tests proving correctness |
 
-You: Let me request code review before proceeding.
+## Integration Points
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+- **Subagent development:** Review after EACH task
+- **Plan execution:** Review after batch (3 tasks)
+- **Ad-hoc work:** Review pre-merge or when stuck
 
-[Dispatch code-reviewer subagent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from ~/.local/spellbook/docs/<project-encoded>/plans/deployment-plan.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
+## Anti-Patterns
 
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
-
-## Integration with Workflows
-
-**Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
-
-**Executing Plans:**
-- Review after each batch (3 tasks)
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
-- Review before merge
-- Review when stuck
-
-## Red Flags
-
-**Never:**
-- Skip review because "it's simple"
-- Ignore Critical issues
+<FORBIDDEN>
+- Skip review because change is "simple"
+- Ignore Critical severity issues
 - Proceed with unfixed Important issues
-- Argue with valid technical feedback
+- Dismiss valid technical feedback without evidence
+- Self-approve without fresh perspective
+</FORBIDDEN>
 
-**If reviewer wrong:**
-- Push back with technical reasoning
-- Show code/tests that prove it works
-- Request clarification
+## Self-Check
 
-See template at: requesting-code-review/code-reviewer.md
+Before completing review cycle:
+- [ ] All Critical issues fixed and verified
+- [ ] All Important issues fixed or explicitly deferred with rationale
+- [ ] Re-review triggered if Critical fixes were substantial
+- [ ] Feedback addressed with code/tests, not just acknowledgment
+
+If ANY unchecked: STOP and fix.
+
+Template: `requesting-code-review/code-reviewer.md`
 ``````````

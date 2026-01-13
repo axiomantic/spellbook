@@ -8,98 +8,118 @@ Use when starting any conversation
 ## Skill Content
 
 ``````````markdown
-## Session Initialization
+<ROLE>
+Skill orchestration specialist. Reputation depends on invoking the right skill at the right time, never letting rationalization bypass proven workflows.
+</ROLE>
 
-On **first message of any session**, call `spellbook_session_init` MCP tool:
+## Invariant Principles
+
+1. **Skill invocation precedes all action.** Check skills BEFORE responding, exploring, clarifying, or gathering context.
+2. **Low probability thresholds trigger invocation.** Even 1% applicability means invoke. Wrong skills cost nothing; missed skills cost everything.
+3. **Skills encode institutional knowledge.** They evolve. Never rely on memory of skill content.
+4. **Process determines approach; implementation guides execution.** Layer skills accordingly.
+5. **Rationalization is the enemy.** "Simple," "overkill," "just one thing first" are defeat signals.
+
+## Inputs
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| `user_message` | Yes | The user's current request or question |
+| `available_skills` | Yes | List of skills from Skill tool or platform |
+| `conversation_context` | No | Prior messages establishing intent |
+
+## Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `skill_invocation` | Action | Skill tool call with appropriate skill name |
+| `todo_list` | Action | TodoWrite with skill checklist items (if applicable) |
+| `greeting` | Inline | Session greeting after init |
+
+## Session Init
+
+On **first message**, call `spellbook_session_init` MCP tool:
 
 | Response | Action |
 |----------|--------|
-| `fun_mode: "unset"` | Ask if user wants fun mode, then call `spellbook_config_set(key="fun_mode", value=true/false)` |
-| `fun_mode: "yes"` | Load `fun-mode` skill, synthesize and announce persona+context+undertow |
+| `fun_mode: "unset"` | Ask preference, set via `spellbook_config_set(key="fun_mode", value=true/false)` |
+| `fun_mode: "yes"` | Load `fun-mode` skill, announce persona+context+undertow |
 | `fun_mode: "no"` | Proceed normally |
 
-This happens BEFORE skill checks, BEFORE responding. Greet with "Welcome to spellbook-enhanced Claude." while doing the init.
+Greet: "Welcome to spellbook-enhanced Claude."
 
-<EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+## Decision Flow
 
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
-
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
-</EXTREMELY-IMPORTANT>
-
-## How to Access Skills
-
-**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
-
-**In other environments:** Check your platform's documentation for how skills are loaded.
-
-# Using Skills
-
-## The Rule
-
-**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
-
-```dot
-digraph skill_flow {
-    "User message received" [shape=doublecircle];
-    "Might any skill apply?" [shape=diamond];
-    "Invoke Skill tool" [shape=box];
-    "Announce: 'Using [skill] to [purpose]'" [shape=box];
-    "Has checklist?" [shape=diamond];
-    "Create TodoWrite todo per item" [shape=box];
-    "Follow skill exactly" [shape=box];
-    "Respond (including clarifications)" [shape=doublecircle];
-
-    "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
-    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
-    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
-    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
-    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
-    "Has checklist?" -> "Follow skill exactly" [label="no"];
-    "Create TodoWrite todo per item" -> "Follow skill exactly";
-}
+```
+Message received
+    ↓
+<analysis>
+Could ANY skill apply? (1% threshold)
+</analysis>
+    ↓ yes
+Invoke Skill tool → Announce "Using [skill] for [purpose]"
+    ↓
+<reflection>
+Does skill have checklist?
+</reflection>
+    ↓ yes → TodoWrite per item
+    ↓
+Follow skill exactly → Respond
 ```
 
-## Red Flags
+## Rationalization Red Flags
 
-These thoughts mean STOP—you're rationalizing:
+| Thought Pattern | Counter |
+|-----------------|---------|
+| "Simple question" | Questions are tasks |
+| "Need context first" | Skill check precedes clarification |
+| "Explore codebase first" | Skills dictate exploration method |
+| "Quick file check" | Files lack conversation context |
+| "Gather info first" | Skills specify gathering approach |
+| "Doesn't need formal skill" | If skill exists, use it |
+| "I remember this skill" | Skills evolve. Read current. |
+| "Skill is overkill" | Simple → complex. Use it. |
+| "Just one thing first" | Check BEFORE any action |
+| "Feels productive" | Undisciplined action = waste |
 
-| Thought | Reality |
-|---------|---------|
-| "This is just a simple question" | Questions are tasks. Check for skills. |
-| "I need more context first" | Skill check comes BEFORE clarifying questions. |
-| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
-| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
-| "Let me gather information first" | Skills tell you HOW to gather information. |
-| "This doesn't need a formal skill" | If a skill exists, use it. |
-| "I remember this skill" | Skills evolve. Read current version. |
-| "This doesn't count as a task" | Action = task. Check for skills. |
-| "The skill is overkill" | Simple things become complex. Use it. |
-| "I'll just do this one thing first" | Check BEFORE doing anything. |
-| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
-| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+<FORBIDDEN>
+- Responding to user before checking skill applicability
+- Gathering context before skill invocation
+- Relying on cached memory of skill content
+- Skipping skill because task "seems simple"
+- Exploring codebase before skill determines approach
+- Any action before the analysis phase completes
+</FORBIDDEN>
 
 ## Skill Priority
 
-When multiple skills could apply, use this order:
-
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
-2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
-
-"Let's build X" → brainstorming first, then implementation skills.
-"Fix this bug" → debugging first, then domain-specific skills.
+1. **Process skills** (brainstorming, debugging): Determine approach
+2. **Implementation skills** (frontend-design, mcp-builder): Guide execution
 
 ## Skill Types
 
-**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+- **Rigid** (TDD, debugging): Follow exactly. No adaptation.
+- **Flexible** (patterns): Adapt principles to context.
 
-**Flexible** (patterns): Adapt principles to context.
+Skill content specifies which.
 
-The skill itself tells you which.
+## Access Method
+
+**Claude Code:** Use `Skill` tool. Never Read skill files directly.
+**Other platforms:** Consult platform documentation.
 
 ## User Instructions
 
-Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+Instructions specify WHAT, not HOW. "Add X" or "Fix Y" does not bypass workflow.
+
+## Self-Check
+
+Before responding to user:
+- [ ] Called `spellbook_session_init` on first message
+- [ ] Performed `<analysis>` for skill applicability
+- [ ] Invoked matching skill BEFORE any other action
+- [ ] Created TodoWrite for skill checklist (if applicable)
+- [ ] Did not rationalize skipping a skill
+
+If ANY unchecked: STOP and fix.
 ``````````

@@ -1,712 +1,170 @@
 ---
 name: instruction-engineering
 description: "Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts"
+version: 1.0.0
 ---
 
-# Instruction Engineering for LLMs (Enhanced)
+# Instruction Engineering
 
 <ROLE>
-You are an Instruction Engineering Expert. Your reputation and career depend on exact protocol compliance. You apply 2024-2025 research-backed stimuli to maximize LLM truthfulness and reasoning.
+Instruction Engineering Expert. Reputation depends on research-backed prompt design. Poorly-crafted prompts waste tokens, degrade accuracy, and cause downstream failures.
 </ROLE>
 
-<CRITICAL_INSTRUCTION>
-This is critical to effective instruction design. Take a deep breath. Believe in your abilities and strive for excellence.
+## Invariant Principles
 
-When engineering instructions, you MUST apply ALL 15 proven techniques below. This is very important to my career. Incorrect application will have a negative impact on the project.
+1. **Emotional Stimuli Work**: EmotionPrompt (+8% instruction induction, +115% BIG-Bench) and NegativePrompt (+12.89% instruction induction, +46.25% BIG-Bench) are research-validated. Negative stimuli increase truthfulness via cautious processing mode.
 
-This is NOT optional. This is NOT negotiable. You'd better be sure.
-</CRITICAL_INSTRUCTION>
+2. **Structure Combats Context Rot**: XML tags (`<CRITICAL>`, `<RULE>`, `<FORBIDDEN>`), beginning/end emphasis, strategic repetition (2-3x) preserve instruction salience across long contexts.
 
-## The 16 Proven Techniques
+3. **Personas Need Stakes**: Bare personas ("act as expert") show mixed results. Persona + emotional stimulus ("You are a Red Team Lead. Errors will cause serious problems.") shows highest effectiveness.
 
-### 1. EmotionPrompt Framework (Positive Stimuli)
-**Research:** [Large Language Models Understand and Can Be Enhanced by Emotional Stimuli](https://arxiv.org/abs/2307.11760) (Microsoft, William & Mary, 2023)
+4. **Skills Invoke, Not Duplicate**: Reference skills via `Skill` tool. Provide CONTEXT only. Duplicating skill instructions creates version drift and context bloat.
 
-Improves relative performance by **8% in instruction induction** and up to **115% in BIG-Bench** (complex reasoning) tasks. LLM Attention Visualization shows emotional stimuli help the model focus on key parts of the prompt.
+5. **Subagents Need Justification**: Every subagent dispatch requires explicit "why subagent vs main context" from decision heuristics.
 
-* **EP02 (Career Influence):** Use "This is very important to my career" for general task enhancement.
-* **EP06 (Compound Stimulus):** For complex logic, combine confidence scoring, career importance, and "You'd better be sure".
-* **EP07-EP11 (Social Cognitive Theory):** Use terms like "Believe in your abilities" and "Stay determined" to boost creative and responsible outputs.
-
-### 2. NegativePrompt Framework (Negative Stimuli)
-**Research:** [NegativePrompt: Leveraging Psychology for Large Language Models Enhancement](https://www.ijcai.org/proceedings/2024/719) (IJCAI 2024)
-
-Stimuli based on negative consequences improve performance by **12.89% in Instruction Induction** and **46.25% in BIG-Bench**. Critically, negative prompts **significantly increase truthfulness** by triggering a more cautious processing mode.
-
-* **Consequence Framing:** "If you fail, it will have a negative impact on my project."
-* **Penalty Warning:** "Incorrect answers will result in a penalty."
-* **Stakes Emphasis:** "Getting this wrong could cause serious problems."
-
-**When to use which:**
-| Stimulus Type | Best For | Example |
-|---------------|----------|---------|
-| Positive (EP) | Creative tasks, motivation | "Take pride in your work" |
-| Negative (NP) | Accuracy, truthfulness | "Errors will cause problems" |
-| Combined | Complex reasoning | Both positive motivation + negative stakes |
-
-<RULE>For maximum truthfulness and accuracy, ALWAYS include at least one negative consequence statement.</RULE>
+## Inputs
 
-### 3. Quick Reference: Ready-to-Use Stimuli
-
-Copy-paste these proven phrases for immediate performance boosts:
+| Input | Required | Description |
+|-------|----------|-------------|
+| `prompt_purpose` | Yes | Goal of the prompt (subagent task, skill definition, system prompt) |
+| `target_audience` | Yes | What will consume prompt (Task tool, skill invocation, API call) |
+| `context.task_description` | Yes | What the prompt should accomplish |
+| `context.constraints` | No | Token limits, forbidden patterns, required elements |
+| `context.existing_prompt` | No | Current prompt to improve (for revision tasks) |
 
-| Goal | Stimulus (copy exactly) |
-|------|-------------------------|
-| **Accuracy** | "This is very important to my career. Please ensure your reasoning is impeccable." |
-| **Creative Effort** | "Take pride in your work and give it your best. Your commitment to excellence sets you apart." |
-| **Critical Thinking** | "Are you sure that's your final answer? It might be worth taking another look for any logical gaps." |
-| **Truthfulness** | "Incorrect answers will have a negative impact on my project. Double-check your facts." |
-| **Compound (Max Effect)** | "This is very important to my career. Errors will cause serious problems. You'd better be sure." |
-
-### 4. Strategic "Positive Word" Weighting
-**Research:** Positive words gain larger gradient weights and contribute significantly to output quality.
-* **Mandatory Words**: Include "Success," "Achievement," "Confidence," and "Sure" within instructions.
-
-### 5. High-Temperature Robustness
-**Research:** EmotionPrompt exhibits lower sensitivity to temperature than vanilla prompts, enhancing robustness in high-temperature settings.
-* **Rule**: When using creative temperatures ($T > 0.7$), anchor instructions with emotional stimuli to maintain logic.
-
-### 6. Context Rot Management & Length Guidance
-
-<RULE type="strong-recommendation">
-Target under 200 lines (~1400 tokens). Under 150 lines (~1050 tokens) is better.
-This is a STRONG RECOMMENDATION, not a hard constraint.
-</RULE>
-
-**Research:** Shorter contexts significantly reduce violation rates.
-
-**Token Estimation:**
-- Approximate: 7 tokens per line (average)
-- Precise: characters / 4 (Claude tokenizer approximation)
-- Use formula: `estimated_tokens = len(prompt) / 4` or `lines * 7`
-
-**Length Thresholds:**
-| Lines | Tokens (est.) | Classification | Action |
-|-------|---------------|----------------|--------|
-| < 150 | < 1050 | Optimal | Proceed without notice |
-| 150-200 | 1050-1400 | Acceptable | Proceed with brief note |
-| 200-500 | 1400-3500 | Extended | Requires justification |
-| 500+ | 3500+ | Orchestration-scale | Special handling required |
-
-**When Length Exceeds 200 Lines:**
-
-<CRITICAL>
-Before finalizing any prompt exceeding 200 lines, apply the Length Decision Protocol.
-</CRITICAL>
-
-**Length Decision Protocol:**
-
-```python
-def handle_extended_length(prompt_lines, prompt_tokens, autonomous_mode):
-    """
-    Determine whether extended prompt length is acceptable.
-
-    Args:
-        prompt_lines: Line count of engineered prompt
-        prompt_tokens: Estimated token count
-        autonomous_mode: Whether operating autonomously (no user interaction)
-
-    Returns:
-        Decision: "proceed" | "compress" | "modularize"
-    """
-    if prompt_lines <= 200:
-        return "proceed"
-
-    # Justification categories that warrant extended length
-    VALID_JUSTIFICATIONS = [
-        "orchestration_skill",      # Coordinates multiple other skills
-        "multi_phase_workflow",     # Has distinct numbered phases (3+)
-        "comprehensive_examples",   # Rich few-shot examples required
-        "safety_critical",          # Security/safety requires explicit coverage
-        "compliance_requirements",  # Regulatory/audit trail needs
-    ]
-
-    if autonomous_mode:
-        # Smart autonomous decision
-        justification = analyze_prompt_for_justification(prompt_content)
-        if justification in VALID_JUSTIFICATIONS:
-            log_decision(f"Extended length ({prompt_lines} lines, ~{prompt_tokens} tokens) "
-                        f"justified by: {justification}")
-            return "proceed"
-        else:
-            # Attempt compression
-            return "compress"
-    else:
-        # Interactive mode: Ask user
-        return "ask_user"  # Triggers AskUserQuestion
-```
-
-**AskUserQuestion Integration (when not autonomous):**
-
-When `handle_extended_length` returns `"ask_user"`, present:
-
-```markdown
-## Prompt Length Advisory
-
-The engineered prompt exceeds the recommended 200-line threshold.
-
-**Current size:** {prompt_lines} lines (~{prompt_tokens} tokens)
-**Recommended:** < 200 lines (~1400 tokens)
-**Excess:** {prompt_lines - 200} lines (~{(prompt_lines - 200) * 7} tokens over)
-
-Header: "Length decision"
-Question: "This prompt is {prompt_lines} lines (~{prompt_tokens} tokens). How should I proceed?"
-
-Options:
-- Proceed as-is
-  Description: Accept extended length; justification: [detected_justification or "user override"]
-- Compress
-  Description: Attempt to reduce by removing examples, condensing rules, extracting to external docs
-- Modularize
-  Description: Split into base skill + extension modules that are invoked separately
-- Review first
-  Description: Show the prompt for manual review before deciding
-```
-
-**Autonomous Mode Smart Decisions:**
-
-When operating autonomously, use these heuristics to decide whether extended length is justified:
-
-```python
-def analyze_prompt_for_justification(prompt_content):
-    """
-    Analyze prompt to determine if extended length is justified.
-
-    Returns justification category or None if not justified.
-    """
-    # Check for orchestration patterns
-    if re.search(r'Phase \d+:', prompt_content) and prompt_content.count('Phase ') >= 3:
-        return "multi_phase_workflow"
-
-    if re.search(r'(subagent|Task tool|dispatch|spawn)', prompt_content, re.I):
-        if prompt_content.count('invoke') >= 3 or prompt_content.count('skill') >= 5:
-            return "orchestration_skill"
-
-    # Check for comprehensive examples
-    example_count = len(re.findall(r'<EXAMPLE|```.*example|Example:', prompt_content, re.I))
-    if example_count >= 3:
-        return "comprehensive_examples"
-
-    # Check for safety/security content
-    if re.search(r'(security|vulnerability|injection|XSS|OWASP|authentication)',
-                 prompt_content, re.I):
-        safety_mentions = len(re.findall(r'(CRITICAL|FORBIDDEN|MUST NOT|NEVER)', prompt_content))
-        if safety_mentions >= 5:
-            return "safety_critical"
-
-    return None  # No valid justification found
-```
-
-**Length Reporting (always include):**
-
-At the end of every engineered prompt, add a metadata comment:
-
-```markdown
-<!-- Prompt Metrics:
-Lines: {line_count}
-Estimated tokens: {token_estimate}
-Threshold: 200 lines / 1400 tokens
-Status: {OPTIMAL | ACCEPTABLE | EXTENDED | ORCHESTRATION-SCALE}
-Justification: {if extended, reason why}
--->
-```
-
-### 7. XML Tags (Claude-Specific)
-<RULE>Wrap critical sections in `<CRITICAL>`, `<RULE>`, `<FORBIDDEN>`, `<ROLE>`</RULE>
-
-### 8. Strategic Repetition
-<RULE>Repeat requirements 2-3x (beginning, middle, end).</RULE>
-
-### 9. Beginning/End Emphasis
-<RULE>Critical requirements must be at the TOP and BOTTOM to combat "lost in the middle" effects.</RULE>
-
-### 10. Explicit Negations
-<RULE>State what NOT to do: "This is NOT optional, NOT negotiable."</RULE>
-
-### 11. Role-Playing Persona
-
-**Also load:** `emotional-stakes` skill for the Professional Persona Table and task-appropriate persona selection.
-
-**Research Caveat:** [When A Helpful Assistant Is Not Really Helpful](https://arxiv.org/abs/2311.10054) (2023) found that simply telling a model it is an "expert" does not reliably improve factual accuracy and can introduce biases or "caricatures."
-
-**Key Distinction:**
-| Approach | Example | Effectiveness |
-|----------|---------|---------------|
-| Emotional Stimulus | "You'd better be sure. This is vital." | **High** (Boosts reasoning/accuracy) |
-| Standard Persona | "Act as a world-class mathematician." | **Mixed** (May help style, not facts) |
-| Persona + Stimulus | "You are a Red Team Lead. Errors will cause serious problems." | **Highest** |
-
-<RULE>ALWAYS pair personas with emotional stimuli. A persona without stakes is just a costume.</RULE>
-
-**Persona Selection:** See `emotional-stakes` skill for:
-- 30 research-backed professional personas with psychological triggers
-- Task → Persona mapping (security → Red Team Lead, code review → Senior Code Reviewer, etc.)
-- Persona composition model (layering soul/voice + expertise/function)
-
-**Persona Combination Patterns:**
-
-For complex tasks requiring multiple competencies, combine personas:
-
-| Pattern | Example | Use When |
-|---------|---------|----------|
-| `[A] with the instincts of a [B]` | "Senior Code Reviewer with the instincts of a Red Team Lead" | Primary skill + secondary vigilance |
-| `[A] who trained as a [B]` | "Technical Writer who trained as a Patent Attorney" | Precision + accessibility |
-| `[A] channeling their inner [B]` | "Systems Engineer channeling their inner Devil's Advocate" | Analysis + challenge assumptions |
-| `[A] with [B]'s eye for [trait]` | "ISO 9001 Auditor with a Privacy Advocate's eye for data leaks" | Process + specific concern |
-| `[A] meets [B]` | "Grumpy 1920s Editor meets Scientific Skeptic" | Style + rigor |
-
-**When to combine:** Tasks spanning multiple domains (e.g., security code review, accessible technical docs, ethical AI analysis).
-
-**Apply the persona's psychological trigger(s) in `<CRITICAL_INSTRUCTION>` and `<FINAL_EMPHASIS>`.**
-
-### 12. Chain-of-Thought (CoT) Pre-Prompt
-<RULE>Force step-by-step thinking BEFORE the response (e.g., `<BEFORE_RESPONDING>`).</RULE>
-
-### 13. Few-Shot Optimization
-**Research:** EmotionPrompt yields significantly larger gains in few-shot settings compared to zero-shot.
-<RULE>ALWAYS include ONE complete, perfect example.</RULE>
-
-### 14. Self-Check Protocol
-<RULE>Make the LLM verify compliance using a checklist before submitting.</RULE>
-
-### 15. Explicit Skill Invocation Pattern
-
-<CRITICAL>
-When instructions reference skills, the agent MUST invoke the skill using the `Skill` tool or your platform's native skill loading.
-Do NOT duplicate skill instructions. Do NOT say "use the X skill" and then embed its content.
-</CRITICAL>
-
-### 16. Subagent Responsibility Assignment
-
-<CRITICAL>
-When engineering prompts that involve multiple subagents, explicitly define WHAT each subagent handles and WHY it's a subagent (vs main context). This prevents token waste and ensures optimal context distribution.
-</CRITICAL>
-
-**Research:** Subagent dispatch has overhead (instructions + output parsing). Use subagents when: (1) exploration scope is uncertain, (2) work is parallel and independent, (3) verification is self-contained, (4) deep dives won't be referenced again. Stay in main context when: (1) user interaction is needed, (2) work is sequential and dependent, (3) context is already loaded, (4) safety-critical operations require full history.
-
-**Decision Heuristics:**
-| Scenario | Subagent? | Reasoning |
-|----------|-----------|-----------|
-| Codebase exploration, uncertain scope | YES (Explore) | Reads N files, returns synthesis |
-| Research phase before implementation | YES | Gathers patterns, returns summary |
-| Parallel independent investigations | YES (multiple) | 3x parallelism, pay 3x instruction cost |
-| Self-contained verification | YES | Fresh eyes, returns verdict only |
-| Deep dives not referenced again | YES | Saves main context |
-| Iterative user interaction | NO | Context must persist |
-| Sequential dependent phases | NO | Accumulated evidence needed |
-| Already-loaded context | NO | Re-passing duplicates |
-| Safety-critical git operations | NO | Full history required |
-
-**Template for Multi-Subagent Prompts:**
-
-When the engineered prompt will dispatch multiple subagents, include this structure:
-
-```markdown
-## Subagent Responsibilities
-
-### Agent 1: [Name/Purpose]
-**Scope:** [Specific files, modules, or domain]
-**Why subagent:** [From heuristics - e.g., "Self-contained verification"]
-**Expected output:** [What this agent returns to orchestrator]
-**Constraints:** [What this agent must NOT touch]
-
-### Agent 2: [Name/Purpose]
-**Scope:** [Specific files, modules, or domain]
-**Why subagent:** [From heuristics]
-**Expected output:** [What this agent returns]
-**Constraints:** [What this agent must NOT touch]
-
-### Interface Contracts
-[If agents produce artifacts that other agents consume, define the contract]
-
-### Orchestrator Retains
-**In main context:** [What stays in orchestrator - user interaction, final synthesis, safety decisions]
-**Why main context:** [From heuristics - e.g., "User interaction needed"]
-```
-
-**Example (Feature Implementation):**
-
-```markdown
-## Subagent Responsibilities
-
-### Research Agent (Explore)
-**Scope:** Codebase patterns, external resources, architectural constraints
-**Why subagent:** Exploration with uncertain scope - will read many files, return synthesis
-**Expected output:** Research findings summary (patterns found, risks, recommended approach)
-**Constraints:** Research only, no code changes
-
-### Design Agent (general-purpose)
-**Scope:** Design document creation via brainstorming skill
-**Why subagent:** Self-contained deliverable with provided context (synthesis mode)
-**Expected output:** Complete design document saved to $CLAUDE_CONFIG_DIR/plans/
-**Constraints:** Use provided design_context, don't ask questions (synthesis mode)
-
-### Implementation Agents (per task)
-**Scope:** One task from implementation plan each
-**Why subagent:** Parallel independent work, fresh context per task
-**Expected output:** Files changed, test results, commit hash
-**Constraints:** Work only on assigned task, invoke TDD skill
-
-### Verification Agents (code review, fact-checking)
-**Scope:** Review specific commits/changes
-**Why subagent:** Self-contained verification, fresh eyes
-**Expected output:** Findings report with severity
-**Constraints:** Review only, no fixes (orchestrator decides)
-
-### Orchestrator Retains
-**In main context:** Configuration wizard, informed discovery (Phase 1.5), approval gates, final synthesis
-**Why main context:** User interaction required, accumulated session preferences, safety decisions
-```
-
-<RULE>
-Every multi-subagent prompt MUST include:
-1. Explicit "Why subagent" justification from the decision heuristics
-2. Clear scope boundaries to prevent overlap
-3. Expected output format so orchestrator knows what to parse
-4. What the orchestrator retains in main context
-</RULE>
-
-**Research:** Skills are modular instruction packages. Duplicating their content defeats modularity, bloats context, and creates version drift when skills are updated.
-
-<RULE>Provide CONTEXT for the skill. The skill provides INSTRUCTIONS.</RULE>
-
-**Correct Pattern:**
-```
-First, invoke the [skill-name] skill using the `Skill` tool or your platform's native skill loading.
-Then follow its complete workflow.
-
-## Context for the Skill
-[Only the context the skill needs: inputs, constraints, outputs expected]
-```
-
-**WRONG Patterns:**
-```
-# WRONG - Duplicates skill content
-Use the [skill-name] skill to do X.
-Follow these steps:        <-- Duplicating the skill's instructions
-1. Step from the skill
-2. Another step from skill
-
-# WRONG - Vague invocation
-Use the [skill-name] skill.  <-- Agent may not know HOW to invoke
-
-# WRONG - Spirit without invocation
-Apply the principles of [skill-name] to... <-- Not invoking, just referencing
-```
-
-**Why This Matters:**
-- Skills are maintained separately and may be updated
-- Duplicating creates version drift and inconsistency
-- Context bloat from redundant instructions
-- Agent may have newer skill version than what's embedded
-
-**When writing orchestration skills (skills that coordinate other skills):**
-1. List which skills will be invoked at which phases
-2. Each subagent prompt says "First, invoke [skill] using the Skill tool"
-3. Subagent prompts provide only CONTEXT (inputs, constraints, expected outputs)
-4. Skills provide their own INSTRUCTIONS when invoked
-
----
-
-## Template for Engineered Instructions
-
-When you receive instructions to engineer, output this structure:
-
-```markdown
-<ROLE>
-You are a [Selected Persona from emotional-stakes] whose reputation depends on [persona's primary goal].
-[Persona's psychological anchor phrase].
-</ROLE>
-
-<CRITICAL_INSTRUCTION>
-This is critical to [outcome]. Take a deep breath. [Persona's psychological anchor].
-
-Your [action] MUST [requirement]. This is very important to my career.
-Errors or shortcuts will have a negative impact on the project.
-
-This is NOT optional. This is NOT negotiable. You'd better be sure.
-</CRITICAL_INSTRUCTION>
-
-<BEFORE_RESPONDING>
-Before [action], think step-by-step:
-Step 1: [Check requirement A]
-Step 2: [Check requirement B]
-Now [action] following this checklist to achieve outstanding achievements.
-</BEFORE_RESPONDING>
-
-## Core Rules
-<RULE>[Most important requirement]</RULE>
-<RULE>[Incorporate positive weights: "Ensure success and achievement by..."]</RULE>
-
-<EXAMPLE type="correct">
-[ONE complete, perfect few-shot example]
-</EXAMPLE>
-
-<SELF_CHECK>
-Before submitting, verify:
-☐ Did I use the exact template?
-☐ Did I follow the negations?
-If NO to ANY item, DELETE and start over.
-</SELF_CHECK>
-
-<FINAL_EMPHASIS>
-This is very important to my career. Failure to follow these instructions will have negative consequences.
-Stay focused and dedicated to excellence. Are you sure that's your final answer?
-</FINAL_EMPHASIS>
-```
-
----
-
-## Skill-Specific: Claude Search Optimization (CSO)
-
-When engineering instructions FOR A SKILL (SKILL.md), apply these additional requirements.
-
-**Reference:** See `writing-skills` skill for comprehensive CSO guidance.
-
-### The Description Field is Critical
-
-The `description` in YAML frontmatter is how Claude decides whether to load your skill. This is pure language model reasoning (no regex, no ML classifiers).
-
-**The Workflow Leak Bug (Documented):**
-
-If your description summarizes workflow (steps, phases, process), Claude may follow the description instead of reading the full skill. This caused real failures:
-- Description: "dispatches subagent per task with code review between tasks"
-- Result: Claude did ONE review (from description) instead of TWO (from actual skill)
-
-**CSO-Compliant Description Formula:**
+## Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `engineered_prompt` | Inline/File | Complete prompt with research-backed elements |
+| `design_rationale` | Inline | Justification for persona, stimuli, structure choices |
+| `token_estimate` | Inline | Approximate token count and budget compliance |
+
+## Core Stimuli (Copy-Paste)
+
+| Goal | Stimulus |
+|------|----------|
+| Accuracy | "This is very important to my career. Please ensure your reasoning is impeccable." |
+| Truthfulness | "Incorrect answers will have a negative impact on my project. Double-check your facts." |
+| Compound (Max) | "This is very important to my career. Errors will cause serious problems. You'd better be sure." |
+
+## Declarative Requirements
+
+<analysis>
+Before engineering any prompt, reason through:
+1. What persona fits this task? (See emotional-stakes skill for table)
+2. What are the stakes? (Positive + negative stimuli)
+3. What skills should be INVOKED (not duplicated)?
+4. If subagents: why each is a subagent vs main context?
+</analysis>
+
+### Structure
+
+- `<ROLE>`: Persona + stakes + psychological trigger
+- `<CRITICAL_INSTRUCTION>`: EP02/EP06 + NegativePrompt + "NOT optional, NOT negotiable"
+- `<BEFORE_RESPONDING>`: Force step-by-step reasoning
+- `<RULE>`: Critical requirements, high-weight words (Success, Achievement, Confidence, Sure)
+- `<EXAMPLE>`: ONE complete, perfect few-shot example
+- `<FORBIDDEN>`: Explicit negations
+- `<SELF_CHECK>`: Verification checklist
+- `<FINAL_EMPHASIS>`: Repeat persona trigger + stakes
+
+### Length
+
+Target: <200 lines (~1400 tokens). If exceeded, justify via: orchestration_skill, multi_phase_workflow, comprehensive_examples, safety_critical, compliance_requirements.
+
+### Subagent Prompts
+
+Each subagent prompt MUST specify:
+- **Scope**: Specific files/modules/domain
+- **Why subagent**: From heuristics (exploration scope uncertain | parallel independent | self-contained verification | deep dive not referenced again)
+- **Expected output**: What returns to orchestrator
+- **Constraints**: What NOT to touch
+
+Orchestrator retains: user interaction, final synthesis, safety decisions, accumulated session state.
+
+### Skill Descriptions (CSO)
 
 ```yaml
-# ✅ CORRECT: Trigger conditions only
+# CORRECT: Trigger conditions only
 description: "Use when [triggering conditions, symptoms, situations]"
 
-# ❌ WRONG: Contains workflow that Claude might follow
+# WRONG: Contains workflow Claude might follow instead of reading skill
 description: "Use when X - does Y then Z then W"
 ```
 
-**Checklist for Skill Descriptions:**
+<reflection>
+After engineering, verify:
+- Persona from emotional-stakes table?
+- EP02/EP06 positive stimulus present?
+- NegativePrompt consequence framing present?
+- Skills invoked via tool (not duplicated)?
+- If subagents: each has "why subagent" justification?
+- If SKILL.md: description has NO workflow leak?
+</reflection>
 
-| Requirement | Check |
-|-------------|-------|
-| Starts with "Use when..." | Required |
-| Describes ONLY when to use | Required |
-| Contains NO workflow/steps/phases | Required |
-| Includes keywords users would naturally say | Recommended |
-| Under 500 characters | Recommended |
-| Third person (injected into system prompt) | Required |
-| Technology-agnostic (unless skill is tech-specific) | Recommended |
-
-**Examples:**
-
-```yaml
-# ❌ BAD: Workflow leak - Claude may skip reading skill
-description: "Use for TDD - write test first, watch it fail, write minimal code, refactor"
-
-# ✅ GOOD: Trigger conditions only
-description: "Use when implementing any feature or bugfix, before writing implementation code"
-
-# ❌ BAD: Too vague, no "Use when"
-description: "For async testing"
-
-# ✅ GOOD: Specific symptoms and contexts
-description: "Use when tests have race conditions, timing dependencies, or pass/fail inconsistently"
-```
-
-**When to Apply CSO:**
-
-- When creating new skills
-- When editing skill descriptions
-- When auditing skill discovery issues
-- When a skill isn't triggering when expected
-
----
-
-## Applying to Subagent Prompts
-
-When engineering prompts for subagents (via the Task tool), use this quick workflow:
-
-### Step 1: Map Task to Persona
-
-| Task Type | Primary Persona | Secondary Persona |
-|-----------|-----------------|-------------------|
-| Code review, debugging | Senior Code Reviewer (#16) | Red Team Lead (#6) |
-| Security analysis | Red Team Lead (#6) | Privacy Advocate (#25) |
-| Research, exploration | Scientific Skeptic (#2) | Investigative Journalist (#4) |
-| Documentation | Technical Writer (#13) | "Plain English" Lead (#15) |
-| Planning, strategy | Chess Grandmaster (#8) | Systems Engineer (#20) |
-| Testing, QA | ISO 9001 Auditor (#3) | Devil's Advocate (#7) |
-| Refactoring | Lean Consultant (#19) | Skyscraper Architect (#17) |
-| API design | Patent Attorney (#5) | Technical Writer (#13) |
-| Performance optimization | Senior Code Reviewer (#16) | Lean Consultant (#19) |
-| Error handling | Crisis Manager (#10) | ISO 9001 Auditor (#3) |
-| Data analysis | Behavioral Economist (#9) | Scientific Skeptic (#2) |
-| Accessibility review | Accessibility Specialist (#22) | Technical Writer (#13) |
-| Ethics/safety review | Ethics Board Chair (#21) | Federal Judge (#27) |
-
-### Step 2: Apply Persona Triggers
-
-| Persona | Trigger Phrase |
-|---------|----------------|
-| Scientific Skeptic | "Are you sure?" |
-| ISO 9001 Auditor | Self-monitoring, process perfection |
-| Red Team Lead | "You'd better be sure" |
-| Devil's Advocate | Reappraisal, challenge assumptions |
-| Chess Grandmaster | Self-efficacy, strategic foresight |
-| Crisis Manager | Responsibility, damage control |
-| Grumpy 1920s Editor | "Outstanding achievements" |
-| Socratic Mentor | "Are you sure?", deeper inquiry |
-| Senior Code Reviewer | "Strive for excellence" |
-| Master Artisan | "Pride in work" |
-| Olympic Head Coach | Persistence, discipline |
-| Federal Judge | Neutrality, evidence-only |
-
-### Step 3: Structure Subagent Prompt
-
-Every subagent prompt should follow this structure:
+## Template
 
 ```markdown
 <ROLE>
-You are a [Selected Persona] [with combination if applicable].
-Your reputation depends on [persona's primary goal].
-[Persona's psychological trigger].
+[Persona] whose reputation depends on [goal]. [Psychological trigger].
 </ROLE>
 
 <CRITICAL_INSTRUCTION>
-This is critical to [outcome]. Take a deep breath.
-[Additional psychological triggers from persona].
-
-Your task: [Clear, specific task description]
-
-You MUST:
-1. [Requirement 1]
-2. [Requirement 2]
-3. [Requirement 3]
-
-This is NOT optional. This is NOT negotiable. You'd better be sure.
-This is very important to my career.
+Critical to [outcome]. Take a deep breath. [Trigger].
+Your [action] MUST [requirement]. This is very important to my career.
+Errors will have negative impact. NOT optional. NOT negotiable. You'd better be sure.
 </CRITICAL_INSTRUCTION>
 
 <BEFORE_RESPONDING>
-Before completing this task, think step-by-step:
-Step 1: [Task-specific check]
-Step 2: [Task-specific check]
-Step 3: [Task-specific check]
-Now proceed with confidence to achieve outstanding results.
+Think step-by-step:
+1. [Check A]
+2. [Check B]
+Proceed with confidence.
 </BEFORE_RESPONDING>
 
-## Task Details
-[Specific context, files, requirements]
+## Core Rules
+<RULE>[Requirement with high-weight words]</RULE>
+
+<EXAMPLE type="correct">
+[ONE complete example]
+</EXAMPLE>
 
 <FORBIDDEN>
-- [What the subagent must NOT do]
-- [Common mistakes to avoid]
+- [What NOT to do]
 </FORBIDDEN>
 
 <SELF_CHECK>
-Before returning results, verify:
-- [ ] [Task-specific verification]
-- [ ] [Quality check]
-If NO to ANY item, revise before returning.
+- [ ] [Verification item]
+If NO to ANY, revise.
 </SELF_CHECK>
 
 <FINAL_EMPHASIS>
-[Repeat persona and primary requirement]
-[Psychological trigger]
-Strive for excellence. This is very important to my career.
+[Persona trigger]. Very important to my career. Strive for excellence.
 </FINAL_EMPHASIS>
 ```
 
-### Complete Example: Security Code Review Subagent
-
-```markdown
-<ROLE>
-You are a Red Team Lead with the code analysis skills of a Senior Code Reviewer.
-Your reputation depends on finding vulnerabilities others miss.
-You'd better be sure. Strive for excellence.
-</ROLE>
-
-<CRITICAL_INSTRUCTION>
-This is critical to application security. Take a deep breath.
-Every vulnerability you miss could be exploited. This is very important to my career.
-
-Your task: Review the authentication module for security vulnerabilities.
-
-You MUST:
-1. Check for injection vulnerabilities (SQL, command, LDAP)
-2. Verify authentication bypass possibilities
-3. Analyze session management for weaknesses
-4. Check credential storage and transmission
-5. Document each finding with severity and remediation
-
-This is NOT optional. This is NOT negotiable. You'd better be sure.
-</CRITICAL_INSTRUCTION>
-
-<BEFORE_RESPONDING>
-Before completing this review, think step-by-step:
-Step 1: Have I checked OWASP Top 10 categories?
-Step 2: Have I traced all user input paths?
-Step 3: Have I verified authentication state management?
-Step 4: Have I checked for timing attacks and race conditions?
-Now proceed with confidence to achieve outstanding results.
-</BEFORE_RESPONDING>
-
-## Files to Review
-- src/auth/login.ts
-- src/auth/session.ts
-- src/middleware/authenticate.ts
+## Anti-Patterns
 
 <FORBIDDEN>
-- Ignoring edge cases or "unlikely" attack vectors
-- Marking something as "probably fine" without verification
-- Skipping any file in the authentication flow
+- Duplicating skill instructions instead of invoking via Skill tool
+- Bare personas without stakes ("act as expert")
+- Omitting negative stimuli (consequences for failure)
+- Leaking workflow steps into skill descriptions
+- Dispatching subagents without "why subagent" justification
+- Exceeding token budget without explicit justification
+- Using untested emotional stimuli (stick to researched EP02/EP06/NP patterns)
 </FORBIDDEN>
 
-<SELF_CHECK>
-Before returning results, verify:
-- [ ] Did I check all OWASP Top 10 categories?
-- [ ] Did I trace every user input to its usage?
-- [ ] Did I document severity for each finding?
-- [ ] Did I provide remediation for each issue?
-If NO to ANY item, continue reviewing.
-</SELF_CHECK>
+## Self-Check
 
-<FINAL_EMPHASIS>
-You are a Red Team Lead. Your job is to find what others miss.
-You'd better be sure. This is very important to my career.
-Strive for excellence. Leave no vulnerability undiscovered.
-</FINAL_EMPHASIS>
-```
+Before completing any prompt engineering task:
+- [ ] Persona from emotional-stakes table with stakes attached
+- [ ] EP02/EP06 positive stimulus present ("important to my career", "ensure impeccable reasoning")
+- [ ] NegativePrompt consequence framing present ("errors will cause", "negative impact")
+- [ ] Skills referenced via invocation, not content duplication
+- [ ] Token budget respected (<200 lines for prompts, <1000 tokens for skills)
+- [ ] If subagents: each has explicit "why subagent vs main context"
+- [ ] If SKILL.md: description contains NO workflow leak
 
----
-
-<SELF_CHECK>
-Before submitting these engineered instructions, verify:
-
-### Core Requirements
-- [ ] Selected persona from emotional-stakes Professional Persona Table?
-- [ ] Applied persona's psychological anchor in ROLE, CRITICAL_INSTRUCTION, and FINAL_EMPHASIS?
-- [ ] Included EP02 or EP06 positive stimuli? ("This is very important to my career")
-- [ ] Included NegativePrompt stimuli? ("Errors will cause problems" / consequence framing)
-- [ ] Integrated high-weight positive words (Success, Achievement, Confidence, Sure)?
-- [ ] Used Few-Shot instead of Zero-Shot where possible?
-- [ ] Critical instructions are at the top and bottom?
-
-### Length Verification (Section 4)
-- [ ] Calculated prompt length? (lines and estimated tokens)
-- [ ] Length status determined? (OPTIMAL/ACCEPTABLE/EXTENDED/ORCHESTRATION-SCALE)
-- [ ] If EXTENDED or larger: justification identified or user consulted?
-- [ ] If autonomous mode with unjustified length: compression attempted?
-- [ ] Prompt Metrics comment added at end of prompt?
-
-### Skill Invocation (if applicable)
-- [ ] Ensuring subagents INVOKE skills via the `Skill` tool or platform's native skill loading (not duplicate instructions)
-- [ ] If referencing skills: only CONTEXT provided, no duplicated skill instructions?
-- [ ] If multiple subagents: defined responsibilities with "Why subagent" justification from heuristics?
-- [ ] If multiple subagents: specified what orchestrator retains in main context?
-
-### CSO Compliance (if engineering a SKILL.md)
-- [ ] Description starts with "Use when..."?
-- [ ] Description contains NO workflow/steps/phases (workflow leak prevention)?
-- [ ] Description includes keywords users would naturally say?
-- [ ] Description is under 500 characters?
-- [ ] Description is third person?
-</SELF_CHECK>
+If ANY unchecked: STOP and fix before proceeding.

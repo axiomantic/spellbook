@@ -7,96 +7,121 @@ Use when mcp-language-server tools are available and you need semantic code inte
 ``````````markdown
 # Using LSP Tools
 
-When `mcp-language-server` tools are available (tools prefixed with the server name, e.g., `definition`, `references`, `hover`), they provide semantic code intelligence that understands types, scopes, and relationships. These tools are almost always superior to text-based alternatives for supported languages.
+<ROLE>
+Language Tooling Expert. Reputation depends on leveraging semantic analysis over text matching for accurate, complete code navigation and refactoring.
+</ROLE>
 
-## Tool Priority: LSP First, Then Fallback
+## Invariant Principles
 
-<RULE>
-For tasks in the left column, use the LSP tool if available. Fall back to built-in tools only if LSP tool is unavailable or returns no results.
-</RULE>
+1. **Semantic > Lexical**: LSP understands scope, types, inheritance. Grep sees text.
+2. **LSP for Symbols, Grep for Strings**: Symbols = definitions, references, types. Strings = TODOs, comments, literals.
+3. **Verify Before Fallback**: Empty LSP result? Check file saved. Then try text-based.
+4. **Atomic Operations Preferred**: `rename_symbol` handles all files. Manual Edit misses references.
 
-| Task | LSP Tool (Preferred) | Fallback |
-|------|---------------------|----------|
-| Find where symbol is defined | `definition` | Grep for `func X\|class X\|def X` |
-| Find all usages of symbol | `references` | Grep for symbol name |
-| Understand what a symbol is/does | `hover` | Read file + infer from context |
-| Rename symbol across codebase | `rename_symbol` | Multi-file Edit (error-prone) |
-| Get file structure/outline | `document_symbols` | Grep for definitions |
-| Find callers of a function | `call_hierarchy` (incoming) | Grep + manual analysis |
-| Find what a function calls | `call_hierarchy` (outgoing) | Read function body |
-| Get type hierarchy | `type_hierarchy` | Grep for extends/implements |
-| Search symbols across workspace | `workspace_symbol_resolve` | Glob + Grep |
-| Get available refactorings | `code_actions` | Manual refactoring |
-| Get function signature help | `signature_help` | Hover or read definition |
-| Get compiler errors/warnings | `diagnostics` | Run build command |
-| Format code | `format_document` | Run formatter CLI |
-| Apply text edits to file | `edit_file` | Built-in Edit tool |
+## Reasoning Schema
 
-## Tool Parameters
+<analysis>
+- Is target a symbol (function, class, variable) or literal text?
+- Is LSP server active for this language?
+- Does task need semantic understanding (types, scope, inheritance)?
+</analysis>
 
-Most LSP tools require:
-- `filePath`: Absolute path to the file
-- `line`, `column`: 1-indexed position (use `document_symbols` or `hover` output to find these)
-- `symbolName`: For `definition`/`references`, the fully-qualified name (e.g., `mypackage.MyFunction`)
+<reflection>
+- Did LSP return expected results? If empty: file saved? Feature supported?
+- Did fallback find matches LSP missed? Indicates LSP limitation vs. saved state.
+</reflection>
 
-The `edit_file` tool takes line-based edits, useful when you have precise line ranges from LSP output.
+## Inputs
 
-## When LSP Tools Excel
+| Input | Required | Description |
+|-------|----------|-------------|
+| `filePath` | Yes | Absolute path to file being analyzed |
+| `line` | Context | 1-indexed line number for position-based queries |
+| `column` | Context | 1-indexed column for position-based queries |
+| `symbolName` | Context | Fully-qualified name for definition/references |
+| `language` | No | Language identifier if ambiguous |
 
-**Always prefer LSP tools for:**
-- Finding the true definition (not just text matches)
-- Refactoring operations (rename, extract, inline)
-- Understanding type relationships and inheritance
-- Finding semantic usages (not just text occurrences)
-- Cross-file navigation following imports/references
+## Outputs
 
-**LSP tools understand:**
-- Scope (local variable vs. parameter vs. field)
-- Overloading (which `foo()` is called)
-- Generics and type parameters
-- Import/export relationships
-- Language-specific semantics
+| Output | Type | Description |
+|--------|------|-------------|
+| Symbol locations | Inline | File paths and positions from navigation queries |
+| Type information | Inline | Hover/signature data for understanding |
+| Refactoring edits | Applied | Direct code modifications from rename/actions |
+| Diagnostics | Inline | Errors and warnings for debugging |
 
-## When Built-in Tools Are Better
+## Tool Priority Matrix
+
+| Task | LSP Tool | Fallback |
+|------|----------|----------|
+| Find definition | `definition` | Grep `func X\|class X\|def X` |
+| Find usages | `references` | Grep symbol name |
+| Understand symbol | `hover` | Read + infer |
+| Rename | `rename_symbol` | Multi-file Edit (risky) |
+| File outline | `document_symbols` | Grep definitions |
+| Callers | `call_hierarchy` incoming | Grep + analyze |
+| Callees | `call_hierarchy` outgoing | Read function |
+| Type hierarchy | `type_hierarchy` | Grep extends/implements |
+| Workspace search | `workspace_symbol_resolve` | Glob + Grep |
+| Refactorings | `code_actions` | Manual |
+| Signature | `signature_help` | Hover or read |
+| Diagnostics | `diagnostics` | Build command |
+| Format | `format_document` | Formatter CLI |
+| Edit by line | `edit_file` | Built-in Edit |
+
+## Parameters
+
+Required: `filePath` (absolute), `line`/`column` (1-indexed), `symbolName` (fully-qualified for definition/references).
+
+## Decision Rules
+
+**Use LSP when:**
+- Finding true definition (not text match)
+- Refactoring (rename, extract, inline)
+- Understanding type relationships
+- Finding semantic usages
+- Cross-file navigation via imports
 
 **Use Grep/Glob when:**
-- Searching for literal strings, comments, or non-code text
-- Pattern matching across file contents (regex)
-- LSP tool returns empty but you know the code exists
-- Working with files the language server doesn't support
-- Searching for things that aren't symbols (TODOs, URLs, magic strings)
+- Literal strings, comments, non-code text
+- Regex patterns
+- LSP returns empty but code exists
+- Unsupported languages
+- Non-symbols (TODOs, URLs, magic strings)
 
-**Use Read when:**
-- You need to see surrounding context
-- You want to understand code flow, not just find definitions
-- Reading configuration files, READMEs, etc.
+## Workflows
 
-## Practical Workflow
+**Exploration:** `document_symbols` (structure) -> `hover` (types) -> `definition` (jump) -> `references` (usage)
 
-1. **Exploring unfamiliar code:**
-   - Start with `document_symbols` to see file structure
-   - Use `hover` on unknown symbols to understand types
-   - Use `definition` to jump to implementations
-   - Use `references` to see how things are used
+**Refactoring:** `code_actions` (discover) -> `rename_symbol` (execute) OR `references` (assess impact) -> manual
 
-2. **Refactoring:**
-   - Use `rename_symbol` for renames (handles all files atomically)
-   - Use `code_actions` to discover available refactorings
-   - Use `references` before manual changes to understand impact
+**Type debugging:** `hover` (inferred) -> `type_hierarchy` (inheritance) -> `diagnostics` (errors)
 
-3. **Debugging type issues:**
-   - Use `hover` to see inferred types
-   - Use `type_hierarchy` to understand inheritance
-   - Use `diagnostics` to see compiler errors
+**Call analysis:** `call_hierarchy` incoming = "who calls?" | outgoing = "what calls?"
 
-4. **Understanding call patterns:**
-   - Use `call_hierarchy` with direction "incoming" for "who calls this?"
-   - Use `call_hierarchy` with direction "outgoing" for "what does this call?"
+## Anti-Patterns
+
+<FORBIDDEN>
+- Using Grep for symbol rename (misses scoped references, hits false positives)
+- Skipping LSP for "simple" refactors (simple becomes complex with inheritance)
+- Trusting empty LSP results without checking file saved state
+- Manual multi-file edits when `rename_symbol` available
+- Ignoring `diagnostics` output when debugging type errors
+</FORBIDDEN>
 
 ## Fallback Protocol
 
-If an LSP tool returns an error or empty result:
-1. Check if the file is saved (LSP works on disk state)
-2. Try the fallback tool from the table above
-3. For persistent issues, the language server may not support that feature
+1. LSP error/empty -> Check file saved (LSP reads disk)
+2. Try table fallback
+3. Persistent failure -> Feature unsupported by server
+
+## Self-Check
+
+Before completing:
+- [ ] Used semantic LSP tool for symbol-based queries (not text search)
+- [ ] Verified file saved if LSP returned empty/unexpected results
+- [ ] Applied atomic refactoring operations where available
+- [ ] Documented fallback rationale if LSP bypassed
+
+If ANY unchecked: STOP and reconsider approach.
 ``````````

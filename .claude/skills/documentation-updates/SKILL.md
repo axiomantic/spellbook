@@ -5,65 +5,62 @@ description: "Use after modifying library skills, library commands, or agents to
 
 # Documentation Updates
 
-Enforces documentation hygiene when library content changes.
+<analysis>
+Identify: What library content changed? Scope: library skills (`skills/`), commands (`commands/`), agents (`agents/`).
+Exclude: Repo skills (`.claude/skills/`) are internal tooling, no external docs needed.
+</analysis>
 
-<CRITICAL>
-When ANY of these are modified, corresponding documentation MUST be updated:
-- `skills/*/SKILL.md` (library skills)
-- `commands/*.md` (library commands)
-- `agents/*/AGENT.md` (agents)
+## Invariant Principles
 
-This does NOT apply to repo skills (`.claude/skills/`) which are internal tooling.
-</CRITICAL>
+1. **Library changes require documentation trail** - Every modification to installed content must be traceable through CHANGELOG
+2. **Counts must match reality** - README totals reflect actual files, never stale
+3. **Generated docs stay fresh** - Run generator after any library content change
+4. **Repo skills are invisible** - Internal tooling never touches external docs
 
-## Required Updates
+## Required Updates Matrix
 
-| Change Type | CHANGELOG | README | Docs |
-|-------------|-----------|--------|------|
-| New library skill | Add to "Added" section | Update skill count, add to table, add link ref | Run `python3 scripts/generate_docs.py` |
-| Modified library skill | Add to "Changed" section | Only if description changed | Run docs generator |
-| Removed library skill | Add to "Removed" section | Update count, remove from table/links | Run docs generator |
-| New command | Add to "Added" section | Update command count, add to table | Run docs generator |
-| Modified command | Add to "Changed" section | Only if description changed | Run docs generator |
+| Change | CHANGELOG | README | Docs Generator |
+|--------|-----------|--------|----------------|
+| Add library skill | "Added" section | count++, add table row, add link ref | Run |
+| Modify library skill | "Changed" section | Only if description changed | Run |
+| Remove library skill | "Removed" section | count--, remove row/link | Run |
+| Add/modify command | Appropriate section | Update if count/description affected | Run |
 
-## Checklist
+## Verification Checklist
 
-Before completing any PR that touches library content:
+<reflection>
+Before PR completion, evidence required for each:
+</reflection>
 
-- [ ] CHANGELOG.md updated under `## [Unreleased]`
-- [ ] README.md skill/command count is accurate
-- [ ] README.md tables include new items with link references
-- [ ] `python3 scripts/generate_docs.py` has been run
-- [ ] Generated docs committed (pre-commit hooks should handle this)
+- [ ] CHANGELOG.md has entry under `## [Unreleased]`
+- [ ] README.md counts match `ls skills/*/SKILL.md | wc -l` and `ls commands/*.md | wc -l`
+- [ ] New items have table rows AND link references
+- [ ] `python3 scripts/generate_docs.py` executed
+- [ ] Pre-commit hooks committed generated files
 
-## CHANGELOG Format
+## CHANGELOG Entry Format
 
 ```markdown
 ## [Unreleased]
 
 ### Added
 - **skill-name skill** - one-line description
-  - Bullet point for notable feature
-  - Another bullet point
+  - Notable feature bullet
 
 ### Changed
 - **skill-name skill** - what changed and why
 
 ### Removed
-- **skill-name skill** - why it was removed
+- **skill-name skill** - removal rationale
 ```
 
-## README Update Pattern
+## README Link Reference Pattern
 
-1. Update count in `### Skills (N total)` header
-2. Add skill to appropriate category row in table
-3. Add link reference at bottom of skills section:
-   ```markdown
-   [skill-name]: https://axiomantic.github.io/spellbook/latest/skills/skill-name/
-   ```
+```markdown
+[skill-name]: https://axiomantic.github.io/spellbook/latest/skills/skill-name/
+```
 
-## Terminology
-
-See CLAUDE.md glossary for distinction between:
-- **Library skills** (`skills/`) - installed for spellbook users
-- **Repo skills** (`.claude/skills/`) - internal tooling for spellbook development
+<CRITICAL>
+Library content (`skills/`, `commands/`, `agents/`) triggers this skill.
+Repo content (`.claude/skills/`) does NOT.
+</CRITICAL>

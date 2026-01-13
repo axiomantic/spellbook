@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Pre-commit hook to update AGENTS.spellbook.md context file.
+Pre-commit hook to update context files.
 
-This is the installable template that gets inserted into user config directories
-for Codex and OpenCode. Gemini uses native extensions (extensions/gemini/).
+CLAUDE.spellbook.md is the installable template that gets inserted into user 
+config directories for Claude, Codex, and OpenCode. Gemini uses native extensions.
 
-Regenerates the context file and checks if it needs updating.
-If the file changed, updates it and exits with error so user can re-stage.
+Regenerates context files and checks if they need updating.
+If files changed, updates them and exits with error so user can re-stage.
 """
 import subprocess
 import sys
@@ -17,9 +17,9 @@ REPO_ROOT = SCRIPT_DIR.parent
 GENERATE_SCRIPT = SCRIPT_DIR / "generate_context.py"
 CLAUDE_MD = REPO_ROOT / "CLAUDE.spellbook.md"
 
-# Only AGENTS.spellbook.md needed now (Gemini uses extensions/gemini/GEMINI.md)
+# Only CLAUDE.spellbook.md needed now (Gemini uses extensions/gemini/GEMINI.md)
 CONTEXT_FILES = [
-    REPO_ROOT / "AGENTS.spellbook.md",
+    REPO_ROOT / "CLAUDE.spellbook.md",
 ]
 
 

@@ -1,58 +1,48 @@
 # Git Safety Protocol
 
-## Purpose
-Standard safety checks and confirmation requirements for git operations. Reference this pattern instead of repeating safety rules in each skill.
+## Invariant Principles
 
-## Core Rules
+1. **User Agency**: Repository state changes require explicit user consent
+2. **Reversibility Awareness**: Destructive operations demand impact disclosure
+3. **Context Preservation**: Never discard uncommitted work without warning
+4. **Clean History**: No auto-generated footers, no issue tags in commits
+5. **Interactive Incompatibility**: CLI environment cannot handle `-i` flags
 
-| Operation | Requirement |
-|-----------|-------------|
-| `commit` | Ask permission first |
-| `push` | Ask permission first |
-| `checkout` | Ask permission first |
-| `restore` | Ask permission first |
-| `stash` | Ask permission first |
-| `merge` | Ask permission first |
-| `rebase` | Ask permission first |
-| `reset` | Ask permission first |
-| `push --force` | Warn strongly, require explicit confirmation |
-| `reset --hard` | Warn strongly, require explicit confirmation |
+## Permission Matrix
 
-## Pre-Operation Checklist
+| Risk Level | Operations | Requirement |
+|------------|-----------|-------------|
+| Standard | commit, push, checkout, restore, stash, merge, rebase, reset | Permission |
+| Destructive | `--force`, `--hard` | Warning + explicit confirmation |
+| Forbidden | `--no-verify`, config modification, `-i` flags | Never (unless user explicitly requests `--no-verify`) |
 
-Before ANY git operation with side effects:
+## Prohibited in Commits
 
-```
-1. [ ] Confirm user intent
-2. [ ] Check for uncommitted changes that might be lost
-3. [ ] Verify target branch/ref exists
-4. [ ] For destructive ops: explain what will be lost
-```
+- Co-authorship footers
+- GitHub issue tags (e.g., `fixes #123`)
 
-## Prohibited Actions
+## Pre-Operation Validation
 
-- NEVER use `--no-verify` unless user explicitly requests
-- NEVER use `--force` on main/master without strong warning
-- NEVER modify git config
-- NEVER use interactive flags (`-i`) - not supported
-- NEVER put co-authorship footers in commits
-- NEVER tag GitHub issues in commit messages
+<analysis>
+Before git operation with side effects:
+- User intent confirmed?
+- Uncommitted changes at risk?
+- Target branch/ref exists?
+- Destructive impact explained?
+</analysis>
 
-## Confirmation Format
+## Confirmation Template
 
 ```
-I'm about to run: `git [command]`
-
-This will: [explain effect]
-[If destructive]: Warning: This cannot be undone.
-
-Proceed? (yes/no)
+Running: `git [command]`
+Effect: [description]
+[If destructive]: Warning: Cannot be undone.
+Proceed?
 ```
 
-## Usage in Skills
+## Skill Reference
 
-Reference this pattern:
 ```markdown
 ## Git Operations
-Follow patterns/git-safety-protocol.md for all git commands.
+Follow patterns/git-safety-protocol.md
 ```

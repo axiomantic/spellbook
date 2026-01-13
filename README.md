@@ -88,10 +88,10 @@ Reusable workflows for structured development:
 | Category | Skills | Origin |
 |----------|--------|--------|
 | **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [debugging], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
-| **Code Quality** | [green-mirage-audit], [fixing-tests], [fact-checking], [finding-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
+| **Code Quality** | [code-quality-enforcement], [green-mirage-audit], [fixing-tests], [fact-checking], [finding-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
 | **Feature Dev** | [implementing-features], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [worktree-merge], [merge-conflict-resolution] | spellbook |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
-| **Meta** | [using-skills], [writing-skills], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [smart-reading] | [superpowers] |
+| **Meta** | [using-skills], [writing-skills], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia] | [superpowers] |
 | **Session** | [fun-mode], [emotional-stakes] | spellbook |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
@@ -100,6 +100,7 @@ Reusable workflows for structured development:
 [test-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/
 [debugging]: https://axiomantic.github.io/spellbook/latest/skills/debugging/
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
+[code-quality-enforcement]: https://axiomantic.github.io/spellbook/latest/skills/code-quality-enforcement/
 [green-mirage-audit]: https://axiomantic.github.io/spellbook/latest/skills/green-mirage-audit/
 [fixing-tests]: https://axiomantic.github.io/spellbook/latest/skills/fixing-tests/
 [fact-checking]: https://axiomantic.github.io/spellbook/latest/skills/fact-checking/
@@ -121,6 +122,7 @@ Reusable workflows for structured development:
 [instruction-optimizer]: https://axiomantic.github.io/spellbook/latest/skills/instruction-optimizer/
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
+[project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/

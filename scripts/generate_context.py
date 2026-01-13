@@ -122,10 +122,10 @@ import argparse
 def generate_context_content(include_content: str = "") -> str:
     dirs = get_skill_dirs()
     skills = find_skills(dirs)
-    
+
     # Sort by name
     skills.sort(key=lambda x: x['name'])
-    
+
     skills_list = []
     for skill in skills:
         name = skill['name']
@@ -133,12 +133,18 @@ def generate_context_content(include_content: str = "") -> str:
         # Clean description newlines
         desc = desc.replace('\n', ' ')
         skills_list.append(f"- **{name}**: {desc}")
-        
+
     skill_context = TEMPLATE.format(skills_list='\n'.join(skills_list))
-    
+
     if include_content:
         # Strip trailing whitespace to ensure consistent output
         include_content = include_content.rstrip()
+
+        # Check if content already has SPELLBOOK_CONTEXT - if so, return as-is
+        # to avoid duplicate skill registries
+        if '<SPELLBOOK_CONTEXT>' in include_content:
+            return include_content
+
         return f"{include_content}\n\n---\n\n# Spellbook Skill Registry\n\n{skill_context}"
     return skill_context
 

@@ -46,13 +46,6 @@ The following items originated as skills in superpowers but have been converted 
 |-------|-------------|
 | [code-reviewer](agents/code-reviewer.md) | Specialized code review agent |
 
-### Hooks
-
-| Hook | Description |
-|------|-------------|
-| session-start.sh | Session initialization with skill context |
-| hooks.json | Hook configuration |
-
 ## Original Skills (Spellbook)
 
 The following skills were developed specifically for Spellbook:

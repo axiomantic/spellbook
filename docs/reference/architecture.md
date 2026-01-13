@@ -9,7 +9,6 @@ spellbook/
 ├── skills/           # Reusable workflow definitions
 ├── commands/         # Slash commands
 ├── agents/           # Specialized agent definitions
-├── hooks/            # Session automation hooks
 ├── spellbook_mcp/    # MCP server for skill discovery
 ├── lib/              # Shared JavaScript utilities
 ├── installer/        # Installation components
@@ -38,8 +37,8 @@ Skills can be explicitly namespaced:
 Native integration via:
 - Skills loaded from `~/.claude/skills/`
 - Commands from `~/.claude/commands/`
-- Hooks from `~/.claude/hooks/`
 - MCP server for runtime skill discovery
+- Session initialization via CLAUDE.md context file
 
 ### OpenCode
 
@@ -76,15 +75,6 @@ The `spellbook_mcp/` directory contains a FastMCP server providing:
 **Swarm Tools:**
 - `swarm_init` - Initialize swarm coordination
 - `swarm_status` - Get current swarm status
-
-## Hooks
-
-Hooks automate session behavior:
-
-| Hook | Trigger | Purpose |
-|------|---------|---------|
-| `session-start.sh` | Session creation | Inject skill context |
-| `hooks.json` | Configuration | Define hook behavior |
 
 ## File Formats
 

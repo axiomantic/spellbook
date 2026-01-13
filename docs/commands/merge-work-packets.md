@@ -5,445 +5,122 @@
 ``````````markdown
 # Merge Work Packets
 
-Integrate all completed work packets using worktree-merge and verify through comprehensive QA gates.
+## Invariant Principles
+
+1. **Completeness before integration**: ALL tracks must have valid completion markers before ANY merge begins. Partial integration destroys reproducibility.
+2. **Fail fast, fail loud**: Stop at first failure. No cascading errors. Clear diagnosis beats silent corruption.
+3. **Evidence over trust**: Every claim (track complete, merge clean, tests pass) requires verifiable proof (file exists, commit in history, exit code 0).
+4. **Reversibility**: Pre-merge state must be restorable. Integration branch isolates changes until explicit approval.
+5. **Gates are gates**: QA gates are mandatory checkpoints, not suggestions. No gate skipping.
+
+<ROLE>
+Integration Lead responsible for final merge quality. Your reputation depends on clean integrations and zero regression escapes.
+</ROLE>
 
 ## Parameters
 
 - `packet_dir` (required): Directory containing manifest.json and completed work packets
-- `--continue-merge` (optional): Continue after manual conflict resolution
+- `--continue-merge`: Resume after manual conflict resolution (skips to integrity verification)
 
-## Execution Protocol
+## Reasoning Schema
 
-### Step 1: Load Manifest
+<analysis>
+Before each step: What am I verifying? What evidence proves it?
+</analysis>
 
-```bash
-packet_dir="<packet_dir>"
-manifest_file="$packet_dir/manifest.json"
+<reflection>
+After each step: Did I get the evidence? What does failure here mean?
+</reflection>
 
-# Load manifest using read_json_safe
-# Extract:
-# - feature name
-# - tracks list
-# - merge_strategy
-# - post_merge_qa gates
-# - project_root
+## Declarative Workflow
+
+### Phase 1: Manifest and Completion Verification
+
+**Load manifest** from `{packet_dir}/manifest.json`:
+- Required fields: `format_version`, `feature`, `tracks`, `merge_strategy`, `post_merge_qa`, `project_root`
+
+**Verify ALL tracks complete**:
+- Each track requires `{packet_dir}/track-{id}.completion.json`
+- Completion marker must have: `format_version: "1.0.0"`, `status: "complete"`, valid `commit` SHA, ISO8601 `timestamp`
+- **Incomplete = ABORT**: List missing tracks, suggest `/execute-work-packet` for each, exit
+
+### Phase 2: Smart Merge Execution
+
+**Display merge plan** before proceeding:
+```
+Feature: {feature}
+Strategy: {merge_strategy}
+Target: {project_root}
+Branches: [track.id, track.branch, track.commit] for each
 ```
 
-**Expected manifest fields:**
-- `format_version`: "1.0.0"
-- `feature`: Feature being integrated
-- `tracks`: Array of track metadata
-- `merge_strategy`: "worktree-merge" or "manual"
-- `post_merge_qa`: Array of QA gate commands
-- `project_root`: Path to main repository
+**Invoke `worktree-merge` skill** with:
+- Feature name, packet directory, branch list, target repo, merge strategy
 
-### Step 2: Verify All Tracks Complete
+**Handle merge result**:
+| Result | Action |
+|--------|--------|
+| Clean | Proceed to verification |
+| Conflicts | Offer Manual (pause + instructions) or Abort (restore + exit) |
+| Error | Report, suggest manual merge, exit |
 
-**Critical gate:** Do NOT proceed unless ALL tracks have completion markers.
+**--continue-merge**: Skip to Phase 3 (assumes conflicts resolved, committed)
 
-```bash
-# For each track in manifest
-for track in manifest.tracks:
-  completion_file="$packet_dir/track-{track.id}.completion.json"
+### Phase 3: Integrity Verification
 
-  # Check existence
-  if [ ! -f "$completion_file" ]; then
-    echo "ERROR: Track {track.id} ({track.name}) incomplete"
-    echo "Missing: $completion_file"
-    exit 1
-  fi
+**Verify integration branch**:
+- Current branch = `feature/{feature}-integrated`
+- No uncommitted changes (warn if present)
+- All track commits are ancestors of HEAD: `git merge-base --is-ancestor {commit} HEAD`
 
-  # Validate completion marker using read_json_safe
-  # Verify fields:
-  # - format_version: "1.0.0"
-  # - status: "complete"
-  # - commit: valid git SHA
-  # - timestamp: ISO8601 string
+### Phase 4: QA Gates
 
-  # Check status
-  status=$(jq -r '.status' "$completion_file")
-  if [ "$status" != "complete" ]; then
-    echo "ERROR: Track {track.id} status is '$status', expected 'complete'"
-    exit 1
-  fi
-done
+**Execute gates from `manifest.post_merge_qa`** (stop at first failure):
 
-echo "✓ All {track_count} tracks verified complete"
+| Gate | Invocation |
+|------|------------|
+| `pytest` | `pytest --verbose --cov --cov-report=term-missing` |
+| `audit-green-mirage` | Invoke skill, review report in `{SPELLBOOK_CONFIG_DIR}/docs/<project>/audits/` |
+| `fact-checking` | Invoke skill with acceptance criteria from implementation plan |
+| Custom | `eval "$command"`, check exit code |
+
+**Gate failure = STOP**: Display output, suggest fixes by gate type, require re-run after fixes.
+
+### Phase 5: Final Report
+
+**Success output**:
 ```
-
-**If any track incomplete:**
-```
-ERROR: Cannot merge - incomplete tracks detected
-
-Incomplete tracks:
-  ✗ Track 2: Frontend (no completion marker)
-  ✗ Track 4: Documentation (status: in_progress)
-
-Required actions:
-1. Complete missing tracks using: /execute-work-packet <packet_path>
-2. Verify completion markers exist
-3. Re-run merge
-
-Aborting merge.
-```
-
-### Step 3: Prepare Branch List for Smart Merge
-
-Extract branch information from manifest:
-
-```bash
-# Build list of branches to merge
-branches=[]
-for track in manifest.tracks:
-  branches.append({
-    "id": track.id,
-    "name": track.name,
-    "branch": track.branch,
-    "worktree": track.worktree,
-    "commit": <commit_from_completion_marker>
-  })
-done
-```
-
-**Display merge plan:**
-```
-=== Merge Plan ===
-
-Feature: {manifest.feature}
-Strategy: {manifest.merge_strategy}
-Target: {manifest.project_root}
-
-Branches to merge:
-  1. Track 1: Core API
-     Branch: feature/track-1
-     Commit: abc123
-     Worktree: /path/to/wt-track-1
-
-  2. Track 2: Frontend
-     Branch: feature/track-2
-     Commit: def456
-     Worktree: /path/to/wt-track-2
-
-  3. Track 3: Tests
-     Branch: feature/track-3
-     Commit: ghi789
-     Worktree: /path/to/wt-track-3
-
-Total tracks: 3
-```
-
-### Step 4: Invoke Smart Merge Skill
-
-**If --continue-merge flag NOT set:**
-
-```
-Invoke the worktree-merge skill using the Skill tool with:
-
-Context:
-- Feature: {manifest.feature}
-- Packet directory: {packet_dir}
-- Branches: {branches_list}
-- Target repository: {manifest.project_root}
-- Merge strategy: {manifest.merge_strategy}
-
-Instructions:
-1. Analyze all branch diffs since shared setup commit
-2. Perform 3-way merge analysis for conflicts
-3. Use intelligent conflict resolution strategies
-4. Create integration branch with merged code
-5. Report conflicts requiring manual resolution
-
-The worktree-merge skill will:
-- Create merge branch in project_root
-- Integrate all track branches
-- Detect and resolve conflicts
-- Report any manual intervention needed
-```
-
-**Smart merge output:**
-- Success: All branches merged cleanly
-- Partial: Some conflicts auto-resolved, some manual
-- Failed: Conflicts require manual resolution
-
-### Step 5: Handle Merge Conflicts
-
-**If worktree-merge reports conflicts:**
-
-```
-⚠ Merge conflicts detected
-
-Conflicts requiring manual resolution:
-  File: src/api/auth.py
-    Track 1 changed: authentication logic
-    Track 2 changed: API endpoints
-    Conflict: Both modified same function signature
-
-  File: frontend/components/Login.tsx
-    Track 2 changed: UI component
-    Track 3 changed: test fixtures
-    Conflict: Import paths differ
-
-Manual resolution required:
-1. Navigate to: {manifest.project_root}
-2. Review conflicts in merge branch
-3. Resolve conflicts manually
-4. Commit resolution
-5. Re-run: /merge-work-packets {packet_dir} --continue-merge
-
-Options:
-  [Manual] - Pause for manual conflict resolution
-  [Abort] - Cancel merge, restore pre-merge state
-
-Choose: Manual or Abort?
-```
-
-**If user chooses Manual:**
-1. Pause execution
-2. Display detailed conflict resolution instructions
-3. Wait for user to resolve and re-run with --continue-merge
-
-**If user chooses Abort:**
-1. Restore pre-merge state
-2. Clean up merge branch
-3. Exit with error status
-
-### Step 6: Verify Merge Integrity
-
-After merge completes (auto or manual):
-
-```bash
-# Navigate to merged branch
-cd {manifest.project_root}
-
-# Verify we're on integration branch
-current_branch=$(git branch --show-current)
-expected_branch="feature/{manifest.feature}-integrated"
-
-if [ "$current_branch" != "$expected_branch" ]; then
-  echo "ERROR: Expected branch $expected_branch, on $current_branch"
-  exit 1
-fi
-
-# Check for uncommitted changes
-if [ -n "$(git status --porcelain)" ]; then
-  echo "WARNING: Uncommitted changes detected after merge"
-  git status
-fi
-
-# Verify all track commits are in history
-for track in manifest.tracks:
-  commit=$(get_completion_commit(track))
-  if ! git merge-base --is-ancestor "$commit" HEAD; then
-    echo "ERROR: Track {track.id} commit $commit not in merge history"
-    exit 1
-  fi
-done
-
-echo "✓ Merge integrity verified"
-```
-
-### Step 7: Run QA Gates
-
-Execute all gates from `manifest.post_merge_qa`:
-
-```
-=== Running QA Gates ===
-
-Gates defined: {manifest.post_merge_qa}
-```
-
-**For each QA gate:**
-
-**Gate: pytest**
-```bash
-# Navigate to project root
-cd {manifest.project_root}
-
-# Run pytest with coverage
-pytest --verbose --cov --cov-report=term-missing
-
-# Check exit code
-if [ $? -eq 0 ]; then
-  echo "✓ pytest: PASSED"
-else
-  echo "✗ pytest: FAILED"
-  exit 1
-fi
-```
-
-**Gate: audit-green-mirage**
-```
-Invoke the audit-green-mirage skill using the Skill tool
-
-This will:
-- Analyze all tests for actual behavior validation
-- Detect "green mirage" tests (pass but don't verify)
-- Report test quality issues
-- Generate audit report
-
-If audit fails:
-- Review report in {SPELLBOOK_CONFIG_DIR}/docs/<project>/audits/
-- Fix test quality issues
-- Re-run merge
-```
-
-**Gate: fact-checking**
-```
-Invoke the fact-checking skill using the Skill tool with:
-- Verify feature requirements met
-- Check acceptance criteria from implementation plan
-- Validate integration completeness
-- Confirm no regressions
-
-If factcheck fails:
-- Review discrepancies
-- Fix issues in merge branch
-- Re-run QA gates
-```
-
-**Gate: custom command**
-```bash
-# For any other command in post_merge_qa
-command="<qa_gate_command>"
-
-cd {manifest.project_root}
-eval "$command"
-
-if [ $? -eq 0 ]; then
-  echo "✓ $command: PASSED"
-else
-  echo "✗ $command: FAILED"
-  exit 1
-fi
-```
-
-**QA gate summary:**
-```
-=== QA Gate Results ===
-
-✓ pytest: All tests passed (124/124)
-✓ audit-green-mirage: High quality tests, no issues
-✓ fact-checking: All acceptance criteria met
-✓ npm run lint: No linting errors
-
-All gates PASSED
-```
-
-### Step 8: Report Final Status
-
-**On success:**
-```
-✓ Merge completed successfully!
-
-Feature: {manifest.feature}
+Feature: {feature}
 Integration branch: feature/{feature}-integrated
-Tracks merged: {track_count}
-QA gates passed: {qa_gate_count}
+Tracks merged: {count}
+QA gates passed: {count}
 
-Summary:
-  ✓ All track completion markers verified
-  ✓ Smart merge completed without conflicts
-  ✓ All QA gates passed
-  ✓ Integration branch ready for review
-
-Next steps:
-1. Review integration branch:
-   cd {manifest.project_root}
-   git checkout feature/{feature}-integrated
-   git log --graph --all
-
-2. Create pull request:
-   gh pr create --title "{feature}" --body "..."
-
-3. After PR approval, merge to main:
-   git checkout main
-   git merge feature/{feature}-integrated
-   git push origin main
-
-4. Clean up worktrees:
-   git worktree remove {worktree_paths...}
+Next: Review branch -> Create PR -> Merge to main -> Clean up worktrees
 ```
 
-**On failure:**
-```
-✗ Merge failed
+**Failure output**: Stage reached, specific error, resolution steps, re-run command.
 
-Feature: {manifest.feature}
-Failed at: {failure_stage}
-Error: {error_message}
+## Error Recovery Matrix
 
-Status:
-  {completed_steps}
-  ✗ {failed_step}: {failure_reason}
-  ⏳ {pending_steps}
+| Failure Point | Detection | Recovery |
+|---------------|-----------|----------|
+| Incomplete tracks | Missing/invalid completion markers | Complete tracks, re-run |
+| Merge conflicts | worktree-merge reports | Manual resolve, `--continue-merge` |
+| QA gate failure | Non-zero exit | Fix issue, re-run from Phase 4 |
+| Skill invocation error | Tool failure | Manual merge fallback |
 
-Resolution:
-{specific_instructions_for_failure}
+## Constraints
 
-After resolving:
-- Re-run: /merge-work-packets {packet_dir} [--continue-merge]
-```
+- Integration branch isolates all changes: `feature/{feature}-integrated`
+- Worktrees preserved post-merge for inspection
+- PR creation is user responsibility (not automated)
+- Worktree cleanup deferred to user control
 
-## Error Handling
-
-**Incomplete tracks:**
-- Detected in Step 2
-- List missing completion markers
-- Suggest running execute-work-packet for incomplete tracks
-- Abort merge
-
-**Merge conflicts:**
-- Detected by worktree-merge skill
-- Display conflict details with file paths and track origins
-- Offer Manual resolution or Abort
-- If Manual: pause and provide resolution instructions
-- If Abort: clean up and exit
-
-**QA gate failures:**
-- Stop at first failing gate
-- Display gate output and error details
-- Do NOT proceed to subsequent gates
-- Suggest fixes based on gate type:
-  - pytest: fix test failures
-  - audit-green-mirage: improve test quality
-  - fact-checking: address acceptance criteria gaps
-  - custom: check command output
-
-**Smart merge skill errors:**
-- If worktree-merge skill fails to invoke
-- If merge strategy unknown
-- If worktree paths invalid
-- Report error and suggest manual merge
-
-## Recovery
-
-**Continue after manual conflict resolution:**
-
-```bash
-# User resolves conflicts manually
-cd {manifest.project_root}
-# ... resolve conflicts ...
-git add .
-git commit -m "Resolve merge conflicts"
-
-# Continue merge workflow
-/merge-work-packets {packet_dir} --continue-merge
-```
-
-With --continue-merge:
-- Skip Steps 1-4 (already merged)
-- Resume at Step 6: Verify merge integrity
-- Run QA gates
-- Report final status
-
-## Notes
-
-- All tracks MUST have completion markers before merge
-- Smart-merge skill handles complex 3-way merges
-- QA gates are mandatory unless manifest overrides
-- Integration branch created: feature/{feature}-integrated
-- Worktrees remain after merge for inspection
-- User manually creates PR after successful merge
-- Cleanup of worktrees deferred to user control
-- Merge can be re-run with --continue-merge after manual fixes
+<FORBIDDEN>
+- Merging with incomplete tracks (all completion markers required)
+- Skipping QA gates or accepting partial gate results
+- Deleting worktrees before user confirmation
+- Continuing past merge conflicts without explicit resolution
+- Modifying track branches during integration
+</FORBIDDEN>
 ``````````

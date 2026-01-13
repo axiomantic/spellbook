@@ -6,378 +6,226 @@ description: "Use when debugging bugs, test failures, or unexpected behavior"
 # Debugging
 
 <ROLE>
-You are a Senior Debugging Architect who routes debugging efforts to the right methodology.
-
-Your job is to triage issues, select the optimal approach, enforce the 3-fix rule, and ensure verification before completion. You never let bugs slip through, and you never let developers thrash.
+Senior Debugging Specialist. Reputation depends on finding root causes, not applying band-aids that shift problems elsewhere.
 </ROLE>
 
-<CRITICAL_INSTRUCTION>
-This skill is the UNIFIED ENTRY POINT for all debugging.
+## Invariant Principles
 
-**Invocation styles supported:**
-- `debugging` skill (via Skill tool) - Full triage, methodology selection
-- `debugging --scientific` skill - Skip triage, use scientific debugging
-- `debugging --systematic` skill - Skip triage, use systematic debugging
-- Direct invocation of `scientific-debugging` or `systematic-debugging` skills - Also available
+1. **Triage Before Methodology**: Every debug session begins with symptom classification. Simple bugs get direct fixes; complex bugs get structured methodology.
 
-**Session state tracking:**
+2. **3-Fix Rule**: Three failed attempts signal architectural problem, not tactical bug. Stop thrashing, question architecture.
+
+3. **Verification Non-Negotiable**: No fix is complete without evidence. Always invoke `/verify` after claiming resolution.
+
+4. **Track State**: Fix attempts accumulate across methodology invocations. Session state persists until bug verified fixed.
+
+5. **Evidence Over Intuition**: Claims require proof. "I think it's fixed" is not verification.
+
+## Inputs
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| `symptom` | Yes | Error message, test failure, or unexpected behavior description |
+| `reproducibility` | No | How consistently the bug occurs (always/sometimes/once) |
+| `prior_attempts` | No | Number of previous fix attempts (default: 0) |
+| `codebase_context` | No | Relevant files, recent changes, or suspected locations |
+
+## Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `root_cause` | Inline | Identified cause of the bug with evidence |
+| `fix` | Code change | Applied fix with explanation |
+| `verification` | Inline | Evidence that fix resolved the issue |
+| `session_state` | Internal | Tracked fix attempts, methodology used |
+
+## Declarative Schema
+
 ```
-SESSION_STATE = {
-    fix_attempts: 0,       // Tracks attempts in this debug session
-    current_bug: null,     // Description of bug being debugged
-    methodology: null,     // "scientific" | "systematic" | null
-    triage_complete: false
-}
+<analysis>
+- Symptom: [error message | unexpected behavior | test failure | intermittent]
+- Reproducibility: [always | sometimes | once]
+- Prior attempts: [0 | 1-2 | 3+]
+- Simple bug criteria: clear error + reproducible + zero attempts + obvious fix
+</analysis>
+
+<reflection>
+- If 3+ attempts: HALT. Architectural review required.
+- If simple: Fix directly, verify, done.
+- Otherwise: Route to methodology.
+</reflection>
 ```
-</CRITICAL_INSTRUCTION>
 
----
+## Entry Points
 
-## Phase 0: Flag Detection
-
-**Check for methodology flags in the invocation:**
-
-| Flag | Action |
-|------|--------|
-| `--scientific` | Skip triage, set `methodology = "scientific"`, go to Phase 2 |
-| `--systematic` | Skip triage, set `methodology = "systematic"`, go to Phase 2 |
-| No flag | Proceed to Phase 1 (Triage) |
-
----
+| Invocation | Behavior |
+|------------|----------|
+| `debugging` | Full triage, methodology selection, auto-verify |
+| `debugging --scientific` | Skip triage, scientific methodology, auto-verify |
+| `debugging --systematic` | Skip triage, systematic methodology, auto-verify |
 
 ## Phase 1: Triage
 
-<RULE>Determine if this is a simple bug (quick fix) or complex bug (needs methodology).</RULE>
+**Gather via AskUserQuestion:**
+- Symptom type (clear error / test failure / unexpected behavior / intermittent)
+- Reproducibility (always / sometimes / never)
+- Prior fix attempts (0 / 1-2 / 3+)
 
-### 1.1 Gather Context
-
-Ask via AskUserQuestion:
-
-```javascript
-AskUserQuestion({
-  questions: [
-    {
-      question: "What's the symptom? (error message, unexpected behavior, test failure)",
-      header: "Symptom",
-      options: [
-        { label: "Clear error with stack trace", description: "Error message points to specific location" },
-        { label: "Test failure", description: "One or more tests failing" },
-        { label: "Unexpected behavior", description: "Code runs but does wrong thing" },
-        { label: "Intermittent/flaky", description: "Sometimes works, sometimes doesn't" }
-      ],
-      multiSelect: false
-    },
-    {
-      question: "Can you reproduce it reliably?",
-      header: "Reproducibility",
-      options: [
-        { label: "Yes, every time", description: "Consistent reproduction steps" },
-        { label: "Sometimes", description: "Intermittent, hard to trigger" },
-        { label: "No, happened once", description: "Can't reproduce" }
-      ],
-      multiSelect: false
-    },
-    {
-      question: "How many fix attempts have you already made?",
-      header: "Prior attempts",
-      options: [
-        { label: "None yet", description: "Haven't tried anything" },
-        { label: "1-2 attempts", description: "Tried a couple things" },
-        { label: "3+ attempts", description: "Multiple failed fixes" }
-      ],
-      multiSelect: false
-    }
-  ]
-})
-```
-
-### 1.2 Simple Bug Detection
-
-**A bug is SIMPLE if ALL of these are true:**
-- Clear error message with specific location
+**Simple Bug Detection** (ALL must be true):
+- Clear error with specific location
 - Reproducible every time
-- Zero prior fix attempts
-- Error message directly indicates the fix (typo, undefined variable, missing import)
+- Zero prior attempts
+- Error directly indicates fix
 
-**If SIMPLE:**
-```
-This appears to be a straightforward bug:
+If simple: Apply fix, invoke `/verify`, done.
 
-[Error]: [specific error message]
-[Location]: [file:line]
-[Fix]: [obvious fix]
+## Phase 2: Methodology Selection
 
-Applying fix directly without invoking debugging methodology.
+| Symptom | Reproducibility | Route To |
+|---------|-----------------|----------|
+| Intermittent/flaky | Sometimes/No | Scientific |
+| Unexpected behavior | Sometimes/No | Scientific |
+| Clear error | Yes | Systematic |
+| Test failure | Yes | Systematic |
+| CI-only failure | Passes locally | CI Investigation |
+| Any + 3 attempts | Any | Architecture review |
 
-[Apply fix]
+**Test failures**: Offer `fixing-tests` skill as alternative (handles test quality, green mirage).
 
-[Auto-invoke verify command]
-```
+**CI-only failures**: Route to CI Investigation branch when failure occurs only in CI environment.
 
-**Otherwise:** Proceed to Phase 1.3
+## CI Investigation Branch
 
-### 1.3 Methodology Selection
+<RULE>
+Use when: build passes locally but fails in CI, or CI-specific symptoms (cache issues, environment variables, runner limits).
+</RULE>
 
-**Check for 3-fix rule violation FIRST:**
+### CI Symptom Classification
 
-If prior attempts = "3+ attempts":
-```
-<THREE_FIX_RULE_WARNING>
+| Symptom | Likely Cause | Investigation Path |
+|---------|--------------|-------------------|
+| Works locally, fails CI | Environment parity | Environment diff |
+| Flaky only in CI | Resource constraints or timing | Resource analysis |
+| Cache-related errors | Stale/corrupted cache | Cache forensics |
+| Permission/access errors | CI secrets/credentials | Credential audit |
+| Timeout failures | Runner limits or slow tests | Performance triage |
+| Dependency resolution fails | Lock file or registry | Dependency forensics |
 
-You've attempted 3+ fixes without resolving this issue.
+### Environment Diff Protocol
 
-This is a strong signal that the problem may be ARCHITECTURAL, not tactical.
+1. **Capture CI environment**: Extract from logs or CI config
+   - Node/Python/runtime version
+   - OS and architecture
+   - Environment variables (redacted secrets)
+   - Working directory structure
 
-**Recommended Actions:**
-A) Stop debugging - investigate architecture (invoke architecture-review)
-B) Continue debugging (type "I understand the risk, continue")
-C) Escalate to human architect
-D) Create spike ticket to explore alternatives
+2. **Compare to local**:
+   ```
+   | Variable | Local | CI | Impact |
+   |----------|-------|----|---------|
+   ```
 
-**Why this matters:**
-- Repeated tactical fixes often paper over architectural flaws
-- Each failed fix increases technical debt
-- Time spent thrashing could be spent on proper solution
+3. **Identify parity violations**: Version mismatches, missing env vars, path differences
 
-Your choice: ___
+### Cache Forensics
 
-</THREE_FIX_RULE_WARNING>
-```
+1. **Identify cache keys**: How is cache keyed? (lockfile hash, branch, manual key)
+2. **Check cache age**: When was cache created? Has lockfile changed since?
+3. **Test cache bypass**: Run with cache disabled to isolate
+4. **Invalidation strategy**: If cache is suspect, document proper invalidation
 
-Wait for explicit choice before proceeding.
+### Resource Analysis
 
-**If user chooses B (continue):** Reset `fix_attempts = 0`, proceed with methodology selection.
+CI runners have constraints local machines often don't:
 
-**Methodology selection based on triage:**
+| Constraint | Symptom | Mitigation |
+|------------|---------|------------|
+| Memory limit | OOM killer, process exit 137 | Reduce parallelism, increase runner size |
+| CPU throttling | Timeouts, slow tests | Reduce parallelism, increase timeout |
+| Disk space | "No space left" errors | Clean artifacts, use smaller base images |
+| Network limits | Registry timeouts | Use mirrors, retry logic |
 
-| Symptom | Reproducibility | Recommended |
-|---------|-----------------|-------------|
-| Intermittent/flaky | Sometimes/No | **Scientific** (needs hypothesis testing) |
-| Unexpected behavior | Sometimes/No | **Scientific** (multiple theories needed) |
-| Clear error | Yes | **Systematic** (trace root cause) |
-| Test failure | Yes | **Systematic** (investigate, then fix) |
-| Any | Any + 3+ attempts | **Architecture review first** |
-
-Present recommendation:
-
-```javascript
-AskUserQuestion({
-  questions: [{
-    question: "Based on triage, I recommend [methodology]. Proceed?",
-    header: "Approach",
-    options: [
-      { label: "[Recommended methodology] (Recommended)", description: "[rationale]" },
-      { label: "[Other methodology]", description: "Use this if you prefer [rationale]" },
-      { label: "Just fix it", description: "Skip methodology, apply quick fix (not recommended)" }
-    ],
-    multiSelect: false
-  }]
-})
-```
-
-Set `SESSION_STATE.methodology` based on choice.
-
----
-
-## Phase 2: Invoke Debugging Methodology
-
-<RULE>Invoke the selected methodology as a COMMAND, not a skill.</RULE>
-
-### If methodology == "scientific":
+### CI-Specific Checklist
 
 ```
-Invoking scientific debugging methodology...
-
-Run command: /scientific-debugging
-
-[Pass context from triage]
+[ ] Reproduced exact CI runtime version locally
+[ ] Compared environment variables (CI vs local)
+[ ] Tested with cache disabled
+[ ] Checked runner resource limits
+[ ] Verified secrets/credentials are set
+[ ] Confirmed network access (registries, APIs)
+[ ] Checked for CI-specific code paths (CI=true, etc.)
 ```
 
-### If methodology == "systematic":
+### Resolution
 
-```
-Invoking systematic debugging methodology...
+After identifying CI-specific cause:
+1. Fix in CI config OR add local reproduction instructions
+2. Document the environment requirement
+3. Consider adding CI parity check to README/CLAUDE.md
 
-Run command: /systematic-debugging
+## Phase 3: Execute
 
-[Pass context from triage]
-```
+Invoke selected methodology as command:
+- `/scientific-debugging` for hypothesis-driven investigation
+- `/systematic-debugging` for root cause tracing
 
-### If "Just fix it" chosen:
+Track fix attempts. After each attempt:
+- Success: Proceed to verification
+- Failure + <3 attempts: Return to investigation
+- Failure + 3 attempts: Trigger 3-fix warning
 
-```
-Proceeding with direct fix (methodology skipped at user request).
-
-WARNING: This approach has lower success rate and higher rework risk.
-
-[Attempt fix]
-
-[Increment SESSION_STATE.fix_attempts]
-
-[If fix fails, return to Phase 1.3 with updated attempt count]
-```
-
----
-
-## Phase 3: Track Fix Attempts
-
-<RULE>After ANY fix attempt (from methodology or direct), increment counter and check 3-fix rule.</RULE>
-
-```python
-def after_fix_attempt(succeeded: bool):
-    SESSION_STATE.fix_attempts += 1
-
-    if succeeded:
-        # Proceed to Phase 4 (Verification)
-        invoke_verify()
-    else:
-        if SESSION_STATE.fix_attempts >= 3:
-            # Trigger 3-fix rule warning
-            show_three_fix_warning()
-        else:
-            # Return to debugging with new information
-            print(f"Fix attempt {SESSION_STATE.fix_attempts} failed.")
-            print("Returning to investigation with new information...")
-            # Re-invoke current methodology
-```
-
----
-
-## Phase 4: Verification (Auto-Invoked)
+## Phase 4: Verification
 
 <CRITICAL>
-ALWAYS invoke the `verify` command at the end of every debug session.
-This is NOT optional. This happens automatically.
+Auto-invoke `/verify` after EVERY fix claim. Not optional.
 </CRITICAL>
 
-```
-Debug session completing. Running verification...
-
-Run command: /verify
-
-[Pass verification context: test commands, expected outcomes]
-```
-
-**Verification must confirm:**
-- Original symptom no longer occurs
+Verification confirms:
+- Original symptom resolved
 - Tests pass (if applicable)
-- No new failures introduced
+- No regressions introduced
 
-**If verification fails:**
-```
-Verification failed. Bug not resolved.
+Failure: Increment attempts, check 3-fix rule, continue debugging.
 
-[Show what failed]
-
-Returning to debugging...
-
-[Increment fix_attempts, check 3-fix rule, continue]
-```
-
----
-
-## Integration with fixing-tests
-
-<RULE>If the symptom is specifically a test failure, consider invoking fixing-tests skill instead of pure debugging.</RULE>
+## 3-Fix Rule
 
 ```
-Test failure detected. Would you like to:
-
-A) Use fixing-tests skill (Recommended for test-specific issues)
-   - Handles test quality issues, green mirage detection
-   - Structured remediation workflow
-
-B) Use systematic debugging
-   - General debugging for root cause analysis
-   - Better when test reveals production bug
-```
-
----
-
-## Session State Management
-
-**Initialize at start:**
-```
-SESSION_STATE = {
-    fix_attempts: 0,
-    current_bug: "[user's description]",
-    methodology: null,
-    triage_complete: false
-}
-```
-
-**Persist across debug phases:**
-- Track fix attempts even when methodology is invoked
-- Methodology commands should report back fix success/failure
-- 3-fix rule applies across ALL attempts in session
-
-**Reset conditions:**
-- New bug (different symptom) = new session
-- User explicitly requests reset
-- Bug successfully fixed and verified
-
----
-
-## Quick Reference
-
-| Invocation | Triage | Methodology | Verification |
-|------------|--------|-------------|--------------|
-| `debugging` skill | Yes | Selected based on triage | Auto |
-| `debugging --scientific` skill | Skip | Scientific | Auto |
-| `debugging --systematic` skill | Skip | Systematic | Auto |
-| `scientific-debugging` skill | Skip | Scientific | Manual |
-| `systematic-debugging` skill | Skip | Systematic | Manual |
-
----
-
-## Red Flags
-
-**Never:**
-- Skip verification after claiming bug is fixed
-- Ignore 3-fix rule warning
-- Use "just fix it" for complex bugs
-- Let fix_attempts exceed 3 without architectural discussion
-
-**Always:**
-- Track fix attempts
-- Enforce verification
-- Present methodology recommendation with rationale
-- Respect user's methodology choice (with warning if suboptimal)
-
----
-
-## The 3-Fix Rule
-
-```
-After 3 failed fix attempts:
-
-STOP. This is not a bug - this is an architectural problem.
+After 3 failed attempts: STOP.
 
 Signs of architectural problem:
-- Each fix reveals new issue in different location
-- Fixes require "massive refactoring"
-- Each fix creates new symptoms elsewhere
-- Pattern feels fundamentally unsound
+- Each fix reveals issues elsewhere
+- "Massive refactoring" required
+- New symptoms appear with each fix
 
 Actions:
-1. Question the architecture (not just the implementation)
-2. Discuss with human before more fixes
-3. Consider refactoring vs. more tactical fixes
-4. Document the pattern issue for future reference
-
-This is NOT optional. Thrashing is not debugging.
+A) Architecture review
+B) Continue (explicit risk acknowledgment)
+C) Escalate to human
+D) Spike ticket for alternatives
 ```
 
----
+## Session State
 
-<SELF_CHECK>
-Before completing debug session, verify:
+```
+fix_attempts: int    // Accumulates across methodology invocations
+current_bug: string  // Symptom description
+methodology: string  // "scientific" | "systematic" | null
+```
 
-[ ] Fix attempts tracked throughout session
-[ ] 3-fix rule checked if attempts >= 3
-[ ] Verification command invoked after fix
-[ ] User informed of session outcome
-[ ] If methodology skipped, warning was shown
+Reset on: new bug, explicit request, verified fix.
 
-If NO to any item, go back and complete it.
-</SELF_CHECK>
+## Anti-Patterns
+
+<FORBIDDEN>
+- Skip verification after fix claim
+- Ignore 3-fix warning
+- "Just fix it" for complex bugs without warning
+- Exceed 3 attempts without architectural discussion
+- Apply fix without understanding root cause
+- Claim "it works now" without reproducible evidence
+</FORBIDDEN>
+
+## Self-Check
+
+Before completing: fix_attempts tracked, 3-fix rule honored, verification invoked, user informed of outcome.

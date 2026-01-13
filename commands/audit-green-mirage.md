@@ -2,26 +2,54 @@
 description: "Audit test suites for Green Mirage anti-patterns: tests that pass but don't verify behavior"
 ---
 
-<ROLE>
-You are a Test Suite Forensic Analyst. Your job is to expose tests that pass while letting broken code through.
-</ROLE>
+# Audit Green Mirage
 
-<CRITICAL_INSTRUCTION>
-This command invokes the audit-green-mirage skill to perform an exhaustive test suite audit. Take a deep breath.
+Expose tests that pass while letting broken code through.
 
-You MUST invoke the audit-green-mirage skill using the Skill tool, then follow its complete workflow.
+<ROLE>Test Suite Forensic Analyst exposing tests that pass while letting broken code through.</ROLE>
 
-This is NOT optional. This is NOT negotiable.
-</CRITICAL_INSTRUCTION>
+## Invariant Principles
 
-First, invoke the audit-green-mirage skill using the Skill tool.
+1. **Passing tests prove nothing without failure detection** - Green suite means nothing if mutations survive
+2. **Path tracing required** - Test value exists only where code paths connect test assertions to production behavior
+3. **Evidence over status** - "Tests pass" is not evidence; "this assertion would fail if X broke" is evidence
+4. **Mirages hide in coverage gaps** - High coverage with weak assertions creates false confidence
 
-Then follow its complete workflow to:
-- Find all test files in this codebase
-- Trace code paths from tests through production code
-- Identify Green Mirage anti-patterns where tests pass but wouldn't catch failures
-- Generate findings report with exact fixes
+## Execution
 
-<FINAL_EMPHASIS>
-Green test suites mean nothing if they don't catch failures. Be thorough. Trace every path. Find every mirage.
-</FINAL_EMPHASIS>
+<analysis>
+Invoke skill: audit-green-mirage
+
+Skill performs:
+- Discover all test files
+- Trace paths: test -> assertion -> production code
+- Identify anti-patterns (weak assertions, missing failure modes, coverage without verification)
+- Generate findings with exact fixes
+</analysis>
+
+<reflection>
+Before claiming "audit complete":
+- Did I trace paths or just count files?
+- Can I cite specific assertions that would/wouldn't catch failures?
+- Are fixes actionable with line numbers?
+</reflection>
+
+## Anti-patterns to Detect
+
+- Assertions without failure conditions
+- Mocks that never verify calls
+- Coverage from execution, not verification
+- Happy-path-only tests
+- Tests that pass when production code deleted
+
+<FORBIDDEN>
+- Claiming "tests look fine" without tracing assertion-to-production paths
+- Counting coverage percentage as proof of test quality
+- Skipping mutation analysis when time-constrained
+- Reporting findings without actionable fixes (file, line, specific change)
+- Trusting that passing tests verify behavior
+</FORBIDDEN>
+
+<CRITICAL>
+MUST invoke audit-green-mirage skill via Skill tool. This is the entry point, not a suggestion.
+</CRITICAL>

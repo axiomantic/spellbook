@@ -84,7 +84,7 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
     "crush": {
         "name": "Crush",
         "config_dir_env": "CRUSH_GLOBAL_CONFIG",
-        "default_config_dir": Path.home() / ".config" / "crush",
+        "default_config_dir": Path.home() / ".local" / "share" / "crush",
         "context_file": "AGENTS.md",
         # Note: Crush reads skills from options.skills_paths in crush.json
         # We configure it to include ~/.claude/skills/ for shared skills

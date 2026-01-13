@@ -2,12 +2,12 @@
 Crush platform installer.
 
 Crush (by Charmbracelet) supports:
-- AGENTS.md for context (installed to ~/.config/crush/AGENTS.md)
+- AGENTS.md for context (installed to ~/.local/share/crush/AGENTS.md)
 - MCP for session/swarm management tools
 - Native Agent Skills via options.skills_paths in crush.json
 - Context files via options.context_paths in crush.json
 
-Crush configuration is stored in ~/.config/crush/crush.json (JSON format).
+Crush configuration is stored in ~/.local/share/crush/crush.json (JSON format).
 See: https://github.com/charmbracelet/crush
 """
 
@@ -231,7 +231,7 @@ class CrushInstaller(PlatformInstaller):
                     platform=self.platform_id,
                     success=True,
                     action="skipped",
-                    message="~/.config/crush not found",
+                    message="~/.local/share/crush not found",
                 )
             )
             return results

@@ -1,54 +1,57 @@
 # Subagent Dispatch Pattern
 
-## Purpose
-Standard decision framework for when to use subagents vs main context. Reference this instead of repeating heuristics.
+## Invariant Principles
 
-## Quick Decision Tree
+1. **Context is cost.** Every token in main context persists; subagent context is discarded after synthesis.
+2. **Subagents isolate complexity.** Exploration, research, parallel work belong in disposable contexts.
+3. **Main context preserves continuity.** User feedback loops, accumulated evidence, safety decisions require persistent state.
+4. **Output must be actionable.** Subagents return summaries, not data dumps.
+
+## Decision Schema
 
 ```
-Task requires reading 3+ files for single answer? → Subagent
-Task has uncertain scope / exploration needed?   → Subagent (Explore)
-Task is parallel-independent from other tasks?   → Multiple subagents
-Task needs iterative user feedback?              → Main context
-Task builds on established conversation context? → Main context
-Task is safety-critical git operation?           → Main context
+<analysis>
+- Does task need 3+ file reads for one answer? → subagent
+- Is scope uncertain / exploratory? → subagent (Explore)
+- Are tasks parallel-independent? → multiple subagents
+- Needs user feedback iteration? → main context
+- Builds on established context? → main context
+- Safety-critical git operation? → main context
+</analysis>
+
+<reflection>
+subagent_cost = instructions + work + output_summary
+main_cost = all intermediate steps retained
+Use subagent when: subagent_cost < main_cost
+</reflection>
 ```
 
 ## Subagent Types
 
-| Type | Use When |
-|------|----------|
-| `Explore` | Codebase exploration, finding files, understanding structure |
-| `general-purpose` | Multi-step tasks, research, implementation |
-| `Plan` | Architecture decisions, implementation planning |
-| `Bash` | Command execution, git operations |
-
-## Cost-Benefit Analysis
-
-Use subagent when: `subagent_cost < main_context_cost`
-
-Where:
-- `subagent_cost` = instructions + work + output summary
-- `main_context_cost` = all intermediate steps kept in conversation
+| Type | Trigger |
+|------|---------|
+| Explore | Finding files, understanding structure, codebase navigation |
+| General | Multi-step research, implementation tasks |
+| Plan | Architecture decisions, implementation planning |
+| Bash | Command execution, git operations |
 
 ## Prompt Requirements
 
-Good subagent prompts include:
-1. Clear task description
-2. Expected output format
-3. Scope boundaries (what NOT to do)
-4. Context needed from conversation
+Every subagent prompt:
+1. Clear task + expected output format
+2. Scope boundaries (what NOT to do)
+3. Relevant conversation context
+4. NegativePrompt: explicit prohibitions prevent drift
 
-## Output Handling
+## Output Contract
 
-- Subagent returns summary, not raw data
+- Return summary, not raw data
+- Large outputs → file path only
 - Orchestrator synthesizes for user
-- Large outputs go to files, return path only
 
-## Usage in Skills
+## Usage Reference
 
 ```markdown
-## Research Phase
 Use subagent dispatch pattern (patterns/subagent-dispatch.md).
-Launch Explore agent for codebase analysis.
+Launch [Type] agent for [task].
 ```

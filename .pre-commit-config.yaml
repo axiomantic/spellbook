@@ -28,3 +28,10 @@ repos:
         language: system
         pass_filenames: false
         files: ^(skills/|commands/|agents/|CLAUDE\.spellbook\.md)
+
+      - id: validate-schemas
+        name: Validate skill/command/agent schemas
+        entry: uv run scripts/validate_schemas.py
+        language: system
+        pass_filenames: false
+        files: ^(skills/|commands/|agents/)

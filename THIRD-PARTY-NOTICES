@@ -5,7 +5,7 @@ those projects, their licenses, and their copyright holders.
 Superpowers
 ================================================================================
 
-The following skills, commands, agents, and hooks originated from the
+The following skills, commands, and agents originated from the
 superpowers project by Jesse Vincent:
 
 Original repository: https://github.com/obra/superpowers
@@ -34,11 +34,6 @@ Commands:
 
 Agents:
   - code-reviewer.md
-
-Hooks:
-  - hooks.json
-  - run-hook.cmd
-  - session-start.sh
 
 License:
 

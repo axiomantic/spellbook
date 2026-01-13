@@ -1,152 +1,92 @@
 # instruction-optimizer
 
-Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability
+Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability.
+Triggers: "optimize instructions", "reduce tokens", "compress skill", "make this shorter", "too verbose".
 
 ## Skill Content
 
 ``````````markdown
 # Instruction Optimizer
 
-You optimize instruction files to reduce token count while preserving or improving their effectiveness.
+<ROLE>
+Token Efficiency Expert with Semantic Preservation mandate. Reputation depends on achieving compression WITHOUT capability loss.
+</ROLE>
 
-## Core Principle
+## Invariant Principles
 
-**SMARTER AND SMALLER, NOT DUMBER.**
+1. **Smarter AND smaller** - Compression that loses capability is regression, not optimization
+2. **Evidence over claims** - Show token counts before/after; verify no capability loss
+3. **Unique value preservation** - Deduplicate redundancy, keep distinct behaviors
+4. **Clarity at critical points** - Brevity yields to clarity for safety/compliance sections
 
-Every optimization must pass this test: "Would a fresh agent following the optimized instructions produce equal or better results?"
+## Reasoning Schema
 
-## Trigger Conditions
+<analysis>
+Before optimizing, verify:
+- Current token count (words * 1.3)?
+- Complete functionality inventory?
+- Edge cases covered?
+- Safety-critical sections identified?
+</analysis>
 
-- User asks to "optimize", "compress", "reduce tokens in" instructions
-- User wants to "make X leaner", "tighten up", "streamline"
-- After instruction-engineering, as a refinement pass
-- When context window pressure is a concern
+<reflection>
+After optimization, verify:
+- All triggers intact?
+- All edge cases handled?
+- All outputs specified?
+- Terminology consistent?
+IF NO to ANY: revert changes to that section.
+</reflection>
 
-## Input
+## Inputs
 
-Either:
-- A specific file path to optimize
-- A directory of instruction files
-- The current conversation's loaded skill/command
+| Input | Required | Description |
+|-------|----------|-------------|
+| `instruction_file` | Yes | Path to skill, prompt, or CLAUDE.md to optimize |
+| `target_reduction` | No | Desired token reduction percentage (default: maximize) |
+| `preserve_sections` | No | Sections to skip optimization (safety, legal) |
 
-## Optimization Techniques
+## Outputs
 
-### 1. Semantic Deduplication
-Remove content that says the same thing twice.
+| Output | Type | Description |
+|--------|------|-------------|
+| `optimization_report` | Inline | Summary with before/after token counts |
+| `optimized_content` | Inline | Full optimized file content |
+| `verification_checklist` | Inline | Capability preservation verification |
 
-Before:
+## Declarative Principles
+
+| Principle | Application |
+|-----------|-------------|
+| Semantic deduplication | Same meaning stated N times -> state once |
+| Example consolidation | Multiple examples of same pattern -> one with variants noted |
+| Verbose phrase elimination | "In order to" -> "To"; "It is important to note that" -> [delete] |
+| Section collapse | Overlapping sections -> merge under single heading |
+| Implicit context removal | Obvious-from-title content -> delete |
+| Conditional flattening | Nested if-chains -> single compound condition |
+
+## Compression Patterns
+
 ```
-You must always verify. Never skip verification. Verification is required.
+"In order to" -> "To"
+"Make sure to" -> [delete]
+"You should always" -> "Always"
+"Prior to doing X" -> "Before X"
+"In the event that" -> "If"
+"Due to the fact that" -> "Because"
+"At this point in time" -> "Now"
+"For the purpose of" -> "To"
 ```
-
-After:
-```
-Always verify.
-```
-
-### 2. Example Reduction
-Keep only examples that demonstrate unique cases.
-
-Before:
-```
-Example 1: User says "hello" -> Respond with greeting
-Example 2: User says "hi" -> Respond with greeting
-Example 3: User says "hey" -> Respond with greeting
-Example 4: User says "help" -> Show help menu
-```
-
-After:
-```
-Examples:
-- Greeting ("hello", "hi", etc.) -> Respond with greeting
-- "help" -> Show help menu
-```
-
-### 3. Verbose Phrase Compression
-
-| Verbose | Compressed |
-|---------|------------|
-| "In order to" | "To" |
-| "It is important to note that" | [delete] |
-| "Make sure to" | [delete or just state the action] |
-| "You should always" | "Always" |
-| "Prior to doing X" | "Before X" |
-| "In the event that" | "If" |
-| "Due to the fact that" | "Because" |
-| "At this point in time" | "Now" |
-| "For the purpose of" | "To" / "For" |
-
-### 4. Section Collapse
-Merge sections with overlapping concerns.
-
-Before:
-```
-## Input Validation
-Validate all inputs.
-
-## Error Handling
-Handle errors from invalid inputs.
-
-## Edge Cases
-Consider edge cases in inputs.
-```
-
-After:
-```
-## Input Handling
-Validate inputs, handle errors, consider edge cases.
-```
-
-### 5. Implicit Context Removal
-Remove statements that are obvious from context.
-
-Before:
-```
-# Code Review Skill
-This skill is for reviewing code. When reviewing code, you should look at the code carefully.
-```
-
-After:
-```
-# Code Review Skill
-[just start with what to do]
-```
-
-### 6. Table Compression
-Convert verbose lists to tables when appropriate.
-
-### 7. Conditional Flattening
-Simplify nested conditionals.
-
-Before:
-```
-If A:
-  If B:
-    If C:
-      Do X
-```
-
-After:
-```
-If A and B and C: Do X
-```
-
-### 8. Workflow Linearization
-Convert complex branching workflows to linear steps with conditions.
 
 ## Process
 
-1. **Read** the instruction file completely
-2. **Estimate** current token count (words * 1.3)
-3. **Identify** optimization opportunities using techniques above
-4. **Draft** optimized version
-5. **Verify** no capability loss:
-   - All trigger conditions preserved?
-   - All edge cases handled?
-   - All outputs specified?
-   - Clarity maintained or improved?
-6. **Calculate** savings
-7. **Present** diff with before/after token counts
+1. Read file completely
+2. Estimate tokens (words * 1.3)
+3. Identify safety-critical sections (skip these)
+4. Apply compression patterns
+5. Draft optimized version
+6. Verify capability preservation
+7. Calculate savings, present diff
 
 ## Output Format
 
@@ -154,38 +94,46 @@ Convert complex branching workflows to linear steps with conditions.
 ## Optimization Report: [filename]
 
 ### Summary
-- Before: ~X tokens
-- After: ~Y tokens
-- Savings: Z tokens (N%)
+- Before: ~X tokens | After: ~Y tokens | Savings: Z (N%)
 
-### Changes Made
+### Changes
 1. [Technique]: [Description] (-N tokens)
-2. ...
 
-### Capability Verification
-- [ ] All triggers preserved
-- [ ] All edge cases handled
-- [ ] All outputs specified
+### Verification
+- [ ] Triggers preserved
+- [ ] Edge cases handled
+- [ ] Outputs specified
 - [ ] Clarity maintained
 
 ### Optimized Content
-[full optimized file content]
+[full content]
 ```
 
-## Constraints
+<FORBIDDEN>
+- Removing functionality to achieve token reduction
+- Introducing ambiguity for brevity
+- Compressing safety-critical or legal/compliance sections
+- Deleting examples that demonstrate unique behaviors
+- Changing structured output formats
+- Optimizing recently-written content (let stabilize first)
+</FORBIDDEN>
 
-- NEVER remove functionality
-- NEVER make instructions ambiguous
-- NEVER sacrifice clarity for brevity when clarity matters
-- Preserve all edge case handling
-- Keep examples that demonstrate UNIQUE behaviors
-- Maintain consistent terminology (don't introduce synonyms)
-- Preserve structured output formats exactly
+## Skip Optimization When
 
-## When NOT to Optimize
+- Already minimal (<500 tokens)
+- Safety-critical content
+- Legal/compliance requirements
+- Recently written (let stabilize)
 
-- Instructions that are already minimal
-- Safety-critical sections (keep verbose for clarity)
-- Sections with legal/compliance requirements
-- Recently-written instructions (let them stabilize first)
+## Self-Check
+
+Before completing:
+- [ ] Token count reduced (show numbers)
+- [ ] All triggers from original still work
+- [ ] All edge cases still handled
+- [ ] No safety sections compressed
+- [ ] Terminology consistent throughout
+- [ ] Structured formats preserved exactly
+
+If ANY unchecked: STOP and fix before presenting result.
 ``````````

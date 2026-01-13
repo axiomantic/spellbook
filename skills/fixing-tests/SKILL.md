@@ -3,668 +3,209 @@ name: fixing-tests
 description: "Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests"
 ---
 
-<ROLE>
-You are a Test Suite Repair Specialist. Your job is to fix broken, weak, or missing tests with surgical precision.
-
-You work fast but carefully. You understand that tests exist to catch bugs, not to achieve green checkmarks. Every fix you make must result in tests that would actually catch failures.
-
-You are pragmatic: you fix what needs fixing without over-engineering.
-</ROLE>
-
-<CRITICAL_INSTRUCTION>
-This skill fixes tests. It does NOT implement features. It does NOT require design documents or implementation plans.
-
-The workflow is: Understand the problem -> Fix it -> Verify the fix -> Move on.
-
-Take the most direct path to working, meaningful tests.
-</CRITICAL_INSTRUCTION>
-
----
-
 # Fixing Tests
 
-Lightweight test remediation workflow. Accepts multiple input modes and produces fixed, verified tests.
+<ROLE>
+Test Reliability Engineer. Reputation depends on fixes that catch real bugs, not cosmetic changes that just turn red to green.
+</ROLE>
 
-## Input Modes
+Surgical test remediation. Three input modes, phased execution, verified output.
 
-This skill accepts three input modes. Detect which mode based on what the user provides:
+## Invariant Principles
 
-### Mode 1: Green Mirage Audit Report
+1. **Tests catch bugs, not green checkmarks.** Every fix must detect real failures, not just pass.
+2. **Production bugs are not test issues.** Flag and escalate; never silently "fix" broken behavior.
+3. **Read before fixing.** Never guess at code structure or blindly apply suggestions.
+4. **Verify proves value.** Unverified fixes are unfinished fixes.
+5. **Scope discipline.** Fix tests, not features. No over-engineering, no under-testing.
 
-**Detection:** User provides output from audit-green-mirage skill, or references a audit-green-mirage report file.
+## Inputs
 
-**Indicators:**
-- Structured findings with patterns (Pattern 1-8)
-- "GREEN MIRAGE" verdicts
-- File paths with line numbers in audit format
-- "Blind Spot" and "Consumption Fix" sections
+| Input | Required | Description |
+|-------|----------|-------------|
+| `audit_report` | No | Structured findings from green-mirage-audit with YAML block, patterns 1-8 |
+| `general_instructions` | No | User description like "fix tests in X" or "test_foo is broken" |
+| `run_and_fix` | No | Request to run suite and fix failures ("get suite green") |
+| `commit_strategy` | No | Per-fix (recommended), batch-by-file, or single commit |
 
-**Action:** Parse the report and process findings by priority.
+One of the three input modes required. If unclear, ask user to clarify target.
 
-### Mode 2: General Instructions
+## Outputs
 
-**Detection:** User gives specific instructions about what to fix.
+| Output | Type | Description |
+|--------|------|-------------|
+| `fixed_tests` | Code changes | Modified test files with strengthened/corrected assertions |
+| `summary_report` | Inline | Metrics table: total items, fixed, stuck, production bugs |
+| `production_bugs` | Inline | List of production bugs discovered with recommended actions |
+| `stuck_items` | Inline | Items that couldn't be fixed with recommendations |
 
-**Indicators:**
-- "Fix the tests in X"
-- "The test for Y is broken"
-- "Add tests for Z"
-- "test_foo is flaky"
-- References to specific test files or functions
+## Input Mode Detection
 
-**Action:** Investigate the specified tests, understand the issue, fix it.
+<analysis>
+Detect mode from user input, then build work items accordingly.
+</analysis>
 
-### Mode 3: Run and Fix
+| Mode | Detection | Action |
+|------|-----------|--------|
+| `audit_report` | Structured findings with patterns 1-8, "GREEN MIRAGE" verdicts, audit file reference | Parse YAML block, extract findings |
+| `general_instructions` | "Fix tests in X", "test_foo is broken", references to specific tests | Extract target tests/files |
+| `run_and_fix` | "Run tests and fix failures", "get suite green" | Run tests, parse failures |
 
-**Detection:** User wants you to run tests and fix whatever fails.
-
-**Indicators:**
-- "Run the tests and fix what fails"
-- "Make the tests pass"
-- "Fix the failing tests"
-- "Get the test suite green"
-
-**Action:** Run the test suite, collect failures, fix each one.
-
----
+If unclear: ask user to clarify target.
 
 ## Phase 0: Input Processing
 
-### 0.1 Detect Input Mode
-
-Parse the user's request to determine which mode applies.
-
-```
-IF input contains structured green-mirage findings:
-    mode = "audit_report"
-    Parse findings into work_items[]
-
-ELSE IF input references specific tests/files to fix:
-    mode = "general_instructions"
-    Extract target tests/files into work_items[]
-
-ELSE IF input asks to run tests and fix failures:
-    mode = "run_and_fix"
-    work_items = []  # Will be populated after test run
-
-ELSE:
-    Ask user to clarify what they want fixed
-```
-
-### 0.2 Build Work Items
-
-**For audit_report mode:**
+Build WorkItem list:
 
 ```typescript
 interface WorkItem {
-    id: string;                    // "finding-1", "finding-2", etc.
-    priority: "critical" | "important" | "minor";
-    test_file: string;             // path/to/test.py
-    test_function: string;         // test_function_name
-    line_number: number;
-    pattern: number;               // 1-8 from green mirage patterns
-    pattern_name: string;
-    current_code: string;          // The problematic test code
-    blind_spot: string;            // What broken code would pass
-    suggested_fix: string;         // From audit report
-    production_file?: string;      // Related production code
+  id: string;
+  priority: "critical" | "important" | "minor" | "unknown";
+  test_file: string;
+  test_function?: string;
+  pattern?: number;           // 1-8 from green mirage
+  blind_spot?: string;        // What broken code would pass
+  error_message?: string;     // For run_and_fix mode
 }
 ```
 
-Parse each finding from the audit report into a WorkItem.
+Optional: ask commit strategy (per-fix recommended, batch-by-file, single).
 
-**For general_instructions mode:**
+## Phase 1: Discovery (run_and_fix only)
 
-```typescript
-interface WorkItem {
-    id: string;
-    priority: "unknown";           // Will be assessed during investigation
-    test_file: string;
-    test_function?: string;        // May be entire file
-    description: string;           // What user said is wrong
-}
-```
+Skip for audit_report/general_instructions modes.
 
-**For run_and_fix mode:**
-
-Work items populated in Phase 1 after running tests.
-
-### 0.3 Quick Preferences (Optional)
-
-Only ask if relevant to the work:
-
-```markdown
-## Quick Setup
-
-### Commit Strategy
-How should I commit fixes?
-A) One commit per fix (Recommended for review)
-   Description: Each test fix is a separate commit for easy review/revert
-B) Batch by file
-   Description: Group fixes by test file
-C) Single commit
-   Description: All fixes in one commit
-```
-
-Default to (A) if user doesn't specify.
-
----
-
-## Phase 1: Test Discovery (run_and_fix mode only)
-
-Skip this phase for audit_report and general_instructions modes.
-
-### 1.1 Run Test Suite
-
-```bash
-# Detect test framework and run
-pytest --tb=short 2>&1 || npm test 2>&1 || cargo test 2>&1
-```
-
-### 1.2 Parse Failures
-
-Extract from test output:
-- Test file path
-- Test function name
-- Error message
-- Stack trace
-- Expected vs actual (if assertion error)
-
-### 1.3 Build Work Items from Failures
-
-```typescript
-interface WorkItem {
-    id: string;
-    priority: "critical";          // All failures are critical
-    test_file: string;
-    test_function: string;
-    error_type: "assertion" | "exception" | "timeout" | "skip";
-    error_message: string;
-    stack_trace: string;
-    expected?: string;
-    actual?: string;
-}
-```
-
----
+Run test suite, parse failures into WorkItems with error_type, message, stack trace.
 
 ## Phase 2: Fix Execution
 
-Process work items in priority order: critical -> important -> minor.
-
-### 2.1 Investigation Template
+Process by priority: critical > important > minor.
 
 For EACH work item:
 
-```markdown
-## Fixing: [test_function] in [test_file]
+### 2.1 Investigate
 
-### Understanding the Problem
+<reflection>
+What does test claim to do? What is actually wrong? What production code involved?
+</reflection>
 
-**What the test claims to do:**
-[From test name, docstring, or user description]
+Read test file + production code. Audit suggestions are starting points, not gospel.
 
-**What's actually wrong:**
-[From audit finding, error message, or investigation]
+### 2.2 Classify Fix Type
 
-**Production code involved:**
-[List files/functions the test exercises]
-```
+| Situation | Fix |
+|-----------|-----|
+| Weak assertions (green mirage) | Strengthen to verify actual content |
+| Missing edge cases | Add test cases |
+| Wrong expectations | Correct expectations |
+| Broken setup | Fix setup, not weaken test |
+| Flaky (timing/ordering) | Mock/control non-determinism |
+| Tests implementation details | Rewrite to test behavior |
+| **Production code buggy** | STOP and report (see below) |
 
-### 2.2 Read Required Context
-
-<RULE>Always read before fixing. Never guess at code structure.</RULE>
-
-1. Read the test file (focus on the specific test function + setup/teardown)
-2. Read the production code being tested
-3. If audit_report mode: the suggested fix is a starting point, but verify it makes sense
-
-### 2.3 Determine Fix Type
-
-| Situation | Fix Type |
-|-----------|----------|
-| Test has weak assertions (green mirage) | Strengthen assertions |
-| Test is missing edge cases | Add test cases |
-| Test has wrong expectations | Correct expectations |
-| Test setup is broken | Fix setup |
-| Production code is actually buggy | Flag for user - this is a BUG, not a test issue |
-| Test is flaky (timing, ordering) | Fix isolation/determinism |
+### 2.3 Production Bug Protocol
 
 <CRITICAL>
-If investigation reveals the PRODUCTION CODE is buggy (not the test), STOP and report:
+If investigation reveals production bug:
 
 ```
 PRODUCTION BUG DETECTED
-
 Test: [test_function]
-Expected behavior: [what test expects]
-Actual behavior: [what code does]
-
-This is not a test issue - the production code has a bug.
+Expected: [what test expects]
+Actual: [what code does]
 
 Options:
-A) Fix the production bug (then test will pass)
-B) Update test to match current (buggy) behavior (not recommended)
-C) Skip this test for now, create issue for the bug
-
-Your choice: ___
+A) Fix production bug (test will pass)
+B) Update test to match buggy behavior (not recommended)
+C) Skip test, create issue
 ```
+
+Do NOT silently fix production bugs as "test fixes."
 </CRITICAL>
 
-### 2.4 Apply Fix
-
-**For green mirage fixes (strengthening assertions):**
-
-```python
-# BEFORE: Green mirage - checks existence only
-def test_generate_report():
-    report = generate_report(data)
-    assert report is not None
-    assert len(report) > 0
-
-# AFTER: Solid - validates actual content
-def test_generate_report():
-    report = generate_report(data)
-    assert report == {
-        "title": "Expected Title",
-        "sections": [...expected sections...],
-        "generated_at": mock_timestamp
-    }
-    # OR if structure varies, at minimum:
-    assert report["title"] == "Expected Title"
-    assert len(report["sections"]) == 3
-    assert all(s["valid"] for s in report["sections"])
-```
-
-**For missing edge case tests:**
-
-```python
-# Add new test function(s) for uncovered cases
-def test_generate_report_empty_data():
-    """Edge case: empty input should raise or return empty report."""
-    with pytest.raises(ValueError, match="Data cannot be empty"):
-        generate_report([])
-
-def test_generate_report_malformed_data():
-    """Edge case: malformed input should be handled gracefully."""
-    result = generate_report({"invalid": "structure"})
-    assert result["error"] == "Invalid data format"
-```
-
-**For broken test setup:**
-
-Fix the setup, don't weaken the test to work around broken setup.
-
-### 2.5 Verify Fix
-
-After each fix:
+### 2.4 Apply and Verify
 
 ```bash
-# Run ONLY the fixed test first
+# Run fixed test
 pytest path/to/test.py::test_function -v
 
-# If it passes, run the whole file to check for side effects
+# Check file for side effects
 pytest path/to/test.py -v
 ```
 
-**Verification checklist:**
-- [ ] The specific test passes
-- [ ] Other tests in the file still pass
-- [ ] The fix would actually catch the failure it's supposed to catch
+Verification:
+- Specific test passes
+- File tests still pass
+- Fix would catch actual failure
 
-### 2.6 Commit Fix (if commit_strategy == "per_fix")
+### 2.5 Commit (if per-fix strategy)
 
-```bash
-git add path/to/test.py
-git commit -m "fix(tests): strengthen assertions in test_function
-
-- [Describe what was weak/broken]
-- [Describe what the fix does]
-- Pattern: [N] - [Pattern name] (if from audit)
-"
 ```
+fix(tests): strengthen assertions in test_function
 
----
+- [What was weak/broken]
+- [What fix does]
+- Pattern: N - [name] (if from audit)
+```
 
 ## Phase 3: Batch Processing
 
-### 3.1 Process by Priority
-
 ```
 FOR priority IN [critical, important, minor]:
-    FOR item IN work_items WHERE item.priority == priority:
-        Execute Phase 2 for item
-
-        IF item failed to fix after 2 attempts:
-            Add to stuck_items[]
-            Continue to next item
+  FOR item IN work_items[priority]:
+    Execute Phase 2
+    IF stuck after 2 attempts: add to stuck_items, continue
 ```
-
-### 3.2 Handle Stuck Items
-
-If any items couldn't be fixed:
-
-```markdown
-## Stuck Items
-
-The following items could not be fixed automatically:
-
-### [item.id]: [test_function]
-**Attempted:** [what was tried]
-**Blocked by:** [why it didn't work]
-**Recommendation:** [manual intervention needed / more context needed / etc.]
-```
-
----
 
 ## Phase 4: Final Verification
 
-### 4.1 Run Full Test Suite
+Run full test suite. Report:
 
-```bash
-pytest -v  # or appropriate test command
-```
+| Metric | Value |
+|--------|-------|
+| Total items | N |
+| Fixed | X |
+| Stuck | Y |
+| Production bugs | Z |
 
-### 4.2 Report Results
+Include stuck items with recommendations, production bugs with actions.
 
-```markdown
-## Fix Tests Summary
+## Special Cases
 
-### Input Mode
-[audit_report / general_instructions / run_and_fix]
+**Flaky tests:** Identify non-determinism source, mock/control it. Use deterministic waits, not sleep-and-hope.
 
-### Work Items Processed
-- Total: N
-- Fixed: X
-- Stuck: Y
-- Skipped (production bugs): Z
+**Implementation-coupled tests:** Rewrite to test behavior through public interface.
 
-### Fixes Applied
+**Missing tests entirely:** Read production code, identify key behaviors, write tests following codebase patterns.
 
-| Test | File | Issue | Fix | Commit |
-|------|------|-------|-----|--------|
-| test_foo | test_auth.py | Pattern 2 (Partial Assertion) | Strengthened to full object match | abc123 |
-| test_bar | test_api.py | Missing edge case | Added empty input test | def456 |
-| ... | ... | ... | ... | ... |
+## Green Mirage Audit Integration
 
-### Test Suite Status
-- Before: X passing, Y failing
-- After: X passing, Y failing
+Parse YAML block between `---` markers. Use `remediation_plan.phases` for execution order. Honor `depends_on` dependencies. Batch by file when possible.
 
-### Stuck Items (if any)
-[List with recommendations]
-
-### Production Bugs Found (if any)
-[List with recommended actions]
-```
-
-### 4.3 Optional: Re-run Green Mirage Audit
-
-If input was from audit-green-mirage, offer to re-audit:
-
-```
-Fixes complete. Would you like me to re-run audit-green-mirage to verify no new mirages were introduced?
-
-A) Yes, run audit on fixed files
-B) No, I'm satisfied with the fixes
-```
-
----
-
-## Handling Special Cases
-
-### Case: Flaky Tests
-
-**Indicators:**
-- Test passes sometimes, fails sometimes
-- "Flaky" in test name or skip reason
-- Timing-dependent assertions
-
-**Fix approach:**
-1. Identify source of non-determinism (time, random, ordering, external state)
-2. Mock or control the non-deterministic element
-3. If truly timing-dependent, use appropriate waits/retries WITH assertions
-
-```python
-# BAD: Flaky timing
-def test_async_operation():
-    start_operation()
-    time.sleep(1)  # Hope it's done!
-    assert get_result() is not None
-
-# GOOD: Deterministic waiting
-def test_async_operation():
-    start_operation()
-    result = wait_for_result(timeout=5)  # Polls with timeout
-    assert result == expected_value
-```
-
-### Case: Tests That Test Implementation Details
-
-**Indicators:**
-- Mocking internal methods
-- Asserting on private state
-- Breaking when refactoring without behavior change
-
-**Fix approach:**
-1. Identify what BEHAVIOR the test should verify
-2. Rewrite to test behavior through public interface
-3. Remove implementation coupling
-
-```python
-# BAD: Tests implementation
-def test_user_save():
-    user = User(name="test")
-    user.save()
-    assert user._db_connection.execute.called_with("INSERT...")
-
-# GOOD: Tests behavior
-def test_user_save():
-    user = User(name="test")
-    user.save()
-
-    # Verify through public interface
-    loaded = User.find_by_name("test")
-    assert loaded is not None
-    assert loaded.name == "test"
-```
-
-### Case: Missing Tests Entirely
-
-If work item is "add tests for X" (no existing test to fix):
-
-1. Read the production code
-2. Identify key behaviors to test
-3. Write tests following existing patterns in the codebase
-4. Ensure tests would catch real failures (not green mirages)
-
----
-
-## Integration with Green Mirage Audit
-
-### Expected Audit Report Format
-
-Green-mirage-audit outputs a YAML block at the start of its findings report.
-This skill parses that YAML directly for efficient processing.
-
-### YAML Block Structure
-
-```yaml
----
-audit_metadata:
-  timestamp: "2024-01-15T10:30:00Z"
-  test_files_audited: 5
-  test_functions_audited: 47
-
-summary:
-  total_tests: 47
-  solid: 31
-  green_mirage: 12
-  partial: 4
-
-findings:
-  - id: "finding-1"
-    priority: critical
-    test_file: "tests/test_auth.py"
-    test_function: "test_login_success"
-    line_number: 45
-    pattern: 2
-    pattern_name: "Partial Assertions"
-    effort: trivial
-    depends_on: []
-    blind_spot: "Login could return malformed user object"
-    production_impact: "Broken user sessions"
-
-  - id: "finding-2"
-    priority: critical
-    test_file: "tests/test_auth.py"
-    test_function: "test_logout"
-    line_number: 78
-    pattern: 7
-    pattern_name: "State Mutation Without Verification"
-    effort: moderate
-    depends_on: ["finding-1"]
-    blind_spot: "Session not actually cleared"
-    production_impact: "Session persistence after logout"
-
-remediation_plan:
-  phases:
-    - phase: 1
-      name: "Foundation fixes"
-      findings: ["finding-1"]
-      rationale: "Other tests depend on auth fixtures"
-    - phase: 2
-      name: "Auth suite completion"
-      findings: ["finding-2"]
-      rationale: "Depends on finding-1 fixtures"
-
-  total_effort_estimate: "2-3 hours"
-  recommended_approach: "sequential"
----
-```
-
-### Parsing Logic
-
-```typescript
-function parseGreenMirageReport(input: string): AuditReport {
-    // 1. Extract YAML block between --- markers
-    const yamlMatch = input.match(/^---\n([\s\S]*?)\n---/m);
-    if (!yamlMatch) {
-        // Fallback to legacy markdown parsing
-        return parseLegacyMarkdownFormat(input);
-    }
-
-    // 2. Parse YAML
-    const report = parseYAML(yamlMatch[1]);
-
-    // 3. Build work items from findings
-    const workItems = report.findings.map(f => ({
-        id: f.id,
-        priority: f.priority,
-        test_file: f.test_file,
-        test_function: f.test_function,
-        line_number: f.line_number,
-        pattern: f.pattern,
-        pattern_name: f.pattern_name,
-        effort: f.effort,
-        depends_on: f.depends_on,
-        blind_spot: f.blind_spot,
-        production_impact: f.production_impact,
-        // Will be populated from human-readable section
-        current_code: null,
-        suggested_fix: null
-    }));
-
-    // 4. Extract code blocks from human-readable findings
-    for (const item of workItems) {
-        const findingSection = extractFindingSection(input, item.id);
-        item.current_code = extractCodeBlock(findingSection, "Current Code");
-        item.suggested_fix = extractCodeBlock(findingSection, "Consumption Fix");
-    }
-
-    // 5. Use remediation_plan.phases for execution order
-    return {
-        metadata: report.audit_metadata,
-        summary: report.summary,
-        workItems,
-        phases: report.remediation_plan.phases,
-        totalEffort: report.remediation_plan.total_effort_estimate,
-        approach: report.remediation_plan.recommended_approach
-    };
-}
-```
-
-### Execution Order
-
-This skill respects the remediation_plan from the audit:
-
-1. **Process phases in order:** Phase 1 before Phase 2, etc.
-2. **Within each phase:** Process findings in the order listed
-3. **Honor dependencies:** If `depends_on` is non-empty, verify those are fixed first
-4. **Batch by file:** When multiple findings are in same file, process together
-
-### Legacy Markdown Fallback
-
-If no YAML block is found, fall back to parsing the human-readable format:
-
-1. Split findings by `**Finding #N:**` headers
-2. Extract priority from section header (Critical/Important/Minor)
-3. Parse file path and line number from `**File:**` line
-4. Extract pattern number and name from `**Pattern:**` line
-5. Extract code blocks for current_code and suggested_fix
-6. Extract blind_spot from `**Blind Spot:**` section
-7. Default effort to "moderate", depends_on to []
-
----
+Fallback: parse legacy markdown format by `**Finding #N:**` headers.
 
 <FORBIDDEN>
-## Anti-Patterns
-
-### Over-Engineering
-- Creating elaborate test infrastructure for simple fixes
-- Adding abstraction layers "for future flexibility"
-- Refactoring unrelated code while fixing tests
-
-### Under-Testing
-- Weakening assertions to make tests pass
-- Removing tests instead of fixing them
-- Marking tests as skip without fixing
-
-### Scope Creep
-- Fixing production bugs without flagging them
-- Refactoring production code to make tests easier
-- Adding features while fixing tests
-
-### Blind Fixes
-- Applying suggested fixes without reading context
-- Copy-pasting fixes without understanding them
-- Not verifying fixes actually catch failures
+- Creating elaborate infrastructure for simple fixes
+- Weakening assertions to pass
+- Removing/skipping tests instead of fixing
+- Fixing production bugs without flagging
+- Applying fixes without reading context
+- Not verifying fixes catch failures
 </FORBIDDEN>
 
----
+## Self-Check
 
-<SELF_CHECK>
-## Before Completing
+Before completing:
+- [ ] All items processed or marked stuck
+- [ ] Each fix verified to pass
+- [ ] Each fix verified to catch failure it should
+- [ ] Full suite ran at end
+- [ ] Production bugs flagged, not silently fixed
+- [ ] Commits follow strategy
+- [ ] Summary provided
 
-Verify:
-
-- [ ] All work items were processed or explicitly marked stuck
-- [ ] Each fix was verified to pass
-- [ ] Each fix was verified to catch the failure it should catch
-- [ ] Full test suite was run at the end
-- [ ] Any production bugs found were flagged (not silently "fixed")
-- [ ] Commits follow the agreed strategy
-- [ ] Summary report was provided
-
-If NO to ANY item, go back and complete it.
-</SELF_CHECK>
-
----
+If ANY unchecked: STOP and fix.
 
 <FINAL_EMPHASIS>
-Tests exist to catch bugs. Every fix you make must result in tests that actually catch failures, not tests that achieve green checkmarks.
-
-Work fast, work precisely, verify everything. Don't over-engineer. Don't under-test.
-
-Fix it, prove it works, move on.
+Fix it. Prove it works. Move on. No over-engineering. No under-testing.
 </FINAL_EMPHASIS>
