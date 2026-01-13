@@ -105,6 +105,7 @@ nav:
       - skills/project-encyclopedia.md
     - Session Skills:
       - skills/fun-mode.md
+      - skills/tarot-mode.md
   - Commands:
     - Overview: commands/index.md
     - Debugging Commands:

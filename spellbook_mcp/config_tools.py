@@ -6,6 +6,40 @@ import random
 from pathlib import Path
 from typing import Any, Optional
 
+# Mode configuration constants
+VALID_MODE_TYPES = {"tarot", "fun", "none"}
+VALID_TAROT_PERSONAS = {"magician", "priestess", "hermit", "fool"}
+
+
+def validate_mode_config(mode: Any) -> bool:
+    """Validate a mode configuration object.
+
+    Args:
+        mode: The mode configuration to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    if not isinstance(mode, dict):
+        return False
+
+    mode_type = mode.get("type")
+    if mode_type not in VALID_MODE_TYPES:
+        return False
+
+    # Tarot-specific validation
+    if mode_type == "tarot":
+        active_personas = mode.get("active_personas")
+        if active_personas is not None:
+            if not isinstance(active_personas, list):
+                return False
+            if len(active_personas) == 0:
+                return False
+            if not all(p in VALID_TAROT_PERSONAS for p in active_personas):
+                return False
+
+    return True
+
 
 def get_config_path() -> Path:
     """Get path to spellbook config file."""
@@ -145,42 +179,116 @@ def random_line(file_path: Path) -> str:
         return ""
 
 
+# Tarot mode defaults
+DEFAULT_TAROT_PERSONAS = ["magician", "priestess", "hermit", "fool"]
+DEFAULT_DEBATE_ROUNDS_MAX = 3
+
+
 def session_init() -> dict:
     """Initialize a spellbook session.
 
-    Reads fun_mode preference from config and selects random
-    persona/context/undertow if fun mode is enabled.
+    Reads mode preference from config. Supports both new mode object format
+    and legacy fun_mode boolean for backwards compatibility.
 
     Returns:
-        Dict with:
-        - fun_mode: "yes" | "no" | "unset"
-        - persona: str (only if fun_mode=yes)
-        - context: str (only if fun_mode=yes)
-        - undertow: str (only if fun_mode=yes)
+        Dict with mode configuration. Format depends on mode type:
+        - unset: {"mode": {"type": "unset"}}
+        - none: {"mode": {"type": "none"}}
+        - fun: {"mode": {"type": "fun"}, "persona": ..., "context": ..., "undertow": ...}
+        - tarot: {"mode": {"type": "tarot", "active_personas": [...], "debate_rounds_max": N}}
     """
+    # Check for new mode object first
+    mode_config = config_get("mode")
+    if mode_config is not None and isinstance(mode_config, dict):
+        return _handle_mode_config(mode_config)
+
+    # Fall back to legacy fun_mode boolean
     fun_mode_value = config_get("fun_mode")
+    if fun_mode_value is not None:
+        return _handle_legacy_fun_mode(fun_mode_value)
 
-    # Determine fun_mode status
-    if fun_mode_value is None:
-        return {"fun_mode": "unset"}
+    # Neither set - return unset
+    return {"mode": {"type": "unset"}}
 
-    if not fun_mode_value:
-        return {"fun_mode": "no"}
 
-    # Fun mode enabled - select random persona/context/undertow
+def _handle_mode_config(mode_config: dict) -> dict:
+    """Handle new mode object configuration.
+
+    Args:
+        mode_config: The mode configuration dict from config
+
+    Returns:
+        Session init response dict
+    """
+    mode_type = mode_config.get("type")
+
+    if mode_type == "tarot":
+        return _handle_tarot_mode(mode_config)
+    elif mode_type == "fun":
+        return _handle_fun_mode()
+    elif mode_type == "none":
+        return {"mode": {"type": "none"}}
+    else:
+        # Invalid or missing type - treat as unset
+        return {"mode": {"type": "unset"}}
+
+
+def _handle_tarot_mode(mode_config: dict) -> dict:
+    """Handle tarot mode configuration.
+
+    Args:
+        mode_config: The tarot mode configuration
+
+    Returns:
+        Tarot mode response with defaults applied
+    """
+    active_personas = mode_config.get("active_personas", DEFAULT_TAROT_PERSONAS)
+    debate_rounds_max = mode_config.get("debate_rounds_max", DEFAULT_DEBATE_ROUNDS_MAX)
+
+    return {
+        "mode": {
+            "type": "tarot",
+            "active_personas": active_personas,
+            "debate_rounds_max": debate_rounds_max,
+        }
+    }
+
+
+def _handle_fun_mode() -> dict:
+    """Handle fun mode - select random persona/context/undertow.
+
+    Returns:
+        Fun mode response with persona/context/undertow selections
+    """
     spellbook_dir = get_spellbook_dir()
     fun_assets = spellbook_dir / "skills" / "fun-mode"
 
-    # Verify the assets directory exists
     if not fun_assets.is_dir():
         return {
-            "fun_mode": "yes",
+            "mode": {"type": "fun"},
             "error": f"fun-mode assets not found at {fun_assets}",
         }
 
     return {
-        "fun_mode": "yes",
+        "mode": {"type": "fun"},
         "persona": random_line(fun_assets / "personas.txt"),
         "context": random_line(fun_assets / "contexts.txt"),
         "undertow": random_line(fun_assets / "undertows.txt"),
     }
+
+
+def _handle_legacy_fun_mode(fun_mode_value: Any) -> dict:
+    """Handle legacy fun_mode boolean configuration.
+
+    Provides backwards compatibility for configs using fun_mode: true/false.
+
+    Args:
+        fun_mode_value: The legacy fun_mode value
+
+    Returns:
+        Session init response in new format
+    """
+    if not fun_mode_value:
+        return {"mode": {"type": "none"}}
+
+    return _handle_fun_mode()

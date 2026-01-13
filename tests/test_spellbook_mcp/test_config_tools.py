@@ -158,20 +158,20 @@ class TestConfigSet:
 
 
 class TestSessionInit:
-    """Tests for session_init function."""
+    """Tests for session_init function - legacy fun_mode backwards compatibility."""
 
     def test_returns_unset_when_no_config(self, tmp_path, monkeypatch):
-        """Test that missing config returns fun_mode=unset."""
+        """Test that missing config returns mode.type=unset."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "nonexistent" / "spellbook.json"
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         result = session_init()
-        assert result == {"fun_mode": "unset"}
+        assert result == {"mode": {"type": "unset"}}
 
     def test_returns_unset_when_fun_mode_not_set(self, tmp_path, monkeypatch):
-        """Test that config without fun_mode returns unset."""
+        """Test that config without fun_mode or mode returns unset."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "spellbook.json"
@@ -179,10 +179,10 @@ class TestSessionInit:
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         result = session_init()
-        assert result == {"fun_mode": "unset"}
+        assert result == {"mode": {"type": "unset"}}
 
-    def test_returns_no_when_fun_mode_false(self, tmp_path, monkeypatch):
-        """Test that fun_mode=false returns no."""
+    def test_returns_none_when_legacy_fun_mode_false(self, tmp_path, monkeypatch):
+        """Test that legacy fun_mode=false returns mode.type=none."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "spellbook.json"
@@ -190,10 +190,10 @@ class TestSessionInit:
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         result = session_init()
-        assert result == {"fun_mode": "no"}
+        assert result == {"mode": {"type": "none"}}
 
-    def test_returns_yes_with_selections_when_enabled(self, tmp_path, monkeypatch):
-        """Test that fun_mode=true returns yes with persona/context/undertow."""
+    def test_returns_fun_with_selections_when_legacy_fun_mode_true(self, tmp_path, monkeypatch):
+        """Test that legacy fun_mode=true returns fun mode with persona/context/undertow."""
         from spellbook_mcp.config_tools import session_init
 
         # Set up config
@@ -212,7 +212,7 @@ class TestSessionInit:
 
         result = session_init()
 
-        assert result["fun_mode"] == "yes"
+        assert result["mode"]["type"] == "fun"
         assert result["persona"] in ["Test Persona 1", "Test Persona 2"]
         assert result["context"] in ["Test Context 1", "Test Context 2"]
         assert result["undertow"] in ["Test Undertow 1", "Test Undertow 2"]
@@ -225,14 +225,13 @@ class TestSessionInit:
         config_path.write_text('{"fun_mode": true}')
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
-        # Point to a directory that exists but doesn't have fun-mode assets
         fake_spellbook = tmp_path / "fake_spellbook"
         fake_spellbook.mkdir()
         monkeypatch.setattr("spellbook_mcp.config_tools.get_spellbook_dir", lambda: fake_spellbook)
 
         result = session_init()
 
-        assert result["fun_mode"] == "yes"
+        assert result["mode"]["type"] == "fun"
         assert "error" in result
         assert "fun-mode assets not found" in result["error"]
 
@@ -254,7 +253,7 @@ class TestSessionInit:
 
         result = session_init()
 
-        assert result["fun_mode"] == "yes"
+        assert result["mode"]["type"] == "fun"
         assert result["persona"] == ""
         assert result["context"] == ""
         assert result["undertow"] == ""
@@ -270,15 +269,29 @@ class TestSessionInit:
         spellbook_dir = tmp_path / "spellbook"
         fun_assets = spellbook_dir / "skills" / "fun-mode"
         fun_assets.mkdir(parents=True)
-        # Don't create any .txt files
         monkeypatch.setenv("SPELLBOOK_DIR", str(spellbook_dir))
 
         result = session_init()
 
-        assert result["fun_mode"] == "yes"
+        assert result["mode"]["type"] == "fun"
         assert result["persona"] == ""
         assert result["context"] == ""
         assert result["undertow"] == ""
+
+    def test_mode_object_takes_precedence_over_legacy(self, tmp_path, monkeypatch):
+        """Test that mode object is used even if fun_mode is also present."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text(json.dumps({
+            "fun_mode": True,  # Legacy key
+            "mode": {"type": "none"}  # New key takes precedence
+        }))
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+
+        assert result == {"mode": {"type": "none"}}
 
 
 class TestRandomLine:
@@ -326,6 +339,164 @@ class TestRandomLine:
         assert result == "Line with spaces"
 
 
+class TestSessionInitModeObject:
+    """Tests for session_init with mode object config."""
+
+    def test_returns_tarot_config_when_mode_type_tarot(self, tmp_path, monkeypatch):
+        """Test that mode.type=tarot returns full tarot config."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text(json.dumps({
+            "mode": {
+                "type": "tarot",
+                "active_personas": ["magician", "priestess", "hermit", "fool"],
+                "debate_rounds_max": 3
+            }
+        }))
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+
+        assert result["mode"]["type"] == "tarot"
+        assert result["mode"]["active_personas"] == ["magician", "priestess", "hermit", "fool"]
+        assert result["mode"]["debate_rounds_max"] == 3
+
+    def test_returns_tarot_defaults_when_minimal_config(self, tmp_path, monkeypatch):
+        """Test that minimal tarot config gets defaults."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text(json.dumps({
+            "mode": {"type": "tarot"}
+        }))
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+
+        assert result["mode"]["type"] == "tarot"
+        assert result["mode"]["active_personas"] == ["magician", "priestess", "hermit", "fool"]
+        assert result["mode"]["debate_rounds_max"] == 3
+
+    def test_returns_none_mode_when_mode_type_none(self, tmp_path, monkeypatch):
+        """Test that mode.type=none returns simple none response."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text(json.dumps({"mode": {"type": "none"}}))
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+
+        assert result == {"mode": {"type": "none"}}
+
+    def test_returns_fun_mode_with_selections_when_mode_type_fun(self, tmp_path, monkeypatch):
+        """Test that mode.type=fun returns fun mode response with persona/context/undertow."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text(json.dumps({"mode": {"type": "fun"}}))
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        # Set up fun-mode assets
+        spellbook_dir = tmp_path / "spellbook"
+        fun_assets = spellbook_dir / "skills" / "fun-mode"
+        fun_assets.mkdir(parents=True)
+        (fun_assets / "personas.txt").write_text("Test Persona\n")
+        (fun_assets / "contexts.txt").write_text("Test Context\n")
+        (fun_assets / "undertows.txt").write_text("Test Undertow\n")
+        monkeypatch.setenv("SPELLBOOK_DIR", str(spellbook_dir))
+
+        result = session_init()
+
+        assert result["mode"]["type"] == "fun"
+        assert result["persona"] == "Test Persona"
+        assert result["context"] == "Test Context"
+        assert result["undertow"] == "Test Undertow"
+
+    def test_returns_unset_when_no_mode_and_no_fun_mode(self, tmp_path, monkeypatch):
+        """Test that missing both mode and fun_mode returns unset."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text(json.dumps({"other_key": "value"}))
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+
+        assert result == {"mode": {"type": "unset"}}
+
+    def test_returns_custom_active_personas_when_configured(self, tmp_path, monkeypatch):
+        """Test that custom active_personas list is respected."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text(json.dumps({
+            "mode": {
+                "type": "tarot",
+                "active_personas": ["magician", "hermit"]  # Custom subset
+            }
+        }))
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+
+        assert result["mode"]["active_personas"] == ["magician", "hermit"]
+
+
+class TestModeValidation:
+    """Tests for mode configuration validation."""
+
+    def test_valid_mode_types(self):
+        """Test that valid mode types are accepted."""
+        from spellbook_mcp.config_tools import validate_mode_config
+
+        assert validate_mode_config({"type": "tarot"}) is True
+        assert validate_mode_config({"type": "fun"}) is True
+        assert validate_mode_config({"type": "none"}) is True
+
+    def test_invalid_mode_type_rejected(self):
+        """Test that invalid mode types are rejected."""
+        from spellbook_mcp.config_tools import validate_mode_config
+
+        assert validate_mode_config({"type": "invalid"}) is False
+        assert validate_mode_config({"type": ""}) is False
+        assert validate_mode_config({}) is False
+
+    def test_tarot_mode_requires_active_personas(self):
+        """Test that tarot mode validates active_personas when present."""
+        from spellbook_mcp.config_tools import validate_mode_config
+
+        # Valid: type only (defaults apply)
+        assert validate_mode_config({"type": "tarot"}) is True
+
+        # Valid: with active_personas
+        assert validate_mode_config({
+            "type": "tarot",
+            "active_personas": ["magician", "hermit"]
+        }) is True
+
+        # Invalid: unknown persona
+        assert validate_mode_config({
+            "type": "tarot",
+            "active_personas": ["magician", "unknown"]
+        }) is False
+
+        # Invalid: empty active_personas
+        assert validate_mode_config({
+            "type": "tarot",
+            "active_personas": []
+        }) is False
+
+    def test_non_dict_rejected(self):
+        """Test that non-dict values are rejected."""
+        from spellbook_mcp.config_tools import validate_mode_config
+
+        assert validate_mode_config("tarot") is False
+        assert validate_mode_config(True) is False
+        assert validate_mode_config(None) is False
+
+
 class TestGetSpellbookDir:
     """Tests for get_spellbook_dir function."""
 
@@ -348,5 +519,6 @@ class TestGetSpellbookDir:
         # Should not raise - falls back to finding via __file__ or default
         result = get_spellbook_dir()
         assert isinstance(result, Path)
-        # Should find the actual spellbook dir (running from repo) or default
-        assert result.name in ("spellbook", "spellbook")
+        # Should find the actual spellbook dir (or worktree) containing expected files
+        # When running in worktree, directory name may be worktree name, not "spellbook"
+        assert (result / "skills").is_dir() or result.name == "spellbook"

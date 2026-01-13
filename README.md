@@ -92,7 +92,7 @@ Reusable workflows for structured development:
 | **Feature Dev** | [implementing-features], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [worktree-merge], [merge-conflict-resolution] | spellbook |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
 | **Meta** | [using-skills], [writing-skills], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia] | [superpowers] |
-| **Session** | [fun-mode], [emotional-stakes] | spellbook |
+| **Session** | [fun-mode], [tarot-mode], [emotional-stakes] | spellbook |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
@@ -125,6 +125,7 @@ Reusable workflows for structured development:
 [project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
+[tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
 
 ### Commands (17 total)

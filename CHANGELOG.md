@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Tarot Mode** - alternative to fun mode with four tarot archetype personas collaborating via visible roundtable dialogue
+  - Personas: Magician (intent clarifier), High Priestess (possibility generator), Hermit (skeptical critic), Fool (assumption breaker)
+  - New `mode` object config format: `{"mode": {"type": "tarot", "active_personas": [...]}}`
+  - `skills/tarot-mode/SKILL.md` with persona definitions, dialogue protocol, consensus handling
+  - Session init returns structured mode config with defaults
+  - Backwards compatibility: legacy `fun_mode: true/false` auto-migrates to new format
+
+### Changed
+- `session_init()` now returns `{"mode": {"type": "..."}}` format instead of `{"fun_mode": "..."}` (legacy format still works via auto-migration)
+
 ## [0.6.0] - 2026-01-12
 
 ### Fixed
