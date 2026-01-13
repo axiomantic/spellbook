@@ -44,6 +44,13 @@ class SkillFacts:
     # Semantic properties (requires judgment)
     description_follows_use_when_pattern: bool
 
+    # Additional structural properties
+    has_analysis_tag: bool  # <analysis> tag present
+    has_reflection_tag: bool  # <reflection> tag present
+    has_self_check_section: bool  # Self-Check or Self Check section
+    has_inputs_section: bool  # Inputs table/section
+    has_outputs_section: bool  # Outputs table/section
+
     # Metadata
     file_path: str
     extraction_model: str = "unknown"
@@ -61,6 +68,11 @@ Read the following skill file content and extract these properties:
 3. has_forbidden_section: Is there a <FORBIDDEN> tag OR a section header containing "FORBIDDEN" or "Anti-Patterns"?
 4. invariant_principles_count: Count the numbered items under "## Invariant Principles" (0 if section doesn't exist)
 5. description_follows_use_when_pattern: Does the description field in frontmatter start with "Use when" or similar trigger phrase?
+6. has_analysis_tag: Is there an <analysis> tag in the content?
+7. has_reflection_tag: Is there a <reflection> tag in the content?
+8. has_self_check_section: Is there a section header containing "Self-Check" or "Self Check" (case insensitive)?
+9. has_inputs_section: Is there an "## Inputs" section or a table with input parameters?
+10. has_outputs_section: Is there an "## Outputs" section or a table with output/deliverable information?
 
 Output format (strict JSON, no extra text):
 {
@@ -68,7 +80,12 @@ Output format (strict JSON, no extra text):
   "has_role_tag": true,
   "has_forbidden_section": true,
   "invariant_principles_count": 5,
-  "description_follows_use_when_pattern": true
+  "description_follows_use_when_pattern": true,
+  "has_analysis_tag": false,
+  "has_reflection_tag": false,
+  "has_self_check_section": true,
+  "has_inputs_section": true,
+  "has_outputs_section": true
 }
 
 SKILL FILE CONTENT:
@@ -102,6 +119,9 @@ def extract_facts_from_skill(skill_path: Path, timeout: int = 90) -> Optional[Sk
                 "claude",
                 "-p", prompt,
                 "--output-format", "json",
+                "--tools", "",
+                "--disable-slash-commands",
+                "--setting-sources", "",
             ],
             capture_output=True,
             text=True,
@@ -148,6 +168,11 @@ def extract_facts_from_skill(skill_path: Path, timeout: int = 90) -> Optional[Sk
             has_forbidden_section=facts_dict.get("has_forbidden_section", False),
             invariant_principles_count=facts_dict.get("invariant_principles_count", 0),
             description_follows_use_when_pattern=facts_dict.get("description_follows_use_when_pattern", False),
+            has_analysis_tag=facts_dict.get("has_analysis_tag", False),
+            has_reflection_tag=facts_dict.get("has_reflection_tag", False),
+            has_self_check_section=facts_dict.get("has_self_check_section", False),
+            has_inputs_section=facts_dict.get("has_inputs_section", False),
+            has_outputs_section=facts_dict.get("has_outputs_section", False),
             file_path=str(skill_path),
             extraction_model="claude-sonnet-4-20250514",
         )
@@ -244,17 +269,109 @@ class TestReproducibility:
 
 
 class TestAllSkillsMinimumCompliance:
-    """Test all skills meet minimum quality standards."""
+    """Test all skills meet minimum quality standards.
+
+    Quality standards for skills:
+    - has_yaml_frontmatter: Required for all skills (discovery, metadata)
+    - has_role_tag: Required for all skills (agent persona clarity)
+    - has_forbidden_section: Required for quality skills (guardrails)
+    - invariant_principles_count >= 3: Required for quality skills (core tenets)
+    - description_follows_use_when_pattern: Required (trigger clarity)
+    """
 
     @requires_claude
     @pytest.mark.parametrize("skill_path", get_all_skill_files(), ids=lambda p: p.parent.name)
     def test_skill_has_required_structure(self, skill_path: Path):
-        """Every skill should have basic required structure."""
+        """Every skill should meet all quality standards.
+
+        Failing tests indicate either:
+        1. Skill needs improvement to meet standards
+        2. Standards need adjustment for edge cases
+        3. Extraction prompt needs refinement for accuracy
+        """
+        skill_name = skill_path.parent.name
         facts = extract_facts_from_skill(skill_path)
 
-        assert facts is not None, f"Extraction failed for {skill_path.parent.name}"
-        assert facts.has_yaml_frontmatter, f"{skill_path.parent.name}: Missing YAML frontmatter"
-        # Note: Not all skills have ROLE tags yet - this test will reveal which ones
+        assert facts is not None, f"Extraction failed for {skill_name}"
+
+        # Collect all failures for comprehensive reporting
+        failures = []
+        warnings = []
+
+        # Property 1: YAML frontmatter (required for all skills)
+        if not facts.has_yaml_frontmatter:
+            failures.append(
+                f"has_yaml_frontmatter=False: Missing YAML frontmatter block (--- ... ---)"
+            )
+
+        # Property 2: ROLE tag (required for all skills)
+        if not facts.has_role_tag:
+            failures.append(
+                f"has_role_tag=False: Missing <ROLE> tag for agent persona"
+            )
+
+        # Property 3: FORBIDDEN section (required for quality skills)
+        if not facts.has_forbidden_section:
+            failures.append(
+                f"has_forbidden_section=False: Missing <FORBIDDEN> tag or Anti-Patterns section"
+            )
+
+        # Property 4: Invariant principles count (>= 3 for quality skills)
+        if facts.invariant_principles_count < 3:
+            failures.append(
+                f"invariant_principles_count={facts.invariant_principles_count}: "
+                f"Expected >= 3 numbered principles under '## Invariant Principles'"
+            )
+
+        # Property 5: Description follows "Use when" pattern
+        if not facts.description_follows_use_when_pattern:
+            failures.append(
+                f"description_follows_use_when_pattern=False: "
+                f"Description should start with 'Use when' or similar trigger phrase"
+            )
+
+        # Property 6: Analysis tag (recommended for structured thinking)
+        if not facts.has_analysis_tag:
+            warnings.append(
+                f"has_analysis_tag=False: Consider adding <analysis> tag for structured reasoning"
+            )
+
+        # Property 7: Reflection tag (recommended for self-correction)
+        if not facts.has_reflection_tag:
+            warnings.append(
+                f"has_reflection_tag=False: Consider adding <reflection> tag for self-correction"
+            )
+
+        # Property 8: Self-Check section (recommended for quality verification)
+        if not facts.has_self_check_section:
+            warnings.append(
+                f"has_self_check_section=False: Consider adding Self-Check section for verification"
+            )
+
+        # Property 9: Inputs section (optional but recommended for complex skills)
+        if not facts.has_inputs_section:
+            warnings.append(
+                f"has_inputs_section=False: Consider adding Inputs section for clarity"
+            )
+
+        # Property 10: Outputs section (optional but recommended for complex skills)
+        if not facts.has_outputs_section:
+            warnings.append(
+                f"has_outputs_section=False: Consider adding Outputs section for clarity"
+            )
+
+        # Print soft warnings (do not fail test)
+        if warnings:
+            warning_report = "\n  - ".join(warnings)
+            print(f"\n[WARNINGS] {skill_name} missing optional properties:\n  - {warning_report}")
+
+        # Report all failures at once for comprehensive feedback
+        if failures:
+            failure_report = "\n  - ".join(failures)
+            pytest.fail(
+                f"\n{skill_name} failed quality checks:\n  - {failure_report}\n\n"
+                f"Extracted facts: {facts}"
+            )
 
 
 # =============================================================================
@@ -272,11 +389,21 @@ class TestSkillFactsDataclass:
             has_forbidden_section=True,
             invariant_principles_count=5,
             description_follows_use_when_pattern=True,
+            has_analysis_tag=True,
+            has_reflection_tag=False,
+            has_self_check_section=True,
+            has_inputs_section=True,
+            has_outputs_section=False,
             file_path="/path/to/skill.md",
         )
 
         assert facts.has_yaml_frontmatter is True
         assert facts.invariant_principles_count == 5
+        assert facts.has_analysis_tag is True
+        assert facts.has_reflection_tag is False
+        assert facts.has_self_check_section is True
+        assert facts.has_inputs_section is True
+        assert facts.has_outputs_section is False
 
     def test_extraction_prompt_contains_all_properties(self):
         """Verify extraction prompt asks for all SkillFacts properties."""
@@ -285,6 +412,11 @@ class TestSkillFactsDataclass:
         assert "has_forbidden_section" in EXTRACTION_PROMPT
         assert "invariant_principles_count" in EXTRACTION_PROMPT
         assert "description_follows_use_when_pattern" in EXTRACTION_PROMPT
+        assert "has_analysis_tag" in EXTRACTION_PROMPT
+        assert "has_reflection_tag" in EXTRACTION_PROMPT
+        assert "has_self_check_section" in EXTRACTION_PROMPT
+        assert "has_inputs_section" in EXTRACTION_PROMPT
+        assert "has_outputs_section" in EXTRACTION_PROMPT
 
 
 class TestSkillFileDiscovery:
