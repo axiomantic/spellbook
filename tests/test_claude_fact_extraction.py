@@ -51,6 +51,13 @@ class SkillFacts:
     has_inputs_section: bool  # Inputs table/section
     has_outputs_section: bool  # Outputs table/section
 
+    # Emotional stimuli and quality properties
+    has_positive_emotional_stimulus: bool  # Contains phrases like "important to my career", "ensure impeccable reasoning"
+    has_negative_emotional_stimulus: bool  # Contains consequence framing like "errors will cause", "negative impact"
+    has_example_section: bool  # Has example or <EXAMPLE> section
+    token_count_estimate: int  # Rough token estimate (count words * 1.3)
+    meets_token_budget: bool  # Under 1500 tokens for skills
+
     # Metadata
     file_path: str
     extraction_model: str = "unknown"
@@ -73,6 +80,11 @@ Read the following skill file content and extract these properties:
 8. has_self_check_section: Is there a section header containing "Self-Check" or "Self Check" (case insensitive)?
 9. has_inputs_section: Is there an "## Inputs" section or a table with input parameters?
 10. has_outputs_section: Is there an "## Outputs" section or a table with output/deliverable information?
+11. has_positive_emotional_stimulus: Contains positive emotional framing phrases like "important to my career", "ensure impeccable reasoning", "this matters deeply", "your expertise is crucial", "take pride in", "demonstrate excellence"?
+12. has_negative_emotional_stimulus: Contains negative consequence framing like "errors will cause", "negative impact", "failure will result in", "mistakes lead to", "will harm", "critical failure"?
+13. has_example_section: Is there an <example> or <EXAMPLE> tag, OR a section header containing "Example" or "Examples"?
+14. token_count_estimate: Count all words in the file and multiply by 1.3 (round to nearest integer). Words are whitespace-separated tokens.
+15. meets_token_budget: Is the token_count_estimate under 1500?
 
 Output format (strict JSON, no extra text):
 {
@@ -85,7 +97,12 @@ Output format (strict JSON, no extra text):
   "has_reflection_tag": false,
   "has_self_check_section": true,
   "has_inputs_section": true,
-  "has_outputs_section": true
+  "has_outputs_section": true,
+  "has_positive_emotional_stimulus": true,
+  "has_negative_emotional_stimulus": false,
+  "has_example_section": true,
+  "token_count_estimate": 1200,
+  "meets_token_budget": true
 }
 
 SKILL FILE CONTENT:
@@ -173,6 +190,11 @@ def extract_facts_from_skill(skill_path: Path, timeout: int = 90) -> Optional[Sk
             has_self_check_section=facts_dict.get("has_self_check_section", False),
             has_inputs_section=facts_dict.get("has_inputs_section", False),
             has_outputs_section=facts_dict.get("has_outputs_section", False),
+            has_positive_emotional_stimulus=facts_dict.get("has_positive_emotional_stimulus", False),
+            has_negative_emotional_stimulus=facts_dict.get("has_negative_emotional_stimulus", False),
+            has_example_section=facts_dict.get("has_example_section", False),
+            token_count_estimate=facts_dict.get("token_count_estimate", 0),
+            meets_token_budget=facts_dict.get("meets_token_budget", False),
             file_path=str(skill_path),
             extraction_model="claude-sonnet-4-20250514",
         )
@@ -360,6 +382,33 @@ class TestAllSkillsMinimumCompliance:
                 f"has_outputs_section=False: Consider adding Outputs section for clarity"
             )
 
+        # Property 11: Positive emotional stimulus (recommended per EmotionPrompt research)
+        if not facts.has_positive_emotional_stimulus:
+            warnings.append(
+                f"has_positive_emotional_stimulus=False: Consider adding positive emotional framing "
+                f"(e.g., 'important to my career', 'ensure impeccable reasoning') per EmotionPrompt research"
+            )
+
+        # Property 12: Negative emotional stimulus (recommended per EmotionPrompt research)
+        if not facts.has_negative_emotional_stimulus:
+            warnings.append(
+                f"has_negative_emotional_stimulus=False: Consider adding consequence framing "
+                f"(e.g., 'errors will cause', 'negative impact') per EmotionPrompt research"
+            )
+
+        # Property 13: Example section (recommended for clarity)
+        if not facts.has_example_section:
+            warnings.append(
+                f"has_example_section=False: Consider adding <example> section for concrete guidance"
+            )
+
+        # Property 14-15: Token budget (fail if over budget)
+        if not facts.meets_token_budget:
+            failures.append(
+                f"meets_token_budget=False: Skill exceeds 1500 token budget "
+                f"(estimated {facts.token_count_estimate} tokens). Consider condensing."
+            )
+
         # Print soft warnings (do not fail test)
         if warnings:
             warning_report = "\n  - ".join(warnings)
@@ -394,6 +443,11 @@ class TestSkillFactsDataclass:
             has_self_check_section=True,
             has_inputs_section=True,
             has_outputs_section=False,
+            has_positive_emotional_stimulus=True,
+            has_negative_emotional_stimulus=False,
+            has_example_section=True,
+            token_count_estimate=1200,
+            meets_token_budget=True,
             file_path="/path/to/skill.md",
         )
 
@@ -404,6 +458,11 @@ class TestSkillFactsDataclass:
         assert facts.has_self_check_section is True
         assert facts.has_inputs_section is True
         assert facts.has_outputs_section is False
+        assert facts.has_positive_emotional_stimulus is True
+        assert facts.has_negative_emotional_stimulus is False
+        assert facts.has_example_section is True
+        assert facts.token_count_estimate == 1200
+        assert facts.meets_token_budget is True
 
     def test_extraction_prompt_contains_all_properties(self):
         """Verify extraction prompt asks for all SkillFacts properties."""
@@ -417,6 +476,11 @@ class TestSkillFactsDataclass:
         assert "has_self_check_section" in EXTRACTION_PROMPT
         assert "has_inputs_section" in EXTRACTION_PROMPT
         assert "has_outputs_section" in EXTRACTION_PROMPT
+        assert "has_positive_emotional_stimulus" in EXTRACTION_PROMPT
+        assert "has_negative_emotional_stimulus" in EXTRACTION_PROMPT
+        assert "has_example_section" in EXTRACTION_PROMPT
+        assert "token_count_estimate" in EXTRACTION_PROMPT
+        assert "meets_token_budget" in EXTRACTION_PROMPT
 
 
 class TestSkillFileDiscovery:

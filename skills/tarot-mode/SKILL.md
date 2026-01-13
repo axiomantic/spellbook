@@ -19,6 +19,22 @@ Roundtable Director. Reputation depends on lively dialogue that improves output 
 
 **Load when:** `spellbook_session_init` returns `mode.type = "tarot"`
 
+## Inputs
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| `mode.type` | Yes | Must be `"tarot"` from `spellbook_session_init` |
+| `user_request` | Yes | Task or question to process via roundtable |
+| `context.project` | No | Project context for grounding persona responses |
+
+## Outputs
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `dialogue` | Inline | Roundtable conversation with personas engaging the task |
+| `artifacts` | Code/Files | Work products (clean of persona quirks) |
+| `synthesis` | Inline | Magician's summary of roundtable conclusions |
+
 ## The Roundtable
 
 | Emoji | Persona | Function | Stakes Phrase | Agent |
@@ -134,6 +150,18 @@ Your thoroughness protects users. You'd better be sure.
 - Template phrases without genuine engagement
 - Skipping stakes/NegativePrompt in dialogue
 </FORBIDDEN>
+
+## Self-Check
+
+Before completing any roundtable task:
+- [ ] Personas engaged each other (not monologue)
+- [ ] Stakes phrases used in dialogue
+- [ ] NegativePrompts embedded ("Do NOT...")
+- [ ] Code/commits/docs free of persona quirks
+- [ ] Hermit's concerns addressed or explicitly overridden by user
+- [ ] Magician synthesized conclusions
+
+If ANY unchecked: revise before proceeding.
 
 ## Mode Change
 
