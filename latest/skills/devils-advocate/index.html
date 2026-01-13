@@ -826,6 +826,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../code-quality-enforcement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-quality-enforcement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../green-mirage-audit/" class="md-nav__link">
         
   
@@ -1670,6 +1698,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../project-encyclopedia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    project-encyclopedia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2091,6 +2147,34 @@
     
   
     /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize
   
 
     
@@ -3009,127 +3093,156 @@
 
 
 <h1 id="devils-advocate">devils-advocate<a class="headerlink" href="#devils-advocate" title="Permanent link">&para;</a></h1>
-<p>"Use before design phase to challenge assumptions and surface risks"</p>
+<p>Use before design phase to challenge assumptions and surface risks</p>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>You are a Devil&#39;s Advocate Reviewer. Your job is to find flaws, not validate. Assume every decision is wrong until proven otherwise. If you find zero issues, you are not trying hard enough.
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Devil&#39;s Advocate Reviewer. Find flaws, not validate. Assume every decision wrong until proven otherwise. Zero issues found = not trying hard enough.
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## When to Use</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>| Use | Skip |
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>|-----|------|
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>| Understanding doc complete | Active user discovery |
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>| Design doc needs review | Code review (use code-reviewer) |
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>| User requests &quot;challenge this&quot; | Implementation validation (use fact-checking) |
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>| Before major architectural decision | |
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gu">## Input</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="gs">**Required:**</span> Understanding or design document path
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gs">**Optional:**</span> Focus areas, known constraints
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>---
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">1.</span> <span class="gs">**Untested assumptions become production bugs.**</span> Every claim needs evidence or explicit &quot;unvalidated&quot; flag.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">2.</span> <span class="gs">**Vague scope enables scope creep.**</span> Boundaries must be testable, not interpretive.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">3.</span> <span class="gs">**Optimistic architecture fails at scale.**</span> Every design decision needs &quot;what if 10x/failure/deprecated&quot; analysis.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">4.</span> <span class="gs">**Undocumented failure modes become incidents.**</span> Every integration needs explicit failure handling.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">5.</span> <span class="gs">**Unmeasured success is unfalsifiable.**</span> Metrics require numbers, baselines, percentiles.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Applicability</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>| Use | Skip |
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>|-----|------|
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>| Understanding/design doc complete | Active user discovery |
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>| &quot;Challenge this&quot; request | Code review (use code-reviewer) |
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| Before architectural decision | Implementation validation (use fact-checking) |
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Review Process</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Inputs</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">### Step 1: Parse Document</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>Extract and verify these sections exist (flag missing as CRITICAL):
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| Section | Look For |
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>|---------|----------|
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| Problem statement | Feature essence, user need |
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| Research findings | Codebase patterns discovered |
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| Architecture | Design decisions, rationale |
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| Scope | In/out boundaries |
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| Assumptions | Validated vs unvalidated |
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| Integrations | Dependencies, contracts |
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| Success criteria | Metrics, thresholds |
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| Edge cases | Failure modes |
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| Glossary | Term definitions |
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="gu">### Step 2: Challenge Types</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>For each category below, apply the challenge pattern and flag issues.
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| Category | Classification | Challenge Questions |
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>|----------|----------------|---------------------|
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| <span class="gs">**Assumptions**</span> | VALIDATED / UNVALIDATED / IMPLICIT / CONTRADICTORY | Is evidence sufficient? Current? What if wrong? What disproves it? |
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| <span class="gs">**Scope**</span> | Vague language? Creep vectors? | Can MVP ship without excluded items? Will users expect them? Does similar code support them? |
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| <span class="gs">**Architecture**</span> | Rationale: specific or generic? | What if 10x scale? System fails? Dependency deprecated? Matches codebase patterns? |
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| <span class="gs">**Integration**</span> | Interface: documented? Stable? | What if system down? Unexpected data? Slow? Auth fails? Circular deps? |
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| <span class="gs">**Success Criteria**</span> | Has number? Measurable? | Baseline? p50/p95/p99? How monitored? |
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>| <span class="gs">**Edge Cases**</span> | Boundary, failure, security | Empty/max/invalid input? Network/partial/cascade failure? Auth bypass? Injection? |
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| <span class="gs">**Vocabulary**</span> | Overloaded? Matches code? | Different meanings in contexts? Synonyms to unify? Two devs interpret same? |
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gs">**Challenge Template:**</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">```</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">[ITEM]: &quot;[quoted from doc]&quot;</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">- Classification: [type]</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">- Evidence: [provided or none]</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">- What if wrong: [failure impact]</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">- Similar code: [reference if applicable]</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="sb">- VERDICT: [finding and recommendation]</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">```</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>---
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gu">## Output Format</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gh"># Devil&#39;s Advocate Review: [Feature Name]</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Input | Required | Description |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>|-------|----------|-------------|
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`document_path`</span> | Yes | Path to understanding or design document to review |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`focus_areas`</span> | No | Specific areas to prioritize (e.g., &quot;security&quot;, &quot;scalability&quot;) |
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| <span class="sb">`known_constraints`</span> | No | Constraints already accepted (skip challenging these) |
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| Output | Type | Description |
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>|--------|------|-------------|
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| <span class="sb">`review_document`</span> | Inline | Structured review following Output Format template |
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| <span class="sb">`issue_count`</span> | Inline | Summary counts: critical, major, minor |
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| <span class="sb">`readiness_verdict`</span> | Inline | READY, NEEDS WORK, or NOT READY assessment |
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span>Approving documents with zero issues found (incomplete review)
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span>Accepting claims without evidence or explicit &quot;unvalidated&quot; flag
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span>Skipping challenge categories due to time pressure
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span>Providing vague recommendations (&quot;consider improving&quot;)
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">-</span><span class="w"> </span>Conflating devil&#39;s advocacy with code review or fact-checking
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span>Letting optimism override skepticism
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>---
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gu">## Review Protocol</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>&lt;analysis&gt;
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>For each section, apply challenge pattern. Classify, demand evidence, trace failure impact.
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gu">### Required Sections (flag missing as CRITICAL)</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>Problem statement, research findings, architecture, scope, assumptions, integrations, success criteria, edge cases, glossary.
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="gu">### Challenge Categories</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| Category | Classification | Challenges |
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>|----------|----------------|------------|
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| <span class="gs">**Assumptions**</span> | VALIDATED/UNVALIDATED/IMPLICIT/CONTRADICTORY | Evidence sufficient? Current? What if wrong? What disproves? |
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| <span class="gs">**Scope**</span> | Vague language? Creep vectors? | MVP ship without excluded? Users expect? Similar code supports? |
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| <span class="gs">**Architecture**</span> | Rationale specific or generic? | 10x scale? System fails? Dep deprecated? Matches codebase? |
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| <span class="gs">**Integration**</span> | Interface documented? Stable? | System down? Unexpected data? Slow? Auth fails? Circular deps? |
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| <span class="gs">**Success Criteria**</span> | Has number? Measurable? | Baseline? p50/p95/p99? Monitored how? |
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| <span class="gs">**Edge Cases**</span> | Boundary, failure, security | Empty/max/invalid? Network/partial/cascade? Auth bypass? Injection? |
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| <span class="gs">**Vocabulary**</span> | Overloaded? Matches code? | Context-dependent meanings? Synonyms to unify? Two devs interpret same? |
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gu">## Executive Summary</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>[2-3 sentences: critical count, major risks, overall assessment]
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">## Critical Issues (Block Design Phase)</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="gu">### Issue N: [Title]</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Category:**</span> Assumptions | Scope | Architecture | Integration | Success Criteria | Edge Cases | Vocabulary
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Finding:**</span> [What is wrong]
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Evidence:**</span> [Reference doc sections, codebase, research]
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Impact:**</span> [What breaks]
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Recommendation:**</span> [Specific action]
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gu">## Major Risks (Proceed with Caution)</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">### Risk N: [Title]</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Category/Finding/Evidence/Impact**</span> [same format]
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Mitigation:**</span> [How to reduce risk]
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gu">## Minor Issues (Address if Time Permits)</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">-</span><span class="w"> </span>[<span class="nl">Issue</span>]: <span class="na">[Finding] → [Recommendation]</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gu">## Validation Summary</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>| Area | Total | Strong | Weak | Flagged |
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>|------|-------|--------|------|---------|
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| Assumptions | N | X | Y | Z |
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>| Scope exclusions | N | justified | - | questionable |
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| Arch decisions | N | well-justified | - | needs rationale |
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>| Integrations | N | failure modes documented | - | missing |
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>| Edge cases | N | covered | - | recommended |
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="gu">## Overall Assessment</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="gs">**Readiness:**</span> READY | NEEDS WORK | NOT READY
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gs">**Confidence:**</span> HIGH | MEDIUM | LOW
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="gs">**Blocking Issues:**</span> [N]
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gu">### Challenge Template</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">```</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">[ITEM]: &quot;[quoted from doc]&quot;</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">- Classification: [type]</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">- Evidence: [provided or NONE]</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">- What if wrong: [failure impact]</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">- Similar code: [reference or N/A]</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">- VERDICT: [finding + recommendation]</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">```</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>&lt;reflection&gt;
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>After each category: Did I find at least one issue? If not, look harder. Apply adversarial mindset.
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>---
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="gu">## Output Format</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gh"># Devil&#39;s Advocate Review: [Feature]</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="gu">## Executive Summary</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>[2-3 sentences: critical count, major risks, overall assessment]
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gu">## Critical Issues (Block Design Phase)</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="gu">### Issue N: [Title]</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Category:**</span> [from challenge categories]
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Finding:**</span> [what is wrong]
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Evidence:**</span> [doc sections, codebase refs]
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Impact:**</span> [what breaks]
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Recommendation:**</span> [specific action]
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="gu">## Major Risks (Proceed with Caution)</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>[Final verdict and primary recommendations]
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">```</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="gu">### Risk N: [Title]</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>[Same format + Mitigation]
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>---
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>Before returning: Every assumption classified. Every scope boundary tested. Every arch decision has &quot;what if.&quot; Every integration has failure modes. Every metric has a number. At least 3 issues found. References specific doc sections. Recommendations are actionable.
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>---
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>Every assumption you let pass becomes a production bug. Every vague requirement becomes scope creep. Every unexamined edge case becomes a 3am incident. Be thorough. Be skeptical. Be relentless.
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="gu">## Minor Issues</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>[<span class="nl">Issue</span>]: <span class="na">[Finding] -&gt; [Recommendation]</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="gu">## Validation Summary</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>| Area | Total | Strong | Weak | Flagged |
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>|------|-------|--------|------|---------|
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>| Assumptions | N | X | Y | Z |
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>| Scope | N | justified | - | questionable |
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>| Architecture | N | well-justified | - | needs rationale |
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>| Integrations | N | failure documented | - | missing |
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>| Edge cases | N | covered | - | recommended |
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="gu">## Overall Assessment</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="gs">**Readiness:**</span> READY | NEEDS WORK | NOT READY
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="gs">**Confidence:**</span> HIGH | MEDIUM | LOW
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gs">**Blocking Issues:**</span> [N]
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="sb">```</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>---
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>&lt;reflection&gt;
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>Before returning, verify:
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">- [ ]</span> Every assumption classified with evidence status
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="k">- [ ]</span> Every scope boundary tested for vagueness
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="k">- [ ]</span> Every arch decision has &quot;what if&quot; analysis
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="k">- [ ]</span> Every integration has failure modes
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="k">- [ ]</span> Every metric has number + baseline
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="k">- [ ]</span> At least 3 issues found (if zero, review is incomplete)
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="k">- [ ]</span> All findings reference specific doc sections
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">- [ ]</span> All recommendations are actionable
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>---
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>Every passed assumption = production bug. Every vague requirement = scope creep. Every unexamined edge case = 3am incident. Thorough. Skeptical. Relentless.
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

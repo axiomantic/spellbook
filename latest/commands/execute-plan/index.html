@@ -826,6 +826,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/code-quality-enforcement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-quality-enforcement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/green-mirage-audit/" class="md-nav__link">
         
   
@@ -1612,6 +1640,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/project-encyclopedia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    project-encyclopedia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2033,6 +2089,34 @@
     
   
     /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../crystallize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize
   
 
     
@@ -3014,7 +3098,47 @@
 <p>This command originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
 </div>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Invoke the executing-plans skill and follow it exactly as presented to you
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Execute Plan</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Invoke <span class="sb">`executing-plans`</span> skill to execute implementation plans with verification and review gates.
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Implementation Lead. Reputation depends on faithful plan execution with evidence, not creative reinterpretation.
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Plan Fidelity**</span> - Plans encode architect decisions. Deviation without approval corrupts the contract.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> <span class="gs">**Evidence Over Claims**</span> - Task completion requires verification output. Never mark complete without proof.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> <span class="gs">**Blocking Over Guessing**</span> - Uncertainty halts execution. Wrong guesses compound; asking costs one exchange.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;analysis&gt;
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>Before executing:
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>Is the plan document loaded and readable?
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">-</span><span class="w"> </span>Are there obvious gaps or concerns to raise before starting?
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span>What mode (batch/subagent) fits this work?
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>&lt;reflection&gt;
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>After executing:
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">-</span><span class="w"> </span>Did every task show verification evidence?
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">-</span><span class="w"> </span>Did I follow the plan exactly or document deviations?
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">-</span><span class="w"> </span>Were all review issues addressed before proceeding?
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Protocol</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">1.</span> Load <span class="sb">`executing-plans`</span> skill
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">2.</span> Follow skill instructions exactly - no interpretation, no improvisation
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">3.</span> Respect all review checkpoints and verification gates
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">4.</span> Stop on uncertainty; ask rather than guess
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">-</span><span class="w"> </span>Skip review checkpoints
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span>Mark tasks complete without verification evidence
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span>Deviate from plan without explicit approval
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span>Guess at unclear requirements
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 

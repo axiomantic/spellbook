@@ -826,6 +826,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../code-quality-enforcement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-quality-enforcement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../green-mirage-audit/" class="md-nav__link">
         
   
@@ -1670,6 +1698,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../project-encyclopedia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    project-encyclopedia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2091,6 +2147,34 @@
     
   
     /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize
   
 
     
@@ -3017,104 +3101,106 @@
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Requesting Code Review</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Dispatch code-reviewer subagent to catch issues before they cascade.
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gs">**Core principle:**</span> Review early, review often.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Quality Gate Enforcer. Reputation depends on catching bugs before they reach production, not rubber-stamping changes.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## When to Request Review</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gs">**Mandatory:**</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">-</span><span class="w"> </span>After each task in subagent-driven development
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">-</span><span class="w"> </span>After completing major feature
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">-</span><span class="w"> </span>Before merge to main
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;analysis&gt;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>Fresh eyes catch blind spots. Cost of early review &lt;&lt; cost of cascading bugs.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>Review gates prevent technical debt accumulation.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gs">**Optional but valuable:**</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>When stuck (fresh perspective)
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>Before refactoring (baseline check)
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>After fixing complex bug
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">1.</span> <span class="gs">**Review Early**</span> - Catch issues before they compound across tasks
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">2.</span> <span class="gs">**Evidence Over Claims**</span> - Issues require file:line references, not vague assertions
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">3.</span> <span class="gs">**Severity Honesty**</span> - Critical = data loss/security; Important = architecture/gaps; Minor = polish
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">4.</span> <span class="gs">**Pushback Valid**</span> - Reviewer wrong sometimes; counter with code/tests, not authority
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gu">## How to Request</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gu">## Inputs</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gs">**1. Get git SHAs:**</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="nv">BASE_SHA</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>HEAD~1<span class="k">)</span><span class="w">  </span><span class="c1"># or origin/main</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="nv">HEAD_SHA</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>HEAD<span class="k">)</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">```</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| Input | Required | Description |
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>|-------|----------|-------------|
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| <span class="sb">`context.changes`</span> | Yes | Git range (BASE_SHA..HEAD_SHA) or file list |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| <span class="sb">`context.what_implemented`</span> | Yes | Feature/change description |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`context.plan_reference`</span> | No | Link to spec, task, or plan being implemented |
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="gs">**2. Dispatch code-reviewer subagent:**</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="gu">## Outputs</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>Use Task tool with code-reviewer type, fill template at <span class="sb">`code-reviewer.md`</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="gs">**Placeholders:**</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">-</span><span class="w"> </span><span class="sb">`{WHAT_WAS_IMPLEMENTED}`</span> - What you just built
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">-</span><span class="w"> </span><span class="sb">`{PLAN_OR_REQUIREMENTS}`</span> - What it should do
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span><span class="sb">`{BASE_SHA}`</span> - Starting commit
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span><span class="sb">`{HEAD_SHA}`</span> - Ending commit
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">-</span><span class="w"> </span><span class="sb">`{DESCRIPTION}`</span> - Brief summary
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gs">**3. Act on feedback:**</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span>Fix Critical issues immediately
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span>Fix Important issues before proceeding
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span>Note Minor issues for later
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">-</span><span class="w"> </span>Push back if reviewer is wrong (with reasoning)
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">## Example</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">```</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">[Just completed Task 2: Add verification function]</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">You: Let me request code review before proceeding.</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">BASE_SHA=$(git log --oneline | grep &quot;Task 1&quot; | head -1 | awk &#39;{print $1}&#39;)</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">HEAD_SHA=$(git rev-parse HEAD)</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">[Dispatch code-reviewer subagent]</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">  PLAN_OR_REQUIREMENTS: Task 2 from ~/.local/spellbook/docs/&lt;project-encoded&gt;/plans/deployment-plan.md</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">  BASE_SHA: a7981ec</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">  HEAD_SHA: 3df7661</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">[Subagent returns]:</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="sb">  Strengths: Clean architecture, real tests</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">  Issues:</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">    Important: Missing progress indicators</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">    Minor: Magic number (100) for reporting interval</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">  Assessment: Ready to proceed</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">You: [Fix progress indicators]</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">[Continue to Task 3]</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">```</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">## Integration with Workflows</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gs">**Subagent-Driven Development:**</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Review after EACH task
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Catch issues before they compound
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>Fix before moving to next task
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="gs">**Executing Plans:**</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">-</span><span class="w"> </span>Review after each batch (3 tasks)
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">-</span><span class="w"> </span>Get feedback, apply, continue
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gs">**Ad-Hoc Development:**</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>Review before merge
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span>Review when stuck
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="gu">## Red Flags</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gs">**Never:**</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>Skip review because &quot;it&#39;s simple&quot;
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span>Ignore Critical issues
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>Proceed with unfixed Important issues
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>Argue with valid technical feedback
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gs">**If reviewer wrong:**</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Push back with technical reasoning
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Show code/tests that prove it works
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Request clarification
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| Output | Type | Description |
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>|--------|------|-------------|
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| <span class="sb">`review_report`</span> | Inline | Structured feedback with severity levels |
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| <span class="sb">`action_items`</span> | List | Prioritized fixes: Critical &gt; Important &gt; Minor |
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| <span class="sb">`approval_status`</span> | Boolean | Whether changes pass review gate |
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="gu">## When to Review</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| Trigger | Requirement |
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>|---------|-------------|
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| Task completion (subagent dev) | Mandatory |
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>| Major feature complete | Mandatory |
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| Pre-merge to main | Mandatory |
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| Stuck / need perspective | Recommended |
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| Pre-refactor baseline | Recommended |
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="gu">## Execution Protocol</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="gs">**1. Capture git range:**</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="nv">BASE_SHA</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>origin/main<span class="k">)</span><span class="w">  </span><span class="c1"># or HEAD~N</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="nv">HEAD_SHA</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>HEAD<span class="k">)</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">```</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gs">**2. Dispatch code-reviewer subagent**</span> using template <span class="sb">`code-reviewer.md`</span>:
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| Placeholder | Value |
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>|-------------|-------|
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| <span class="sb">`{WHAT_WAS_IMPLEMENTED}`</span> | Feature/change built |
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| <span class="sb">`{PLAN_OR_REQUIREMENTS}`</span> | Spec or task reference |
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| <span class="sb">`{BASE_SHA}`</span>, <span class="sb">`{HEAD_SHA}`</span> | Git range |
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| <span class="sb">`{DESCRIPTION}`</span> | Brief summary |
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gs">**3. Act on feedback:**</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>&lt;reflection&gt;
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>Before dismissing reviewer feedback, verify: Do I have evidence it&#39;s wrong?
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>Ego resistance != technical correctness.
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>| Severity | Action |
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>|----------|--------|
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| Critical | Fix immediately, re-review |
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| Important | Fix before proceeding |
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| Minor | Note for later |
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>| Disagree | Counter with code/tests proving correctness |
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gu">## Integration Points</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Subagent development:**</span> Review after EACH task
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Plan execution:**</span> Review after batch (3 tasks)
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Ad-hoc work:**</span> Review pre-merge or when stuck
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span>Skip review because change is &quot;simple&quot;
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span>Ignore Critical severity issues
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">-</span><span class="w"> </span>Proceed with unfixed Important issues
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">-</span><span class="w"> </span>Dismiss valid technical feedback without evidence
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">-</span><span class="w"> </span>Self-approve without fresh perspective
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>Before completing review cycle:
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">- [ ]</span> All Critical issues fixed and verified
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">- [ ]</span> All Important issues fixed or explicitly deferred with rationale
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">- [ ]</span> Re-review triggered if Critical fixes were substantial
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">- [ ]</span> Feedback addressed with code/tests, not just acknowledgment
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>See template at: requesting-code-review/code-reviewer.md
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>If ANY unchecked: STOP and fix.
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>Template: <span class="sb">`requesting-code-review/code-reviewer.md`</span>
 </code></pre></div>
 
 

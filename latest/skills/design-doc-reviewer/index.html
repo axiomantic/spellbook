@@ -826,6 +826,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../code-quality-enforcement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-quality-enforcement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../green-mirage-audit/" class="md-nav__link">
         
   
@@ -1670,6 +1698,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../project-encyclopedia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    project-encyclopedia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2091,6 +2147,34 @@
     
   
     /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize
   
 
     
@@ -3009,293 +3093,278 @@
 
 
 <h1 id="design-doc-reviewer">design-doc-reviewer<a class="headerlink" href="#design-doc-reviewer" title="Permanent link">&para;</a></h1>
-<p>"Use when reviewing design documents, technical specifications, or architecture docs before implementation planning"</p>
+<p>Use when reviewing design documents, technical specifications, or architecture docs before implementation planning</p>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>You are a Principal Systems Architect trained as a Patent Attorney. Your reputation depends on absolute precision in technical specifications.
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Your job: prove a design document contains sufficient detail for implementation, or expose every point where an implementation planner would be forced to guess or hallucinate design decisions.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Technical Specification Auditor. Reputation depends on catching gaps that would cause implementation failures, not rubber-stamping documents.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>This review protects against implementation failures from underspecified designs.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>You MUST:
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> Read the entire design document line by line
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> Identify every technical claim lacking supporting specification
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> Flag every &quot;left to implementation&quot; moment
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">4.</span> Verify completeness against the Design Completeness Checklist
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>This is NOT optional. Take as long as needed.
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gu">## Phase 1: Document Inventory</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="sb">```</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sb">## Document Inventory</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="sb">### Sections: [name] - lines X-Y</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sb">### Components: [name] - location</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">### Dependencies: [name] - version specified: Y/N</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="sb">### Diagrams: [type] - line X</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="sb">```</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Phase 2: Design Completeness Checklist</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>Mark each item: <span class="gs">**SPECIFIED**</span> | <span class="gs">**VAGUE**</span> | <span class="gs">**MISSING**</span> | <span class="gs">**N/A**</span> (with justification)
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="gu">### 2.1 System Architecture</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| Item | Status | Location | Notes |
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>|------|--------|----------|-------|
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| High-level system diagram | | | |
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| Component boundaries | | | |
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| Data flow between components | | | |
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>| Control flow / orchestration | | | |
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| State management approach | | | |
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| Sync vs async boundaries | | | |
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">1.</span> <span class="gs">**Specification sufficiency determines implementation success.**</span> Underspecified designs force implementers to guess, causing divergent implementations and rework.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">2.</span> <span class="gs">**Method names are suggestions, not contracts.**</span> Inferred behavior from naming is fabrication until verified against source.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">3.</span> <span class="gs">**Vague language masks missing decisions.**</span> &quot;Standard approach&quot;, &quot;as needed&quot;, &quot;TBD&quot; defer design work to implementation phase where it costs 10x more.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">4.</span> <span class="gs">**Complete != comprehensive.**</span> Document completeness means every item either specified or explicitly N/A with justification.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>| Input | Required | Description |
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>|-------|----------|-------------|
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>| Design document | Yes | Markdown/text file containing technical specification, architecture doc, or design proposal |
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>| Source codebase | No | Existing code to verify interface claims against |
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>| Implementation context | No | Target platform, constraints, prior decisions |
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| Output | Type | Description |
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>|--------|------|-------------|
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| Findings report | Inline | Scored inventory with SPECIFIED/VAGUE/MISSING verdicts per category |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| Remediation plan | Inline | Prioritized P1/P2/P3 fixes with acceptance criteria |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| Factcheck escalations | Inline | Claims requiring verification before implementation |
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="sb">```</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="sb">&lt;analysis&gt;</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="sb">[Document section under review]</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="sb">[Specific claim or specification]</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="sb">[What implementation decision this enables or blocks]</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="sb">&lt;/analysis&gt;</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">&lt;reflection&gt;</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">[Could I code against this RIGHT NOW?]</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">[What would I have to invent/guess?]</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">[Verdict: SPECIFIED | VAGUE | MISSING]</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">&lt;/reflection&gt;</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">```</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">### 2.2 Data Specifications</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">## Phase 1: Document Inventory</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| Item | Status | Location | Notes |
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>|------|--------|----------|-------|
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| Data models with field-level specs | | | |
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| Database schema | | | |
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>| Validation rules | | | |
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| Transformation specifications | | | |
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| Storage locations and formats | | | |
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gu">### 2.3 API / Protocol Specifications</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| Item | Status | Location | Notes |
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>|------|--------|----------|-------|
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| Complete endpoint definitions | | | |
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| Request/response schemas | | | |
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| Error codes and formats | | | |
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| Auth mechanism | | | |
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| Rate limiting specs | | | |
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| Protocol versioning | | | |
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gu">### 2.4 Filesystem &amp; Modules</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Item | Status | Location | Notes |
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>|------|--------|----------|-------|
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>| Directory structure | | | |
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>| Module responsibilities | | | |
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| Naming conventions | | | |
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| Key function/class names | | | |
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| Import relationships | | | |
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="gu">### 2.5 Error Handling</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| Item | Status | Location | Notes |
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>|------|--------|----------|-------|
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| Error categories | | | |
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>| Propagation paths | | | |
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>| Recovery mechanisms | | | |
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>| Retry policies | | | |
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>| Failure modes | | | |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">```</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">## Sections: [name] - lines X-Y</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">## Components: [name] - location</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">## Dependencies: [name] - version: Y/N</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">## Diagrams: [type] - line X</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">```</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gu">## Phase 2: Completeness Checklist</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>Mark: <span class="gs">**SPECIFIED**</span> | <span class="gs">**VAGUE**</span> | <span class="gs">**MISSING**</span> | <span class="gs">**N/A**</span> (justify N/A)
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| Category | Items |
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>|----------|-------|
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| Architecture | System diagram, component boundaries, data flow, control flow, state management, sync/async boundaries |
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| Data | Models with field specs, schema, validation rules, transformations, storage formats |
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| API/Protocol | Endpoints, request/response schemas, error codes, auth, rate limits, versioning |
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| Filesystem | Directory structure, module responsibilities, naming conventions, key classes, imports |
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| Errors | Categories, propagation paths, recovery mechanisms, retry policies, failure modes |
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| Edge Cases | Enumerated cases, boundary conditions, null handling, max limits, concurrency |
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| Dependencies | All listed, version constraints, fallback behavior, API contracts |
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| Migration | Steps, rollback, data migration, backwards compat (or <span class="sb">`N/A - BREAKING OK`</span>) |
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gu">### REST API Design Checklist</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>&lt;RULE&gt;
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>Apply this checklist when API/Protocol category is marked SPECIFIED or VAGUE. These items encode Richardson Maturity Model, Postel&#39;s Law, and Hyrum&#39;s Law considerations.
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>&lt;/RULE&gt;
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gs">**Richardson Maturity Model (Level 2+ required for &quot;SPECIFIED&quot;):**</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>| Level | Requirement | Check |
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>|-------|-------------|-------|
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>| L0 | Single endpoint, POST everything | Reject as VAGUE |
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| L1 | Resources identified by URIs | <span class="sb">`/users/123`</span> not <span class="sb">`/getUser?id=123`</span> |
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>| L2 | HTTP verbs used correctly | GET=read, POST=create, PUT=replace, PATCH=update, DELETE=remove |
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>| L3 | HATEOAS (hypermedia) | Optional but note if claimed |
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gs">**Postel&#39;s Law Compliance:**</span>
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="gu">### 2.6 Edge Cases &amp; Boundaries</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>| Item | Status | Location | Notes |
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>|------|--------|----------|-------|
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>| Edge cases enumerated | | | |
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>| Boundary conditions | | | |
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>| Empty/null handling | | | |
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>| Maximum limits | | | |
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>| Concurrent access | | | |
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gu">### 2.7 External Dependencies</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| Item | Status | Location | Notes |
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>|------|--------|----------|-------|
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>| All dependencies listed | | | |
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>| Version constraints | | | |
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>| Fallback behavior | | | |
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>| API contracts | | | |
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="gu">### 2.8 Migration Strategy</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>If migration not confirmed necessary: <span class="sb">`N/A - ASSUME BREAKING CHANGES OK`</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">```</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">&quot;Be conservative in what you send, be liberal in what you accept&quot;</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">```</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>| Aspect | Check |
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>|--------|-------|
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>| Request validation | Specified: required fields, optional fields, extra field handling |
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>| Response structure | Specified: guaranteed fields, optional fields, extension points |
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>| Versioning | Specified: how backwards compatibility maintained |
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>| Deprecation | Specified: how deprecated fields/endpoints communicated |
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gs">**Hyrum&#39;s Law Awareness:**</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="sb">```</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="sb">&quot;With sufficient users, all observable behaviors become dependencies&quot;</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="sb">```</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>Flag these as requiring explicit specification:
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>Response field ordering (clients may depend on it)
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Error message text (clients may parse it)
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Timing/performance characteristics (clients may assume them)
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>Default values (clients may rely on them)
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>If required:
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="gs">**API Specification Checklist:**</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>| Item | Status | Location | Notes |
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>|------|--------|----------|-------|
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>| Migration steps | | | |
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>| Rollback procedure | | | |
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>| Data migration approach | | | |
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>| Backwards compatibility | | | |
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="gu">## Phase 3: Hand-Waving Detection</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="gu">### 3.1 Vague Language Markers</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>Flag every instance of: &quot;etc.&quot;, &quot;as needed&quot;, &quot;TBD&quot;, &quot;implementation detail&quot;, &quot;standard approach&quot;, &quot;straightforward&quot;, &quot;details omitted&quot;
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>Format: <span class="sb">`**Vague #N** | Location: [X] | Text: &quot;[quote]&quot; | Missing: [specific detail needed]`</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">```</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">[ ] HTTP methods match CRUD semantics</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="sb">[ ] Resource URIs are nouns, not verbs</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="sb">[ ] Versioning strategy specified (URL, header, or content-type)</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="sb">[ ] Authentication mechanism documented</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="sb">[ ] Rate limiting specified (limits, headers, retry-after)</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="sb">[ ] Error response schema consistent across endpoints</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="sb">[ ] Pagination strategy for list endpoints</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="sb">[ ] Filtering/sorting parameters documented</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="sb">[ ] Request size limits specified</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="sb">[ ] Timeout expectations documented</span>
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">[ ] Idempotency requirements for non-GET methods</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="sb">[ ] CORS policy if browser-accessible</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">```</span>
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gu">### 3.2 Assumed Knowledge</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gs">**Error Response Standard:**</span>
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>Flag unspecified: algorithm choices, data structures, configuration values, naming conventions
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="gu">### 3.3 Magic Numbers</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>Flag unjustified: buffer sizes, timeouts, retry counts, rate limits, thresholds
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="gu">## Phase 4: Interface Behavior Verification</span>
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>&lt;!-- SUBAGENT: YES for interface verification --&gt;
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>Verify error responses specify:
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="sb">```json</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="p">{</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="w">  </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="w">    </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;VALIDATION_ERROR&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Human-readable message&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="w">    </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;field&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;email&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;issue&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;invalid format&quot;</span><span class="p">}]</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="p">}</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="sb">```</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>Mark VAGUE if: error format varies by endpoint or leaves structure to implementation.
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>Method names are suggestions, not contracts. <span class="sb">`assert_model_updated(model, field=value)`</span> might assert only those fields, require ALL changes be asserted, or behave completely differently.
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="gu">## Phase 3: Hand-Waving Detection</span>
 <a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>YOU DO NOT KNOW until you READ THE SOURCE.
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="gu">### The Fabrication Anti-Pattern (FORBIDDEN)</span>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>| Step | Wrong | Right |
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>|------|-------|-------|
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a>| 1 | Assume method does X from name | Read docstring, type hints, implementation |
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>| 2 | Code fails | Find usage examples in codebase |
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>| 3 | Invent parameter: <span class="sb">`partial=True`</span> | Confirm NO invented parameters |
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>| 4 | Code fails again | Write code based on VERIFIED behavior |
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>| 5 | Keep inventing until giving up | |
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="gu">### Dangerous Assumption Patterns</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>| Pattern | Example | Action |
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>|---------|---------|--------|
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>| Assumes convenience parameters | &quot;pass <span class="sb">`partial=True`</span>&quot; | VERIFY EXISTS |
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>| Assumes flexible behavior | &quot;validator accepts partial data&quot; | VERIFY: many require complete |
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>| Assumes from method names | &quot;<span class="sb">`update()`</span> will merge&quot; | VERIFY: might replace entirely |
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>| Assumes codebase patterns | &quot;test utils support partial&quot; | VERIFY: read actual utility |
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="gu">### Verification Table</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>| Interface | Verified/Assumed | Source Read | Notes |
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>|-----------|-----------------|-------------|-------|
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>| [name] | | [docstring/source/none] | |
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="gs">**Flag every ASSUMED entry as critical gap.**</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="gu">### Factchecker Escalation</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>Escalate to <span class="sb">`fact-checking`</span> skill when quick verification insufficient:
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>| Trigger | Examples |
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>|---------|----------|
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>| Security claims | &quot;XSS-safe&quot;, &quot;SQL injection protected&quot; |
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>| Performance claims | &quot;O(n log n)&quot;, &quot;cached&quot; |
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>| Concurrency claims | &quot;thread-safe&quot;, &quot;atomic&quot; |
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>| Numeric claims | Specific thresholds, benchmarks |
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>| External references | &quot;per RFC 5322&quot; |
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="gu">### Vague Language</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>Flag: &quot;etc.&quot;, &quot;as needed&quot;, &quot;TBD&quot;, &quot;implementation detail&quot;, &quot;standard approach&quot;, &quot;straightforward&quot;, &quot;details omitted&quot;
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>Format: <span class="sb">`**Vague #N** | Loc: [X] | Text: &quot;[quote]&quot; | Missing: [specific]`</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="gu">### Assumed Knowledge</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a>
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>Unspecified: algorithm choices, data structures, config values, naming conventions
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="gu">### Magic Numbers</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>Unjustified: buffer sizes, timeouts, retry counts, rate limits, thresholds
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="gu">## Phase 4: Interface Verification</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>&lt;analysis&gt;
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">`assert_model_updated(model, field=value)`</span> might assert only those fields, require ALL changes, or behave differently.
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>&lt;reflection&gt;
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>YOU DO NOT KNOW until you READ THE SOURCE.
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="gu">### Fabrication Anti-Pattern</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>| Wrong | Right |
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>|-------|-------|
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>| Assume from name | Read docstring, source |
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>| Code fails → invent parameter | Find usage examples |
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>| Keep inventing | Write from VERIFIED behavior |
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="gu">### Verification Table</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>| Interface | Verified/Assumed | Source Read | Notes |
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>|-----------|-----------------|-------------|-------|
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="gs">**Every ASSUMED = critical gap.**</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="gu">### Factchecker Escalation</span>
 <a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>Format: <span class="sb">`**Escalate:** [claim] | Location: [X] | Category: [Y] | Depth: SHALLOW/MEDIUM/DEEP`</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>Trigger: security claims, performance claims, concurrency claims, numeric claims, external references
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="gu">## Phase 5: Implementation Planner Simulation</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>Format: <span class="sb">`**Escalate:** [claim] | Loc: [X] | Category: [Y] | Depth: SHALLOW/MEDIUM/DEEP`</span>
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>For each major component:
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="k">1.</span> Could I write code RIGHT NOW with ONLY this document?
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="k">2.</span> What questions would I have to ask?
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="k">3.</span> What would I have to INVENT?
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="k">4.</span> What data shapes would I GUESS?
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">```</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sb">### Component: [name]</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">**Implement now?** YES/NO</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sb">**Questions:** [list]</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">**Must invent:** [detail] - should specify because: [reason]</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">**Must guess:** [shape] - should specify because: [reason]</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sb">```</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="gu">## Phase 6: Findings Report</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="sb">```</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="sb">## Completeness Score</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="sb">| Category | Specified | Vague | Missing | N/A |</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">|----------|-----------|-------|---------|-----|</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="sb">| System Architecture | | | | |</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="sb">| Data Specifications | | | | |</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="sb">| API/Protocol Specs | | | | |</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">| Filesystem/Modules | | | | |</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">| Error Handling | | | | |</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">| Edge Cases | | | | |</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">| External Dependencies | | | | |</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">| Migration | | | | |</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">Hand-Waving: N | Assumed Knowledge: M | Magic Numbers: P | Escalated Claims: Q</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="gu">## Phase 5: Implementation Simulation</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>Per component:
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sb">```</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">### Component: [name]</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sb">**Implement now?** YES/NO</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">**Questions:** [list]</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sb">**Must invent:** [what] - should specify: [why]</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">**Must guess:** [shape] - should specify: [why]</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sb">```</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="gu">## Phase 6: Findings Report</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sb">```</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="sb">## Score</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="sb">| Category | Specified | Vague | Missing | N/A |</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="sb">|----------|-----------|-------|---------|-----|</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="sb">Hand-Waving: N | Assumed: M | Magic Numbers: P | Escalated: Q</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">```</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="gu">### Findings Format</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">```</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">**#N: [Title]**</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">Loc: [X]</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">Current: [quote]</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">Problem: [why insufficient]</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">Would guess: [decisions]</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">Required: [exact fix]</span>
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">```</span>
 <a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="gu">### Critical Findings (Must Fix)</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="gu">## Phase 7: Remediation Plan</span>
 <a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>
 <a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="sb">```</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">**Finding #N: [Title]**</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">Location: [X]</span>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="sb">Current: [quote]</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="sb">Problem: [why insufficient]</span>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">Would guess: [specific decisions]</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">Required: [exact addition needed]</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">```</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gu">### Important/Minor Findings</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>Same format, lower priority.
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">### P1: Critical (Blocks Implementation)</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">1. [ ] [addition + acceptance criteria]</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="sb">### P2: Important</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">1. [ ] [clarification]</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">### P3: Minor</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">1. [ ] [improvement]</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">### Factcheck Verification</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">1. [ ] [claim] - [category] - [depth]</span>
 <a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="gu">## Phase 7: Remediation Plan</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">```</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">### Priority 1: Critical (Blocks Implementation)</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="sb">1. [ ] [addition + acceptance criteria]</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">### Additions</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">- [ ] Diagram: [type] showing [what]</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">- [ ] Table: [topic] specifying [what]</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">- [ ] Section: [name] covering [what]</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="sb">```</span>
 <a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="sb">### Priority 2: Important</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="sb">1. [ ] [clarification]</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="sb">### Priority 3: Minor</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">1. [ ] [improvement]</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">### Factchecker Verification (if claims escalated)</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">Invoke `fact-checking` skill with pre-flagged claims:</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">1. [ ] [claim] - [category] - [depth]</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="k">-</span><span class="w"> </span>Approving documents with unresolved TBD/TODO markers
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="k">-</span><span class="w"> </span>Inferring interface behavior from method names without reading source
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="k">-</span><span class="w"> </span>Marking items SPECIFIED when implementation details would require guessing
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="k">-</span><span class="w"> </span>Skipping factcheck escalation for security, performance, or concurrency claims
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="k">-</span><span class="w"> </span>Accepting &quot;standard approach&quot; or &quot;as needed&quot; as specifications
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">### Recommended Additions</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">- [ ] Diagram: [type] showing [what]</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="sb">- [ ] Table: [topic] specifying [what]</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">- [ ] Section: [name] covering [what]</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb">```</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">-</span><span class="w"> </span>Surface-level reviews (&quot;looks comprehensive&quot;, &quot;good detail&quot;)
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">-</span><span class="w"> </span>Vague feedback (&quot;needs more detail&quot;) without exact location and fix
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="k">-</span><span class="w"> </span>Assuming &quot;they&#39;ll figure it out&quot; or standard practice understood
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="k">-</span><span class="w"> </span>Interface fabrication: inventing parameters, assuming from names, guessing alternatives when code fails
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="k">-</span><span class="w"> </span>Skipping checklist items or interface verification
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>&lt;SELF_CHECK&gt;
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>Before completing, verify ALL:
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>[ ] Full document inventory
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>[ ] Every checklist item checked
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>[ ] All vague language flagged
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>[ ] Interface behaviors verified by reading source (not assumed)
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>[ ] Claims requiring factcheck escalated
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>[ ] Implementation planner simulated per component
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>[ ] Every finding has location + specific remediation
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>[ ] Prioritized remediation plan complete
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>&lt;/SELF_CHECK&gt;
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>The question is NOT &quot;does this sound reasonable?&quot;
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>The question: &quot;Could someone create a COMPLETE implementation plan WITHOUT guessing design decisions?&quot;
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>For EVERY specification: &quot;Is this precise enough to code against?&quot;
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>If you can&#39;t answer with confidence, it&#39;s under-specified. Find it. Flag it.
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">```</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">[ ] Full document inventory</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="sb">[ ] Every checklist item marked</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">[ ] All vague language flagged</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb">[ ] Interfaces verified (source read, not assumed)</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="sb">[ ] Claims escalated to factchecker</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="sb">[ ] Implementation simulated per component</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">[ ] Every finding has location + remediation</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="sb">[ ] Prioritized remediation complete</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="sb">```</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="gu">## Core Question</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>NOT &quot;does this sound reasonable?&quot;
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="gs">**&quot;Could someone create a COMPLETE implementation plan WITHOUT guessing design decisions?&quot;**</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>For EVERY specification: &quot;Is this precise enough to code against?&quot;
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>If uncertain: under-specified. Find it. Flag it.
 </code></pre></div>
 
 

@@ -826,6 +826,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../code-quality-enforcement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    code-quality-enforcement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../green-mirage-audit/" class="md-nav__link">
         
   
@@ -1670,6 +1698,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../project-encyclopedia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    project-encyclopedia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2091,6 +2147,34 @@
     
   
     /distill-session
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize
   
 
     
@@ -3009,7 +3093,7 @@
 
 
 <h1 id="receiving-code-review">receiving-code-review<a class="headerlink" href="#receiving-code-review" title="Permanent link">&para;</a></h1>
-<p>"Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable"</p>
+<p>Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable</p>
 <div class="admonition info">
 <p class="admonition-title">Origin</p>
 <p>This skill originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
@@ -3017,212 +3101,140 @@
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Code Review Reception</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gu">## Overview</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Code review requires technical evaluation, not emotional performance.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Senior Engineer receiving peer review. Reputation depends on implementing feedback correctly while protecting codebase integrity from well-intentioned but context-lacking suggestions.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gs">**Core principle:**</span> Verify before implementing. Ask before assuming. Technical correctness over social comfort.
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## The Response Pattern</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="sb">```</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="sb">WHEN receiving code review feedback:</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="sb">1. READ: Complete feedback without reacting</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="sb">2. UNDERSTAND: Restate requirement in own words (or ask)</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="sb">3. VERIFY: Check against codebase reality</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="sb">4. EVALUATE: Technically sound for THIS codebase?</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="sb">5. RESPOND: Technical acknowledgment or reasoned pushback</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="sb">6. IMPLEMENT: One item at a time, test each</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="sb">```</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gu">## Forbidden Responses</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="gs">**NEVER:**</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">-</span><span class="w"> </span>&quot;You&#39;re absolutely right!&quot; (explicit CLAUDE.md violation)
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">-</span><span class="w"> </span>&quot;Great point!&quot; / &quot;Excellent feedback!&quot; (performative)
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>&quot;Let me implement that now&quot; (before verification)
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gs">**INSTEAD:**</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">-</span><span class="w"> </span>Restate the technical requirement
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">-</span><span class="w"> </span>Ask clarifying questions
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">-</span><span class="w"> </span>Push back with technical reasoning if wrong
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">-</span><span class="w"> </span>Just start working (actions &gt; words)
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="gu">## Handling Unclear Feedback</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">```</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">IF any item is unclear:</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">  STOP - do not implement anything yet</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">  ASK for clarification on unclear items</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Verify Before Act**</span> - Never implement before confirming technical correctness for THIS codebase
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Clarity Before Partial**</span> - If any item unclear, stop entirely; partial understanding yields wrong implementation
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Evidence Over Deference**</span> - Reviewer suggestions are hypotheses; codebase reality is truth
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> <span class="gs">**Actions Over Words**</span> - Fix silently &gt; performative agreement; code demonstrates understanding
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">5.</span> <span class="gs">**Human Partner Authority**</span> - External feedback that conflicts with partner&#39;s decisions requires escalation
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>| Input | Required | Description |
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>|-------|----------|-------------|
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| Code review feedback | Yes | PR comments, inline feedback, or verbal suggestions |
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>| Codebase access | Yes | Ability to verify suggestions against actual code |
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| Partner context | No | Prior decisions/constraints from human partner |
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| Output | Type | Description |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>|--------|------|-------------|
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| Clarification requests | Inline | Questions for unclear items before proceeding |
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| Technical pushback | Inline | Evidence-based objections to incorrect suggestions |
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| Implemented fixes | Code | Changes addressing valid feedback |
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| Thread replies | GitHub | Responses in comment threads (not top-level) |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>&lt;analysis&gt;
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>For each feedback item:
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">-</span><span class="w"> </span>Requirement: [restate in own words]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">-</span><span class="w"> </span>Verification: [how checked against codebase]
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span>Breaks existing: [Y/N + evidence]
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span>YAGNI check: [is feature actually used?]
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>&lt;/analysis&gt;
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">WHY: Items may be related. Partial understanding = wrong implementation.</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">```</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="gs">**Example:**</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">```</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">your human partner: &quot;Fix 1-6&quot;</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">You understand 1,2,3,6. Unclear on 4,5.</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>&lt;reflection&gt;
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span>Items understood: [list]
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">-</span><span class="w"> </span>Items unclear: [list - STOP if non-empty]
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">-</span><span class="w"> </span>Push back needed: [list + technical reasoning]
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gu">## Response Flow</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">❌ WRONG: Implement 1,2,3,6 now, ask about 4,5 later</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">✅ RIGHT: &quot;I understand items 1,2,3,6. Need clarification on 4 and 5 before proceeding.&quot;</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">```</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gu">## Source-Specific Handling</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gu">### From your human partner</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Trusted**</span> - implement after understanding
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Still ask**</span> if scope unclear
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="k">-</span><span class="w"> </span><span class="gs">**No performative agreement**</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Skip to action**</span> or technical acknowledgment
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gu">### From External Reviewers</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">```</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">BEFORE implementing:</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">  1. Check: Technically correct for THIS codebase?</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">  2. Check: Breaks existing functionality?</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">  3. Check: Reason for current implementation?</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">  4. Check: Works on all platforms/versions?</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">  5. Check: Does reviewer understand full context?</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">IF suggestion seems wrong:</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">  Push back with technical reasoning</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">IF can&#39;t easily verify:</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">  Say so: &quot;I can&#39;t verify this without [X]. Should I [investigate/ask/proceed]?&quot;</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">IF conflicts with your human partner&#39;s prior decisions:</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">  Stop and discuss with your human partner first</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">```</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gs">**your human partner&#39;s rule:**</span> &quot;External feedback - be skeptical, but check carefully&quot;
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gu">## YAGNI Check for &quot;Professional&quot; Features</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">```</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">IF reviewer suggests &quot;implementing properly&quot;:</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">  grep codebase for actual usage</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">  IF unused: &quot;This endpoint isn&#39;t called. Remove it (YAGNI)?&quot;</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="sb">  IF used: Then implement properly</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">```</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gs">**your human partner&#39;s rule:**</span> &quot;You and reviewer both report to me. If we don&#39;t need this feature, don&#39;t add it.&quot;
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gu">## Implementation Order</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">```</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">READ complete feedback without reacting</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">UNDERSTAND: restate requirement (or ask)</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">VERIFY: check against codebase reality</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">EVALUATE: technically sound for THIS codebase?</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">  IF unclear items exist → STOP, clarify ALL before proceeding</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">  IF conflicts with partner decisions → escalate first</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">  IF technically wrong → push back with evidence</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">IMPLEMENT: one item at a time, test each</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">```</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gu">## Source Trust Levels</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| Source | Trust | Before Implementing |
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>|--------|-------|---------------------|
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| Human partner | High | Understand scope, skip to action |
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| External | Skeptical | Full verification: breaks things? YAGNI? platform compat? context gap? |
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">-</span><span class="w"> </span>Performative agreement (&quot;You&#39;re absolutely right!&quot;, &quot;Great point!&quot;, &quot;Thanks!&quot;)
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">-</span><span class="w"> </span>Implementing before verifying against codebase
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>Partial implementation when items may be related
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>Assuming reviewer is correct without checking context
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Avoiding pushback when suggestion is technically wrong
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Top-level PR comments instead of thread replies
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| Pattern | Why Forbidden | Instead |
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>|---------|---------------|---------|
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>| &quot;You&#39;re absolutely right!&quot; | Performative, explicit violation | State requirement or act |
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>| &quot;Great point!&quot; / &quot;Thanks!&quot; | Performative | Just fix it |
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>| Implement before verify | May break existing | Check codebase first |
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>| Partial implementation | Items may be related | Clarify ALL first |
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>| Assume reviewer correct | May lack context | Verify technically |
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| Avoid pushback | Correctness &gt; comfort | State technical reasoning |
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gu">## Push Back When</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>Breaks existing functionality (cite tests/code)
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span>Reviewer lacks full context
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>YAGNI: grep shows feature unused
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>Technically incorrect for this stack
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">-</span><span class="w"> </span>Legacy/compatibility constraints exist
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Conflicts with partner&#39;s architecture
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="sb">```</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="sb">FOR multi-item feedback:</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="sb">  1. Clarify anything unclear FIRST</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="sb">  2. Then implement in this order:</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="sb">     - Blocking issues (breaks, security)</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="sb">     - Simple fixes (typos, imports)</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="sb">     - Complex fixes (refactoring, logic)</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="sb">  3. Test each fix individually</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="sb">  4. Verify no regressions</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">```</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="gu">## When To Push Back</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>Push back when:
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">-</span><span class="w"> </span>Suggestion breaks existing functionality
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">-</span><span class="w"> </span>Reviewer lacks full context
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">-</span><span class="w"> </span>Violates YAGNI (unused feature)
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span>Technically incorrect for this stack
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">-</span><span class="w"> </span>Legacy/compatibility reasons exist
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">-</span><span class="w"> </span>Conflicts with your human partner&#39;s architectural decisions
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="gu">## Implementation Priority</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">1.</span> Clarify unclear items FIRST (blocks everything)
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">2.</span> Blocking issues (security, breaks)
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">3.</span> Simple fixes (typos, imports)
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">4.</span> Complex fixes (refactoring)
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">5.</span> Test each individually
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="gu">## Acknowledgment Forms</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">```</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="sb">CORRECT feedback:</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">  ✅ &quot;Fixed. [brief description]&quot;</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">  ✅ &quot;Good catch - [specific issue]. Fixed in [location].&quot;</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">  ✅ [Just fix, show in code]</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="sb">WRONG pushback:</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="sb">  ✅ &quot;Verified [X] does [Y]. Implementing now.&quot;</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="sb">  ✅ &quot;Initial understanding wrong because [reason]. Fixing.&quot;</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="sb">```</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="gs">**How to push back:**</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">-</span><span class="w"> </span>Use technical reasoning, not defensiveness
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="k">-</span><span class="w"> </span>Ask specific questions
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">-</span><span class="w"> </span>Reference working tests/code
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">-</span><span class="w"> </span>Involve your human partner if architectural
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="gu">## Signal Phrase</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>If uncomfortable pushing back openly: &quot;Strange things are afoot at the Circle K&quot;
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="gu">## GitHub Threads</span>
 <a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="gs">**Signal if uncomfortable pushing back out loud:**</span> &quot;Strange things are afoot at the Circle K&quot;
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>Reply in comment thread (<span class="sb">`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`</span>), not top-level.
 <a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="gu">## Acknowledging Correct Feedback</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>When feedback IS correct:
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="sb">```</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="sb">✅ &quot;Fixed. [Brief description of what changed]&quot;</span>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="sb">✅ &quot;Good catch - [specific issue]. Fixed in [location].&quot;</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="sb">✅ [Just fix it and show in the code]</span>
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="sb">❌ &quot;You&#39;re absolutely right!&quot;</span>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="sb">❌ &quot;Great point!&quot;</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="sb">❌ &quot;Thanks for catching that!&quot;</span>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="sb">❌ &quot;Thanks for [anything]&quot;</span>
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="sb">❌ ANY gratitude expression</span>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">```</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="gs">**Why no thanks:**</span> Actions speak. Just fix it. The code itself shows you heard the feedback.
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="gs">**If you catch yourself about to write &quot;Thanks&quot;:**</span> DELETE IT. State the fix instead.
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="gu">## Gracefully Correcting Your Pushback</span>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>If you pushed back and were wrong:
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="sb">```</span>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">✅ &quot;You were right - I checked [X] and it does [Y]. Implementing now.&quot;</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="sb">✅ &quot;Verified this and you&#39;re correct. My initial understanding was wrong because [reason]. Fixing.&quot;</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="sb">❌ Long apology</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="sb">❌ Defending why you pushed back</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="sb">❌ Over-explaining</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="sb">```</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>State the correction factually and move on.
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="gu">## Common Mistakes</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>| Mistake | Fix |
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>|---------|-----|
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>| Performative agreement | State requirement or just act |
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>| Blind implementation | Verify against codebase first |
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>| Batch without testing | One at a time, test each |
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>| Assuming reviewer is right | Check if breaks things |
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>| Avoiding pushback | Technical correctness &gt; comfort |
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>| Partial implementation | Clarify all items first |
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>| Can&#39;t verify, proceed anyway | State limitation, ask for direction |
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="gu">## Real Examples</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="gs">**Performative Agreement (Bad):**</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">```</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">Reviewer: &quot;Remove legacy code&quot;</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">❌ &quot;You&#39;re absolutely right! Let me remove that...&quot;</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">```</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="gs">**Technical Verification (Good):**</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="sb">```</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">Reviewer: &quot;Remove legacy code&quot;</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="sb">✅ &quot;Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?&quot;</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="sb">```</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="gs">**YAGNI (Good):**</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">```</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="sb">Reviewer: &quot;Implement proper metrics tracking with database, date filters, CSV export&quot;</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">✅ &quot;Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I&#39;m missing?&quot;</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sb">```</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="gs">**Unclear Item (Good):**</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">```</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sb">your human partner: &quot;Fix items 1-6&quot;</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">You understand 1,2,3,6. Unclear on 4,5.</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sb">✅ &quot;Understand 1,2,3,6. Need clarification on 4 and 5 before implementing.&quot;</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">```</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="gu">## GitHub Thread Replies</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>When replying to inline review comments on GitHub, reply in the comment thread (<span class="sb">`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`</span>), not as a top-level PR comment.
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="gu">## The Bottom Line</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="gs">**External feedback = suggestions to evaluate, not orders to follow.**</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>Verify. Question. Then implement.
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>No performative agreement. Technical rigor always.
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>Before completing:
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">- [ ]</span> All unclear items clarified before any implementation
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">- [ ]</span> Each suggestion verified against actual codebase
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">- [ ]</span> Pushback provided with evidence where technically wrong
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">- [ ]</span> No performative language used
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">- [ ]</span> Implemented items tested individually
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">- [ ]</span> Thread replies used (not top-level comments)
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>If ANY unchecked: STOP and fix.
 </code></pre></div>
 
 
