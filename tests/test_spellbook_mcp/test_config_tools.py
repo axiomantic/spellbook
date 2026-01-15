@@ -161,17 +161,18 @@ class TestSessionInit:
     """Tests for session_init function."""
 
     def test_returns_unset_when_no_config(self, tmp_path, monkeypatch):
-        """Test that missing config returns fun_mode=unset."""
+        """Test that missing config returns mode.type=unset."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "nonexistent" / "spellbook.json"
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         result = session_init()
-        assert result == {"fun_mode": "unset"}
+        assert result["mode"]["type"] == "unset"
+        assert result["fun_mode"] == "unset"  # Legacy key
 
-    def test_returns_unset_when_fun_mode_not_set(self, tmp_path, monkeypatch):
-        """Test that config without fun_mode returns unset."""
+    def test_returns_unset_when_no_mode_keys_set(self, tmp_path, monkeypatch):
+        """Test that config without session_mode or fun_mode returns unset."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "spellbook.json"
@@ -179,10 +180,47 @@ class TestSessionInit:
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         result = session_init()
-        assert result == {"fun_mode": "unset"}
+        assert result["mode"]["type"] == "unset"
+        assert result["fun_mode"] == "unset"  # Legacy key
 
-    def test_returns_no_when_fun_mode_false(self, tmp_path, monkeypatch):
-        """Test that fun_mode=false returns no."""
+    def test_returns_none_when_session_mode_none(self, tmp_path, monkeypatch):
+        """Test that session_mode='none' returns mode.type=none."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"session_mode": "none"}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+        assert result["mode"]["type"] == "none"
+        assert result["fun_mode"] == "no"  # Legacy key
+
+    def test_returns_tarot_mode(self, tmp_path, monkeypatch):
+        """Test that session_mode='tarot' returns tarot mode."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"session_mode": "tarot"}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+        assert result["mode"]["type"] == "tarot"
+        assert result["fun_mode"] == "no"  # Legacy key - tarot is not fun mode
+
+    def test_session_mode_takes_precedence_over_legacy(self, tmp_path, monkeypatch):
+        """Test that session_mode takes precedence over legacy fun_mode."""
+        from spellbook_mcp.config_tools import session_init
+
+        config_path = tmp_path / "spellbook.json"
+        # Both set, session_mode should win
+        config_path.write_text('{"session_mode": "tarot", "fun_mode": true}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        result = session_init()
+        assert result["mode"]["type"] == "tarot"
+
+    def test_legacy_fun_mode_false_returns_none(self, tmp_path, monkeypatch):
+        """Test that legacy fun_mode=false returns mode.type=none."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "spellbook.json"
@@ -190,15 +228,16 @@ class TestSessionInit:
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         result = session_init()
-        assert result == {"fun_mode": "no"}
+        assert result["mode"]["type"] == "none"
+        assert result["fun_mode"] == "no"  # Legacy key
 
-    def test_returns_yes_with_selections_when_enabled(self, tmp_path, monkeypatch):
-        """Test that fun_mode=true returns yes with persona/context/undertow."""
+    def test_returns_fun_mode_with_selections(self, tmp_path, monkeypatch):
+        """Test that session_mode='fun' returns fun mode with persona/context/undertow."""
         from spellbook_mcp.config_tools import session_init
 
         # Set up config
         config_path = tmp_path / "spellbook.json"
-        config_path.write_text('{"fun_mode": true}')
+        config_path.write_text('{"session_mode": "fun"}')
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         # Set up fun-mode assets
@@ -212,17 +251,43 @@ class TestSessionInit:
 
         result = session_init()
 
+        assert result["mode"]["type"] == "fun"
+        assert result["mode"]["persona"] in ["Test Persona 1", "Test Persona 2"]
+        assert result["mode"]["context"] in ["Test Context 1", "Test Context 2"]
+        assert result["mode"]["undertow"] in ["Test Undertow 1", "Test Undertow 2"]
+        # Legacy keys
         assert result["fun_mode"] == "yes"
         assert result["persona"] in ["Test Persona 1", "Test Persona 2"]
-        assert result["context"] in ["Test Context 1", "Test Context 2"]
-        assert result["undertow"] in ["Test Undertow 1", "Test Undertow 2"]
+
+    def test_legacy_fun_mode_true_works(self, tmp_path, monkeypatch):
+        """Test that legacy fun_mode=true still works when session_mode not set."""
+        from spellbook_mcp.config_tools import session_init
+
+        # Set up config with legacy key only
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"fun_mode": true}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        # Set up fun-mode assets
+        spellbook_dir = tmp_path / "spellbook"
+        fun_assets = spellbook_dir / "skills" / "fun-mode"
+        fun_assets.mkdir(parents=True)
+        (fun_assets / "personas.txt").write_text("Test Persona\n")
+        (fun_assets / "contexts.txt").write_text("Test Context\n")
+        (fun_assets / "undertows.txt").write_text("Test Undertow\n")
+        monkeypatch.setenv("SPELLBOOK_DIR", str(spellbook_dir))
+
+        result = session_init()
+
+        assert result["mode"]["type"] == "fun"
+        assert result["fun_mode"] == "yes"
 
     def test_handles_missing_assets_dir(self, tmp_path, monkeypatch):
         """Test error when fun-mode assets directory doesn't exist."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "spellbook.json"
-        config_path.write_text('{"fun_mode": true}')
+        config_path.write_text('{"session_mode": "fun"}')
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         # Point to a directory that exists but doesn't have fun-mode assets
@@ -232,16 +297,19 @@ class TestSessionInit:
 
         result = session_init()
 
+        assert result["mode"]["type"] == "fun"
+        assert "error" in result["mode"]
+        assert "fun-mode assets not found" in result["mode"]["error"]
+        # Legacy keys
         assert result["fun_mode"] == "yes"
         assert "error" in result
-        assert "fun-mode assets not found" in result["error"]
 
     def test_handles_empty_asset_files(self, tmp_path, monkeypatch):
         """Test handling of empty persona/context/undertow files."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "spellbook.json"
-        config_path.write_text('{"fun_mode": true}')
+        config_path.write_text('{"session_mode": "fun"}')
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         spellbook_dir = tmp_path / "spellbook"
@@ -254,17 +322,17 @@ class TestSessionInit:
 
         result = session_init()
 
+        assert result["mode"]["type"] == "fun"
+        assert result["mode"]["persona"] == ""
         assert result["fun_mode"] == "yes"
         assert result["persona"] == ""
-        assert result["context"] == ""
-        assert result["undertow"] == ""
 
     def test_handles_missing_asset_files(self, tmp_path, monkeypatch):
         """Test handling of missing persona/context/undertow files."""
         from spellbook_mcp.config_tools import session_init
 
         config_path = tmp_path / "spellbook.json"
-        config_path.write_text('{"fun_mode": true}')
+        config_path.write_text('{"session_mode": "fun"}')
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         spellbook_dir = tmp_path / "spellbook"
@@ -275,10 +343,131 @@ class TestSessionInit:
 
         result = session_init()
 
+        assert result["mode"]["type"] == "fun"
+        assert result["mode"]["persona"] == ""
         assert result["fun_mode"] == "yes"
         assert result["persona"] == ""
-        assert result["context"] == ""
-        assert result["undertow"] == ""
+
+
+class TestSessionModeSet:
+    """Tests for session_mode_set function."""
+
+    def test_session_only_mode_set(self, tmp_path, monkeypatch):
+        """Test setting session-only mode (not permanent)."""
+        from spellbook_mcp.config_tools import session_mode_set, _session_state
+
+        # Reset session state
+        _session_state["mode"] = None
+
+        result = session_mode_set("tarot", permanent=False)
+
+        assert result["status"] == "ok"
+        assert result["mode"] == "tarot"
+        assert result["permanent"] is False
+        assert _session_state["mode"] == "tarot"
+
+        # Clean up
+        _session_state["mode"] = None
+
+    def test_permanent_mode_set(self, tmp_path, monkeypatch):
+        """Test setting permanent mode (saved to config)."""
+        from spellbook_mcp.config_tools import session_mode_set, _session_state, config_get
+
+        config_path = tmp_path / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        # Reset session state
+        _session_state["mode"] = None
+
+        result = session_mode_set("fun", permanent=True)
+
+        assert result["status"] == "ok"
+        assert result["mode"] == "fun"
+        assert result["permanent"] is True
+        # Session state should be cleared so config takes effect
+        assert _session_state["mode"] is None
+        # Config should be updated
+        assert config_get("session_mode") == "fun"
+
+    def test_invalid_mode_rejected(self):
+        """Test that invalid modes are rejected."""
+        from spellbook_mcp.config_tools import session_mode_set
+
+        result = session_mode_set("invalid_mode", permanent=False)
+
+        assert result["status"] == "error"
+        assert "Invalid mode" in result["message"]
+
+
+class TestSessionModeGet:
+    """Tests for session_mode_get function."""
+
+    def test_returns_session_override(self, tmp_path, monkeypatch):
+        """Test that session override is returned when set."""
+        from spellbook_mcp.config_tools import session_mode_get, _session_state
+
+        _session_state["mode"] = "tarot"
+
+        result = session_mode_get()
+
+        assert result["mode"] == "tarot"
+        assert result["source"] == "session"
+        assert result["permanent"] is False
+
+        # Clean up
+        _session_state["mode"] = None
+
+    def test_returns_config_when_no_session(self, tmp_path, monkeypatch):
+        """Test that config is returned when no session override."""
+        from spellbook_mcp.config_tools import session_mode_get, _session_state
+
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"session_mode": "fun"}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        _session_state["mode"] = None
+
+        result = session_mode_get()
+
+        assert result["mode"] == "fun"
+        assert result["source"] == "config"
+        assert result["permanent"] is True
+
+    def test_returns_unset_when_nothing_configured(self, tmp_path, monkeypatch):
+        """Test that unset is returned when nothing configured."""
+        from spellbook_mcp.config_tools import session_mode_get, _session_state
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        _session_state["mode"] = None
+
+        result = session_mode_get()
+
+        assert result["mode"] is None
+        assert result["source"] == "unset"
+
+
+class TestSessionInitWithSessionState:
+    """Tests for session_init with session state override."""
+
+    def test_session_state_takes_priority(self, tmp_path, monkeypatch):
+        """Test that session state overrides config."""
+        from spellbook_mcp.config_tools import session_init, _session_state
+
+        # Config says fun, but session says tarot
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"session_mode": "fun"}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        _session_state["mode"] = "tarot"
+
+        result = session_init()
+
+        assert result["mode"]["type"] == "tarot"
+
+        # Clean up
+        _session_state["mode"] = None
 
 
 class TestRandomLine:

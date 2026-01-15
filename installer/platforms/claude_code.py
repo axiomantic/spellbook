@@ -6,7 +6,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..components.context_files import generate_claude_context
-from ..components.mcp import check_claude_cli_available, register_mcp_server, restart_mcp_server, unregister_mcp_server
+from ..components.mcp import (
+    check_claude_cli_available,
+    get_spellbook_server_url,
+    install_daemon,
+    is_daemon_running,
+    register_mcp_http_server,
+    uninstall_daemon,
+    unregister_mcp_server,
+)
 from ..components.symlinks import (
     cleanup_spellbook_symlinks,
     create_command_symlinks,
@@ -219,50 +227,61 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
 
-        # Register MCP server (clean up old variants first)
-        if check_claude_cli_available():
-            server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
-            if server_path.exists():
-                # Remove any old variant names before installing
-                # This ensures clean upgrade from older versions
-                for old_name in ["spellbook-http"]:
-                    unregister_mcp_server(old_name, dry_run=self.dry_run)
+        # Install MCP daemon and register with HTTP transport
+        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
+        if server_path.exists():
+            # Remove any old variant names before installing
+            for old_name in ["spellbook-http"]:
+                unregister_mcp_server(old_name, dry_run=self.dry_run)
 
-                success, msg = register_mcp_server(
-                    "spellbook", ["python3", str(server_path)], dry_run=self.dry_run
+            # Install and start the daemon (stops/uninstalls existing first)
+            daemon_success, daemon_msg = install_daemon(
+                self.spellbook_dir, dry_run=self.dry_run
+            )
+            results.append(
+                InstallResult(
+                    component="mcp_daemon",
+                    platform=self.platform_id,
+                    success=daemon_success,
+                    action="installed" if daemon_success else "failed",
+                    message=f"MCP daemon: {daemon_msg}",
                 )
-                results.append(
-                    InstallResult(
-                        component="mcp_server",
-                        platform=self.platform_id,
-                        success=success,
-                        action="installed" if success else "failed",
-                        message=f"MCP server: {msg}",
-                    )
-                )
+            )
 
-                # Restart the MCP server so changes take effect immediately
-                if success:
-                    restart_success, restart_msg = restart_mcp_server(
-                        "spellbook", dry_run=self.dry_run
+            # Register MCP server with HTTP transport
+            if daemon_success or self.dry_run:
+                if check_claude_cli_available():
+                    server_url = get_spellbook_server_url()
+                    reg_success, reg_msg = register_mcp_http_server(
+                        "spellbook", server_url, dry_run=self.dry_run
                     )
                     results.append(
                         InstallResult(
-                            component="mcp_restart",
+                            component="mcp_server",
                             platform=self.platform_id,
-                            success=restart_success,
-                            action="restarted" if restart_success else "failed",
-                            message=f"MCP restart: {restart_msg}",
+                            success=reg_success,
+                            action="installed" if reg_success else "failed",
+                            message=f"MCP registration: {reg_msg}",
+                        )
+                    )
+                else:
+                    results.append(
+                        InstallResult(
+                            component="mcp_server",
+                            platform=self.platform_id,
+                            success=True,
+                            action="skipped",
+                            message="MCP registration: claude CLI not available (daemon running, configure manually)",
                         )
                     )
         else:
             results.append(
                 InstallResult(
-                    component="mcp_server",
+                    component="mcp_daemon",
                     platform=self.platform_id,
-                    success=True,
-                    action="skipped",
-                    message="MCP server: claude CLI not available",
+                    success=False,
+                    action="failed",
+                    message=f"MCP daemon: server.py not found at {server_path}",
                 )
             )
 
@@ -358,6 +377,18 @@ class ClaudeCodeInstaller(PlatformInstaller):
                                 message=f"{component_name}: failed to remove - {e}",
                             )
                         )
+
+        # Uninstall MCP daemon
+        daemon_success, daemon_msg = uninstall_daemon(dry_run=self.dry_run)
+        results.append(
+            InstallResult(
+                component="mcp_daemon",
+                platform=self.platform_id,
+                success=daemon_success,
+                action="removed" if daemon_success else "failed",
+                message=f"MCP daemon: {daemon_msg}",
+            )
+        )
 
         # Unregister MCP servers (both stdio and HTTP variants)
         if check_claude_cli_available():

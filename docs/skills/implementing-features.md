@@ -33,6 +33,7 @@ Senior Software Architect orchestrating feature delivery. Reputation depends on 
 | Input | Required | Description |
 |-------|----------|-------------|
 | `user_request` | Yes | Feature description, wish, or requirement from user |
+| `motivation` | Inferred | WHY the feature is needed (ask if not evident in request) |
 | `escape_hatch.design_doc` | No | Path to existing design document to skip Phase 2 |
 | `escape_hatch.impl_plan` | No | Path to existing implementation plan to skip Phases 2-3 |
 | `codebase_access` | Yes | Ability to read/search project files |
@@ -52,6 +53,7 @@ Senior Software Architect orchestrating feature delivery. Reputation depends on 
 ```
 Phase 0: Configuration Wizard
   ├─ Detect escape hatches ("using design doc <path>", "using impl plan <path>")
+  ├─ Clarify motivation (WHY this feature - if not evident from request)
   ├─ Clarify feature essence (1-2 sentences)
   └─ Collect preferences: autonomous_mode, parallelization, worktree, post_impl
     ↓
@@ -113,9 +115,10 @@ SESSION_PREFERENCES = {
 }
 
 SESSION_CONTEXT = {
-  feature_essence: {},
+  motivation: {},      // WHY: driving reason, category, success criteria
+  feature_essence: {}, // WHAT: 1-2 sentence description
   research_findings: {},
-  design_context: {}  // Comprehensive context passed to all subagents
+  design_context: {}   // Comprehensive context passed to all subagents
 }
 ```
 
@@ -137,6 +140,65 @@ SESSION_CONTEXT = {
 | "using design doc \<path\>" | Ask: review first OR treat as ready → skip Phase 2 creation |
 | "using impl plan \<path\>" | Ask: review first OR treat as ready → skip Phases 2-3 |
 | "just implement" | Minimal inline plan → Phase 4 directly |
+
+## Motivation Clarification (Phase 0)
+
+<RULE>
+Before diving into WHAT to build, understand WHY the user wants it. Motivation shapes every subsequent decision.
+</RULE>
+
+### When to Ask
+
+Ask about motivation when the request lacks clear purpose:
+
+| Request Type | Motivation Clear? | Action |
+|--------------|-------------------|--------|
+| "Add a logout button" | No - why now? | Ask |
+| "Users are getting stuck and can't exit, add logout" | Yes - user friction | Proceed |
+| "Implement caching for the API" | No - performance? cost? | Ask |
+| "API calls are slow and costing us $500/day, add caching" | Yes - perf + cost | Proceed |
+| "Add dark mode" | No - user request? accessibility? | Ask |
+| "Refactor the auth module" | No - why refactor? | Ask |
+
+### How to Ask
+
+Use AskUserQuestion with suggested motivations based on the request type:
+
+```
+What's driving this request? Understanding the "why" helps me ask better questions and make better design decisions.
+
+Suggested reasons (select or describe your own):
+- [ ] Users requested/complained about this
+- [ ] Performance or cost issue
+- [ ] Technical debt / maintainability concern
+- [ ] New business requirement
+- [ ] Security or compliance need
+- [ ] Developer experience improvement
+- [ ] Other: ___
+```
+
+### Using Motivation Context
+
+Store motivation in SESSION_CONTEXT and use it to:
+
+1. **Inform Research (Phase 1)**: If motivation is "performance", research existing bottlenecks. If "user complaints", research current UX flow.
+
+2. **Shape Discovery Questions (Phase 1.5)**: Motivation guides what trade-offs matter. Cost-driven features prioritize efficiency; UX-driven features prioritize usability.
+
+3. **Guide Design (Phase 2)**: Motivation becomes a design constraint. "Users complained about complexity" means simplicity trumps feature-richness.
+
+4. **Define Success Criteria**: Motivation defines what "done" looks like. Performance motivation needs benchmarks; UX motivation needs user flow validation.
+
+### Motivation Categories
+
+| Category | Typical Signals | Key Questions to Ask Later |
+|----------|-----------------|----------------------------|
+| **User Pain** | complaints, confusion, stuck | What's the current user journey? What's the failure mode? |
+| **Performance** | slow, expensive, timeout | What are current metrics? What's the target? |
+| **Technical Debt** | fragile, hard to maintain, legacy | What breaks when you touch it? Who understands it? |
+| **Business Need** | new requirement, stakeholder request | What's the deadline? What's the priority vs other work? |
+| **Security/Compliance** | audit, vulnerability, regulation | What's the threat model? What's the compliance requirement? |
+| **Developer Experience** | tedious, error-prone, manual | How often does this pain occur? What's the workaround today? |
 
 ## Refactoring Mode
 
@@ -333,6 +395,7 @@ Comprehensive (4.6.1): After all tasks
 
 ## Self-Check Before Completion
 
+- [ ] Motivation clarified (WHY is understood, not just WHAT)
 - [ ] Every subagent invokes skill via Skill tool
 - [ ] All preferences collected in Phase 0
 - [ ] Research achieved 100% quality score
