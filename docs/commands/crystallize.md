@@ -288,6 +288,74 @@ Before generating synthesized output, verify ALL of these. If ANY fails: HALT an
 **On failure:** HALT crystallization. Report specific failure. Restore missing content from original before proceeding.
 </CRITICAL>
 
+### Phase 4.5: Iteration Loop
+
+After compression, iterate until output passes self-review. This prevents common crystallization failures.
+
+<CRITICAL>
+**Circuit breaker:** Maximum 3 iterations. If still failing after 3, HALT and report unresolved issues to user.
+</CRITICAL>
+
+**Iteration Protocol:**
+
+```
+iteration = 0
+max_iterations = 3
+
+WHILE iteration < max_iterations:
+    RUN self_review(compressed_output)
+    IF all_checks_pass:
+        BREAK → proceed to Phase 5
+    ELSE:
+        LOG issues found
+        FIX identified issues
+        iteration += 1
+
+IF iteration == max_iterations AND NOT all_checks_pass:
+    HALT → report unresolved issues to user
+```
+
+**Self-Review Checklist (run each iteration):**
+
+| Check | Detection | Fix |
+|-------|-----------|-----|
+| Missing closing anchor | No `</FINAL_EMPHASIS>` or `</ROLE>` at end | Restore from original or add canonical closing |
+| Insufficient CRITICAL/FORBIDDEN | Count < 3 | Restore removed blocks from original |
+| Lost explanatory tables | Table columns reduced OR "Why"/"Rationale"/"Example" columns missing | Restore full table from original |
+| Missing negative guidance | No "When NOT to Use" / "Avoid" / "Never" sections | Restore section from original |
+| Lost calibration notes | Missing "You are bad at" / "known failure" / "common mistake" phrases | Restore calibration content from original |
+| Broken workflow cycles | Missing "Repeat" / "Continue until" / loop-back instructions | Restore cycle completion from original |
+| Incomplete enumerations | List has fewer items than original | Restore complete list from original |
+| Missing functional symbols | ✓ ✗ ⚠ ⏳ removed | Restore symbols from original |
+
+**Iteration Log Format:**
+
+```
+=== Iteration N ===
+Issues Found:
+- [Issue 1]: [Specific location and description]
+- [Issue 2]: [Specific location and description]
+
+Fixes Applied:
+- [Fix 1]: [What was restored/corrected]
+- [Fix 2]: [What was restored/corrected]
+
+Status: [PASS | FAIL - continuing to iteration N+1]
+```
+
+**Exit Conditions:**
+
+1. **PASS**: All 8 checks pass → proceed to Phase 5
+2. **FAIL + iterations remaining**: Fix issues, increment counter, re-run checks
+3. **FAIL + no iterations remaining**: HALT, report to user with:
+   - List of unresolved issues
+   - Specific locations in output
+   - Suggested manual fixes
+
+<RULE>
+Each iteration must make FORWARD PROGRESS. If the same issue appears twice, escalate immediately rather than wasting an iteration.
+</RULE>
+
 ### Phase 5: Verification
 
 <reflection>
@@ -418,8 +486,9 @@ Before completing crystallization:
 - [ ] Phase 2 complete: Gaps identified and documented
 - [ ] Phase 3 complete: Improvements designed
 - [ ] Phase 4 complete: Compression applied to redundant content only
-- [ ] Phase 5 complete: All verification boxes checked
 - [ ] Pre-Crystallization Verification passed (all items checked)
+- [ ] Phase 4.5 complete: Iteration loop passed (all 8 checks pass OR escalated to user)
+- [ ] Phase 5 complete: All verification boxes checked
 - [ ] Post-Synthesis Verification passed (token count, section count, etc.)
 
 ### Content Preservation

@@ -5,16 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Fixed
-- **Crystallize over-compression restored** - 29 skills/commands recovered from aggressive crystallization
-  - ~12,000 lines of load-bearing content restored via synthesis of OLD + CURRENT versions
-  - Each file went through individual synthesis → review → iterate loop
-  - Files with issues required fix iterations (6 files needed emotional architecture fixes)
+## [0.7.1] - 2026-01-15
 
 ### Enhanced
 - **`/crystallize` command** - comprehensive improvements based on restoration project learnings
+  - Added **Phase 4.5: Iteration Loop** - self-iterates until output passes 8-check review
+    - Circuit breaker: max 3 iterations to prevent infinite loops
+    - 8 specific checks: closing anchor, CRITICAL count, explanatory tables, negative guidance, calibration notes, workflow cycles, enumerations, functional symbols
+    - Forward progress rule: escalates if same issue appears twice
   - Added **Load-Bearing Content Identification** section - explicitly marks content types as UNTOUCHABLE
   - Added **Symbol Preservation Rules** - functional symbols (`✓ ✗ ⚠ ⏳`) distinguished from decorative emojis
   - Added **Table Preservation Rules** - protects explanatory columns ("Why X Wins", "Rationale", "Example")
@@ -25,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added **Post-Synthesis Verification** - token count thresholds (<80% = HALT, >120% = warning)
   - Expanded **Anti-Patterns** - 7 new forbidden behaviors from empirical findings
   - Reorganized **Self-Check** - grouped by phase completion, content preservation, new rules
+
+### Fixed
+- **Crystallize over-compression restored** - 29 skills/commands recovered from aggressive crystallization
+  - ~12,000 lines of load-bearing content restored via synthesis of OLD + CURRENT versions
+  - Each file went through individual synthesis → review → iterate loop
+  - Files with issues required fix iterations (6 files needed emotional architecture fixes)
 
 ## [0.7.0] - 2026-01-13
 
