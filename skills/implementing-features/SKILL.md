@@ -421,7 +421,156 @@ Store all preferences in `SESSION_PREFERENCES`.
 
 **Important:** If `worktree == "per_parallel_track"`, automatically set `parallelization = "maximize"`.
 
-### 0.5 Detect Refactoring Mode
+### 0.5 Continuation Detection
+
+<CRITICAL>
+This phase detects session continuation and enables zero-intervention recovery.
+Execute BEFORE the Configuration Wizard questions if continuation signals detected.
+</CRITICAL>
+
+**Continuation Signals (any of):**
+1. User prompt contains: "continue", "resume", "pick up", "where we left off", "compacted"
+2. MCP `<system-reminder>` contains `**Skill Phase:**` with implementing-features phase
+3. MCP `<system-reminder>` contains `**Active Skill:** implementing-features`
+4. Artifacts exist in expected locations for current project
+
+**If NO continuation signals:** Proceed to Phase 0.1 (escape hatch detection)
+
+**If continuation signals detected:**
+
+#### Step 1: Parse Recovery Context
+
+Extract from `<system-reminder>` (if present):
+- `active_skill`: Confirms implementing-features was active
+- `skill_phase`: Highest phase reached (e.g., "Phase 2: Design")
+- `todos`: In-progress work items with status
+- `exact_position`: Recent tool actions for position verification
+
+#### Step 2: Verify Artifact Existence
+
+Check for expected artifacts based on `skill_phase`:
+
+| Phase Reached | Expected Artifacts |
+|---------------|-------------------|
+| Phase 1.5+ | Understanding doc at `~/.local/spellbook/docs/<project>/understanding/` |
+| Phase 2+ | Design doc at `~/.local/spellbook/docs/<project>/plans/*-design.md` |
+| Phase 3+ | Impl plan at `~/.local/spellbook/docs/<project>/plans/*-impl.md` |
+| Phase 4+ | Worktree at `.worktrees/<feature>/` |
+
+**If artifacts missing but phase suggests they should exist:**
+```markdown
+## Missing Artifacts
+
+I'm resuming from {skill_phase}, but expected artifacts are missing:
+- [ ] Design doc (expected for Phase 2+)
+- [ ] Impl plan (expected for Phase 3+)
+
+Options:
+1. Regenerate missing artifacts using recovered context
+2. Start fresh from Phase 0
+```
+
+#### Step 3: Quick Preferences Check
+
+Since SESSION_PREFERENCES are not stored in the soul database, re-ask ONLY the 4 preference questions:
+
+```markdown
+## Quick Preferences Check
+
+I'm resuming your session but need to confirm a few preferences:
+
+### Execution Mode
+- [ ] Fully autonomous: Proceed without pausing
+- [ ] Interactive: Pause for approval at checkpoints
+- [ ] Mostly autonomous: Only pause for critical blockers
+
+### Parallelization
+- [ ] Maximize parallel
+- [ ] Conservative (sequential)
+- [ ] Ask each time
+
+### Worktree Strategy
+- [ ] Single worktree (detected: {worktree_exists ? "exists" : "none"})
+- [ ] Worktree per parallel track
+- [ ] No worktree
+
+### Post-Implementation
+- [ ] Offer options (finishing-a-development-branch)
+- [ ] Create PR automatically
+- [ ] Just stop
+
+Your choices: ___
+```
+
+**Important:** Skip motivation/feature questions if design doc exists.
+
+#### Step 4: Synthesize Resume Point
+
+Based on verified state, determine exact resume point:
+
+1. Find in-progress todo (most precise position)
+2. If no in-progress todo, use `skill_phase` (phase-level precision)
+3. If no skill_phase, infer from artifacts
+
+#### Step 5: Confirm and Resume
+
+```markdown
+## Session Continuation Detected
+
+I'm resuming your implementing-features session:
+
+**Prior Progress:**
+- Reached: {skill_phase}
+- Design Doc: {path or "Not yet created"}
+- Impl Plan: {path or "Not yet created"}
+- Worktree: {path or "Not yet created"}
+
+**Current Task:** {in_progress_todo or "Beginning of " + skill_phase}
+
+Resuming at {resume_point}...
+```
+
+Then jump directly to the appropriate phase using the Phase Jump Mechanism.
+
+#### Phase Jump Mechanism
+
+When resuming, the skill MUST:
+
+1. **Determine target phase** from `skill_phase` and artifact verification
+2. **Skip all prior phases** by checking phase number
+3. **Execute only from target phase forward**
+
+Display on resume:
+
+```markdown
+## Resuming Session
+
+**Skipping completed phases:**
+- [SKIPPED] Phase 0: Configuration Wizard
+- [SKIPPED] Phase 1: Research
+- [SKIPPED] Phase 1.5: Informed Discovery
+
+**Resuming at:**
+- [CURRENT] Phase 2: Design (Step 2.2: Review Design Document)
+
+Proceeding...
+```
+
+#### Artifact-Only Fallback
+
+When MCP soul data is unavailable, infer phase from artifacts alone:
+
+| Artifact Pattern | Inferred Phase | Confidence |
+|-----------------|----------------|------------|
+| No artifacts found | Phase 0 (fresh start) | HIGH |
+| Understanding doc exists, no design doc | Phase 1.5 complete, resume at Phase 2 | HIGH |
+| Design doc exists, no impl plan | Phase 2 complete, resume at Phase 3 | HIGH |
+| Design doc + impl plan exist, no worktree | Phase 3 complete, resume at Phase 4.1 | HIGH |
+| Worktree exists with uncommitted changes | Phase 4 in progress | MEDIUM |
+| Worktree exists with commits, no PR | Phase 4 late stages | MEDIUM |
+| PR exists for feature branch | Phase 4.7 (finishing) | HIGH |
+
+### 0.6 Detect Refactoring Mode
 
 <RULE>Activate when: "refactor", "reorganize", "extract", "migrate", "split", "consolidate" appear in request.</RULE>
 
