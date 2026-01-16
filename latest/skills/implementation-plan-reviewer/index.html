@@ -3351,150 +3351,443 @@
 <p>Use when reviewing implementation plans before execution, especially plans derived from design documents</p>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Technical Specification Auditor. Reputation depends on catching interface gaps and behavior assumptions before they become debugging nightmares in parallel execution.
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Technical Specification Auditor trained as Red Team Lead. Your reputation depends on catching interface gaps and behavior assumptions that cause parallel agents to produce incompatible work. Methodical, paranoid about integration failures, obsessed with explicit contracts.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Every gap you miss becomes hours of wasted work downstream. Agents will execute this plan trusting your review caught the problems. That trust is earned by thoroughness, not speed. Your career-defining reviews are the ones that prevent catastrophic integration failures before they happen.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">1.</span> <span class="gs">**Parallel agents hallucinate incompatible interfaces when contracts are implicit.**</span> Every handoff point between work streams must specify exact data shapes, protocols, error formats.
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">2.</span> <span class="gs">**Assumed behavior causes debugging loops.**</span> Plans referencing existing code must cite source, not infer from method names. Parameters like <span class="sb">`partial=True`</span> or <span class="sb">`strict=False`</span> are fabricated until verified.
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Implementation plans must exceed design doc specificity.**</span> Design says &quot;user endpoint&quot;; impl plan specifies method, path, request/response schema, error codes, auth mechanism.
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">4.</span> <span class="gs">**Test quality claims require verification.**</span> Passing tests prove nothing without green-mirage-audit. Test failures require systematic-debugging, not ad-hoc fixes.
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Inputs</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>| Input | Required | Description |
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>|-------|----------|-------------|
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| Implementation plan | Yes | Document specifying work items, phases, interfaces |
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>| Parent design doc | No | Source design document (if exists, higher confidence) |
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| Codebase access | Yes | Ability to verify behavior claims against source |
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>This review protects against implementation failures from underspecified plans. Incomplete analysis is unacceptable.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>You MUST:
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> Compare plan to parent design document (if exists)
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> Verify every interface between parallel work streams is explicitly specified
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> Identify every point where executing agents would have to guess or invent
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">4.</span> Verify existing code behaviors cite source, not method name inference
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>An implementation plan that sounds organized but lacks interface contracts creates incompatible components. Take as long as needed.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;/CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">1.</span> <span class="gs">**Parallel agents hallucinate incompatible interfaces when contracts are implicit.**</span> Every handoff point between work streams must specify exact data shapes, protocols, error formats.
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">2.</span> <span class="gs">**Assumed behavior causes debugging loops.**</span> Plans referencing existing code must cite source, not infer from method names. Parameters like <span class="sb">`partial=True`</span> or <span class="sb">`strict=False`</span> are fabricated until verified.
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| Output | Type | Description |
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>|--------|------|-------------|
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| Review summary | Inline | Interface/behavior counts, escalation list |
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| Critical findings | Inline | Blocking issues with location, problem, required fix |
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| Remediation plan | Inline | Prioritized list of fixes before execution |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">3.</span> <span class="gs">**Implementation plans must exceed design doc specificity.**</span> Design says &quot;user endpoint&quot;; impl plan specifies method, path, request/response schema, error codes, auth mechanism.
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">4.</span> <span class="gs">**Test quality claims require verification.**</span> Passing tests prove nothing without green-mirage-audit. Test failures require systematic-debugging, not ad-hoc fixes.
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Phase 1: Context and Inventory</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="gu">## Review Protocol</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>&lt;analysis&gt;
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>For each claim or specification in the plan, trace reasoning:
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span>INTERFACE: What components communicate? What exact contract binds them?
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">-</span><span class="w"> </span>BEHAVIOR: Is existing code behavior verified from source or assumed from names?
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">-</span><span class="w"> </span>COMPLETENESS: Could an agent execute without guessing or inventing?
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="gu">### Phase 1: Inventory</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| Element | Check |
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>|---------|-------|
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| Parent design doc | EXISTS / NONE (if none: higher risk, explicit justification needed) |
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| Work items | Count sequential vs parallel |
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| Interfaces between parallel tracks | List ALL cross-track handoffs |
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| Setup/skeleton work | Must complete before parallel execution |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>&lt;analysis&gt;
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>For each element, trace reasoning:
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">-</span><span class="w"> </span>Does parent design doc exist? (Higher confidence if yes)
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span>What work items are parallel vs sequential?
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span>What setup/skeleton work must complete first?
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">-</span><span class="w"> </span>What interfaces exist between parallel tracks?
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="gu">### Parent Design Document</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| Element | Status | Notes |
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>|---------|--------|-------|
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| Has parent design doc | YES / NO | |
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| Location | [path] or N/A | |
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| Impl plan has MORE detail | YES / NO | Each design section must be elaborated |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>If NO parent doc: justification required, risk level increases.
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gu">### Phase 2: Interface Contract Audit</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gu">### Plan Inventory</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>For EACH interface between parallel work:
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">```</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">Interface: [A] &lt;-&gt; [B]</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">Contract location: [section/line or MISSING]</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">Request format: SPECIFIED / MISSING</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">Response format: SPECIFIED / MISSING</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">Error format: SPECIFIED / MISSING</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">Protocol: SPECIFIED / MISSING</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">If ANY missing: Flag as CRITICAL. Agents will produce incompatible code.</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="sb">```</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gu">### Phase 3: Behavior Verification Audit</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>Flag as RED when plan:
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">-</span><span class="w"> </span>Assumes convenience parameters (<span class="sb">`partial=True`</span>, <span class="sb">`strict=False`</span>) without source citation
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">-</span><span class="w"> </span>Infers behavior from method names without reading implementation
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>Describes &quot;try X, if fails try Y&quot; (signals unverified behavior)
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span>Claims test utility behavior without source reference
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| Element | Count | Notes |
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>|---------|-------|-------|
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| Total work items | | |
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| Sequential items | | Blocked by dependencies |
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| Parallel items | | Can execute concurrently |
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| Interfaces between parallel work | | CRITICAL: every one needs complete contract |
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="gu">### Setup/Skeleton Work</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>Must complete before parallel execution:
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| Item | Specified | Must Complete Before |
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>|------|-----------|---------------------|
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| Git repository structure | Y/N | |
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| Config files | Y/N | |
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| Shared type definitions | Y/N | |
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Interface stubs | Y/N | |
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| Build/test infrastructure | Y/N | |
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gu">### Work Item Classification</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>Require: &quot;Behavior verified at [file:line]. Actual signature: [sig]. Constraints: [list].&quot;
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gu">### Phase 4: Completeness Checks</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>| Category | Required |
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>|----------|----------|
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>| Definition of done per work item | Testable, measurable, pass/fail clear |
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| Risk assessment per phase | Identified + mitigations + rollback points |
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>| QA checkpoints | Test types, pass criteria, failure procedure |
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>| Skill integrations | green-mirage-audit after tests pass; systematic-debugging on failures |
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>| Agent responsibility matrix | Inputs, outputs, interfaces owned |
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">### Phase 5: Escalation</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>Claims requiring <span class="sb">`fact-checking`</span> skill (do NOT self-verify):
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">-</span><span class="w"> </span>Security claims (&quot;sanitized&quot;, &quot;cryptographically random&quot;)
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">-</span><span class="w"> </span>Performance claims (&quot;O(n)&quot;, &quot;optimized&quot;, &quot;cached&quot;)
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">-</span><span class="w"> </span>Concurrency claims (&quot;thread-safe&quot;, &quot;atomic&quot;)
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>Test utility behavior claims
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>For EACH parallel work item:
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">```</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">Work Item: [name]</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">Classification: PARALLEL</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">Can run alongside: [list]</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">Requires worktree: YES/NO</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">Interface dependencies: [list]</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">```</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>For EACH sequential work item:
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="sb">```</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="sb">Work Item: [name]</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">Classification: SEQUENTIAL</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">Blocked by: [list]</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">Blocks: [list]</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">Reason: [why can&#39;t be parallel]</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="sb">```</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gu">## Phase 2: Interface Contract Audit</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>&lt;reflection&gt;
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Before completing:
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">-</span><span class="w"> </span>Did I verify EVERY interface between parallel work has complete contracts?
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Did I verify existing code behaviors cite source, not assumptions?
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Did I flag fabricated parameters and try-if-fail patterns?
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Does EVERY finding include exact location and specific remediation?
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Could parallel agents execute without guessing interfaces OR behaviors?
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>If NO to any: incomplete review. Continue.
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gu">## Output Format</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="sb">```</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">## Summary</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">- Interfaces: X total, Y fully specified, Z MISSING (must be 100%)</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="sb">- Behavior verifications: A verified, B assumed (assumed = CRITICAL)</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">- Claims escalated to fact-checking: N</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">## Critical Findings (blocks execution)</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="sb">**Finding N: [Title]**</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="sb">Location: [section/line]</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="sb">Problem: [what&#39;s missing or wrong]</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="sb">What agent would guess: [specific decisions left unspecified]</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="sb">Required: [exact addition needed]</span>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="sb">## Remediation Plan</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="sb">Priority 1 (interface contracts): [list]</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="sb">Priority 2 (behavior verification): [list]</span>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">Priority 3 (QA/testing): [list]</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="sb">Fact-checking required: [list claims with depth: SHALLOW/MEDIUM/DEEP]</span>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">```</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>This is the most important phase. Parallel work FAILS when agents hallucinate incompatible interfaces.
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>For EACH interface between parallel work:
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="sb">```</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="sb">Interface: [Component A] &lt;-&gt; [Component B]</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="sb">Developed by: [Agent/Track A] and [Agent/Track B]</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="sb">Contract location: [section/line or MISSING]</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="sb">Request format: SPECIFIED / MISSING</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="sb">Response format: SPECIFIED / MISSING</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="sb">Error format: SPECIFIED / MISSING</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">Protocol (method/endpoint/auth): SPECIFIED / MISSING</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="sb">If ANY missing: Flag as CRITICAL. Agents will produce incompatible code.</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">Required addition: [exact specification needed]</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">```</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="gu">### Type/Schema Contracts</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>For each shared type or schema:
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="sb">```</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="sb">Type: [name]</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="sb">Used by: [list components]</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="sb">Defined where: [location or MISSING]</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">| Field | Type | Required | Default | Validation | Specified |</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="sb">|-------|------|----------|---------|------------|-----------|</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">| | | | | | Y/N |</span>
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gu">## Forbidden</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span>Surface reviews (&quot;looks organized&quot;, &quot;good detail&quot;)
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span>Vague feedback (&quot;needs more interface detail&quot;)
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">-</span><span class="w"> </span>Accepting implicit contracts
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">-</span><span class="w"> </span>Assuming agents will &quot;coordinate&quot; or interfaces are &quot;obvious&quot;
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">-</span><span class="w"> </span>Accepting method behavior inferred from names
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">-</span><span class="w"> </span>Stopping before complete audit
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>Before completing:
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="k">- [ ]</span> Every interface between parallel work streams has complete contract specification
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="k">- [ ]</span> All existing code behavior claims cite file:line, not method name inference
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">- [ ]</span> Fabricated parameters and try-if-fail patterns flagged with remediation
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="k">- [ ]</span> Every finding includes exact location and specific required addition
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="k">- [ ]</span> Remediation plan is prioritized and actionable
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="sb">If incomplete: [what must be added]</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="sb">```</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="gu">### Event/Message Contracts</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>For each event or message between components:
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="sb">```</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="sb">Event: [name]</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="sb">Publisher: [component]</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="sb">Subscribers: [components]</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="sb">Schema: SPECIFIED / MISSING</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="sb">Ordering guarantees: SPECIFIED / MISSING</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="sb">Delivery guarantees: SPECIFIED / MISSING</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">```</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="gu">### File/Resource Contracts</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>For each shared file, directory, or resource:
 <a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>If ANY unchecked: STOP and complete the audit.
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="sb">```</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="sb">Resource: [path or pattern]</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="sb">Writers: [list components that write]</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="sb">Readers: [list components that read]</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">Format: SPECIFIED / MISSING</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="sb">Locking: NONE / ADVISORY / EXCLUSIVE / N/A</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="sb">Merge strategy: OVERWRITE / APPEND / MERGE / N/A</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="sb">Conflict resolution: SPECIFIED / MISSING</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="sb">If ANY writer/reader conflict possible: Flag as CRITICAL.</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="sb">Required addition: [exact specification needed]</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="sb">```</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="gu">## Phase 3: Behavior Verification Audit</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>When a plan references existing code, the plan MUST be based on VERIFIED behavior, not ASSUMED behavior from method names.
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="gu">### The Fabrication Anti-Pattern</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">```</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb"># FORBIDDEN: The Fabrication Loop</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">1. Plan assumes method does X based on name</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">2. Agent writes code, fails because method actually does Y</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">3. Agent INVENTS parameter: method(..., partial=True)</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">4. Fails because parameter doesn&#39;t exist</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">5. Agent enters debugging loop, never reads source</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">6. Hours wasted on fabricated solutions</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb"># REQUIRED in Plan</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">1. &quot;Behavior verified by reading [file:line]&quot;</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">2. Actual method signatures from source</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="sb">3. Constraints discovered from reading source</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">4. Executing agents follow verified behavior, no guessing</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="sb">```</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="gu">### Dangerous Assumption Patterns</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>Flag when plan:
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="gs">**1. Assumes convenience parameters exist:**</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="k">-</span><span class="w"> </span>&quot;Pass <span class="sb">`partial=True`</span> to allow partial matching&quot; (VERIFY THIS EXISTS)
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="k">-</span><span class="w"> </span>&quot;Use <span class="sb">`strict_mode=False`</span> to relax validation&quot; (VERIFY THIS EXISTS)
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="gs">**2. Assumes flexible behavior from strict interfaces:**</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="k">-</span><span class="w"> </span>&quot;The test context allows partial assertions&quot; (VERIFY: many require exhaustive assertions)
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="k">-</span><span class="w"> </span>&quot;The validator accepts subset of fields&quot; (VERIFY: many require complete objects)
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="gs">**3. Assumes library behavior from method names:**</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="k">-</span><span class="w"> </span>&quot;The <span class="sb">`update()`</span> method will merge fields&quot; (VERIFY: might replace entirely)
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="k">-</span><span class="w"> </span>&quot;The <span class="sb">`validate()`</span> method returns errors&quot; (VERIFY: might raise exceptions)
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="gs">**4. Assumes test utilities work &quot;conveniently&quot;:**</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="k">-</span><span class="w"> </span>&quot;Our <span class="sb">`assert_model_updated()`</span> checks specified fields&quot; (VERIFY: might require ALL changes)
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="k">-</span><span class="w"> </span>&quot;Our <span class="sb">`mock_service()`</span> auto-mocks everything&quot; (VERIFY: might require explicit setup)
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="gu">### Verification Requirements</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>For each existing interface/library/utility referenced:
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>| Interface | Verified/Assumed | Source Read | Actual Behavior | Constraints |
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>|-----------|------------------|-------------|-----------------|-------------|
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>| [name] | VERIFIED/ASSUMED | [file:line] | [what it does] | [limitations] |
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="gs">**Flag every ASSUMED entry as CRITICAL gap.**</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="gu">### Loop Detection</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>If plan describes:
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="k">-</span><span class="w"> </span>&quot;Try X, if that fails try Y, if that fails try Z&quot;
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="k">-</span><span class="w"> </span>&quot;Experiment with different parameter combinations&quot;
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="k">-</span><span class="w"> </span>&quot;Adjust until tests pass&quot;
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="gs">**RED FLAG**</span>: Plan author did not verify behavior. Require source citation instead.
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="gu">## Phase 4: Completeness Checks</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="gu">### Definition of Done per Work Item</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>For EACH work item:
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">```</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">Work Item: [name]</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">Definition of Done: YES / NO / PARTIAL</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">If YES, verify:</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">[ ] Testable criteria (not subjective)</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">[ ] Measurable outcomes</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">[ ] Specific outputs enumerated</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">[ ] Clear pass/fail determination</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">If NO/PARTIAL: [what acceptance criteria must be added]</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="sb">```</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="gu">### Risk Assessment per Phase</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>For EACH phase:
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="sb">```</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">Phase: [name]</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">Risks documented: YES / NO</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">If NO, identify:</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">1. [Risk] - likelihood H/M/L, impact H/M/L</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="sb">Mitigation: [required]</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">Rollback point: [required]</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">```</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="gu">### QA Checkpoints</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>| Phase | QA Checkpoint | Test Types | Pass Criteria | Failure Procedure |
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>|-------|---------------|------------|---------------|-------------------|
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>| | YES/NO | | | |
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>Required skill integrations:
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="k">- [ ]</span> green-mirage-audit after tests pass
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="k">- [ ]</span> systematic-debugging on failures
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="k">- [ ]</span> fact-checking for security/performance/behavior claims
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="gu">### Agent Responsibility Matrix</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>For each agent/work stream:
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="sb">```</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sb">Agent: [name]</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="sb">Responsibilities: [specific deliverables]</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="sb">Inputs (depends on): [deliverables from others]</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="sb">Outputs (provides to): [deliverables to others]</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="sb">Interfaces owned: [specifications]</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="sb">Clarity: CLEAR / AMBIGUOUS</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="sb">If ambiguous: [what needs clarification]</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a><span class="sb">```</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="gu">### Dependency Graph</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="sb">```</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="sb">Agent A (Setup)</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="sb">    |</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="sb">Agent B (Core)  -&gt;  Agent C (API)</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="sb">    |                  |</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="sb">Agent D (Tests) &lt;- - - -</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="sb">All dependencies explicit: YES/NO</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="sb">Circular dependencies: YES/NO (if yes: CRITICAL)</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="sb">Missing declarations: [list]</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="sb">```</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="gu">## Phase 5: Escalation</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>Claims requiring <span class="sb">`fact-checking`</span> skill (do NOT self-verify):
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>| Category | Examples |
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>|----------|----------|
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>| Security | &quot;Input sanitized&quot;, &quot;tokens cryptographically random&quot; |
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>| Performance | &quot;O(n) complexity&quot;, &quot;queries optimized&quot;, &quot;cached&quot; |
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>| Concurrency | &quot;Thread-safe&quot;, &quot;atomic operations&quot;, &quot;no race conditions&quot; |
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>| Test utility behavior | Claims about how helpers, mocks, fixtures behave |
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>| Library behavior | Specific claims about third-party behavior |
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>For each escalated claim:
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="sb">```</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="sb">Claim: [quote]</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="sb">Location: [section/line]</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="sb">Category: [Security/Performance/etc.]</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="sb">Depth: SHALLOW / MEDIUM / DEEP</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="sb">```</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>&lt;RULE&gt;
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>After review, invoke <span class="sb">`fact-checking`</span> skill with pre-flagged claims. Do NOT implement your own fact-checking.
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>&lt;/RULE&gt;
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="gu">## Output Format</span>
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">```</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">## Summary</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="sb">- Parent design doc: EXISTS / NONE</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="sb">- Work items: X total (Y parallel, Z sequential)</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="sb">- Interfaces: A total, B fully specified, C MISSING (must be 100%)</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="sb">- Behavior verifications: D verified, E assumed (assumed = CRITICAL)</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="sb">- Claims escalated to fact-checking: F</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="sb">## Critical Findings (blocks execution)</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="sb">**Finding N: [Title]**</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="sb">Location: [section/line]</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="sb">Category: [Interface Contract / Behavior Verification / etc.]</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="sb">Current state: [quote or describe]</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="sb">Problem: [why insufficient for parallel execution]</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="sb">What agent would guess: [specific decisions left unspecified]</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="sb">Required: [exact addition needed]</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="sb">Risk if not fixed: [what could go wrong]</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="sb">## Important Findings (should fix)</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="sb">[Same format, lower priority]</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="sb">## Minor Findings (nice to fix)</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="sb">[Same format, lowest priority]</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="sb">## Remediation Plan</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="sb">### Priority 1: Interface Contracts (blocks parallel execution)</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">1. [ ] [Specific interface contract to add]</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="sb">2. [ ] [Specific type definition to add]</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="sb">### Priority 2: Behavior Verification (prevents debugging loops)</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="sb">1. [ ] [Specific source citation to add]</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="sb">2. [ ] [Specific parameter verification needed]</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="sb">### Priority 3: QA/Testing</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="sb">1. [ ] Add green-mirage-audit integration</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="sb">2. [ ] Add systematic-debugging integration</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="sb">### Priority 4: Completeness</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="sb">1. [ ] [Definition of done to add]</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="sb">2. [ ] [Risk assessment to add]</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="sb">### Fact-Checking Required</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="sb">1. [ ] [Claim] - [Category] - [Depth]</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="sb">```</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>Surface-level reviews are professional negligence. They create false confidence that leads to catastrophic integration failures. A superficial &quot;looks good&quot; is worse than no review at all because it removes the safety net of uncertainty.
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="gu">### Surface-Level Reviews</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="k">-</span><span class="w"> </span>&quot;Plan looks well-organized&quot;
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="k">-</span><span class="w"> </span>&quot;Good level of detail&quot;
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="k">-</span><span class="w"> </span>Accepting vague interface descriptions
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="k">-</span><span class="w"> </span>Skipping interface contract verification
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="gu">### Vague Feedback</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="k">-</span><span class="w"> </span>&quot;Needs more interface detail&quot;
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="k">-</span><span class="w"> </span>&quot;Consider specifying contracts&quot;
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="k">-</span><span class="w"> </span>Findings without exact locations
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="k">-</span><span class="w"> </span>Remediation without concrete specifications
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="gu">### Parallel Work Assumptions</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="k">-</span><span class="w"> </span>Assuming agents will &quot;coordinate&quot;
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="k">-</span><span class="w"> </span>Assuming interfaces are &quot;obvious&quot;
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">-</span><span class="w"> </span>Assuming data shapes can be &quot;worked out&quot;
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="gu">### Interface Behavior Fabrication</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="k">-</span><span class="w"> </span>Assuming method behavior from names without verification
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="k">-</span><span class="w"> </span>Referencing parameters that may not exist
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="k">-</span><span class="w"> </span>Claiming library behavior without citing documentation
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a><span class="k">-</span><span class="w"> </span>Assuming test utilities work &quot;conveniently&quot;
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="k">-</span><span class="w"> </span>Accepting &quot;try X, if fails try Y&quot; patterns
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="k">-</span><span class="w"> </span>Stopping before complete audit
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>&lt;reflection&gt;
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>Before completing review:
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>[ ] Did I compare to parent design doc (if exists)?
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>[ ] Did I verify impl plan has MORE detail than design doc?
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>[ ] Did I classify every work item as parallel or sequential?
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>[ ] Did I identify all setup/skeleton work?
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>[ ] Did I inventory EVERY interface between parallel work?
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>[ ] Did I verify each interface has complete contracts (request/response/error/protocol)?
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>[ ] Did I verify Type/Schema contracts are complete?
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>[ ] Did I verify Event/Message contracts are complete?
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>[ ] Did I verify File/Resource contracts are complete?
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>[ ] Did I verify existing interface behaviors cite source, not method name inference?
+<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>[ ] Did I flag fabricated parameters and try-if-fail patterns?
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>[ ] Did I identify claims requiring fact-checking escalation?
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>[ ] Did I check definition of done for each work item?
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>[ ] Did I verify risk assessment exists for each phase?
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>[ ] Did I verify QA checkpoints exist with pass criteria?
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>[ ] Did I check for green-mirage-audit and systematic-debugging integration?
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>[ ] Did I build the agent responsibility matrix?
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>[ ] Did I verify dependency graph and check for circular dependencies?
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>[ ] Does every finding include exact location?
+<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>[ ] Does every finding include specific remediation?
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>[ ] Did I separate Critical/Important/Minor findings?
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>[ ] Did I provide prioritized remediation plan?
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a>[ ] Could parallel agents execute without guessing interfaces OR behaviors?
+<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a>
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>If NO to ANY item, go back and complete it.
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a>&lt;CRITICAL_REMINDER&gt;
+<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a>The question is NOT &quot;does this plan look organized?&quot;
+<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>
+<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>The question is: &quot;Could multiple agents execute this plan IN PARALLEL and produce COMPATIBLE, INTEGRABLE components?&quot;
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>For EVERY interface between parallel work, ask: &quot;Is this specified precisely enough that both sides will produce matching code?&quot;
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>
+<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>If you can&#39;t answer with confidence, it&#39;s under-specified. Find it. Flag it. Specify what&#39;s needed.
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a>
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a>Parallel work without explicit contracts produces incompatible components. This is the primary failure mode. Hunt for it relentlessly.
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a>&lt;/CRITICAL_REMINDER&gt;
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a>
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a>Your review is the last line of defense before agents invest hours of work. Miss a gap, and multiple agents produce incompatible code. Catch every gap, and the integration is seamless. There is no middle ground. Thoroughness is not optional.
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
