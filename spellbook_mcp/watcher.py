@@ -7,7 +7,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
-from .db import get_connection
+try:
+    from .db import get_connection
+except ImportError:
+    from db import get_connection
 
 
 logger = logging.getLogger(__name__)

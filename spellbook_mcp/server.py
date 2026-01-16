@@ -78,9 +78,14 @@ from compaction_detector import (
     mark_context_injected,
     get_recovery_reminder,
 )
+from db import init_db, get_db_path
+from watcher import SessionWatcher
 
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
+
+# Global watcher thread instance (initialized in __main__)
+_watcher = None
 
 mcp = FastMCP("spellbook")
 
@@ -604,6 +609,12 @@ def spellbook_health_check() -> dict:
 
 
 if __name__ == "__main__":
+    # Initialize database and start watcher thread
+    db_path = str(get_db_path())
+    init_db(db_path)
+    _watcher = SessionWatcher(db_path)
+    _watcher.start()
+
     # Support both stdio (default) and HTTP transport modes
     # Set SPELLBOOK_MCP_TRANSPORT=streamable-http to run as HTTP server
     transport = os.environ.get("SPELLBOOK_MCP_TRANSPORT", "stdio")

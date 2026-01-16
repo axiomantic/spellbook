@@ -15,8 +15,12 @@ import os
 from functools import wraps
 from typing import Any, Optional
 
-from .db import get_connection, get_db_path
-from .watcher import is_heartbeat_fresh
+try:
+    from .db import get_connection, get_db_path
+    from .watcher import is_heartbeat_fresh
+except ImportError:
+    from db import get_connection, get_db_path
+    from watcher import is_heartbeat_fresh
 
 
 # Module state for injection control
