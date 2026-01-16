@@ -353,7 +353,25 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
     time.sleep(1)
 
     if is_daemon_running():
-        return (False, "Daemon still running after stop attempt")
+        # Graceful stop failed, force kill
+        subprocess.run(
+            ["pkill", "-f", "spellbook_mcp/server.py"],
+            capture_output=True
+        )
+        time.sleep(1)
+
+        if is_daemon_running():
+            # Last resort: SIGKILL
+            subprocess.run(
+                ["pkill", "-9", "-f", "spellbook_mcp/server.py"],
+                capture_output=True
+            )
+            time.sleep(1)
+
+            if is_daemon_running():
+                return (False, "Daemon still running after force kill attempt")
+
+        return (True, "Daemon stopped (force killed)")
 
     return (True, "Daemon stopped")
 
