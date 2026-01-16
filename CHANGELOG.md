@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.3] - 2026-01-16
+
+### Added
+- **Zero-intervention session recovery** - Automatic context restoration after Claude Code compaction
+  - Background watcher monitors session transcripts for compaction events
+  - SQLite database stores 6 state components: todos, active skill, persona, recent files, position, workflow pattern
+  - MCP tool response injection via `<system-reminder>` tags using decorator pattern
+  - No user action required; recovery context automatically injected into next MCP tool response
+  - 17 new tests covering extractors, database, watcher, injection, and end-to-end recovery
+
 ## [0.7.2] - 2026-01-16
 
 ### Fixed
@@ -495,7 +505,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/axiomantic/spellbook/compare/v0.7.2...v0.7.3
+[0.7.2]: https://github.com/axiomantic/spellbook/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/axiomantic/spellbook/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/axiomantic/spellbook/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/axiomantic/spellbook/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/axiomantic/spellbook/compare/v0.4.0...v0.5.0
