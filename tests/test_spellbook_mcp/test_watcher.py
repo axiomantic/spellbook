@@ -1,10 +1,12 @@
 """Tests for session watcher thread."""
 
+import json
 import pytest
 import time
 import sqlite3
 from pathlib import Path
 from datetime import datetime
+from unittest.mock import patch, MagicMock
 
 
 def test_watcher_starts_and_stops(tmp_path):
@@ -88,3 +90,179 @@ def test_watcher_heartbeat_freshness_check(tmp_path):
     conn.commit()
 
     assert not is_heartbeat_fresh(str(db_path))
+
+
+def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
+    """Test that _poll_sessions detects compaction and saves soul to DB."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db, get_connection
+    from spellbook_mcp.compaction_detector import CompactionEvent
+    from spellbook_mcp import injection
+
+    db_path = tmp_path / "test.db"
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    init_db(str(db_path))
+
+    # Create a mock session file
+    session_dir = tmp_path / ".claude" / "projects" / "-tmp-project"
+    session_dir.mkdir(parents=True)
+    session_file = session_dir / "test-session.jsonl"
+    session_file.write_text(
+        json.dumps({"type": "user", "message": "hello"}) + "\n"
+        + json.dumps({"type": "assistant", "message": "hi"}) + "\n"
+    )
+
+    # Create mock compaction event
+    mock_event = CompactionEvent(
+        session_id="test-session",
+        summary="Test summary",
+        leaf_uuid="leaf-123",
+        detected_at=time.time(),
+        project_path=str(project_path),
+    )
+
+    # Mock soul extraction result
+    mock_soul = {
+        "todos": [{"content": "Fix bug", "status": "in_progress"}],
+        "active_skill": "debugging",
+        "skill_phase": None,
+        "persona": "Test Persona",
+        "recent_files": ["/path/to/file.py"],
+        "exact_position": [{"tool": "Read", "primary_arg": "/path/to/file.py"}],
+        "workflow_pattern": "TDD",
+    }
+
+    # Track if _set_pending_compaction was called
+    pending_calls = []
+    original_set_pending = injection._set_pending_compaction
+
+    def mock_set_pending(value):
+        pending_calls.append(value)
+        original_set_pending(value)
+
+    # Create watcher with project path
+    watcher = SessionWatcher(str(db_path), project_path=str(project_path))
+
+    # Mock all the lazy imports within _poll_sessions
+    with patch.object(
+        watcher.__class__, '_poll_sessions', autospec=True
+    ) as original_poll:
+        # Restore original method but with patched imports
+        original_poll.side_effect = None
+
+    # Use patch.dict to patch the modules that get lazy imported
+    with patch(
+        "spellbook_mcp.compaction_detector.check_for_compaction", return_value=mock_event
+    ) as mock_check:
+        with patch(
+            "spellbook_mcp.compaction_detector._get_current_session_file",
+            return_value=session_file,
+        ):
+            with patch(
+                "spellbook_mcp.soul_extractor.extract_soul", return_value=mock_soul
+            ) as mock_extract:
+                monkeypatch.setattr(injection, "_set_pending_compaction", mock_set_pending)
+
+                # Call _poll_sessions
+                watcher._poll_sessions()
+
+                # Verify check_for_compaction was called with project path
+                mock_check.assert_called_once_with(str(project_path))
+
+                # Verify extract_soul was called with session file
+                mock_extract.assert_called_once_with(str(session_file))
+
+    # Verify soul was saved to database
+    conn = get_connection(str(db_path))
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT project_path, session_id, persona, active_skill, todos FROM souls"
+    )
+    row = cursor.fetchone()
+
+    assert row is not None
+    assert row[0] == str(project_path)  # project_path
+    assert row[1] == "test-session"  # session_id
+    assert row[2] == "Test Persona"  # persona
+    assert row[3] == "debugging"  # active_skill
+    todos = json.loads(row[4])
+    assert len(todos) == 1
+    assert todos[0]["content"] == "Fix bug"
+
+    # Verify _set_pending_compaction was called with True
+    assert True in pending_calls
+
+    # Reset injection state for other tests
+    injection._reset_state()
+
+
+def test_poll_sessions_skips_already_processed_compaction(tmp_path):
+    """Test that _poll_sessions skips already processed compaction events."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db, get_connection
+    from spellbook_mcp.compaction_detector import CompactionEvent
+
+    db_path = tmp_path / "test.db"
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    init_db(str(db_path))
+
+    # Create mock compaction event
+    mock_event = CompactionEvent(
+        session_id="test-session",
+        summary="Test summary",
+        leaf_uuid="leaf-123",
+        detected_at=time.time(),
+        project_path=str(project_path),
+    )
+
+    watcher = SessionWatcher(str(db_path), project_path=str(project_path))
+
+    # Pre-mark this compaction as processed
+    watcher._processed_compactions.add(("test-session", "leaf-123"))
+
+    with patch(
+        "spellbook_mcp.compaction_detector.check_for_compaction", return_value=mock_event
+    ):
+        with patch("spellbook_mcp.soul_extractor.extract_soul") as mock_extract:
+            watcher._poll_sessions()
+
+            # extract_soul should NOT be called since event was already processed
+            mock_extract.assert_not_called()
+
+    # Verify no soul was saved
+    conn = get_connection(str(db_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM souls")
+    count = cursor.fetchone()[0]
+    assert count == 0
+
+
+def test_poll_sessions_no_compaction_event(tmp_path):
+    """Test that _poll_sessions does nothing when no compaction detected."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db, get_connection
+
+    db_path = tmp_path / "test.db"
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    init_db(str(db_path))
+
+    watcher = SessionWatcher(str(db_path), project_path=str(project_path))
+
+    with patch(
+        "spellbook_mcp.compaction_detector.check_for_compaction", return_value=None
+    ):
+        with patch("spellbook_mcp.soul_extractor.extract_soul") as mock_extract:
+            watcher._poll_sessions()
+
+            # extract_soul should NOT be called
+            mock_extract.assert_not_called()
+
+    # Verify no soul was saved
+    conn = get_connection(str(db_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM souls")
+    count = cursor.fetchone()[0]
+    assert count == 0
