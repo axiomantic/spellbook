@@ -354,30 +354,34 @@ class TestSessionModeSet:
 
     def test_session_only_mode_set(self, tmp_path, monkeypatch):
         """Test setting session-only mode (not permanent)."""
-        from spellbook_mcp.config_tools import session_mode_set, _session_state
+        from spellbook_mcp.config_tools import (
+            session_mode_set, _get_session_state, _session_states, DEFAULT_SESSION_ID
+        )
 
         # Reset session state
-        _session_state["mode"] = None
+        _session_states.clear()
 
         result = session_mode_set("tarot", permanent=False)
 
         assert result["status"] == "ok"
         assert result["mode"] == "tarot"
         assert result["permanent"] is False
-        assert _session_state["mode"] == "tarot"
+        assert _get_session_state(DEFAULT_SESSION_ID)["mode"] == "tarot"
 
         # Clean up
-        _session_state["mode"] = None
+        _session_states.clear()
 
     def test_permanent_mode_set(self, tmp_path, monkeypatch):
         """Test setting permanent mode (saved to config)."""
-        from spellbook_mcp.config_tools import session_mode_set, _session_state, config_get
+        from spellbook_mcp.config_tools import (
+            session_mode_set, _get_session_state, _session_states, DEFAULT_SESSION_ID, config_get
+        )
 
         config_path = tmp_path / "spellbook.json"
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
         # Reset session state
-        _session_state["mode"] = None
+        _session_states.clear()
 
         result = session_mode_set("fun", permanent=True)
 
@@ -385,9 +389,12 @@ class TestSessionModeSet:
         assert result["mode"] == "fun"
         assert result["permanent"] is True
         # Session state should be cleared so config takes effect
-        assert _session_state["mode"] is None
+        assert _get_session_state(DEFAULT_SESSION_ID)["mode"] is None
         # Config should be updated
         assert config_get("session_mode") == "fun"
+
+        # Clean up
+        _session_states.clear()
 
     def test_invalid_mode_rejected(self):
         """Test that invalid modes are rejected."""
@@ -404,9 +411,13 @@ class TestSessionModeGet:
 
     def test_returns_session_override(self, tmp_path, monkeypatch):
         """Test that session override is returned when set."""
-        from spellbook_mcp.config_tools import session_mode_get, _session_state
+        from spellbook_mcp.config_tools import (
+            session_mode_get, _get_session_state, _session_states, DEFAULT_SESSION_ID
+        )
 
-        _session_state["mode"] = "tarot"
+        # Reset and set session state
+        _session_states.clear()
+        _get_session_state(DEFAULT_SESSION_ID)["mode"] = "tarot"
 
         result = session_mode_get()
 
@@ -415,17 +426,18 @@ class TestSessionModeGet:
         assert result["permanent"] is False
 
         # Clean up
-        _session_state["mode"] = None
+        _session_states.clear()
 
     def test_returns_config_when_no_session(self, tmp_path, monkeypatch):
         """Test that config is returned when no session override."""
-        from spellbook_mcp.config_tools import session_mode_get, _session_state
+        from spellbook_mcp.config_tools import session_mode_get, _session_states
 
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
-        _session_state["mode"] = None
+        # Reset session state (no override)
+        _session_states.clear()
 
         result = session_mode_get()
 
@@ -433,19 +445,26 @@ class TestSessionModeGet:
         assert result["source"] == "config"
         assert result["permanent"] is True
 
+        # Clean up
+        _session_states.clear()
+
     def test_returns_unset_when_nothing_configured(self, tmp_path, monkeypatch):
         """Test that unset is returned when nothing configured."""
-        from spellbook_mcp.config_tools import session_mode_get, _session_state
+        from spellbook_mcp.config_tools import session_mode_get, _session_states
 
         config_path = tmp_path / "nonexistent" / "spellbook.json"
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
-        _session_state["mode"] = None
+        # Reset session state (no override)
+        _session_states.clear()
 
         result = session_mode_get()
 
         assert result["mode"] is None
         assert result["source"] == "unset"
+
+        # Clean up
+        _session_states.clear()
 
 
 class TestSessionInitWithSessionState:
@@ -453,21 +472,25 @@ class TestSessionInitWithSessionState:
 
     def test_session_state_takes_priority(self, tmp_path, monkeypatch):
         """Test that session state overrides config."""
-        from spellbook_mcp.config_tools import session_init, _session_state
+        from spellbook_mcp.config_tools import (
+            session_init, _get_session_state, _session_states, DEFAULT_SESSION_ID
+        )
 
         # Config says fun, but session says tarot
         config_path = tmp_path / "spellbook.json"
         config_path.write_text('{"session_mode": "fun"}')
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
 
-        _session_state["mode"] = "tarot"
+        # Reset and set session state
+        _session_states.clear()
+        _get_session_state(DEFAULT_SESSION_ID)["mode"] = "tarot"
 
         result = session_init()
 
         assert result["mode"]["type"] == "tarot"
 
         # Clean up
-        _session_state["mode"] = None
+        _session_states.clear()
 
 
 class TestRandomLine:
@@ -539,3 +562,301 @@ class TestGetSpellbookDir:
         assert isinstance(result, Path)
         # Should find the actual spellbook dir (running from repo) or default
         assert result.name in ("spellbook", "spellbook")
+
+
+class TestSessionIsolation:
+    """Tests for multi-session isolation in HTTP daemon mode."""
+
+    def test_different_sessions_have_isolated_state(self, tmp_path, monkeypatch):
+        """Test that different session IDs have isolated mode state."""
+        from spellbook_mcp.config_tools import (
+            session_mode_set, session_mode_get, _session_states
+        )
+
+        # Reset global state
+        _session_states.clear()
+
+        # Session A sets mode to fun
+        session_mode_set("fun", permanent=False, session_id="session-a")
+
+        # Session B sets mode to tarot
+        session_mode_set("tarot", permanent=False, session_id="session-b")
+
+        # Verify each session sees its own mode
+        result_a = session_mode_get(session_id="session-a")
+        result_b = session_mode_get(session_id="session-b")
+
+        assert result_a["mode"] == "fun"
+        assert result_a["source"] == "session"
+        assert result_b["mode"] == "tarot"
+        assert result_b["source"] == "session"
+
+        # Clean up
+        _session_states.clear()
+
+    def test_session_init_respects_session_id(self, tmp_path, monkeypatch):
+        """Test that session_init uses session-specific state."""
+        from spellbook_mcp.config_tools import (
+            session_init, session_mode_set, _session_states
+        )
+
+        # No config file
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        # Reset global state
+        _session_states.clear()
+
+        # Session A sets mode to tarot
+        session_mode_set("tarot", permanent=False, session_id="session-a")
+
+        # Session B has no mode set
+
+        # Verify session_init returns session-specific state
+        result_a = session_init(session_id="session-a")
+        result_b = session_init(session_id="session-b")
+
+        assert result_a["mode"]["type"] == "tarot"
+        assert result_b["mode"]["type"] == "unset"
+
+        # Clean up
+        _session_states.clear()
+
+    def test_permanent_mode_affects_all_sessions(self, tmp_path, monkeypatch):
+        """Test that permanent mode (config) is shared across sessions.
+
+        Also verifies that session A's local override is cleared when
+        setting permanent mode (production line 208: session_state["mode"] = None).
+        """
+        from spellbook_mcp.config_tools import (
+            session_mode_set, session_mode_get, _session_states
+        )
+
+        config_path = tmp_path / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        # Reset global state
+        _session_states.clear()
+
+        # Session A sets permanent mode
+        session_mode_set("fun", permanent=True, session_id="session-a")
+
+        # Session B (without session override) should see config
+        result_b = session_mode_get(session_id="session-b")
+
+        assert result_b["mode"] == "fun"
+        assert result_b["source"] == "config"
+        assert result_b["permanent"] is True
+
+        # Verify session A also sees config (local override was cleared)
+        result_a = session_mode_get(session_id="session-a")
+        assert result_a["mode"] == "fun"
+        assert result_a["source"] == "config", "Session A's local override should be cleared"
+        assert result_a["permanent"] is True
+
+        # Clean up
+        _session_states.clear()
+
+    def test_session_override_takes_precedence_over_config(self, tmp_path, monkeypatch):
+        """Test that session-only mode overrides config-based mode."""
+        from spellbook_mcp.config_tools import (
+            session_mode_set, session_mode_get, _session_states
+        )
+
+        # Set up config with fun mode
+        config_path = tmp_path / "spellbook.json"
+        config_path.write_text('{"session_mode": "fun"}')
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        # Reset global state
+        _session_states.clear()
+
+        # Session A overrides with tarot
+        session_mode_set("tarot", permanent=False, session_id="session-a")
+
+        # Session A sees its override, Session B sees config
+        result_a = session_mode_get(session_id="session-a")
+        result_b = session_mode_get(session_id="session-b")
+
+        assert result_a["mode"] == "tarot"
+        assert result_a["source"] == "session"
+        assert result_b["mode"] == "fun"
+        assert result_b["source"] == "config"
+
+        # Clean up
+        _session_states.clear()
+
+    def test_default_session_id_for_backward_compatibility(self, tmp_path, monkeypatch):
+        """Test that None session_id uses default for backward compatibility."""
+        from spellbook_mcp.config_tools import (
+            session_mode_set, session_mode_get, _session_states, DEFAULT_SESSION_ID
+        )
+
+        # Reset global state
+        _session_states.clear()
+
+        # Set mode without session_id (should use default)
+        session_mode_set("fun", permanent=False)
+
+        # Get without session_id (should use default)
+        result = session_mode_get()
+
+        assert result["mode"] == "fun"
+        assert result["source"] == "session"
+
+        # Verify it's in the default session
+        from spellbook_mcp.config_tools import _get_session_state
+        assert _get_session_state(DEFAULT_SESSION_ID)["mode"] == "fun"
+
+        # Clean up
+        _session_states.clear()
+
+
+class TestSessionCleanup:
+    """Tests for session cleanup/garbage collection."""
+
+    def test_stale_sessions_are_cleaned_up(self, tmp_path, monkeypatch):
+        """Test that stale sessions are cleaned up during normal API access.
+
+        This test would FAIL if _cleanup_stale_sessions() was removed from
+        _get_session_state(), because the stale session would persist.
+        """
+        from datetime import datetime, timedelta
+        from spellbook_mcp.config_tools import (
+            session_mode_set, session_mode_get, _session_states,
+            _session_activity, SESSION_TTL_DAYS
+        )
+
+        # Reset global state
+        _session_states.clear()
+        _session_activity.clear()
+
+        # Create an old session via PUBLIC API
+        session_mode_set("fun", permanent=False, session_id="old-session")
+
+        # Artificially age the session (this is acceptable test setup)
+        _session_activity["old-session"] = datetime.now() - timedelta(days=SESSION_TTL_DAYS + 1)
+
+        # Create a recent session via PUBLIC API
+        session_mode_set("tarot", permanent=False, session_id="recent-session")
+
+        # Access via PUBLIC API - this should trigger cleanup as side effect
+        session_mode_get(session_id="any-session")
+
+        # Old session should be gone (cleaned up as side effect of access)
+        assert "old-session" not in _session_states, "Stale session should be cleaned on access"
+        assert "old-session" not in _session_activity, "Stale session activity should be cleaned"
+
+        # Recent session should remain
+        assert "recent-session" in _session_states, "Recent session should be preserved"
+        assert "recent-session" in _session_activity, "Recent session activity should be preserved"
+
+        # Clean up
+        _session_states.clear()
+        _session_activity.clear()
+
+    def test_activity_timestamp_updated_on_access(self, tmp_path, monkeypatch):
+        """Test that accessing session state via public API updates activity timestamp.
+
+        Uses session_mode_get (public API) instead of _get_session_state (internal).
+        """
+        from datetime import datetime
+        from spellbook_mcp.config_tools import (
+            session_mode_get, _session_states, _session_activity
+        )
+
+        # Reset global state
+        _session_states.clear()
+        _session_activity.clear()
+
+        session_id = "test-session"
+
+        # Access via PUBLIC API
+        before = datetime.now()
+        session_mode_get(session_id=session_id)
+        after = datetime.now()
+
+        # Verify timestamp was updated
+        assert session_id in _session_activity
+        assert before <= _session_activity[session_id] <= after
+
+        # Clean up
+        _session_states.clear()
+        _session_activity.clear()
+
+    def test_new_session_gets_default_state(self, tmp_path, monkeypatch):
+        """Test that new sessions have no mode set by default.
+
+        Uses session_mode_get (public API) instead of _get_session_state (internal).
+        Verifies public API returns expected default state.
+        """
+        from spellbook_mcp.config_tools import (
+            session_mode_get, _session_states, _session_activity
+        )
+
+        config_path = tmp_path / "nonexistent" / "spellbook.json"
+        monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
+
+        # Reset global state
+        _session_states.clear()
+        _session_activity.clear()
+
+        session_id = "brand-new-session"
+
+        # Use PUBLIC API
+        result = session_mode_get(session_id=session_id)
+
+        # Verify public API returns expected default
+        assert result["mode"] is None
+        assert result["source"] == "unset"
+
+        # Session should now be tracked
+        assert session_id in _session_states
+        assert session_id in _session_activity
+
+        # Clean up
+        _session_states.clear()
+        _session_activity.clear()
+
+    def test_cleanup_integrated_with_session_access(self, tmp_path, monkeypatch):
+        """Mutation-catching test: cleanup must be integrated with session access.
+
+        This test would FAIL if _cleanup_stale_sessions() was removed from
+        _get_session_state(). It verifies that cleanup happens as a side effect
+        of accessing ANY session, not just the stale one.
+
+        Key insight: Create a stale session, then access a DIFFERENT session.
+        The stale session should be cleaned up as a side effect. This proves
+        cleanup is integrated into the access path, not just working in isolation.
+        """
+        from datetime import datetime, timedelta
+        from spellbook_mcp.config_tools import (
+            session_mode_set, session_mode_get, _session_states,
+            _session_activity, SESSION_TTL_DAYS
+        )
+
+        # Reset global state
+        _session_states.clear()
+        _session_activity.clear()
+
+        # Create a stale session via public API
+        session_mode_set("fun", permanent=False, session_id="stale-session")
+        _session_activity["stale-session"] = datetime.now() - timedelta(days=SESSION_TTL_DAYS + 1)
+
+        # Verify the stale session exists before access
+        assert "stale-session" in _session_states, "Precondition: stale session should exist"
+
+        # Access a DIFFERENT session - this should trigger cleanup as side effect
+        session_mode_get(session_id="different-session")
+
+        # The stale session should be gone - this is the mutation-catching assertion
+        # If _cleanup_stale_sessions() was removed from _get_session_state(), this fails
+        assert "stale-session" not in _session_states, (
+            "Cleanup did not run during session access. "
+            "This indicates _cleanup_stale_sessions() may not be called in _get_session_state()."
+        )
+        assert "stale-session" not in _session_activity
+
+        # Clean up
+        _session_states.clear()
+        _session_activity.clear()

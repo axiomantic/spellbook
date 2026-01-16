@@ -3,14 +3,61 @@
 import json
 import os
 import random
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
-# Session-specific state (in-memory, resets on MCP server restart)
+# Session-specific state keyed by session_id (in-memory, resets on MCP server restart)
 # This allows session-only mode changes that don't persist to config
-_session_state: dict = {
-    "mode": None,  # None = use config file, string = session override
-}
+# Each session gets its own state dict to support multi-session HTTP daemon mode
+_session_states: dict[str, dict] = {}
+
+# Track last activity per session for cleanup
+_session_activity: dict[str, datetime] = {}
+
+# Session TTL for garbage collection
+SESSION_TTL_DAYS = 3
+
+# Default session ID for backward compatibility (stdio single-session mode)
+DEFAULT_SESSION_ID = "__default__"
+
+
+def _cleanup_stale_sessions() -> None:
+    """Remove sessions with no activity for SESSION_TTL_DAYS.
+
+    Called on each state access to garbage collect old sessions.
+    """
+    cutoff = datetime.now() - timedelta(days=SESSION_TTL_DAYS)
+    stale = [sid for sid, ts in _session_activity.items() if ts < cutoff]
+    for sid in stale:
+        _session_states.pop(sid, None)
+        _session_activity.pop(sid, None)
+
+
+def _get_session_state(session_id: Optional[str] = None) -> dict:
+    """Get or create session state, update activity timestamp.
+
+    Args:
+        session_id: Session identifier. If None, uses DEFAULT_SESSION_ID
+                    for backward compatibility with stdio transport.
+
+    Returns:
+        Session state dict with "mode" key.
+    """
+    _cleanup_stale_sessions()  # Run cleanup on each access
+    sid = session_id or DEFAULT_SESSION_ID
+    _session_activity[sid] = datetime.now()
+    if sid not in _session_states:
+        _session_states[sid] = {"mode": None}
+    return _session_states[sid]
+
+
+def _get_default_session_state() -> dict:
+    """Get the default session state for backward compatibility.
+
+    Used by existing code and tests that don't pass session_id.
+    """
+    return _get_session_state(DEFAULT_SESSION_ID)
 
 
 def get_config_path() -> Path:
@@ -135,12 +182,16 @@ def config_set(key: str, value: Any) -> dict:
     return {"status": "ok", "config": config}
 
 
-def session_mode_set(mode: str, permanent: bool = False) -> dict:
+def session_mode_set(
+    mode: str, permanent: bool = False, session_id: Optional[str] = None
+) -> dict:
     """Set session mode, optionally persisting to config.
 
     Args:
         mode: Mode to set ("fun", "tarot", "none")
         permanent: If True, save to config file. If False, session-only.
+        session_id: Session identifier for multi-session isolation.
+                    If None, uses default session for backward compatibility.
 
     Returns:
         Dict with status and current mode state
@@ -148,27 +199,35 @@ def session_mode_set(mode: str, permanent: bool = False) -> dict:
     if mode not in ("fun", "tarot", "none"):
         return {"status": "error", "message": f"Invalid mode: {mode}. Use 'fun', 'tarot', or 'none'."}
 
+    session_state = _get_session_state(session_id)
+
     if permanent:
         # Save to config file
         config_set("session_mode", mode)
         # Clear session override so config takes effect
-        _session_state["mode"] = None
+        session_state["mode"] = None
         return {"status": "ok", "mode": mode, "permanent": True}
     else:
         # Session-only: store in memory
-        _session_state["mode"] = mode
+        session_state["mode"] = mode
         return {"status": "ok", "mode": mode, "permanent": False}
 
 
-def session_mode_get() -> dict:
+def session_mode_get(session_id: Optional[str] = None) -> dict:
     """Get current session mode state.
+
+    Args:
+        session_id: Session identifier for multi-session isolation.
+                    If None, uses default session for backward compatibility.
 
     Returns:
         Dict with mode, source (session or config), and permanent flag
     """
-    if _session_state["mode"] is not None:
+    session_state = _get_session_state(session_id)
+
+    if session_state["mode"] is not None:
         return {
-            "mode": _session_state["mode"],
+            "mode": session_state["mode"],
             "source": "session",
             "permanent": False,
         }
@@ -200,7 +259,7 @@ def random_line(file_path: Path) -> str:
         return ""
 
 
-def session_init() -> dict:
+def session_init(session_id: Optional[str] = None) -> dict:
     """Initialize a spellbook session.
 
     Resolution order:
@@ -209,13 +268,18 @@ def session_init() -> dict:
     3. fun_mode legacy config key
     4. Unset
 
+    Args:
+        session_id: Session identifier for multi-session isolation.
+                    If None, uses default session for backward compatibility.
+
     Returns:
         Dict with:
         - mode: {"type": "fun"|"tarot"|"none"|"unset", ...mode-specific data}
         - fun_mode: "yes"|"no"|"unset" (legacy key for backward compatibility)
     """
     # Check session state first (in-memory override)
-    session_override = _session_state.get("mode")
+    session_state = _get_session_state(session_id)
+    session_override = session_state.get("mode")
 
     # Then check config
     config_mode = config_get("session_mode")

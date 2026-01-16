@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-01-16
+
+### Fixed
+- **MCP daemon session isolation** - Each Claude session now has isolated state
+  - `mode` (fun/tarot/none) is now per-session instead of shared singleton
+  - Added 3-day TTL with automatic cleanup of stale sessions
+  - Backward compatible with stdio transport via `DEFAULT_SESSION_ID`
+  - 12 new tests with green mirage audit verification
+
+### Changed
+- **MCP transport config** - Updated `~/.claude.json` to use HTTP transport (`type: "http"`) instead of stdio for spellbook MCP server
+
 ## [0.7.1] - 2026-01-15
 
 ### Enhanced

@@ -32,9 +32,9 @@ Health:
 - spellbook_health_check: Check server health, version, available tools, and uptime
 """
 
-from fastmcp import FastMCP
+from fastmcp import FastMCP, Context
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import os
 import json
 import sys
@@ -380,8 +380,23 @@ def spellbook_config_set(key: str, value) -> dict:
     return config_set(key, value)
 
 
+def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
+    """Extract session_id from Context if available.
+
+    Returns None if ctx is None or request_context is not available,
+    which signals to use default session for backward compatibility.
+    """
+    if ctx is None:
+        return None
+    try:
+        return ctx.session_id
+    except RuntimeError:
+        # MCP session not established yet
+        return None
+
+
 @mcp.tool()
-def spellbook_session_init() -> dict:
+def spellbook_session_init(ctx: Context) -> dict:
     """
     Initialize a spellbook session.
 
@@ -394,11 +409,11 @@ def spellbook_session_init() -> dict:
             "fun_mode": "yes"|"no"|"unset"  // legacy key
         }
     """
-    return session_init()
+    return session_init(_get_session_id(ctx))
 
 
 @mcp.tool()
-def spellbook_session_mode_set(mode: str, permanent: bool = False) -> dict:
+def spellbook_session_mode_set(ctx: Context, mode: str, permanent: bool = False) -> dict:
     """
     Set session mode, optionally persisting to config.
 
@@ -409,11 +424,11 @@ def spellbook_session_mode_set(mode: str, permanent: bool = False) -> dict:
     Returns:
         {"status": "ok", "mode": str, "permanent": bool}
     """
-    return session_mode_set(mode, permanent)
+    return session_mode_set(mode, permanent, _get_session_id(ctx))
 
 
 @mcp.tool()
-def spellbook_session_mode_get() -> dict:
+def spellbook_session_mode_get(ctx: Context) -> dict:
     """
     Get current session mode state.
 
@@ -424,7 +439,7 @@ def spellbook_session_mode_get() -> dict:
             "permanent": bool
         }
     """
-    return session_mode_get()
+    return session_mode_get(_get_session_id(ctx))
 
 
 def _get_version() -> str:
@@ -492,7 +507,7 @@ def spellbook_check_compaction() -> dict:
 
 
 @mcp.tool()
-def spellbook_context_ping() -> str:
+def spellbook_context_ping(ctx: Context) -> str:
     """
     Ping tool that checks for pending compaction recovery context.
 
@@ -516,13 +531,14 @@ def spellbook_context_ping() -> str:
     pending = get_pending_context(project_path)
 
     if pending:
-        # Get current mode info for context
-        mode_info = session_mode_get()
+        # Get current mode info for context (use session-isolated state)
+        sid = _get_session_id(ctx)
+        mode_info = session_mode_get(sid)
         mode_data = None
 
         if mode_info.get('mode') in ('fun', 'tarot'):
             # Fetch full mode info including persona
-            init_result = session_init()
+            init_result = session_init(sid)
             mode_data = init_result.get('mode', {})
 
         # Generate recovery reminder
