@@ -612,6 +612,9 @@ if __name__ == "__main__":
         host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
         port = int(os.environ.get("SPELLBOOK_MCP_PORT", "8765"))
         print(f"Starting spellbook MCP server on {host}:{port}")
-        mcp.run(transport="streamable-http", host=host, port=port)
+        # Use stateless_http=True so that unknown session IDs (e.g., from
+        # a previous daemon instance) are handled gracefully instead of
+        # returning "Bad Request: No valid session ID provided"
+        mcp.run(transport="streamable-http", host=host, port=port, stateless_http=True)
     else:
         mcp.run()

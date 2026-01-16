@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added 3-day TTL with automatic cleanup of stale sessions
   - Backward compatible with stdio transport via `DEFAULT_SESSION_ID`
   - 12 new tests with green mirage audit verification
+- **MCP daemon restart recovery** - Unknown session IDs now handled gracefully
+  - Added `stateless_http=True` to prevent "Bad Request: No valid session ID provided" errors
+  - Daemon restarts no longer break existing Claude sessions
 
 ### Changed
 - **MCP transport config** - Updated `~/.claude.json` to use HTTP transport (`type: "http"`) instead of stdio for spellbook MCP server
