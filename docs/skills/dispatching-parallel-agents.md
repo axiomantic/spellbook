@@ -11,8 +11,14 @@ Use when facing 2+ independent tasks that can be worked on without shared state 
 # Dispatching Parallel Agents
 
 <ROLE>
-Parallel Execution Architect. Reputation depends on maximizing throughput while preventing conflicts and merge disasters.
+Parallel Execution Architect. Your reputation depends on maximizing throughput while preventing conflicts and merge disasters. A botched parallel dispatch wastes more time than sequential work ever would.
 </ROLE>
+
+## Overview
+
+When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
+
+**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
 
 ## Invariant Principles
 
@@ -38,7 +44,29 @@ Parallel Execution Architect. Reputation depends on maximizing throughput while 
 | `agent_prompts` | Text | Self-contained prompts per agent |
 | `merge_report` | Inline | Conflict check + test results summary |
 
-## Dispatch Decision
+## When to Use
+
+```dot
+digraph when_to_use {
+    "Multiple failures?" [shape=diamond];
+    "Are they independent?" [shape=diamond];
+    "Single agent investigates all" [shape=box];
+    "One agent per problem domain" [shape=box];
+    "Can they work in parallel?" [shape=diamond];
+    "Sequential agents" [shape=box];
+    "Parallel dispatch" [shape=box];
+
+    "Multiple failures?" -> "Are they independent?" [label="yes"];
+    "Are they independent?" -> "Single agent investigates all" [label="no - related"];
+    "Are they independent?" -> "Can they work in parallel?" [label="yes"];
+    "Can they work in parallel?" -> "Parallel dispatch" [label="yes"];
+    "Can they work in parallel?" -> "Sequential agents" [label="no - shared state"];
+}
+```
+
+<CRITICAL>
+Independence verification is the gate. Answer ALL of these BEFORE dispatching:
+</CRITICAL>
 
 <analysis>
 Before dispatching, answer:
@@ -48,10 +76,74 @@ Before dispatching, answer:
 - Will agents edit same files?
 </analysis>
 
-**Dispatch when:** 3+ failures with different root causes, isolated subsystems, no shared state
-**Stay sequential when:** Related failures, exploratory debugging, shared resources, unknown scope
+**Use when:**
+- 3+ test files failing with different root causes
+- Multiple subsystems broken independently
+- Each problem can be understood without context from others
+- No shared state between investigations
 
-## Agent Prompt Template
+**Don't use when:**
+- Failures are related (fix one might fix others)
+- Need to understand full system state
+- Agents would interfere with each other (same files, shared resources)
+- Exploratory debugging (you don't know what's broken yet)
+
+---
+
+## The Pattern
+
+### 1. Identify Independent Domains
+
+Group failures by what's broken:
+- File A tests: Tool approval flow
+- File B tests: Batch completion behavior
+- File C tests: Abort functionality
+
+Each domain is independent - fixing tool approval doesn't affect abort tests.
+
+### 2. Create Focused Agent Prompts
+
+Each agent gets:
+- **Specific scope:** One test file or subsystem
+- **Clear goal:** Make these tests pass
+- **Constraints:** Don't change other code
+- **Expected output:** Summary of what you found and fixed
+
+### 3. Dispatch in Parallel
+
+```typescript
+Task("Fix agent-tool-abort.test.ts failures")
+Task("Fix batch-completion-behavior.test.ts failures")
+Task("Fix tool-approval-race-conditions.test.ts failures")
+// All three run concurrently
+```
+
+### 4. Review and Integrate
+
+<CRITICAL>
+NEVER integrate agent work without completing ALL verification steps. Skipping any step causes merge disasters and silent regressions.
+</CRITICAL>
+
+<reflection>
+After agents return:
+1. Read each summary - understand what changed
+2. Check conflict potential - same files edited?
+3. Run full test suite - verify integration
+4. Spot check fixes - agents make systematic errors
+
+Only integrate when: summaries reviewed, no file conflicts, tests green.
+</reflection>
+
+---
+
+## Agent Prompt Structure
+
+Good agent prompts are:
+1. **Focused** - One clear problem domain
+2. **Self-contained** - All context needed to understand the problem
+3. **Specific about output** - What should the agent return?
+
+### Template
 
 ```markdown
 Fix [SPECIFIC SCOPE]:
@@ -69,26 +161,41 @@ Constraints:
 Return: Summary of root cause + changes made
 ```
 
-## Prompt Quality Gates
+### Full Example
 
-| Anti-pattern | Fix |
-|--------------|-----|
-| "Fix all tests" | Specify exact file/tests |
-| No error context | Paste actual errors |
-| No constraints | Add "do NOT change X" |
-| "Fix it" output | Require cause+changes summary |
+```markdown
+Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
 
-## Post-Dispatch Protocol
+1. "should abort tool with partial output capture" - expects 'interrupted at' in message
+2. "should handle mixed completed and aborted tools" - fast tool aborted instead of completed
+3. "should properly track pendingToolCount" - expects 3 results but gets 0
 
-<reflection>
-After agents return:
-1. Read each summary - understand what changed
-2. Check conflict potential - same files edited?
-3. Run full test suite - verify integration
-4. Spot check fixes - agents make systematic errors
-</reflection>
+These are timing/race condition issues. Your task:
 
-Only integrate when: summaries reviewed, no file conflicts, tests green
+1. Read the test file and understand what each test verifies
+2. Identify root cause - timing issues or actual bugs?
+3. Fix by:
+   - Replacing arbitrary timeouts with event-based waiting
+   - Fixing bugs in abort implementation if found
+   - Adjusting test expectations if testing changed behavior
+
+Do NOT just increase timeouts - find the real issue.
+
+Return: Summary of what you found and what you fixed.
+```
+
+---
+
+## Common Mistakes
+
+| Anti-pattern | Problem | Fix |
+|--------------|---------|-----|
+| "Fix all the tests" | Agent gets lost | Specify exact file/tests |
+| No error context | Agent guesses wrong | Paste actual error messages and test names |
+| No constraints | Agent refactors everything | Add "do NOT change X" |
+| "Fix it" output | You don't know what changed | Require cause+changes summary |
+
+---
 
 ## Anti-Patterns
 
@@ -99,7 +206,32 @@ Only integrate when: summaries reviewed, no file conflicts, tests green
 - Skipping conflict check before merge
 - Integrating without running full test suite
 - Dispatching exploratory work (unknown scope)
+- Parallel dispatch when failures might be related
 </FORBIDDEN>
+
+---
+
+## Real Example
+
+**Scenario:** 6 failures across 3 files post-refactor
+
+**Domain isolation:**
+- agent-tool-abort.test.ts (3 failures): timing issues
+- batch-completion-behavior.test.ts (2 failures): event structure bug
+- tool-approval-race-conditions.test.ts (1 failure): async waiting
+
+**Dispatch:** 3 parallel agents, each scoped to one file
+
+**Results:**
+- Agent 1: Replaced timeouts with event-based waiting
+- Agent 2: Fixed event structure bug (threadId in wrong place)
+- Agent 3: Added wait for async tool execution to complete
+
+**Integration:** All fixes independent, zero conflicts, full suite green
+
+**Gain:** 3 problems solved in time of 1
+
+---
 
 ## Self-Check
 
@@ -111,20 +243,37 @@ Before completing:
 - [ ] Conflict check performed on returned work
 - [ ] Full test suite green after merge
 
-If ANY unchecked: STOP and fix.
+<CRITICAL>
+If ANY unchecked: STOP and fix. Parallel dispatch without independence verification causes merge disasters.
+</CRITICAL>
 
-## Compressed Example
+---
 
-**Scenario:** 6 failures across 3 files post-refactor
+## Key Benefits
 
-**Domain isolation:**
-- agent-tool-abort.test.ts (3): timing issues
-- batch-completion-behavior.test.ts (2): event structure
-- tool-approval-race-conditions.test.ts (1): async waiting
+1. **Parallelization** - Multiple investigations happen simultaneously
+2. **Focus** - Each agent has narrow scope, less context to track
+3. **Independence** - Agents don't interfere with each other
+4. **Speed** - 3 problems solved in time of 1
 
-**Dispatch:** 3 parallel agents, each scoped to one file
+## Verification
 
-**Results:** Independent fixes, zero conflicts, suite green
+After agents return:
+1. **Review each summary** - Understand what changed
+2. **Check for conflicts** - Did agents edit same code?
+3. **Run full suite** - Verify all fixes work together
+4. **Spot check** - Agents can make systematic errors
 
-**Gain:** 3 problems solved in time of 1
+## Real-World Impact
+
+From debugging session (2025-10-03):
+- 6 failures across 3 files
+- 3 agents dispatched in parallel
+- All investigations completed concurrently
+- All fixes integrated successfully
+- Zero conflicts between agent changes
+
+<FINAL_EMPHASIS>
+Parallel dispatch is a force multiplier when used correctly, and a merge disaster when used carelessly. The independence gate is non-negotiable. Verify before dispatch, verify before integration. Your reputation depends on the rigor of your verification, not the speed of your dispatch.
+</FINAL_EMPHASIS>
 ``````````

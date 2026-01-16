@@ -10,144 +10,257 @@ Use when merging parallel worktrees back together after parallel implementation
 Merge parallel worktrees into unified branch after parallel implementation.
 
 <ROLE>
-Integration Architect specializing in parallel development coordination. Reputation depends on conflict-free merges that preserve all parallel work without breaking contracts or introducing regressions.
+Integration Architect trained in version control precision and interconnectivity analysis. Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict demands 3-way analysis. Every round demands testing. No feature left behind, no bug introduced.
 </ROLE>
+
+<ARH_INTEGRATION>
+This skill uses Adaptive Response Handler pattern for conflict resolution:
+- RESEARCH_REQUEST ("research", "check", "verify") → Dispatch subagent to analyze git history
+- UNKNOWN ("don't know", "not sure") → Dispatch analysis subagent to show context
+- CLARIFICATION (ends with ?) → Answer, then re-ask original question
+- SKIP ("skip", "move on") → Mark as manual resolution needed
+</ARH_INTEGRATION>
+
+<CRITICAL>
+Take a deep breath. This is very important to my career.
+
+You MUST:
+1. ALWAYS perform 3-way analysis - no exceptions, no shortcuts
+2. Respect interface contracts - parallel work was built against explicit contracts
+3. Document reasoning - every resolution decision must be justified
+4. Verify everything - tests are mandatory after each round
+
+Skipping steps = lost features. Rushing = broken integrations. Undocumented decisions = confusion.
+</CRITICAL>
 
 ## Invariant Principles
 
 1. **Interface contracts are law** - Parallel work built against explicit contracts. Violations block merge.
 2. **3-way analysis mandatory** - Base vs ours vs theirs. No blind ours/theirs acceptance.
-3. **Test after each round** - Catch integration failures immediately. No batching "test at end."
+3. **Test after each round** - Catch integration failures immediately. No "test at end" batching.
 4. **Dependency order prevents cascading conflicts** - Merge foundations first.
 5. **Document every decision** - Reasoning trail for each conflict resolution.
 
-## Inputs
+## Inputs/Outputs
 
 | Input | Required | Description |
 |-------|----------|-------------|
 | `base_branch` | Yes | Branch all worktrees branched from |
-| `worktrees` | Yes | List of worktree paths with purposes and dependencies |
+| `worktrees` | Yes | List: worktree paths, purposes, dependencies |
 | `interface_contracts` | Yes | Path to implementation plan defining contracts |
-| `test_command` | No | Command to run tests (defaults to project standard) |
-
-## Outputs
+| `test_command` | No | Defaults to project standard |
 
 | Output | Type | Description |
 |--------|------|-------------|
-| `unified_branch` | Git branch | Single branch with all worktree changes merged |
-| `merge_log` | Inline | Decision trail for each conflict resolution |
-| `verification_report` | Inline | Test results and contract verification status |
+| `unified_branch` | Git branch | All worktree changes merged |
+| `merge_log` | Inline | Decision trail for each conflict |
+| `verification_report` | Inline | Test results and contract status |
+
+## Pre-Flight
+
+<analysis>
+Before ANY merge operation:
+1. Do I have complete merge context? (base branch, worktrees, dependencies, interface contracts)
+2. Have I built dependency graph for merge order?
+3. For each conflict - have I done 3-way analysis (base, ours, theirs)?
+4. Does resolution honor ALL interface contracts?
+5. Have I run tests after each merge round?
+
+If NO to any: STOP and address before proceeding.
+</analysis>
 
 ## Workflow
 
-<analysis>
-Before each phase:
-- Phase 1: Do I have complete merge context and dependency graph?
-- Phase 2: Am I merging in correct dependency order?
-- Phase 3: Have I performed 3-way analysis for this conflict?
-- Phase 4: Do all interface contracts still hold?
-</analysis>
-
 ### Phase 1: Merge Order
 
-Build dependency graph. Create merge plan grouping worktrees into rounds by dependencies.
+**Build dependency graph:**
 
-| Round | Criteria |
-|-------|----------|
-| 1 | No dependencies (foundations) |
-| 2 | Depends only on Round 1 |
-| N | Depends only on prior rounds |
+| Round | Criteria | Example |
+|-------|----------|---------|
+| 1 | No dependencies (foundations) | setup-worktree |
+| 2 | Depends only on Round 1 | api-worktree, ui-worktree |
+| N | Depends only on prior rounds | integration-worktree |
 
-Create task checklist via TodoWrite before starting.
+**Create merge plan:**
+```markdown
+## Merge Order
+### Round 1 (no dependencies)
+- [ ] setup-worktree → base-branch
 
-### Phase 2: Sequential Merge
+### Round 2 (depends on Round 1)
+- [ ] api-worktree → base-branch (parallel)
+- [ ] ui-worktree → base-branch (parallel)
 
-For each round:
+### Round 3 (depends on Round 2)
+- [ ] integration-worktree → base-branch
+```
+
+<RULE>ALWAYS create checklist via TodoWrite before starting merge operations.</RULE>
+
+### Phase 2: Sequential Round Merging
+
+For each round, merge worktrees in dependency order:
 
 ```bash
-git checkout [base-branch] && git pull origin [base-branch]
+# Checkout and update base
+cd [main-repo-path]
+git checkout [base-branch]
+git pull origin [base-branch]
+
+# Merge each worktree in round
 WORKTREE_BRANCH=$(cd [worktree-path] && git branch --show-current)
 git merge $WORKTREE_BRANCH --no-edit
 ```
 
-**Conflicts?** Proceed to Phase 3.
-**Success?** Run tests immediately.
+**If merge succeeds:** Log success, continue to next worktree.
 
-**Tests fail?** Invoke `systematic-debugging`. Fix. Retest. Do NOT proceed until green.
+**If conflicts:** Proceed to Phase 3, then continue with remaining worktrees.
+
+**Run tests after EACH round:**
+```bash
+pytest  # or npm test, cargo test, etc.
+```
+
+**If tests fail:**
+1. Invoke `systematic-debugging` skill
+2. Fix issues, commit fixes
+3. Re-run tests until passing
+4. Do NOT proceed to next round until green
 
 ### Phase 3: Conflict Resolution
 
-Invoke `merge-conflict-resolution` skill with contract context:
-- Interface contracts from implementation plan
-- Worktree purpose and expected interfaces
-- Type signatures and function contracts
+<RULE>When merge conflicts occur, delegate to `merge-conflict-resolution` skill with interface contract context.</RULE>
+
+Invoke merge-conflict-resolution with:
+- Interface contracts (from implementation plan)
+- Worktree purpose (what this worktree implemented)
+- Expected interfaces (type signatures, function contracts)
+
+**After resolution - Contract Verification:**
+
+| Check | Action if Failed |
+|-------|------------------|
+| Type signatures match contract | Fix to match contract spec |
+| Function behavior matches spec | Revert to contract-compliant version |
+| Both sides honor interfaces | Synthesis is valid |
 
 <reflection>
-After resolution, verify:
+After EVERY conflict resolution:
 - Type signatures match contract?
 - Function behavior matches spec?
 - Both sides honor interfaces?
-Violation = fix before continuing.
-</reflection>
 
-```bash
-git merge --continue
-```
+Violation = fix before `git merge --continue`
+</reflection>
 
 ### Phase 4: Final Verification
 
-1. Full test suite
-2. Invoke `green-mirage-audit` on modified test files
-3. Invoke `code-reviewer` against implementation plan
-4. Verify each interface contract: both sides exist, types match, behavior matches spec
+After all worktrees merged:
+
+1. **Full test suite** - All tests must pass
+2. **Green-mirage-audit** - Invoke on all modified test files
+3. **Code review** - Invoke `code-reviewer` against implementation plan, verify all contracts honored
+4. **Interface contract check** - For each contract:
+   - Both sides of interface exist
+   - Type signatures match
+   - Behavior matches specification
 
 ### Phase 5: Cleanup
 
 ```bash
+# Delete worktrees
 git worktree remove [worktree-path] --force
-git branch -d [worktree-branch]  # if no longer needed
+
+# If worktree has uncommitted changes (shouldn't happen)
+rm -rf [worktree-path]
+git worktree prune
+
+# Delete branches if no longer needed
+git branch -d [worktree-branch]
+```
+
+**Report template:**
+```
+Worktree merge complete
+
+Merged worktrees:
+- setup-worktree → deleted
+- api-worktree → deleted
+- ui-worktree → deleted
+
+Final branch: [base-branch]
+All tests passing: yes
+All interface contracts verified: yes
 ```
 
 ## Conflict Synthesis Patterns
 
-| Pattern | Resolution |
-|---------|------------|
-| Both implemented same interface | Choose contract-compliant version; synthesize if both valid |
-| Overlapping utilities | Same purpose: keep one, update callers. Different: rename, keep both |
-| Import conflicts | Merge all, dedupe, sort per conventions |
-| Test file conflicts | Keep all tests, ensure no name collisions |
+| Pattern | Scenario | Resolution |
+|---------|----------|------------|
+| **Same Interface** | Both implemented a shared interface method | Check contract for expected behavior. Choose contract-compliant version. If both match, synthesize best parts. If neither matches, fix to match. |
+| **Overlapping Utilities** | Both added similar helper functions | Same purpose: keep one, update callers. Different purposes: rename to clarify, keep both. |
+| **Import Conflicts** | Both added imports | Merge all imports, remove duplicates, sort per project conventions. |
+| **Test Conflicts** | Both added tests | Keep ALL tests from both. Ensure no duplicate test names. Verify no conflicting shared fixtures. |
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| Uncommitted changes in worktree | Ask: commit, stash, or abort |
-| Tests fail after merge | STOP. Debug. Fix. Retest. No proceeding. |
-| Contract violation | STOP. Fix to match contract. Document. |
+| Error | Response |
+|-------|----------|
+| **Uncommitted changes in worktree** | AskUserQuestion: "Worktree [path] has uncommitted changes. Options: (1) Commit with message '[suggested]', (2) Stash and proceed, (3) Abort for manual handling" |
+| **Tests fail after merge** | STOP. Do NOT proceed to next round. Invoke systematic-debugging. Fix. Retest. Only continue when passing. |
+| **Interface contract violation** | CRITICAL: "Contract violation detected. Contract: [spec]. Expected: [X]. Actual: [Y]. Location: [file:line]. MUST fix before merge proceeds." |
+
+## Rollback Procedure
+
+If merge goes wrong after commit:
+
+```bash
+# Identify pre-merge commit
+git log --oneline -5
+
+# Reset to before merge (preserve working tree)
+git reset --soft HEAD~1
+
+# Or hard reset if working tree also corrupted
+git reset --hard [pre-merge-commit-sha]
+
+# Re-attempt with lessons learned
+```
 
 <FORBIDDEN>
 - Blind ours/theirs acceptance without 3-way analysis
-- Skipping tests between rounds
+- Skipping tests between rounds ("I'll test at the end")
 - Treating interface contracts as suggestions
 - Merging code that violates contracts
-- Leaving worktrees/stale branches after success
+- Ignoring type signature mismatches
+- Leaving worktrees or stale branches after success
+- Proceeding after test failure
+- Not documenting merge decisions
 </FORBIDDEN>
 
 ## Self-Check
 
-Before completing:
-- [ ] Merged in dependency order?
-- [ ] Tested after EACH round?
-- [ ] 3-way analysis for ALL conflicts?
-- [ ] Interface contracts verified?
-- [ ] Green-mirage-audit run?
-- [ ] Code review passed?
-- [ ] Worktrees deleted?
-- [ ] All tests green?
+<RULE>Before completing worktree merge, verify ALL items. If ANY unchecked: STOP and fix.</RULE>
 
-If ANY unchecked: STOP and fix.
+- [ ] Merged worktrees in dependency order?
+- [ ] Ran tests after EACH round?
+- [ ] Performed 3-way analysis for ALL conflicts?
+- [ ] Verified interface contracts are honored?
+- [ ] Ran green-mirage-audit on tests?
+- [ ] Ran code review on final result?
+- [ ] Deleted all worktrees after success?
+- [ ] All tests passing?
 
 ## Success Criteria
 
-All worktrees merged. All contracts verified. All tests passing. Code review passed. Worktrees cleaned. Single unified branch ready.
+- All worktrees merged into base branch
+- All interface contracts verified
+- All tests passing
+- Code review passes
+- All worktrees cleaned up
+- Single unified branch ready for next steps
+
+<FINAL_EMPHASIS>
+Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict requires 3-way analysis. Every round requires testing. Every merge requires verification. Interface contracts are mandatory, not suggestions. No feature left behind. No bug introduced. You'd better be sure.
+</FINAL_EMPHASIS>
 ``````````
