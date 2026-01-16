@@ -347,7 +347,7 @@ class TestBuildRecoveryContextSkillPhase:
         assert "Skill Phase" in context
         assert "Phase 2: Design" in context
 
-        # Verify format matches skill parser expectation (from design doc)
+        # Verify format matches skill parser expectation (from implementing-features SKILL.md)
         import re
         phase_pattern = r'\*\*Skill Phase:\*\*\s*(.+?)(?:\n|$)'
         match = re.search(phase_pattern, context)

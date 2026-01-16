@@ -154,7 +154,8 @@ def test_extract_skill_phase_only_tracks_after_most_recent_invocation():
 def test_extract_skill_phase_1_5_not_1():
     r"""Test that Phase 1.5 is detected correctly, not as Phase 1.
 
-    This tests the negative lookahead (?!\.5) in the Phase 1 pattern.
+    This tests the negative lookahead (?!\.) in the Phase 1 pattern,
+    which prevents matching if a decimal point follows "1".
     Without it, "Phase 1.5" would incorrectly match "Phase 1".
     """
     from spellbook_mcp.extractors.skill_phase import extract_skill_phase

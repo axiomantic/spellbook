@@ -52,7 +52,7 @@ def read_jsonl(path: str, max_messages: int = 200) -> List[Dict[str, Any]]:
 def extract_soul(transcript_path: str) -> Soul:
     """Extract complete soul from session transcript.
 
-    Reads last 200 messages and extracts all 6 components.
+    Reads last 200 messages and extracts all 7 components.
 
     Args:
         transcript_path: Path to session .jsonl file
@@ -61,7 +61,7 @@ def extract_soul(transcript_path: str) -> Soul:
         Soul dict with keys:
         - todos: List of active todo dicts
         - active_skill: Skill name or None
-        - skill_phase: Phase description or None (currently always None)
+        - skill_phase: Phase description or None
         - persona: Persona string or None
         - recent_files: List of file paths
         - exact_position: List of tool action dicts
