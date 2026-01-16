@@ -55,6 +55,22 @@ def test_extract_skill_phase_highest_wins():
     assert result == "Phase 3: Implementation Planning"
 
 
+def test_extract_skill_phase_highest_wins_not_last():
+    """Test that highest phase wins even when lower phase appears later.
+
+    This ensures the extractor tracks HIGHEST phase reached, not LAST phase mentioned.
+    Sessions may reference earlier phases in retrospect without regressing progress.
+    """
+    from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+    messages = [
+        {"role": "assistant", "tool_calls": [{"tool": "Skill", "args": {"skill": "implementing-features"}}]},
+        {"role": "assistant", "content": "## Phase 3: Implementation Planning\n\nStarting planning..."},
+        {"role": "assistant", "content": "Wait, I need to revisit Phase 1: Research\n\nLet me check something..."},
+    ]
+    result = extract_skill_phase(messages)
+    assert result == "Phase 3: Implementation Planning"
+
+
 def test_extract_skill_phase_ignores_other_skills():
     """Test that phases are only tracked after implementing-features invocation."""
     from spellbook_mcp.extractors.skill_phase import extract_skill_phase
