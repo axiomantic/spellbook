@@ -1,6 +1,7 @@
 """Database schema and connection management for session recovery."""
 
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -17,6 +18,7 @@ def get_db_path() -> Path:
 
 
 _connections = {}  # Cache connections by path
+_connections_lock: threading.Lock = threading.Lock()
 
 
 def get_connection(db_path: str = None) -> sqlite3.Connection:
@@ -31,16 +33,17 @@ def get_connection(db_path: str = None) -> sqlite3.Connection:
     if db_path is None:
         db_path = str(get_db_path())
 
-    # Return cached connection if exists
-    if db_path in _connections:
-        return _connections[db_path]
+    with _connections_lock:
+        # Return cached connection if exists
+        if db_path in _connections:
+            return _connections[db_path]
 
-    conn = sqlite3.connect(db_path, timeout=5.0, check_same_thread=False)
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA synchronous=NORMAL")
+        conn = sqlite3.connect(db_path, timeout=5.0, check_same_thread=False)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
 
-    _connections[db_path] = conn
-    return conn
+        _connections[db_path] = conn
+        return conn
 
 
 def init_db(db_path: str = None) -> None:
@@ -165,6 +168,7 @@ def close_all_connections():
     Used primarily for cleanup in tests.
     """
     global _connections
-    for conn in _connections.values():
-        conn.close()
-    _connections = {}
+    with _connections_lock:
+        for conn in _connections.values():
+            conn.close()
+        _connections = {}

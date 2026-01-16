@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - SQLite database stores 6 state components: todos, active skill, persona, recent files, position, workflow pattern
   - MCP tool response injection via `<system-reminder>` tags using decorator pattern
   - No user action required; recovery context automatically injected into next MCP tool response
-  - 17 new tests covering extractors, database, watcher, injection, and end-to-end recovery
+  - 96 new tests covering extractors, database, watcher, injection, and end-to-end recovery
 
 ## [0.7.2] - 2026-01-16
 

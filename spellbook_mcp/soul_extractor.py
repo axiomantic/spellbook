@@ -1,6 +1,7 @@
 """Extract structured session state (soul) from transcript."""
 
 import json
+from collections import deque
 from typing import Dict, Any, List
 from pathlib import Path
 
@@ -16,6 +17,9 @@ from .extractors.types import Soul
 def read_jsonl(path: str, max_messages: int = 200) -> List[Dict[str, Any]]:
     """Read last N messages from JSONL transcript.
 
+    Uses deque with maxlen for memory efficiency - only keeps
+    the most recent max_messages in memory at any time.
+
     Args:
         path: Path to .jsonl file
         max_messages: Maximum messages to return (from end of file)
@@ -23,11 +27,11 @@ def read_jsonl(path: str, max_messages: int = 200) -> List[Dict[str, Any]]:
     Returns:
         List of message dicts, limited to last max_messages
     """
-    messages: List[Dict[str, Any]] = []
+    messages: deque[Dict[str, Any]] = deque(maxlen=max_messages)
     file_path = Path(path)
 
     if not file_path.exists():
-        return messages
+        return list(messages)
 
     with open(file_path, "r") as f:
         for line in f:
@@ -41,8 +45,7 @@ def read_jsonl(path: str, max_messages: int = 200) -> List[Dict[str, Any]]:
                 # Skip malformed lines
                 continue
 
-    # Return only last max_messages
-    return messages[-max_messages:]
+    return list(messages)
 
 
 def extract_soul(transcript_path: str) -> Soul:
