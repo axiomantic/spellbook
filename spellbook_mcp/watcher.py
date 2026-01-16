@@ -1,5 +1,6 @@
 """Background watcher for session compaction events."""
 
+import sqlite3
 import threading
 import time
 import logging
@@ -99,15 +100,19 @@ def is_heartbeat_fresh(db_path: str, max_age: float = 30.0) -> bool:
     Returns:
         True if heartbeat exists and is fresh
     """
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT timestamp FROM heartbeat WHERE id = 1")
-    row = cursor.fetchone()
+    try:
+        conn = get_connection(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT timestamp FROM heartbeat WHERE id = 1")
+        row = cursor.fetchone()
 
-    if not row:
+        if not row:
+            return False
+
+        heartbeat = datetime.fromisoformat(row[0])
+        age = (datetime.now() - heartbeat).total_seconds()
+
+        return age < max_age
+    except sqlite3.OperationalError:
+        # Table doesn't exist - database not initialized
         return False
-
-    heartbeat = datetime.fromisoformat(row[0])
-    age = (datetime.now() - heartbeat).total_seconds()
-
-    return age < max_age
