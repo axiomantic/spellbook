@@ -156,3 +156,28 @@ def test_extract_soul_returns_soul_typed_dict(tmp_path):
         "workflow_pattern"
     }
     assert set(soul.keys()) == expected_keys
+
+
+def test_extract_soul_includes_skill_phase(tmp_path):
+    """Test that extract_soul includes skill_phase from transcript."""
+    from spellbook_mcp.soul_extractor import extract_soul
+
+    # Create test transcript with implementing-features invocation and phase
+    transcript_path = tmp_path / "session.jsonl"
+    messages = [
+        {
+            "role": "assistant",
+            "tool_calls": [{"tool": "Skill", "args": {"skill": "implementing-features"}}],
+        },
+        {
+            "role": "assistant",
+            "content": "## Phase 2: Design\n\nCreating design document...",
+        },
+    ]
+    with open(transcript_path, "w") as f:
+        for msg in messages:
+            f.write(json.dumps(msg) + "\n")
+
+    soul = extract_soul(str(transcript_path))
+
+    assert soul["skill_phase"] == "Phase 2: Design"

@@ -319,6 +319,44 @@ class TestBuildRecoveryContext:
         close_all_connections()
 
 
+class TestBuildRecoveryContextSkillPhase:
+    """Tests for skill_phase in build_recovery_context."""
+
+    def test_build_recovery_context_includes_skill_phase(self, tmp_path):
+        """Test that skill_phase is included in recovery context when present."""
+        from spellbook_mcp.injection import build_recovery_context
+        from spellbook_mcp.db import init_db, get_connection, close_all_connections
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        # Insert soul with skill_phase
+        conn = get_connection(db_path)
+        conn.execute(
+            """
+            INSERT INTO souls (id, project_path, active_skill, skill_phase)
+            VALUES (?, ?, ?, ?)
+        """,
+            ("soul-1", "/test/project", "implementing-features", "Phase 2: Design"),
+        )
+        conn.commit()
+
+        context = build_recovery_context(db_path, "/test/project")
+
+        assert context is not None
+        assert "Skill Phase" in context
+        assert "Phase 2: Design" in context
+
+        # Verify format matches skill parser expectation (from design doc)
+        import re
+        phase_pattern = r'\*\*Skill Phase:\*\*\s*(.+?)(?:\n|$)'
+        match = re.search(phase_pattern, context)
+        assert match is not None, "Skill Phase format must match parser regex"
+        assert match.group(1) == "Phase 2: Design", f"Expected 'Phase 2: Design', got '{match.group(1)}'"
+
+        close_all_connections()
+
+
 class TestInjectRecoveryContextDecorator:
     """Tests for inject_recovery_context decorator."""
 

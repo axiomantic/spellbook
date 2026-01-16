@@ -134,7 +134,7 @@ def build_recovery_context(
     # Get latest soul for this project (most recently bound)
     cursor.execute(
         """
-        SELECT persona, active_skill, todos, recent_files, exact_position, workflow_pattern
+        SELECT persona, active_skill, skill_phase, todos, recent_files, exact_position, workflow_pattern
         FROM souls
         WHERE project_path = ?
         ORDER BY bound_at DESC
@@ -147,7 +147,7 @@ def build_recovery_context(
     if not row:
         return None
 
-    persona, active_skill, todos_json, files_json, position_json, workflow = row
+    persona, active_skill, skill_phase, todos_json, files_json, position_json, workflow = row
 
     # Parse JSON fields with error handling for corrupted data
     try:
@@ -174,6 +174,9 @@ def build_recovery_context(
 
     if active_skill:
         parts.append(f"**Active Skill:** {active_skill}")
+
+    if skill_phase:
+        parts.append(f"**Skill Phase:** {skill_phase}")
 
     if persona:
         parts.append(f"**Session Persona:** {persona}")

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .extractors.todos import extract_todos
 from .extractors.skill import extract_active_skill
+from .extractors.skill_phase import extract_skill_phase
 from .extractors.persona import extract_persona
 from .extractors.files import extract_recent_files
 from .extractors.position import extract_position
@@ -71,7 +72,7 @@ def extract_soul(transcript_path: str) -> Soul:
     return {
         "todos": extract_todos(messages),
         "active_skill": extract_active_skill(messages),
-        "skill_phase": None,  # No extractor for this yet
+        "skill_phase": extract_skill_phase(messages),
         "persona": extract_persona(messages),
         "recent_files": extract_recent_files(messages),
         "exact_position": extract_position(messages),
