@@ -1,0 +1,7 @@
+{
+  "config": "./.markdownlint.json",
+  "ignores": [
+    "node_modules/**",
+    ".pytest_cache/**"
+  ]
+}

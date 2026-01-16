@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - No user action required; recovery context automatically injected into next MCP tool response
   - 96 new tests covering extractors, database, watcher, injection, and end-to-end recovery
 
+### Fixed
+- **Thread safety in recovery module** - Added locks for concurrent access
+  - `threading.Lock` in `injection.py` for shared state (`_call_counter`, `_pending_compaction`)
+  - `threading.Lock` in `db.py` for connection cache (`_connections`)
+- **JSON error handling** - `build_recovery_context()` now gracefully handles corrupted JSON in database
+- **Memory optimization** - Soul extractor uses `collections.deque(maxlen=200)` for efficient transcript reading
+- **Markdown lint errors** - Fixed 12 pre-existing lint issues across project
+  - Setext heading styles converted to ATX in `commands/address-pr-feedback.md`, `skills/project-encyclopedia/SKILL.md`
+  - Table column counts fixed in `docs/commands/index.md`
+  - Added `.markdownlint-cli2.jsonc` for proper ignore configuration
+
 ## [0.7.2] - 2026-01-16
 
 ### Fixed
