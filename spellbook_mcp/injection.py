@@ -12,6 +12,7 @@ Key functions:
 
 import json
 import os
+import threading
 from functools import wraps
 from typing import Any, Optional
 
@@ -27,14 +28,16 @@ except ImportError:
 _injection_cache: Optional[dict] = None
 _call_counter: int = 0
 _pending_compaction: bool = False
+_state_lock: threading.Lock = threading.Lock()
 
 
 def _reset_state() -> None:
     """Reset module state. Used for testing."""
     global _injection_cache, _call_counter, _pending_compaction
-    _injection_cache = None
-    _call_counter = 0
-    _pending_compaction = False
+    with _state_lock:
+        _injection_cache = None
+        _call_counter = 0
+        _pending_compaction = False
 
 
 def _set_pending_compaction(pending: bool) -> None:
@@ -46,7 +49,8 @@ def _set_pending_compaction(pending: bool) -> None:
         pending: True to trigger injection on next tool call
     """
     global _pending_compaction
-    _pending_compaction = pending
+    with _state_lock:
+        _pending_compaction = pending
 
 
 def should_inject() -> bool:
@@ -61,18 +65,19 @@ def should_inject() -> bool:
     """
     global _call_counter, _pending_compaction
 
-    # Check for pending compaction (highest priority)
-    if _pending_compaction:
-        _call_counter = 0
-        _pending_compaction = False
-        return True
+    with _state_lock:
+        # Check for pending compaction (highest priority)
+        if _pending_compaction:
+            _call_counter = 0
+            _pending_compaction = False
+            return True
 
-    # Increment counter and check for periodic injection
-    _call_counter += 1
-    if _call_counter % 10 == 0:
-        return True
+        # Increment counter and check for periodic injection
+        _call_counter += 1
+        if _call_counter % 10 == 0:
+            return True
 
-    return False
+        return False
 
 
 def wrap_with_reminder(result: Any, context: Optional[str]) -> Any:
@@ -144,10 +149,21 @@ def build_recovery_context(
 
     persona, active_skill, todos_json, files_json, position_json, workflow = row
 
-    # Parse JSON fields with null safety
-    todos = json.loads(todos_json) if todos_json else []
-    recent_files = json.loads(files_json) if files_json else []
-    exact_position = json.loads(position_json) if position_json else []
+    # Parse JSON fields with error handling for corrupted data
+    try:
+        todos = json.loads(todos_json) if todos_json else []
+    except json.JSONDecodeError:
+        todos = []
+
+    try:
+        recent_files = json.loads(files_json) if files_json else []
+    except json.JSONDecodeError:
+        recent_files = []
+
+    try:
+        exact_position = json.loads(position_json) if position_json else []
+    except json.JSONDecodeError:
+        exact_position = []
 
     # Build context parts (only include non-empty sections)
     parts = []
