@@ -246,15 +246,13 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 
     for name, cmd_file in sorted(all_cmd_files, key=lambda x: x[0]):
         content = cmd_file.read_text()
-        # Try to extract a description from the first paragraph
-        lines = content.split("\n")
-        desc = ""
-        for line in lines:
-            if line.strip() and not line.startswith("#") and not line.startswith("---"):
-                desc = line.strip()[:80]
-                if len(line.strip()) > 80:
-                    desc += "..."
-                break
+        frontmatter, body = extract_frontmatter(content)
+        desc = frontmatter.get("description", "")
+        if isinstance(desc, str):
+            # Collapse multi-line descriptions to single line, truncate
+            desc = " ".join(desc.split())[:80]
+            if len(frontmatter.get("description", "")) > 80:
+                desc += "..."
         origin = "[superpowers](https://github.com/obra/superpowers)" if name in SUPERPOWERS_COMMANDS else "spellbook"
         commands_index += f"| [/{name}]({name}.md) | {desc} | {origin} |\n"
 
