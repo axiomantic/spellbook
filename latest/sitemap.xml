@@ -93,6 +93,14 @@
          <lastmod>2026-01-17</lastmod>
     </url>
     <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/commands/pr-distill-bless/</loc>
+         <lastmod>2026-01-17</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/commands/pr-distill/</loc>
+         <lastmod>2026-01-17</lastmod>
+    </url>
+    <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/scientific-debugging/</loc>
          <lastmod>2026-01-17</lastmod>
     </url>
@@ -230,6 +238,10 @@
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/merge-conflict-resolution/</loc>
+         <lastmod>2026-01-17</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/skills/pr-distill/</loc>
          <lastmod>2026-01-17</lastmod>
     </url>
     <url>
