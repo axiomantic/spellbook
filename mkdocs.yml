@@ -81,6 +81,7 @@ nav:
       - skills/fixing-tests.md
       - skills/fact-checking.md
       - skills/finding-dead-code.md
+      - skills/pr-distill.md
       - skills/receiving-code-review.md
       - skills/requesting-code-review.md
     - Feature Development:
@@ -120,6 +121,8 @@ nav:
       - commands/address-pr-feedback.md
       - commands/move-project.md
       - commands/audit-green-mirage.md
+      - commands/pr-distill.md
+      - commands/pr-distill-bless.md
       - commands/brainstorm.md
       - commands/write-plan.md
       - commands/execute-plan.md

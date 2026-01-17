@@ -14,7 +14,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python compiled libraries (but allow lib/pr-distill/ for spellbook JS code)
+lib/*
+!lib/pr-distill/
 lib64/
 parts/
 sdist/
