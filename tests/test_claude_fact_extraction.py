@@ -315,6 +315,7 @@ class TestAllSkillsMinimumCompliance:
         "implementation-plan-reviewer",
         "implementing-features",
         "instruction-engineering",
+        "project-encyclopedia",
         "receiving-code-review",
         "smart-reading",
         "test-driven-development",
