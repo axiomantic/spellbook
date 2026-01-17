@@ -560,8 +560,9 @@ class TestGetSpellbookDir:
         # Should not raise - falls back to finding via __file__ or default
         result = get_spellbook_dir()
         assert isinstance(result, Path)
-        # Should find the actual spellbook dir (running from repo) or default
-        assert result.name in ("spellbook", "spellbook")
+        # Should find the actual spellbook dir (running from repo or worktree) or default
+        # Worktrees have names like "zero-intervention-recovery" in .worktrees/
+        assert result.name == "spellbook" or ".worktrees" in str(result)
 
 
 class TestSessionIsolation:

@@ -426,7 +426,7 @@ Options:
 **For each Category C item (in priority order):**
 
 1. **Present the issue:**
-```
+```text
 ===============================================================
 Fix <n> of <total>: <file>:<line>
 
@@ -434,12 +434,12 @@ Reviewer: @<username>
 Priority: <P0/P1/P2/P3>
 Comment: "<full_comment_body>"
 
-Current Code:
+Current Code
 ---------------------------------------------------------------
 <current code with line numbers and context>
 ---------------------------------------------------------------
 
-Suggested Fix:
+Suggested Fix
 ---------------------------------------------------------------
 <proposed change with diff highlighting>
 ---------------------------------------------------------------
@@ -489,9 +489,9 @@ Options:
 #### Phase 3: Completion Summary
 
 After wizard completes, show summary:
-```
+```text
 ===============================================================
-                    Wizard Complete!
+                    Wizard Complete
 ===============================================================
 
 Posted "Fixed in" replies: <count>

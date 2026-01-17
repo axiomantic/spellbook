@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.3] - 2026-01-16
+
+### Added
+- **Zero-intervention session recovery** - Automatic context restoration after Claude Code compaction
+  - Background watcher monitors session transcripts for compaction events
+  - SQLite database stores 6 state components: todos, active skill, persona, recent files, position, workflow pattern
+  - MCP tool response injection via `<system-reminder>` tags using decorator pattern
+  - No user action required; recovery context automatically injected into next MCP tool response
+  - 96 new tests covering extractors, database, watcher, injection, and end-to-end recovery
+
+### Fixed
+- **Thread safety in recovery module** - Added locks for concurrent access
+  - `threading.Lock` in `injection.py` for shared state (`_call_counter`, `_pending_compaction`)
+  - `threading.Lock` in `db.py` for connection cache (`_connections`)
+- **JSON error handling** - `build_recovery_context()` now gracefully handles corrupted JSON in database
+- **Memory optimization** - Soul extractor uses `collections.deque(maxlen=200)` for efficient transcript reading
+- **Markdown lint errors** - Fixed 12 pre-existing lint issues across project
+  - Setext heading styles converted to ATX in `commands/address-pr-feedback.md`, `skills/project-encyclopedia/SKILL.md`
+  - Table column counts fixed in `docs/commands/index.md`
+  - Added `.markdownlint-cli2.jsonc` for proper ignore configuration
+
 ## [0.7.2] - 2026-01-16
 
 ### Fixed
@@ -495,7 +516,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.3...HEAD
+[0.7.3]: https://github.com/axiomantic/spellbook/compare/v0.7.2...v0.7.3
+[0.7.2]: https://github.com/axiomantic/spellbook/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/axiomantic/spellbook/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/axiomantic/spellbook/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/axiomantic/spellbook/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/axiomantic/spellbook/compare/v0.4.0...v0.5.0

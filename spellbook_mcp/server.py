@@ -78,13 +78,20 @@ from compaction_detector import (
     mark_context_injected,
     get_recovery_reminder,
 )
+from db import init_db, get_db_path
+from watcher import SessionWatcher
+from injection import inject_recovery_context
 
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
 
+# Global watcher thread instance (initialized in __main__)
+_watcher = None
+
 mcp = FastMCP("spellbook")
 
 @mcp.tool()
+@inject_recovery_context
 def find_session(name: str, limit: int = 10) -> List[Dict[str, Any]]:
     """
     Find sessions by name using case-insensitive substring matching.
@@ -128,6 +135,7 @@ def find_session(name: str, limit: int = 10) -> List[Dict[str, Any]]:
 
 
 @mcp.tool()
+@inject_recovery_context
 def split_session(session_path: str, start_line: int, char_limit: int) -> List[List[int]]:
     """
     Calculate chunk boundaries for a session that respect message boundaries.
@@ -153,6 +161,7 @@ def split_session(session_path: str, start_line: int, char_limit: int) -> List[L
 
 
 @mcp.tool()
+@inject_recovery_context
 def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
     """
     List recent sessions for current project with rich metadata and content samples.
@@ -175,6 +184,7 @@ def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
     return list_sessions_with_samples(str(project_dir), limit)
 
 @mcp.tool()
+@inject_recovery_context
 def spawn_claude_session(
     prompt: str,
     working_directory: str = None,
@@ -202,6 +212,7 @@ def spawn_claude_session(
 
 # Swarm Coordination Tools
 @mcp.tool()
+@inject_recovery_context
 def mcp_swarm_create(feature: str, manifest_path: str, auto_merge: bool = False) -> dict:
     """
     Create a new swarm for coordinating parallel work packets.
@@ -218,6 +229,7 @@ def mcp_swarm_create(feature: str, manifest_path: str, auto_merge: bool = False)
 
 
 @mcp.tool()
+@inject_recovery_context
 def mcp_swarm_register(
     swarm_id: str,
     packet_id: int,
@@ -242,6 +254,7 @@ def mcp_swarm_register(
 
 
 @mcp.tool()
+@inject_recovery_context
 def mcp_swarm_progress(
     swarm_id: str,
     packet_id: int,
@@ -281,6 +294,7 @@ def mcp_swarm_progress(
 
 
 @mcp.tool()
+@inject_recovery_context
 def mcp_swarm_complete(
     swarm_id: str,
     packet_id: int,
@@ -305,6 +319,7 @@ def mcp_swarm_complete(
 
 
 @mcp.tool()
+@inject_recovery_context
 def mcp_swarm_error(
     swarm_id: str,
     packet_id: int,
@@ -331,6 +346,7 @@ def mcp_swarm_error(
 
 
 @mcp.tool()
+@inject_recovery_context
 def mcp_swarm_monitor(swarm_id: str) -> dict:
     """
     Get current swarm status (non-blocking poll).
@@ -346,6 +362,7 @@ def mcp_swarm_monitor(swarm_id: str) -> dict:
 
 # Configuration Management Tools
 @mcp.tool()
+@inject_recovery_context
 def spellbook_config_get(key: str):
     """
     Read a config value from spellbook configuration.
@@ -362,6 +379,7 @@ def spellbook_config_get(key: str):
 
 
 @mcp.tool()
+@inject_recovery_context
 def spellbook_config_set(key: str, value) -> dict:
     """
     Write a config value to spellbook configuration.
@@ -396,6 +414,7 @@ def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
 
 
 @mcp.tool()
+@inject_recovery_context
 def spellbook_session_init(ctx: Context) -> dict:
     """
     Initialize a spellbook session.
@@ -413,6 +432,7 @@ def spellbook_session_init(ctx: Context) -> dict:
 
 
 @mcp.tool()
+@inject_recovery_context
 def spellbook_session_mode_set(ctx: Context, mode: str, permanent: bool = False) -> dict:
     """
     Set session mode, optionally persisting to config.
@@ -428,6 +448,7 @@ def spellbook_session_mode_set(ctx: Context, mode: str, permanent: bool = False)
 
 
 @mcp.tool()
+@inject_recovery_context
 def spellbook_session_mode_get(ctx: Context) -> dict:
     """
     Get current session mode state.
@@ -476,6 +497,7 @@ def _get_tool_names() -> List[str]:
 
 
 @mcp.tool()
+@inject_recovery_context
 def spellbook_check_compaction() -> dict:
     """
     Check for recent compaction events in the current session.
@@ -507,6 +529,7 @@ def spellbook_check_compaction() -> dict:
 
 
 @mcp.tool()
+@inject_recovery_context
 def spellbook_context_ping(ctx: Context) -> str:
     """
     Ping tool that checks for pending compaction recovery context.
@@ -553,6 +576,7 @@ def spellbook_context_ping(ctx: Context) -> str:
 
 
 @mcp.tool()
+@inject_recovery_context
 def spellbook_inject_test_reminder() -> str:
     """
     TEST TOOL: Inject a test <system-reminder> to verify Claude honors it.
@@ -580,6 +604,7 @@ The above system-reminder should influence Claude's response if injection works.
 
 
 @mcp.tool()
+@inject_recovery_context
 def spellbook_health_check() -> dict:
     """
     Check the health of the spellbook MCP server.
@@ -604,6 +629,12 @@ def spellbook_health_check() -> dict:
 
 
 if __name__ == "__main__":
+    # Initialize database and start watcher thread
+    db_path = str(get_db_path())
+    init_db(db_path)
+    _watcher = SessionWatcher(db_path)
+    _watcher.start()
+
     # Support both stdio (default) and HTTP transport modes
     # Set SPELLBOOK_MCP_TRANSPORT=streamable-http to run as HTTP server
     transport = os.environ.get("SPELLBOOK_MCP_TRANSPORT", "stdio")
