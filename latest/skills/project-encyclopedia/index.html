@@ -3567,56 +3567,57 @@
 <a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">```</span>
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="gs">**Key boundaries:**</span>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>-
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="gu">## Decisions</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>| Decision | Alternatives | Rationale | Date |
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>|----------|--------------|-----------|------|
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="gu">## Entry Points</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>| Entry | Path | Purpose |
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>|-------|------|---------|
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="gu">## Testing</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Command**</span>:
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Framework**</span>:
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Key patterns**</span>:
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="gu">## See Also</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">-</span><span class="w"> </span>README.md for setup instructions
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">-</span><span class="w"> </span>CLAUDE.md for development conventions
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>```
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="k">-</span><span class="w"> </span>Auto-creating without asking
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="k">-</span><span class="w"> </span>Including implementation details that change frequently
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="k">-</span><span class="w"> </span>Duplicating content from existing docs
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="k">-</span><span class="w"> </span>Diagrams with more than 7 nodes
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="k">-</span><span class="w"> </span>Encyclopedias exceeding 1000 lines
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">-</span><span class="w"> </span>Skipping staleness check on existing encyclopedias
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="k">-</span><span class="w"> </span>Regenerating from scratch instead of surgical refresh
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>Before completing encyclopedia work:
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">- [ ]</span> User explicitly consented to creation/refresh
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">- [ ]</span> Total content &lt; 1000 lines
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="k">- [ ]</span> No duplication of existing documentation
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="k">- [ ]</span> Architecture diagram &lt;= 7 nodes
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="k">- [ ]</span> Glossary contains only project-specific terms
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="k">- [ ]</span> Decisions explain rationale, not just facts
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="k">- [ ]</span> File written to <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/encyclopedia.md`</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="k">- [ ]</span> Mtime reflects current date
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>If ANY unchecked: Revise before completing.
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="k">-</span><span class="w"> </span>(to be filled)
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="gu">## Decisions</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>| Decision | Alternatives | Rationale | Date |
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>|----------|--------------|-----------|------|
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="gu">## Entry Points</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>| Entry | Path | Purpose |
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>|-------|------|---------|
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gu">## Testing</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Command**</span>:
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Framework**</span>:
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Key patterns**</span>:
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="gu">## See Also</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">-</span><span class="w"> </span>README.md for setup instructions
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">-</span><span class="w"> </span>CLAUDE.md for development conventions
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>```
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="k">-</span><span class="w"> </span>Auto-creating without asking
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="k">-</span><span class="w"> </span>Including implementation details that change frequently
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="k">-</span><span class="w"> </span>Duplicating content from existing docs
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="k">-</span><span class="w"> </span>Diagrams with more than 7 nodes
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">-</span><span class="w"> </span>Encyclopedias exceeding 1000 lines
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="k">-</span><span class="w"> </span>Skipping staleness check on existing encyclopedias
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="k">-</span><span class="w"> </span>Regenerating from scratch instead of surgical refresh
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>Before completing encyclopedia work:
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">- [ ]</span> User explicitly consented to creation/refresh
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="k">- [ ]</span> Total content &lt; 1000 lines
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="k">- [ ]</span> No duplication of existing documentation
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="k">- [ ]</span> Architecture diagram &lt;= 7 nodes
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="k">- [ ]</span> Glossary contains only project-specific terms
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="k">- [ ]</span> Decisions explain rationale, not just facts
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="k">- [ ]</span> File written to <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/encyclopedia.md`</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="k">- [ ]</span> Mtime reflects current date
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>If ANY unchecked: Revise before completing.
 </code></pre></div>
 
 
