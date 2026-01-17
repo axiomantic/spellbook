@@ -66,7 +66,7 @@ describe('index.js orchestrator', () => {
 
     it('should fetch PR and parse diff', async () => {
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue(mockParsedDiff);
+      mockDeps.parseDiff.mockReturnValue({ files: mockParsedDiff, warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: new Map(), unmatched: mockParsedDiff });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
@@ -75,7 +75,7 @@ describe('index.js orchestrator', () => {
       expect(mockDeps.fetchPR).toHaveBeenCalledWith(mockPRIdentifier);
       expect(mockDeps.parseDiff).toHaveBeenCalledWith(mockPRData.diff);
       expect(result.prData).toEqual(mockPRData);
-      expect(result.parsedDiff).toEqual(mockParsedDiff);
+      expect(result.parsedDiff).toEqual({ files: mockParsedDiff, warnings: [] });
     });
 
     it('should run pattern matching on parsed diff', async () => {
@@ -91,7 +91,7 @@ describe('index.js orchestrator', () => {
       const mockUnmatched = [{ path: 'unknown.py' }];
 
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue(mockParsedDiff);
+      mockDeps.parseDiff.mockReturnValue({ files: mockParsedDiff, warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: mockMatched, unmatched: mockUnmatched });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
@@ -107,7 +107,7 @@ describe('index.js orchestrator', () => {
 
     it('should save results to cache', async () => {
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue(mockParsedDiff);
+      mockDeps.parseDiff.mockReturnValue({ files: mockParsedDiff, warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: new Map(), unmatched: [] });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
@@ -117,7 +117,7 @@ describe('index.js orchestrator', () => {
         'owner/repo',
         123,
         mockPRData.meta,
-        mockParsedDiff,
+        { files: mockParsedDiff, warnings: [] },
         expect.objectContaining({
           matched: expect.any(Array),
           unmatched: expect.any(Array),
@@ -129,7 +129,7 @@ describe('index.js orchestrator', () => {
       const unmatchedFiles = [{ path: 'unknown.py', status: 'modified' }];
 
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue(mockParsedDiff);
+      mockDeps.parseDiff.mockReturnValue({ files: mockParsedDiff, warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: new Map(), unmatched: unmatchedFiles });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
@@ -141,7 +141,7 @@ describe('index.js orchestrator', () => {
 
     it('should not return aiPrompt when all files matched', async () => {
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue(mockParsedDiff);
+      mockDeps.parseDiff.mockReturnValue({ files: mockParsedDiff, warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: new Map(), unmatched: [] });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
@@ -157,7 +157,7 @@ describe('index.js orchestrator', () => {
       };
 
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue(mockParsedDiff);
+      mockDeps.parseDiff.mockReturnValue({ files: mockParsedDiff, warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: new Map(), unmatched: [] });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
@@ -303,7 +303,7 @@ describe('index.js orchestrator', () => {
 
       mockDeps.parsePRIdentifier.mockReturnValue({ prNumber: 123, repo: 'owner/repo' });
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue([]);
+      mockDeps.parseDiff.mockReturnValue({ files: [], warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: new Map(), unmatched: [] });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
@@ -359,7 +359,7 @@ describe('index.js orchestrator', () => {
 
       mockDeps.parsePRIdentifier.mockReturnValue({ prNumber: 123, repo: 'owner/repo' });
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue(unmatchedFiles);
+      mockDeps.parseDiff.mockReturnValue({ files: unmatchedFiles, warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: new Map(), unmatched: unmatchedFiles });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
@@ -415,7 +415,7 @@ describe('index.js orchestrator', () => {
 
       mockDeps.parsePRIdentifier.mockReturnValue({ prNumber: 456, repo: 'org/project' });
       mockDeps.fetchPR.mockResolvedValue(mockPRData);
-      mockDeps.parseDiff.mockReturnValue([]);
+      mockDeps.parseDiff.mockReturnValue({ files: [], warnings: [] });
       mockDeps.matchPatterns.mockReturnValue({ matched: new Map(), unmatched: [] });
       mockDeps.saveCache.mockResolvedValue(undefined);
 
