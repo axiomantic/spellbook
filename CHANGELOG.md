@@ -10,10 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Zero-intervention session recovery** - Automatic context restoration after Claude Code compaction
   - Background watcher monitors session transcripts for compaction events
-  - SQLite database stores 6 state components: todos, active skill, persona, recent files, position, workflow pattern
+  - SQLite database stores 7 state components: todos, active skill, skill phase, persona, recent files, position, workflow pattern
   - MCP tool response injection via `<system-reminder>` tags using decorator pattern
   - No user action required; recovery context automatically injected into next MCP tool response
   - 96 new tests covering extractors, database, watcher, injection, and end-to-end recovery
+- **Session continuation for implementing-features skill** - Resume interrupted workflows at exact position
+  - `skill_phase` extractor detects highest phase reached in implementing-features sessions
+  - Phase 0.5 Continuation Detection enables zero-intervention resume after compaction
+  - Parses recovery context from `<system-reminder>`, verifies artifacts, re-collects preferences
+  - Phase jump mechanism skips completed phases and resumes at correct position
+  - 13 new tests for skill_phase extraction with comprehensive edge case coverage
 
 ### Fixed
 - **Thread safety in recovery module** - Added locks for concurrent access
