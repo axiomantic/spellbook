@@ -35,8 +35,8 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (29 total)](#skills-29-total)
-  - [Commands (17 total)](#commands-17-total)
+  - [Skills (30 total)](#skills-30-total)
+  - [Commands (19 total)](#commands-19-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -81,14 +81,14 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (29 total)
+### Skills (30 total)
 
 Reusable workflows for structured development:
 
 | Category | Skills | Origin |
 |----------|--------|--------|
 | **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [debugging], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
-| **Code Quality** | [code-quality-enforcement], [green-mirage-audit], [fixing-tests], [fact-checking], [finding-dead-code], [receiving-code-review], [requesting-code-review] | mixed |
+| **Code Quality** | [code-quality-enforcement], [green-mirage-audit], [fixing-tests], [fact-checking], [finding-dead-code], [pr-distill], [receiving-code-review], [requesting-code-review] | mixed |
 | **Feature Dev** | [implementing-features], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [worktree-merge], [merge-conflict-resolution] | spellbook |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
 | **Meta** | [using-skills], [writing-skills], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia] | [superpowers] |
@@ -127,8 +127,9 @@ Reusable workflows for structured development:
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
+[pr-distill]: https://axiomantic.github.io/spellbook/latest/skills/pr-distill/
 
-### Commands (17 total)
+### Commands (19 total)
 
 | Command | Description | Origin |
 |---------|-------------|--------|
@@ -149,6 +150,8 @@ Reusable workflows for structured development:
 | [/execute-work-packets-seq] | Execute all packets sequentially | spellbook |
 | [/merge-work-packets] | Merge completed packets with QA gates | spellbook |
 | [/mode] | Switch session mode (fun/tarot/off) | spellbook |
+| [/pr-distill] | Analyze PR, categorize changes by review necessity | spellbook |
+| [/pr-distill-bless] | Save discovered pattern for future distillations | spellbook |
 
 *\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
 
@@ -169,6 +172,8 @@ Reusable workflows for structured development:
 [/execute-work-packets-seq]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/
 [/merge-work-packets]: https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/
 [/mode]: https://axiomantic.github.io/spellbook/latest/commands/mode/
+[/pr-distill]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill/
+[/pr-distill-bless]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill-bless/
 
 ### Agents (7 total)
 

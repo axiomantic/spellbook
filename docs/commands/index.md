@@ -18,6 +18,8 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/merge-work-packets](merge-work-packets.md) | Verify all tracks complete, invoke worktree-merge, run QA gates, report final in... | spellbook |
 | [/mode](mode.md) | Switch session mode between fun, tarot, or off | spellbook |
 | [/move-project](move-project.md) | Move project: relocate directory and update Claude Code session references safel... | spellbook |
+| [/pr-distill](pr-distill.md) | Analyze a PR and generate a review distillation report that categorizes changes ... | spellbook |
+| [/pr-distill-bless](pr-distill-bless.md) | Save a discovered pattern for future PR distillation, adding it to the blessed p... | spellbook |
 | [/scientific-debugging](scientific-debugging.md) | Rigorous theory-experiment debugging methodology. Use when debugging complex iss... | spellbook |
 | [/simplify](simplify.md) | Reduce cognitive complexity of code via verified transformations. Use when code ... | spellbook |
 | [/systematic-debugging](systematic-debugging.md) | 4-phase root cause debugging methodology. Use when encountering bugs, test failu... | spellbook |
