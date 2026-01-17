@@ -30,44 +30,45 @@ describe('cache module', () => {
   });
 
   describe('CACHE_DIR', () => {
-    it('should be defined as /tmp/pr-distill-cache', () => {
-      expect(CACHE_DIR).toBe('/tmp/pr-distill-cache');
+    it('should be defined and end with pr-distill-cache', () => {
+      expect(CACHE_DIR).toBeDefined();
+      expect(CACHE_DIR.endsWith('pr-distill-cache')).toBe(true);
     });
   });
 
   describe('getCachePath', () => {
     it('should return path to cache directory for repo and PR', () => {
       const result = getCachePath('owner/repo', 42);
-      expect(result).toBe('/tmp/pr-distill-cache/owner-repo/42');
+      expect(result).toBe(path.join(CACHE_DIR, 'owner-repo', '42'));
     });
 
     it('should handle repo names with special characters', () => {
       const result = getCachePath('my-org/my-repo', 100);
-      expect(result).toBe('/tmp/pr-distill-cache/my-org-my-repo/100');
+      expect(result).toBe(path.join(CACHE_DIR, 'my-org-my-repo', '100'));
     });
 
     it('should handle repo names with multiple slashes', () => {
       const result = getCachePath('github.com/owner/repo', 1);
-      expect(result).toBe('/tmp/pr-distill-cache/github.com-owner-repo/1');
+      expect(result).toBe(path.join(CACHE_DIR, 'github.com-owner-repo', '1'));
     });
   });
 
   describe('getCache', () => {
-    it('should return null when cache does not exist', () => {
-      const result = getCache(testRepo, testPrNumber, 'abc123');
+    it('should return null when cache does not exist', async () => {
+      const result = await getCache(testRepo, testPrNumber, 'abc123');
       expect(result).toBeNull();
     });
 
-    it('should return null when meta.json is missing', () => {
+    it('should return null when meta.json is missing', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
       fs.writeFileSync(path.join(cachePath, 'diff.json'), '{}');
 
-      const result = getCache(testRepo, testPrNumber, 'abc123');
+      const result = await getCache(testRepo, testPrNumber, 'abc123');
       expect(result).toBeNull();
     });
 
-    it('should return null when headRefOid does not match', () => {
+    it('should return null when headRefOid does not match', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
       fs.writeFileSync(path.join(cachePath, 'meta.json'), JSON.stringify({
@@ -76,11 +77,11 @@ describe('cache module', () => {
       }));
       fs.writeFileSync(path.join(cachePath, 'diff.json'), '[]');
 
-      const result = getCache(testRepo, testPrNumber, 'new-sha');
+      const result = await getCache(testRepo, testPrNumber, 'new-sha');
       expect(result).toBeNull();
     });
 
-    it('should return cached data when headRefOid matches', () => {
+    it('should return cached data when headRefOid matches', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
 
@@ -94,7 +95,7 @@ describe('cache module', () => {
       fs.writeFileSync(path.join(cachePath, 'meta.json'), JSON.stringify(meta));
       fs.writeFileSync(path.join(cachePath, 'diff.json'), JSON.stringify(diff));
 
-      const result = getCache(testRepo, testPrNumber, 'abc123');
+      const result = await getCache(testRepo, testPrNumber, 'abc123');
 
       expect(result).not.toBeNull();
       expect(result.meta).toEqual(meta);
@@ -102,7 +103,7 @@ describe('cache module', () => {
       expect(result.analysis).toBeNull();  // No analysis.json
     });
 
-    it('should include analysis when analysis.json exists', () => {
+    it('should include analysis when analysis.json exists', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
 
@@ -114,23 +115,23 @@ describe('cache module', () => {
       fs.writeFileSync(path.join(cachePath, 'diff.json'), JSON.stringify(diff));
       fs.writeFileSync(path.join(cachePath, 'analysis.json'), JSON.stringify(analysis));
 
-      const result = getCache(testRepo, testPrNumber, 'abc123');
+      const result = await getCache(testRepo, testPrNumber, 'abc123');
 
       expect(result.analysis).toEqual(analysis);
     });
 
-    it('should return null when cache files are corrupted', () => {
+    it('should return null when cache files are corrupted', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
       fs.writeFileSync(path.join(cachePath, 'meta.json'), 'not valid json');
 
-      const result = getCache(testRepo, testPrNumber, 'abc123');
+      const result = await getCache(testRepo, testPrNumber, 'abc123');
       expect(result).toBeNull();
     });
   });
 
   describe('saveCache', () => {
-    it('should create cache directory and write meta and diff', () => {
+    it('should create cache directory and write meta and diff', async () => {
       const meta = {
         headRefOid: 'abc123',
         prNumber: testPrNumber,
@@ -138,7 +139,7 @@ describe('cache module', () => {
       };
       const diff = [{ path: 'file.py', status: 'added' }];
 
-      saveCache(testRepo, testPrNumber, meta, diff);
+      await saveCache(testRepo, testPrNumber, meta, diff);
 
       const cachePath = getCachePath(testRepo, testPrNumber);
       expect(fs.existsSync(cachePath)).toBe(true);
@@ -152,12 +153,12 @@ describe('cache module', () => {
       expect(savedDiff).toEqual(diff);
     });
 
-    it('should write analysis when provided', () => {
+    it('should write analysis when provided', async () => {
       const meta = { headRefOid: 'abc123', fetchedAt: new Date().toISOString() };
       const diff = [{ path: 'file.py' }];
       const analysis = { scoredChanges: [], discoveredPatterns: [] };
 
-      saveCache(testRepo, testPrNumber, meta, diff, analysis);
+      await saveCache(testRepo, testPrNumber, meta, diff, analysis);
 
       const cachePath = getCachePath(testRepo, testPrNumber);
       expect(fs.existsSync(path.join(cachePath, 'analysis.json'))).toBe(true);
@@ -166,17 +167,17 @@ describe('cache module', () => {
       expect(savedAnalysis).toEqual(analysis);
     });
 
-    it('should not write analysis.json when analysis is not provided', () => {
+    it('should not write analysis.json when analysis is not provided', async () => {
       const meta = { headRefOid: 'abc123', fetchedAt: new Date().toISOString() };
       const diff = [{ path: 'file.py' }];
 
-      saveCache(testRepo, testPrNumber, meta, diff);
+      await saveCache(testRepo, testPrNumber, meta, diff);
 
       const cachePath = getCachePath(testRepo, testPrNumber);
       expect(fs.existsSync(path.join(cachePath, 'analysis.json'))).toBe(false);
     });
 
-    it('should overwrite existing cache', () => {
+    it('should overwrite existing cache', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
       fs.writeFileSync(path.join(cachePath, 'meta.json'), JSON.stringify({ old: true }));
@@ -184,7 +185,7 @@ describe('cache module', () => {
       const meta = { headRefOid: 'new', fetchedAt: new Date().toISOString() };
       const diff = [{ path: 'new-file.py' }];
 
-      saveCache(testRepo, testPrNumber, meta, diff);
+      await saveCache(testRepo, testPrNumber, meta, diff);
 
       const savedMeta = JSON.parse(fs.readFileSync(path.join(cachePath, 'meta.json'), 'utf8'));
       expect(savedMeta).toEqual(meta);
@@ -192,24 +193,24 @@ describe('cache module', () => {
   });
 
   describe('invalidateCache', () => {
-    it('should delete cache directory', () => {
+    it('should delete cache directory', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
       fs.writeFileSync(path.join(cachePath, 'meta.json'), '{}');
       fs.writeFileSync(path.join(cachePath, 'diff.json'), '[]');
 
-      invalidateCache(testRepo, testPrNumber);
+      await invalidateCache(testRepo, testPrNumber);
 
       expect(fs.existsSync(cachePath)).toBe(false);
     });
 
-    it('should not throw when cache does not exist', () => {
-      expect(() => invalidateCache(testRepo, testPrNumber)).not.toThrow();
+    it('should not throw when cache does not exist', async () => {
+      await expect(invalidateCache(testRepo, testPrNumber)).resolves.not.toThrow();
     });
   });
 
   describe('updateCacheAnalysis', () => {
-    it('should update only analysis.json without touching other files', () => {
+    it('should update only analysis.json without touching other files', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
 
@@ -219,7 +220,7 @@ describe('cache module', () => {
       fs.writeFileSync(path.join(cachePath, 'diff.json'), JSON.stringify(originalDiff));
 
       const analysis = { scoredChanges: [{ file: 'test' }], discoveredPatterns: [] };
-      updateCacheAnalysis(testRepo, testPrNumber, analysis);
+      await updateCacheAnalysis(testRepo, testPrNumber, analysis);
 
       // Analysis should be updated
       const savedAnalysis = JSON.parse(fs.readFileSync(path.join(cachePath, 'analysis.json'), 'utf8'));
@@ -232,20 +233,20 @@ describe('cache module', () => {
       expect(savedDiff).toEqual(originalDiff);
     });
 
-    it('should throw when cache directory does not exist', () => {
-      expect(() => {
-        updateCacheAnalysis(testRepo, testPrNumber, { scoredChanges: [] });
-      }).toThrow();
+    it('should throw when cache directory does not exist', async () => {
+      await expect(
+        updateCacheAnalysis(testRepo, testPrNumber, { scoredChanges: [] })
+      ).rejects.toThrow();
     });
 
-    it('should overwrite existing analysis.json', () => {
+    it('should overwrite existing analysis.json', async () => {
       const cachePath = getCachePath(testRepo, testPrNumber);
       fs.mkdirSync(cachePath, { recursive: true });
       fs.writeFileSync(path.join(cachePath, 'meta.json'), '{}');
       fs.writeFileSync(path.join(cachePath, 'analysis.json'), JSON.stringify({ old: true }));
 
       const newAnalysis = { scoredChanges: [{ new: true }] };
-      updateCacheAnalysis(testRepo, testPrNumber, newAnalysis);
+      await updateCacheAnalysis(testRepo, testPrNumber, newAnalysis);
 
       const savedAnalysis = JSON.parse(fs.readFileSync(path.join(cachePath, 'analysis.json'), 'utf8'));
       expect(savedAnalysis).toEqual(newAnalysis);

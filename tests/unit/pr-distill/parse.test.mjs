@@ -203,7 +203,7 @@ index abc123..def456 100644
 describe('parseDiff', () => {
   it('should parse empty diff', () => {
     const result = parseDiff('');
-    expect(result).toEqual([]);
+    expect(result).toEqual({ files: [], warnings: [] });
   });
 
   it('should parse diff with single file', () => {
@@ -219,9 +219,10 @@ index abc123..def456 100644
 
     const result = parseDiff(diff);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].path).toBe('src/index.js');
-    expect(result[0].status).toBe('modified');
+    expect(result.files).toHaveLength(1);
+    expect(result.files[0].path).toBe('src/index.js');
+    expect(result.files[0].status).toBe('modified');
+    expect(result.warnings).toHaveLength(0);
   });
 
   it('should parse diff with multiple files', () => {
@@ -252,16 +253,18 @@ index xyz789..0000000
 
     const result = parseDiff(diff);
 
-    expect(result).toHaveLength(3);
+    expect(result.files).toHaveLength(3);
 
-    expect(result[0].path).toBe('src/one.js');
-    expect(result[0].status).toBe('added');
+    expect(result.files[0].path).toBe('src/one.js');
+    expect(result.files[0].status).toBe('added');
 
-    expect(result[1].path).toBe('src/two.js');
-    expect(result[1].status).toBe('modified');
+    expect(result.files[1].path).toBe('src/two.js');
+    expect(result.files[1].status).toBe('modified');
 
-    expect(result[2].path).toBe('src/three.js');
-    expect(result[2].status).toBe('deleted');
+    expect(result.files[2].path).toBe('src/three.js');
+    expect(result.files[2].status).toBe('deleted');
+
+    expect(result.warnings).toHaveLength(0);
   });
 
   it('should correctly count total additions and deletions', () => {
@@ -279,8 +282,8 @@ index abc123..def456 100644
 
     const result = parseDiff(diff);
 
-    expect(result[0].additions).toBe(3);
-    expect(result[0].deletions).toBe(1);
+    expect(result.files[0].additions).toBe(3);
+    expect(result.files[0].deletions).toBe(1);
   });
 
   it('should handle files with spaces in path', () => {
@@ -294,8 +297,8 @@ index abc123..def456 100644
 
     const result = parseDiff(diff);
 
-    expect(result).toHaveLength(1);
-    expect(result[0].path).toBe('src/my file.js');
+    expect(result.files).toHaveLength(1);
+    expect(result.files[0].path).toBe('src/my file.js');
   });
 
   it('should handle diff with only binary files', () => {
@@ -309,10 +312,10 @@ Binary files a/image2.jpg and b/image2.jpg differ`;
 
     const result = parseDiff(diff);
 
-    expect(result).toHaveLength(2);
-    expect(result[0].path).toBe('image1.png');
-    expect(result[0].status).toBe('added');
-    expect(result[1].path).toBe('image2.jpg');
-    expect(result[1].status).toBe('modified');
+    expect(result.files).toHaveLength(2);
+    expect(result.files[0].path).toBe('image1.png');
+    expect(result.files[0].status).toBe('added');
+    expect(result.files[1].path).toBe('image2.jpg');
+    expect(result.files[1].status).toBe('modified');
   });
 });

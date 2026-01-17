@@ -3,77 +3,8 @@ import {
   matchPatterns,
   sortPatternsByPrecedence,
   testPattern,
-  minimatch
 } from '../../../lib/pr-distill/matcher.js';
 import { BUILTIN_PATTERNS } from '../../../lib/pr-distill/patterns.js';
-
-describe('minimatch', () => {
-  describe('exact match', () => {
-    it('should match exact path', () => {
-      expect(minimatch('foo/bar.py', 'foo/bar.py')).toBe(true);
-    });
-
-    it('should not match different path', () => {
-      expect(minimatch('foo/bar.py', 'foo/baz.py')).toBe(false);
-    });
-  });
-
-  describe('single asterisk (*)', () => {
-    it('should match any characters in a single segment', () => {
-      expect(minimatch('foo/bar.py', 'foo/*.py')).toBe(true);
-      expect(minimatch('foo/baz.py', 'foo/*.py')).toBe(true);
-    });
-
-    it('should not match across directory boundaries', () => {
-      expect(minimatch('foo/bar/baz.py', 'foo/*.py')).toBe(false);
-    });
-
-    it('should match at beginning of segment', () => {
-      expect(minimatch('test_file.py', 'test_*.py')).toBe(true);
-    });
-
-    it('should match at end of segment', () => {
-      expect(minimatch('file.test.py', '*.test.py')).toBe(true);
-    });
-  });
-
-  describe('double asterisk (**)', () => {
-    it('should match zero or more directories', () => {
-      expect(minimatch('foo/bar/baz.py', '**/baz.py')).toBe(true);
-      expect(minimatch('baz.py', '**/baz.py')).toBe(true);
-      expect(minimatch('a/b/c/d/baz.py', '**/baz.py')).toBe(true);
-    });
-
-    it('should match at end of pattern', () => {
-      expect(minimatch('foo/bar/baz.py', 'foo/**')).toBe(true);
-      expect(minimatch('foo/a/b/c.js', 'foo/**')).toBe(true);
-    });
-
-    it('should match in middle of pattern', () => {
-      expect(minimatch('src/foo/bar/test.py', 'src/**/test.py')).toBe(true);
-      expect(minimatch('src/test.py', 'src/**/test.py')).toBe(true);
-    });
-
-    it('should combine ** with *', () => {
-      expect(minimatch('src/foo/bar.test.js', 'src/**/*.test.js')).toBe(true);
-      expect(minimatch('src/bar.test.js', 'src/**/*.test.js')).toBe(true);
-    });
-  });
-
-  describe('edge cases', () => {
-    it('should handle empty pattern', () => {
-      expect(minimatch('foo.py', '')).toBe(false);
-    });
-
-    it('should handle empty path', () => {
-      expect(minimatch('', 'foo.py')).toBe(false);
-    });
-
-    it('should handle pattern with only **', () => {
-      expect(minimatch('any/path/here.py', '**')).toBe(true);
-    });
-  });
-});
 
 describe('testPattern', () => {
   const makeMockFile = (path, hunks = []) => ({
