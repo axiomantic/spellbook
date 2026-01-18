@@ -291,6 +291,66 @@ class TestSortPatternsByPrecedence:
         assert result[1].id == "blessed-medium"
         assert result[2].id == "high"
 
+    def test_unknown_priority_not_dropped(self):
+        """Patterns with unknown priority should not be silently dropped."""
+        unknown_pattern = Pattern(
+            id="unknown-priority-pattern",
+            description="Test pattern with unknown priority",
+            confidence=50,
+            priority="unknown",  # Not a recognized priority
+            default_category="test",
+            match_file=re.compile(r".*\.test$"),
+        )
+        patterns = [unknown_pattern]
+
+        result = sort_patterns_by_precedence(patterns, [])
+
+        assert len(result) == 1, "Pattern with unknown priority should not be dropped"
+        assert result[0].id == "unknown-priority-pattern"
+
+    def test_sort_preserves_all_patterns(self):
+        """sort_patterns_by_precedence should return all input patterns."""
+        patterns = [
+            Pattern(
+                id="p1",
+                description="High priority",
+                confidence=95,
+                priority="high",
+                default_category="SAFE_TO_SKIP",
+                match_file=re.compile(r".*"),
+            ),
+            Pattern(
+                id="p2",
+                description="Medium priority",
+                confidence=80,
+                priority="medium",
+                default_category="LIKELY_SKIP",
+                match_file=re.compile(r".*"),
+            ),
+            Pattern(
+                id="p3",
+                description="Always review",
+                confidence=20,
+                priority="always_review",
+                default_category="REVIEW_REQUIRED",
+                match_file=re.compile(r".*"),
+            ),
+            Pattern(
+                id="p4",
+                description="Unknown priority",
+                confidence=50,
+                priority="weird",
+                default_category="test",
+                match_file=re.compile(r".*"),
+            ),
+        ]
+
+        result = sort_patterns_by_precedence(patterns, [])
+
+        assert len(result) == len(patterns), (
+            f"Expected {len(patterns)} patterns, got {len(result)}"
+        )
+
 
 class TestMatchPatterns:
     """Test the main pattern matching function."""

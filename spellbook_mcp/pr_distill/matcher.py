@@ -79,6 +79,8 @@ def sort_patterns_by_precedence(
     high = []
     medium = []
 
+    other = []
+
     for pattern in patterns:
         if pattern.priority == "always_review":
             always_review.append(pattern)
@@ -88,8 +90,11 @@ def sort_patterns_by_precedence(
             high.append(pattern)
         elif pattern.priority == "medium":
             medium.append(pattern)
+        else:
+            # Unknown priority - append at lowest precedence
+            other.append(pattern)
 
-    return always_review + blessed + high + medium
+    return always_review + blessed + high + medium + other
 
 
 def match_patterns(
