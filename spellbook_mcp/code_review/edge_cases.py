@@ -18,12 +18,18 @@ class EdgeCaseResult:
         message: Human-readable description of the edge case
         can_continue: Whether the workflow can continue
         truncate_to: Suggested number of files to review if truncation needed
+        name: Identifier for this edge case type (e.g., "binary_files")
+        severity: Severity level ("warning", "error") if detected
+        affected_files: List of file paths affected by this edge case
     """
 
     detected: bool
     message: str | None = None
     can_continue: bool = True
     truncate_to: int | None = None
+    name: str | None = None
+    severity: str | None = None
+    affected_files: list[str] | None = None
 
 
 def check_empty_diff(files: list[FileDiff]) -> EdgeCaseResult:
