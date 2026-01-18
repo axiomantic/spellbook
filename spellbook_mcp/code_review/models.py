@@ -80,6 +80,7 @@ class FileDiff:
         deletions: Number of lines deleted
         old_path: Previous path for renamed files
         hunks: List of diff hunks with detailed line info
+        binary: True if this is a binary file (cannot be meaningfully diffed)
     """
 
     path: str
@@ -88,6 +89,7 @@ class FileDiff:
     deletions: int = 0
     old_path: str | None = None
     hunks: list[dict[str, Any]] = field(default_factory=list)
+    binary: bool = False
 
 
 @dataclass
