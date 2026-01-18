@@ -109,3 +109,35 @@ def check_diff_too_large(
         can_continue=True,
         truncate_to=truncate_to,
     )
+
+
+def check_binary_files(files: list[FileDiff]) -> EdgeCaseResult:
+    """Check for binary files that need manual review.
+
+    Binary files cannot be meaningfully diff'd and should be
+    flagged for human attention.
+
+    Args:
+        files: List of FileDiff objects from PR
+
+    Returns:
+        EdgeCaseResult with any binary file warnings
+    """
+    binary_files = [f for f in files if f.binary]
+
+    if not binary_files:
+        return EdgeCaseResult(
+            detected=False,
+            name="binary_files",
+            message="No binary files detected",
+        )
+
+    paths = [f.path for f in binary_files]
+    return EdgeCaseResult(
+        detected=True,
+        name="binary_files",
+        severity="warning",
+        message=f"Binary files detected: {', '.join(paths)}. Manual review recommended.",
+        affected_files=paths,
+        can_continue=True,
+    )
