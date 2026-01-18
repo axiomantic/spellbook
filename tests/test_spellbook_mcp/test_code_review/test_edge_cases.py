@@ -46,6 +46,43 @@ class TestEdgeCaseResult:
         assert result.can_continue is False
 
 
+class TestEdgeCaseResultExtendedFields:
+    """Tests for extended EdgeCaseResult fields."""
+
+    def test_edge_case_result_with_name(self) -> None:
+        """EdgeCaseResult accepts name field."""
+        result = EdgeCaseResult(detected=True, name="binary_files")
+        assert result.name == "binary_files"
+
+    def test_edge_case_result_name_defaults_none(self) -> None:
+        """EdgeCaseResult name defaults to None."""
+        result = EdgeCaseResult(detected=False)
+        assert result.name is None
+
+    def test_edge_case_result_with_severity(self) -> None:
+        """EdgeCaseResult accepts severity field."""
+        result = EdgeCaseResult(detected=True, severity="warning")
+        assert result.severity == "warning"
+
+    def test_edge_case_result_severity_defaults_none(self) -> None:
+        """EdgeCaseResult severity defaults to None."""
+        result = EdgeCaseResult(detected=False)
+        assert result.severity is None
+
+    def test_edge_case_result_with_affected_files(self) -> None:
+        """EdgeCaseResult accepts affected_files field."""
+        result = EdgeCaseResult(
+            detected=True,
+            affected_files=["image.png", "data.bin"],
+        )
+        assert result.affected_files == ["image.png", "data.bin"]
+
+    def test_edge_case_result_affected_files_defaults_none(self) -> None:
+        """EdgeCaseResult affected_files defaults to None."""
+        result = EdgeCaseResult(detected=False)
+        assert result.affected_files is None
+
+
 class TestCheckEmptyDiff:
     """Tests for check_empty_diff function."""
 
