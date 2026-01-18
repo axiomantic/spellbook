@@ -1,6 +1,6 @@
 # requesting-code-review
 
-Use when completing tasks, implementing major features, or before merging
+Use when you want to review your own changes before submitting a PR. [DEPRECATED] Routes to code-review --self
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
@@ -8,106 +8,61 @@ Use when completing tasks, implementing major features, or before merging
 ## Skill Content
 
 ``````````markdown
-# Requesting Code Review
+# Requesting Code Review (Deprecated)
 
 <ROLE>
-Quality Gate Enforcer. Reputation depends on catching bugs before they reach production, not rubber-stamping changes.
+Routing agent. Immediately routes to the replacement skill.
 </ROLE>
 
+<CRITICAL>
+This skill is deprecated. Routing to `code-review --self`.
+</CRITICAL>
+
 <analysis>
-Fresh eyes catch blind spots. Cost of early review << cost of cascading bugs.
-Review gates prevent technical debt accumulation.
+Deprecated skill. Routes to code-review --self for all functionality.
 </analysis>
 
 ## Invariant Principles
 
-1. **Review Early** - Catch issues before they compound across tasks
-2. **Evidence Over Claims** - Issues require file:line references, not vague assertions
-3. **Severity Honesty** - Critical = data loss/security; Important = architecture/gaps; Minor = polish
-4. **Pushback Valid** - Reviewer wrong sometimes; counter with code/tests, not authority
-
-## Inputs
-
-| Input | Required | Description |
-|-------|----------|-------------|
-| `context.changes` | Yes | Git range (BASE_SHA..HEAD_SHA) or file list |
-| `context.what_implemented` | Yes | Feature/change description |
-| `context.plan_reference` | No | Link to spec, task, or plan being implemented |
-
-## Outputs
-
-| Output | Type | Description |
-|--------|------|-------------|
-| `review_report` | Inline | Structured feedback with severity levels |
-| `action_items` | List | Prioritized fixes: Critical > Important > Minor |
-| `approval_status` | Boolean | Whether changes pass review gate |
-
-## When to Review
-
-| Trigger | Requirement |
-|---------|-------------|
-| Task completion (subagent dev) | Mandatory |
-| Major feature complete | Mandatory |
-| Pre-merge to main | Mandatory |
-| Stuck / need perspective | Recommended |
-| Pre-refactor baseline | Recommended |
-
-## Execution Protocol
-
-**1. Capture git range:**
-```bash
-BASE_SHA=$(git rev-parse origin/main)  # or HEAD~N
-HEAD_SHA=$(git rev-parse HEAD)
-```
-
-**2. Dispatch code-reviewer subagent** using template `code-reviewer.md`:
-
-| Placeholder | Value |
-|-------------|-------|
-| `{WHAT_WAS_IMPLEMENTED}` | Feature/change built |
-| `{PLAN_OR_REQUIREMENTS}` | Spec or task reference |
-| `{BASE_SHA}`, `{HEAD_SHA}` | Git range |
-| `{DESCRIPTION}` | Brief summary |
-
-**3. Act on feedback:**
+1. **Route to Replacement** - Always route to `code-review --self`
+2. **Pass Context Through** - Forward all provided context to replacement skill
+3. **No Independent Execution** - This skill does not execute review logic itself
 
 <reflection>
-Before dismissing reviewer feedback, verify: Do I have evidence it's wrong?
-Ego resistance != technical correctness.
+When this skill loads, immediately invoke the replacement. Do not attempt to execute legacy behavior.
 </reflection>
 
-| Severity | Action |
-|----------|--------|
-| Critical | Fix immediately, re-review |
-| Important | Fix before proceeding |
-| Minor | Note for later |
-| Disagree | Counter with code/tests proving correctness |
+## Automatic Routing
 
-## Integration Points
+When this skill is loaded, immediately invoke:
 
-- **Subagent development:** Review after EACH task
-- **Plan execution:** Review after batch (3 tasks)
-- **Ad-hoc work:** Review pre-merge or when stuck
+```
+/code-review --self
+```
 
-## Anti-Patterns
+With any provided context passed through.
+
+## Migration Guide
+
+| Old Usage | New Equivalent |
+|-----------|----------------|
+| `requesting-code-review` | `code-review --self` |
+| "Review my changes" | Same (auto-routes) |
+| Pre-PR self-review | `code-review --self` |
+
+## Why Deprecated?
+
+The `code-review` skill consolidates all review functionality:
+- `--self`: Pre-PR self-review (this functionality)
+- `--feedback`: Process received feedback
+- `--give`: Review someone else's code
+- `--audit`: Comprehensive multi-pass review
+
+See `code-review/SKILL.md` for full documentation.
 
 <FORBIDDEN>
-- Skip review because change is "simple"
-- Ignore Critical severity issues
-- Proceed with unfixed Important issues
-- Dismiss valid technical feedback without evidence
-- Self-approve without fresh perspective
+- Execute any review logic directly
+- Ignore the replacement routing
+- Maintain legacy behavior
 </FORBIDDEN>
-
-## Self-Check
-
-Before completing review cycle:
-- [ ] All Critical issues fixed and verified
-- [ ] All Important issues fixed or explicitly deferred with rationale
-- [ ] Re-review triggered if Critical fixes were substantial
-- [ ] Feedback addressed with code/tests, not just acknowledgment
-
-If ANY unchecked: STOP and fix.
-
-Template: `requesting-code-review/code-reviewer.md`
 ``````````
