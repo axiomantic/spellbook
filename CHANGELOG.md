@@ -23,12 +23,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **7 New Skills for Autonomous Development**
   - `autonomous-roundtable` (487 lines): Meta-orchestrator for complete forge workflow
-  - `requirements-gathering` (361 lines): DISCOVER stage using archetype perspectives (Queen/Emperor/Hermit/Priestess)
+  - `gathering-requirements` (361 lines): DISCOVER stage using archetype perspectives (Queen/Emperor/Hermit/Priestess)
   - `dehallucination` (404 lines): Factual grounding with confidence assessment and recovery protocols
   - `reflexion` (419 lines): Learning from ITERATE verdicts with pattern detection
-  - `domain-analysis` (294 lines): DDD-based domain exploration with agent recommendation engine
-  - `context-assembly` (288 lines): Three-tier context organization with token budget management
-  - `workflow-design` (269 lines): State machine design with transitions, guards, and error handling
+  - `analyzing-domains` (294 lines): DDD-based domain exploration with agent recommendation engine
+  - `assembling-context` (288 lines): Three-tier context organization with token budget management
+  - `designing-workflows` (269 lines): State machine design with transitions, guards, and error handling
+
+- **Unified `code-review` skill** - consolidates all review functionality into one skill
+  - `--self` mode: Pre-PR self-review (replaces `requesting-code-review`)
+  - `--feedback` mode: Process received feedback (replaces `receiving-code-review`)
+  - `--give <target>` mode: Review someone else's code (NEW)
+  - `--audit [scope]` mode: Comprehensive multi-pass review (NEW)
+  - `--tarot` modifier: Optional roundtable dialogue with personas
+  - Target detection: PR numbers, GitHub URLs (with repo extraction), and branch names
+  - Edge case handling: empty diffs, missing comments, oversized diffs with truncation
+  - Finding deduplication: merges findings at same location, keeps highest severity
+
+- **MCP infrastructure for code-review** - backend modules for the skill
+  - `code_review/arg_parser.py` - argument parsing with mode detection
+  - `code_review/models.py` - data models (Finding, PRData, FileDiff, etc.)
+  - `code_review/router.py` - mode routing with target type detection
+  - `code_review/edge_cases.py` - early detection of workflow-affecting conditions
+  - `code_review/deduplication.py` - finding deduplication by file:line
 
 ### Enhanced
 - **implementing-features skill** - Mandatory quality gates for swarmed execution
@@ -36,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - README.md template with execution protocol and gate summary
   - Swarmed Execution anti-patterns in FORBIDDEN section
   - Phase 3.5 self-check items for work packet quality
+
+### Deprecated
+- `requesting-code-review` skill (use `code-review --self`)
+- `receiving-code-review` skill (use `code-review --feedback`)
 
 ## [0.7.7] - 2026-01-21
 
