@@ -224,3 +224,82 @@ class TestTargetTypeParsing:
         args = CodeReviewArgs(self_review=False, give="fix-bug-123")
         handler = route_to_handler(args)
         assert handler.target_type == TargetType.BRANCH
+
+
+class TestModeHandlerWarnings:
+    """Tests for ModeHandler warnings field."""
+
+    def test_warnings_defaults_empty_list(self) -> None:
+        """ModeHandler warnings defaults to empty list."""
+        handler = ModeHandler(name="self")
+        assert handler.warnings == []
+
+    def test_warnings_can_be_set(self) -> None:
+        """ModeHandler warnings can be populated."""
+        handler = ModeHandler(
+            name="self",
+            warnings=["'old-skill' is deprecated. Use 'new-skill' instead."],
+        )
+        assert len(handler.warnings) == 1
+        assert "deprecated" in handler.warnings[0]
+
+    def test_warnings_multiple(self) -> None:
+        """ModeHandler can hold multiple warnings."""
+        handler = ModeHandler(
+            name="self",
+            warnings=["Warning 1", "Warning 2", "Warning 3"],
+        )
+        assert len(handler.warnings) == 3
+
+
+class TestDeprecationWarnings:
+    """Tests for deprecation warning emission."""
+
+    def test_requesting_code_review_deprecated(self) -> None:
+        """Emits warning when invoked from requesting-code-review skill."""
+        args = CodeReviewArgs(self_review=True)
+        result = route_to_handler(args, source_skill="requesting-code-review")
+        assert len(result.warnings) == 1
+        assert "requesting-code-review" in result.warnings[0]
+        assert "deprecated" in result.warnings[0].lower()
+        assert "code-review --self" in result.warnings[0]
+
+    def test_receiving_code_review_deprecated(self) -> None:
+        """Emits warning when invoked from receiving-code-review skill."""
+        args = CodeReviewArgs(feedback=True)
+        result = route_to_handler(args, source_skill="receiving-code-review")
+        assert len(result.warnings) == 1
+        assert "receiving-code-review" in result.warnings[0]
+        assert "code-review --feedback" in result.warnings[0]
+
+    def test_code_review_not_deprecated(self) -> None:
+        """No warning when invoked from code-review skill."""
+        args = CodeReviewArgs(self_review=True)
+        result = route_to_handler(args, source_skill="code-review")
+        assert result.warnings == []
+
+    def test_no_source_skill_no_warning(self) -> None:
+        """No warning when source_skill is None."""
+        args = CodeReviewArgs(self_review=True)
+        result = route_to_handler(args, source_skill=None)
+        assert result.warnings == []
+
+    def test_no_source_skill_default_no_warning(self) -> None:
+        """No warning when source_skill is not provided (default)."""
+        args = CodeReviewArgs(self_review=True)
+        result = route_to_handler(args)
+        assert result.warnings == []
+
+    def test_unknown_skill_no_warning(self) -> None:
+        """No warning for unknown source skills."""
+        args = CodeReviewArgs(self_review=True)
+        result = route_to_handler(args, source_skill="some-other-skill")
+        assert result.warnings == []
+
+    def test_deprecation_warning_with_give_mode(self) -> None:
+        """Deprecation warning works with give mode."""
+        args = CodeReviewArgs(give="123")
+        result = route_to_handler(args, source_skill="requesting-code-review")
+        assert result.name == "give"
+        assert len(result.warnings) == 1
+        assert "requesting-code-review" in result.warnings[0]

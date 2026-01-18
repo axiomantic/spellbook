@@ -4,7 +4,7 @@ Routes parsed arguments to the appropriate handler configuration.
 """
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from .arg_parser import CodeReviewArgs
@@ -36,6 +36,7 @@ class ModeHandler:
         repo: Repository in owner/repo format if detected from URL
         scope: Scope for audit mode (file, directory, 'security', 'all')
         parallel: Whether to enable parallel processing
+        warnings: List of warning messages (e.g., deprecation notices)
     """
 
     name: str
@@ -46,6 +47,7 @@ class ModeHandler:
     repo: str | None = None
     scope: str | None = None
     parallel: bool = False
+    warnings: list[str] = field(default_factory=list)
 
 
 # Regex patterns for target type detection
@@ -53,6 +55,12 @@ _GITHUB_PR_URL = re.compile(
     r"(?:https?://)?github\.com/([^/]+/[^/]+)/pull/(\d+)",
     re.IGNORECASE,
 )
+
+# Deprecated skills and their replacement commands
+DEPRECATED_SKILLS: dict[str, str] = {
+    "requesting-code-review": "code-review --self",
+    "receiving-code-review": "code-review --feedback",
+}
 
 
 def _detect_target_type(target: str) -> tuple[TargetType, str | None]:
@@ -78,15 +86,27 @@ def _detect_target_type(target: str) -> tuple[TargetType, str | None]:
     return TargetType.BRANCH, None
 
 
-def route_to_handler(args: CodeReviewArgs) -> ModeHandler:
+def route_to_handler(
+    args: CodeReviewArgs,
+    source_skill: str | None = None,
+) -> ModeHandler:
     """Route parsed arguments to appropriate handler configuration.
 
     Args:
         args: Parsed CodeReviewArgs from argument parser
+        source_skill: Name of skill that invoked routing (for deprecation detection)
 
     Returns:
         ModeHandler configured for the selected mode
     """
+    # Check for deprecated skill invocation
+    warnings: list[str] = []
+    if source_skill and source_skill in DEPRECATED_SKILLS:
+        replacement = DEPRECATED_SKILLS[source_skill]
+        warnings.append(
+            f"'{source_skill}' is deprecated. Use '{replacement}' instead."
+        )
+
     # Handle give mode
     if args.give is not None:
         target_type, repo = _detect_target_type(args.give)
@@ -97,6 +117,7 @@ def route_to_handler(args: CodeReviewArgs) -> ModeHandler:
             target=args.give,
             target_type=target_type,
             repo=repo,
+            warnings=warnings,
         )
 
     # Handle audit mode
@@ -107,6 +128,7 @@ def route_to_handler(args: CodeReviewArgs) -> ModeHandler:
             requires_feedback=False,
             scope=args.audit_scope,
             parallel=True,
+            warnings=warnings,
         )
 
     # Handle feedback mode
@@ -119,6 +141,7 @@ def route_to_handler(args: CodeReviewArgs) -> ModeHandler:
             requires_feedback=True,
             target=target,
             target_type=target_type,
+            warnings=warnings,
         )
 
     # Default: self mode
@@ -130,4 +153,5 @@ def route_to_handler(args: CodeReviewArgs) -> ModeHandler:
         requires_feedback=False,
         target=target,
         target_type=target_type,
+        warnings=warnings,
     )
