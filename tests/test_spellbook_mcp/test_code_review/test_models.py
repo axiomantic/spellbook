@@ -375,3 +375,32 @@ class TestReviewReport:
         assert report.important_count == 0
         assert report.minor_count == 0
         assert report.action_items == []
+
+
+class TestFileDiffBinaryField:
+    """Tests for FileDiff.binary field."""
+
+    def test_binary_defaults_false(self) -> None:
+        """Binary field defaults to False."""
+        diff = FileDiff(path="test.py", status="modified")
+        assert diff.binary is False
+
+    def test_binary_can_be_set_true(self) -> None:
+        """Binary field can be set to True."""
+        diff = FileDiff(path="image.png", status="added", binary=True)
+        assert diff.binary is True
+
+    def test_binary_field_in_diff_with_all_fields(self) -> None:
+        """Binary field works with all other FileDiff fields."""
+        diff = FileDiff(
+            path="data.bin",
+            status="modified",
+            additions=0,
+            deletions=0,
+            old_path="old_data.bin",
+            hunks=[],
+            binary=True,
+        )
+        assert diff.binary is True
+        assert diff.path == "data.bin"
+        assert diff.old_path == "old_data.bin"
