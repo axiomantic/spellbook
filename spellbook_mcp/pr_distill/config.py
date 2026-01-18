@@ -83,8 +83,12 @@ def load_config(project_root: str) -> PRDistillConfig:
     config_path = get_config_path(project_root)
 
     if not os.path.exists(config_path):
-        # Return a copy of defaults
-        return dict(DEFAULT_CONFIG)
+        # Return a deep copy of defaults to avoid mutation issues
+        return {
+            "blessed_patterns": list(DEFAULT_CONFIG["blessed_patterns"]),
+            "always_review_paths": list(DEFAULT_CONFIG["always_review_paths"]),
+            "query_count_thresholds": dict(DEFAULT_CONFIG["query_count_thresholds"]),
+        }
 
     try:
         with open(config_path, "r") as f:
@@ -97,8 +101,12 @@ def load_config(project_root: str) -> PRDistillConfig:
             "query_count_thresholds": loaded.get("query_count_thresholds", DEFAULT_CONFIG["query_count_thresholds"]),
         }
     except (json.JSONDecodeError, OSError):
-        # Parse error or read error, return defaults
-        return dict(DEFAULT_CONFIG)
+        # Parse error or read error, return deep copy of defaults
+        return {
+            "blessed_patterns": list(DEFAULT_CONFIG["blessed_patterns"]),
+            "always_review_paths": list(DEFAULT_CONFIG["always_review_paths"]),
+            "query_count_thresholds": dict(DEFAULT_CONFIG["query_count_thresholds"]),
+        }
 
 
 def save_config(project_root: str, config: PRDistillConfig) -> None:
