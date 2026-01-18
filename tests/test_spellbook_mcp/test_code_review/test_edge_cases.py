@@ -7,6 +7,7 @@ from spellbook_mcp.code_review.edge_cases import (
     check_empty_diff,
     check_no_comments,
     check_diff_too_large,
+    check_binary_files,
 )
 from spellbook_mcp.code_review.models import FileDiff
 
@@ -228,3 +229,64 @@ class TestCheckDiffTooLarge:
         assert result.message is not None
         # Message should mention the size
         assert "1000" in result.message or "lines" in result.message.lower()
+
+
+class TestCheckBinaryFiles:
+    """Tests for check_binary_files edge case handler."""
+
+    def test_no_binary_files(self) -> None:
+        """Returns not detected when no binary files present."""
+        files = [
+            FileDiff(path="src/main.py", status="modified"),
+            FileDiff(path="README.md", status="modified"),
+        ]
+        result = check_binary_files(files)
+        assert result.detected is False
+        assert result.name == "binary_files"
+
+    def test_single_binary_file(self) -> None:
+        """Detects single binary file."""
+        files = [
+            FileDiff(path="src/main.py", status="modified"),
+            FileDiff(path="assets/logo.png", status="added", binary=True),
+        ]
+        result = check_binary_files(files)
+        assert result.detected is True
+        assert result.severity == "warning"
+        assert "logo.png" in result.message
+        assert result.affected_files == ["assets/logo.png"]
+
+    def test_multiple_binary_files(self) -> None:
+        """Detects multiple binary files."""
+        files = [
+            FileDiff(path="icon.ico", status="added", binary=True),
+            FileDiff(path="data.bin", status="modified", binary=True),
+            FileDiff(path="src/code.py", status="modified"),
+        ]
+        result = check_binary_files(files)
+        assert result.detected is True
+        assert len(result.affected_files) == 2
+        assert "icon.ico" in result.affected_files
+        assert "data.bin" in result.affected_files
+
+    def test_empty_file_list(self) -> None:
+        """Handles empty file list gracefully."""
+        result = check_binary_files([])
+        assert result.detected is False
+        assert result.name == "binary_files"
+
+    def test_all_binary_files(self) -> None:
+        """Handles case where all files are binary."""
+        files = [
+            FileDiff(path="image1.png", status="added", binary=True),
+            FileDiff(path="image2.jpg", status="added", binary=True),
+        ]
+        result = check_binary_files(files)
+        assert result.detected is True
+        assert len(result.affected_files) == 2
+
+    def test_can_continue_is_true(self) -> None:
+        """Binary files detection allows workflow to continue."""
+        files = [FileDiff(path="data.bin", status="added", binary=True)]
+        result = check_binary_files(files)
+        assert result.can_continue is True
