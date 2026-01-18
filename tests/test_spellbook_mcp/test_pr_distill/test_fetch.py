@@ -278,3 +278,107 @@ class TestRunCommand:
         """Failed command raises CalledProcessError."""
         with pytest.raises(subprocess.CalledProcessError):
             run_command("exit 1")
+
+    def test_run_command_timeout(self):
+        """run_command propagates TimeoutExpired from subprocess."""
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = subprocess.TimeoutExpired(cmd="test", timeout=120)
+            with pytest.raises(subprocess.TimeoutExpired):
+                run_command("test command")
+
+
+class TestCompareSemverEdgeCases:
+    """Edge case tests for compare_semver."""
+
+    def test_compare_with_non_numeric_raises(self):
+        """compare_semver raises ValueError for non-numeric versions."""
+        with pytest.raises(ValueError):
+            compare_semver("2.30.a", "2.30.0")
+
+    def test_compare_with_empty_string_raises(self):
+        """compare_semver raises ValueError for empty strings."""
+        with pytest.raises(ValueError):
+            compare_semver("", "2.30.0")
+
+
+class TestParsePRIdentifierEdgeCases:
+    """Edge case tests for parse_pr_identifier."""
+
+    def test_parse_zero_pr_number(self):
+        """parse_pr_identifier rejects PR number 0."""
+        with pytest.raises(PRDistillError) as exc_info:
+            parse_pr_identifier("0")
+        assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
+
+    def test_parse_negative_pr_number(self):
+        """parse_pr_identifier rejects negative PR numbers."""
+        with pytest.raises(PRDistillError) as exc_info:
+            parse_pr_identifier("-1")
+        assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
+
+
+class TestFetchPRErrorPaths:
+    """Tests for fetch_pr error handling."""
+
+    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
+    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    def test_fetch_pr_invalid_json(self, mock_run_command, mock_check_version):
+        """fetch_pr raises PRDistillError on invalid JSON response."""
+        mock_check_version.return_value = True
+        mock_run_command.return_value = "not valid json at all"
+
+        with pytest.raises(PRDistillError) as exc_info:
+            fetch_pr({"pr_number": 123, "repo": "owner/repo"})
+
+        assert exc_info.value.code == ErrorCode.GH_NETWORK_ERROR
+        assert "Invalid JSON" in str(exc_info.value)
+
+    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
+    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    def test_fetch_pr_diff_fails(self, mock_run_command, mock_check_version):
+        """fetch_pr handles failure when pr view succeeds but pr diff fails."""
+        mock_check_version.return_value = True
+
+        def side_effect(cmd):
+            if "gh pr view" in cmd:
+                return '{"number": 123, "title": "Test"}'
+            elif "gh pr diff" in cmd:
+                raise subprocess.CalledProcessError(
+                    1, "gh pr diff", stderr=b"not found"
+                )
+            raise Exception(f"Unexpected command: {cmd}")
+
+        mock_run_command.side_effect = side_effect
+
+        with pytest.raises(PRDistillError) as exc_info:
+            fetch_pr({"pr_number": 123, "repo": "owner/repo"})
+
+        # Should map to GH_PR_NOT_FOUND since stderr contains "not found"
+        assert exc_info.value.code == ErrorCode.GH_PR_NOT_FOUND
+
+    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
+    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    def test_fetch_pr_rate_limited(self, mock_run_command, mock_check_version):
+        """fetch_pr handles rate limit errors."""
+        mock_check_version.return_value = True
+        error = subprocess.CalledProcessError(1, "gh", stderr=b"API rate limit exceeded")
+        mock_run_command.side_effect = error
+
+        with pytest.raises(PRDistillError) as exc_info:
+            fetch_pr({"pr_number": 123, "repo": "owner/repo"})
+
+        assert exc_info.value.code == ErrorCode.GH_RATE_LIMITED
+        assert exc_info.value.recoverable is True
+
+    @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
+    @patch("spellbook_mcp.pr_distill.fetch.run_command")
+    def test_fetch_pr_auth_error(self, mock_run_command, mock_check_version):
+        """fetch_pr handles authentication errors."""
+        mock_check_version.return_value = True
+        error = subprocess.CalledProcessError(1, "gh", stderr=b"gh auth login")
+        mock_run_command.side_effect = error
+
+        with pytest.raises(PRDistillError) as exc_info:
+            fetch_pr({"pr_number": 123, "repo": "owner/repo"})
+
+        assert exc_info.value.code == ErrorCode.GH_NOT_AUTHENTICATED

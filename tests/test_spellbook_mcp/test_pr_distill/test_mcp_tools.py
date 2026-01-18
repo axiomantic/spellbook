@@ -35,6 +35,9 @@ index abc123..def456 100644
         assert result["files"][0]["status"] == "modified"
         assert result["files"][0]["additions"] == 1
         assert result["files"][0]["deletions"] == 0
+        # Verify hunk structure exists
+        assert len(result["files"][0].get("hunks", [])) > 0
+        assert result["warnings"] == []  # Explicitly verify no warnings
 
     def test_parses_empty_diff(self):
         """pr_diff handles empty diff string."""
@@ -139,6 +142,10 @@ class TestPrMatchPatterns:
         assert "patterns_checked" in result
         # migration-file pattern should match (regex: /migrations/.*\.py$)
         assert "migration-file" in result["matched"]
+        # Verify match has content (not just key existence)
+        assert len(result["matched"]["migration-file"]) > 0
+        # Verify patterns were actually checked
+        assert result["patterns_checked"] > 0
 
     def test_returns_unmatched_files(self, tmp_path):
         """pr_match_patterns returns unmatched files."""
@@ -161,6 +168,10 @@ class TestPrMatchPatterns:
 
         assert len(result["unmatched"]) == 1
         assert result["unmatched"][0]["path"] == "random_file.xyz"
+        # Verify matched is truly empty (no spurious matches)
+        assert len(result["matched"]) == 0 or all(
+            len(v) == 0 for v in result["matched"].values()
+        )
 
 
 class TestPrBlessPattern:
@@ -176,6 +187,8 @@ class TestPrBlessPattern:
         assert result["success"] is True
         assert result["pattern_id"] == "my-custom-pattern"
         assert result.get("error") is None
+        # Verify already_blessed is False for first blessing
+        assert result.get("already_blessed") is False or "already_blessed" not in result
 
     def test_rejects_invalid_pattern(self, tmp_path):
         """pr_bless_pattern rejects invalid pattern ID."""
@@ -186,6 +199,9 @@ class TestPrBlessPattern:
 
         assert result["success"] is False
         assert "error" in result
+        # Verify error message is meaningful
+        assert len(result["error"]) > 0
+        assert result["pattern_id"] == "INVALID_PATTERN"
 
     def test_reports_already_blessed(self, tmp_path):
         """pr_bless_pattern reports when pattern already blessed."""
@@ -263,6 +279,9 @@ class TestPrFetch:
         assert "meta" in result
         assert "diff" in result
         assert result["meta"]["number"] == 123
+        # Verify mocks were actually called
+        mock_check_version.assert_called_once()
+        assert mock_run_command.call_count == 3  # remote, pr view, pr diff
 
     @patch("spellbook_mcp.pr_distill.fetch.check_gh_version")
     @patch("spellbook_mcp.pr_distill.fetch.run_command")
@@ -278,3 +297,6 @@ class TestPrFetch:
 
         assert result["meta"]["number"] == 456
         assert result["repo"] == "owner/repo"
+        # Verify mocks were actually called
+        mock_check_version.assert_called_once()
+        assert mock_run_command.call_count == 2  # pr view, pr diff (no remote needed for URL)
