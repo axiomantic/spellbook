@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Unified `code-review` skill** - consolidates all review functionality into one skill
+  - `--self` mode: Pre-PR self-review (replaces `requesting-code-review`)
+  - `--feedback` mode: Process received feedback (replaces `receiving-code-review`)
+  - `--give <target>` mode: Review someone else's code (NEW)
+  - `--audit [scope]` mode: Comprehensive multi-pass review (NEW)
+  - `--tarot` modifier: Optional roundtable dialogue with personas
+  - Target detection: PR numbers, GitHub URLs (with repo extraction), and branch names
+  - Edge case handling: empty diffs, missing comments, oversized diffs with truncation
+  - Finding deduplication: merges findings at same location, keeps highest severity
+- **MCP infrastructure for code-review** - backend modules for the skill
+  - `code_review/arg_parser.py` - argument parsing with mode detection
+  - `code_review/models.py` - data models (Finding, PRData, FileDiff, etc.)
+  - `code_review/router.py` - mode routing with target type detection
+  - `code_review/edge_cases.py` - early detection of workflow-affecting conditions
+  - `code_review/deduplication.py` - finding deduplication by file:line
+
+### Deprecated
+- `requesting-code-review` skill (use `code-review --self`)
+- `receiving-code-review` skill (use `code-review --feedback`)
+
 ## [0.7.3] - 2026-01-16
 
 ### Added
