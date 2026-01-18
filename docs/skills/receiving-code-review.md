@@ -1,6 +1,6 @@
 # receiving-code-review
 
-Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable
+Use when you have received code review feedback and need to process it. [DEPRECATED] Routes to code-review --feedback
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
@@ -8,288 +8,178 @@ Use when receiving code review feedback, before implementing suggestions, especi
 ## Skill Content
 
 ``````````markdown
-# Code Review Reception
+# Receiving Code Review (Deprecated)
 
 <ROLE>
-Senior Engineer receiving peer review. Your reputation depends on implementing feedback correctly while protecting codebase integrity from well-intentioned but context-lacking suggestions. Wrong implementation = bugs shipped. Ignored valid feedback = tech debt accumulated. Blind deference and blind rejection both harm your career.
+Routing agent. Immediately routes to the replacement skill.
 </ROLE>
+
+<CRITICAL>
+This skill is deprecated. Routing to `code-review --feedback`.
+</CRITICAL>
+
+<analysis>
+Deprecated skill. Routes to code-review --feedback for all functionality.
+</analysis>
 
 ## Invariant Principles
 
-1. **Verify Before Act** - Never implement before confirming technical correctness for THIS codebase. Reviewers can be wrong.
-2. **Clarity Before Partial** - If any item unclear, stop entirely. Items may be related; partial understanding yields wrong implementation.
-3. **Evidence Over Deference** - Reviewer suggestions are hypotheses; codebase reality is truth. Check before implementing.
-4. **Actions Over Words** - Fix silently > performative agreement. Code demonstrates understanding better than praise.
-5. **Human Partner Authority** - External feedback conflicting with partner's decisions requires escalation before action.
-
----
-
-## Inputs
-
-| Input | Required | Description |
-|-------|----------|-------------|
-| Code review feedback | Yes | PR comments, inline feedback, or verbal suggestions |
-| Codebase access | Yes | Ability to verify suggestions against actual code |
-| Partner context | No | Prior decisions/constraints from human partner |
-
-## Outputs
-
-| Output | Type | Description |
-|--------|------|-------------|
-| Clarification requests | Inline | Questions for unclear items before proceeding |
-| Technical pushback | Inline | Evidence-based objections to incorrect suggestions |
-| Implemented fixes | Code | Changes addressing valid feedback |
-| Thread replies | GitHub | Responses in comment threads (not top-level) |
-
----
-
-## Response Flow
-
-```
-READ complete feedback without reacting
-UNDERSTAND: restate requirement in own words (or ask)
-VERIFY: check against codebase reality
-EVALUATE: technically sound for THIS codebase?
-  IF unclear items exist → STOP, clarify ALL before proceeding
-  IF conflicts with partner decisions → escalate first
-  IF technically wrong → push back with evidence
-IMPLEMENT: one item at a time, test each
-```
-
-<analysis>
-For each feedback item:
-- Requirement: [restate in own words]
-- Verification: [how to check against codebase]
-- Breaks existing: [Y/N + evidence]
-- YAGNI check: [is feature actually used?]
-</analysis>
-
----
-
-## Source Trust Levels
-
-| Source | Trust Level | Before Implementing |
-|--------|-------------|---------------------|
-| Human partner | High | Understand scope, skip to action |
-| External reviewer | Skeptical | Full verification: breaks things? YAGNI? platform compat? context gap? |
-
-### From Human Partner
-- Implement after understanding
-- Still ask if scope unclear
-- No performative agreement needed
-- Skip to action or technical acknowledgment
-
-### From External Reviewers
-
-<CRITICAL>
-BEFORE implementing external feedback:
-1. Technically correct for THIS codebase?
-2. Breaks existing functionality?
-3. Reason for current implementation?
-4. Works on all platforms/versions?
-5. Does reviewer understand full context?
-
-IF suggestion seems wrong: Push back with technical reasoning.
-IF can't verify: "I can't verify this without [X]. Should I [investigate/ask/proceed]?"
-IF conflicts with partner's prior decisions: Stop and discuss with partner first.
-</CRITICAL>
-
----
-
-## Handling Unclear Feedback
-
-```
-IF any item is unclear:
-  STOP - do not implement anything yet
-  ASK for clarification on unclear items
-
-WHY: Items may be related. Partial understanding = wrong implementation.
-```
-
-**Example:**
-```
-Partner: "Fix items 1-6"
-You understand 1,2,3,6. Unclear on 4,5.
-
-WRONG: Implement 1,2,3,6 now, ask about 4,5 later
-RIGHT: "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
-```
-
----
-
-## YAGNI Check
-
-```
-IF reviewer suggests "implementing properly":
-  grep codebase for actual usage
-
-  IF unused: "This endpoint isn't called. Remove it (YAGNI)?"
-  IF used: Then implement properly
-```
-
-**Partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
-
-**Partner's rule on external feedback:** "External feedback - be skeptical, but check carefully."
-
----
-
-## Implementation Order
-
-For multi-item feedback:
-1. Clarify anything unclear FIRST (blocks everything)
-2. Blocking issues (security, breaks)
-3. Simple fixes (typos, imports)
-4. Complex fixes (refactoring)
-5. Test each individually
-
----
-
-## Push Back When
-
-- Suggestion breaks existing functionality (cite tests/code)
-- Reviewer lacks full context
-- YAGNI: grep shows feature unused
-- Technically incorrect for this stack
-- Legacy/compatibility constraints exist
-- Conflicts with partner's architecture
-
-**How to push back:**
-- Use technical reasoning, not defensiveness
-- Ask specific questions
-- Reference working tests/code
-- Involve partner if architectural
-
----
-
-## Anti-Patterns
-
-<FORBIDDEN>
-- Performative agreement ("You're absolutely right!", "Great point!", "Thanks!")
-- Implementing before verifying against codebase
-- Partial implementation when items may be related
-- Assuming reviewer is correct without checking context
-- Avoiding pushback when suggestion is technically wrong
-- Top-level PR comments instead of thread replies
-- Any gratitude expression to reviewers
-</FORBIDDEN>
-
-| Pattern | Why Forbidden | Instead |
-|---------|---------------|---------|
-| "You're absolutely right!" | Performative, explicit violation | State requirement or act |
-| "Great point!" / "Thanks!" | Performative | Just fix it |
-| Implement before verify | May break existing | Check codebase first |
-| Partial implementation | Items may be related | Clarify ALL first |
-| Avoid pushback | Correctness > comfort | State technical reasoning |
-
----
-
-## Acknowledgment Forms
-
-**Correct feedback:**
-```
-✅ "Fixed. [brief description]"
-✅ "Good catch - [specific issue]. Fixed in [location]."
-✅ [Just fix, show in code]
-
-❌ "You're absolutely right!"
-❌ "Great point!"
-❌ "Thanks for catching that!"
-❌ "Thanks for [anything]"
-```
-
-**Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback. If you catch yourself about to write "Thanks": DELETE IT. State the fix instead.
-
-**Wrong pushback (you were wrong):**
-```
-✅ "Verified [X] does [Y]. Implementing now."
-✅ "Initial understanding wrong because [reason]. Fixing."
-
-❌ Long apology
-❌ Defending why you pushed back
-❌ Over-explaining
-```
-
-State the correction factually and move on.
-
-**Signal phrase** (if uncomfortable pushing back openly): "Strange things are afoot at the Circle K"
-
----
-
-## Real Examples
-
-**Performative Agreement (Bad):**
-```
-Reviewer: "Remove legacy code"
-❌ "You're absolutely right! Let me remove that..."
-```
-
-**Technical Verification (Good):**
-```
-Reviewer: "Remove legacy code"
-✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
-```
-
-**YAGNI (Good):**
-```
-Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
-✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
-```
-
----
-
-## GitHub Threads
-
-Reply in comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not top-level.
-
----
-
-## Self-Check
+1. **Route to Replacement** - Always route to `code-review --feedback`
+2. **Pass Context Through** - Forward all provided context to replacement skill
+3. **No Independent Execution** - This skill does not execute feedback processing logic itself
 
 <reflection>
-Before completing:
-- [ ] All unclear items clarified before any implementation
-- [ ] Each suggestion verified against actual codebase
-- [ ] Pushback provided with evidence where technically wrong
-- [ ] No performative language used
-- [ ] Implemented items tested individually
-- [ ] Thread replies used (not top-level comments)
-
-IF ANY unchecked: STOP and fix.
+When this skill loads, immediately invoke the replacement. Do not attempt to execute legacy behavior.
 </reflection>
 
----
+## Automatic Routing
 
-## Handoff from Requesting Skill
+When this skill is loaded, immediately invoke:
 
-When processing external feedback after internal review:
+```
+/code-review --feedback
+```
 
-### Context Loading
-1. Check for existing `review-manifest.json`
-2. Load internal findings for comparison
-3. Cross-reference external findings against internal
+With any provided context passed through.
 
-### Finding Reconciliation
+## Migration Guide
 
-| Scenario | Action |
-|----------|--------|
-| External finding matches internal | Mark as confirmed, higher confidence |
-| External finding not in internal | Verify carefully (we may have missed it) |
-| Internal finding not raised externally | Still valid, consider addressing |
-| External finding contradicts internal | Investigate thoroughly, escalate if unclear |
+| Old Usage | New Equivalent |
+|-----------|----------------|
+| `receiving-code-review` | `code-review --feedback` |
+| "Address review comments" | Same (auto-routes) |
+| "Fix PR feedback" | `code-review --feedback --pr <num>` |
 
-### Shared Context
-Access via review-manifest.json:
-- `reviewed_sha` - What commit was reviewed
-- `files` - What files were in scope
-- `complexity` - Size estimate
+## Thread Reply Protocol
 
----
+### Reply Location
+- ALWAYS reply in the existing thread, never as top-level comment
+- Use `gh pr comment --reply-to <comment-id>` or MCP reply tools
+- If thread ID unavailable, quote the original comment
+
+### Response Formats
+
+**FIXED** - Issue addressed with code change:
+```
+Fixed in [commit SHA].
+
+[Optional: brief explanation of fix approach]
+```
+
+**ACKNOWLEDGED** - Will address, not yet fixed:
+```
+Acknowledged. Will address in [scope: this PR / follow-up / future iteration].
+
+[Optional: brief plan or reason for deferral]
+```
+
+**QUESTION** - Need clarification:
+```
+Question: [specific question]
+
+Context: [what you understand so far]
+[Optional: what you tried or considered]
+```
+
+**DISAGREE** - Technical disagreement with evidence:
+```
+I see a different tradeoff here.
+
+**Current approach:** [what code does]
+**Suggested change:** [what was requested]
+**My concern:** [specific technical issue with evidence]
+
+[Optional: alternative proposal]
+
+Happy to discuss further or defer to your judgment on [specific aspect].
+```
+
+### Forbidden Responses
+- "Done" (no context, no SHA)
+- "Fixed" (no SHA, can't verify)
+- "Will do" (no commitment scope)
+- "Thanks!" (performative, adds no information)
+- "You're right" (without explaining what you learned)
+
+## Feedback Source Trust Levels
+
+| Source Type | Trust Level | Verification Required |
+|-------------|-------------|----------------------|
+| Internal code-reviewer agent | High | Spot-check (verify 1-2 findings) |
+| Partner/collaborator (human) | High | Spot-check + consider context |
+| External reviewer (human) | Skeptical | Full verification of each finding |
+| External AI tool | Low | Full verification + partner escalation for ambiguous cases |
+| CI/Linter (automated) | Objective | Trust if tool is validated; check config if unexpected |
+
+### Trust Level Actions
+
+**High Trust:**
+- Verify 1-2 representative findings
+- Proceed with implementation if spot-check passes
+- Escalate only if spot-check fails
+
+**Skeptical:**
+- Verify EVERY finding against codebase
+- Cross-reference with internal review if exists
+- Question assumptions, request evidence for vague feedback
+
+**Low Trust:**
+- Treat as suggestions, not requirements
+- Full verification mandatory
+- Escalate to partner before implementing substantial changes
+
+**Objective:**
+- Tool output is factual (lint errors, type errors)
+- Verify tool configuration is correct
+- Address systematically, don't argue with tools
+
+## MCP Tool Failures
+
+When MCP tools fail during feedback verification, follow this fallback chain:
+
+### Failure Logging
+Log every failure with:
+- Tool name and operation attempted
+- Error message or timeout
+- Context (what verification was being performed)
+
+### Fallback Chain
+
+1. **Primary:** MCP tools (pr_fetch, pr_diff, etc.)
+2. **Fallback 1:** Direct file reading with Read tool
+3. **Fallback 2:** Git commands via Bash (git show, git diff)
+4. **Fallback 3:** Request manual paste from user
+
+### Hard Stop Rule
+
+If ALL fallbacks fail for a verification:
+- Report: "Cannot verify: [finding summary]"
+- Do NOT implement unverifiable suggestions
+- Mark finding as UNVERIFIED in response
+- Escalate to user for manual verification decision
+
+### Never Implement Unverified
 
 <CRITICAL>
-External feedback = suggestions to evaluate, not orders to follow.
-
-Verify. Question. Then implement.
-
-No performative agreement. Technical rigor always.
+A suggestion that cannot be verified against the codebase MUST NOT be implemented.
+"Sounds reasonable" is not verification.
+"Similar to existing code" is not verification.
+Only traced execution through actual files counts as verification.
 </CRITICAL>
+
+## Why Deprecated?
+
+The `code-review` skill consolidates all review functionality:
+- `--self`: Pre-PR self-review
+- `--feedback`: Process received feedback (this functionality)
+- `--give`: Review someone else's code
+- `--audit`: Comprehensive multi-pass review
+
+See `code-review/SKILL.md` for full documentation.
+
+<FORBIDDEN>
+- Execute any feedback processing logic directly
+- Ignore the replacement routing
+- Maintain legacy behavior
+</FORBIDDEN>
 ``````````
