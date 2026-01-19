@@ -2,7 +2,7 @@
 
 Structured data formats for machine-readable and human-readable code review output.
 
-**Reference:** See [code-review-taxonomy.md](./code-review-taxonomy.md) for severity levels, categories, and approval states.
+**Reference:** See [code-review-taxonomy.md](code-review-taxonomy.md) for severity levels, categories, and approval states.
 
 ---
 
