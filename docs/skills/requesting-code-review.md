@@ -109,5 +109,30 @@ Before completing review cycle:
 
 If ANY unchecked: STOP and fix.
 
+## Handoff to Receiving Skill
+
+When external feedback arrives after an internal review:
+
+### Context Preservation
+- Pass `review-manifest.json` path to receiving skill
+- Include internal findings for cross-reference
+- Note which internal findings overlap with external
+
+### Invocation Pattern
+```
+When processing external PR feedback:
+1. Load review-manifest.json from prior internal review (if exists)
+2. Invoke receiving-code-review skill with:
+   - External feedback source
+   - Internal review artifacts path
+   - Trust level for source
+```
+
+### Provenance Tracking
+Mark each finding with source:
+- `source: internal` - From code-reviewer agent
+- `source: external` - From PR reviewer
+- `source: merged` - External finding confirmed by internal
+
 Template: `requesting-code-review/code-reviewer.md`
 ``````````

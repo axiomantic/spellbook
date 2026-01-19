@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.4] - 2026-01-19
+
+### Enhanced
+- **Code review skill interoperability** - handoff protocol between requesting and receiving skills
+  - `requesting-code-review`: Added "Handoff to Receiving Skill" section with context preservation, invocation pattern, and provenance tracking (source: internal/external/merged)
+  - `receiving-code-review`: Added "Handoff from Requesting Skill" section with context loading, finding reconciliation table, and shared context via review-manifest.json
+  - Enables seamless transition from internal review to processing external PR feedback
+
 ## [0.7.3] - 2026-01-16
 
 ### Added
@@ -522,7 +530,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.3...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.4...HEAD
+[0.7.4]: https://github.com/axiomantic/spellbook/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/axiomantic/spellbook/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/axiomantic/spellbook/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/axiomantic/spellbook/compare/v0.7.0...v0.7.1

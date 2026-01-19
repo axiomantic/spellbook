@@ -254,6 +254,32 @@ IF ANY unchecked: STOP and fix.
 
 ---
 
+## Handoff from Requesting Skill
+
+When processing external feedback after internal review:
+
+### Context Loading
+1. Check for existing `review-manifest.json`
+2. Load internal findings for comparison
+3. Cross-reference external findings against internal
+
+### Finding Reconciliation
+
+| Scenario | Action |
+|----------|--------|
+| External finding matches internal | Mark as confirmed, higher confidence |
+| External finding not in internal | Verify carefully (we may have missed it) |
+| Internal finding not raised externally | Still valid, consider addressing |
+| External finding contradicts internal | Investigate thoroughly, escalate if unclear |
+
+### Shared Context
+Access via review-manifest.json:
+- `reviewed_sha` - What commit was reviewed
+- `files` - What files were in scope
+- `complexity` - Size estimate
+
+---
+
 <CRITICAL>
 External feedback = suggestions to evaluate, not orders to follow.
 
