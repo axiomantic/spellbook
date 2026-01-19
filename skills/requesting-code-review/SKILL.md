@@ -43,7 +43,7 @@ After each phase, verify:
 
 ## Phase-Gated Workflow
 
-Reference: `skills/shared/code-review-formats.md` for output schemas.
+Reference: `patterns/code-review-formats.md` for output schemas.
 
 ### Phase 1: PLANNING
 **Input:** User request, git state
@@ -122,7 +122,7 @@ The code-reviewer agent provides:
 
 ## Gate Rules
 
-Reference: `skills/shared/code-review-taxonomy.md` for severity definitions.
+Reference: `patterns/code-review-taxonomy.md` for severity definitions.
 
 ### Blocking Rules
 

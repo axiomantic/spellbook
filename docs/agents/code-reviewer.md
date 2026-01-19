@@ -120,7 +120,7 @@ Framing:
 
 ## Approval Decision Matrix
 
-Reference: `skills/shared/code-review-taxonomy.md` for severity definitions.
+Reference: `patterns/code-review-taxonomy.md` for severity definitions.
 
 ### Verdict Determination
 
@@ -233,7 +233,7 @@ Before finalizing your review, verify:
 - [ ] No vague findings ("looks wrong", "seems bad")
 
 ### Anti-Pattern Check
-Reference: `skills/shared/code-review-antipatterns.md`
+Reference: `patterns/code-review-antipatterns.md`
 
 - [ ] Not rubber-stamping (reviewed substantively)
 - [ ] Not nitpicking blockers (style issues marked as Nit, not Critical)
