@@ -3689,13 +3689,39 @@
 <a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
 <a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>---
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>External feedback = suggestions to evaluate, not orders to follow.
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>Verify. Question. Then implement.
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>No performative agreement. Technical rigor always.
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="gu">## Handoff from Requesting Skill</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>When processing external feedback after internal review:
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="gu">### Context Loading</span>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="k">1.</span> Check for existing <span class="sb">`review-manifest.json`</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">2.</span> Load internal findings for comparison
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">3.</span> Cross-reference external findings against internal
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="gu">### Finding Reconciliation</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>| Scenario | Action |
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>|----------|--------|
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>| External finding matches internal | Mark as confirmed, higher confidence |
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>| External finding not in internal | Verify carefully (we may have missed it) |
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>| Internal finding not raised externally | Still valid, consider addressing |
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>| External finding contradicts internal | Investigate thoroughly, escalate if unclear |
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="gu">### Shared Context</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>Access via review-manifest.json:
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="k">-</span><span class="w"> </span><span class="sb">`reviewed_sha`</span> - What commit was reviewed
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="k">-</span><span class="w"> </span><span class="sb">`files`</span> - What files were in scope
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="k">-</span><span class="w"> </span><span class="sb">`complexity`</span> - Size estimate
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>---
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>External feedback = suggestions to evaluate, not orders to follow.
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>Verify. Question. Then implement.
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>No performative agreement. Technical rigor always.
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>&lt;/CRITICAL&gt;
 </code></pre></div>
 
 
