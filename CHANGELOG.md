@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.5] - 2026-01-21
+
+### Fixed
+- **Installer patterns/docs symlink failure** - installer was creating `patterns` and `docs` as directories before attempting to symlink them, causing `[fail]` status on fresh installs
+
 ## [0.7.4] - 2026-01-19
 
 ### Enhanced
@@ -530,7 +535,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.4...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.5...HEAD
+[0.7.5]: https://github.com/axiomantic/spellbook/compare/v0.7.4...v0.7.5
 [0.7.4]: https://github.com/axiomantic/spellbook/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/axiomantic/spellbook/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/axiomantic/spellbook/compare/v0.7.1...v0.7.2

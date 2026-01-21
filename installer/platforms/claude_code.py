@@ -75,7 +75,8 @@ class ClaudeCodeInstaller(PlatformInstaller):
             return results
 
         # Create subdirectories
-        for subdir in ["skills", "commands", "scripts", "agents", "patterns", "docs", "plans"]:
+        # Note: patterns and docs are symlinked, not created as directories
+        for subdir in ["skills", "commands", "scripts", "agents", "plans"]:
             subdir_path = self.config_dir / subdir
             if not self.dry_run:
                 subdir_path.mkdir(parents=True, exist_ok=True)
