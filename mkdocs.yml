@@ -96,6 +96,9 @@ nav:
       - skills/requirements-gathering.md
       - skills/dehallucination.md
       - skills/reflexion.md
+      - skills/domain-analysis.md
+      - skills/context-assembly.md
+      - skills/workflow-design.md
     - Specialized Skills:
       - skills/async-await-patterns.md
       - skills/using-lsp-tools.md

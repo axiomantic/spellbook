@@ -35,7 +35,7 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (34 total)](#skills-34-total)
+  - [Skills (37 total)](#skills-37-total)
   - [Commands (19 total)](#commands-19-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
@@ -81,7 +81,7 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (34 total)
+### Skills (37 total)
 
 Reusable workflows for structured development:
 
@@ -90,7 +90,7 @@ Reusable workflows for structured development:
 | **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [debugging], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
 | **Code Quality** | [code-quality-enforcement], [green-mirage-audit], [fixing-tests], [fact-checking], [finding-dead-code], [pr-distill], [receiving-code-review], [requesting-code-review] | mixed |
 | **Feature Dev** | [implementing-features], [design-doc-reviewer], [implementation-plan-reviewer], [devils-advocate], [worktree-merge], [merge-conflict-resolution] | spellbook |
-| **Autonomous Dev** | [autonomous-roundtable], [requirements-gathering], [dehallucination], [reflexion] | spellbook |
+| **Autonomous Dev** | [autonomous-roundtable], [requirements-gathering], [dehallucination], [reflexion], [domain-analysis], [context-assembly], [workflow-design] | spellbook |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
 | **Meta** | [using-skills], [writing-skills], [instruction-engineering], [instruction-optimizer], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia] | [superpowers] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] | spellbook |
@@ -133,6 +133,9 @@ Reusable workflows for structured development:
 [requirements-gathering]: https://axiomantic.github.io/spellbook/latest/skills/requirements-gathering/
 [dehallucination]: https://axiomantic.github.io/spellbook/latest/skills/dehallucination/
 [reflexion]: https://axiomantic.github.io/spellbook/latest/skills/reflexion/
+[domain-analysis]: https://axiomantic.github.io/spellbook/latest/skills/domain-analysis/
+[context-assembly]: https://axiomantic.github.io/spellbook/latest/skills/context-assembly/
+[workflow-design]: https://axiomantic.github.io/spellbook/latest/skills/workflow-design/
 
 ### Commands (19 total)
 
