@@ -321,6 +321,81 @@ def running_under_uv() -> bool:
 # Repository Management
 # =============================================================================
 
+def check_repo_needs_update(repo_dir: Path, timeout: int = 30) -> tuple[bool | None, str | None]:
+    """
+    Check if a git repo is behind its remote.
+
+    Performs a git fetch and compares local HEAD to upstream.
+
+    Args:
+        repo_dir: Path to the git repository
+        timeout: Timeout for git fetch in seconds
+
+    Returns:
+        (needs_update, reason) where:
+        - (True, "N commits behind origin/main") if updates available
+        - (False, None) if already up to date
+        - (None, "error message") if check failed (network, etc.)
+    """
+    try:
+        # Fetch from remote (quiet, with timeout)
+        result = subprocess.run(
+            ["git", "-C", str(repo_dir), "fetch", "--quiet"],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        if result.returncode != 0:
+            return (None, f"git fetch failed: {result.stderr.strip()}")
+
+        # Get the default branch from remote HEAD
+        result = subprocess.run(
+            ["git", "-C", str(repo_dir), "symbolic-ref", "refs/remotes/origin/HEAD"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            # refs/remotes/origin/HEAD -> refs/remotes/origin/main
+            remote_ref = result.stdout.strip()
+        else:
+            # Fallback: try origin/main, then origin/master
+            for branch in ["origin/main", "origin/master"]:
+                result = subprocess.run(
+                    ["git", "-C", str(repo_dir), "rev-parse", "--verify", branch],
+                    capture_output=True,
+                )
+                if result.returncode == 0:
+                    remote_ref = branch
+                    break
+            else:
+                return (None, "could not determine remote branch")
+
+        # Count commits we're behind
+        result = subprocess.run(
+            ["git", "-C", str(repo_dir), "rev-list", "--count", f"HEAD..{remote_ref}"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            return (None, f"could not compare versions: {result.stderr.strip()}")
+
+        behind_count = int(result.stdout.strip())
+
+        if behind_count > 0:
+            # Extract just the branch name for the message
+            branch_name = remote_ref.split("/")[-1] if "/" in remote_ref else remote_ref
+            return (True, f"{behind_count} commit{'s' if behind_count > 1 else ''} behind {branch_name}")
+        else:
+            return (False, None)
+
+    except subprocess.TimeoutExpired:
+        return (None, "git fetch timed out (network issue?)")
+    except ValueError as e:
+        return (None, f"unexpected git output: {e}")
+    except Exception as e:
+        return (None, f"error checking for updates: {e}")
+
+
 def is_spellbook_repo(path: Path) -> bool:
     """Check if a path is a spellbook repository."""
     # Key indicators of spellbook repo
@@ -378,18 +453,44 @@ def clone_repository(install_dir: Path, auto_yes: bool = False) -> bool:
     if install_dir.exists():
         if (install_dir / ".git").is_dir():
             print_info(f"Found existing installation at {install_dir}")
-            if prompt_yn("Update existing installation?", auto_yes=auto_yes):
-                print_step("Updating repository...")
-                try:
-                    subprocess.run(
-                        ["git", "-C", str(install_dir), "pull", "--ff-only"],
-                        check=True,
-                        capture_output=True,
-                    )
-                    print_success("Updated to latest version")
-                except subprocess.CalledProcessError:
-                    print_warning("Could not fast-forward. Using existing version.")
-            return True
+
+            # Check if updates are available before prompting
+            print_step("Checking for updates...")
+            needs_update, reason = check_repo_needs_update(install_dir)
+
+            if needs_update is None:
+                # Check failed (network issue, etc.)
+                print_warning(f"Could not check for updates: {reason}")
+                print_info("Continuing with existing version.")
+                return True
+            elif needs_update is False:
+                # Already up to date
+                print_success("Already at latest version")
+                return True
+            else:
+                # Updates available
+                print_info(f"Updates available: {reason}")
+
+                # In headless/non-interactive mode, auto-update
+                # In interactive mode, prompt user
+                should_update = auto_yes or not is_interactive()
+                if not should_update:
+                    should_update = prompt_yn("Update to latest version?", auto_yes=False)
+
+                if should_update:
+                    print_step("Updating repository...")
+                    try:
+                        subprocess.run(
+                            ["git", "-C", str(install_dir), "pull", "--ff-only"],
+                            check=True,
+                            capture_output=True,
+                        )
+                        print_success("Updated to latest version")
+                    except subprocess.CalledProcessError:
+                        print_warning("Could not fast-forward. Using existing version.")
+                else:
+                    print_info("Skipping update, using existing version.")
+                return True
         else:
             print_warning(f"Directory {install_dir} exists but is not a git repository.")
             if prompt_yn("Back up and replace?", auto_yes=auto_yes):
