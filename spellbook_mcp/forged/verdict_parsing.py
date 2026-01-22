@@ -21,7 +21,7 @@ PERSONA_BLOCK_PATTERN = r"\*\*(\w+)\*\*:?\s*(.*?)(?=\*\*\w+\*\*:|$)"
 VERDICT_PATTERN = r"[Vv]erdict:?\s*(APPROVE|ITERATE|ABSTAIN)"
 
 # Pattern to extract severity
-SEVERITY_PATTERN = r"[Ss]everity:?\s*(blocking|important|minor)"
+SEVERITY_PATTERN = r"[Ss]everity:?\s*(blocking|significant|minor)"
 
 # Pattern to extract concerns list
 CONCERNS_PATTERN = r"[Cc]oncerns?:?\s*\n((?:\s*[-*]\s*.+\n?)+)"
@@ -42,7 +42,7 @@ class ParsedVerdict:
         verdict: The archetype's decision - "APPROVE", "ITERATE", or "ABSTAIN"
         concerns: List of concerns raised by the archetype
         suggestions: List of suggestions for improvement
-        severity: Impact level - "blocking", "important", or "minor"
+        severity: Impact level - "blocking", "significant", or "minor"
     """
 
     archetype: str

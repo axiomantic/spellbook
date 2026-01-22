@@ -555,7 +555,7 @@ def prioritize_for_context(
         + len(str(reflections))
         + sum(len(str(fb.to_dict())) for fb in feedback_items)
     )
-    total_tokens = estimate_tokens(str(total_chars))
+    total_tokens = math.ceil(total_chars / CHARS_PER_TOKEN)
 
     return ContextWindow(
         artifact_content=artifact_content,

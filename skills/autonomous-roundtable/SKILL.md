@@ -192,7 +192,7 @@ Call forge_project_init with:
 | DISCOVER | Understand requirements | requirements-gathering | Requirements document |
 | DESIGN | Architectural decisions | brainstorming | Design document |
 | PLAN | Implementation tasks | writing-plans | Implementation plan |
-| IMPLEMENT | Build and test | test-driven-development | Code + tests |
+| IMPLEMENT | Build and test | implementing-features | Code + tests |
 | COMPLETE | Validation and cleanup | (none - final roundtable) | Completion report |
 
 **Stage Flow:**
@@ -235,7 +235,7 @@ feedback.source contains "hallucination":
 DISCOVER: requirements-gathering
 DESIGN: brainstorming
 PLAN: writing-plans
-IMPLEMENT: test-driven-development
+IMPLEMENT: implementing-features
 ```
 
 ### Using forge_select_skill

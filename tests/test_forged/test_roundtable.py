@@ -114,7 +114,7 @@ class TestParsedVerdictDataclass:
             verdict="ITERATE",
             concerns=["Exceeds scope", "Breaks constraints"],
             suggestions=["Reduce scope", "Add bounds checking"],
-            severity="important",
+            severity="significant",
         )
 
         reconstructed = ParsedVerdict.from_dict(original.to_dict())
@@ -279,13 +279,13 @@ Verdict: APPROVE
 **Hierophant**: The standards are not met.
 
 Verdict: ITERATE
-Severity: important
+Severity: significant
 """
         verdicts = parse_roundtable_response(response)
 
         hierophant = next((v for v in verdicts if v.archetype == "Hierophant"), None)
         assert hierophant is not None
-        assert hierophant.severity == "important"
+        assert hierophant.severity == "significant"
 
     def test_parse_empty_response_returns_empty_list(self):
         """parse_roundtable_response returns empty list for empty input."""

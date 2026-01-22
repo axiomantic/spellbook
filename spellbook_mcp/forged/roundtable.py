@@ -15,7 +15,6 @@ Each archetype brings a unique perspective to validate stage completion:
 - Queen: User needs, stakeholder value
 """
 
-from pathlib import Path
 from typing import Optional
 
 from spellbook_mcp.forged.artifacts import read_artifact
@@ -258,7 +257,7 @@ Suggestions:
 - [Any suggestions for improvement]
 
 Verdict: [APPROVE | ITERATE | ABSTAIN]
-Severity: [blocking | important | minor] (only if ITERATE)
+Severity: [blocking | significant | minor] (only if ITERATE)
 
 ## Verdict Meanings
 
