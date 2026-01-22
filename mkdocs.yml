@@ -91,6 +91,11 @@ nav:
       - skills/devils-advocate.md
       - skills/worktree-merge.md
       - skills/merge-conflict-resolution.md
+    - Autonomous Development:
+      - skills/autonomous-roundtable.md
+      - skills/requirements-gathering.md
+      - skills/dehallucination.md
+      - skills/reflexion.md
     - Specialized Skills:
       - skills/async-await-patterns.md
       - skills/using-lsp-tools.md
