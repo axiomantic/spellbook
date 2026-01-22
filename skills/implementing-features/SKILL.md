@@ -1568,8 +1568,127 @@ def extract_tracks_from_impl_plan(impl_plan_content):
 
 **Generate files:**
 - `manifest.json`: Track metadata, dependencies, status
-- `README.md`: Execution instructions
+- `README.md`: Execution instructions with quality gate checklist
 - `track-{id}-{name}.md`: Work packet per track
+
+#### Work Packet Template
+
+<CRITICAL>
+Work packets MUST include mandatory quality gates. Packets without gates produce incomplete work that passes tests but fails in production.
+</CRITICAL>
+
+Each `track-{id}-{name}.md` MUST follow this template:
+
+```markdown
+# Work Packet: [Track Name]
+
+**Feature:** [feature-name]
+**Track:** [track-id]
+**Dependencies:** [list or "none"]
+
+## Context
+
+[Design context, architectural constraints, interfaces]
+
+## Tasks
+
+[Task list from implementation plan]
+
+## Quality Gates (MANDATORY)
+
+After completing ALL tasks in this packet, you MUST run:
+
+### Gate 1: Implementation Completion Verification
+
+For each task, verify:
+- [ ] All acceptance criteria traced to code
+- [ ] All expected outputs exist with correct interfaces
+- [ ] No dead code paths or unused implementations
+
+### Gate 2: Code Review
+
+Invoke `requesting-code-review` skill:
+- Files: [list of files created/modified]
+- Review criteria: code quality, error handling, type safety, security
+
+Fix ALL critical and important issues before proceeding.
+
+### Gate 3: Fact-Checking
+
+Invoke `fact-checking` skill:
+- Verify all docstrings match actual behavior
+- Verify all comments are accurate
+- Verify all type hints are correct
+- Verify error messages are truthful
+
+Fix ALL false claims before proceeding.
+
+### Gate 4: Test Quality (Green Mirage Audit)
+
+Invoke `audit-green-mirage` skill on test files:
+- Verify tests have meaningful assertions (not just "passes")
+- Verify tests cover error paths (not just happy path)
+- Verify tests don't mock too much
+
+Fix ALL green mirage issues before proceeding.
+
+### Gate 5: Full Test Suite
+
+Run `uv run pytest tests/` (or equivalent).
+ALL tests must pass. No exceptions.
+
+## Completion Checklist
+
+Before marking this packet complete:
+
+- [ ] All tasks implemented
+- [ ] Gate 1: Implementation completion verified
+- [ ] Gate 2: Code review passed (no critical/important issues)
+- [ ] Gate 3: Fact-checking passed (no false claims)
+- [ ] Gate 4: Green mirage audit passed
+- [ ] Gate 5: Full test suite passes
+- [ ] Changes committed with descriptive message
+
+If ANY checkbox is unchecked, the packet is NOT complete.
+```
+
+#### README.md Template
+
+The work packet `README.md` MUST include:
+
+```markdown
+# Work Packets: [Feature Name]
+
+## Execution Protocol
+
+<CRITICAL>
+Each packet includes MANDATORY quality gates. Do NOT skip them.
+Completing tasks without running gates produces incomplete work.
+</CRITICAL>
+
+### For Each Packet:
+
+1. Read the packet's Context section
+2. Implement all Tasks using TDD
+3. Run ALL Quality Gates (5 gates, in order)
+4. Complete the Completion Checklist
+5. Commit with descriptive message
+6. Update manifest.json status to "complete"
+
+### Quality Gate Summary
+
+| Gate | Skill to Invoke | Pass Criteria |
+|------|-----------------|---------------|
+| Implementation Completion | (manual verification) | All criteria traced |
+| Code Review | requesting-code-review | No critical/important issues |
+| Fact-Checking | fact-checking | No false claims |
+| Green Mirage Audit | audit-green-mirage | No mirage issues |
+| Test Suite | (run tests) | All tests pass |
+
+### After All Packets Complete
+
+Run final integration verification across all packets.
+```
 
 ### 3.6 Session Handoff (TERMINAL)
 
@@ -2303,6 +2422,15 @@ completion from multiple perspectives.
 - Skipping worktree-merge
 - Not running tests after merge
 - Leaving worktrees after merge
+
+### Swarmed Execution (Work Packets)
+- **Generating work packets WITHOUT quality gate checklist** - packets must include 5 gates
+- **Completing packet tasks without running quality gates** - gates are MANDATORY, not optional
+- **Skipping code review in packets** - each packet needs requesting-code-review
+- **Skipping fact-checking in packets** - each packet needs fact-checking skill
+- **Skipping green mirage audit in packets** - each packet needs audit-green-mirage
+- **Marking packet complete with unchecked gates** - all 5 gates must pass
+- **Assuming tests passing = quality** - tests verify behavior, gates verify quality
 </FORBIDDEN>
 
 ---
@@ -2352,6 +2480,12 @@ completion from multiple perspectives.
 - [ ] Subagent invoked executing-plans to fix
 - [ ] Analyzed execution mode (swarmed/delegated/direct)
 - [ ] If swarmed: Generated work packets and handed off
+
+### Phase 3.5 (if swarmed)
+- [ ] Work packets include quality gate checklist (5 gates)
+- [ ] Work packets include completion checklist
+- [ ] README.md includes execution protocol with gate summary
+- [ ] Each packet specifies skills to invoke for gates
 
 ### Phase 4 (if not swarmed)
 - [ ] Subagent invoked using-git-worktrees (if applicable)
