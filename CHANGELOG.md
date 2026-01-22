@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-01-22
+
+### Added
+- **Forged Autonomous Development System** - Meta-orchestration layer for brain-out project implementation
+  - Database schema and models: `forge_tokens`, `iteration_state`, `reflections` tables
+  - Artifact storage: path generation, CRUD operations for feature artifacts
+  - Iteration MCP tools: `forge_iteration_start`, `forge_iteration_advance`, `forge_iteration_return`
+  - Project graph: `FeatureNode`, `ProjectGraph`, dependency ordering with cycle detection
+  - Project MCP tools: `forge_project_init`, `forge_project_status`, `forge_feature_update`, `forge_select_skill`
+  - Validator infrastructure: `VALIDATOR_CATALOG` with 12 validators across 4 archetypes
+  - Context filtering: `truncate_smart`, `select_relevant_knowledge`, `similarity`, token budget management
+  - Roundtable MCP tools: `forge_roundtable_convene`, `forge_roundtable_debate`, `forge_process_roundtable_response`
+  - Verdict parsing: regex-based extraction of archetype verdicts from LLM responses
+  - OpenCode plugin: TypeScript extension for stage tracking and roundtable integration
+  - 330 tests covering all forged modules
+
+- **7 New Skills for Autonomous Development**
+  - `autonomous-roundtable` (487 lines): Meta-orchestrator for complete forge workflow
+  - `requirements-gathering` (361 lines): DISCOVER stage using archetype perspectives (Queen/Emperor/Hermit/Priestess)
+  - `dehallucination` (404 lines): Factual grounding with confidence assessment and recovery protocols
+  - `reflexion` (419 lines): Learning from ITERATE verdicts with pattern detection
+  - `domain-analysis` (294 lines): DDD-based domain exploration with agent recommendation engine
+  - `context-assembly` (288 lines): Three-tier context organization with token budget management
+  - `workflow-design` (269 lines): State machine design with transitions, guards, and error handling
+
+### Enhanced
+- **implementing-features skill** - Mandatory quality gates for swarmed execution
+  - Work packet template with 5 required gates: implementation completion, code review, fact-checking, green mirage audit, test suite
+  - README.md template with execution protocol and gate summary
+  - Swarmed Execution anti-patterns in FORBIDDEN section
+  - Phase 3.5 self-check items for work packet quality
+
 ## [0.7.7] - 2026-01-21
 
 ### Fixed
