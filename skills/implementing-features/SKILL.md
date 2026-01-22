@@ -2227,6 +2227,28 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 | 4.6.3 | audit-green-mirage | Test quality audit |
 | 4.7 | finishing-a-development-branch | Complete workflow |
 
+## Forge Integration (Optional)
+
+When forge tools are available via MCP, they provide token-based workflow enforcement
+and roundtable validation. These tools are OPTIONAL but enhance workflow rigor.
+
+| Tool | Purpose |
+|------|---------|
+| `forge_project_init` | Initialize feature decomposition with dependency graph |
+| `forge_iteration_start` | Start/resume a feature iteration, get workflow token |
+| `forge_iteration_advance` | Move to next stage after APPROVE verdict |
+| `forge_iteration_return` | Return to earlier stage after ITERATE verdict |
+| `forge_roundtable_convene` | Generate validation prompts with tarot archetypes |
+| `forge_process_roundtable_response` | Parse LLM roundtable output for verdicts |
+| `forge_select_skill` | Get recommended skill for current stage/context |
+
+**Token System:** Forge tools use tokens to enforce workflow order. Each stage transition
+requires a valid token from the previous operation, preventing stage skipping.
+
+**Roundtable Validation:** The roundtable system uses tarot archetypes (Magician, Priestess,
+Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) to validate stage
+completion from multiple perspectives.
+
 ---
 
 <FORBIDDEN>
