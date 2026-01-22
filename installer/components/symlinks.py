@@ -18,8 +18,16 @@ class SymlinkResult:
     message: str
 
 
+def is_dir_empty(path: Path) -> bool:
+    """Check if a directory is empty."""
+    try:
+        return not any(path.iterdir())
+    except (OSError, PermissionError):
+        return False
+
+
 def create_symlink(
-    source: Path, target: Path, dry_run: bool = False
+    source: Path, target: Path, dry_run: bool = False, remove_empty_dirs: bool = True
 ) -> SymlinkResult:
     """
     Create a symlink from target to source.
@@ -28,6 +36,7 @@ def create_symlink(
         source: The actual file/directory to link to
         target: Where the symlink will be created
         dry_run: If True, don't actually create the symlink
+        remove_empty_dirs: If True, remove empty directories blocking symlink creation
 
     Returns SymlinkResult with status.
     """
@@ -64,16 +73,23 @@ def create_symlink(
         # Remove existing (file, dir, or symlink)
         if target.is_symlink() or target.exists():
             if target.is_dir() and not target.is_symlink():
-                # Don't remove directories, only symlinks and files
-                return SymlinkResult(
-                    source=source,
-                    target=target,
-                    success=False,
-                    action="failed",
-                    message=f"Target is a directory, not a symlink: {target}",
-                )
-            target.unlink()
-            action = "updated"
+                # Handle existing directory
+                if remove_empty_dirs and is_dir_empty(target):
+                    # Empty directory - safe to remove
+                    target.rmdir()
+                    action = "updated"
+                else:
+                    # Non-empty directory - don't remove
+                    return SymlinkResult(
+                        source=source,
+                        target=target,
+                        success=False,
+                        action="failed",
+                        message=f"Target is a non-empty directory: {target}. Remove it manually to proceed.",
+                    )
+            else:
+                target.unlink()
+                action = "updated"
         else:
             action = "created"
 

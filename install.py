@@ -582,6 +582,48 @@ def bootstrap(args: argparse.Namespace) -> Path:
 
     if spellbook_dir:
         print_success(f"Found spellbook at {spellbook_dir}")
+
+        # Check if the found repo needs updating
+        if (spellbook_dir / ".git").is_dir():
+            print_step("Checking for updates...")
+            needs_update, reason = check_repo_needs_update(spellbook_dir)
+
+            if needs_update is None:
+                # Check failed (network issue, etc.)
+                print_warning(f"Could not check for updates: {reason}")
+            elif needs_update:
+                print_info(f"Updates available: {reason}")
+
+                # In headless/non-interactive mode, auto-update
+                should_update = auto_yes or not is_interactive()
+                if not should_update:
+                    should_update = prompt_yn("Update to latest version?", auto_yes=False)
+
+                if should_update:
+                    print_step("Updating repository...")
+                    try:
+                        subprocess.run(
+                            ["git", "-C", str(spellbook_dir), "pull", "--ff-only"],
+                            check=True,
+                            capture_output=True,
+                        )
+                        print_success("Updated to latest version")
+
+                        # Re-exec from updated repo to use latest install.py
+                        new_script = spellbook_dir / "install.py"
+                        current_script = get_script_path()
+                        if new_script.exists() and (
+                            current_script is None or
+                            new_script.resolve() != current_script.resolve()
+                        ):
+                            print_step("Running updated installer...")
+                            filtered_args = [a for a in sys.argv[1:] if a != "--bootstrapped"]
+                            cmd = ["uv", "run", str(new_script)] + filtered_args + ["--bootstrapped"]
+                            os.execvp("uv", cmd)
+                    except subprocess.CalledProcessError:
+                        print_warning("Could not fast-forward. Using existing version.")
+            else:
+                print_info("Already at latest version")
     else:
         # Need to clone
         install_dir = Path(args.install_dir) if args.install_dir else DEFAULT_INSTALL_DIR
