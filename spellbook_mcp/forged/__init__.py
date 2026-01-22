@@ -16,6 +16,13 @@ from spellbook_mcp.forged.artifacts import (
     write_artifact,
 )
 
+# Iteration tools exports
+from spellbook_mcp.forged.iteration_tools import (
+    forge_iteration_advance,
+    forge_iteration_return,
+    forge_iteration_start,
+)
+
 __all__ = [
     # Artifacts
     "VALID_ARTIFACT_TYPES",
@@ -26,4 +33,8 @@ __all__ = [
     "list_artifacts",
     "read_artifact",
     "write_artifact",
+    # Iteration tools
+    "forge_iteration_advance",
+    "forge_iteration_return",
+    "forge_iteration_start",
 ]
