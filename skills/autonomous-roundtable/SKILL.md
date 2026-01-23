@@ -189,19 +189,19 @@ Call forge_project_init with:
 
 | Stage | Purpose | Primary Skill | Supporting Skills | Artifact |
 |-------|---------|---------------|-------------------|----------|
-| DISCOVER | Understand requirements | requirements-gathering | domain-analysis | Requirements document |
-| DESIGN | Architectural decisions | brainstorming | workflow-design | Design document |
-| PLAN | Implementation tasks | writing-plans | context-assembly | Implementation plan |
-| IMPLEMENT | Build and test | implementing-features | context-assembly | Code + tests |
+| DISCOVER | Understand requirements | gathering-requirements | analyzing-domains | Requirements document |
+| DESIGN | Architectural decisions | brainstorming | designing-workflows | Design document |
+| PLAN | Implementation tasks | writing-plans | assembling-context | Implementation plan |
+| IMPLEMENT | Build and test | implementing-features | assembling-context | Code + tests |
 | COMPLETE | Validation and cleanup | (none - final roundtable) | - | Completion report |
 
 ### Supporting Skill Invocation
 
 | Skill | When to Invoke | Stage |
 |-------|----------------|-------|
-| domain-analysis | Feature involves unfamiliar domain, complex business logic, or unclear terminology | DISCOVER |
-| workflow-design | Feature has explicit states, transitions, approval flows, or pipelines | DESIGN |
-| context-assembly | Preparing work packets (swarmed) or subagent prompts | PLAN, IMPLEMENT |
+| analyzing-domains | Feature involves unfamiliar domain, complex business logic, or unclear terminology | DISCOVER |
+| designing-workflows | Feature has explicit states, transitions, approval flows, or pipelines | DESIGN |
+| assembling-context | Preparing work packets (swarmed) or subagent prompts | PLAN, IMPLEMENT |
 
 **Stage Flow:**
 ```
@@ -226,7 +226,7 @@ Select: debugging or systematic-debugging
 If iteration has feedback from roundtable:
 ```
 feedback.severity == "blocking" AND stage == "DISCOVER":
-  Select: requirements-gathering
+  Select: gathering-requirements
 
 feedback.severity == "blocking" AND stage == "DESIGN":
   Select: brainstorming
@@ -240,7 +240,7 @@ feedback.source contains "hallucination":
 
 ### Priority 3: Stage Defaults
 ```
-DISCOVER: requirements-gathering
+DISCOVER: gathering-requirements
 DESIGN: brainstorming
 PLAN: writing-plans
 IMPLEMENT: implementing-features
@@ -447,10 +447,10 @@ User: "Build a CLI todo app with SQLite storage and JSON export"
    - stage: DISCOVER
 
 4. Select skill (forge_select_skill):
-   - Returns: requirements-gathering
+   - Returns: gathering-requirements
 
 5. Invoke skill:
-   - Skill tool: requirements-gathering
+   - Skill tool: gathering-requirements
    - Context: Feature description, project context
 
 6. Convene roundtable:

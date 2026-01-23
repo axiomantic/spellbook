@@ -76,29 +76,29 @@ nav:
       - skills/using-git-worktrees.md
       - skills/finishing-a-development-branch.md
     - Code Quality Skills:
-      - skills/code-quality-enforcement.md
-      - skills/green-mirage-audit.md
+      - skills/enforcing-code-quality.md
+      - skills/auditing-green-mirage.md
       - skills/fixing-tests.md
       - skills/fact-checking.md
       - skills/finding-dead-code.md
-      - skills/pr-distill.md
+      - skills/distilling-prs.md
       - skills/receiving-code-review.md
       - skills/requesting-code-review.md
     - Feature Development:
       - skills/implementing-features.md
-      - skills/design-doc-reviewer.md
-      - skills/implementation-plan-reviewer.md
+      - skills/reviewing-design-docs.md
+      - skills/reviewing-impl-plans.md
       - skills/devils-advocate.md
-      - skills/worktree-merge.md
-      - skills/merge-conflict-resolution.md
+      - skills/merging-worktrees.md
+      - skills/resolving-merge-conflicts.md
     - Autonomous Development:
       - skills/autonomous-roundtable.md
-      - skills/requirements-gathering.md
+      - skills/gathering-requirements.md
       - skills/dehallucination.md
       - skills/reflexion.md
-      - skills/domain-analysis.md
-      - skills/context-assembly.md
-      - skills/workflow-design.md
+      - skills/analyzing-domains.md
+      - skills/assembling-context.md
+      - skills/designing-workflows.md
     - Specialized Skills:
       - skills/async-await-patterns.md
       - skills/using-lsp-tools.md
@@ -107,7 +107,7 @@ nav:
       - skills/using-skills.md
       - skills/writing-skills.md
       - skills/instruction-engineering.md
-      - skills/instruction-optimizer.md
+      - skills/optimizing-instructions.md
       - skills/emotional-stakes.md
       - skills/dispatching-parallel-agents.md
       - skills/smart-reading.md

@@ -1,11 +1,11 @@
 ---
-description: Verify all tracks complete, invoke worktree-merge, run QA gates, report final integration status.
+description: Verify all tracks complete, invoke merging-worktrees, run QA gates, report final integration status.
 disable-model-invocation: true
 ---
 
 # Merge Work Packets
 
-Integrate all completed work packets using worktree-merge and verify through comprehensive QA gates.
+Integrate all completed work packets using merging-worktrees and verify through comprehensive QA gates.
 
 ## Invariant Principles
 
@@ -55,7 +55,7 @@ manifest_file="$packet_dir/manifest.json"
 - `format_version`: "1.0.0"
 - `feature`: Feature being integrated
 - `tracks`: Array of track metadata
-- `merge_strategy`: "worktree-merge" or "manual"
+- `merge_strategy`: "merging-worktrees" or "manual"
 - `post_merge_qa`: Array of QA gate commands
 - `project_root`: Path to main repository
 
@@ -159,7 +159,7 @@ Total tracks: 3
 **If --continue-merge flag NOT set:**
 
 ```
-Invoke the worktree-merge skill using the Skill tool with:
+Invoke the merging-worktrees skill using the Skill tool with:
 
 Context:
 - Feature: {manifest.feature}
@@ -175,7 +175,7 @@ Instructions:
 4. Create integration branch with merged code
 5. Report conflicts requiring manual resolution
 
-The worktree-merge skill will:
+The merging-worktrees skill will:
 - Create merge branch in project_root
 - Integrate all track branches
 - Detect and resolve conflicts
@@ -193,7 +193,7 @@ The worktree-merge skill will:
 
 ### Step 5: Handle Merge Conflicts
 
-**If worktree-merge reports conflicts:**
+**If merging-worktrees reports conflicts:**
 
 ```
 ⚠ Merge conflicts detected
@@ -421,7 +421,7 @@ After resolving:
 - Abort merge
 
 **Merge conflicts:**
-- Detected by worktree-merge skill
+- Detected by merging-worktrees skill
 - Display conflict details with file paths and track origins
 - Offer Manual resolution or Abort
 - If Manual: pause and provide resolution instructions
@@ -438,7 +438,7 @@ After resolving:
   - custom: check command output
 
 **Smart merge skill errors:**
-- If worktree-merge skill fails to invoke
+- If merging-worktrees skill fails to invoke
 - If merge strategy unknown
 - If worktree paths invalid
 - Report error and suggest manual merge
@@ -448,7 +448,7 @@ After resolving:
 | Failure Point | Detection | Recovery |
 |---------------|-----------|----------|
 | Incomplete tracks | Missing/invalid completion markers | Complete tracks via `/execute-work-packet`, re-run |
-| Merge conflicts | worktree-merge reports | Manual resolve, `--continue-merge` |
+| Merge conflicts | merging-worktrees reports | Manual resolve, `--continue-merge` |
 | QA gate failure | Non-zero exit code | Fix issue, re-run from Phase 4 |
 | Skill invocation error | Tool failure | Manual merge fallback |
 

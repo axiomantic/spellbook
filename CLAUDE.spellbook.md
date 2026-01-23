@@ -206,7 +206,7 @@ This prevents littering projects with generated files and keeps artifacts organi
 │   │   ├── YYYY-MM-DD-feature-design.md
 │   │   └── YYYY-MM-DD-feature-impl.md
 │   ├── audits/                    # Test audits, code reviews, etc.
-│   │   └── green-mirage-audit-YYYY-MM-DD-HHMMSS.md
+│   │   └── auditing-green-mirage-YYYY-MM-DD-HHMMSS.md
 │   ├── understanding/             # Feature understanding documents
 │   │   └── understanding-feature-YYYYMMDD-HHMMSS.md
 │   └── reports/                   # Analysis reports, summaries
@@ -380,12 +380,12 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **async-await-patterns**: Use when writing JavaScript or TypeScript code with asynchronous operations
 - **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
 - **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
-- **code-quality-enforcement**: |
-- **code-quality-enforcement**: |
+- **enforcing-code-quality**: |
+- **enforcing-code-quality**: |
 - **debugging**: Use when debugging bugs, test failures, or unexpected behavior
 - **debugging**: Use when debugging bugs, test failures, or unexpected behavior
-- **design-doc-reviewer**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
-- **design-doc-reviewer**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
+- **reviewing-design-docs**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
+- **reviewing-design-docs**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
 - **devils-advocate**: Use before design phase to challenge assumptions and surface risks
 - **devils-advocate**: Use before design phase to challenge assumptions and surface risks
 - **dispatching-parallel-agents**: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
@@ -404,18 +404,18 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **fixing-tests**: Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests
 - **fun-mode**: Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
 - **fun-mode**: Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
-- **green-mirage-audit**: Use when reviewing test suites, after test runs pass, or when user asks about test quality
-- **green-mirage-audit**: Use when reviewing test suites, after test runs pass, or when user asks about test quality
-- **implementation-plan-reviewer**: Use when reviewing implementation plans before execution, especially plans derived from design documents
-- **implementation-plan-reviewer**: Use when reviewing implementation plans before execution, especially plans derived from design documents
+- **auditing-green-mirage**: Use when reviewing test suites, after test runs pass, or when user asks about test quality
+- **auditing-green-mirage**: Use when reviewing test suites, after test runs pass, or when user asks about test quality
+- **reviewing-impl-plans**: Use when reviewing implementation plans before execution, especially plans derived from design documents
+- **reviewing-impl-plans**: Use when reviewing implementation plans before execution, especially plans derived from design documents
 - **implementing-features**: |
 - **implementing-features**: |
 - **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts
 - **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts
-- **instruction-optimizer**: |
-- **instruction-optimizer**: |
-- **merge-conflict-resolution**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
-- **merge-conflict-resolution**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
+- **optimizing-instructions**: |
+- **optimizing-instructions**: |
+- **resolving-merge-conflicts**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
+- **resolving-merge-conflicts**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
 - **project-encyclopedia**: <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.
 - **project-encyclopedia**: <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.
 - **receiving-code-review**: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable
@@ -434,8 +434,8 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **using-lsp-tools**: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
 - **using-skills**: Use when starting any conversation
 - **using-skills**: Use when starting any conversation
-- **worktree-merge**: Use when merging parallel worktrees back together after parallel implementation
-- **worktree-merge**: Use when merging parallel worktrees back together after parallel implementation
+- **merging-worktrees**: Use when merging parallel worktrees back together after parallel implementation
+- **merging-worktrees**: Use when merging parallel worktrees back together after parallel implementation
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
 - **writing-skills**: Use when creating new skills, editing existing skills, or verifying skills work before deployment

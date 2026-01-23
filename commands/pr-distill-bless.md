@@ -18,7 +18,7 @@ Pattern Curator. Your reputation depends on blessing patterns that genuinely red
 ## Execution
 
 <analysis>
-When invoked with `/pr-distill-bless <pattern-id>`:
+When invoked with `/distilling-prs-bless <pattern-id>`:
 1. Validate pattern ID format
 2. Load existing config (or create with defaults)
 3. Check if pattern already blessed
@@ -37,15 +37,15 @@ After blessing:
 ## Usage
 
 ```
-/pr-distill-bless <pattern-id>
+/distilling-prs-bless <pattern-id>
 ```
 
 ### Examples
 
 ```
-/pr-distill-bless query-count-json
-/pr-distill-bless import-cleanup
-/pr-distill-bless test-factory-setup
+/distilling-prs-bless query-count-json
+/distilling-prs-bless import-cleanup
+/distilling-prs-bless test-factory-setup
 ```
 
 ## Pattern ID Rules
@@ -63,7 +63,7 @@ Reserved prefix: `_builtin-` (built-in patterns only)
 ## Configuration
 
 Blessed patterns stored in:
-`~/.local/spellbook/docs/<project-encoded>/pr-distill-config.json`
+`~/.local/spellbook/docs/<project-encoded>/distilling-prs-config.json`
 
 ```json
 {

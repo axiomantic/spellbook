@@ -61,8 +61,8 @@ Abort if any required field missing.
       "depends_on": []
     }
   ],
-  "merge_strategy": "worktree-merge",
-  "post_merge_qa": ["pytest", "green-mirage-audit"]
+  "merge_strategy": "merging-worktrees",
+  "post_merge_qa": ["pytest", "auditing-green-mirage"]
 }
 ```
 
@@ -239,7 +239,7 @@ Run: /merge-work-packets {packet_dir}
 
 This will:
 1. Verify all completion markers
-2. Invoke worktree-merge skill
+2. Invoke merging-worktrees skill
 3. Run QA gates: {manifest.post_merge_qa}
 4. Report final integration status
 ```

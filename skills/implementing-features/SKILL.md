@@ -122,13 +122,13 @@ Phase 1.5: Informed Discovery
     ↓
 Phase 2: Design (skip if escape hatch)
   ├─ 2.1: Subagent invokes brainstorming (SYNTHESIS MODE)
-  ├─ 2.2: Subagent invokes design-doc-reviewer
+  ├─ 2.2: Subagent invokes reviewing-design-docs
   ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous)
   └─ 2.4: Subagent invokes executing-plans to fix
     ↓
 Phase 3: Implementation Planning (skip if impl plan escape hatch)
   ├─ 3.1: Subagent invokes writing-plans
-  ├─ 3.2: Subagent invokes implementation-plan-reviewer
+  ├─ 3.2: Subagent invokes reviewing-impl-plans
   ├─ 3.3: GATE: User approval per mode
   ├─ 3.4: Subagent invokes executing-plans to fix
   ├─ 3.4.5: Execution mode analysis (tokens/tasks/tracks → swarmed|delegated|direct)
@@ -1318,13 +1318,13 @@ Task (or subagent simulation):
 
 ### 2.2 Review Design Document
 
-<RULE>Subagent MUST invoke design-doc-reviewer.</RULE>
+<RULE>Subagent MUST invoke reviewing-design-docs.</RULE>
 
 ```
 Task (or subagent simulation):
   description: "Review design document"
   prompt: |
-    First, invoke the design-doc-reviewer skill using the Skill tool.
+    First, invoke the reviewing-design-docs skill using the Skill tool.
     Then follow its complete workflow.
 
     ## Context for the Skill
@@ -1440,13 +1440,13 @@ Task (or subagent simulation):
 
 ### 3.2 Review Implementation Plan
 
-<RULE>Subagent MUST invoke implementation-plan-reviewer.</RULE>
+<RULE>Subagent MUST invoke reviewing-impl-plans.</RULE>
 
 ```
 Task (or subagent simulation):
   description: "Review implementation plan"
   prompt: |
-    First, invoke the implementation-plan-reviewer skill using the Skill tool.
+    First, invoke the reviewing-impl-plans skill using the Skill tool.
     Then follow its complete workflow.
 
     ## Context for the Skill
@@ -1831,13 +1831,13 @@ Sequential execution via executing-plans skill.
 
 ### 4.2.5 Smart Merge (if per_parallel_track)
 
-<RULE>Subagent MUST invoke worktree-merge skill.</RULE>
+<RULE>Subagent MUST invoke merging-worktrees skill.</RULE>
 
 ```
 Task:
   description: "Smart merge parallel worktrees"
   prompt: |
-    First, invoke the worktree-merge skill using the Skill tool.
+    First, invoke the merging-worktrees skill using the Skill tool.
     Merge all parallel worktrees.
 
     ## Context for the Skill
@@ -2330,19 +2330,19 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 
 | Phase | Skill | Purpose |
 |-------|-------|---------|
-| 1.2 | domain-analysis | **If unfamiliar domain**: Extract ubiquitous language, identify aggregates |
+| 1.2 | analyzing-domains | **If unfamiliar domain**: Extract ubiquitous language, identify aggregates |
 | 1.6 | devils-advocate | Challenge Understanding Document |
 | 2.1 | brainstorming | Create design doc |
-| 2.1 | workflow-design | **If feature has states/flows**: Design state machine |
-| 2.2 | design-doc-reviewer | Review design doc |
+| 2.1 | designing-workflows | **If feature has states/flows**: Design state machine |
+| 2.2 | reviewing-design-docs | Review design doc |
 | 2.4, 3.4 | executing-plans | Fix findings |
 | 3.1 | writing-plans | Create impl plan |
-| 3.2 | implementation-plan-reviewer | Review impl plan |
-| 3.5 | context-assembly | **If swarmed**: Prepare context packages for work packets |
+| 3.2 | reviewing-impl-plans | Review impl plan |
+| 3.5 | assembling-context | **If swarmed**: Prepare context packages for work packets |
 | 4.1 | using-git-worktrees | Create workspace(s) |
 | 4.2 | dispatching-parallel-agents | Parallel execution |
-| 4.2 | context-assembly | Prepare context for parallel subagents |
-| 4.2.5 | worktree-merge | Merge parallel worktrees |
+| 4.2 | assembling-context | Prepare context for parallel subagents |
+| 4.2.5 | merging-worktrees | Merge parallel worktrees |
 | 4.3 | test-driven-development | TDD per task |
 | 4.5 | requesting-code-review | Review per task |
 | 4.5.1, 4.6.4, 4.6.5 | fact-checking | Claim validation |
@@ -2423,7 +2423,7 @@ completion from multiple perspectives.
 - Creating worktrees WITHOUT committing setup work
 - Parallel subagents modifying shared code
 - Not honoring interface contracts
-- Skipping worktree-merge
+- Skipping merging-worktrees
 - Not running tests after merge
 - Leaving worktrees after merge
 
@@ -2473,13 +2473,13 @@ completion from multiple perspectives.
 
 ### Phase 2 (if not skipped)
 - [ ] Subagent invoked brainstorming in SYNTHESIS MODE
-- [ ] Subagent invoked design-doc-reviewer
+- [ ] Subagent invoked reviewing-design-docs
 - [ ] Handled approval gate per autonomous_mode
 - [ ] Subagent invoked executing-plans to fix
 
 ### Phase 3 (if not skipped)
 - [ ] Subagent invoked writing-plans
-- [ ] Subagent invoked implementation-plan-reviewer
+- [ ] Subagent invoked reviewing-impl-plans
 - [ ] Handled approval gate per autonomous_mode
 - [ ] Subagent invoked executing-plans to fix
 - [ ] Analyzed execution mode (swarmed/delegated/direct)
@@ -2508,7 +2508,7 @@ completion from multiple perspectives.
 ### Phase 4 (if per_parallel_track)
 - [ ] Setup/skeleton completed and committed BEFORE worktrees
 - [ ] Worktree per parallel group
-- [ ] Subagent invoked worktree-merge
+- [ ] Subagent invoked merging-worktrees
 - [ ] Tests after merge
 - [ ] Interface contracts verified
 - [ ] Worktrees cleaned up

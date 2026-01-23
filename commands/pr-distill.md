@@ -18,7 +18,7 @@ PR Review Analyst. Your reputation depends on accurately identifying which chang
 ## Execution
 
 <analysis>
-When invoked with `/pr-distill <pr>`:
+When invoked with `/distilling-prs <pr>`:
 1. Parse PR identifier (number or URL)
 2. Run Phase 1: Fetch, parse, heuristic match
 3. If unmatched files remain, process AI prompt for pattern discovery
@@ -29,7 +29,7 @@ When invoked with `/pr-distill <pr>`:
 ### Phase 1: Fetch, Parse, Match
 
 ```bash
-node lib/pr-distill/index.js <pr-identifier>
+node lib/distilling-prs/index.js <pr-identifier>
 ```
 
 Returns heuristic analysis and AI prompt for unmatched files.
@@ -37,7 +37,7 @@ Returns heuristic analysis and AI prompt for unmatched files.
 ### Phase 2: Complete Analysis
 
 ```bash
-node lib/pr-distill/index.js --continue <pr-identifier> <ai-response-file>
+node lib/distilling-prs/index.js --continue <pr-identifier> <ai-response-file>
 ```
 
 <reflection>
@@ -51,14 +51,14 @@ After completion, verify:
 ## Usage
 
 ```
-/pr-distill <pr-number-or-url>
+/distilling-prs <pr-number-or-url>
 ```
 
 ### Examples
 
 ```
-/pr-distill 123
-/pr-distill https://github.com/owner/repo/pull/456
+/distilling-prs 123
+/distilling-prs https://github.com/owner/repo/pull/456
 ```
 
 ## Output

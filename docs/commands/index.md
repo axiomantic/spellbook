@@ -15,7 +15,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/execute-work-packet](execute-work-packet.md) | Execute a single work packet - read packet, check dependencies, run tasks via TD... | spellbook |
 | [/execute-work-packets-seq](execute-work-packets-seq.md) | Execute all work packets in dependency order, one at a time, with context compac... | spellbook |
 | [/handoff](handoff.md) | Shift change: brief successor on context, workflow, pending work, and verificati... | spellbook |
-| [/merge-work-packets](merge-work-packets.md) | Verify all tracks complete, invoke worktree-merge, run QA gates, report final in... | spellbook |
+| [/merge-work-packets](merge-work-packets.md) | Verify all tracks complete, invoke merging-worktrees, run QA gates, report final... | spellbook |
 | [/mode](mode.md) | Switch session mode between fun, tarot, or off | spellbook |
 | [/move-project](move-project.md) | Move project: relocate directory and update Claude Code session references safel... | spellbook |
 | [/pr-distill](pr-distill.md) | Analyze a PR and generate a review distillation report that categorizes changes ... | spellbook |

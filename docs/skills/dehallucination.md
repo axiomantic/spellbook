@@ -367,7 +367,7 @@ Record in accumulated_knowledge:
 
 ### When to Invoke
 
-1. **After requirements-gathering**: Verify existence claims about codebase
+1. **After gathering-requirements**: Verify existence claims about codebase
 2. **After design (brainstorming)**: Verify technical capability claims
 3. **After planning (writing-plans)**: Verify implementation assumptions
 4. **Before IMPLEMENT stage**: Final verification pass
