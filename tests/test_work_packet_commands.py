@@ -55,7 +55,7 @@ def sample_manifest(tmp_path):
             }
         ],
         "shared_setup_commit": "abc123",
-        "merge_strategy": "worktree-merge",
+        "merge_strategy": "merging-worktrees",
         "post_merge_qa": ["pytest", "audit-green-mirage", "fact-checking"]
     }
 

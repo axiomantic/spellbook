@@ -101,26 +101,26 @@ Reusable workflows for structured development:
 [test-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/
 [debugging]: https://axiomantic.github.io/spellbook/latest/skills/debugging/
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
-[enforcing-code-quality]: https://axiomantic.github.io/spellbook/latest/skills/code-quality-enforcement/
-[auditing-green-mirage]: https://axiomantic.github.io/spellbook/latest/skills/green-mirage-audit/
+[enforcing-code-quality]: https://axiomantic.github.io/spellbook/latest/skills/enforcing-code-quality/
+[auditing-green-mirage]: https://axiomantic.github.io/spellbook/latest/skills/auditing-green-mirage/
 [fixing-tests]: https://axiomantic.github.io/spellbook/latest/skills/fixing-tests/
 [fact-checking]: https://axiomantic.github.io/spellbook/latest/skills/fact-checking/
 [finding-dead-code]: https://axiomantic.github.io/spellbook/latest/skills/finding-dead-code/
 [receiving-code-review]: https://axiomantic.github.io/spellbook/latest/skills/receiving-code-review/
 [requesting-code-review]: https://axiomantic.github.io/spellbook/latest/skills/requesting-code-review/
 [implementing-features]: https://axiomantic.github.io/spellbook/latest/skills/implementing-features/
-[reviewing-design-docs]: https://axiomantic.github.io/spellbook/latest/skills/design-doc-reviewer/
-[reviewing-impl-plans]: https://axiomantic.github.io/spellbook/latest/skills/implementation-plan-reviewer/
+[reviewing-design-docs]: https://axiomantic.github.io/spellbook/latest/skills/reviewing-design-docs/
+[reviewing-impl-plans]: https://axiomantic.github.io/spellbook/latest/skills/reviewing-impl-plans/
 [devils-advocate]: https://axiomantic.github.io/spellbook/latest/skills/devils-advocate/
-[merging-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/worktree-merge/
-[resolving-merge-conflicts]: https://axiomantic.github.io/spellbook/latest/skills/merge-conflict-resolution/
+[merging-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/merging-worktrees/
+[resolving-merge-conflicts]: https://axiomantic.github.io/spellbook/latest/skills/resolving-merge-conflicts/
 [async-await-patterns]: https://axiomantic.github.io/spellbook/latest/skills/async-await-patterns/
 [using-lsp-tools]: https://axiomantic.github.io/spellbook/latest/skills/using-lsp-tools/
 [nim-pr-guide]: https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
 [instruction-engineering]: https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/
-[optimizing-instructions]: https://axiomantic.github.io/spellbook/latest/skills/instruction-optimizer/
+[optimizing-instructions]: https://axiomantic.github.io/spellbook/latest/skills/optimizing-instructions/
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
 [project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
@@ -128,14 +128,14 @@ Reusable workflows for structured development:
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
-[distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/pr-distill/
+[distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [autonomous-roundtable]: https://axiomantic.github.io/spellbook/latest/skills/autonomous-roundtable/
-[gathering-requirements]: https://axiomantic.github.io/spellbook/latest/skills/requirements-gathering/
+[gathering-requirements]: https://axiomantic.github.io/spellbook/latest/skills/gathering-requirements/
 [dehallucination]: https://axiomantic.github.io/spellbook/latest/skills/dehallucination/
 [reflexion]: https://axiomantic.github.io/spellbook/latest/skills/reflexion/
-[analyzing-domains]: https://axiomantic.github.io/spellbook/latest/skills/domain-analysis/
-[assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/context-assembly/
-[designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/workflow-design/
+[analyzing-domains]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-domains/
+[assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
+[designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 
 ### Commands (19 total)
 
@@ -566,7 +566,7 @@ Discover tests that pass but don't actually verify behavior, then fix them.
 │ > /audit-green-mirage                                                       │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
-⏺ Skill(green-mirage-audit)
+⏺ Skill(auditing-green-mirage)
 
   Analyzing test suite: tests/**/*.test.ts
   Found 247 test cases across 34 files.
@@ -578,7 +578,7 @@ Discover tests that pass but don't actually verify behavior, then fix them.
   ...
 
   ✓ Audit complete. Report saved to:
-    ~/.local/spellbook/docs/Users-me-myproject/audits/green-mirage-audit-20260106-091522.md
+    ~/.local/spellbook/docs/Users-me-myproject/audits/auditing-green-mirage-20260106-091522.md
 
   Summary:
   ┌─────────────────────────────────────────────────────────────────────────┐
@@ -661,7 +661,7 @@ Split work across isolated branches, merge when complete.
 │ > Merge the worktrees back together                                         │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
-⏺ Skill(worktree-merge)
+⏺ Skill(merging-worktrees)
 
   Analyzing 3 worktrees for merge:
 

@@ -535,11 +535,11 @@ When implementing fixes, these can be invoked:
 |------|------|---------|
 | `writing-skills` | skill | **AUTHORITATIVE** guide for skill structure, CSO, and description writing |
 | `instruction-engineering` | skill | Restructuring poorly-organized instructions |
-| `instruction-optimizer` | skill | Compressing verbose instructions |
+| `optimizing-instructions` | skill | Compressing verbose instructions |
 | `writing-plans` | skill | Creating implementation plans |
 | `fact-checking` | skill | Deep-diving on specific claims |
 | `finding-dead-code` | skill | Identifying unused code in MCP tools |
-| `green-mirage-audit` | skill | Auditing test quality |
+| `auditing-green-mirage` | skill | Auditing test quality |
 | `/simplify` | command | Simplifying overcomplicated workflows |
 
 ## Naming Convention Reference

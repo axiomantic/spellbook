@@ -5,9 +5,9 @@ feedback history, and workflow stage to ensure appropriate skills are
 invoked at each step of the autonomous development process.
 
 Selection Priority Order:
-1. Handle errors/failures (test errors -> fixing-tests, merge errors -> merge-conflict-resolution)
+1. Handle errors/failures (test errors -> fixing-tests, merge errors -> resolving-merge-conflicts)
 2. Handle feedback type (code_quality -> receiving-code-review, factual_accuracy -> fact-checking)
-3. Stage-based default (DISCOVER -> requirements-gathering, DESIGN -> brainstorming, etc.)
+3. Stage-based default (DISCOVER -> gathering-requirements, DESIGN -> brainstorming, etc.)
 """
 
 from typing import Optional
@@ -17,7 +17,7 @@ from spellbook_mcp.forged.models import IterationState, Feedback
 
 # Stage to default skill mapping
 STAGE_DEFAULT_SKILLS = {
-    "DISCOVER": "requirements-gathering",
+    "DISCOVER": "gathering-requirements",
     "DESIGN": "brainstorming",
     "PLAN": "writing-plans",
     "IMPLEMENT": "implementing-features",
@@ -28,7 +28,7 @@ STAGE_DEFAULT_SKILLS = {
 # Feedback classification to skill mapping
 FEEDBACK_SKILL_MAPPING = {
     "test_failure": "fixing-tests",
-    "merge_conflict": "merge-conflict-resolution",
+    "merge_conflict": "resolving-merge-conflicts",
     "code_quality": "receiving-code-review",
     "factual_accuracy": "fact-checking",
 }

@@ -39,7 +39,7 @@ All items conform to their respective schemas:
 | async-await-patterns | 953 | 137 | PASS | |
 | brainstorming | 1,007 | 118 | PASS | |
 | debugging | 1,135 | 158 | PASS | |
-| design-doc-reviewer | 1,466 | 203 | PASS | |
+| reviewing-design-docs | 1,466 | 203 | PASS | |
 | devils-advocate | 1,250 | 153 | PASS | |
 | dispatching-parallel-agents | 859 | 124 | PASS | |
 | emotional-stakes | 1,090 | 123 | PASS | |
@@ -49,12 +49,12 @@ All items conform to their respective schemas:
 | finishing-a-development-branch | 1,132 | 161 | PASS | |
 | fixing-tests | 1,499 | 211 | PASS | |
 | fun-mode | 1,145 | 131 | PASS | |
-| green-mirage-audit | 1,357 | 164 | PASS | |
-| implementation-plan-reviewer | 1,214 | 150 | PASS | |
+| auditing-green-mirage | 1,357 | 164 | PASS | |
+| reviewing-impl-plans | 1,214 | 150 | PASS | |
 | implementing-features | 2,089 | 214 | PASS | Over budget (orchestrator) |
 | instruction-engineering | 1,507 | 170 | PASS | Over budget |
-| instruction-optimizer | 921 | 138 | PASS | |
-| merge-conflict-resolution | 1,298 | 155 | PASS | |
+| optimizing-instructions | 921 | 138 | PASS | |
+| resolving-merge-conflicts | 1,298 | 155 | PASS | |
 | receiving-code-review | 1,065 | 141 | PASS | |
 | requesting-code-review | 738 | 107 | PASS | |
 | smart-reading | 1,048 | 138 | PASS | |
@@ -62,7 +62,7 @@ All items conform to their respective schemas:
 | using-git-worktrees | 1,095 | 147 | PASS | |
 | using-lsp-tools | 1,094 | 124 | PASS | |
 | using-skills | 919 | 119 | PASS | |
-| worktree-merge | 1,070 | 150 | PASS | |
+| merging-worktrees | 1,070 | 150 | PASS | |
 | writing-plans | 1,073 | 144 | PASS | |
 | writing-skills | 1,269 | 159 | PASS | |
 
@@ -98,26 +98,26 @@ All items conform to their respective schemas:
 implementing-features (orchestrator)
 ├── devils-advocate
 ├── brainstorming
-├── design-doc-reviewer
+├── reviewing-design-docs
 ├── writing-plans
-├── implementation-plan-reviewer
+├── reviewing-impl-plans
 ├── executing-plans
 │   └── test-driven-development
 ├── using-git-worktrees
 ├── dispatching-parallel-agents
 ├── requesting-code-review
 ├── fact-checking
-├── worktree-merge
-├── green-mirage-audit
+├── merging-worktrees
+├── auditing-green-mirage
 ├── debugging (on failure)
 └── finishing-a-development-branch
 
 fixing-tests
 ├── test-driven-development
-└── green-mirage-audit
+└── auditing-green-mirage
 
-worktree-merge
-└── merge-conflict-resolution
+merging-worktrees
+└── resolving-merge-conflicts
 ```
 
 ## Token Budget Notes

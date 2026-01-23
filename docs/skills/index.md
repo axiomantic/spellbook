@@ -38,7 +38,7 @@ Skills for maintaining and improving code quality:
 
 | Skill | When to Use |
 |-------|-------------|
-| [green-mirage-audit](green-mirage-audit.md) | Auditing test suite quality |
+| [auditing-green-mirage](auditing-green-mirage.md) | Auditing test suite quality |
 | [fixing-tests](fixing-tests.md) | Fixing failing or weak tests |
 | [fact-checking](fact-checking.md) | Verifying claims and assumptions |
 | [finding-dead-code](finding-dead-code.md) | Identifying unused code |
@@ -52,11 +52,11 @@ Skills for building and reviewing features:
 | Skill | When to Use |
 |-------|-------------|
 | [implementing-features](implementing-features.md) | End-to-end feature implementation |
-| [design-doc-reviewer](design-doc-reviewer.md) | Reviewing design documents |
-| [implementation-plan-reviewer](implementation-plan-reviewer.md) | Reviewing implementation plans |
+| [reviewing-design-docs](reviewing-design-docs.md) | Reviewing design documents |
+| [reviewing-impl-plans](reviewing-impl-plans.md) | Reviewing implementation plans |
 | [devils-advocate](devils-advocate.md) | Challenging assumptions and decisions |
-| [worktree-merge](worktree-merge.md) | Merging parallel worktrees |
-| [merge-conflict-resolution](merge-conflict-resolution.md) | Resolving git merge conflicts with synthesis |
+| [merging-worktrees](merging-worktrees.md) | Merging parallel worktrees |
+| [resolving-merge-conflicts](resolving-merge-conflicts.md) | Resolving git merge conflicts with synthesis |
 
 ### Specialized Skills
 

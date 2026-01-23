@@ -158,7 +158,7 @@ Violation = fix before `git merge --continue`
 After all worktrees merged:
 
 1. **Full test suite** - All tests must pass
-2. **Green-mirage-audit** - Invoke on all modified test files
+2. **auditing-green-mirage** - Invoke on all modified test files
 3. **Code review** - Invoke `code-reviewer` against implementation plan, verify all contracts honored
 4. **Interface contract check** - For each contract:
    - Both sides of interface exist

@@ -194,7 +194,7 @@ class TestValidatorCatalog:
         validator = VALIDATOR_CATALOG["test_quality"]
         assert validator.status == "EXISTS"
         assert validator.archetype == "code-quality"
-        assert validator.skill == "green-mirage-audit"
+        assert validator.skill == "auditing-green-mirage"
 
     def test_catalog_contains_fact_check(self):
         """VALIDATOR_CATALOG must contain fact_check validator."""

@@ -627,7 +627,7 @@ class TestSkillSelection:
     """Tests for skill selection algorithm."""
 
     def test_select_skill_for_discover_stage(self):
-        """DISCOVER stage should default to requirements-gathering skill."""
+        """DISCOVER stage should default to gathering-requirements skill."""
         from spellbook_mcp.forged.skill_selection import select_skill
         from spellbook_mcp.forged.models import IterationState
 
@@ -638,7 +638,7 @@ class TestSkillSelection:
         )
 
         skill = select_skill(context)
-        assert skill == "requirements-gathering"
+        assert skill == "gathering-requirements"
 
     def test_select_skill_for_design_stage(self):
         """DESIGN stage should default to brainstorming skill."""
@@ -708,7 +708,7 @@ class TestSkillSelection:
         assert skill == "fixing-tests"
 
     def test_select_skill_with_merge_error_feedback(self):
-        """Merge conflicts should trigger merge-conflict-resolution skill."""
+        """Merge conflicts should trigger resolving-merge-conflicts skill."""
         from spellbook_mcp.forged.skill_selection import select_skill
         from spellbook_mcp.forged.models import IterationState, Feedback
 
@@ -730,7 +730,7 @@ class TestSkillSelection:
         )
 
         skill = select_skill(context)
-        assert skill == "merge-conflict-resolution"
+        assert skill == "resolving-merge-conflicts"
 
     def test_select_skill_with_code_quality_feedback(self):
         """Code quality feedback should trigger receiving-code-review skill."""

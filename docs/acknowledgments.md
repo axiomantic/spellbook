@@ -53,18 +53,18 @@ The following skills were developed specifically for Spellbook:
 | Skill | Description |
 |-------|-------------|
 | [async-await-patterns](skills/async-await-patterns.md) | JavaScript/TypeScript async/await best practices |
-| [design-doc-reviewer](skills/design-doc-reviewer.md) | Design document completeness review |
+| [reviewing-design-docs](skills/reviewing-design-docs.md) | Design document completeness review |
 | [devils-advocate](skills/devils-advocate.md) | Adversarial review of assumptions |
 | [debugging](skills/debugging.md) | Unified debugging entry point (routes to debugging commands) |
 | [fact-checking](skills/fact-checking.md) | Systematic claim verification |
 | [finding-dead-code](skills/finding-dead-code.md) | Unused code detection |
 | [fixing-tests](skills/fixing-tests.md) | Test remediation and quality improvement |
-| [green-mirage-audit](skills/green-mirage-audit.md) | Test suite quality audit |
+| [auditing-green-mirage](skills/auditing-green-mirage.md) | Test suite quality audit |
 | [implementing-features](skills/implementing-features.md) | End-to-end feature implementation |
-| [implementation-plan-reviewer](skills/implementation-plan-reviewer.md) | Implementation plan review |
+| [reviewing-impl-plans](skills/reviewing-impl-plans.md) | Implementation plan review |
 | [instruction-engineering](skills/instruction-engineering.md) | LLM prompt optimization |
 | [nim-pr-guide](skills/nim-pr-guide.md) | Nim language PR contribution guide |
-| [worktree-merge](skills/worktree-merge.md) | Intelligent worktree merging |
+| [merging-worktrees](skills/merging-worktrees.md) | Intelligent worktree merging |
 | [subagent-prompting](skills/subagent-prompting.md) | Effective subagent instruction patterns |
 
 ### Original Commands (Spellbook)

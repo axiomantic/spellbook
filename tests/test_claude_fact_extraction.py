@@ -302,17 +302,17 @@ class TestAllSkillsMinimumCompliance:
     """
 
     # Skills with known token budget issues - xfail until condensed
-    # TODO: Run /instruction-optimizer on each to bring under 1500 tokens
+    # TODO: Run /optimizing-instructions on each to bring under 1500 tokens
     KNOWN_OVER_BUDGET_SKILLS = {
         "debugging",
-        "design-doc-reviewer",
+        "reviewing-design-docs",
         "dispatching-parallel-agents",
         "executing-plans",
         "fact-checking",
         "finding-dead-code",
         "fixing-tests",
-        "green-mirage-audit",
-        "implementation-plan-reviewer",
+        "auditing-green-mirage",
+        "reviewing-impl-plans",
         "implementing-features",
         "instruction-engineering",
         "project-encyclopedia",
@@ -320,7 +320,7 @@ class TestAllSkillsMinimumCompliance:
         "smart-reading",
         "test-driven-development",
         "using-git-worktrees",
-        "worktree-merge",
+        "merging-worktrees",
         "writing-skills",
     }
 
