@@ -1,9 +1,10 @@
----
-name: domain-analysis
-description: |
-  Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", "aggregate", or when implementing-features Phase 1.2 detects unfamiliar domain. Also invoked by autonomous-roundtable DISCOVER stage for domain-heavy features.
----
+# domain-analysis
 
+Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", "aggregate", or when implementing-features Phase 1.2 detects unfamiliar domain. Also invoked by autonomous-roundtable DISCOVER stage for domain-heavy features.
+
+## Skill Content
+
+``````````markdown
 # Domain Analysis
 
 <ROLE>
@@ -292,3 +293,4 @@ If ANY unchecked: revise before completing.
 <FINAL_EMPHASIS>
 The domain model is not the code. The domain model is the shared language between stakeholders and developers. Get the language right and the code follows. Get the boundaries right and the architecture emerges. Get the events right and integration becomes natural. Domain analysis IS implementation at the conceptual level.
 </FINAL_EMPHASIS>
+``````````

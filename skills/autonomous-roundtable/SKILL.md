@@ -187,13 +187,21 @@ Call forge_project_init with:
 
 ## Stage Definitions
 
-| Stage | Purpose | Primary Skill | Artifact |
-|-------|---------|---------------|----------|
-| DISCOVER | Understand requirements | requirements-gathering | Requirements document |
-| DESIGN | Architectural decisions | brainstorming | Design document |
-| PLAN | Implementation tasks | writing-plans | Implementation plan |
-| IMPLEMENT | Build and test | implementing-features | Code + tests |
-| COMPLETE | Validation and cleanup | (none - final roundtable) | Completion report |
+| Stage | Purpose | Primary Skill | Supporting Skills | Artifact |
+|-------|---------|---------------|-------------------|----------|
+| DISCOVER | Understand requirements | requirements-gathering | domain-analysis | Requirements document |
+| DESIGN | Architectural decisions | brainstorming | workflow-design | Design document |
+| PLAN | Implementation tasks | writing-plans | context-assembly | Implementation plan |
+| IMPLEMENT | Build and test | implementing-features | context-assembly | Code + tests |
+| COMPLETE | Validation and cleanup | (none - final roundtable) | - | Completion report |
+
+### Supporting Skill Invocation
+
+| Skill | When to Invoke | Stage |
+|-------|----------------|-------|
+| domain-analysis | Feature involves unfamiliar domain, complex business logic, or unclear terminology | DISCOVER |
+| workflow-design | Feature has explicit states, transitions, approval flows, or pipelines | DESIGN |
+| context-assembly | Preparing work packets (swarmed) or subagent prompts | PLAN, IMPLEMENT |
 
 **Stage Flow:**
 ```

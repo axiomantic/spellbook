@@ -2330,14 +2330,18 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 
 | Phase | Skill | Purpose |
 |-------|-------|---------|
+| 1.2 | domain-analysis | **If unfamiliar domain**: Extract ubiquitous language, identify aggregates |
 | 1.6 | devils-advocate | Challenge Understanding Document |
 | 2.1 | brainstorming | Create design doc |
+| 2.1 | workflow-design | **If feature has states/flows**: Design state machine |
 | 2.2 | design-doc-reviewer | Review design doc |
 | 2.4, 3.4 | executing-plans | Fix findings |
 | 3.1 | writing-plans | Create impl plan |
 | 3.2 | implementation-plan-reviewer | Review impl plan |
+| 3.5 | context-assembly | **If swarmed**: Prepare context packages for work packets |
 | 4.1 | using-git-worktrees | Create workspace(s) |
 | 4.2 | dispatching-parallel-agents | Parallel execution |
+| 4.2 | context-assembly | Prepare context for parallel subagents |
 | 4.2.5 | worktree-merge | Merge parallel worktrees |
 | 4.3 | test-driven-development | TDD per task |
 | 4.5 | requesting-code-review | Review per task |

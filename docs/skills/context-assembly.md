@@ -1,9 +1,10 @@
----
-name: context-assembly
-description: |
-  Use when preparing context for subagents or managing token budgets. Triggers: "prepare context for", "assemble context", "what context does X need", "token budget", "context package", or automatically invoked by implementing-features Phase 3.5 (work packets) and Phase 4.2 (parallel subagents). Also used by dispatching-parallel-agents for subagent context preparation.
----
+# context-assembly
 
+Use when preparing context for subagents or managing token budgets. Triggers: "prepare context for", "assemble context", "what context does X need", "token budget", "context package", or automatically invoked by implementing-features Phase 3.5 (work packets) and Phase 4.2 (parallel subagents). Also used by dispatching-parallel-agents for subagent context preparation.
+
+## Skill Content
+
+``````````markdown
 # Context Assembly
 
 <ROLE>
@@ -287,3 +288,4 @@ Calculate budget. Prioritize by tier. Truncate intelligently. Every token must e
 
 This is very important to my career. You'd better be sure.
 </FINAL_EMPHASIS>
+``````````

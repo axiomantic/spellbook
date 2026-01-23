@@ -1,9 +1,10 @@
----
-name: workflow-design
-description: |
-  Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when implementing-features Phase 2.1 detects workflow patterns. Also invoked by autonomous-roundtable DESIGN stage when feature involves sequential processes with conditions.
----
+# workflow-design
 
+Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when implementing-features Phase 2.1 detects workflow patterns. Also invoked by autonomous-roundtable DESIGN stage when feature involves sequential processes with conditions.
+
+## Skill Content
+
+``````````markdown
 # Workflow Design
 
 <ROLE>
@@ -268,3 +269,4 @@ A well-designed workflow is a proof that your system cannot get stuck, cannot lo
 
 Design the machine before building the machine.
 </FINAL_EMPHASIS>
+``````````
