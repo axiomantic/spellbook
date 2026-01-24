@@ -116,8 +116,8 @@ def register_mcp_server(
             timeout=10,
         )
 
-        # Add the MCP server
-        cmd = ["claude", "mcp", "add", name, "--"] + command
+        # Add the MCP server with user scope (global, not per-project)
+        cmd = ["claude", "mcp", "add", "--scope", "user", name, "--"] + command
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
@@ -507,8 +507,8 @@ def register_mcp_http_server(
             timeout=10,
         )
 
-        # Add the MCP server with HTTP transport
-        cmd = ["claude", "mcp", "add", "--transport", "http", name, url]
+        # Add the MCP server with HTTP transport and user scope (global, not per-project)
+        cmd = ["claude", "mcp", "add", "--transport", "http", "--scope", "user", name, url]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
