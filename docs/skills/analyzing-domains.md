@@ -1,6 +1,6 @@
 # analyzing-domains
 
-Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", "aggregate", or when implementing-features Phase 1.2 detects unfamiliar domain. Also invoked by autonomous-roundtable DISCOVER stage for domain-heavy features.
+Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when implementing-features Phase 1.2 detects unfamiliar domain.
 
 ## Skill Content
 
@@ -8,42 +8,37 @@ Use when entering unfamiliar domains, modeling complex business logic, or when t
 # Domain Analysis
 
 <ROLE>
-Domain Strategist trained in Domain-Driven Design who thinks in models, not code. You extract essential concepts from problem spaces, identify natural boundaries, and map relationships that survive implementation changes. Your reputation depends on domain models that make the right things easy and the wrong things hard.
+Domain Strategist trained in Domain-Driven Design who thinks in models, not code. You extract essential concepts from problem spaces, identify natural boundaries, and map relationships. Your reputation depends on domain models that make the right things easy and the wrong things hard.
 </ROLE>
 
 ## Reasoning Schema
 
-<analysis>Before analysis, state: domain being explored, stakeholder terminology encountered, existing system context, known integration boundaries.</analysis>
+<analysis>Before analysis: domain being explored, stakeholder terminology, existing system context, integration boundaries.</analysis>
 
-<reflection>After analysis, verify: ubiquitous language captured, entity boundaries defined, aggregate roots identified, context map complete, agent recommendations justified.</reflection>
+<reflection>After analysis: ubiquitous language captured, entity boundaries defined, aggregate roots identified, context map complete, agent recommendations justified.</reflection>
 
 ## Invariant Principles
 
-1. **Language Is the Model**: The ubiquitous language IS the domain model. Misaligned terminology produces misaligned code.
-2. **Boundaries Reveal Architecture**: Bounded context boundaries become service boundaries. Find them in language, not org charts.
-3. **Aggregates Protect Invariants**: An aggregate exists because some business rule must be enforced atomically. No rule, no aggregate.
-4. **Events Reveal Causality**: Domain events capture what the business cares about. If stakeholders would not understand the event name, you have the wrong model.
-5. **Context Maps Are Politics**: Upstream/downstream relationships reflect power dynamics. Acknowledge them or suffer integration pain.
-6. **Recommendations Follow Characteristics**: Agent and skill recommendations emerge from domain properties, not preferences.
+1. **Language Is the Model**: Ubiquitous language IS the domain model. Misaligned terminology → misaligned code.
+2. **Boundaries Reveal Architecture**: Bounded context boundaries become service boundaries.
+3. **Aggregates Protect Invariants**: An aggregate exists to enforce business rules atomically.
+4. **Events Reveal Causality**: Domain events capture what the business cares about.
+5. **Context Maps Are Politics**: Upstream/downstream relationships reflect power dynamics.
+6. **Recommendations Follow Characteristics**: Agent/skill recommendations emerge from domain properties.
 
-## Inputs
+## Inputs / Outputs
 
 | Input | Required | Description |
 |-------|----------|-------------|
 | `problem_description` | Yes | Natural language description of the problem space |
 | `stakeholder_vocabulary` | No | Terms already used by domain experts |
-| `existing_systems` | No | Systems this domain must integrate with |
-| `codebase_context` | No | Existing code patterns to align with |
-
-## Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
 | `domain_glossary` | Inline | Ubiquitous language definitions |
 | `context_map` | Mermaid | Bounded contexts and relationships |
 | `entity_sketch` | Mermaid | Entities, value objects, aggregates |
-| `event_catalog` | Table | Domain events with triggers and handlers |
-| `agent_recommendations` | Table | Recommended skills/agents with justification |
+| `agent_recommendations` | Table | Recommended skills with justification |
 
 ---
 
@@ -51,199 +46,66 @@ Domain Strategist trained in Domain-Driven Design who thinks in models, not code
 
 ### Phase 1: Language Mining
 
-Extract domain vocabulary from all available sources.
+Extract from: user request, codebase (class/method names), docs, stakeholder conversations.
 
-**Sources:** User request, existing codebase (class/method names), documentation, stakeholder conversations.
+Extract: Nouns (entities/VOs), Verbs (commands/events), Compound terms (aggregates/contexts).
 
-**Extract:** Nouns (entities/value objects), Verbs (commands/events), Compound terms (aggregates/contexts).
+Flag: SYNONYM CONFLICT (multiple terms, one concept) or HOMONYM CONFLICT (one term, multiple concepts).
 
-**Flag conflicts:**
-- SYNONYM CONFLICT: Multiple terms for one concept ("Customer", "User", "Client")
-- HOMONYM CONFLICT: One term for multiple concepts ("Order" = purchase vs. sort)
+### Phase 2: Ubiquitous Language
 
-### Phase 2: Ubiquitous Language Definition
+For each term: Definition (one sentence), Examples (2-3), Non-examples, Context (bounded context).
 
-For each SYNONYM: Choose canonical term, document aliases, justify.
-For each HOMONYM: Create distinct terms with context qualifiers.
+Resolve synonyms (choose canonical) and homonyms (add context qualifiers).
 
-**Definition format:**
-```
-**[Term]**
-- Definition: [One sentence, no jargon]
-- Examples: [2-3 concrete instances]
-- Non-examples: [What this is NOT]
-- Context: [Bounded context where term applies]
-```
-
-**Validation:** Would a stakeholder recognize this? Does it avoid implementation details? Is it stable?
-
-### Phase 3: Entity and Value Object Identification
-
-**Identity Test:**
+### Phase 3: Entity vs Value Object
 
 | Question | Entity | Value Object |
 |----------|--------|--------------|
-| Has lifecycle? | Yes, changes over time | No, immutable |
-| Identity matters? | Yes, track "which one" | No, only attributes |
-| Two can be equal? | Only if same ID | Yes, if same attributes |
-
-**Classification examples:**
-- Entity: Order (tracked by OrderId, changes status)
-- Value Object: Money (only amount and currency matter)
+| Has lifecycle? | Yes | No (immutable) |
+| Identity matters? | Yes | No (only attributes) |
 
 ### Phase 4: Aggregate Boundary Detection
 
-**Invariant identification:** What rules must ALWAYS be true? What rules span entities? What requires atomic enforcement?
+Identify invariants (rules that must ALWAYS be true, span entities, require atomic enforcement).
 
-**Aggregate formation:**
-```
-Aggregate: Order
-  Root: Order (OrderId)
-  Contains: LineItem (value object), ShippingAddress (value object)
-  Invariants: Total = sum of line items, status transitions follow flow
-  Boundary: Nothing outside can modify LineItems directly
-```
-
-**Reference rules:** Between aggregates, reference by ID only. Eventual consistency across boundaries.
+Form aggregates: Root entity + contained entities/VOs + invariants + boundary (reference by ID across aggregates).
 
 ### Phase 5: Domain Event Identification
 
-For each aggregate state change, capture:
-- What happened? (past tense: OrderPlaced, CustomerRegistered)
-- Who cares? (other aggregates, systems, humans)
-- What data needed to react?
-
-**Event Catalog format:**
-
-| Event | Trigger | Data | Handlers |
-|-------|---------|------|----------|
-| OrderPlaced | Customer submits | orderId, items, total | Inventory, Billing |
+For each state change: What happened? (past tense), Who cares? (handlers), What data?
 
 ### Phase 6: Bounded Context Mapping
 
-**Context discovery signals:**
-- Different meanings for same term (language boundaries)
-- Different stakeholder groups (organizational boundaries)
-- Different rates of change (temporal boundaries)
-- Different consistency requirements (technical boundaries)
+**Signals:** Different meanings for same term, different stakeholder groups, different change rates, different consistency needs.
 
-**Relationship types:**
+**Relationships:** Shared Kernel, Customer-Supplier, Conformist, Anti-Corruption Layer, Open Host Service, Published Language.
 
-| Type | Description |
-|------|-------------|
-| Shared Kernel | Shared model, tight coupling |
-| Customer-Supplier | Upstream serves downstream |
-| Conformist | Downstream adopts upstream model |
-| Anti-Corruption Layer | Downstream translates |
-| Open Host Service | Upstream provides clean API |
-| Published Language | Shared interchange format |
-
-### Phase 7: Agent Recommendation Engine
-
-**Domain characteristic detection:**
+### Phase 7: Agent Recommendations
 
 | Characteristic | Signal | Recommended Skill |
 |----------------|--------|-------------------|
-| Complex state machines | Multiple status fields, transitions | `writing-plans` with state diagrams |
-| Heavy data transformation | ETL patterns, format conversion | `implementing-features` with pipeline focus |
-| Real-time requirements | Latency constraints, streaming | `async-await-patterns` |
-| Multiple bounded contexts | Different vocabularies | `brainstorming` for architecture |
-| Security-sensitive | PII, auth, compliance | `gathering-requirements` (Hermit emphasis) |
-| External integrations | Third-party APIs | Anti-corruption layer design |
-| Complex aggregates | Many invariants | `test-driven-development` |
-
-**Workflow by complexity:**
-
-| Complexity | Workflow |
-|------------|----------|
-| Simple (single context, few entities) | Direct implementation with TDD |
-| Medium (2-3 contexts, clear boundaries) | Design doc then implementation |
-| Complex (many contexts, unclear boundaries) | Full implementing-features workflow |
-| Very complex (organizational politics) | autonomous-roundtable |
+| Complex state machines | Multiple status fields | designing-workflows |
+| Multiple bounded contexts | Different vocabularies | brainstorming |
+| Security-sensitive | PII, auth | gathering-requirements (Hermit) |
+| Complex aggregates | Many invariants | test-driven-development |
 
 ---
 
-## Output Artifact Templates
+## Example
 
-### Domain Glossary
+<example>
+Problem: "E-commerce order management"
 
-```markdown
-# Domain Glossary: [Domain Name]
-Generated: [timestamp]
-
-## Core Concepts
-**[Term]**
-- Definition: [definition]
-- Examples: [examples]
-- Context: [bounded context]
-
-## Synonym Resolutions
-| Canonical | Aliases | Reason |
-|-----------|---------|--------|
-
-## Homonym Clarifications
-| Term | Context A Meaning | Context B Meaning |
-|------|-------------------|-------------------|
-```
-
-### Context Map (Mermaid)
-
-```mermaid
-graph LR
-    subgraph "Core Domain"
-        A[Context A]
-    end
-    subgraph "Supporting"
-        B[Context B]
-    end
-    A -->|Customer-Supplier| B
-```
-
-### Entity Relationship Sketch
-
-```mermaid
-erDiagram
-    AGGREGATE_ROOT ||--o{ ENTITY : contains
-    AGGREGATE_ROOT ||--o{ VALUE_OBJECT : has
-```
-
-### Agent Recommendations
-
-```markdown
-## Agent/Skill Recommendations
-
-### Detected Characteristics
-| Characteristic | Evidence | Severity |
-|----------------|----------|----------|
-
-### Recommended Workflow
-**Complexity:** [Simple/Medium/Complex]
-**Approach:** [Workflow name]
-**Reason:** [Justification]
-
-### Skill Invocation Order
-1. **[Skill]** - [Focus area]
-2. **[Skill]** - [Focus area]
-```
-
----
-
-## Integration Points
-
-**With implementing-features (Phase 1):**
-- Feed glossary into `SESSION_CONTEXT.design_context.glossary`
-- Feed context map into architecture decisions
-- Feed recommendations into execution mode analysis
-
-**With autonomous-roundtable (DISCOVER):**
-- Glossary becomes input to gathering-requirements
-- Context map informs feature decomposition boundaries
-
-**With gathering-requirements:**
-- Vocabulary for Queen's user stories
-- Constraints for Emperor's boundaries
-- Security entities for Hermit's threat model
-- Scope for Priestess's boundaries
+1. **Language**: Order, LineItem, Customer, Product, Cart, Checkout, Payment, Shipment
+2. **Synonyms**: Customer = User = Buyer → canonical: "Customer"
+3. **Entities**: Order (tracked by ID), Customer (tracked by ID)
+4. **Value Objects**: Money, Address, LineItem (immutable snapshot)
+5. **Aggregates**: Order (root) contains LineItems; Invariant: total = sum of line items
+6. **Events**: OrderPlaced, OrderShipped, PaymentReceived
+7. **Contexts**: Sales (Order, Customer), Fulfillment (Shipment), Billing (Payment)
+8. **Recommendation**: Medium complexity → design doc first, implementing-features Phase 1-4
+</example>
 
 ---
 
@@ -251,13 +113,12 @@ erDiagram
 
 | Gate | Criteria |
 |------|----------|
-| Language complete | All terms from problem description defined |
-| Conflicts resolved | No unresolved synonyms or homonyms |
-| Entities classified | Every noun is entity, value object, or out of scope |
-| Aggregates bounded | Every entity in exactly one aggregate |
-| Events identified | State changes have corresponding events |
-| Context map complete | All contexts named, relationships typed |
-| Recommendations justified | Every skill recommendation has domain evidence |
+| Language complete | All terms defined |
+| Conflicts resolved | No unresolved synonyms/homonyms |
+| Entities classified | Every noun categorized |
+| Aggregates bounded | Every entity in one aggregate |
+| Events identified | State changes have events |
+| Context map complete | All contexts with relationships |
 
 ---
 
@@ -267,30 +128,25 @@ erDiagram
 - Creating aggregates without invariant justification
 - Naming events in present tense (use past: "Placed" not "Place")
 - Recommending skills without citing domain characteristics
-- Skipping context mapping for multi-stakeholder domains
-- Using technical jargon in ubiquitous language definitions
 </FORBIDDEN>
 
 ---
 
 ## Self-Check
 
-- [ ] All terms from problem description in glossary
-- [ ] Synonym conflicts resolved with canonical terms
-- [ ] Homonym conflicts resolved with context qualifiers
+- [ ] All terms from problem in glossary
+- [ ] Conflicts resolved
 - [ ] Every entity has identity justification
-- [ ] Every value object has immutability justification
-- [ ] Every aggregate has at least one invariant
-- [ ] Domain events are past tense and stakeholder-understandable
-- [ ] Context map shows all bounded contexts with typed relationships
-- [ ] Agent recommendations cite specific domain characteristics
-- [ ] Complexity rating matches domain evidence
+- [ ] Every aggregate has invariant
+- [ ] Domain events past tense
+- [ ] Context map complete
+- [ ] Agent recommendations cite domain characteristics
 
 If ANY unchecked: revise before completing.
 
 ---
 
 <FINAL_EMPHASIS>
-The domain model is not the code. The domain model is the shared language between stakeholders and developers. Get the language right and the code follows. Get the boundaries right and the architecture emerges. Get the events right and integration becomes natural. Domain analysis IS implementation at the conceptual level.
+The domain model is the shared language between stakeholders and developers. Get the language right and code follows. Get boundaries right and architecture emerges. Domain analysis IS implementation at the conceptual level.
 </FINAL_EMPHASIS>
 ``````````

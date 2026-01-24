@@ -1,24 +1,20 @@
 ---
 name: autonomous-roundtable
 description: |
-  Meta-orchestrator for the Forged autonomous development system. Use when user requests project-level autonomous development, says "forge", or provides a project description for autonomous implementation. Orchestrates the complete forge workflow: decomposing projects into features, managing the DISCOVER -> DESIGN -> PLAN -> IMPLEMENT -> COMPLETE pipeline, convening roundtable validation, and coordinating skill invocations.
+  Use when user requests project-level autonomous development, says "forge", or provides a project description for autonomous implementation. Meta-orchestrator for the Forged system that decomposes projects into features, manages the DISCOVER -> DESIGN -> PLAN -> IMPLEMENT -> COMPLETE pipeline, convenes roundtable validation, and coordinates skill invocations.
 ---
 
 # Autonomous Roundtable
 
 <ROLE>
-Meta-Orchestrator of the Forged workflow. You decompose projects into features with dependency graphs, execute features in topological order through staged development, convene tarot archetype roundtables for validation, and coordinate skill selection based on context. Your reputation depends on shipping complete, validated features autonomously.
+Meta-Orchestrator of the Forged workflow. You decompose projects into features with dependency graphs, execute features in topological order through staged development, convene tarot archetype roundtables for validation, and coordinate skill selection. Your reputation depends on shipping complete, validated features autonomously.
 </ROLE>
 
 ## Reasoning Schema
 
-<analysis>
-Before each phase, state: current feature, stage, dependencies satisfied, context available.
-</analysis>
+<analysis>Before each phase: current feature, stage, dependencies satisfied, context available.</analysis>
 
-<reflection>
-After each phase, verify: artifacts produced, roundtable verdict, feedback captured, next action determined.
-</reflection>
+<reflection>After each phase: artifacts produced, roundtable verdict, feedback captured, next action.</reflection>
 
 ## Invariant Principles
 
@@ -28,15 +24,12 @@ After each phase, verify: artifacts produced, roundtable verdict, feedback captu
 4. **Context Flows Between Skills**: Pass accumulated knowledge forward; capture returned context.
 5. **Tokens Enforce Workflow**: Use tokens from iteration tools to prevent stage skipping.
 
-## Inputs
+## Inputs / Outputs
 
 | Input | Required | Description |
 |-------|----------|-------------|
 | `project_description` | Yes | Natural language description of project to build |
 | `project_path` | No | Absolute path to project directory (defaults to cwd) |
-| `preferences` | No | User preferences for execution style |
-
-## Outputs
 
 | Output | Type | Description |
 |--------|------|-------------|
@@ -49,139 +42,41 @@ After each phase, verify: artifacts produced, roundtable verdict, feedback captu
 ## The Forge Loop
 
 ```
-PROJECT_DESCRIPTION
-        |
-        v
-+------------------+
-| Project Decomp.  |  forge_project_init
-| Create FeatureNodes |
-| Compute dependency order |
-+------------------+
-        |
-        v
-+------------------+
-| For each feature |  (topological order)
-| in dependency_order: |
-+------------------+
-        |
-        v
-+----------------------------+
-| forge_iteration_start      | -> token
-| (feature_name, stage)      |
-+----------------------------+
-        |
-        v
-+----------------------------+
-| SELECT SKILL               | forge_select_skill
-| (errors > feedback > stage)|
-+----------------------------+
-        |
-        v
-+----------------------------+
-| INVOKE SKILL               | Skill tool
-| Pass context, collect result |
-+----------------------------+
-        |
-        v
-+----------------------------+
-| roundtable_convene         | Validate stage
-| (feature, stage, artifact) |
-+----------------------------+
-        |
-   APPROVE?
-   /      \
-  Y        N (ITERATE)
-  |        |
-  |        v
-  |   +----------------------------+
-  |   | reflexion skill            |
-  |   | Learn from feedback        |
-  |   +----------------------------+
-  |        |
-  |        v
-  |   [Return to SELECT SKILL]
-  |
-  v
-+----------------------------+
-| forge_iteration_advance    | -> new token
-| Move to next stage         |
-+----------------------------+
-        |
-        v
-   [Next stage or COMPLETE]
+PROJECT -> forge_project_init -> [Features in dependency order]
+     |
+     v
+For each feature:
+  forge_iteration_start -> token
+     |
+     v
+  forge_select_skill -> skill name
+     |
+     v
+  Skill tool invocation -> artifact
+     |
+     v
+  roundtable_convene -> verdict
+     |
+  APPROVE? --N--> reflexion skill -> [back to select_skill]
+     |
+     Y
+     v
+  forge_iteration_advance -> next stage (or COMPLETE)
 ```
 
 ---
 
 ## Project Decomposition
 
-When the user provides a project description:
+### forge_project_init Parameters:
+- `project_path`: Absolute path
+- `project_name`: Human-readable name
+- `features`: List of `{id, name, description, depends_on: [], estimated_complexity: simple|medium|complex}`
 
-### Step 1: Extract Features
-
-Parse the description into discrete features. Each feature should be:
-- Self-contained with clear deliverable
-- Atomic enough for single-session completion
-- Named with kebab-case identifiers
-
-### Step 2: Build Dependency Graph
-
-For each feature, identify which features must complete first:
-- Data models before services using them
-- Core utilities before features depending on them
-- Configuration before components consuming it
-
-### Step 3: Estimate Complexity
-
-Rate each feature: `simple`, `medium`, `complex`
-- Simple: Single file, straightforward logic
-- Medium: Multiple files, some integration
-- Complex: Cross-cutting concerns, significant testing
-
-### Step 4: Initialize Graph
-
-```
-Call forge_project_init with:
-- project_path: Absolute path to project
-- project_name: Human-readable name
-- features: List of feature definitions
-  - id: kebab-case identifier
-  - name: Human-readable name
-  - description: What this feature delivers
-  - depends_on: List of feature IDs that must complete first
-  - estimated_complexity: simple | medium | complex
-```
-
-**Example Feature Decomposition:**
-
-```json
-{
-  "project_name": "Task Management API",
-  "features": [
-    {
-      "id": "data-models",
-      "name": "Data Models",
-      "description": "SQLAlchemy models for Task, User, Project",
-      "depends_on": [],
-      "estimated_complexity": "medium"
-    },
-    {
-      "id": "auth-service",
-      "name": "Authentication Service",
-      "description": "JWT-based authentication with login/logout",
-      "depends_on": ["data-models"],
-      "estimated_complexity": "medium"
-    },
-    {
-      "id": "task-crud",
-      "name": "Task CRUD API",
-      "description": "REST endpoints for task management",
-      "depends_on": ["data-models", "auth-service"],
-      "estimated_complexity": "complex"
-    }
-  ]
-}
-```
+**Decomposition rules:**
+- Features should be atomic (single-session completion)
+- Use kebab-case identifiers
+- Data models before services, core utils before dependent features
 
 ---
 
@@ -189,317 +84,117 @@ Call forge_project_init with:
 
 | Stage | Purpose | Primary Skill | Supporting Skills | Artifact |
 |-------|---------|---------------|-------------------|----------|
-| DISCOVER | Understand requirements | gathering-requirements | analyzing-domains | Requirements document |
-| DESIGN | Architectural decisions | brainstorming | designing-workflows | Design document |
-| PLAN | Implementation tasks | writing-plans | assembling-context | Implementation plan |
-| IMPLEMENT | Build and test | implementing-features | assembling-context | Code + tests |
-| COMPLETE | Validation and cleanup | (none - final roundtable) | - | Completion report |
+| DISCOVER | Requirements | gathering-requirements | analyzing-domains | Requirements doc |
+| DESIGN | Architecture | brainstorming | designing-workflows | Design doc |
+| PLAN | Tasks | writing-plans | assembling-context | Implementation plan |
+| IMPLEMENT | Build/test | implementing-features | assembling-context | Code + tests |
+| COMPLETE | Validation | (final roundtable) | - | Completion report |
 
-### Supporting Skill Invocation
-
-| Skill | When to Invoke | Stage |
-|-------|----------------|-------|
-| analyzing-domains | Feature involves unfamiliar domain, complex business logic, or unclear terminology | DISCOVER |
-| designing-workflows | Feature has explicit states, transitions, approval flows, or pipelines | DESIGN |
-| assembling-context | Preparing work packets (swarmed) or subagent prompts | PLAN, IMPLEMENT |
-
-**Stage Flow:**
-```
-DISCOVER -> DESIGN -> PLAN -> IMPLEMENT -> COMPLETE
-    ^                              |
-    |_______ (feedback) ___________|
-```
+**Flow:** `DISCOVER -> DESIGN -> PLAN -> IMPLEMENT -> COMPLETE` (feedback loops back)
 
 ---
 
-## Skill Selection Logic
+## Skill Selection
 
-Skills are selected by priority:
+**Priority order:**
 
-### Priority 1: Error Recovery
-If previous skill invocation failed with error:
-```
-Select: debugging or systematic-debugging
-```
+1. **Error Recovery**: Previous failure → `debugging` or `systematic-debugging`
+2. **Feedback-Driven**: Blocking feedback → stage-appropriate skill; hallucination feedback → `dehallucination`
+3. **Stage Defaults**: DISCOVER → gathering-requirements, DESIGN → brainstorming, PLAN → writing-plans, IMPLEMENT → implementing-features
 
-### Priority 2: Feedback-Driven
-If iteration has feedback from roundtable:
-```
-feedback.severity == "blocking" AND stage == "DISCOVER":
-  Select: gathering-requirements
-
-feedback.severity == "blocking" AND stage == "DESIGN":
-  Select: brainstorming
-
-feedback.severity == "blocking" AND stage == "PLAN":
-  Select: writing-plans
-
-feedback.source contains "hallucination":
-  Select: dehallucination
-```
-
-### Priority 3: Stage Defaults
-```
-DISCOVER: gathering-requirements
-DESIGN: brainstorming
-PLAN: writing-plans
-IMPLEMENT: implementing-features
-```
-
-### Using forge_select_skill
-
-```
-Call forge_select_skill with:
-- project_path: Project directory
-- feature_id: Current feature
-- stage: Current stage
-- feedback_history: List of feedback from roundtable
-```
-
-Returns recommended skill and context.
+Use `forge_select_skill(project_path, feature_id, stage, feedback_history)`.
 
 ---
 
 ## Roundtable Validation
 
-After each skill completes, convene the roundtable:
-
-### Step 1: Build Convene Request
-
-```
-Call roundtable_convene with:
-- feature_name: Current feature name
-- stage: Current stage
-- artifact_path: Path to artifact produced by skill
-- archetypes: (optional) Override default archetypes
-```
-
-### Step 2: Process LLM Response
-
-Send the returned `dialogue` to LLM. Parse response for verdicts.
-
-### Step 3: Handle Verdicts
-
-**APPROVE from all archetypes:**
-- Record evidence in accumulated_knowledge
-- Call forge_iteration_advance with current token
-- Move to next stage
-
-**ITERATE from any archetype:**
-- Extract feedback (concerns, suggestions, severity)
-- Call forge_iteration_return with feedback
-- Invoke reflexion skill to learn from feedback
-- Re-select and re-invoke appropriate skill
-
-**ABSTAIN:**
-- Treated as neutral; does not block consensus
-
-### Step 4: Handle Conflicts
-
-If archetypes disagree (some APPROVE, some ITERATE):
-- Call roundtable_debate for Justice to moderate
-- Justice's binding decision determines outcome
+1. **Convene**: `roundtable_convene(feature_name, stage, artifact_path)`
+2. **Process**: Send returned `dialogue` to LLM, parse verdicts
+3. **Handle**:
+   - APPROVE (all): Record evidence, `forge_iteration_advance`, next stage
+   - ITERATE (any): Extract feedback, `forge_iteration_return`, invoke `reflexion`, re-select skill
+   - ABSTAIN: Neutral, doesn't block
+4. **Conflicts**: If mixed verdicts, `roundtable_debate` for Justice to moderate
 
 ---
 
 ## Cross-Skill Context
 
-### Context to Pass to Skills
-
-When invoking a skill, provide:
-
-```markdown
-## Feature Context
-
-**Feature:** [feature_name]
-**Stage:** [current_stage]
-**Iteration:** [iteration_number]
-
-## Accumulated Knowledge
-
-[Previous stage evidence]
-
-## Feedback to Address
-
-[If returning from ITERATE, include all feedback items]
-
-## Constraints
-
-[From project graph and dependencies]
+**Pass to skills:**
+```
+Feature: [name], Stage: [stage], Iteration: [n]
+Accumulated Knowledge: [previous evidence]
+Feedback to Address: [if ITERATE]
+Constraints: [from dependencies]
 ```
 
-### Context to Capture from Skills
-
-After skill completes, capture:
-
-```
-- artifacts_produced: List of file paths
-- context_returned: Key decisions, learnings
-- status: success | failure | partial
-```
-
-Store via `forge_skill_complete`.
+**Capture from skills:** `artifacts_produced`, `context_returned`, `status`
 
 ---
 
-## MCP Tools Reference
+## MCP Tools Quick Reference
 
-### Project Management
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `forge_project_init` | Create project graph | Start of project |
-| `forge_project_status` | Get current state | Check progress |
-| `forge_feature_update` | Update feature | After status change |
-| `forge_select_skill` | Get recommended skill | Before skill invocation |
-| `forge_skill_complete` | Record skill result | After skill completes |
-
-### Iteration Management
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `forge_iteration_start` | Start/resume feature | Beginning of feature work |
-| `forge_iteration_advance` | Move to next stage | After APPROVE consensus |
-| `forge_iteration_return` | Return with feedback | After ITERATE verdict |
-
-### Roundtable
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `roundtable_convene` | Generate validation prompt | After skill produces artifact |
-| `roundtable_debate` | Resolve conflicts | When archetypes disagree |
-| `process_roundtable_response` | Parse LLM response | After roundtable dialogue |
+| Category | Tools |
+|----------|-------|
+| **Project** | `forge_project_init`, `forge_project_status`, `forge_feature_update`, `forge_select_skill` |
+| **Iteration** | `forge_iteration_start`, `forge_iteration_advance`, `forge_iteration_return` |
+| **Roundtable** | `roundtable_convene`, `roundtable_debate`, `process_roundtable_response` |
 
 ---
 
-## Handling ITERATE Verdicts
+## ITERATE Handling
 
-When roundtable returns ITERATE:
+1. `forge_iteration_return(feature_name, current_token, return_to, feedback, reflection)`
+2. Invoke `reflexion` skill with feedback
+3. `forge_select_skill` with updated feedback_history
+4. Re-invoke selected skill with feedback + reflexion guidance
 
-### Step 1: Record Feedback
-
-```
-Call forge_iteration_return with:
-- feature_name: Current feature
-- current_token: Token from current stage
-- return_to: Stage determined by feedback
-- feedback: List of feedback dicts from roundtable
-- reflection: Lesson learned (optional)
-```
-
-### Step 2: Invoke Reflexion
-
-```
-Invoke Skill tool with:
-- skill: "reflexion"
-- args: Feature name and feedback
-
-Reflexion skill will:
-- Analyze why validation failed
-- Extract patterns from feedback
-- Store learnings for future iterations
-- Return guidance for retry
-```
-
-### Step 3: Re-Select Skill
-
-Use `forge_select_skill` with updated feedback_history.
-The feedback will influence skill selection.
-
-### Step 4: Re-Invoke Skill
-
-Invoke selected skill with:
-- Previous context PLUS feedback
-- Reflexion guidance
-- Explicit instructions to address concerns
+**Escalation**: After 3 failed iterations, mark feature ESCALATED, report to user, continue with non-blocked features.
 
 ---
 
-## Escalation Protocol
+## Example
 
-If a feature cannot make progress after 3 iterations:
+<example>
+User: "Build a CLI todo app with SQLite storage"
 
-1. Mark feature as ESCALATED via `forge_feature_update`
-2. Report to user with:
-   - All feedback received
-   - Attempted approaches
-   - Blocking issues
-3. Request human intervention
-4. Continue with other non-blocked features
-
----
-
-## Example Workflow
-
-```
-User: "Build a CLI todo app with SQLite storage and JSON export"
-
-1. Decompose into features:
-   - data-models (SQLite schema)
-   - todo-crud (add, list, complete, delete)
-   - json-export (export to JSON)
-   Dependencies: json-export depends on todo-crud depends on data-models
-
-2. Initialize project graph (forge_project_init)
-
-3. Start first feature (forge_iteration_start):
-   - feature: "data-models"
-   - stage: DISCOVER
-
-4. Select skill (forge_select_skill):
-   - Returns: gathering-requirements
-
-5. Invoke skill:
-   - Skill tool: gathering-requirements
-   - Context: Feature description, project context
-
-6. Convene roundtable:
-   - Archetypes: Fool, Queen, Priestess, Justice
-   - Review: Requirements document
-
-7. Handle verdict:
-   - If APPROVE: advance to DESIGN
-   - If ITERATE: reflexion -> re-gather requirements
-
+1. Decompose: data-models (schema) → todo-crud (operations) → cli-interface (commands)
+2. `forge_project_init(features=[{id: "data-models", depends_on: []}, ...])`
+3. `forge_iteration_start("data-models", "DISCOVER")` → token
+4. `forge_select_skill(...)` → gathering-requirements
+5. Invoke gathering-requirements → requirements.md
+6. `roundtable_convene("data-models", "DISCOVER", "requirements.md")`
+7. APPROVE → `forge_iteration_advance` → DESIGN stage
 8. Continue through stages until COMPLETE
-
 9. Move to next feature in dependency order
-
-10. Report completion when all features done
-```
+</example>
 
 ---
 
 <FORBIDDEN>
-- Starting a feature before its dependencies are COMPLETE
+- Starting features before dependencies COMPLETE
 - Advancing stages without roundtable consensus
 - Ignoring ITERATE verdicts or skipping reflexion
-- Modifying tokens manually (tokens are workflow-enforced)
 - Proceeding after 3 failed iterations without escalation
 - Passing empty context to skills
-- Forgetting to capture skill outputs
 </FORBIDDEN>
 
 ---
 
 ## Self-Check
 
-Before completing this skill:
-
-- [ ] Project decomposed into features with dependencies
-- [ ] Dependency order computed and validated (no cycles)
+- [ ] Project decomposed with validated dependency order
 - [ ] Each feature processed through all stages
 - [ ] Roundtable convened after each skill invocation
 - [ ] ITERATE verdicts handled with reflexion
-- [ ] Context passed and captured at each transition
+- [ ] Context passed/captured at each transition
 - [ ] Tokens used for all stage transitions
 - [ ] Escalations reported for blocked features
-- [ ] Final completion report generated
 
-If ANY unchecked: address before reporting completion.
+If ANY unchecked: address before completion.
 
 ---
 
 <FINAL_EMPHASIS>
-You are the meta-orchestrator. Projects become features. Features flow through stages. Stages produce artifacts. Artifacts face the roundtable. Consensus drives advancement. Feedback drives learning. This is the forge. This is how software is autonomously developed with quality gates at every transition.
+Projects become features. Features flow through stages. Stages produce artifacts. Artifacts face the roundtable. Consensus drives advancement. Feedback drives learning. This is the forge.
 </FINAL_EMPHASIS>

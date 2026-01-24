@@ -9,6 +9,20 @@ from unittest.mock import patch, MagicMock
 
 # Import the MCP server module to access the tools
 from spellbook_mcp import server
+from spellbook_mcp.pr_distill import config as pr_config
+
+
+@pytest.fixture
+def isolated_config_dir(tmp_path):
+    """Fixture to isolate pr_distill config to temp directory.
+
+    The config module stores configs in ~/.local/spellbook/docs/<encoded-path>/
+    which causes test pollution. This fixture patches CONFIG_DIR to use tmp_path.
+    """
+    original_config_dir = pr_config.CONFIG_DIR
+    pr_config.CONFIG_DIR = str(tmp_path / "config")
+    yield tmp_path
+    pr_config.CONFIG_DIR = original_config_dir
 
 
 class TestPrDiff:
@@ -177,10 +191,10 @@ class TestPrMatchPatterns:
 class TestPrBlessPattern:
     """Tests for pr_bless_pattern MCP tool."""
 
-    def test_blesses_valid_pattern(self, tmp_path):
+    def test_blesses_valid_pattern(self, isolated_config_dir):
         """pr_bless_pattern blesses a valid pattern."""
         result = server.pr_bless_pattern.fn(
-            project_root=str(tmp_path),
+            project_root=str(isolated_config_dir),
             pattern_id="my-custom-pattern",
         )
 
@@ -190,10 +204,10 @@ class TestPrBlessPattern:
         # Verify already_blessed is False for first blessing
         assert result.get("already_blessed") is False or "already_blessed" not in result
 
-    def test_rejects_invalid_pattern(self, tmp_path):
+    def test_rejects_invalid_pattern(self, isolated_config_dir):
         """pr_bless_pattern rejects invalid pattern ID."""
         result = server.pr_bless_pattern.fn(
-            project_root=str(tmp_path),
+            project_root=str(isolated_config_dir),
             pattern_id="INVALID_PATTERN",  # uppercase not allowed
         )
 
@@ -203,17 +217,17 @@ class TestPrBlessPattern:
         assert len(result["error"]) > 0
         assert result["pattern_id"] == "INVALID_PATTERN"
 
-    def test_reports_already_blessed(self, tmp_path):
+    def test_reports_already_blessed(self, isolated_config_dir):
         """pr_bless_pattern reports when pattern already blessed."""
         # Bless once
         server.pr_bless_pattern.fn(
-            project_root=str(tmp_path),
+            project_root=str(isolated_config_dir),
             pattern_id="my-pattern",
         )
 
         # Bless again
         result = server.pr_bless_pattern.fn(
-            project_root=str(tmp_path),
+            project_root=str(isolated_config_dir),
             pattern_id="my-pattern",
         )
 
@@ -224,15 +238,15 @@ class TestPrBlessPattern:
 class TestPrListPatterns:
     """Tests for pr_list_patterns MCP tool."""
 
-    def test_returns_all_patterns(self, tmp_path):
+    def test_returns_all_patterns(self, isolated_config_dir):
         """pr_list_patterns returns builtin and blessed patterns."""
         # First bless a pattern
         server.pr_bless_pattern.fn(
-            project_root=str(tmp_path),
+            project_root=str(isolated_config_dir),
             pattern_id="my-blessed-pattern",
         )
 
-        result = server.pr_list_patterns.fn(project_root=str(tmp_path))
+        result = server.pr_list_patterns.fn(project_root=str(isolated_config_dir))
 
         assert "builtin" in result
         assert "blessed" in result

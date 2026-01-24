@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.0] - 2026-01-22
+## [0.9.0] - 2026-01-22
 
 ### Added
 - **Forged Autonomous Development System** - Meta-orchestration layer for brain-out project implementation
@@ -22,13 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 330 tests covering all forged modules
 
 - **7 New Skills for Autonomous Development**
-  - `autonomous-roundtable` (487 lines): Meta-orchestrator for complete forge workflow
-  - `gathering-requirements` (361 lines): DISCOVER stage using archetype perspectives (Queen/Emperor/Hermit/Priestess)
-  - `dehallucination` (404 lines): Factual grounding with confidence assessment and recovery protocols
-  - `reflexion` (419 lines): Learning from ITERATE verdicts with pattern detection
-  - `analyzing-domains` (294 lines): DDD-based domain exploration with agent recommendation engine
-  - `assembling-context` (288 lines): Three-tier context organization with token budget management
-  - `designing-workflows` (269 lines): State machine design with transitions, guards, and error handling
+  - `autonomous-roundtable`: Meta-orchestrator for complete forge workflow
+  - `gathering-requirements`: DISCOVER stage using archetype perspectives (Queen/Emperor/Hermit/Priestess)
+  - `dehallucination`: Factual grounding with confidence assessment and recovery protocols
+  - `reflexion`: Learning from ITERATE verdicts with pattern detection
+  - `analyzing-domains`: DDD-based domain exploration with agent recommendation engine
+  - `assembling-context`: Three-tier context organization with token budget management
+  - `designing-workflows`: State machine design with transitions, guards, and error handling
 
 - **Unified `code-review` skill** - consolidates all review functionality into one skill
   - `--self` mode: Pre-PR self-review (replaces `requesting-code-review`)
@@ -47,6 +47,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `code_review/edge_cases.py` - early detection of workflow-affecting conditions
   - `code_review/deduplication.py` - finding deduplication by file:line
 
+### Changed
+- **12 skills renamed to gerund pattern** for naming consistency
+  - `domain-analysis` → `analyzing-domains`
+  - `context-assembly` → `assembling-context`
+  - `workflow-design` → `designing-workflows`
+  - `code-quality-enforcement` → `enforcing-code-quality`
+  - `design-doc-reviewer` → `reviewing-design-docs`
+  - `implementation-plan-reviewer` → `reviewing-impl-plans`
+  - `merge-conflict-resolution` → `resolving-merge-conflicts`
+  - `green-mirage-audit` → `auditing-green-mirage`
+  - `pr-distill` → `distilling-prs`
+  - `instruction-optimizer` → `optimizing-instructions`
+  - `worktree-merge` → `merging-worktrees`
+  - `requirements-gathering` → `gathering-requirements`
+
 ### Enhanced
 - **implementing-features skill** - Mandatory quality gates for swarmed execution
   - Work packet template with 5 required gates: implementation completion, code review, fact-checking, green mirage audit, test suite
@@ -57,6 +72,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 - `requesting-code-review` skill (use `code-review --self`)
 - `receiving-code-review` skill (use `code-review --feedback`)
+
+## [0.8.0] - 2026-01-21
+
+### Added
+- **PR-distill Python MCP migration** - moved from JavaScript CLI to Python MCP tools
+  - `pr_fetch` - fetch PR metadata and diff from GitHub
+  - `pr_diff` - parse unified diff into FileDiff objects
+  - `pr_files` - extract file list from pr_fetch result
+  - `pr_match_patterns` - match heuristic patterns against file diffs
+  - `pr_bless_pattern` - bless a pattern for elevated precedence
+  - `pr_list_patterns` - list all available patterns (builtin and blessed)
+  - Foundation modules: errors, types, patterns, config, parse, matcher, bless, fetch
+  - Removed JavaScript implementation after Python migration complete
+  - Updated skill to use MCP tools instead of CLI
+
+### Enhanced
+- **Tarot mode documentation** - updated to list all 10 archetypes
+- **Recovery testing** - added comprehensive before/after recovery e2e test
 
 ## [0.7.7] - 2026-01-21
 
@@ -608,7 +641,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.7.5...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/axiomantic/spellbook/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/axiomantic/spellbook/compare/v0.7.7...v0.8.0
+[0.7.7]: https://github.com/axiomantic/spellbook/compare/v0.7.6...v0.7.7
+[0.7.6]: https://github.com/axiomantic/spellbook/compare/v0.7.5...v0.7.6
 [0.7.5]: https://github.com/axiomantic/spellbook/compare/v0.7.4...v0.7.5
 [0.7.4]: https://github.com/axiomantic/spellbook/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/axiomantic/spellbook/compare/v0.7.2...v0.7.3
