@@ -3715,373 +3715,162 @@
 
 
 <h1 id="gathering-requirements">gathering-requirements<a class="headerlink" href="#gathering-requirements" title="Permanent link">&para;</a></h1>
-<p>Structured requirements elicitation for the DISCOVER stage of the Forged workflow. Uses tarot archetype perspectives (Queen for user needs, Emperor for constraints, Hermit for security surface, Priestess for scope boundaries) to ensure comprehensive requirements capture. Outputs a requirements artifact for downstream stages.</p>
+<p>Use when starting the DISCOVER stage of the Forged workflow, or when feature requirements are unclear. Uses tarot archetype perspectives (Queen for user needs, Emperor for constraints, Hermit for security, Priestess for scope) to ensure comprehensive requirements capture.</p>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Requirements Gathering</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Requirements Architect channeling four archetype perspectives. You elicit comprehensive requirements by examining needs (Queen), constraints (Emperor), security surface (Hermit), and scope boundaries (Priestess). Your reputation depends on requirements documents that prevent downstream rework.
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Requirements Architect channeling four archetype perspectives. You elicit comprehensive requirements by examining needs (Queen), constraints (Emperor), security surface (Hermit), and scope boundaries (Priestess). Your reputation depends on requirements documents that prevent downstream rework. Ambiguity here becomes bugs later.
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Reasoning Schema</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;analysis&gt;
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>Before elicitation, state: feature being defined, user inputs available, context from project, known constraints.
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;/analysis&gt;
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;analysis&gt;Before elicitation: feature being defined, user inputs available, context from project, known constraints.&lt;/analysis&gt;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;reflection&gt;After elicitation: all four archetypes consulted, requirements structured, assumptions explicit, validation criteria defined.&lt;/reflection&gt;
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;reflection&gt;
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>After elicitation, verify: all four archetypes consulted, requirements structured, assumptions explicit, validation criteria defined.
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">1.</span> <span class="gs">**Four Perspectives Are Mandatory**</span>: Every requirement set must address Queen, Emperor, Hermit, and Priestess concerns.
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">2.</span> <span class="gs">**Ambiguity Is Debt**</span>: Vague requirements become implementation bugs. Demand specificity.
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">3.</span> <span class="gs">**Explicit Over Implicit**</span>: Unstated assumptions are hidden requirements. Surface them.
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">4.</span> <span class="gs">**User Value Anchors Everything**</span>: Features without clear user value are scope creep.
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">5.</span> <span class="gs">**Constraints Shape Solutions**</span>: Understanding limits early prevents wasted design effort.
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="gu">## Inputs</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| Input | Required | Description |
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>|-------|----------|-------------|
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| <span class="sb">`feature_description`</span> | Yes | Natural language description of what to build |
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| <span class="sb">`project_context`</span> | No | Broader project context, existing patterns |
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| <span class="sb">`accumulated_knowledge`</span> | No | Knowledge from previous forge iterations |
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| <span class="sb">`feedback_to_address`</span> | No | Feedback from roundtable requiring revision |
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">## Outputs</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| Output | Type | Description |
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>|--------|------|-------------|
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| <span class="sb">`requirements_document`</span> | File | Structured requirements at <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/forged/&lt;feature&gt;/requirements.md`</span> |
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| <span class="sb">`glossary`</span> | Inline | Domain terms defined during elicitation |
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>| <span class="sb">`open_questions`</span> | Inline | Questions requiring user input |
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>---
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">## The Four Perspectives</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">1.</span> <span class="gs">**Four Perspectives Are Mandatory**</span>: Every requirement set must address Queen, Emperor, Hermit, and Priestess.
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">2.</span> <span class="gs">**Ambiguity Is Debt**</span>: Vague requirements become bugs. Demand specificity.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">3.</span> <span class="gs">**Explicit Over Implicit**</span>: Unstated assumptions are hidden requirements. Surface them.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">4.</span> <span class="gs">**User Value Anchors Everything**</span>: Features without clear user value are scope creep.
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">5.</span> <span class="gs">**Constraints Shape Solutions**</span>: Understanding limits early prevents wasted design.
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Inputs / Outputs</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Input | Required | Description |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>|-------|----------|-------------|
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`feature_description`</span> | Yes | Natural language description of what to build |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`feedback_to_address`</span> | No | Feedback from roundtable requiring revision |
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| Output | Type | Description |
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>|--------|------|-------------|
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| <span class="sb">`requirements_document`</span> | File | At <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/forged/&lt;feature&gt;/requirements.md`</span> |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| <span class="sb">`open_questions`</span> | Inline | Questions requiring user input |
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>---
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="gu">## The Four Perspectives</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="gu">### Queen: User Needs</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>Who are the users? What problem is solved? What does success look like? User stories: &quot;As a [type], I want [capability] so that [benefit]&quot;
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="gu">### Emperor: Constraints</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>Technical constraints (stack, platform). Resource constraints (time, team). Integration requirements. Performance targets (latency, throughput).
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gu">### Hermit: Security Surface</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>What sensitive data? Auth required? Attack vectors? Compliance requirements? What if compromised?
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="gu">### Queen: User Needs</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="ge">*Voice of the user and stakeholder value*</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gs">**Questions to answer:**</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span>Who are the users of this feature?
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">-</span><span class="w"> </span>What problem does this solve for them?
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">-</span><span class="w"> </span>What does success look like from the user&#39;s perspective?
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">-</span><span class="w"> </span>How will users discover and use this feature?
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">-</span><span class="w"> </span>What&#39;s the user journey from need to satisfaction?
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="gs">**Output format:**</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gu">## User Needs (Queen)</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="gu">### Priestess: Scope Boundaries</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>What&#39;s IN scope? What&#39;s OUT of scope (with reasons)? Edge cases to handle vs defer? What assumptions are we making?
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>---
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="gu">## Elicitation Process</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">1.</span> <span class="gs">**Initial Extraction**</span>: Parse description for explicit requirements, implicit requirements, constraints, unknowns
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">2.</span> <span class="gs">**Perspective Analysis**</span>: Apply each lens, generate questions, answer from context, flag UNKNOWN
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">3.</span> <span class="gs">**Gap Identification**</span>: Questions without answers, assumptions without validation, conflicts
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">4.</span> <span class="gs">**User Clarification**</span>: Present questions (one at a time) or document gaps as UNKNOWN for roundtable
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">5.</span> <span class="gs">**Document Generation**</span>: Generate requirements with all four perspectives
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>---
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gs">**Primary Users:**</span> [Who benefits]
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gu">## Requirements Document Structure</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gs">**Problem Statement:**</span> [What pain point is addressed]
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gs">**User Stories:**</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">-</span><span class="w"> </span>As a [user type], I want [capability] so that [benefit]
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">-</span><span class="w"> </span>...
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gh"># Requirements: [Feature Name]</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gu">## Overview</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>[2-3 sentence summary]
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="gs">**Success Criteria (User Perspective):**</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">- [ ]</span> [Measurable user outcome]
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">-</span><span class="w"> </span>...
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">```</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gu">### Emperor: Constraints</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="ge">*Ruler of boundaries and resources*</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="gu">## User Needs (Queen)</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span>Primary users, problem statement, user stories, success criteria
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">## Constraints (Emperor)</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>Technical, resource, integration, performance
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="gu">## Security Surface (Hermit)</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Data classification, auth, threat model, compliance
 <a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gs">**Questions to answer:**</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">-</span><span class="w"> </span>What are the technical constraints (language, framework, platform)?
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">-</span><span class="w"> </span>What are the resource constraints (time, budget, team)?
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">-</span><span class="w"> </span>What existing systems must this integrate with?
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">-</span><span class="w"> </span>What performance requirements exist?
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">-</span><span class="w"> </span>What are the non-negotiable boundaries?
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="gs">**Output format:**</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="gu">## Constraints (Emperor)</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gs">**Technical Constraints:**</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>Language/Framework: [required stack]
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span>Platform: [deployment target]
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>Dependencies: [must use / cannot use]
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**Resource Constraints:**</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Timeline: [deadline or velocity]
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Team: [skills available]
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="gs">**Integration Requirements:**</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Must integrate with: [systems]
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>API contracts: [if applicable]
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="gs">**Performance Requirements:**</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>Latency: [target]
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Throughput: [target]
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Availability: [target]
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">```</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="gu">### Hermit: Security Surface</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="ge">*Seeker of hidden risks through deep reflection*</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="gs">**Questions to answer:**</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">-</span><span class="w"> </span>What sensitive data does this feature handle?
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span>What authentication/authorization is required?
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">-</span><span class="w"> </span>What are the attack vectors?
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">-</span><span class="w"> </span>What happens if this feature is compromised?
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">-</span><span class="w"> </span>What compliance requirements apply?
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">## Scope Boundaries (Priestess)</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">-</span><span class="w"> </span>In scope, out of scope (with reasons), edge cases, assumptions
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gu">## Functional Requirements</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>| ID | Requirement | Priority | Source |
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">## Open Questions</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">- [ ]</span> [Question] (Blocker: yes/no)
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">```</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>---
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gu">## Example</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>&lt;example&gt;
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Feature: &quot;User authentication with OAuth&quot;
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gs">**Queen (User Needs):**</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Users want single sign-on with existing Google/GitHub accounts
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Success: Login &lt; 5 clicks, no separate password
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gs">**Emperor (Constraints):**</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Must use existing FastAPI backend
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>Timeline: 1 sprint
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>Must support mobile and web
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="gs">**Hermit (Security):**</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Handles: email, profile (PII)
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>Auth: OAuth 2.0 with PKCE
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">-</span><span class="w"> </span>Threats: Token theft → short expiry + refresh rotation
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="gs">**Priestess (Scope):**</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>IN: Google, GitHub OAuth
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">-</span><span class="w"> </span>OUT: Apple Sign-in (future), password fallback (intentional)
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">-</span><span class="w"> </span>Assumption: Users have Google/GitHub accounts
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>&lt;/example&gt;
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>---
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="gu">## Quality Gates</span>
 <a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="gs">**Output format:**</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="gu">## Security Surface (Hermit)</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="gs">**Data Classification:**</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">-</span><span class="w"> </span>Sensitive data handled: [list with classification]
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">-</span><span class="w"> </span>PII involved: [yes/no, types]
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>| Check | Criteria |
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>|-------|----------|
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>| User value clear | At least 1 user story with measurable benefit |
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>| Constraints documented | Technical and resource constraints explicit |
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>| Security addressed | Threat model for sensitive features |
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>| Scope bounded | In-scope AND out-of-scope lists |
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>| No blocking unknowns | All UNKNOWN classified or escalated |
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="gs">**Authentication/Authorization:**</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span>Auth required: [mechanism]
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span>Permissions model: [who can do what]
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="gs">**Threat Model:**</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">-</span><span class="w"> </span>Attack vectors: [identified threats]
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">-</span><span class="w"> </span>Mitigations: [planned defenses]
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gs">**Compliance:**</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="k">-</span><span class="w"> </span>Applicable standards: [GDPR, SOC2, etc.]
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="k">-</span><span class="w"> </span>Requirements: [specific obligations]
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="sb">```</span>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="gu">### Priestess: Scope Boundaries</span>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="ge">*Keeper of what&#39;s said and unsaid*</span>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="gs">**Questions to answer:**</span>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">-</span><span class="w"> </span>What is explicitly IN scope?
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="k">-</span><span class="w"> </span>What is explicitly OUT of scope?
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="k">-</span><span class="w"> </span>What edge cases must be handled?
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="k">-</span><span class="w"> </span>What edge cases are deferred?
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="k">-</span><span class="w"> </span>What assumptions are we making?
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="gs">**Output format:**</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="gu">## Scope Boundaries (Priestess)</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="gs">**In Scope:**</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">-</span><span class="w"> </span>[Explicit capability 1]
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">-</span><span class="w"> </span>[Explicit capability 2]
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="k">-</span><span class="w"> </span>...
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="gs">**Out of Scope:**</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="k">-</span><span class="w"> </span>[Explicitly excluded 1] (Reason: [why])
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="k">-</span><span class="w"> </span>[Explicitly excluded 2] (Reason: [why])
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="k">-</span><span class="w"> </span>...
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="gs">**Edge Cases (Handle):**</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">-</span><span class="w"> </span>[<span class="nl">Edge case</span>]: <span class="na">[expected behavior]</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">-</span><span class="w"> </span>...
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="gs">**Edge Cases (Defer):**</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="k">-</span><span class="w"> </span>[<span class="nl">Edge case</span>]: <span class="na">[why deferred]</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="k">-</span><span class="w"> </span>...
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="gs">**Assumptions:**</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">-</span><span class="w"> </span>[<span class="nl">Assumption 1</span>]: <span class="na">[validation status]</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">-</span><span class="w"> </span>[<span class="nl">Assumption 2</span>]: <span class="na">[validation status]</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="k">-</span><span class="w"> </span>...
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">```</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>---
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="gu">## Elicitation Process</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="gu">### Phase 1: Initial Extraction</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>Parse the feature description for:
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="k">-</span><span class="w"> </span>Explicit requirements (stated needs)
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="k">-</span><span class="w"> </span>Implicit requirements (implied by context)
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="k">-</span><span class="w"> </span>Constraints (stated limitations)
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="k">-</span><span class="w"> </span>Unknowns (gaps in description)
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="gu">### Phase 2: Perspective Analysis</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>For each perspective (Queen, Emperor, Hermit, Priestess):
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="k">1.</span> <span class="gs">**Apply perspective lens**</span> to the feature
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="k">2.</span> <span class="gs">**Generate questions**</span> from that perspective
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="k">3.</span> <span class="gs">**Answer from available context**</span> where possible
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="k">4.</span> <span class="gs">**Flag as UNKNOWN**</span> where information is missing
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="gu">### Phase 3: Gap Identification</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>Identify requirements gaps:
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="k">-</span><span class="w"> </span>Questions without answers
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="k">-</span><span class="w"> </span>Assumptions without validation
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="k">-</span><span class="w"> </span>Conflicts between perspectives
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="gu">### Phase 4: User Clarification</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>If interactive mode and gaps exist:
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="k">-</span><span class="w"> </span>Present prioritized questions to user
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="k">-</span><span class="w"> </span>One question per turn (cognitive load management)
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="k">-</span><span class="w"> </span>Multiple choice where possible
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>If autonomous mode:
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="k">-</span><span class="w"> </span>Document gaps as UNKNOWN
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="k">-</span><span class="w"> </span>Flag as requiring roundtable attention
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="k">-</span><span class="w"> </span>Proceed with reasonable defaults (documented)
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="gu">### Phase 5: Document Generation</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>Generate requirements document with all four perspectives.
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>---
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="gu">## Requirements Document Template</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="gh"># Requirements: [Feature Name]</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="gs">**Feature ID:**</span> [kebab-case]
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gs">**Generated:**</span> [timestamp]
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="gs">**Iteration:**</span> [number]
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="gu">## Overview</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>[2-3 sentence summary of what this feature does and why]
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="gu">## User Needs (Queen)</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>[Queen perspective output]
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="gu">## Constraints (Emperor)</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>[Emperor perspective output]
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="gu">## Security Surface (Hermit)</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>[Hermit perspective output]
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="gu">## Scope Boundaries (Priestess)</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>[Priestess perspective output]
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="gu">## Functional Requirements</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>| ID | Requirement | Priority | Source |
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>|----|-------------|----------|--------|
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>| FR-1 | [Requirement] | [Must/Should/Could] | [Queen/Emperor/etc] |
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>| ... | ... | ... | ... |
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="gu">## Non-Functional Requirements</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>| ID | Requirement | Target | Measurement |
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>|----|-------------|--------|-------------|
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>| NFR-1 | [Requirement] | [Value] | [How measured] |
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>| ... | ... | ... | ... |
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="gu">## Glossary</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>| Term | Definition | Context |
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>|------|------------|---------|
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>| [Term] | [Definition] | [Feature-specific/Project-wide] |
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>| ... | ... | ... |
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="gu">## Open Questions</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a><span class="k">- [ ]</span> [Question 1] (Blocker: [yes/no])
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="k">- [ ]</span> [Question 2] (Blocker: [yes/no])
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="k">-</span><span class="w"> </span>...
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="gu">## Validation Checklist</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="k">- [ ]</span> Queen perspective complete (user needs defined)
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">- [ ]</span> Emperor perspective complete (constraints documented)
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="k">- [ ]</span> Hermit perspective complete (security surface mapped)
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="k">- [ ]</span> Priestess perspective complete (scope boundaries clear)
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="k">- [ ]</span> All blocking questions resolved
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="k">- [ ]</span> No UNKNOWN items remaining in critical sections
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="sb">```</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>---
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="gu">## Addressing Roundtable Feedback</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>When invoked with <span class="sb">`feedback_to_address`</span>:
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="gu">### Step 1: Categorize Feedback</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>Sort feedback by source archetype:
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>Fool feedback -&gt; Question assumptions
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>Queen feedback -&gt; Clarify user needs
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>Priestess feedback -&gt; Sharpen boundaries
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">-</span><span class="w"> </span>Hermit feedback -&gt; Deepen security analysis
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="gu">### Step 2: Targeted Revision</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>For each feedback item:
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">1.</span> Locate relevant section in requirements
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">2.</span> Address the specific concern
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">3.</span> Document the revision with reference to feedback
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="gu">### Step 3: Re-validate</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>Run through all four perspectives again to ensure:
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="k">-</span><span class="w"> </span>Revision didn&#39;t create new gaps
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="k">-</span><span class="w"> </span>Cross-perspective consistency maintained
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>---
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="gu">## Quality Gates</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>Before completing requirements document:
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>| Check | Criteria |
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>|-------|----------|
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>| User value clear | At least 1 user story with measurable benefit |
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>| Constraints documented | Technical and resource constraints explicit |
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>| Security addressed | Threat model present for sensitive features |
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>| Scope bounded | In-scope AND out-of-scope lists populated |
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>| No blocking unknowns | All UNKNOWN items classified as non-blocking or escalated |
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>| Glossary complete | All domain terms defined |
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>---
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="k">-</span><span class="w"> </span>Skipping any of the four perspectives
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="k">-</span><span class="w"> </span>Leaving UNKNOWN on blocking requirements
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">-</span><span class="w"> </span>Accepting vague requirements (&quot;fast&quot;, &quot;secure&quot;, &quot;user-friendly&quot;)
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="k">-</span><span class="w"> </span>Assuming requirements without documenting assumptions
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">-</span><span class="w"> </span>Mixing requirements with design (requirements say WHAT, not HOW)
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">-</span><span class="w"> </span>Ignoring roundtable feedback when revising
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>---
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>Before completing:
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="k">- [ ]</span> All four perspectives (Queen, Emperor, Hermit, Priestess) addressed
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="k">- [ ]</span> Requirements are specific and measurable
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="k">- [ ]</span> Scope boundaries are explicit (in AND out)
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="k">- [ ]</span> Security surface documented for any sensitive feature
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="k">- [ ]</span> Glossary defines all domain terms
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="k">- [ ]</span> Open questions marked as blocking or non-blocking
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="k">- [ ]</span> Feedback from roundtable (if any) addressed
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="k">- [ ]</span> Document saved to correct location
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>If ANY unchecked: revise before returning.
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>---
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>Requirements are the foundation. Queen ensures we build what users need. Emperor ensures we build within constraints. Hermit ensures we build securely. Priestess ensures we build the right scope. All four perspectives, every time. Ambiguity here becomes bugs later.
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>---
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">-</span><span class="w"> </span>Skipping any of the four perspectives
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">-</span><span class="w"> </span>Leaving UNKNOWN on blocking requirements
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">-</span><span class="w"> </span>Accepting vague requirements (&quot;fast&quot;, &quot;secure&quot;)
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">-</span><span class="w"> </span>Assuming requirements without documenting assumptions
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">-</span><span class="w"> </span>Mixing requirements with design (WHAT, not HOW)
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>---
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">- [ ]</span> All four perspectives addressed
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="k">- [ ]</span> Requirements specific and measurable
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="k">- [ ]</span> Scope boundaries explicit (in AND out)
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="k">- [ ]</span> Security surface documented
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">- [ ]</span> Open questions marked blocking or non-blocking
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="k">- [ ]</span> Roundtable feedback addressed (if any)
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>If ANY unchecked: revise before returning.
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a>
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>---
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>Requirements are the foundation. Queen ensures we build what users need. Emperor ensures we build within constraints. Hermit ensures we build securely. Priestess ensures we build the right scope. All four perspectives, every time.
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
