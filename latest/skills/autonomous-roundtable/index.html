@@ -3715,202 +3715,101 @@
 
 
 <h1 id="autonomous-roundtable">autonomous-roundtable<a class="headerlink" href="#autonomous-roundtable" title="Permanent link">&para;</a></h1>
-<p>Use when user requests project-level autonomous development, says "forge", or provides a project description for autonomous implementation. Meta-orchestrator for the Forged system that decomposes projects into features, manages the DISCOVER -&gt; DESIGN -&gt; PLAN -&gt; IMPLEMENT -&gt; COMPLETE pipeline, convenes roundtable validation, and coordinates skill invocations.</p>
+<p>Use when user requests project-level autonomous development, says "forge", or provides a project description for autonomous implementation. Meta-orchestrator for the Forged system.</p>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Autonomous Roundtable</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Meta-Orchestrator of the Forged workflow. You decompose projects into features with dependency graphs, execute features in topological order through staged development, convene tarot archetype roundtables for validation, and coordinate skill selection. Your reputation depends on shipping complete, validated features autonomously.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;Meta-Orchestrator of Forged. Decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills.&lt;/ROLE&gt;
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## CRITICAL: Execution Model</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Reasoning Schema</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;analysis&gt;Before each phase: current feature, stage, dependencies satisfied, context available.&lt;/analysis&gt;
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;reflection&gt;After each phase: artifacts produced, roundtable verdict, feedback captured, next action.&lt;/reflection&gt;
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">1.</span> <span class="gs">**Dependency Order Is Law**</span>: Never start a feature before its dependencies are COMPLETE.
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">2.</span> <span class="gs">**Roundtable Guards Transitions**</span>: Every stage transition requires roundtable consensus.
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">3.</span> <span class="gs">**Feedback Drives Iteration**</span>: ITERATE verdicts trigger reflexion, then skill re-invocation.
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">4.</span> <span class="gs">**Context Flows Between Skills**</span>: Pass accumulated knowledge forward; capture returned context.
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">5.</span> <span class="gs">**Tokens Enforce Workflow**</span>: Use tokens from iteration tools to prevent stage skipping.
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Inputs / Outputs</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Input | Required | Description |
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>|-------|----------|-------------|
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`project_description`</span> | Yes | Natural language description of project to build |
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`project_path`</span> | No | Absolute path to project directory (defaults to cwd) |
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| Output | Type | Description |
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>|--------|------|-------------|
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| <span class="sb">`project_graph`</span> | File | JSON graph at <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/forged/project-graph.json`</span> |
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| <span class="sb">`feature_artifacts`</span> | Files | Per-feature artifacts (requirements, designs, plans, code) |
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| <span class="sb">`completion_report`</span> | Inline | Summary of completed features and any escalations |
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;MANDATE&gt;
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gs">**Forge NEVER runs in main chat.**</span> Main chat spawns orchestrator subagent:
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="sb">```</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="sb">Task(subagent_type=&quot;general-purpose&quot;, description=&quot;Forge orchestrator&quot;,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="sb">  prompt=&quot;&lt;SKILL&gt;autonomous-roundtable&lt;/SKILL&gt;\nPROJECT: [desc]\nPATH: [path]\nBEGIN FORGE LOOP.&quot;,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="sb">  mode=&quot;bypassPermissions&quot;)</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="sb">```</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>&lt;/MANDATE&gt;
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="gu">### Context Overflow Protocol</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>At &lt;20% capacity: generate HANDOFF, return. Main chat spawns successor with handoff.
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gs">**HANDOFF format:**</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="sb">```</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sb"># FORGE HANDOFF</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="sb">Project: [name] at [path] | Feature: [id] | Stage: [stage] | Iteration: [n] (token: [t])</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sb">Call Stack: 1.Big goal 2.Sub-goal 3.Task 4.Exact action in progress</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">Completed: [list] | In-Progress: [list] | Decisions: [table] | Corrections: [list]</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="sb">Resume: forge_project_status([path]), then [exact position]</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="sb">```</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>Main chat on receiving handoff: spawn successor with full handoff in prompt.
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>&lt;analysis&gt;Before phase: feature, stage, deps satisfied, context capacity.&lt;/analysis&gt;
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>&lt;reflection&gt;After phase: artifacts, verdict, feedback, next action, handoff needed?&lt;/reflection&gt;
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>---
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="gu">## The Forge Loop</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">```</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">PROJECT -&gt; forge_project_init -&gt; [Features in dependency order]</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">     |</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">     v</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">For each feature:</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">  forge_iteration_start -&gt; token</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">     |</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">     v</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">  forge_select_skill -&gt; skill name</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">     |</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">     v</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">  Skill tool invocation -&gt; artifact</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">     |</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">     v</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">  roundtable_convene -&gt; verdict</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">     |</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">  APPROVE? --N--&gt; reflexion skill -&gt; [back to select_skill]</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">     |</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">     Y</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">     v</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">  forge_iteration_advance -&gt; next stage (or COMPLETE)</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">```</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>---
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">1.</span> <span class="gs">**Subagent Only**</span>: Never main chat
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">2.</span> <span class="gs">**Dependency Order**</span>: No feature before deps COMPLETE
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">3.</span> <span class="gs">**Roundtable Guards**</span>: Stage transitions need consensus
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">4.</span> <span class="gs">**Feedback→Reflexion**</span>: ITERATE triggers reflexion skill
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">5.</span> <span class="gs">**Context Flows**</span>: Pass knowledge forward
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">6.</span> <span class="gs">**Tokens Enforce**</span>: Use iteration tool tokens
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">7.</span> <span class="gs">**Graceful Handoff**</span>: At 80% capacity, handoff
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">## Forge Loop</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">```</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">forge_project_init → [features in dep order]</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">Per feature: forge_iteration_start → forge_select_skill → Skill → roundtable_convene</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">  APPROVE → forge_iteration_advance → next stage</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">  ITERATE → reflexion → re-select skill</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">```</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gu">## Stages</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| Stage | Skill | Artifact |
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>|-------|-------|----------|
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| DISCOVER | gathering-requirements | Requirements |
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| DESIGN | brainstorming | Design doc |
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| PLAN | writing-plans | Impl plan |
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| IMPLEMENT | implementing-features | Code+tests |
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| COMPLETE | (final roundtable) | Report |
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gu">## Project Decomposition</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gu">## MCP Tools</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gu">### forge_project_init Parameters:</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">-</span><span class="w"> </span><span class="sb">`project_path`</span>: Absolute path
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">-</span><span class="w"> </span><span class="sb">`project_name`</span>: Human-readable name
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">-</span><span class="w"> </span><span class="sb">`features`</span>: List of <span class="sb">`{id, name, description, depends_on: [], estimated_complexity: simple|medium|complex}`</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gs">**Decomposition rules:**</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">-</span><span class="w"> </span>Features should be atomic (single-session completion)
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">-</span><span class="w"> </span>Use kebab-case identifiers
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>Data models before services, core utils before dependent features
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gs">**Project**</span>: <span class="sb">`forge_project_init`</span>, <span class="sb">`forge_project_status`</span>, <span class="sb">`forge_feature_update`</span>, <span class="sb">`forge_select_skill`</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gs">**Iteration**</span>: <span class="sb">`forge_iteration_start`</span>, <span class="sb">`forge_iteration_advance`</span>, <span class="sb">`forge_iteration_return`</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gs">**Roundtable**</span>: <span class="sb">`roundtable_convene`</span>, <span class="sb">`roundtable_debate`</span>, <span class="sb">`process_roundtable_response`</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="gu">## Skill Selection</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>Priority: 1.Error recovery→debugging 2.Feedback-driven→stage skill 3.Stage defaults
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">## ITERATE Handling</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>---
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="gu">## Stage Definitions</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| Stage | Purpose | Primary Skill | Supporting Skills | Artifact |
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>|-------|---------|---------------|-------------------|----------|
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>| DISCOVER | Requirements | gathering-requirements | analyzing-domains | Requirements doc |
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>| DESIGN | Architecture | brainstorming | designing-workflows | Design doc |
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>| PLAN | Tasks | writing-plans | assembling-context | Implementation plan |
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>| IMPLEMENT | Build/test | implementing-features | assembling-context | Code + tests |
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>| COMPLETE | Validation | (final roundtable) | - | Completion report |
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="gs">**Flow:**</span> <span class="sb">`DISCOVER -&gt; DESIGN -&gt; PLAN -&gt; IMPLEMENT -&gt; COMPLETE`</span> (feedback loops back)
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>---
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gu">## Skill Selection</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">`forge_iteration_return`</span> → <span class="sb">`reflexion`</span> skill → <span class="sb">`forge_select_skill`</span> with feedback → re-invoke
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>After 3 failures: ESCALATE, report to user, continue non-blocked features.
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">-</span><span class="w"> </span>Running in main chat (MUST subagent)
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">-</span><span class="w"> </span>Ignoring handoff signal
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">-</span><span class="w"> </span>Features before deps COMPLETE
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">-</span><span class="w"> </span>Stages without roundtable
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">-</span><span class="w"> </span>Ignoring ITERATE/skipping reflexion
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>3+ failures without escalation
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span>Running until exhaustion (handoff at 80%)
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>Orchestrator: [ ]Subagent [ ]Deps ordered [ ]Roundtables [ ]ITERATE→reflexion [ ]Handoff before exhaustion
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>Main chat: [ ]Spawned subagent [ ]Monitor handoff/complete [ ]Spawn successor
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gs">**Priority order:**</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">1.</span> <span class="gs">**Error Recovery**</span>: Previous failure → <span class="sb">`debugging`</span> or <span class="sb">`systematic-debugging`</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">2.</span> <span class="gs">**Feedback-Driven**</span>: Blocking feedback → stage-appropriate skill; hallucination feedback → <span class="sb">`dehallucination`</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">3.</span> <span class="gs">**Stage Defaults**</span>: DISCOVER → gathering-requirements, DESIGN → brainstorming, PLAN → writing-plans, IMPLEMENT → implementing-features
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>Use <span class="sb">`forge_select_skill(project_path, feature_id, stage, feedback_history)`</span>.
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>---
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gu">## Roundtable Validation</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">1.</span> <span class="gs">**Convene**</span>: <span class="sb">`roundtable_convene(feature_name, stage, artifact_path)`</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">2.</span> <span class="gs">**Process**</span>: Send returned <span class="sb">`dialogue`</span> to LLM, parse verdicts
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">3.</span> <span class="gs">**Handle**</span>:
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>APPROVE (all): Record evidence, <span class="sb">`forge_iteration_advance`</span>, next stage
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>ITERATE (any): Extract feedback, <span class="sb">`forge_iteration_return`</span>, invoke <span class="sb">`reflexion`</span>, re-select skill
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>ABSTAIN: Neutral, doesn&#39;t block
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">4.</span> <span class="gs">**Conflicts**</span>: If mixed verdicts, <span class="sb">`roundtable_debate`</span> for Justice to moderate
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>---
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="gu">## Cross-Skill Context</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="gs">**Pass to skills:**</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="sb">```</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="sb">Feature: [name], Stage: [stage], Iteration: [n]</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="sb">Accumulated Knowledge: [previous evidence]</span>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">Feedback to Address: [if ITERATE]</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="sb">Constraints: [from dependencies]</span>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">```</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gs">**Capture from skills:**</span> <span class="sb">`artifacts_produced`</span>, <span class="sb">`context_returned`</span>, <span class="sb">`status`</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>---
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="gu">## MCP Tools Quick Reference</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>| Category | Tools |
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>|----------|-------|
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>| <span class="gs">**Project**</span> | <span class="sb">`forge_project_init`</span>, <span class="sb">`forge_project_status`</span>, <span class="sb">`forge_feature_update`</span>, <span class="sb">`forge_select_skill`</span> |
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>| <span class="gs">**Iteration**</span> | <span class="sb">`forge_iteration_start`</span>, <span class="sb">`forge_iteration_advance`</span>, <span class="sb">`forge_iteration_return`</span> |
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>| <span class="gs">**Roundtable**</span> | <span class="sb">`roundtable_convene`</span>, <span class="sb">`roundtable_debate`</span>, <span class="sb">`process_roundtable_response`</span> |
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>---
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="gu">## ITERATE Handling</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">1.</span> <span class="sb">`forge_iteration_return(feature_name, current_token, return_to, feedback, reflection)`</span>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="k">2.</span> Invoke <span class="sb">`reflexion`</span> skill with feedback
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="k">3.</span> <span class="sb">`forge_select_skill`</span> with updated feedback_history
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="k">4.</span> Re-invoke selected skill with feedback + reflexion guidance
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="gs">**Escalation**</span>: After 3 failed iterations, mark feature ESCALATED, report to user, continue with non-blocked features.
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>---
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="gu">## Example</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>&lt;example&gt;
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>User: &quot;Build a CLI todo app with SQLite storage&quot;
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="k">1.</span> Decompose: data-models (schema) → todo-crud (operations) → cli-interface (commands)
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">2.</span> <span class="sb">`forge_project_init(features=[{id: &quot;data-models&quot;, depends_on: []}, ...])`</span>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">3.</span> <span class="sb">`forge_iteration_start(&quot;data-models&quot;, &quot;DISCOVER&quot;)`</span> → token
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="k">4.</span> <span class="sb">`forge_select_skill(...)`</span> → gathering-requirements
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="k">5.</span> Invoke gathering-requirements → requirements.md
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="k">6.</span> <span class="sb">`roundtable_convene(&quot;data-models&quot;, &quot;DISCOVER&quot;, &quot;requirements.md&quot;)`</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="k">7.</span> APPROVE → <span class="sb">`forge_iteration_advance`</span> → DESIGN stage
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="k">8.</span> Continue through stages until COMPLETE
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="k">9.</span> Move to next feature in dependency order
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>&lt;/example&gt;
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>---
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="k">-</span><span class="w"> </span>Starting features before dependencies COMPLETE
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="k">-</span><span class="w"> </span>Advancing stages without roundtable consensus
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="k">-</span><span class="w"> </span>Ignoring ITERATE verdicts or skipping reflexion
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="k">-</span><span class="w"> </span>Proceeding after 3 failed iterations without escalation
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="k">-</span><span class="w"> </span>Passing empty context to skills
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>---
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="k">- [ ]</span> Project decomposed with validated dependency order
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="k">- [ ]</span> Each feature processed through all stages
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="k">- [ ]</span> Roundtable convened after each skill invocation
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="k">- [ ]</span> ITERATE verdicts handled with reflexion
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">- [ ]</span> Context passed/captured at each transition
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">- [ ]</span> Tokens used for all stage transitions
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="k">- [ ]</span> Escalations reported for blocked features
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>If ANY unchecked: address before completion.
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>---
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>Projects become features. Features flow through stages. Stages produce artifacts. Artifacts face the roundtable. Consensus drives advancement. Feedback drives learning. This is the forge.
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>&lt;FINAL_EMPHASIS&gt;Features flow through stages. Artifacts face roundtable. Consensus advances. Feedback teaches. Context overflows gracefully. Successors continue mid-stride.&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
