@@ -5,14 +5,14 @@ from collections import deque
 from typing import Dict, Any, List
 from pathlib import Path
 
-from .extractors.todos import extract_todos
-from .extractors.skill import extract_active_skill
-from .extractors.skill_phase import extract_skill_phase
-from .extractors.persona import extract_persona
-from .extractors.files import extract_recent_files
-from .extractors.position import extract_position
-from .extractors.workflow import extract_workflow_pattern
-from .extractors.types import Soul
+from spellbook_mcp.extractors.todos import extract_todos
+from spellbook_mcp.extractors.skill import extract_active_skill
+from spellbook_mcp.extractors.skill_phase import extract_skill_phase
+from spellbook_mcp.extractors.persona import extract_persona
+from spellbook_mcp.extractors.files import extract_recent_files
+from spellbook_mcp.extractors.position import extract_position
+from spellbook_mcp.extractors.workflow import extract_workflow_pattern
+from spellbook_mcp.extractors.types import Soul
 
 
 def read_jsonl(path: str, max_messages: int = 200) -> List[Dict[str, Any]]:

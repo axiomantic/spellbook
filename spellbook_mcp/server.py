@@ -37,27 +37,16 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 import os
 import json
-import sys
 import time
 
-# Add script directory and repo root to sys.path to allow imports when run directly.
-# - current_dir: allows "from path_utils import ..." style imports
-# - repo_root: allows "from spellbook_mcp.X import ..." style imports
-# This fixes import issues when the server is executed as a standalone script.
-current_dir = os.path.dirname(os.path.abspath(__file__))
-repo_root = os.path.dirname(current_dir)
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
-if repo_root not in sys.path:
-    sys.path.insert(0, repo_root)
-
-from path_utils import get_project_dir
-from session_ops import (
+# All imports use full package paths - no sys.path manipulation needed
+from spellbook_mcp.path_utils import get_project_dir
+from spellbook_mcp.session_ops import (
     split_by_char_limit,
     list_sessions_with_samples,
 )
-from terminal_utils import detect_terminal, spawn_terminal_window
-from swarm_tools import (
+from spellbook_mcp.terminal_utils import detect_terminal, spawn_terminal_window
+from spellbook_mcp.swarm_tools import (
     swarm_create,
     swarm_register,
     swarm_progress,
@@ -65,22 +54,22 @@ from swarm_tools import (
     swarm_error,
     swarm_monitor
 )
-from config_tools import (
+from spellbook_mcp.config_tools import (
     config_get,
     config_set,
     session_init,
     session_mode_set,
     session_mode_get,
 )
-from compaction_detector import (
+from spellbook_mcp.compaction_detector import (
     check_for_compaction,
     get_pending_context,
     mark_context_injected,
     get_recovery_reminder,
 )
-from db import init_db, get_db_path
-from watcher import SessionWatcher
-from injection import inject_recovery_context
+from spellbook_mcp.db import init_db, get_db_path
+from spellbook_mcp.watcher import SessionWatcher
+from spellbook_mcp.injection import inject_recovery_context
 
 # Forged imports
 from spellbook_mcp.forged.schema import init_forged_schema

@@ -190,10 +190,10 @@ def get_launchd_plist_path() -> Path:
 def generate_launchd_plist() -> str:
     """Generate launchd plist content.
 
-    Uses `uv run` to automatically install dependencies in a sandboxed venv.
+    Uses `uv run python -m spellbook_mcp.server` to run the server as a module,
+    which ensures the package is properly installed via pyproject.toml.
     """
     uv_path = get_uv_path()
-    server_script = get_server_script()
     spellbook_dir = get_spellbook_dir()
     log_file = get_log_file()
     err_log_file = get_err_log_file()
@@ -212,7 +212,9 @@ def generate_launchd_plist() -> str:
             <array>
                 <string>{uv_path}</string>
                 <string>run</string>
-                <string>{server_script}</string>
+                <string>python</string>
+                <string>-m</string>
+                <string>spellbook_mcp.server</string>
             </array>
 
             <key>EnvironmentVariables</key>
@@ -318,10 +320,10 @@ def get_systemd_service_path() -> Path:
 def generate_systemd_service() -> str:
     """Generate systemd user service content.
 
-    Uses `uv run` to automatically install dependencies in a sandboxed venv.
+    Uses `uv run python -m spellbook_mcp.server` to run the server as a module,
+    which ensures the package is properly installed via pyproject.toml.
     """
     uv_path = get_uv_path()
-    server_script = get_server_script()
     spellbook_dir = get_spellbook_dir()
     port = get_port()
     host = get_host()
@@ -333,7 +335,7 @@ def generate_systemd_service() -> str:
 
         [Service]
         Type=simple
-        ExecStart={uv_path} run {server_script}
+        ExecStart={uv_path} run python -m spellbook_mcp.server
         WorkingDirectory={spellbook_dir}
         Restart=always
         RestartSec=5

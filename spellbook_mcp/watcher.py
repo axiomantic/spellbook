@@ -11,10 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
-try:
-    from .db import get_connection
-except ImportError:
-    from db import get_connection
+from spellbook_mcp.db import get_connection
 
 
 logger = logging.getLogger(__name__)
@@ -69,13 +66,27 @@ class SessionWatcher(threading.Thread):
         self._shutdown.set()
 
     def run(self):
-        """Main watcher loop with error recovery."""
+        """Main watcher loop with error recovery and circuit breaker."""
+        consecutive_errors = 0
+        max_consecutive_errors = 5  # Give up after 5 consecutive failures
+
         while not self._shutdown.is_set():
             try:
                 self._poll_sessions()
                 self._write_heartbeat()
+                consecutive_errors = 0  # Reset on success
             except Exception as e:
-                logger.error(f"Watcher error: {e}", exc_info=True)
+                consecutive_errors += 1
+                if consecutive_errors >= max_consecutive_errors:
+                    logger.error(
+                        f"Watcher giving up after {max_consecutive_errors} consecutive errors. "
+                        f"Last error: {e}"
+                    )
+                    self._running = False
+                    return  # Exit the watcher thread
+                logger.warning(
+                    f"Watcher error ({consecutive_errors}/{max_consecutive_errors}): {e}"
+                )
                 time.sleep(5.0)  # Backoff before retry
 
             # Use event.wait() instead of time.sleep() for responsive shutdown
@@ -90,21 +101,13 @@ class SessionWatcher(threading.Thread):
         2. Saves the soul to the database
         3. Signals the injection module to trigger context recovery
         """
-        # Lazy imports to avoid circular dependency and script mode issues
-        try:
-            from .compaction_detector import (
-                _get_current_session_file,
-                check_for_compaction,
-            )
-            from .soul_extractor import extract_soul
-            from .injection import _set_pending_compaction
-        except ImportError:
-            from compaction_detector import (
-                _get_current_session_file,
-                check_for_compaction,
-            )
-            from soul_extractor import extract_soul
-            from injection import _set_pending_compaction
+        # Lazy imports to avoid circular dependency at module load time
+        from spellbook_mcp.compaction_detector import (
+            _get_current_session_file,
+            check_for_compaction,
+        )
+        from spellbook_mcp.soul_extractor import extract_soul
+        from spellbook_mcp.injection import _set_pending_compaction
 
         # Check for compaction event
         event = check_for_compaction(self.project_path)

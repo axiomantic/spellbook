@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-01-24
+
+### Fixed
+- **MCP daemon import errors** - Fixed watcher thread import failures that caused 600K+ error log lines
+  - Converted all imports to use full package paths (`from spellbook_mcp.x import...`)
+  - Removed fragile sys.path manipulation from server.py
+  - Added pyproject.toml for proper package installation
+  - Updated daemon to run as module (`python -m spellbook_mcp.server`) instead of script
+- **Watcher circuit breaker** - Watcher now gives up after 5 consecutive failures instead of infinite retry loop
+- **Test isolation for pr_bless_pattern** - Fixed test pollution from global config directory
+
 ## [0.9.0] - 2026-01-22
 
 ### Added
@@ -641,7 +652,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/axiomantic/spellbook/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/axiomantic/spellbook/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/axiomantic/spellbook/compare/v0.7.7...v0.8.0
 [0.7.7]: https://github.com/axiomantic/spellbook/compare/v0.7.6...v0.7.7

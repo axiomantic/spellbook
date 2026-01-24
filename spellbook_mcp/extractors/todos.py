@@ -2,8 +2,8 @@
 
 from typing import List, Dict, Any
 
-from .message_utils import get_tool_calls
-from .types import TodoList
+from spellbook_mcp.extractors.message_utils import get_tool_calls
+from spellbook_mcp.extractors.types import TodoList
 
 
 def extract_todos(messages: List[Dict[str, Any]]) -> TodoList:

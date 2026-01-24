@@ -2,8 +2,8 @@
 
 from typing import List, Dict, Any
 
-from .message_utils import get_tool_calls
-from .types import RecentFiles
+from spellbook_mcp.extractors.message_utils import get_tool_calls
+from spellbook_mcp.extractors.types import RecentFiles
 
 
 def extract_recent_files(messages: List[Dict[str, Any]], limit: int = 50) -> RecentFiles:
