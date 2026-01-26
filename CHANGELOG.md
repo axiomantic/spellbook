@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.4] - 2026-01-26
+
+### Added
+- **Skill usage analysis** - New `analyzing-skill-usage` skill and `analyze_skill_usage` MCP tool for measuring skill performance
+  - A/B testing between skill versions (via `skill:v2` suffixes or `[v2]` in args)
+  - Identifying weak skills by failure/correction rate
+  - Metrics: completion rate, correction rate, token efficiency, failure score
+
 ## [0.9.3] - 2026-01-24
 
 ### Changed

@@ -92,7 +92,7 @@ Reusable workflows for structured development:
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] | spellbook |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] | spellbook |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
-| **Meta** | [using-skills], [writing-skills], [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia] | [superpowers] |
+| **Meta** | [using-skills], [writing-skills], [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia], [analyzing-skill-usage] | [superpowers] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] | spellbook |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
@@ -124,6 +124,7 @@ Reusable workflows for structured development:
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
 [project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
+[analyzing-skill-usage]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-skill-usage/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/

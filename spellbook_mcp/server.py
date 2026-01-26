@@ -98,6 +98,9 @@ from spellbook_mcp.pr_distill.bless import bless_pattern as do_bless_pattern, li
 from spellbook_mcp.pr_distill.config import load_config as load_pr_config
 from spellbook_mcp.pr_distill.fetch import parse_pr_identifier, fetch_pr as do_fetch_pr
 
+# Skill analyzer import
+from spellbook_mcp.skill_analyzer import analyze_sessions as do_analyze_skill_usage
+
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
 
@@ -1205,6 +1208,51 @@ def forge_process_roundtable_response(
         response=response,
         stage=stage,
         iteration=iteration,
+    )
+
+
+# ============================================================================
+# Skill Analysis Tools
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+def analyze_skill_usage(
+    session_paths: Optional[List[str]] = None,
+    skills: Optional[List[str]] = None,
+    compare_versions: bool = False,
+    limit: int = 20,
+) -> dict:
+    """
+    Analyze skill usage patterns across sessions for A/B testing and performance measurement.
+
+    Extracts skill invocations from session transcripts and calculates metrics:
+    - Completion rate: % of invocations that complete without being superseded
+    - Correction rate: % of invocations where user corrected/stopped
+    - Token efficiency: Average tokens consumed per invocation
+    - Failure score: Composite score ranking skill weaknesses
+
+    Args:
+        session_paths: Specific session files to analyze (defaults to recent project sessions)
+        skills: Filter to only these skills (defaults to all)
+        compare_versions: Group by version markers (e.g., skill:v2) for A/B comparison
+        limit: Max sessions to analyze when session_paths not specified (default 20)
+
+    Returns:
+        Dict containing:
+        - sessions_analyzed: Number of sessions processed
+        - total_invocations: Total skill invocations found
+        - unique_skills: Number of distinct skills
+        - skill_metrics: Per-skill metrics sorted by failure score
+        - weak_skills: Top 5 skills with failure_score > 0.2
+        - version_comparisons: A/B results when compare_versions=True
+    """
+    return do_analyze_skill_usage(
+        session_paths=session_paths,
+        skills_filter=skills,
+        group_by_version=compare_versions,
+        limit=limit,
     )
 
 
