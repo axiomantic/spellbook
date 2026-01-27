@@ -402,3 +402,193 @@ class TestGenerateBootPrompt:
         assert "### 0.5 Behavioral Constraints" in result
         assert "workflow pattern: TDD" in result
         assert "Honor decisions from prior session" in result
+
+    def test_boot_prompt_with_todos(self):
+        """Test boot prompt includes TodoWrite for pending todos."""
+        from spellbook_mcp.resume import generate_boot_prompt
+        import json
+
+        todos = json.dumps([
+            {"content": "Implement login", "status": "pending"},
+            {"content": "Write tests", "status": "in_progress"},
+        ])
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "todos": todos,
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "### 0.3 Todo State Restoration" in result
+        assert "TodoWrite(" in result
+        assert "Implement login" in result
+        assert "Write tests" in result
+
+    def test_boot_prompt_no_todos(self):
+        """Test boot prompt handles no todos."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "todos": None,
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "NO TODOS TO RESTORE" in result
+
+    def test_boot_prompt_empty_todos(self):
+        """Test boot prompt handles empty todos array."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "todos": "[]",
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "NO TODOS TO RESTORE" in result
+
+    def test_boot_prompt_with_planning_docs(self, tmp_path):
+        """Test boot prompt includes Read() for planning docs."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        # Create actual planning doc
+        impl_doc = tmp_path / "feature-impl.md"
+        impl_doc.write_text("# Implementation Plan")
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "recent_files": [str(impl_doc)],
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "### 0.2 Required Document Reads" in result
+        assert f'Read("{impl_doc}")' in result
+
+    def test_boot_prompt_no_planning_docs(self):
+        """Test boot prompt handles no planning docs."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "recent_files": None,
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "NO DOCUMENTS TO READ" in result
+
+
+class TestGetResumeFields:
+    """Tests for get_resume_fields function."""
+
+    def test_no_recent_session_returns_unavailable(self, tmp_path):
+        """Test returns resume_available=False when no recent session."""
+        from spellbook_mcp.resume import get_resume_fields
+        from spellbook_mcp.db import init_db
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        result = get_resume_fields("/test/project", str(db_path))
+
+        assert result["resume_available"] is False
+        assert result.get("resume_session_id") is None
+
+    def test_recent_session_returns_resume_fields(self, tmp_path):
+        """Test returns resume fields when recent session exists."""
+        from spellbook_mcp.resume import get_resume_fields
+        from spellbook_mcp.db import init_db, get_connection
+        import json
+        from datetime import datetime
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Insert a recent soul
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT INTO souls (id, session_id, project_path, bound_at, active_skill, skill_phase, todos)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "soul-1",
+            "session-1",
+            "/test/project",
+            datetime.now().isoformat(),
+            "implementing-features",
+            "DESIGN",
+            json.dumps([{"content": "Task 1", "status": "pending"}]),
+        ))
+        conn.commit()
+
+        result = get_resume_fields("/test/project", str(db_path))
+
+        assert result["resume_available"] is True
+        assert result["resume_session_id"] == "soul-1"
+        assert result["resume_active_skill"] == "implementing-features"
+        assert result["resume_skill_phase"] == "DESIGN"
+        assert result["resume_pending_todos"] == 1
+        assert result["resume_boot_prompt"] is not None
+
+    def test_old_session_not_returned(self, tmp_path):
+        """Test sessions older than 24h are not returned."""
+        from spellbook_mcp.resume import get_resume_fields
+        from spellbook_mcp.db import init_db, get_connection
+        from datetime import datetime, timedelta
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Insert an old soul (25 hours ago)
+        old_time = (datetime.now() - timedelta(hours=25)).isoformat()
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT INTO souls (id, session_id, project_path, bound_at, active_skill)
+            VALUES (?, ?, ?, ?, ?)
+        """, ("soul-old", "session-old", "/test/project", old_time, "debugging"))
+        conn.commit()
+
+        result = get_resume_fields("/test/project", str(db_path))
+
+        assert result["resume_available"] is False
+
+    def test_corrupted_todos_sets_flag(self, tmp_path):
+        """Test corrupted todos JSON sets resume_todos_corrupted flag."""
+        from spellbook_mcp.resume import get_resume_fields
+        from spellbook_mcp.db import init_db, get_connection
+        from datetime import datetime
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT INTO souls (id, session_id, project_path, bound_at, todos)
+            VALUES (?, ?, ?, ?, ?)
+        """, ("soul-1", "session-1", "/test/project", datetime.now().isoformat(), "not valid json"))
+        conn.commit()
+
+        result = get_resume_fields("/test/project", str(db_path))
+
+        assert result["resume_available"] is True
+        assert result["resume_todos_corrupted"] is True
+        assert result["resume_pending_todos"] == 0

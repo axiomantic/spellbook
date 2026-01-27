@@ -261,3 +261,132 @@ def generate_boot_prompt(soul: dict) -> str:
     sections.append("\n".join(constraints))
 
     return "\n".join(sections)
+
+
+def _calculate_age_hours(bound_at: str) -> float:
+    """Calculate hours since bound_at timestamp.
+
+    Args:
+        bound_at: ISO timestamp string
+
+    Returns:
+        Hours elapsed since bound_at
+    """
+    bound_dt = datetime.fromisoformat(bound_at.replace("Z", "+00:00"))
+    # Handle timezone-naive datetime
+    if bound_dt.tzinfo is None:
+        now = datetime.now()
+    else:
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+    delta = now - bound_dt
+    return delta.total_seconds() / 3600
+
+
+def get_resume_fields(project_path: str, db_path: str) -> ResumeFields:
+    """Query database for resumable session and build flattened fields.
+
+    Args:
+        project_path: Absolute path to project
+        db_path: Path to SQLite database
+
+    Returns:
+        ResumeFields dict with resume_available and optional resume context
+    """
+    from spellbook_mcp.db import get_connection
+
+    try:
+        conn = get_connection(db_path)
+        cursor = conn.cursor()
+
+        # Calculate threshold time (24 hours ago)
+        from datetime import timedelta
+        threshold = (datetime.now() - timedelta(hours=24)).isoformat()
+
+        # Query for recent soul (within 24 hours)
+        cursor.execute("""
+            SELECT
+                id,
+                session_id,
+                bound_at,
+                persona,
+                active_skill,
+                skill_phase,
+                todos,
+                recent_files,
+                exact_position,
+                workflow_pattern
+            FROM souls
+            WHERE project_path = ?
+              AND bound_at > ?
+            ORDER BY bound_at DESC
+            LIMIT 1
+        """, (project_path, threshold))
+
+        row = cursor.fetchone()
+
+        if not row:
+            return ResumeFields(resume_available=False)
+
+        # Parse row
+        soul_id = row[0]
+        session_id = row[1]
+        bound_at = row[2]
+        persona = row[3]
+        active_skill = row[4]
+        skill_phase = row[5]
+        todos_json = row[6]
+        recent_files_json = row[7]
+        exact_position = row[8]
+        workflow_pattern = row[9]
+
+        # Validate required fields
+        if not soul_id or not bound_at:
+            logger.error("Corrupted soul record: missing required fields")
+            return ResumeFields(resume_available=False)
+
+        # Parse recent_files
+        recent_files = []
+        if recent_files_json:
+            try:
+                recent_files = json.loads(recent_files_json)
+            except json.JSONDecodeError:
+                logger.warning("Could not parse recent_files JSON")
+
+        # Count pending todos and check for corruption
+        pending_count, todos_corrupted = count_pending_todos(todos_json)
+
+        # Build soul dict for boot prompt generation
+        soul = {
+            "id": soul_id,
+            "session_id": session_id,
+            "project_path": project_path,
+            "bound_at": bound_at,
+            "persona": persona,
+            "active_skill": active_skill,
+            "skill_phase": skill_phase,
+            "todos": todos_json,
+            "recent_files": recent_files,
+            "exact_position": exact_position,
+            "workflow_pattern": workflow_pattern,
+        }
+
+        # Generate boot prompt
+        boot_prompt = generate_boot_prompt(soul)
+
+        return ResumeFields(
+            resume_available=True,
+            resume_session_id=soul_id,
+            resume_age_hours=round(_calculate_age_hours(bound_at), 1),
+            resume_bound_at=bound_at,
+            resume_active_skill=active_skill,
+            resume_skill_phase=skill_phase,
+            resume_pending_todos=pending_count,
+            resume_todos_corrupted=todos_corrupted if todos_corrupted else None,
+            resume_workflow_pattern=workflow_pattern,
+            resume_boot_prompt=boot_prompt,
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to get resume context: {e}")
+        return ResumeFields(resume_available=False)
