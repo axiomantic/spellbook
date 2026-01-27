@@ -214,3 +214,82 @@ class TestCountPendingTodos:
         # Should count valid pending items and not crash
         assert count == 2
         assert corrupted is False
+
+
+class TestFindPlanningDocs:
+    """Tests for _find_planning_docs function."""
+
+    def test_find_impl_docs(self, tmp_path):
+        """Test finds *-impl.md files."""
+        from spellbook_mcp.resume import _find_planning_docs
+
+        # Create test files
+        impl_doc = tmp_path / "feature-impl.md"
+        impl_doc.write_text("# Implementation Plan")
+
+        recent_files = [str(impl_doc), "/other/file.py"]
+
+        result = _find_planning_docs(recent_files)
+
+        assert str(impl_doc) in result
+
+    def test_find_design_docs(self, tmp_path):
+        """Test finds *-design.md files."""
+        from spellbook_mcp.resume import _find_planning_docs
+
+        design_doc = tmp_path / "feature-design.md"
+        design_doc.write_text("# Design Doc")
+
+        result = _find_planning_docs([str(design_doc)])
+
+        assert str(design_doc) in result
+
+    def test_find_plan_docs(self, tmp_path):
+        """Test finds *-plan.md files."""
+        from spellbook_mcp.resume import _find_planning_docs
+
+        plan_doc = tmp_path / "feature-plan.md"
+        plan_doc.write_text("# Plan")
+
+        result = _find_planning_docs([str(plan_doc)])
+
+        assert str(plan_doc) in result
+
+    def test_find_plans_directory(self, tmp_path):
+        """Test finds files in plans/ directories."""
+        from spellbook_mcp.resume import _find_planning_docs
+
+        plans_dir = tmp_path / "plans"
+        plans_dir.mkdir()
+        doc = plans_dir / "something.md"
+        doc.write_text("# In plans dir")
+
+        result = _find_planning_docs([str(doc)])
+
+        assert str(doc) in result
+
+    def test_skips_missing_files(self, tmp_path):
+        """Test skips files that no longer exist."""
+        from spellbook_mcp.resume import _find_planning_docs
+
+        # Reference non-existent file
+        missing = str(tmp_path / "missing-impl.md")
+
+        result = _find_planning_docs([missing])
+
+        assert missing not in result
+        assert result == []
+
+    def test_limits_to_three_docs(self, tmp_path):
+        """Test limits result to 3 documents."""
+        from spellbook_mcp.resume import _find_planning_docs
+
+        docs = []
+        for i in range(5):
+            doc = tmp_path / f"doc{i}-impl.md"
+            doc.write_text(f"# Doc {i}")
+            docs.append(str(doc))
+
+        result = _find_planning_docs(docs)
+
+        assert len(result) == 3

@@ -145,3 +145,43 @@ def count_pending_todos(todos_json: Optional[str]) -> tuple[int, bool]:
         return (pending, False)
     except json.JSONDecodeError:
         return (0, True)
+
+
+def _find_planning_docs(recent_files: list[str]) -> list[str]:
+    """Extract planning documents from recent files.
+
+    Looks for files matching patterns:
+    - *-impl.md, *-design.md, *-plan.md
+    - Files in plans/ directories
+
+    Only includes files that still exist.
+
+    Args:
+        recent_files: List of recently accessed file paths
+
+    Returns:
+        List of existing planning doc paths (max 3)
+    """
+    plan_patterns = [
+        r".*-impl\.md$",
+        r".*-design\.md$",
+        r".*-plan\.md$",
+        r".*/plans/.*\.md$",
+    ]
+
+    docs = []
+    missing = []
+
+    for f in recent_files:
+        for pattern in plan_patterns:
+            if re.match(pattern, f):
+                if os.path.exists(f):
+                    docs.append(f)
+                else:
+                    missing.append(f)
+                break
+
+    if missing:
+        logger.warning(f"Planning docs no longer exist: {missing}")
+
+    return docs[:3]  # Limit to 3 docs
