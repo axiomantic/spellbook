@@ -9,6 +9,14 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from spellbook_mcp.session_ops import load_jsonl
 
+from datetime import datetime
+
+# Outcome enum values and their triggers
+OUTCOME_COMPLETED = "completed"      # skill.completed=True, skill.superseded=False
+OUTCOME_ABANDONED = "abandoned"      # skill.completed=False, skill.end_idx is set, not superseded
+OUTCOME_SUPERSEDED = "superseded"    # skill.superseded=True
+OUTCOME_SESSION_ENDED = "session_ended"  # session inactive for 5+ minutes, skill still open
+
 
 def _get_tool_uses(msg: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Extract tool_use blocks from Claude Code message format.
@@ -135,6 +143,89 @@ class SkillMetrics:
             "correction_rate": round(self.correction_rate, 2),
             "failure_score": round(self.failure_score, 2),
         }
+
+
+@dataclass
+class SkillOutcome:
+    """Persistent skill outcome record for analytics.
+
+    Created from SkillInvocation but adds persistence-specific fields.
+    """
+    id: Optional[int] = None  # DB auto-increment, None before insert
+    skill_name: str = ""
+    skill_version: Optional[str] = None
+    session_id: str = ""  # Session filename (stem), LOCAL ONLY
+    project_encoded: str = ""  # Encoded project path, LOCAL ONLY
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    duration_seconds: Optional[float] = None
+    outcome: str = ""  # One of OUTCOME_* constants
+    tokens_used: int = 0  # LOCAL ONLY (bucketed for telemetry)
+    corrections: int = 0  # LOCAL ONLY (never telemetered)
+    retries: int = 0
+    created_at: Optional[datetime] = None
+
+    @classmethod
+    def from_invocation(
+        cls,
+        inv: "SkillInvocation",
+        session_id: str,
+        project_encoded: str,
+    ) -> "SkillOutcome":
+        """Convert SkillInvocation to SkillOutcome.
+
+        Outcome decision table:
+        | completed | superseded | end_idx set | => outcome        |
+        |-----------|------------|-------------|-------------------|
+        | True      | False      | any         | completed         |
+        | True      | True       | any         | superseded        |
+        | False     | True       | any         | superseded        |
+        | False     | False      | True        | abandoned         |
+        | False     | False      | False       | (still active)    |
+        """
+        if inv.superseded:
+            outcome = OUTCOME_SUPERSEDED
+        elif inv.completed:
+            outcome = OUTCOME_COMPLETED
+        elif inv.end_idx is not None:
+            outcome = OUTCOME_ABANDONED
+        else:
+            outcome = ""  # Still active, not yet persistable as final
+
+        start_time = None
+        if inv.timestamp:
+            try:
+                start_time = datetime.fromisoformat(inv.timestamp)
+            except (ValueError, TypeError):
+                pass
+
+        return cls(
+            skill_name=inv.skill,
+            skill_version=inv.version,
+            session_id=session_id,
+            project_encoded=project_encoded,
+            start_time=start_time,
+            end_time=None,  # Calculated when finalized
+            duration_seconds=None,  # Calculated when finalized
+            outcome=outcome,
+            tokens_used=inv.tokens_used,
+            corrections=inv.corrections,
+            retries=1 if inv.retried else 0,
+        )
+
+
+@dataclass
+class TelemetryAggregate:
+    """Anonymous aggregate for telemetry transmission.
+
+    Contains only bucketed, non-identifying information.
+    """
+    skill_name: str
+    skill_version: Optional[str]
+    outcome: str  # completed|abandoned|superseded|session_ended
+    duration_bucket: str  # <1m|1-5m|5-15m|15-30m|30m+
+    token_bucket: str     # <1k|1-5k|5-20k|20-50k|50k+
+    count: int            # Minimum 5 before transmission
 
 
 def _extract_version(skill_name: str, args: Optional[str]) -> Tuple[str, Optional[str]]:
@@ -402,3 +493,170 @@ def _compare_versions(versions: List[SkillMetrics]) -> str:
         return f"Mixed: improves {', '.join(improvements)}; regresses {', '.join(regressions)}"
     else:
         return "No significant difference"
+
+
+def bucket_duration(seconds: float) -> str:
+    """Bucket duration into privacy-safe ranges."""
+    if seconds < 60:
+        return "<1m"
+    elif seconds < 300:
+        return "1-5m"
+    elif seconds < 900:
+        return "5-15m"
+    elif seconds < 1800:
+        return "15-30m"
+    else:
+        return "30m+"
+
+
+def bucket_tokens(tokens: int) -> str:
+    """Bucket token count into privacy-safe ranges."""
+    if tokens < 1000:
+        return "<1k"
+    elif tokens < 5000:
+        return "1-5k"
+    elif tokens < 20000:
+        return "5-20k"
+    elif tokens < 50000:
+        return "20-50k"
+    else:
+        return "50k+"
+
+
+def persist_outcome(outcome: SkillOutcome, db_path: str = None) -> None:
+    """Persist a skill outcome to SQLite.
+
+    Upserts based on (session_id, skill_name, start_time) to handle
+    incremental updates as more information becomes available.
+
+    Args:
+        outcome: SkillOutcome to persist
+        db_path: Path to database (defaults to standard location)
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    # Format start_time for SQLite
+    start_time_str = outcome.start_time.isoformat() if outcome.start_time else None
+    end_time_str = outcome.end_time.isoformat() if outcome.end_time else None
+
+    conn.execute("""
+        INSERT INTO skill_outcomes (
+            skill_name, skill_version, session_id, project_encoded,
+            start_time, end_time, duration_seconds, outcome,
+            tokens_used, corrections, retries
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(session_id, skill_name, start_time) DO UPDATE SET
+            skill_version = excluded.skill_version,
+            end_time = excluded.end_time,
+            duration_seconds = excluded.duration_seconds,
+            outcome = excluded.outcome,
+            tokens_used = excluded.tokens_used,
+            corrections = excluded.corrections,
+            retries = excluded.retries
+    """, (
+        outcome.skill_name,
+        outcome.skill_version,
+        outcome.session_id,
+        outcome.project_encoded,
+        start_time_str,
+        end_time_str,
+        outcome.duration_seconds,
+        outcome.outcome,
+        outcome.tokens_used,
+        outcome.corrections,
+        outcome.retries,
+    ))
+    conn.commit()
+
+
+def finalize_session_outcomes(session_id: str, db_path: str = None) -> int:
+    """Mark all open outcomes in a session as session_ended.
+
+    Called when session file stops being modified (session ended).
+
+    Args:
+        session_id: Session identifier
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        Count of outcomes finalized
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+
+    # Update outcomes where outcome is empty (still open)
+    cursor.execute("""
+        UPDATE skill_outcomes
+        SET outcome = ?
+        WHERE session_id = ? AND outcome = ''
+    """, (OUTCOME_SESSION_ENDED, session_id))
+
+    count = cursor.rowcount
+    conn.commit()
+    return count
+
+
+def anonymize_for_telemetry(
+    outcomes: List[SkillOutcome],
+    min_count: int = 5,
+) -> List[TelemetryAggregate]:
+    """Convert outcomes to anonymous aggregates for telemetry.
+
+    Privacy guarantees:
+    - No session_id, project_encoded, or exact timestamps
+    - No corrections (require content inspection)
+    - Duration bucketed: <1m, 1-5m, 5-15m, 15-30m, 30m+
+    - Tokens bucketed: <1k, 1-5k, 5-20k, 20-50k, 50k+
+    - Only aggregates with count >= min_count
+
+    Args:
+        outcomes: List of SkillOutcome records
+        min_count: Minimum samples before aggregate is included (default 5)
+
+    Returns:
+        List of TelemetryAggregate, empty if insufficient data
+    """
+    # Group by (skill_name, skill_version, outcome, duration_bucket, token_bucket)
+    groups: Dict[tuple, int] = defaultdict(int)
+
+    for outcome in outcomes:
+        if not outcome.outcome:
+            continue  # Skip incomplete outcomes
+
+        duration_bucket = bucket_duration(outcome.duration_seconds or 0)
+        token_bucket = bucket_tokens(outcome.tokens_used)
+
+        key = (
+            outcome.skill_name,
+            outcome.skill_version,
+            outcome.outcome,
+            duration_bucket,
+            token_bucket,
+        )
+        groups[key] += 1
+
+    # Filter by min_count and convert to TelemetryAggregate
+    aggregates = []
+    for key, count in groups.items():
+        if count >= min_count:
+            skill_name, skill_version, outcome, duration_bucket, token_bucket = key
+            aggregates.append(TelemetryAggregate(
+                skill_name=skill_name,
+                skill_version=skill_version,
+                outcome=outcome,
+                duration_bucket=duration_bucket,
+                token_bucket=token_bucket,
+                count=count,
+            ))
+
+    return aggregates
