@@ -35,7 +35,7 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (37 total)](#skills-37-total)
+  - [Skills (42 total)](#skills-42-total)
   - [Commands (19 total)](#commands-19-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
@@ -81,19 +81,19 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (37 total)
+### Skills (42 total)
 
 Reusable workflows for structured development:
 
-| Category | Skills | Origin |
-|----------|--------|--------|
-| **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [debugging], [using-git-worktrees], [finishing-a-development-branch] | [superpowers] |
-| **Code Quality** | [enforcing-code-quality], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review], [requesting-code-review] | mixed |
-| **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] | spellbook |
-| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] | spellbook |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] | spellbook |
-| **Meta** | [using-skills], [writing-skills], [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia], [analyzing-skill-usage] | [superpowers] |
-| **Session** | [fun-mode], [tarot-mode], [emotional-stakes] | spellbook |
+| Category | Skills |
+|----------|--------|
+| **Core Workflow** | [brainstorming], [writing-plans], [executing-plans], [test-driven-development], [debugging], [using-git-worktrees], [finishing-a-development-branch] |
+| **Code Quality** | [enforcing-code-quality], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review], [requesting-code-review] |
+| **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
+| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] |
+| **Meta** | [using-skills], [writing-skills], [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents], [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
+| **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
@@ -140,29 +140,27 @@ Reusable workflows for structured development:
 
 ### Commands (19 total)
 
-| Command | Description | Origin |
-|---------|-------------|--------|
-| [/crystallize] | Transform SOPs into agentic CoT prompts | spellbook |
-| [/handoff] | Custom session compaction | spellbook |
-| [/distill-session] | Extract knowledge from sessions | spellbook |
-| [/simplify] | Code complexity reduction | spellbook |
-| [/address-pr-feedback] | Handle PR review comments | spellbook |
-| [/move-project] | Relocate projects safely | spellbook |
-| [/audit-green-mirage] | Test suite audit | spellbook |
-| [/verify] | Verification before completion | [superpowers]* |
-| [/systematic-debugging] | Methodical debugging workflow | [superpowers]* |
-| [/scientific-debugging] | Hypothesis-driven debugging | spellbook |
-| [/brainstorm] | Design exploration | [superpowers] |
-| [/write-plan] | Create implementation plan | [superpowers] |
-| [/execute-plan] | Execute implementation plan | [superpowers] |
-| [/execute-work-packet] | Execute a single work packet with TDD | spellbook |
-| [/execute-work-packets-seq] | Execute all packets sequentially | spellbook |
-| [/merge-work-packets] | Merge completed packets with QA gates | spellbook |
-| [/mode] | Switch session mode (fun/tarot/off) | spellbook |
-| [/pr-distill] | Analyze PR, categorize changes by review necessity | spellbook |
-| [/pr-distill-bless] | Save discovered pattern for future distillations | spellbook |
-
-*\* Converted from skill to command. Originally `verification-before-completion` and `systematic-debugging` skills in superpowers.*
+| Command | Description |
+|---------|-------------|
+| [/crystallize] | Transform SOPs into agentic CoT prompts |
+| [/handoff] | Custom session compaction |
+| [/distill-session] | Extract knowledge from sessions |
+| [/simplify] | Code complexity reduction |
+| [/address-pr-feedback] | Handle PR review comments |
+| [/move-project] | Relocate projects safely |
+| [/audit-green-mirage] | Test suite audit |
+| [/verify] | Verification before completion |
+| [/systematic-debugging] | Methodical debugging workflow |
+| [/scientific-debugging] | Hypothesis-driven debugging |
+| [/brainstorm] | Design exploration |
+| [/write-plan] | Create implementation plan |
+| [/execute-plan] | Execute implementation plan |
+| [/execute-work-packet] | Execute a single work packet with TDD |
+| [/execute-work-packets-seq] | Execute all packets sequentially |
+| [/merge-work-packets] | Merge completed packets with QA gates |
+| [/mode] | Switch session mode (fun/tarot/off) |
+| [/pr-distill] | Analyze PR, categorize changes by review necessity |
+| [/pr-distill-bless] | Save discovered pattern for future distillations |
 
 [/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
@@ -186,15 +184,15 @@ Reusable workflows for structured development:
 
 ### Agents (7 total)
 
-| Agent | Description | Origin |
-|-------|-------------|--------|
-| [code-reviewer] | Specialized code review | [superpowers] |
-| [chariot-implementer] | Tarot: Implementation specialist | spellbook |
-| [emperor-governor] | Tarot: Resource governor | spellbook |
-| [hierophant-distiller] | Tarot: Wisdom distiller | spellbook |
-| [justice-resolver] | Tarot: Conflict synthesizer | spellbook |
-| [lovers-integrator] | Tarot: Integration specialist | spellbook |
-| [queen-affective] | Tarot: Emotional state monitor | spellbook |
+| Agent | Description |
+|-------|-------------|
+| [code-reviewer] | Specialized code review |
+| [chariot-implementer] | Tarot: Implementation specialist |
+| [emperor-governor] | Tarot: Resource governor |
+| [hierophant-distiller] | Tarot: Wisdom distiller |
+| [justice-resolver] | Tarot: Conflict synthesizer |
+| [lovers-integrator] | Tarot: Integration specialist |
+| [queen-affective] | Tarot: Emotional state monitor |
 
 [code-reviewer]: https://axiomantic.github.io/spellbook/latest/agents/code-reviewer/
 [chariot-implementer]: https://axiomantic.github.io/spellbook/latest/agents/chariot-implementer/
@@ -203,7 +201,6 @@ Reusable workflows for structured development:
 [justice-resolver]: https://axiomantic.github.io/spellbook/latest/agents/justice-resolver/
 [lovers-integrator]: https://axiomantic.github.io/spellbook/latest/agents/lovers-integrator/
 [queen-affective]: https://axiomantic.github.io/spellbook/latest/agents/queen-affective/
-[superpowers]: https://github.com/obra/superpowers
 
 ## Serious Fun
 
@@ -795,7 +792,27 @@ If your assistant supports agent skills with description-based triggers, see the
 
 ## Acknowledgments
 
-Spellbook includes many skills, commands, agents, and hooks from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. These workflow patterns (brainstorming, planning, execution, git worktrees, TDD, debugging) are a core part of spellbook's development methodology.
+Spellbook includes content derived from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent:
+
+| Type | Current Name | Original Name |
+|------|--------------|---------------|
+| Skill | brainstorming | brainstorming |
+| Skill | dispatching-parallel-agents | dispatching-parallel-agents |
+| Skill | executing-plans | executing-plans + subagent-driven-development |
+| Skill | finishing-a-development-branch | finishing-a-development-branch |
+| Skill | receiving-code-review | receiving-code-review |
+| Skill | requesting-code-review | requesting-code-review |
+| Skill | test-driven-development | test-driven-development |
+| Skill | using-git-worktrees | using-git-worktrees |
+| Skill | using-skills | using-superpowers |
+| Skill | writing-plans | writing-plans |
+| Skill | writing-skills | writing-skills |
+| Command | /brainstorm | brainstorm |
+| Command | /write-plan | write-plan |
+| Command | /execute-plan | execute-plan |
+| Command | /verify | verification-before-completion (skill) |
+| Command | /systematic-debugging | systematic-debugging (skill) |
+| Agent | code-reviewer | code-reviewer |
 
 See [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES) for full attribution and license details.
 
