@@ -61,6 +61,14 @@ EXPLICIT_CONTINUE_PATTERNS = [
     r"^back\s+to\s+(it|work)",
 ]
 
+# Implicit continue patterns (require recent session for medium confidence)
+IMPLICIT_CONTINUE_PATTERNS = [
+    r"^(ok|okay|alright|sure|ready|go)[\s,\.!]*$",
+    r"^next\s*(step|task|item)?[\s,\.!]*$",
+    r"^and\s+then",
+    r"^also[,\s]",
+]
+
 
 def detect_continuation_intent(
     first_message: str,
@@ -94,6 +102,16 @@ def detect_continuation_intent(
                 confidence="high",
                 pattern=pattern,
             )
+
+    # Check implicit patterns only if recent session exists
+    if has_recent_session:
+        for pattern in IMPLICIT_CONTINUE_PATTERNS:
+            if re.match(pattern, msg, re.IGNORECASE):
+                return ContinuationIntent(
+                    intent="continue",
+                    confidence="medium",
+                    pattern=pattern,
+                )
 
     return ContinuationIntent(
         intent="neutral",

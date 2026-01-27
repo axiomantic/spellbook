@@ -88,3 +88,40 @@ class TestDetectContinuationIntent:
         assert result["intent"] == "fresh_start"
         assert result["confidence"] == "high"
         assert result["pattern"] is not None
+
+    @pytest.mark.parametrize("message", [
+        "ok",
+        "okay",
+        "alright",
+        "sure",
+        "ready",
+        "go",
+        "next",
+        "next step",
+        "next task",
+        "next item",
+        "and then",
+        "also, let's",
+    ])
+    def test_implicit_continue_with_session(self, message):
+        """Test implicit patterns trigger continue only with recent session."""
+        from spellbook_mcp.resume import detect_continuation_intent
+
+        # With recent session: medium confidence continue
+        result = detect_continuation_intent(message, has_recent_session=True)
+        assert result["intent"] == "continue"
+        assert result["confidence"] == "medium"
+
+    @pytest.mark.parametrize("message", [
+        "ok",
+        "okay",
+        "next",
+        "sure",
+    ])
+    def test_implicit_patterns_without_session(self, message):
+        """Test implicit patterns return neutral without recent session."""
+        from spellbook_mcp.resume import detect_continuation_intent
+
+        result = detect_continuation_intent(message, has_recent_session=False)
+        assert result["intent"] == "neutral"
+        assert result["confidence"] == "low"
