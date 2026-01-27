@@ -1,0 +1,112 @@
+"""Tests for A/B test core logic functions."""
+
+import pytest
+from spellbook_mcp.db import init_db, get_connection
+
+
+class TestExperimentCreate:
+    """Test experiment_create function."""
+
+    def test_creates_experiment_with_variants(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        result = experiment_create(
+            name="test-experiment",
+            skill_name="implementing-features",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            description="Test description",
+            db_path=db_path,
+        )
+
+        assert result["success"] is True
+        assert result["name"] == "test-experiment"
+        assert result["skill_name"] == "implementing-features"
+        assert result["status"] == "created"
+        assert len(result["variants"]) == 2
+        assert result["variants"][0]["name"] == "control"
+        assert result["variants"][0]["skill_version"] is None
+        assert result["variants"][1]["name"] == "treatment"
+        assert result["variants"][1]["skill_version"] == "v2"
+
+    def test_rejects_duplicate_name(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, ExperimentExistsError
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        # First creation succeeds
+        experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+
+        # Second creation with same name fails
+        with pytest.raises(ExperimentExistsError):
+            experiment_create(
+                name="test-experiment",
+                skill_name="debugging",
+                variants=[
+                    {"name": "control", "weight": 50},
+                    {"name": "treatment", "skill_version": "v2", "weight": 50},
+                ],
+                db_path=db_path,
+            )
+
+    def test_rejects_invalid_weight_sum(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, InvalidVariantsError
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        with pytest.raises(InvalidVariantsError, match="must sum to 100"):
+            experiment_create(
+                name="test-experiment",
+                skill_name="debugging",
+                variants=[
+                    {"name": "control", "weight": 50},
+                    {"name": "treatment", "skill_version": "v2", "weight": 40},
+                ],
+                db_path=db_path,
+            )
+
+    def test_rejects_no_control_variant(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, InvalidVariantsError
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        with pytest.raises(InvalidVariantsError, match="skill_version=None"):
+            experiment_create(
+                name="test-experiment",
+                skill_name="debugging",
+                variants=[
+                    {"name": "v1", "skill_version": "v1", "weight": 50},
+                    {"name": "v2", "skill_version": "v2", "weight": 50},
+                ],
+                db_path=db_path,
+            )
+
+    def test_rejects_single_variant(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, InvalidVariantsError
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        with pytest.raises(InvalidVariantsError, match="At least 2"):
+            experiment_create(
+                name="test-experiment",
+                skill_name="debugging",
+                variants=[{"name": "control", "weight": 100}],
+                db_path=db_path,
+            )

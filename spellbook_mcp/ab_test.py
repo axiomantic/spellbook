@@ -249,3 +249,122 @@ def validate_status_transition(current: str, target: str) -> None:
     """Validate experiment status transition is allowed."""
     if target not in VALID_TRANSITIONS.get(current, set()):
         raise InvalidStatusTransitionError(current, target)
+
+
+import uuid
+
+
+def experiment_create(
+    name: str,
+    skill_name: str,
+    variants: list[dict],
+    description: Optional[str] = None,
+    db_path: Optional[str] = None,
+) -> dict:
+    """Create a new experiment with defined variants.
+
+    Args:
+        name: Human-readable unique identifier (1-100 chars, alphanumeric with hyphens/underscores)
+        skill_name: Target skill name
+        variants: List of variant dicts with 'name', optional 'skill_version', and 'weight'
+        description: Optional experiment description
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        Dict with experiment details including generated IDs
+
+    Raises:
+        ExperimentExistsError: If name already taken
+        InvalidVariantsError: If variants are invalid
+        ValidationError: If name format is invalid
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    # Validate name format
+    if not name or len(name) > 100:
+        raise ValidationError("name", "must be 1-100 characters", name)
+
+    # Generate IDs
+    experiment_id = str(uuid.uuid4())
+
+    # Build Variant objects for validation
+    variant_objects = []
+    for v in variants:
+        variant_id = str(uuid.uuid4())
+        variant_objects.append(
+            Variant(
+                id=variant_id,
+                experiment_id=experiment_id,
+                variant_name=v.get("name", ""),
+                skill_version=v.get("skill_version"),
+                weight=v.get("weight", 0),
+            )
+        )
+
+    # Create and validate experiment
+    experiment = Experiment(
+        id=experiment_id,
+        name=name,
+        skill_name=skill_name,
+        description=description,
+        variants=variant_objects,
+    )
+    experiment.validate_variants()
+
+    conn = get_connection(db_path)
+
+    # Check for existing experiment with same name
+    cursor = conn.execute(
+        "SELECT id FROM experiments WHERE name = ?", (name,)
+    )
+    existing = cursor.fetchone()
+    if existing:
+        raise ExperimentExistsError(name, existing[0])
+
+    # Insert experiment
+    conn.execute(
+        """
+        INSERT INTO experiments (id, name, skill_name, status, description, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            experiment.id,
+            experiment.name,
+            experiment.skill_name,
+            experiment.status.value,
+            experiment.description,
+            experiment.created_at.isoformat(),
+        ),
+    )
+
+    # Insert variants
+    for v in variant_objects:
+        conn.execute(
+            """
+            INSERT INTO experiment_variants (id, experiment_id, variant_name, skill_version, weight, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (v.id, v.experiment_id, v.variant_name, v.skill_version, v.weight, v.created_at.isoformat()),
+        )
+
+    conn.commit()
+
+    return {
+        "success": True,
+        "experiment_id": experiment.id,
+        "name": experiment.name,
+        "skill_name": experiment.skill_name,
+        "status": experiment.status.value,
+        "variants": [
+            {
+                "id": v.id,
+                "name": v.variant_name,
+                "skill_version": v.skill_version,
+                "weight": v.weight,
+            }
+            for v in variant_objects
+        ],
+    }
