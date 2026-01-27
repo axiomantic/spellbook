@@ -592,3 +592,76 @@ class TestGetResumeFields:
         assert result["resume_available"] is True
         assert result["resume_todos_corrupted"] is True
         assert result["resume_pending_todos"] == 0
+
+
+class TestSessionInitResume:
+    """Tests for session_init resume integration."""
+
+    def test_session_init_accepts_continuation_message(self, tmp_path, monkeypatch):
+        """Test session_init accepts continuation_message parameter."""
+        from spellbook_mcp.db import init_db
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+
+        from spellbook_mcp.config_tools import session_init
+
+        # Should not raise
+        result = session_init(session_id=None, continuation_message="continue")
+
+        assert "mode" in result
+        assert "resume_available" in result
+
+    def test_session_init_resume_fields_present(self, tmp_path, monkeypatch):
+        """Test session_init includes resume fields in response."""
+        from spellbook_mcp.db import init_db, get_connection
+        from datetime import datetime
+        import json
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+
+        # Insert a recent soul
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT INTO souls (id, session_id, project_path, bound_at, active_skill, skill_phase)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, ("soul-1", "session-1", "/tmp", datetime.now().isoformat(), "debugging", "ANALYZE"))
+        conn.commit()
+
+        # Mock getcwd to return matching project path
+        monkeypatch.setattr("os.getcwd", lambda: "/tmp")
+
+        from spellbook_mcp.config_tools import session_init
+
+        result = session_init(session_id=None, continuation_message="continue")
+
+        assert result["resume_available"] is True
+        assert result["resume_active_skill"] == "debugging"
+
+    def test_session_init_fresh_start_overrides(self, tmp_path, monkeypatch):
+        """Test fresh start message overrides available resume."""
+        from spellbook_mcp.db import init_db, get_connection
+        from datetime import datetime
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+
+        # Insert a recent soul
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT INTO souls (id, session_id, project_path, bound_at, active_skill)
+            VALUES (?, ?, ?, ?, ?)
+        """, ("soul-1", "session-1", "/tmp", datetime.now().isoformat(), "debugging"))
+        conn.commit()
+
+        monkeypatch.setattr("os.getcwd", lambda: "/tmp")
+
+        from spellbook_mcp.config_tools import session_init
+
+        result = session_init(session_id=None, continuation_message="start fresh")
+
+        assert result["resume_available"] is False
