@@ -606,6 +606,132 @@ def finalize_session_outcomes(session_id: str, db_path: str = None) -> int:
     return count
 
 
+def get_analytics_summary(
+    project_encoded: str = None,
+    days: int = 30,
+    skill: str = None,
+    db_path: str = None,
+) -> Dict[str, Any]:
+    """Get skill analytics summary from persisted outcomes.
+
+    Args:
+        project_encoded: Filter to specific project (None for all)
+        days: Time window in days (default 30)
+        skill: Filter to specific skill (None for all)
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        {
+            "total_outcomes": int,
+            "by_skill": {skill_name: SkillMetrics dict},
+            "weak_skills": [top 5 by failure_score],
+            "version_comparisons": [...] if versions present
+        }
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+    from datetime import datetime, timedelta
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+
+    # Build query with filters
+    cutoff = (datetime.now() - timedelta(days=days)).isoformat()
+    params = [cutoff]
+    where_clauses = ["created_at >= ?"]
+
+    if project_encoded:
+        where_clauses.append("project_encoded = ?")
+        params.append(project_encoded)
+
+    if skill:
+        where_clauses.append("skill_name = ?")
+        params.append(skill)
+
+    where_sql = " AND ".join(where_clauses)
+
+    cursor.execute(f"""
+        SELECT skill_name, skill_version, outcome, tokens_used, corrections, retries
+        FROM skill_outcomes
+        WHERE {where_sql}
+    """, params)
+
+    rows = cursor.fetchall()
+
+    # Aggregate metrics
+    by_skill: Dict[str, Dict] = defaultdict(lambda: {
+        "invocations": 0,
+        "completions": 0,
+        "abandonments": 0,
+        "superseded": 0,
+        "session_ended": 0,
+        "corrections": 0,
+        "retries": 0,
+        "total_tokens": 0,
+        "versions": set(),
+    })
+
+    for row in rows:
+        skill_name, version, outcome, tokens, corrections, retries = row
+        m = by_skill[skill_name]
+        m["invocations"] += 1
+        m["total_tokens"] += tokens or 0
+        m["corrections"] += corrections or 0
+        m["retries"] += retries or 0
+
+        if version:
+            m["versions"].add(version)
+
+        if outcome == OUTCOME_COMPLETED:
+            m["completions"] += 1
+        elif outcome == OUTCOME_ABANDONED:
+            m["abandonments"] += 1
+        elif outcome == OUTCOME_SUPERSEDED:
+            m["superseded"] += 1
+        elif outcome == OUTCOME_SESSION_ENDED:
+            m["session_ended"] += 1
+
+    # Calculate rates and convert to serializable format
+    result_by_skill = {}
+    weak_skills = []
+
+    for skill_name, m in by_skill.items():
+        inv = m["invocations"]
+        if inv == 0:
+            continue
+
+        completion_rate = m["completions"] / inv
+        failure_score = (m["corrections"] + m["retries"] + inv - m["completions"]) / inv
+
+        skill_result = {
+            "skill": skill_name,
+            "invocations": inv,
+            "completions": m["completions"],
+            "completion_rate": round(completion_rate, 2),
+            "corrections": m["corrections"],
+            "retries": m["retries"],
+            "avg_tokens": round(m["total_tokens"] / inv),
+            "failure_score": round(failure_score, 2),
+            "versions": list(m["versions"]),
+        }
+        result_by_skill[skill_name] = skill_result
+
+        if failure_score > 0.2:
+            weak_skills.append(skill_result)
+
+    # Sort weak skills by failure score
+    weak_skills.sort(key=lambda x: x["failure_score"], reverse=True)
+
+    return {
+        "total_outcomes": len(rows),
+        "by_skill": result_by_skill,
+        "weak_skills": weak_skills[:5],
+        "period_days": days,
+    }
+
+
 def anonymize_for_telemetry(
     outcomes: List[SkillOutcome],
     min_count: int = 5,
