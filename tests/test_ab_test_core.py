@@ -478,3 +478,157 @@ class TestExperimentList:
 
         assert result["total"] == 1
         assert result["experiments"][0]["name"] == "exp-1"
+
+
+class TestVariantAssignment:
+    """Test variant assignment logic."""
+
+    def test_assigns_variant_deterministically(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_start,
+            get_skill_version_for_session,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        # Get assignment for a session
+        exp_id, variant_id, skill_version = get_skill_version_for_session(
+            skill_name="debugging",
+            session_id="session-123",
+            db_path=db_path,
+        )
+
+        assert exp_id == create_result["experiment_id"]
+        assert variant_id is not None
+
+        # Same session gets same assignment
+        exp_id2, variant_id2, skill_version2 = get_skill_version_for_session(
+            skill_name="debugging",
+            session_id="session-123",
+            db_path=db_path,
+        )
+
+        assert exp_id2 == exp_id
+        assert variant_id2 == variant_id
+        assert skill_version2 == skill_version
+
+    def test_returns_none_when_no_active_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import get_skill_version_for_session
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        exp_id, variant_id, skill_version = get_skill_version_for_session(
+            skill_name="debugging",
+            session_id="session-123",
+            db_path=db_path,
+        )
+
+        assert exp_id is None
+        assert variant_id is None
+        assert skill_version is None
+
+    def test_paused_experiment_no_new_assignments(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_start,
+            experiment_pause,
+            get_skill_version_for_session,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        # Get assignment while active
+        exp_id1, variant_id1, _ = get_skill_version_for_session(
+            skill_name="debugging",
+            session_id="session-existing",
+            db_path=db_path,
+        )
+        assert exp_id1 is not None
+
+        # Pause experiment
+        experiment_pause(create_result["experiment_id"], db_path=db_path)
+
+        # Existing session still gets its assignment
+        exp_id2, variant_id2, _ = get_skill_version_for_session(
+            skill_name="debugging",
+            session_id="session-existing",
+            db_path=db_path,
+        )
+        assert exp_id2 == exp_id1
+        assert variant_id2 == variant_id1
+
+        # New session gets no assignment
+        exp_id3, variant_id3, _ = get_skill_version_for_session(
+            skill_name="debugging",
+            session_id="session-new",
+            db_path=db_path,
+        )
+        assert exp_id3 is None
+        assert variant_id3 is None
+
+    def test_assignment_distribution_roughly_follows_weights(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_start,
+            get_skill_version_for_session,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 70},
+                {"name": "treatment", "skill_version": "v2", "weight": 30},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        control_count = 0
+        treatment_count = 0
+
+        # Assign 100 sessions
+        for i in range(100):
+            _, _, skill_version = get_skill_version_for_session(
+                skill_name="debugging",
+                session_id=f"session-{i}",
+                db_path=db_path,
+            )
+            if skill_version is None:
+                control_count += 1
+            else:
+                treatment_count += 1
+
+        # With 70/30 weights, expect roughly 70 control, 30 treatment
+        # Allow 20% tolerance
+        assert 50 <= control_count <= 90
+        assert 10 <= treatment_count <= 50

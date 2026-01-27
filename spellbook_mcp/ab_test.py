@@ -683,3 +683,131 @@ def experiment_list(
         "experiments": experiments,
         "total": len(experiments),
     }
+
+
+import hashlib
+
+
+def get_skill_version_for_session(
+    skill_name: str,
+    session_id: str,
+    db_path: Optional[str] = None,
+) -> tuple[Optional[str], Optional[str], Optional[str]]:
+    """Determine which skill version a session should receive.
+
+    Args:
+        skill_name: Name of skill being invoked
+        session_id: Claude session ID
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        (experiment_id, variant_id, skill_version)
+        All None if no active experiment for this skill.
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    # Find active or paused experiment for this skill
+    cursor = conn.execute(
+        """
+        SELECT id, status FROM experiments
+        WHERE skill_name = ? AND status IN ('active', 'paused')
+        ORDER BY status = 'active' DESC
+        LIMIT 1
+        """,
+        (skill_name,),
+    )
+    experiment = cursor.fetchone()
+
+    if not experiment:
+        return None, None, None
+
+    experiment_id, status = experiment
+
+    # Check for existing assignment
+    cursor = conn.execute(
+        """
+        SELECT va.variant_id, ev.skill_version
+        FROM variant_assignments va
+        JOIN experiment_variants ev ON va.variant_id = ev.id
+        WHERE va.experiment_id = ? AND va.session_id = ?
+        """,
+        (experiment_id, session_id),
+    )
+    assignment = cursor.fetchone()
+
+    if assignment:
+        return experiment_id, assignment[0], assignment[1]
+
+    # No existing assignment
+    if status == "paused":
+        # Paused experiments do not create new assignments
+        return None, None, None
+
+    # Active experiment: create new assignment
+    variant_id, skill_version = _assign_variant(experiment_id, session_id, conn)
+
+    return experiment_id, variant_id, skill_version
+
+
+def _assign_variant(
+    experiment_id: str,
+    session_id: str,
+    conn,
+) -> tuple[str, Optional[str]]:
+    """Assign session to variant using deterministic hash.
+
+    Args:
+        experiment_id: UUID of experiment
+        session_id: Session to assign
+        conn: Database connection
+
+    Returns:
+        (variant_id, skill_version)
+    """
+    # Get variants with weights
+    cursor = conn.execute(
+        """
+        SELECT id, skill_version, weight FROM experiment_variants
+        WHERE experiment_id = ?
+        ORDER BY variant_name
+        """,
+        (experiment_id,),
+    )
+    variants = cursor.fetchall()
+
+    # Deterministic assignment based on hash
+    hash_input = f"{experiment_id}:{session_id}".encode()
+    hash_value = int(hashlib.sha256(hash_input).hexdigest(), 16) % 100
+
+    cumulative = 0
+    selected_variant_id = None
+    selected_skill_version = None
+
+    for variant_id, skill_version, weight in variants:
+        cumulative += weight
+        if hash_value < cumulative:
+            selected_variant_id = variant_id
+            selected_skill_version = skill_version
+            break
+
+    # Fallback to last variant (should not reach if weights sum to 100)
+    if selected_variant_id is None:
+        selected_variant_id = variants[-1][0]
+        selected_skill_version = variants[-1][1]
+
+    # Persist assignment
+    conn.execute(
+        """
+        INSERT INTO variant_assignments (experiment_id, session_id, variant_id)
+        VALUES (?, ?, ?)
+        """,
+        (experiment_id, session_id, selected_variant_id),
+    )
+    conn.commit()
+
+    return selected_variant_id, selected_skill_version
