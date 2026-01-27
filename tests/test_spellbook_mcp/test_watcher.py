@@ -5,7 +5,7 @@ import pytest
 import time
 import sqlite3
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 
 
@@ -266,3 +266,151 @@ def test_poll_sessions_no_compaction_event(tmp_path):
     cursor.execute("SELECT COUNT(*) FROM souls")
     count = cursor.fetchone()[0]
     assert count == 0
+
+
+def test_analyze_skills_persists_outcomes(tmp_path, monkeypatch):
+    """Test that _analyze_skills extracts and persists skill outcomes."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db, get_connection
+
+    db_path = tmp_path / "test.db"
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    init_db(str(db_path))
+
+    # Create a session file with skill invocations
+    session_dir = tmp_path / ".claude" / "projects" / "-tmp-project"
+    session_dir.mkdir(parents=True)
+    session_file = session_dir / "test-session.jsonl"
+
+    messages = [
+        {"type": "user", "message": {"content": "Help me debug"}},
+        {
+            "type": "assistant",
+            "timestamp": "2026-01-26T10:00:00",
+            "message": {
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "name": "Skill",
+                        "input": {"skill": "debugging"},
+                    }
+                ],
+                "usage": {"output_tokens": 100},
+            },
+        },
+        {
+            "type": "assistant",
+            "message": {
+                "content": [{"type": "text", "text": "Done"}],
+                "usage": {"output_tokens": 200},
+            },
+        },
+    ]
+    session_file.write_text("\n".join(json.dumps(m) for m in messages) + "\n")
+
+    watcher = SessionWatcher(str(db_path), project_path=str(project_path))
+
+    # Mock the session file lookup
+    with patch(
+        "spellbook_mcp.compaction_detector._get_current_session_file",
+        return_value=session_file,
+    ):
+        watcher._analyze_skills()
+
+    # Check outcomes were persisted
+    conn = get_connection(str(db_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT skill_name, tokens_used FROM skill_outcomes")
+    rows = cursor.fetchall()
+
+    assert len(rows) == 1
+    assert rows[0][0] == "debugging"
+    assert rows[0][1] == 300  # 100 + 200
+
+
+def test_analyze_skills_handles_session_inactivity(tmp_path, monkeypatch):
+    """Test that _analyze_skills finalizes outcomes on session inactivity."""
+    from spellbook_mcp.watcher import SessionWatcher, SESSION_INACTIVE_THRESHOLD_SECONDS
+    from spellbook_mcp.db import init_db, get_connection
+    from spellbook_mcp.skill_analyzer import OUTCOME_SESSION_ENDED
+
+    db_path = tmp_path / "test.db"
+    project_path = tmp_path / "project"
+    project_path.mkdir()
+    init_db(str(db_path))
+
+    # Create session file
+    session_dir = tmp_path / ".claude" / "projects" / "-tmp-project"
+    session_dir.mkdir(parents=True)
+    session_file = session_dir / "test-session.jsonl"
+    messages = [
+        {
+            "type": "assistant",
+            "timestamp": "2026-01-26T10:00:00",
+            "message": {
+                "content": [
+                    {"type": "tool_use", "name": "Skill", "input": {"skill": "debugging"}}
+                ],
+            },
+        },
+    ]
+    session_file.write_text("\n".join(json.dumps(m) for m in messages) + "\n")
+
+    watcher = SessionWatcher(str(db_path), project_path=str(project_path))
+
+    # First call to set up tracking
+    with patch(
+        "spellbook_mcp.compaction_detector._get_current_session_file",
+        return_value=session_file,
+    ):
+        watcher._analyze_skills()
+
+    # Simulate inactivity by setting last_activity in the past
+    session_id = session_file.stem
+    if session_id in watcher._skill_states:
+        watcher._skill_states[session_id].last_activity = (
+            datetime.now() - timedelta(seconds=SESSION_INACTIVE_THRESHOLD_SECONDS + 60)
+        )
+
+    # Insert a record with empty outcome to simulate open skill
+    conn = get_connection(str(db_path))
+    conn.execute("""
+        INSERT OR REPLACE INTO skill_outcomes
+        (skill_name, session_id, project_encoded, start_time, outcome)
+        VALUES (?, ?, ?, ?, ?)
+    """, ("debugging", session_id, "test", "2026-01-26T10:00:00", ""))
+    conn.commit()
+
+    # Second call should detect inactivity and finalize
+    with patch(
+        "spellbook_mcp.compaction_detector._get_current_session_file",
+        return_value=session_file,
+    ):
+        watcher._analyze_skills()
+
+    # Check outcome was finalized
+    cursor = conn.cursor()
+    cursor.execute("SELECT outcome FROM skill_outcomes WHERE skill_name = 'debugging'")
+    row = cursor.fetchone()
+
+    # Should be session_ended since skill was still open when session ended
+    assert row is not None
+    assert row[0] == OUTCOME_SESSION_ENDED
+
+
+def test_session_skill_state_tracking(tmp_path):
+    """Test SessionSkillState tracks invocations correctly."""
+    from spellbook_mcp.watcher import SessionSkillState
+    from spellbook_mcp.skill_analyzer import SkillInvocation
+
+    state = SessionSkillState(session_id="test-session")
+
+    inv = SkillInvocation(skill="debugging", start_idx=5)
+    key = state.invocation_key(inv)
+
+    assert key == "debugging:5"
+    assert key not in state.known_invocations
+
+    state.known_invocations.add(key)
+    assert key in state.known_invocations
