@@ -187,6 +187,39 @@ def get_launchd_plist_path() -> Path:
     return Path.home() / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
 
 
+def get_daemon_path() -> str:
+    """Get PATH for daemon environment.
+
+    launchd doesn't inherit shell PATH, so we need to explicitly set it.
+    Includes Homebrew paths for both Apple Silicon and Intel Macs.
+    """
+    import platform
+
+    paths = []
+
+    # Homebrew paths (platform-specific)
+    if platform.machine() == "arm64":
+        paths.append("/opt/homebrew/bin")
+        paths.append("/opt/homebrew/sbin")
+    else:
+        paths.append("/usr/local/bin")
+        paths.append("/usr/local/sbin")
+
+    # User local bin
+    home = Path.home()
+    if (home / ".local" / "bin").exists():
+        paths.append(str(home / ".local" / "bin"))
+
+    # Common tool managers
+    if (home / ".cargo" / "bin").exists():
+        paths.append(str(home / ".cargo" / "bin"))
+
+    # System paths
+    paths.extend(["/usr/bin", "/bin", "/usr/sbin", "/sbin"])
+
+    return ":".join(paths)
+
+
 def generate_launchd_plist() -> str:
     """Generate launchd plist content.
 
@@ -199,6 +232,7 @@ def generate_launchd_plist() -> str:
     err_log_file = get_err_log_file()
     port = get_port()
     host = get_host()
+    daemon_path = get_daemon_path()
 
     return textwrap.dedent(f"""\
         <?xml version="1.0" encoding="UTF-8"?>
@@ -219,6 +253,8 @@ def generate_launchd_plist() -> str:
 
             <key>EnvironmentVariables</key>
             <dict>
+                <key>PATH</key>
+                <string>{daemon_path}</string>
                 <key>SPELLBOOK_MCP_TRANSPORT</key>
                 <string>streamable-http</string>
                 <key>SPELLBOOK_MCP_HOST</key>
@@ -317,6 +353,30 @@ def get_systemd_service_path() -> Path:
     return Path.home() / ".config" / "systemd" / "user" / f"{SERVICE_NAME}.service"
 
 
+def get_linux_daemon_path() -> str:
+    """Get PATH for Linux daemon environment."""
+    paths = []
+
+    home = Path.home()
+
+    # User local bin
+    if (home / ".local" / "bin").exists():
+        paths.append(str(home / ".local" / "bin"))
+
+    # Common tool managers
+    if (home / ".cargo" / "bin").exists():
+        paths.append(str(home / ".cargo" / "bin"))
+
+    # Linuxbrew
+    if Path("/home/linuxbrew/.linuxbrew/bin").exists():
+        paths.append("/home/linuxbrew/.linuxbrew/bin")
+
+    # System paths
+    paths.extend(["/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"])
+
+    return ":".join(paths)
+
+
 def generate_systemd_service() -> str:
     """Generate systemd user service content.
 
@@ -327,6 +387,7 @@ def generate_systemd_service() -> str:
     spellbook_dir = get_spellbook_dir()
     port = get_port()
     host = get_host()
+    daemon_path = get_linux_daemon_path()
 
     return textwrap.dedent(f"""\
         [Unit]
@@ -340,6 +401,7 @@ def generate_systemd_service() -> str:
         Restart=always
         RestartSec=5
 
+        Environment=PATH={daemon_path}
         Environment=SPELLBOOK_MCP_TRANSPORT=streamable-http
         Environment=SPELLBOOK_MCP_HOST={host}
         Environment=SPELLBOOK_MCP_PORT={port}
