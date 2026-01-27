@@ -698,3 +698,113 @@ class TestClaudeSpellbookMdSessionResume:
 
         # Should document passing user's first message
         assert "continuation_message" in content
+
+
+class TestIntegrationEndToEnd:
+    """End-to-end integration tests for session resume flow."""
+
+    def test_full_flow_new_session_no_resume(self, tmp_path, monkeypatch):
+        """Test full flow: new session with no prior session to resume."""
+        from spellbook_mcp.db import init_db
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
+
+        from spellbook_mcp.config_tools import session_init
+
+        result = session_init(
+            session_id="test-session-1",
+            continuation_message="Let's implement a new feature"
+        )
+
+        # Mode should be set (unset in this case)
+        assert "mode" in result
+        # No resume available
+        assert result["resume_available"] is False
+
+    def test_full_flow_continue_prior_session(self, tmp_path, monkeypatch):
+        """Test full flow: continue prior session with active skill."""
+        from spellbook_mcp.db import init_db, get_connection
+        from datetime import datetime
+        import json
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
+
+        # Create a planning doc
+        plans_dir = tmp_path / "plans"
+        plans_dir.mkdir()
+        plan_doc = plans_dir / "feature-impl.md"
+        plan_doc.write_text("# Implementation Plan\n\n## Task 1\nDo something")
+
+        # Insert a recent soul
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT INTO souls (id, session_id, project_path, bound_at, active_skill, skill_phase, todos, recent_files, workflow_pattern)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "soul-1",
+            "prior-session",
+            str(tmp_path),
+            datetime.now().isoformat(),
+            "implementing-features",
+            "IMPLEMENT",
+            json.dumps([{"content": "Complete task 3", "status": "pending"}]),
+            json.dumps([str(plan_doc)]),
+            "TDD",
+        ))
+        conn.commit()
+
+        from spellbook_mcp.config_tools import session_init
+
+        result = session_init(
+            session_id="new-session",
+            continuation_message="continue"
+        )
+
+        # Resume should be available
+        assert result["resume_available"] is True
+        assert result["resume_active_skill"] == "implementing-features"
+        assert result["resume_skill_phase"] == "IMPLEMENT"
+        assert result["resume_pending_todos"] == 1
+        assert result["resume_workflow_pattern"] == "TDD"
+
+        # Boot prompt should contain restoration instructions
+        boot_prompt = result["resume_boot_prompt"]
+        assert "SECTION 0" in boot_prompt
+        assert 'Skill("implementing-features"' in boot_prompt
+        assert "--resume IMPLEMENT" in boot_prompt
+        assert "TodoWrite(" in boot_prompt
+        assert "workflow pattern: TDD" in boot_prompt
+
+    def test_full_flow_fresh_start_overrides(self, tmp_path, monkeypatch):
+        """Test full flow: fresh start overrides even when prior session exists."""
+        from spellbook_mcp.db import init_db, get_connection
+        from datetime import datetime
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+        monkeypatch.setattr("spellbook_mcp.db.get_db_path", lambda: db_path)
+        monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
+
+        # Insert a recent soul
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT INTO souls (id, session_id, project_path, bound_at, active_skill)
+            VALUES (?, ?, ?, ?, ?)
+        """, ("soul-1", "prior-session", str(tmp_path), datetime.now().isoformat(), "debugging"))
+        conn.commit()
+
+        from spellbook_mcp.config_tools import session_init
+
+        result = session_init(
+            session_id="new-session",
+            continuation_message="start fresh - I want to work on something new"
+        )
+
+        # User said "start fresh" so resume should NOT be available
+        assert result["resume_available"] is False
