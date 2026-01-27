@@ -185,3 +185,79 @@ def _find_planning_docs(recent_files: list[str]) -> list[str]:
         logger.warning(f"Planning docs no longer exist: {missing}")
 
     return docs[:3]  # Limit to 3 docs
+
+
+def generate_boot_prompt(soul: dict) -> str:
+    """Generate Section 0 boot prompt from extracted soul.
+
+    Args:
+        soul: Dict with keys: todos, active_skill, skill_phase,
+              recent_files, exact_position, workflow_pattern
+
+    Returns:
+        Markdown-formatted boot prompt for execution
+    """
+    sections = []
+
+    # Header
+    sections.append("## SECTION 0: MANDATORY FIRST ACTIONS\n")
+    sections.append("**Execute IMMEDIATELY before reading any other content.**\n")
+
+    # 0.1 Workflow Restoration
+    sections.append("### 0.1 Workflow Restoration")
+    if soul.get("active_skill"):
+        skill_cmd = f'Skill("{soul["active_skill"]}"'
+        if soul.get("skill_phase"):
+            skill_cmd += f', "--resume {soul["skill_phase"]}"'
+        skill_cmd += ")"
+        sections.append(f"```\n{skill_cmd}\n```")
+    else:
+        sections.append("NO ACTIVE SKILL - proceed to 0.2")
+
+    # 0.2 Document Reads
+    sections.append("\n### 0.2 Required Document Reads")
+    plan_docs = _find_planning_docs(soul.get("recent_files") or [])
+    if plan_docs:
+        read_cmds = [f'Read("{doc}")' for doc in plan_docs]
+        sections.append("```\n" + "\n".join(read_cmds) + "\n```")
+    else:
+        sections.append("NO DOCUMENTS TO READ")
+
+    # 0.3 Todo Restoration
+    sections.append("\n### 0.3 Todo State Restoration")
+    todos_json = soul.get("todos")
+    if todos_json:
+        try:
+            todos = json.loads(todos_json)
+            if isinstance(todos, list) and todos:
+                # Limit to 10 items for boot prompt
+                todo_items = [
+                    {"content": t.get("content", ""), "status": t.get("status", "pending")}
+                    for t in todos[:10]
+                    if isinstance(t, dict)
+                ]
+                if todo_items:
+                    sections.append("```\nTodoWrite(" + json.dumps(todo_items, indent=2) + ")\n```")
+                else:
+                    sections.append("NO TODOS TO RESTORE")
+            else:
+                sections.append("NO TODOS TO RESTORE")
+        except json.JSONDecodeError:
+            sections.append("NO TODOS TO RESTORE")
+    else:
+        sections.append("NO TODOS TO RESTORE")
+
+    # 0.4 Checkpoint
+    sections.append("\n### 0.4 Restoration Checkpoint")
+    sections.append("Before proceeding: Skill invoked? Documents read? Todos restored?")
+
+    # 0.5 Constraints
+    sections.append("\n### 0.5 Behavioral Constraints")
+    constraints = []
+    if soul.get("workflow_pattern"):
+        constraints.append(f"- Continue workflow pattern: {soul['workflow_pattern']}")
+    constraints.append("- Honor decisions from prior session")
+    constraints.append("- Run verification before marking tasks complete")
+    sections.append("\n".join(constraints))
+
+    return "\n".join(sections)

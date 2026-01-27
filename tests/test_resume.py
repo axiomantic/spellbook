@@ -293,3 +293,112 @@ class TestFindPlanningDocs:
         result = _find_planning_docs(docs)
 
         assert len(result) == 3
+
+
+class TestGenerateBootPrompt:
+    """Tests for generate_boot_prompt function."""
+
+    def test_boot_prompt_has_section_0_header(self):
+        """Test boot prompt starts with Section 0 header."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "## SECTION 0: MANDATORY FIRST ACTIONS" in result
+        assert "Execute IMMEDIATELY" in result
+
+    def test_boot_prompt_no_active_skill(self):
+        """Test boot prompt handles no active skill."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "active_skill": None,
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "### 0.1 Workflow Restoration" in result
+        assert "NO ACTIVE SKILL - proceed to 0.2" in result
+
+    def test_boot_prompt_with_active_skill(self):
+        """Test boot prompt includes Skill() call when active."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "active_skill": "implementing-features",
+            "skill_phase": "DESIGN",
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert 'Skill("implementing-features"' in result
+        assert '--resume DESIGN' in result
+
+    def test_boot_prompt_with_skill_no_phase(self):
+        """Test boot prompt handles skill without phase."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "active_skill": "debugging",
+            "skill_phase": None,
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert 'Skill("debugging")' in result
+        assert "--resume" not in result
+
+    def test_boot_prompt_has_checkpoint_section(self):
+        """Test boot prompt includes restoration checkpoint."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "### 0.4 Restoration Checkpoint" in result
+        assert "Skill invoked?" in result
+        assert "Documents read?" in result
+        assert "Todos restored?" in result
+
+    def test_boot_prompt_has_constraints_section(self):
+        """Test boot prompt includes behavioral constraints."""
+        from spellbook_mcp.resume import generate_boot_prompt
+
+        soul = {
+            "id": "test-soul-1",
+            "session_id": "session-1",
+            "project_path": "/test/project",
+            "bound_at": "2026-01-27T10:00:00",
+            "workflow_pattern": "TDD",
+        }
+
+        result = generate_boot_prompt(soul)
+
+        assert "### 0.5 Behavioral Constraints" in result
+        assert "workflow pattern: TDD" in result
+        assert "Honor decisions from prior session" in result
