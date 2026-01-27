@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.5] - 2026-01-26
+
+### Fixed
+- **MCP daemon PATH for CLI tools** - launchd/systemd services now set PATH correctly so tools like `gh` are accessible
+  - macOS: Includes Homebrew paths for both Apple Silicon (`/opt/homebrew/bin`) and Intel (`/usr/local/bin`)
+  - Linux: Includes Linuxbrew, `~/.local/bin`, `~/.cargo/bin`
+
+### Changed
+- **Intentional PR feedback framework** - Expanded `code-review --feedback` mode with structured response workflow
+  - Gather feedback holistically across related PRs before responding
+  - Categorize each item: Accept / Push back / Clarify / Defer
+  - Document rationale for each decision
+  - Response templates for each category
+- **README Superpowers attribution** - Fact-checked and corrected attribution table
+  - Removed inaccurate Origin columns from Skills/Commands/Agents tables
+  - Added † markers to indicate Superpowers-derived items
+  - Created dedicated Acknowledgments table with verified mappings
+
+### Added
+- **Skill analyzer tests** - 31 unit tests covering extraction, correction detection, version parsing, metrics aggregation
+
 ## [0.9.4] - 2026-01-26
 
 ### Added
