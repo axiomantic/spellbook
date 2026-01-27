@@ -159,6 +159,54 @@ def init_db(db_path: str = None) -> None:
         )
     """)
 
+    # Skill outcomes table for analytics persistence
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS skill_outcomes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            skill_name TEXT NOT NULL,
+            skill_version TEXT,
+            session_id TEXT NOT NULL,
+            project_encoded TEXT NOT NULL,
+            start_time TIMESTAMP NOT NULL,
+            end_time TIMESTAMP,
+            duration_seconds REAL,
+            outcome TEXT NOT NULL,
+            tokens_used INTEGER DEFAULT 0,
+            corrections INTEGER DEFAULT 0,
+            retries INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(session_id, skill_name, start_time)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_skill_outcomes_name
+        ON skill_outcomes(skill_name)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_skill_outcomes_version
+        ON skill_outcomes(skill_name, skill_version)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_skill_outcomes_time
+        ON skill_outcomes(created_at)
+    """)
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_skill_outcomes_project
+        ON skill_outcomes(project_encoded)
+    """)
+
+    # Telemetry config table (singleton)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS telemetry_config (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            enabled INTEGER DEFAULT 0,
+            endpoint_url TEXT,
+            last_sync TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     conn.commit()
 
 
