@@ -87,15 +87,15 @@ Reusable workflows for structured development:
 
 | Category | Skills |
 |----------|--------|
-| **Core Workflow** | [brainstorming]*, [writing-plans]*, [executing-plans]*, [test-driven-development]*, [debugging], [using-git-worktrees]*, [finishing-a-development-branch]* |
-| **Code Quality** | [enforcing-code-quality], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]*, [requesting-code-review]* |
+| **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [using-git-worktrees]†, [finishing-a-development-branch]† |
+| **Code Quality** | [enforcing-code-quality], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] |
-| **Meta** | [using-skills]*, [writing-skills]*, [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]*, [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
+| **Meta** | [using-skills]†, [writing-skills]†, [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
-*\* Derived from [superpowers](https://github.com/obra/superpowers)*
+*† Derived from [superpowers](https://github.com/obra/superpowers)*
 
 [brainstorming]: https://axiomantic.github.io/spellbook/latest/skills/brainstorming/
 [writing-plans]: https://axiomantic.github.io/spellbook/latest/skills/writing-plans/
@@ -151,12 +151,12 @@ Reusable workflows for structured development:
 | [/address-pr-feedback] | Handle PR review comments |
 | [/move-project] | Relocate projects safely |
 | [/audit-green-mirage] | Test suite audit |
-| [/verify]* | Verification before completion |
-| [/systematic-debugging]* | Methodical debugging workflow |
+| [/verify]† | Verification before completion |
+| [/systematic-debugging]† | Methodical debugging workflow |
 | [/scientific-debugging] | Hypothesis-driven debugging |
-| [/brainstorm]* | Design exploration |
-| [/write-plan]* | Create implementation plan |
-| [/execute-plan]* | Execute implementation plan |
+| [/brainstorm]† | Design exploration |
+| [/write-plan]† | Create implementation plan |
+| [/execute-plan]† | Execute implementation plan |
 | [/execute-work-packet] | Execute a single work packet with TDD |
 | [/execute-work-packets-seq] | Execute all packets sequentially |
 | [/merge-work-packets] | Merge completed packets with QA gates |
@@ -164,7 +164,7 @@ Reusable workflows for structured development:
 | [/pr-distill] | Analyze PR, categorize changes by review necessity |
 | [/pr-distill-bless] | Save discovered pattern for future distillations |
 
-*\* Derived from [superpowers](https://github.com/obra/superpowers)*
+*† Derived from [superpowers](https://github.com/obra/superpowers)*
 
 [/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
@@ -190,7 +190,7 @@ Reusable workflows for structured development:
 
 | Agent | Description |
 |-------|-------------|
-| [code-reviewer]* | Specialized code review |
+| [code-reviewer]† | Specialized code review |
 | [chariot-implementer] | Tarot: Implementation specialist |
 | [emperor-governor] | Tarot: Resource governor |
 | [hierophant-distiller] | Tarot: Wisdom distiller |
@@ -198,7 +198,7 @@ Reusable workflows for structured development:
 | [lovers-integrator] | Tarot: Integration specialist |
 | [queen-affective] | Tarot: Emotional state monitor |
 
-*\* Derived from [superpowers](https://github.com/obra/superpowers)*
+*† Derived from [superpowers](https://github.com/obra/superpowers)*
 
 [code-reviewer]: https://axiomantic.github.io/spellbook/latest/agents/code-reviewer/
 [chariot-implementer]: https://axiomantic.github.io/spellbook/latest/agents/chariot-implementer/
