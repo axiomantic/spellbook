@@ -118,3 +118,30 @@ def detect_continuation_intent(
         confidence="low",
         pattern=None,
     )
+
+
+def count_pending_todos(todos_json: Optional[str]) -> tuple[int, bool]:
+    """Count non-completed todos from JSON.
+
+    Args:
+        todos_json: JSON string of todos array, or None
+
+    Returns:
+        Tuple of (count, is_corrupted):
+        - count: Number of pending todos (0 if corrupted or None)
+        - is_corrupted: True if JSON was present but malformed
+    """
+    if todos_json is None:
+        return (0, False)
+
+    try:
+        todos = json.loads(todos_json)
+        if not isinstance(todos, list):
+            return (0, True)  # Not an array
+        pending = sum(
+            1 for t in todos
+            if isinstance(t, dict) and t.get("status") != "completed"
+        )
+        return (pending, False)
+    except json.JSONDecodeError:
+        return (0, True)

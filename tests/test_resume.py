@@ -125,3 +125,92 @@ class TestDetectContinuationIntent:
         result = detect_continuation_intent(message, has_recent_session=False)
         assert result["intent"] == "neutral"
         assert result["confidence"] == "low"
+
+
+class TestCountPendingTodos:
+    """Tests for count_pending_todos function."""
+
+    def test_count_pending_todos_none_input(self):
+        """Test None input returns (0, False)."""
+        from spellbook_mcp.resume import count_pending_todos
+
+        count, corrupted = count_pending_todos(None)
+
+        assert count == 0
+        assert corrupted is False
+
+    def test_count_pending_todos_empty_array(self):
+        """Test empty array returns (0, False)."""
+        from spellbook_mcp.resume import count_pending_todos
+
+        count, corrupted = count_pending_todos("[]")
+
+        assert count == 0
+        assert corrupted is False
+
+    def test_count_pending_todos_with_pending(self):
+        """Test counts non-completed todos."""
+        from spellbook_mcp.resume import count_pending_todos
+        import json
+
+        todos = json.dumps([
+            {"content": "Task 1", "status": "pending"},
+            {"content": "Task 2", "status": "in_progress"},
+            {"content": "Task 3", "status": "completed"},
+        ])
+
+        count, corrupted = count_pending_todos(todos)
+
+        assert count == 2
+        assert corrupted is False
+
+    def test_count_pending_todos_all_completed(self):
+        """Test all completed returns 0."""
+        from spellbook_mcp.resume import count_pending_todos
+        import json
+
+        todos = json.dumps([
+            {"content": "Task 1", "status": "completed"},
+            {"content": "Task 2", "status": "completed"},
+        ])
+
+        count, corrupted = count_pending_todos(todos)
+
+        assert count == 0
+        assert corrupted is False
+
+    def test_count_pending_todos_malformed_json(self):
+        """Test malformed JSON returns (0, True)."""
+        from spellbook_mcp.resume import count_pending_todos
+
+        count, corrupted = count_pending_todos("not valid json")
+
+        assert count == 0
+        assert corrupted is True
+
+    def test_count_pending_todos_not_array(self):
+        """Test non-array JSON returns (0, True)."""
+        from spellbook_mcp.resume import count_pending_todos
+
+        count, corrupted = count_pending_todos('{"key": "value"}')
+
+        assert count == 0
+        assert corrupted is True
+
+    def test_count_pending_todos_mixed_items(self):
+        """Test handles mixed item types gracefully."""
+        from spellbook_mcp.resume import count_pending_todos
+        import json
+
+        todos = json.dumps([
+            {"content": "Valid", "status": "pending"},
+            "not a dict",
+            None,
+            {"content": "Also valid", "status": "in_progress"},
+        ])
+
+        count, corrupted = count_pending_todos(todos)
+
+        # Should count valid pending items and not crash
+        assert count == 2
+        assert corrupted is False
