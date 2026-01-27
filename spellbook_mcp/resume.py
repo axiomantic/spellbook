@@ -40,6 +40,15 @@ class ResumeFields(TypedDict, total=False):
     resume_boot_prompt: Optional[str]
 
 
+# Fresh start patterns (highest priority, override resume)
+FRESH_START_PATTERNS = [
+    r"^(start|begin)\s+(fresh|new|over)",
+    r"^new\s+(session|task|project)",
+    r"^forget\s+(previous|last|prior)",
+    r"^clean\s+slate",
+    r"^from\s+(scratch|beginning)",
+]
+
 # Explicit continue patterns (high confidence, match without recent session)
 EXPLICIT_CONTINUE_PATTERNS = [
     r"^\s*continue\s*$",
@@ -67,6 +76,15 @@ def detect_continuation_intent(
         ContinuationIntent with intent, confidence, and matched pattern
     """
     msg = first_message.strip().lower()
+
+    # Check fresh start patterns first (highest priority)
+    for pattern in FRESH_START_PATTERNS:
+        if re.match(pattern, msg, re.IGNORECASE):
+            return ContinuationIntent(
+                intent="fresh_start",
+                confidence="high",
+                pattern=pattern,
+            )
 
     # Check explicit continue patterns (high confidence, no session required)
     for pattern in EXPLICIT_CONTINUE_PATTERNS:

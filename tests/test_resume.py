@@ -62,3 +62,29 @@ class TestDetectContinuationIntent:
         assert result["intent"] == expected_intent
         assert result["confidence"] == expected_confidence
         assert result["pattern"] is not None
+
+    @pytest.mark.parametrize("message", [
+        "start fresh",
+        "begin fresh",
+        "start new",
+        "begin new",
+        "start over",
+        "new session",
+        "new task",
+        "new project",
+        "forget previous",
+        "forget last",
+        "forget prior",
+        "clean slate",
+        "from scratch",
+        "from beginning",
+    ])
+    def test_fresh_start_patterns(self, message):
+        """Test fresh start patterns override resume even if session exists."""
+        from spellbook_mcp.resume import detect_continuation_intent
+
+        result = detect_continuation_intent(message, has_recent_session=True)
+
+        assert result["intent"] == "fresh_start"
+        assert result["confidence"] == "high"
+        assert result["pattern"] is not None
