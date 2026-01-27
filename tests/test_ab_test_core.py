@@ -632,3 +632,70 @@ class TestVariantAssignment:
         # Allow 20% tolerance
         assert 50 <= control_count <= 90
         assert 10 <= treatment_count <= 50
+
+
+class TestExperimentResults:
+    """Test experiment_results function."""
+
+    def test_returns_per_variant_metrics(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_start,
+            get_skill_version_for_session,
+            experiment_results,
+        )
+        from datetime import datetime
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        # Assign a session and record an outcome
+        exp_id, variant_id, skill_version = get_skill_version_for_session(
+            skill_name="debugging",
+            session_id="session-123",
+            db_path=db_path,
+        )
+
+        # Insert an outcome directly for testing
+        conn = get_connection(db_path)
+        conn.execute("""
+            INSERT INTO skill_outcomes (
+                skill_name, session_id, project_encoded, start_time, outcome,
+                tokens_used, experiment_variant_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "debugging",
+            "session-123",
+            "test-project",
+            datetime.now().isoformat(),
+            "completed",
+            1000,
+            variant_id,
+        ))
+        conn.commit()
+
+        result = experiment_results(create_result["experiment_id"], db_path=db_path)
+
+        assert result["success"] is True
+        assert result["name"] == "test-experiment"
+        assert "results" in result
+
+    def test_rejects_nonexistent_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_results, ExperimentNotFoundError
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        with pytest.raises(ExperimentNotFoundError):
+            experiment_results("nonexistent-id", db_path=db_path)

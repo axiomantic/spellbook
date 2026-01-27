@@ -811,3 +811,129 @@ def _assign_variant(
     conn.commit()
 
     return selected_variant_id, selected_skill_version
+
+
+def experiment_results(experiment_id: str, db_path: Optional[str] = None) -> dict:
+    """Compare variant performance with detailed metrics.
+
+    Args:
+        experiment_id: UUID of experiment
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        Dict with per-variant metrics and comparison
+
+    Raises:
+        ExperimentNotFoundError: If experiment doesn't exist
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    # Get experiment
+    cursor = conn.execute(
+        """
+        SELECT name, skill_name, status, created_at, started_at
+        FROM experiments WHERE id = ?
+        """,
+        (experiment_id,),
+    )
+    row = cursor.fetchone()
+
+    if row is None:
+        raise ExperimentNotFoundError(experiment_id)
+
+    name, skill_name, status, created_at, started_at = row
+
+    # Calculate duration
+    duration_days = None
+    if started_at:
+        start = datetime.fromisoformat(started_at)
+        duration_days = (datetime.utcnow() - start).days
+
+    # Get per-variant metrics
+    cursor = conn.execute(
+        """
+        SELECT ev.id, ev.variant_name, ev.skill_version,
+               COUNT(DISTINCT va.session_id) as sessions,
+               SUM(CASE WHEN so.outcome = 'completed' THEN 1 ELSE 0 END) as completed,
+               SUM(CASE WHEN so.outcome = 'abandoned' THEN 1 ELSE 0 END) as abandoned,
+               SUM(CASE WHEN so.outcome = 'superseded' THEN 1 ELSE 0 END) as superseded,
+               SUM(CASE WHEN so.outcome = 'session_ended' THEN 1 ELSE 0 END) as session_ended,
+               AVG(so.tokens_used) as avg_tokens,
+               AVG(so.corrections) as avg_corrections,
+               AVG(so.retries) as avg_retries
+        FROM experiment_variants ev
+        LEFT JOIN variant_assignments va ON ev.id = va.variant_id
+        LEFT JOIN skill_outcomes so ON ev.id = so.experiment_variant_id
+        WHERE ev.experiment_id = ?
+        GROUP BY ev.id
+        """,
+        (experiment_id,),
+    )
+
+    results = {}
+    for v_row in cursor.fetchall():
+        (
+            v_id, v_name, v_version, sessions, completed, abandoned,
+            superseded, session_ended, avg_tokens, avg_corrections, avg_retries
+        ) = v_row
+
+        total_outcomes = (completed or 0) + (abandoned or 0) + (superseded or 0) + (session_ended or 0)
+        completion_rate = (completed or 0) / total_outcomes if total_outcomes > 0 else 0
+        abandonment_rate = (abandoned or 0) / total_outcomes if total_outcomes > 0 else 0
+
+        results[v_name] = {
+            "variant_id": v_id,
+            "skill_version": v_version,
+            "sessions": sessions or 0,
+            "outcomes": {
+                "completed": completed or 0,
+                "abandoned": abandoned or 0,
+                "superseded": superseded or 0,
+                "session_ended": session_ended or 0,
+            },
+            "metrics": {
+                "completion_rate": round(completion_rate, 3),
+                "abandonment_rate": round(abandonment_rate, 3),
+                "avg_tokens_used": round(avg_tokens or 0, 0),
+                "avg_corrections": round(avg_corrections or 0, 1),
+                "avg_retries": round(avg_retries or 0, 1),
+            },
+        }
+
+    # Build comparison
+    comparison = {}
+    variant_names = list(results.keys())
+    if len(variant_names) >= 2 and "control" in results:
+        control = results["control"]
+        treatment_name = [n for n in variant_names if n != "control"][0]
+        treatment = results[treatment_name]
+
+        control_cr = control["metrics"]["completion_rate"]
+        treatment_cr = treatment["metrics"]["completion_rate"]
+
+        comparison = {
+            "completion_rate_delta": round(treatment_cr - control_cr, 3),
+            "token_efficiency_delta": round(
+                (treatment["metrics"]["avg_tokens_used"] or 0) - (control["metrics"]["avg_tokens_used"] or 0), 0
+            ),
+            "correction_rate_delta": round(
+                (treatment["metrics"]["avg_corrections"] or 0) - (control["metrics"]["avg_corrections"] or 0), 1
+            ),
+            "preliminary_winner": treatment_name if treatment_cr > control_cr else "control",
+        }
+
+    return {
+        "success": True,
+        "experiment_id": experiment_id,
+        "name": name,
+        "skill_name": skill_name,
+        "status": status,
+        "duration_days": duration_days,
+        "results": results,
+        "comparison": comparison,
+    }
