@@ -72,6 +72,78 @@ CORRECTION_PATTERNS = [
 ]
 
 
+# Outcome type constants
+OUTCOME_COMPLETED = "completed"
+OUTCOME_ABANDONED = "abandoned"
+OUTCOME_SUPERSEDED = "superseded"
+OUTCOME_SESSION_ENDED = "session_ended"
+
+
+from datetime import datetime as dt
+
+
+@dataclass
+class SkillOutcome:
+    """Outcome of a skill invocation for persistence."""
+
+    skill_name: str
+    session_id: str
+    project_encoded: str
+    start_time: dt
+    outcome: str
+    skill_version: Optional[str] = None
+    end_time: Optional[dt] = None
+    duration_seconds: Optional[int] = None
+    tokens_used: int = 0
+    corrections: int = 0
+    retries: int = 0
+
+
+def persist_outcome(
+    outcome: SkillOutcome,
+    db_path: Optional[str] = None,
+    experiment_variant_id: Optional[str] = None,
+) -> None:
+    """Persist a skill outcome to the database.
+
+    Args:
+        outcome: SkillOutcome to persist
+        db_path: Path to database (defaults to standard location)
+        experiment_variant_id: Optional variant ID if this outcome is part of an experiment
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    conn.execute(
+        """
+        INSERT INTO skill_outcomes (
+            skill_name, skill_version, session_id, project_encoded,
+            start_time, end_time, duration_seconds, outcome,
+            tokens_used, corrections, retries, experiment_variant_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            outcome.skill_name,
+            outcome.skill_version,
+            outcome.session_id,
+            outcome.project_encoded,
+            outcome.start_time.isoformat() if outcome.start_time else None,
+            outcome.end_time.isoformat() if outcome.end_time else None,
+            outcome.duration_seconds,
+            outcome.outcome,
+            outcome.tokens_used,
+            outcome.corrections,
+            outcome.retries,
+            experiment_variant_id,
+        ),
+    )
+    conn.commit()
+
+
 @dataclass
 class SkillInvocation:
     """A single skill invocation event."""
