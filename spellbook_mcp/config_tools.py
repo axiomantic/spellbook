@@ -1,11 +1,15 @@
 """Configuration management and session initialization for spellbook."""
 
 import json
+import logging
 import os
 import random
+import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 # Session-specific state keyed by session_id (in-memory, resets on MCP server restart)
 # This allows session-only mode changes that don't persist to config
@@ -359,23 +363,27 @@ def telemetry_enable(endpoint_url: str = None, db_path: str = None) -> dict:
         db_path: Path to database (defaults to standard location)
 
     Returns:
-        {"status": "enabled", "endpoint_url": str|None}
+        {"status": "enabled", "endpoint_url": str|None} or {"status": "error", "message": str}
     """
     from spellbook_mcp.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
 
-    conn = get_connection(db_path)
-    conn.execute("""
-        INSERT INTO telemetry_config (id, enabled, endpoint_url, updated_at)
-        VALUES (1, 1, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(id) DO UPDATE SET
-            enabled = 1,
-            endpoint_url = COALESCE(excluded.endpoint_url, endpoint_url),
-            updated_at = CURRENT_TIMESTAMP
-    """, (endpoint_url,))
-    conn.commit()
+    try:
+        conn = get_connection(db_path)
+        conn.execute("""
+            INSERT INTO telemetry_config (id, enabled, endpoint_url, updated_at)
+            VALUES (1, 1, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(id) DO UPDATE SET
+                enabled = 1,
+                endpoint_url = COALESCE(excluded.endpoint_url, endpoint_url),
+                updated_at = CURRENT_TIMESTAMP
+        """, (endpoint_url,))
+        conn.commit()
+    except sqlite3.Error as e:
+        logger.error(f"Database error enabling telemetry: {e}")
+        return {"status": "error", "message": str(e)}
 
     return {"status": "enabled", "endpoint_url": endpoint_url}
 
@@ -387,22 +395,26 @@ def telemetry_disable(db_path: str = None) -> dict:
         db_path: Path to database (defaults to standard location)
 
     Returns:
-        {"status": "disabled"}
+        {"status": "disabled"} or {"status": "error", "message": str}
     """
     from spellbook_mcp.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
 
-    conn = get_connection(db_path)
-    conn.execute("""
-        INSERT INTO telemetry_config (id, enabled, updated_at)
-        VALUES (1, 0, CURRENT_TIMESTAMP)
-        ON CONFLICT(id) DO UPDATE SET
-            enabled = 0,
-            updated_at = CURRENT_TIMESTAMP
-    """)
-    conn.commit()
+    try:
+        conn = get_connection(db_path)
+        conn.execute("""
+            INSERT INTO telemetry_config (id, enabled, updated_at)
+            VALUES (1, 0, CURRENT_TIMESTAMP)
+            ON CONFLICT(id) DO UPDATE SET
+                enabled = 0,
+                updated_at = CURRENT_TIMESTAMP
+        """)
+        conn.commit()
+    except sqlite3.Error as e:
+        logger.error(f"Database error disabling telemetry: {e}")
+        return {"status": "error", "message": str(e)}
 
     return {"status": "disabled"}
 
@@ -415,18 +427,29 @@ def telemetry_status(db_path: str = None) -> dict:
 
     Returns:
         {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
+        or includes "status": "error", "message": str on failure
     """
     from spellbook_mcp.db import get_connection, get_db_path
 
     if db_path is None:
         db_path = str(get_db_path())
 
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT enabled, endpoint_url, last_sync FROM telemetry_config WHERE id = 1
-    """)
-    row = cursor.fetchone()
+    try:
+        conn = get_connection(db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT enabled, endpoint_url, last_sync FROM telemetry_config WHERE id = 1
+        """)
+        row = cursor.fetchone()
+    except sqlite3.Error as e:
+        logger.error(f"Database error getting telemetry status: {e}")
+        return {
+            "enabled": False,
+            "endpoint_url": None,
+            "last_sync": None,
+            "status": "error",
+            "message": str(e),
+        }
 
     if row is None:
         return {
