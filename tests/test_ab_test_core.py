@@ -207,3 +207,134 @@ class TestExperimentStart:
 
         with pytest.raises(ExperimentNotFoundError):
             experiment_start("nonexistent-id", db_path=db_path)
+
+
+class TestExperimentPause:
+    """Test experiment_pause function."""
+
+    def test_pauses_active_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, experiment_start, experiment_pause
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        result = experiment_pause(create_result["experiment_id"], db_path=db_path)
+
+        assert result["success"] is True
+        assert result["status"] == "paused"
+
+    def test_rejects_pausing_created_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_pause,
+            InvalidStatusTransitionError,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+
+        with pytest.raises(InvalidStatusTransitionError):
+            experiment_pause(create_result["experiment_id"], db_path=db_path)
+
+
+class TestExperimentComplete:
+    """Test experiment_complete function."""
+
+    def test_completes_active_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_start,
+            experiment_complete,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        result = experiment_complete(create_result["experiment_id"], db_path=db_path)
+
+        assert result["success"] is True
+        assert result["status"] == "completed"
+        assert result["completed_at"] is not None
+
+    def test_completes_paused_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_start,
+            experiment_pause,
+            experiment_complete,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+        experiment_pause(create_result["experiment_id"], db_path=db_path)
+
+        result = experiment_complete(create_result["experiment_id"], db_path=db_path)
+
+        assert result["success"] is True
+        assert result["status"] == "completed"
+
+    def test_rejects_completing_created_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_complete,
+            InvalidStatusTransitionError,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+
+        with pytest.raises(InvalidStatusTransitionError):
+            experiment_complete(create_result["experiment_id"], db_path=db_path)

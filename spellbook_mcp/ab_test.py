@@ -441,3 +441,95 @@ def experiment_start(experiment_id: str, db_path: Optional[str] = None) -> dict:
         "status": "active",
         "started_at": started_at,
     }
+
+
+def experiment_pause(experiment_id: str, db_path: Optional[str] = None) -> dict:
+    """Pause an active experiment without completing it.
+
+    Args:
+        experiment_id: UUID of experiment to pause
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        Dict with experiment status
+
+    Raises:
+        ExperimentNotFoundError: If experiment doesn't exist
+        InvalidStatusTransitionError: If experiment not in active status
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    cursor = conn.execute(
+        "SELECT status FROM experiments WHERE id = ?", (experiment_id,)
+    )
+    row = cursor.fetchone()
+
+    if row is None:
+        raise ExperimentNotFoundError(experiment_id)
+
+    current_status = row[0]
+    validate_status_transition(current_status, "paused")
+
+    conn.execute(
+        "UPDATE experiments SET status = 'paused' WHERE id = ?",
+        (experiment_id,),
+    )
+    conn.commit()
+
+    return {
+        "success": True,
+        "experiment_id": experiment_id,
+        "status": "paused",
+    }
+
+
+def experiment_complete(experiment_id: str, db_path: Optional[str] = None) -> dict:
+    """Mark experiment as completed and freeze data.
+
+    Args:
+        experiment_id: UUID of experiment to complete
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        Dict with experiment status and completed_at timestamp
+
+    Raises:
+        ExperimentNotFoundError: If experiment doesn't exist
+        InvalidStatusTransitionError: If experiment not in active/paused status
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    cursor = conn.execute(
+        "SELECT status FROM experiments WHERE id = ?", (experiment_id,)
+    )
+    row = cursor.fetchone()
+
+    if row is None:
+        raise ExperimentNotFoundError(experiment_id)
+
+    current_status = row[0]
+    validate_status_transition(current_status, "completed")
+
+    completed_at = datetime.utcnow().isoformat()
+    conn.execute(
+        "UPDATE experiments SET status = 'completed', completed_at = ? WHERE id = ?",
+        (completed_at, experiment_id),
+    )
+    conn.commit()
+
+    return {
+        "success": True,
+        "experiment_id": experiment_id,
+        "status": "completed",
+        "completed_at": completed_at,
+    }
