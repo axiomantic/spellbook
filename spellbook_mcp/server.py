@@ -60,6 +60,9 @@ from spellbook_mcp.config_tools import (
     session_init,
     session_mode_set,
     session_mode_get,
+    telemetry_enable as do_telemetry_enable,
+    telemetry_disable as do_telemetry_disable,
+    telemetry_status as do_telemetry_status,
 )
 from spellbook_mcp.compaction_detector import (
     check_for_compaction,
@@ -99,7 +102,10 @@ from spellbook_mcp.pr_distill.config import load_config as load_pr_config
 from spellbook_mcp.pr_distill.fetch import parse_pr_identifier, fetch_pr as do_fetch_pr
 
 # Skill analyzer import
-from spellbook_mcp.skill_analyzer import analyze_sessions as do_analyze_skill_usage
+from spellbook_mcp.skill_analyzer import (
+    analyze_sessions as do_analyze_skill_usage,
+    get_analytics_summary as do_get_analytics_summary,
+)
 
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
@@ -1254,6 +1260,89 @@ def analyze_skill_usage(
         group_by_version=compare_versions,
         limit=limit,
     )
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_analytics_summary(
+    project_path: str = None,
+    days: int = 30,
+    skill: str = None,
+) -> dict:
+    """Get skill analytics summary from persisted outcomes.
+
+    Queries the local skill_outcomes database for aggregated metrics.
+    Unlike analyze_skill_usage which reads session files, this returns
+    metrics from persistent storage.
+
+    Args:
+        project_path: Filter to specific project (defaults to current)
+        days: Time window in days (default 30)
+        skill: Filter to specific skill (defaults to all)
+
+    Returns:
+        {
+            "total_outcomes": int,
+            "by_skill": {skill_name: metrics dict},
+            "weak_skills": [top 5 by failure_score],
+            "period_days": int
+        }
+    """
+    import os
+    project_encoded = None
+    if project_path:
+        project_encoded = project_path.replace("/", "-").lstrip("-")
+    elif project_path is None:
+        # Use current directory
+        project_encoded = os.getcwd().replace("/", "-").lstrip("-")
+
+    return do_get_analytics_summary(
+        project_encoded=project_encoded,
+        days=days,
+        skill=skill,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_telemetry_enable(endpoint_url: str = None) -> dict:
+    """Enable anonymous telemetry aggregation.
+
+    Telemetry is opt-in and privacy-preserving:
+    - No session IDs, project paths, or user data
+    - No corrections (require content inspection)
+    - Only bucketed durations and token counts
+    - Minimum 5 samples before any aggregate is shared
+
+    Args:
+        endpoint_url: Custom endpoint (optional, future use)
+
+    Returns:
+        {"status": "enabled", "endpoint_url": str|None}
+    """
+    return do_telemetry_enable(endpoint_url=endpoint_url)
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_telemetry_disable() -> dict:
+    """Disable telemetry. Local persistence continues unaffected.
+
+    Returns:
+        {"status": "disabled"}
+    """
+    return do_telemetry_disable()
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_telemetry_status() -> dict:
+    """Get current telemetry configuration.
+
+    Returns:
+        {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
+    """
+    return do_telemetry_status()
 
 
 if __name__ == "__main__":
