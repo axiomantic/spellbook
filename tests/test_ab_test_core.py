@@ -338,3 +338,143 @@ class TestExperimentComplete:
 
         with pytest.raises(InvalidStatusTransitionError):
             experiment_complete(create_result["experiment_id"], db_path=db_path)
+
+
+class TestExperimentStatus:
+    """Test experiment_status function."""
+
+    def test_returns_experiment_with_variant_counts(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, experiment_start, experiment_status
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            description="Test description",
+            db_path=db_path,
+        )
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        result = experiment_status(create_result["experiment_id"], db_path=db_path)
+
+        assert result["success"] is True
+        assert result["experiment"]["name"] == "test-experiment"
+        assert result["experiment"]["skill_name"] == "debugging"
+        assert result["experiment"]["status"] == "active"
+        assert result["experiment"]["description"] == "Test description"
+        assert len(result["variants"]) == 2
+        assert result["total_sessions"] == 0
+        assert result["total_outcomes"] == 0
+
+    def test_rejects_nonexistent_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_status, ExperimentNotFoundError
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        with pytest.raises(ExperimentNotFoundError):
+            experiment_status("nonexistent-id", db_path=db_path)
+
+
+class TestExperimentList:
+    """Test experiment_list function."""
+
+    def test_lists_all_experiments(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, experiment_start, experiment_list
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        # Create multiple experiments
+        experiment_create(
+            name="exp-1",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        result2 = experiment_create(
+            name="exp-2",
+            skill_name="implementing-features",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(result2["experiment_id"], db_path=db_path)
+
+        result = experiment_list(db_path=db_path)
+
+        assert result["success"] is True
+        assert result["total"] == 2
+        assert len(result["experiments"]) == 2
+
+    def test_filters_by_status(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, experiment_start, experiment_list
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        experiment_create(
+            name="exp-1",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        result2 = experiment_create(
+            name="exp-2",
+            skill_name="implementing-features",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(result2["experiment_id"], db_path=db_path)
+
+        result = experiment_list(status="active", db_path=db_path)
+
+        assert result["total"] == 1
+        assert result["experiments"][0]["name"] == "exp-2"
+
+    def test_filters_by_skill_name(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, experiment_list
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        experiment_create(
+            name="exp-1",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_create(
+            name="exp-2",
+            skill_name="implementing-features",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+
+        result = experiment_list(skill_name="debugging", db_path=db_path)
+
+        assert result["total"] == 1
+        assert result["experiments"][0]["name"] == "exp-1"

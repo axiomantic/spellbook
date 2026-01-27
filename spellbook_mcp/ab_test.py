@@ -533,3 +533,153 @@ def experiment_complete(experiment_id: str, db_path: Optional[str] = None) -> di
         "status": "completed",
         "completed_at": completed_at,
     }
+
+
+def experiment_status(experiment_id: str, db_path: Optional[str] = None) -> dict:
+    """Get current status and summary metrics for an experiment.
+
+    Args:
+        experiment_id: UUID of experiment
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        Dict with experiment details, variant counts, and metrics
+
+    Raises:
+        ExperimentNotFoundError: If experiment doesn't exist
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    # Get experiment
+    cursor = conn.execute(
+        """
+        SELECT id, name, skill_name, status, description, created_at, started_at, completed_at
+        FROM experiments WHERE id = ?
+        """,
+        (experiment_id,),
+    )
+    row = cursor.fetchone()
+
+    if row is None:
+        raise ExperimentNotFoundError(experiment_id)
+
+    exp_id, name, skill_name, status, description, created_at, started_at, completed_at = row
+
+    # Get variants with counts
+    cursor = conn.execute(
+        """
+        SELECT ev.id, ev.variant_name, ev.skill_version, ev.weight,
+               COUNT(DISTINCT va.session_id) as sessions_assigned,
+               COUNT(DISTINCT so.id) as outcomes_recorded
+        FROM experiment_variants ev
+        LEFT JOIN variant_assignments va ON ev.id = va.variant_id
+        LEFT JOIN skill_outcomes so ON ev.id = so.experiment_variant_id
+        WHERE ev.experiment_id = ?
+        GROUP BY ev.id
+        """,
+        (experiment_id,),
+    )
+
+    variants = []
+    total_sessions = 0
+    total_outcomes = 0
+
+    for v_row in cursor.fetchall():
+        v_id, v_name, v_version, v_weight, sessions, outcomes = v_row
+        variants.append({
+            "id": v_id,
+            "name": v_name,
+            "skill_version": v_version,
+            "weight": v_weight,
+            "sessions_assigned": sessions,
+            "outcomes_recorded": outcomes,
+        })
+        total_sessions += sessions
+        total_outcomes += outcomes
+
+    return {
+        "success": True,
+        "experiment": {
+            "id": exp_id,
+            "name": name,
+            "skill_name": skill_name,
+            "status": status,
+            "description": description,
+            "created_at": created_at,
+            "started_at": started_at,
+            "completed_at": completed_at,
+        },
+        "variants": variants,
+        "total_sessions": total_sessions,
+        "total_outcomes": total_outcomes,
+    }
+
+
+def experiment_list(
+    status: Optional[str] = None,
+    skill_name: Optional[str] = None,
+    db_path: Optional[str] = None,
+) -> dict:
+    """List experiments with optional status filter.
+
+    Args:
+        status: Filter by experiment status
+        skill_name: Filter by target skill
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        Dict with list of experiments and total count
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    query = """
+        SELECT e.id, e.name, e.skill_name, e.status, e.created_at,
+               COUNT(DISTINCT ev.id) as variants_count,
+               COUNT(DISTINCT va.session_id) as total_sessions
+        FROM experiments e
+        LEFT JOIN experiment_variants ev ON e.id = ev.experiment_id
+        LEFT JOIN variant_assignments va ON e.id = va.experiment_id
+        WHERE 1=1
+    """
+    params = []
+
+    if status:
+        query += " AND e.status = ?"
+        params.append(status)
+
+    if skill_name:
+        query += " AND e.skill_name = ?"
+        params.append(skill_name)
+
+    query += " GROUP BY e.id ORDER BY e.created_at DESC"
+
+    cursor = conn.execute(query, params)
+
+    experiments = []
+    for row in cursor.fetchall():
+        exp_id, name, s_name, exp_status, created_at, variants_count, total_sessions = row
+        experiments.append({
+            "id": exp_id,
+            "name": name,
+            "skill_name": s_name,
+            "status": exp_status,
+            "created_at": created_at,
+            "variants_count": variants_count,
+            "total_sessions": total_sessions,
+        })
+
+    return {
+        "success": True,
+        "experiments": experiments,
+        "total": len(experiments),
+    }
