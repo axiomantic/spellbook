@@ -349,3 +349,94 @@ def session_init(session_id: Optional[str] = None) -> dict:
         "context": context,
         "undertow": undertow,
     }
+
+
+def telemetry_enable(endpoint_url: str = None, db_path: str = None) -> dict:
+    """Enable anonymous telemetry aggregation.
+
+    Args:
+        endpoint_url: Optional custom endpoint (default: future Anthropic endpoint)
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        {"status": "enabled", "endpoint_url": str|None}
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+    conn.execute("""
+        INSERT INTO telemetry_config (id, enabled, endpoint_url, updated_at)
+        VALUES (1, 1, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(id) DO UPDATE SET
+            enabled = 1,
+            endpoint_url = COALESCE(excluded.endpoint_url, endpoint_url),
+            updated_at = CURRENT_TIMESTAMP
+    """, (endpoint_url,))
+    conn.commit()
+
+    return {"status": "enabled", "endpoint_url": endpoint_url}
+
+
+def telemetry_disable(db_path: str = None) -> dict:
+    """Disable telemetry. Local persistence continues.
+
+    Args:
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        {"status": "disabled"}
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+    conn.execute("""
+        INSERT INTO telemetry_config (id, enabled, updated_at)
+        VALUES (1, 0, CURRENT_TIMESTAMP)
+        ON CONFLICT(id) DO UPDATE SET
+            enabled = 0,
+            updated_at = CURRENT_TIMESTAMP
+    """)
+    conn.commit()
+
+    return {"status": "disabled"}
+
+
+def telemetry_status(db_path: str = None) -> dict:
+    """Get current telemetry configuration.
+
+    Args:
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT enabled, endpoint_url, last_sync FROM telemetry_config WHERE id = 1
+    """)
+    row = cursor.fetchone()
+
+    if row is None:
+        return {
+            "enabled": False,
+            "endpoint_url": None,
+            "last_sync": None,
+        }
+
+    return {
+        "enabled": bool(row[0]),
+        "endpoint_url": row[1],
+        "last_sync": row[2],
+    }
