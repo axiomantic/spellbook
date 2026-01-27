@@ -368,3 +368,76 @@ def experiment_create(
             for v in variant_objects
         ],
     }
+
+
+def experiment_start(experiment_id: str, db_path: Optional[str] = None) -> dict:
+    """Activate an experiment for variant assignment.
+
+    Args:
+        experiment_id: UUID of experiment to start
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        Dict with experiment status and started_at timestamp
+
+    Raises:
+        ExperimentNotFoundError: If experiment doesn't exist
+        InvalidStatusTransitionError: If experiment not in created/paused status
+        ConcurrentExperimentError: If another experiment for the skill is active
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    conn = get_connection(db_path)
+
+    # Get experiment
+    cursor = conn.execute(
+        "SELECT name, skill_name, status, started_at FROM experiments WHERE id = ?",
+        (experiment_id,),
+    )
+    row = cursor.fetchone()
+
+    if row is None:
+        raise ExperimentNotFoundError(experiment_id)
+
+    name, skill_name, current_status, existing_started_at = row
+
+    # Validate status transition
+    validate_status_transition(current_status, "active")
+
+    # Check for concurrent active experiment for same skill
+    cursor = conn.execute(
+        """
+        SELECT id FROM experiments
+        WHERE skill_name = ? AND status = 'active' AND id != ?
+        """,
+        (skill_name, experiment_id),
+    )
+    active_experiment = cursor.fetchone()
+    if active_experiment:
+        raise ConcurrentExperimentError(skill_name, active_experiment[0])
+
+    # Set started_at only if first activation
+    started_at = existing_started_at
+    if started_at is None:
+        started_at = datetime.utcnow().isoformat()
+        conn.execute(
+            "UPDATE experiments SET status = 'active', started_at = ? WHERE id = ?",
+            (started_at, experiment_id),
+        )
+    else:
+        conn.execute(
+            "UPDATE experiments SET status = 'active' WHERE id = ?",
+            (experiment_id,),
+        )
+
+    conn.commit()
+
+    return {
+        "success": True,
+        "experiment_id": experiment_id,
+        "status": "active",
+        "started_at": started_at,
+    }

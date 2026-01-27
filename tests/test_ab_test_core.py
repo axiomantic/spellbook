@@ -110,3 +110,100 @@ class TestExperimentCreate:
                 variants=[{"name": "control", "weight": 100}],
                 db_path=db_path,
             )
+
+
+class TestExperimentStart:
+    """Test experiment_start function."""
+
+    def test_starts_created_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_create, experiment_start
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+
+        result = experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        assert result["success"] is True
+        assert result["status"] == "active"
+        assert result["started_at"] is not None
+
+    def test_rejects_starting_active_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_start,
+            InvalidStatusTransitionError,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        create_result = experiment_create(
+            name="test-experiment",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+
+        experiment_start(create_result["experiment_id"], db_path=db_path)
+
+        with pytest.raises(InvalidStatusTransitionError):
+            experiment_start(create_result["experiment_id"], db_path=db_path)
+
+    def test_rejects_concurrent_experiment_for_same_skill(self, tmp_path):
+        from spellbook_mcp.ab_test import (
+            experiment_create,
+            experiment_start,
+            ConcurrentExperimentError,
+        )
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        # Create and start first experiment
+        result1 = experiment_create(
+            name="experiment-1",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v2", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+        experiment_start(result1["experiment_id"], db_path=db_path)
+
+        # Create second experiment for same skill
+        result2 = experiment_create(
+            name="experiment-2",
+            skill_name="debugging",
+            variants=[
+                {"name": "control", "weight": 50},
+                {"name": "treatment", "skill_version": "v3", "weight": 50},
+            ],
+            db_path=db_path,
+        )
+
+        # Starting second experiment should fail
+        with pytest.raises(ConcurrentExperimentError):
+            experiment_start(result2["experiment_id"], db_path=db_path)
+
+    def test_rejects_nonexistent_experiment(self, tmp_path):
+        from spellbook_mcp.ab_test import experiment_start, ExperimentNotFoundError
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        with pytest.raises(ExperimentNotFoundError):
+            experiment_start("nonexistent-id", db_path=db_path)
