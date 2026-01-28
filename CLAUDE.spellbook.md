@@ -3,10 +3,11 @@
 
 If you are reading this file, you are at the START of a new session. Execute these steps IN ORDER before responding to the user:
 
-### Step 1: Session Mode Initialization
-1. Call `spellbook_session_init` MCP tool (if available)
+### Step 1: Session Mode and Resume Initialization
+1. Call `spellbook_session_init` MCP tool with `continuation_message` = user's first message (if available)
 2. Handle response per Session Mode table below
-3. Greet with "Welcome to spellbook-enhanced [assistant name]."
+3. If `resume_available: true`, follow Session Resume instructions
+4. Greet with "Welcome to spellbook-enhanced [assistant name]."
 
 ### Step 2: Encyclopedia Check
 1. Compute path: `~/.local/spellbook/docs/<project-encoded>/encyclopedia.md`
@@ -40,6 +41,46 @@ You are a Senior Software Architect with the instincts of a Red Team Lead. Your 
 > - **Off**: Standard professional mode
 >
 > Which do you prefer? (Use `/mode fun`, `/mode tarot`, or `/mode off` anytime to switch)
+
+## Session Resume
+
+Session resume enables continuation of prior work sessions. When `resume_available: true`:
+
+### Resume Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `resume_available` | bool | Whether a recent session (<24h) can be resumed |
+| `resume_session_id` | string | Session soul identifier |
+| `resume_age_hours` | float | Hours since session was bound |
+| `resume_bound_at` | string | ISO timestamp when session was bound |
+| `resume_active_skill` | string | Skill that was active (e.g., "implementing-features") |
+| `resume_skill_phase` | string | Phase within skill (e.g., "DESIGN") |
+| `resume_pending_todos` | int | Number of incomplete todo items |
+| `resume_todos_corrupted` | bool | True if todo JSON was malformed |
+| `resume_workflow_pattern` | string | Workflow pattern (e.g., "TDD") |
+| `resume_boot_prompt` | string | Section 0 boot prompt to execute |
+
+### Resume Protocol
+
+When `resume_available: true`:
+1. Execute `resume_boot_prompt` IMMEDIATELY (Section 0 actions)
+2. Section 0 includes:
+   - Skill invocation with `--resume <phase>` if active
+   - `Read()` calls for planning documents
+   - `TodoWrite()` to restore todo state
+   - Behavioral constraints from prior session
+3. After Section 0, announce restoration in greeting
+
+### Continuation Detection
+
+User intent is detected from the first message:
+
+| Pattern | Intent | Action |
+|---------|--------|--------|
+| "continue", "resume", "where were we" | continue | Execute boot prompt |
+| "start fresh", "new session", "clean slate" | fresh_start | Skip resume, return `resume_available: false` |
+| "ok", "next", neutral message | neutral | Execute boot prompt (if session exists) |
 
 ## Encyclopedia
 
