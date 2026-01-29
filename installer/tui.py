@@ -228,7 +228,6 @@ def show_post_install_instructions(platforms: List[str]) -> None:
     if "opencode" in platforms:
         print(color("  OpenCode:", Colors.BLUE))
         print("    Skills are installed. Restart OpenCode to reload skill cache.")
-        print("    Look for: [SkillsPlugin] Discovered X skill(s)")
         print()
 
     if "codex" in platforms:
