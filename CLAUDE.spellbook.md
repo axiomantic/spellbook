@@ -347,6 +347,11 @@ Each line in `agent-{agentId}.jsonl` is a JSON object containing:
 
 - **TaskOutput visibility bug (GitHub #15098):** The TaskOutput tool is incorrectly hidden from subagents, preventing them from accessing background task results. Workaround: Have the orchestrator retrieve results instead.
 
+- **`gh pr edit` broken:** GitHub Projects Classic deprecation causes GraphQL errors when using `gh pr edit` to update PR title/body. Use the REST API instead:
+  ```bash
+  gh api repos/{owner}/{repo}/pulls/{number} --method PATCH -f title="..." -f body="..."
+  ```
+
 ## Glossary
 
 | Term | Definition |
