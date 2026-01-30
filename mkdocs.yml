@@ -104,6 +104,7 @@ nav:
     - Specialized Skills:
       - skills/async-await-patterns.md
       - skills/using-lsp-tools.md
+      - skills/managing-artifacts.md
       - skills/nim-pr-guide.md
     - Meta Skills:
       - skills/using-skills.md

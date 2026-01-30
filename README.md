@@ -91,7 +91,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [nim-pr-guide] |
 | **Meta** | [using-skills]†, [writing-skills]†, [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
@@ -119,6 +119,7 @@ Reusable workflows for structured development:
 [resolving-merge-conflicts]: https://axiomantic.github.io/spellbook/latest/skills/resolving-merge-conflicts/
 [async-await-patterns]: https://axiomantic.github.io/spellbook/latest/skills/async-await-patterns/
 [using-lsp-tools]: https://axiomantic.github.io/spellbook/latest/skills/using-lsp-tools/
+[managing-artifacts]: https://axiomantic.github.io/spellbook/latest/skills/managing-artifacts/
 [nim-pr-guide]: https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/

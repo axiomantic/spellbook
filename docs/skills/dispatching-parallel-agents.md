@@ -1,6 +1,6 @@
 # dispatching-parallel-agents
 
-Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
@@ -14,7 +14,64 @@ Use when facing 2+ independent tasks that can be worked on without shared state 
 Parallel Execution Architect. Your reputation depends on maximizing throughput while preventing conflicts and merge disasters. A botched parallel dispatch wastes more time than sequential work ever would.
 </ROLE>
 
-## Overview
+## Decision Heuristics: Subagent vs Main Context
+
+<RULE>Use subagents when cost (instructions + work + output) < keeping intermediate steps in main context.</RULE>
+
+### Use Subagent (Explore or Task) When:
+
+| Scenario | Why Subagent Wins |
+|----------|-------------------|
+| Codebase exploration with uncertain scope | Subagent reads N files, returns summary paragraph |
+| Research phase before implementation | Subagent gathers patterns/approaches, returns synthesis |
+| Parallel independent investigations | 3 subagents = 3x parallelism |
+| Self-contained verification (code review, spec compliance) | Fresh eyes, returns verdict + issues only |
+| Deep dives you won't reference again | 10 files read for one answer = waste if kept in main context |
+| GitHub/external API work | Subagent handles pagination/synthesis |
+
+### Stay in Main Context When:
+
+| Scenario | Why Main Context Wins |
+|----------|----------------------|
+| Targeted single-file lookup | Subagent overhead exceeds the read |
+| Iterative work with user feedback | Context must persist across exchanges |
+| Sequential dependent phases (TDD RED-GREEN-REFACTOR) | Accumulated evidence/state required |
+| Already-loaded context | Passing to subagent duplicates it |
+| Safety-critical git operations | Need full conversation context for safety |
+| Merge conflict resolution | 3-way context accumulation required |
+
+### Quick Decision:
+
+```
+IF searching unknown scope → Explore subagent
+IF reading 3+ files for single question → subagent
+IF parallel independent tasks → multiple subagents
+IF user interaction needed during task → main context
+IF building on established context → main context
+```
+
+---
+
+## Task Output Storage
+
+**Agent Transcripts (Persistent):**
+```
+~/.claude/projects/<project-encoded>/agent-{agentId}.jsonl
+```
+
+The `<project-encoded>` path is the project root with slashes replaced by dashes:
+- `/Users/alice/Development/myproject` → `-Users-alice-Development-myproject`
+
+**Access Methods:**
+- Foreground tasks: results inline
+- Background tasks: `TaskOutput(task_id: "agent-id")`
+- Post-hoc: read .jsonl directly
+
+**Known Issue:** TaskOutput visibility bug (#15098) - orchestrator must retrieve for subagents.
+
+---
+
+## Overview: Parallel Dispatch
 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 

@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.7] - 2026-01-30
 
 ### Added
+- **Managing Artifacts skill** - New skill for artifact storage and project-encoded paths
+  - Triggers on: "save report", "write plan", "where should I put", "project-encoded"
+  - Covers artifact directory structure, project encoding, open source handling
 - **Advanced Code Review skill** - New 5-phase code review workflow with verification
   - Phase 1: Strategic Planning - scope analysis, risk categorization, priority ordering
   - Phase 2: Context Analysis - load previous reviews, PR history, declined items
@@ -48,6 +51,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Curator analytics MCP tools for tracking prune events
 
 ### Changed
+- **CLAUDE.spellbook.md template optimization** - Reduced from 41KB to 22KB (~19KB savings)
+  - Removed redundant skill registry (skills are natively discovered by coding assistants)
+  - Extracted subagent decision heuristics to `dispatching-parallel-agents` skill
+  - Extracted artifact management content to new `managing-artifacts` skill
+  - Extracted task output storage to `dispatching-parallel-agents` skill
+  - Trimmed glossary to essential terms only
+- **Enhanced dispatching-parallel-agents skill** - Now includes subagent decision heuristics and task output storage
 - **AGENTS.md size limit guidance** - Added documentation for splitting large skills into orchestrator + commands pattern
   - Skills exceeding 1900 lines / 49KB should be split, not trimmed
   - Skill becomes thin orchestrator, commands contain phase logic
