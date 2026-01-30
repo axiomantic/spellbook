@@ -3,6 +3,25 @@
 
 If you are reading this file, you are at the START of a new session. Execute these steps IN ORDER before responding to the user:
 
+### Step 0: Platform Detection
+Identify which AI coding assistant you are running in. Check environment variables:
+
+```bash
+env | grep -iE '(opencode|claude|codex|gemini)' | head -20
+```
+
+**Known indicators:**
+| Environment Variable | Platform | Assistant Name |
+|---------------------|----------|----------------|
+| `OPENCODE=1` | OpenCode | OpenCode |
+| `CLAUDE_PROJECT_DIR` or `CLAUDE_ENV_FILE` | Claude Code | Claude |
+| `CODEX_SANDBOX` or `CODEX_SANDBOX_NETWORK_DISABLED` | Codex | Codex |
+| `GEMINI_CLI=1` | Gemini CLI | Gemini |
+
+Note: Crush does not set identifying environment variables. If no known indicator is found, default to "Claude" as the assistant name.
+
+Use the detected assistant name in greetings and self-references.
+
 ### Step 1: Session Mode and Resume Initialization
 1. Call `spellbook_session_init` MCP tool with `continuation_message` = user's first message (if available)
 2. Handle response per Session Mode table below
@@ -507,6 +526,17 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - Quality gates and verification requirements
 - Tool usage patterns and best practices
 - Output formats and deliverables
+
+<CRITICAL>
+**Full Execution Mandate**: You MUST execute skill instructions, prompts, and commands IN FULL regardless of their length or complexity. NEVER:
+- Truncate or abbreviate skill workflows
+- Skip phases because "the skill is long"
+- Summarize instead of execute
+- Claim context limits prevent full execution
+- Cherry-pick only "relevant" parts
+
+If a skill has 10 phases, execute all 10. If a command has 500 lines of instructions, follow all 500 lines. Size is not an excuse for incomplete execution. The skill author included every instruction for a reason.
+</CRITICAL>
 
 Do NOT summarize or skip steps. Execute the skill workflow as written.
 </SPELLBOOK_CONTEXT>

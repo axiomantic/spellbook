@@ -2,6 +2,19 @@
 
 Development instructions for spellbook codebase. User-facing template: `CLAUDE.spellbook.md`.
 
+## Supported Platforms
+
+| Platform | GitHub | Config Location | MCP Transport |
+|----------|--------|-----------------|---------------|
+| Claude Code | [anthropics/claude-code](https://github.com/anthropics/claude-code) | `~/.claude/` | HTTP daemon |
+| OpenCode | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
+| Codex | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | stdio |
+| Gemini CLI | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | extension |
+| Crush | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | stdio |
+
+**Note:** There are multiple projects named "opencode". We support **anomalyco/opencode** (92K+ stars),
+not the archived opencode-ai/opencode (which became charmbracelet/crush).
+
 ## Invariant Principles
 
 1. **Library vs Repo distinction**: Library items (`skills/`, `commands/`) ship to users and require docs. Repo items (`.claude/skills/`) are internal only.
@@ -26,7 +39,7 @@ spellbook/
 ├── commands/            # Library commands (shipped)
 ├── agents/              # Agent definitions
 ├── installer/           # Multi-platform installer
-│   ├── platforms/       # claude_code, gemini, opencode, codex
+│   ├── platforms/       # claude_code, opencode, codex, gemini, crush
 │   └── components/      # context_files, symlinks, mcp
 ├── spellbook_mcp/       # MCP server
 ├── scripts/             # Build/maintenance
