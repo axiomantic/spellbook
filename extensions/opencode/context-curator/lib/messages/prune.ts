@@ -1,3 +1,4 @@
+import { countTokens } from "@anthropic-ai/tokenizer";
 import type { Part } from "@opencode-ai/sdk";
 import type { CuratorConfig } from "../types.js";
 import type { Logger } from "../logger.js";
@@ -6,13 +7,6 @@ import { isMessageCompacted } from "./utils.js";
 
 function isToolPart(part: Part): part is Part & { type: "tool"; callID: string; state: { output?: string } } {
   return part.type === "tool" && "callID" in part;
-}
-
-/**
- * Estimate tokens for a string (rough approximation: ~4 chars per token)
- */
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4);
 }
 
 /**
@@ -38,7 +32,7 @@ export function calculateTokenSavings(
       if (isToolPart(part) && targetIds.has(part.callID)) {
         const output = part.state?.output;
         if (output && typeof output === "string") {
-          totalTokens += estimateTokens(output);
+          totalTokens += countTokens(output);
         }
       }
     }

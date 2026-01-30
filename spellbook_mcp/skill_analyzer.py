@@ -80,13 +80,6 @@ CORRECTION_PATTERNS = [
 ]
 
 
-# Outcome type constants
-OUTCOME_COMPLETED = "completed"
-OUTCOME_ABANDONED = "abandoned"
-OUTCOME_SUPERSEDED = "superseded"
-OUTCOME_SESSION_ENDED = "session_ended"
-
-
 from datetime import datetime as dt
 
 

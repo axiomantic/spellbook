@@ -3,7 +3,7 @@ Context Curator MCP tools for analytics tracking.
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from .db import get_connection
@@ -54,7 +54,7 @@ async def curator_track_prune(
     conn = get_connection()
     cursor = conn.cursor()
 
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
     tool_ids_json = json.dumps(tool_ids)
 
     cursor.execute(

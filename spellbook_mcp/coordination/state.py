@@ -1,6 +1,6 @@
 """SQLite state management for coordination server."""
 import sqlite3
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 import uuid
@@ -110,8 +110,8 @@ class StateManager:
         Returns:
             swarm_id
         """
-        swarm_id = f"swarm-{datetime.now(UTC).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
-        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        swarm_id = f"swarm-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
+        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         conn = self._get_connection()
         try:
@@ -155,7 +155,7 @@ class StateManager:
         Returns:
             worker_id
         """
-        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         conn = self._get_connection()
         try:
@@ -199,7 +199,7 @@ class StateManager:
         commit: Optional[str] = None
     ):
         """Update worker progress."""
-        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         conn = self._get_connection()
         try:
@@ -242,7 +242,7 @@ class StateManager:
         review_passed: bool
     ):
         """Mark worker as complete."""
-        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         conn = self._get_connection()
         try:
@@ -311,7 +311,7 @@ class StateManager:
         recoverable: bool
     ):
         """Record an error from a worker."""
-        now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         conn = self._get_connection()
         try:
@@ -381,7 +381,7 @@ class StateManager:
         Args:
             days: Delete swarms older than this many days
         """
-        cutoff = (datetime.now(UTC) - timedelta(days=days)).isoformat().replace("+00:00", "Z")
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat().replace("+00:00", "Z")
 
         conn = self._get_connection()
         try:

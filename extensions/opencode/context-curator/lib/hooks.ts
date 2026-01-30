@@ -60,6 +60,10 @@ export function createChatMessageTransformHandler(
 
     syncToolCache(state, config, logger, output.messages);
 
+    // Capture state before strategies run to calculate delta
+    const toolIdsBefore = state.prune.toolIds.length;
+    const tokensBefore = state.stats.totalPruneTokens;
+
     deduplicate(state, logger, config, output.messages);
     supersedeWrites(state, logger, config, output.messages);
     purgeErrors(state, logger, config, output.messages);
@@ -91,9 +95,13 @@ export function createChatMessageTransformHandler(
     prune(state, logger, config, output.messages);
     insertPruneToolContext(state, config, logger, output.messages);
 
-    if (state.sessionId && state.stats.totalPruneTokens > 0) {
+    // Only track the delta from this turn's automatic pruning (not cumulative)
+    const newToolIds = state.prune.toolIds.slice(toolIdsBefore);
+    const tokensDelta = state.stats.totalPruneTokens - tokensBefore;
+    
+    if (state.sessionId && newToolIds.length > 0 && tokensDelta > 0) {
       mcpClient
-        .trackPrune(state.sessionId, state.prune.toolIds, state.stats.totalPruneTokens, "automatic")
+        .trackPrune(state.sessionId, newToolIds, tokensDelta, "automatic")
         .catch(() => {});
     }
   };

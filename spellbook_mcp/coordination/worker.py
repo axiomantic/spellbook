@@ -7,7 +7,7 @@ checkpoint marker files AND calling MCP backend tools).
 from pathlib import Path
 from typing import Optional
 import json
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 from .backends import get_backend
 
@@ -91,7 +91,7 @@ class SwarmWorker:
         """
         checkpoint = {
             "event": event,
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "packet_id": self.packet_id,
             "packet_name": self.packet_name,
             "tasks_completed": self.tasks_completed,

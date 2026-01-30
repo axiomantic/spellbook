@@ -1,7 +1,7 @@
 """A/B test management for skill version experiments."""
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
@@ -162,7 +162,7 @@ class Variant:
     variant_name: str
     skill_version: Optional[str]
     weight: int
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
         if not 0 <= self.weight <= 100:
@@ -180,7 +180,7 @@ class Experiment:
     skill_name: str
     status: ExperimentStatus = ExperimentStatus.CREATED
     description: Optional[str] = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     variants: list[Variant] = field(default_factory=list)
@@ -217,7 +217,7 @@ class Assignment:
     experiment_id: str
     session_id: str
     variant_id: str
-    assigned_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    assigned_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -422,7 +422,7 @@ def experiment_start(experiment_id: str, db_path: Optional[str] = None) -> dict:
     # Set started_at only if first activation
     started_at = existing_started_at
     if started_at is None:
-        started_at = datetime.now(UTC).isoformat()
+        started_at = datetime.now(timezone.utc).isoformat()
         conn.execute(
             "UPDATE experiments SET status = 'active', started_at = ? WHERE id = ?",
             (started_at, experiment_id),
@@ -520,7 +520,7 @@ def experiment_complete(experiment_id: str, db_path: Optional[str] = None) -> di
     current_status = row[0]
     validate_status_transition(current_status, "completed")
 
-    completed_at = datetime.now(UTC).isoformat()
+    completed_at = datetime.now(timezone.utc).isoformat()
     conn.execute(
         "UPDATE experiments SET status = 'completed', completed_at = ? WHERE id = ?",
         (completed_at, experiment_id),
@@ -852,7 +852,7 @@ def experiment_results(experiment_id: str, db_path: Optional[str] = None) -> dic
     duration_days = None
     if started_at:
         start = datetime.fromisoformat(started_at)
-        duration_days = (datetime.now(UTC) - start).days
+        duration_days = (datetime.now(timezone.utc) - start).days
 
     # Get per-variant metrics
     cursor = conn.execute(

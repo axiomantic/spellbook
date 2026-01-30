@@ -1,7 +1,7 @@
 """FastAPI coordination server for swarm coordination."""
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import StreamingResponse
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import asyncio
 from typing import AsyncGenerator
@@ -35,7 +35,7 @@ class CoordinationServer:
         self.state = StateManager(database_path)
         self.app = FastAPI(title="Spellbook Coordination Server", version="2.0.0")
         self.retry_policy = RetryPolicy()
-        self.start_time = datetime.now(UTC)
+        self.start_time = datetime.now(timezone.utc)
 
         self._setup_routes()
 
@@ -54,7 +54,7 @@ class CoordinationServer:
             return SwarmCreateResponse(
                 swarm_id=swarm_id,
                 endpoint=f"http://{self.host}:{self.port}/swarm/{swarm_id}",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 auto_merge=auto_merge,
                 notify_on_complete=notify_on_complete
             )
@@ -85,7 +85,7 @@ class CoordinationServer:
                 packet_id=request.packet_id,
                 packet_name=request.packet_name,
                 swarm_id=swarm_id,
-                registered_at=datetime.now(UTC)
+                registered_at=datetime.now(timezone.utc)
             )
 
         @self.app.post("/swarm/{swarm_id}/progress", response_model=ProgressResponse)
@@ -113,7 +113,7 @@ class CoordinationServer:
                 task_id=request.task_id,
                 tasks_completed=request.tasks_completed,
                 tasks_total=request.tasks_total,
-                timestamp=datetime.now(UTC)
+                timestamp=datetime.now(timezone.utc)
             )
 
         @self.app.post("/swarm/{swarm_id}/complete", response_model=CompleteResponse)
@@ -144,7 +144,7 @@ class CoordinationServer:
                 acknowledged=True,
                 packet_id=request.packet_id,
                 final_commit=request.final_commit,
-                completed_at=datetime.now(UTC),
+                completed_at=datetime.now(timezone.utc),
                 swarm_complete=swarm_complete,
                 remaining_workers=remaining_workers
             )
@@ -253,7 +253,7 @@ class CoordinationServer:
         @self.app.get("/health", response_model=HealthResponse)
         def health_check():
             """Health check endpoint."""
-            uptime = (datetime.now(UTC) - self.start_time).total_seconds()
+            uptime = (datetime.now(timezone.utc) - self.start_time).total_seconds()
 
             return HealthResponse(
                 status="healthy",
