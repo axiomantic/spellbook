@@ -7,6 +7,11 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | Command | Description | Origin |
 |---------|-------------|--------|
 | [/address-pr-feedback](address-pr-feedback.md) | Systematically address PR review comments. Fetches all threads, categorizes by s... | spellbook |
+| [/advanced-code-review-context](advanced-code-review-context.md) | Advanced Code Review Phase 2: Context Analysis - load previous reviews, PR histo... | spellbook |
+| [/advanced-code-review-plan](advanced-code-review-plan.md) | Advanced Code Review Phase 1: Strategic Planning - scope analysis, risk categori... | spellbook |
+| [/advanced-code-review-report](advanced-code-review-report.md) | Advanced Code Review Phase 5: Report Generation - produce final deliverables inc... | spellbook |
+| [/advanced-code-review-review](advanced-code-review-review.md) | Advanced Code Review Phase 3: Deep Review - multi-pass code analysis, finding ge... | spellbook |
+| [/advanced-code-review-verify](advanced-code-review-verify.md) | Advanced Code Review Phase 4: Verification - fact-check findings against codebas... | spellbook |
 | [/audit-green-mirage](audit-green-mirage.md) | Audit test suites for Green Mirage anti-patterns: tests that pass but don't veri... | spellbook |
 | [/brainstorm](brainstorm.md) | You MUST use this before any creative work - creating features, building compone... | [superpowers](https://github.com/obra/superpowers) |
 | [/crystallize](crystallize.md) | Transform verbose SOPs into high-performance agentic prompts via principled comp... | spellbook |

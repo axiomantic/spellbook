@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.7] - 2026-01-30
+
+### Added
+- **Advanced Code Review skill** - New 5-phase code review workflow with verification
+  - Phase 1: Strategic Planning - scope analysis, risk categorization, priority ordering
+  - Phase 2: Context Analysis - load previous reviews, PR history, declined items
+  - Phase 3: Deep Review - multi-pass code analysis, finding generation
+  - Phase 4: Verification - fact-check findings, remove false positives
+  - Phase 5: Report Generation - produce final deliverables
+  - Tracks previous review decisions (declined, partial agreement, alternatives)
+  - Claim extraction algorithm verifies findings against actual code
+  - Outputs to `~/.local/spellbook/docs/<project>/reviews/`
+- **Code Review Commands** - 5 phase-specific commands for advanced-code-review
+  - `/advanced-code-review-plan` - Phase 1 strategic planning
+  - `/advanced-code-review-context` - Phase 2 context analysis
+  - `/advanced-code-review-review` - Phase 3 deep review
+  - `/advanced-code-review-verify` - Phase 4 verification
+  - `/advanced-code-review-report` - Phase 5 report generation
+
+### Changed
+- **AGENTS.md size limit guidance** - Added documentation for splitting large skills into orchestrator + commands pattern
+  - Skills exceeding 1900 lines / 49KB should be split, not trimmed
+  - Skill becomes thin orchestrator, commands contain phase logic
+- **Orchestrator pattern reinforcement** - Updated CLAUDE.spellbook.md and workflow skills
+  - Clarified orchestrator role: dispatch subagents, don't do work in main context
+  - Added OpenCode agent inheritance (YOLO type propagation to subagents)
+
 ## [0.9.6] - 2026-01-30
 
 ### Added

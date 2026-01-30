@@ -4,8 +4,11 @@ Use this template when dispatching a spec compliance reviewer subagent.
 
 **Purpose:** Verify implementer built what was requested (nothing more, nothing less)
 
+**OpenCode Agent Inheritance:** Use `CURRENT_AGENT_TYPE` (yolo, yolo-focused, or general) as `subagent_type` to inherit permissions.
+
 ```
-Task tool (general-purpose):
+Task tool:
+  subagent_type: "[CURRENT_AGENT_TYPE]"  # yolo if parent is yolo, otherwise general
   description: "Review spec compliance for Task N"
   prompt: |
     You are reviewing whether an implementation matches its specification.

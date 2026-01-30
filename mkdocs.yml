@@ -78,6 +78,7 @@ nav:
     - Code Quality Skills:
       - skills/enforcing-code-quality.md
       - skills/code-review.md
+      - skills/advanced-code-review.md
       - skills/auditing-green-mirage.md
       - skills/fixing-tests.md
       - skills/fact-checking.md
@@ -150,6 +151,12 @@ nav:
       - commands/feature-research.md
       - commands/feature-design.md
       - commands/feature-implement.md
+    - Code Review Commands:
+      - commands/advanced-code-review-plan.md
+      - commands/advanced-code-review-context.md
+      - commands/advanced-code-review-review.md
+      - commands/advanced-code-review-verify.md
+      - commands/advanced-code-review-report.md
     - Execution Mode Commands:
       - commands/execute-work-packet.md
       - commands/execute-work-packets-seq.md

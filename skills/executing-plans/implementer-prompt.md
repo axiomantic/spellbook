@@ -2,8 +2,11 @@
 
 Use this template when dispatching an implementer subagent.
 
+**OpenCode Agent Inheritance:** Use `CURRENT_AGENT_TYPE` (yolo, yolo-focused, or general) as `subagent_type` to inherit permissions.
+
 ```
-Task tool (general-purpose):
+Task tool:
+  subagent_type: "[CURRENT_AGENT_TYPE]"  # yolo if parent is yolo, otherwise general
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]

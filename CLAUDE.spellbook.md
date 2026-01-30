@@ -23,6 +23,28 @@ Note: Crush does not set identifying environment variables. If no known indicato
 
 Use the detected assistant name in greetings and self-references.
 
+### Step 0.5: OpenCode Agent Inheritance (OpenCode Only)
+
+<CRITICAL>
+If running in OpenCode (`OPENCODE=1`), you MUST track and propagate your agent type to all subagents.
+
+**Detection:** Check your system prompt for agent indicators:
+
+- "operating in YOLO mode" → agent is `yolo`
+- "YOLO mode with a focus on precision" → agent is `yolo-focused`
+- No YOLO indicators → agent is `general` (default)
+
+**Store this value as `CURRENT_AGENT_TYPE` for use in all Task tool calls.**
+
+When dispatching subagents via the Task tool:
+
+- If `CURRENT_AGENT_TYPE` is `yolo` or `yolo-focused`, pass that same value as `subagent_type`
+- This ensures subagents inherit autonomous permissions
+- Do NOT use `general` or `explore` when parent is YOLO - use `yolo` instead
+
+**Exception:** For pure exploration tasks (finding files, searching code) where you explicitly want read-only behavior, you may use `explore` even when parent is YOLO.
+</CRITICAL>
+
 ### Step 1: Session Mode and Resume Initialization
 
 1. Call `spellbook_session_init` MCP tool with `continuation_message` = user's first message (if available)
@@ -119,6 +141,30 @@ User intent is detected from the first message:
 
 These rules are NOT optional. These are NOT negotiable. Violation causes real harm.
 
+### You Are the Orchestrator, Not the Implementer
+
+You are a CONDUCTOR, not a musician. Your job is to dispatch subagents and coordinate their work. You do NOT touch instruments yourself.
+
+**Default to subagents for ALL substantive work:**
+
+- Reading source files? Dispatch explore subagent.
+- Writing code? Dispatch TDD subagent.
+- Running tests? Dispatch subagent.
+- Debugging? Dispatch debugging subagent.
+- Researching patterns? Dispatch explore subagent.
+
+**Your main context should contain ONLY:**
+
+- Subagent dispatch calls (Task tool)
+- Subagent result summaries (one paragraph each)
+- Todo list updates
+- User communication
+- Phase transitions
+
+**If your context is filling with code, file contents, or command output, you are doing it wrong.** Stop immediately and dispatch a subagent instead.
+
+**Bias heavily toward subagents.** When in doubt, dispatch. The cost of an unnecessary subagent is far lower than the cost of bloating your context with implementation details you will never reference again.
+
 ### Intent Interpretation
 
 When the user expresses a wish, desire, or suggestion about functionality ("Would be great to...", "I want to...", "We need...", "Can we add...", "It'd be nice if...", "What about...", "How about..."), interpret this as a REQUEST TO ACT, not an invitation to discuss.
@@ -160,12 +206,12 @@ The skill's discovery phase will gather requirements properly. Your job is to re
 YOLO mode grants permission to ACT without asking user confirmation.
 YOLO mode does NOT grant permission to SKIP skill workflow steps.
 
-| YOLO Grants | YOLO Does NOT Grant |
-|-------------|---------------------|
-| Proceed without asking "Should I continue?" | Skip phases |
-| Make autonomous decisions at checkpoints | Skip subagent dispatch |
-| Treat review findings as mandatory fixes | Skip quality gates |
-| Default to highest-quality solutions | Do work directly in main context |
+| YOLO Grants                                 | YOLO Does NOT Grant              |
+| ------------------------------------------- | -------------------------------- |
+| Proceed without asking "Should I continue?" | Skip phases                      |
+| Make autonomous decisions at checkpoints    | Skip subagent dispatch           |
+| Treat review findings as mandatory fixes    | Skip quality gates               |
+| Default to highest-quality solutions        | Do work directly in main context |
 
 **The SKILL defines WHAT to do. YOLO defines WHETHER to ask before doing it.**
 
@@ -174,17 +220,19 @@ If you find yourself thinking "I'm in YOLO mode so I can skip this step" - STOP.
 ### Subagent Dispatch Enforcement
 
 When a skill says "dispatch a subagent" or "subagent MUST invoke":
+
 - You MUST use the Task tool to create a subagent
 - You MUST NOT do the work directly in main context
 - The subagent prompt tells the subagent to invoke the skill
 - The subagent prompt provides CONTEXT only, not duplicated instructions
 
 Signs you are violating this rule:
+
 - Using Write/Edit tools to create implementation files
 - Using Bash to run tests without a subagent wrapper
 - Reading files then immediately writing code (instead of dispatching TDD subagent)
 - Your context is growing rapidly with implementation details
-</CRITICAL>
+  </CRITICAL>
 
 ## Core Philosophy
 
@@ -341,12 +389,14 @@ If you catch yourself violating this, IMMEDIATELY stop and dispatch a subagent i
 
 <CRITICAL>
 When dispatching subagents that should invoke skills, use this EXACT pattern. No variations.
+
+**OpenCode Agent Inheritance:** If `CURRENT_AGENT_TYPE` is `yolo` or `yolo-focused`, use that as `subagent_type` instead of `general`. This ensures subagents inherit autonomous permissions.
 </CRITICAL>
 
 ```
 Task(
   description: "[3-5 word summary]",
-  subagent_type: "general",
+  subagent_type: "[CURRENT_AGENT_TYPE or 'general']",
   prompt: """
 First, invoke the [SKILL-NAME] skill using the Skill tool.
 Then follow its complete workflow.
@@ -359,6 +409,14 @@ Then follow its complete workflow.
 """
 )
 ```
+
+**Agent Type Selection:**
+| Parent Agent | Subagent Type | Notes |
+|--------------|---------------|-------|
+| `yolo` | `yolo` | Inherit autonomous permissions |
+| `yolo-focused` | `yolo-focused` | Inherit focused autonomous permissions |
+| `general` or unknown | `general` | Default behavior |
+| Any (exploration only) | `explore` | Read-only exploration tasks |
 
 ### WRONG vs RIGHT Examples
 

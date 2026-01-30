@@ -88,7 +88,7 @@ Reusable workflows for structured development:
 | Category | Skills |
 |----------|--------|
 | **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [using-git-worktrees]†, [finishing-a-development-branch]† |
-| **Code Quality** | [enforcing-code-quality], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
+| **Code Quality** | [enforcing-code-quality], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] |
@@ -104,6 +104,7 @@ Reusable workflows for structured development:
 [debugging]: https://axiomantic.github.io/spellbook/latest/skills/debugging/
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
 [enforcing-code-quality]: https://axiomantic.github.io/spellbook/latest/skills/enforcing-code-quality/
+[advanced-code-review]: https://axiomantic.github.io/spellbook/latest/skills/advanced-code-review/
 [auditing-green-mirage]: https://axiomantic.github.io/spellbook/latest/skills/auditing-green-mirage/
 [fixing-tests]: https://axiomantic.github.io/spellbook/latest/skills/fixing-tests/
 [fact-checking]: https://axiomantic.github.io/spellbook/latest/skills/fact-checking/
@@ -175,6 +176,11 @@ Reusable workflows for structured development:
 | [/mode] | Switch session mode (fun/tarot/off) |
 | [/pr-distill] | Analyze PR, categorize changes by review necessity |
 | [/pr-distill-bless] | Save discovered pattern for future distillations |
+| [/advanced-code-review-plan] | Phase 1: Strategic planning for code review |
+| [/advanced-code-review-context] | Phase 2: Context analysis and previous review loading |
+| [/advanced-code-review-review] | Phase 3: Deep multi-pass code review |
+| [/advanced-code-review-verify] | Phase 4: Verification and fact-checking of findings |
+| [/advanced-code-review-report] | Phase 5: Report generation and artifact output |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -209,6 +215,11 @@ Reusable workflows for structured development:
 [/mode]: https://axiomantic.github.io/spellbook/latest/commands/mode/
 [/pr-distill]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill/
 [/pr-distill-bless]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill-bless/
+[/advanced-code-review-plan]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-plan/
+[/advanced-code-review-context]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-context/
+[/advanced-code-review-review]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-review/
+[/advanced-code-review-verify]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-verify/
+[/advanced-code-review-report]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-report/
 
 ### Agents (7 total)
 

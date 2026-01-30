@@ -82,6 +82,39 @@ Updates: TOC in README.md, docs from skills/commands/agents.
 
 **Commands**: Create `commands/<name>.md` with `description` frontmatter. Hooks generate docs.
 
+## Size Limits and Splitting
+
+Pre-commit hooks enforce size limits to prevent truncation on platforms like OpenCode:
+- **Skills**: 1900 lines max, 49KB max
+- **Commands**: Similar limits apply
+
+### When a Skill Exceeds Limits
+
+**Do NOT trim content to fit.** Instead, split into a skill + commands pattern:
+
+1. **Skill becomes orchestrator**: The SKILL.md is a thin wrapper that defines the workflow phases and dispatches to commands
+2. **Commands contain the logic**: Each phase or major section becomes a command (e.g., `advanced-code-review-plan.md`, `advanced-code-review-verify.md`)
+3. **Skill invokes commands**: Use `/command-name` syntax to delegate
+
+**Example structure for a large skill:**
+
+```
+skills/advanced-code-review/
+  SKILL.md              # ~200 lines - orchestrator only
+commands/
+  advanced-code-review-plan.md      # Phase 1 logic
+  advanced-code-review-context.md   # Phase 2 logic  
+  advanced-code-review-review.md    # Phase 3 logic
+  advanced-code-review-verify.md    # Phase 4 logic
+  advanced-code-review-report.md    # Phase 5 logic
+```
+
+**Benefits:**
+- Each piece stays under limits
+- Commands are reusable independently
+- Easier to test and maintain
+- Follows the orchestrator pattern (skill coordinates, commands execute)
+
 ## Platform Installers
 
 | Platform | File | Output |

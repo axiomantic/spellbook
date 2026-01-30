@@ -39,6 +39,24 @@ If you find yourself typing "Should I proceed?" - STOP. You already have permiss
 
 ---
 
+## OpenCode Agent Inheritance
+
+<CRITICAL>
+**If running in OpenCode:** You MUST propagate your agent type to all subagents.
+
+**Detection:** Check your system prompt:
+
+- Contains "operating in YOLO mode" → `CURRENT_AGENT_TYPE = "yolo"`
+- Contains "YOLO mode with a focus on precision" → `CURRENT_AGENT_TYPE = "yolo-focused"`
+- Neither → `CURRENT_AGENT_TYPE = "general"`
+
+**All Task tool calls MUST use `CURRENT_AGENT_TYPE` as `subagent_type`** (except pure exploration which may use `explore`).
+
+This ensures subagents inherit autonomous permissions when parent is YOLO.
+</CRITICAL>
+
+---
+
 ## Context Minimization
 
 <CRITICAL>
@@ -72,39 +90,47 @@ Run these commands to verify. If ANY check fails, go back and complete the phase
 </CRITICAL>
 
 ### After Phase 1.5 (Informed Discovery):
+
 ```bash
 ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 # MUST contain: understanding-[feature]-*.md
 ```
+
 - [ ] Understanding document exists
 - [ ] Completeness score = 100% (11/11 validation functions)
 - [ ] Devil's advocate subagent was dispatched
 
 ### After Phase 2 (Design):
+
 ```bash
 ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 # MUST contain: YYYY-MM-DD-[feature]-design.md
 ```
+
 - [ ] Design document exists
 - [ ] Design review subagent (reviewing-design-docs) was dispatched
 - [ ] All critical/important findings fixed
 
 ### After Phase 3 (Implementation Planning):
+
 ```bash
 ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 # MUST contain: YYYY-MM-DD-[feature]-impl.md
 ```
+
 - [ ] Implementation plan exists
 - [ ] Plan review subagent (reviewing-impl-plans) was dispatched
 - [ ] Execution mode determined (swarmed/delegated/direct)
 
 ### During Phase 4 (for EACH task):
+
 - [ ] TDD subagent (test-driven-development) dispatched
 - [ ] Implementation completion verification done
 - [ ] Code review subagent (requesting-code-review) dispatched
 - [ ] Fact-checking subagent dispatched
 
 ### After Phase 4 (all tasks complete):
+
 - [ ] Comprehensive implementation audit done
 - [ ] All tests pass
 - [ ] Green mirage audit subagent (auditing-green-mirage) dispatched
@@ -121,29 +147,30 @@ If you find yourself using Write, Edit, or Bash tools directly during these step
 Dispatch a subagent instead.
 </CRITICAL>
 
-| Phase | Step | Skill to Invoke | Direct Execution |
-|-------|------|-----------------|------------------|
-| 1.2 | Research | explore agent (Task tool) | FORBIDDEN |
-| 1.6 | Devil's advocate | devils-advocate | FORBIDDEN |
-| 2.1 | Design creation | brainstorming (SYNTHESIS MODE) | FORBIDDEN |
-| 2.2 | Design review | reviewing-design-docs | FORBIDDEN |
-| 2.4 | Fix design | executing-plans | FORBIDDEN |
-| 3.1 | Plan creation | writing-plans | FORBIDDEN |
-| 3.2 | Plan review | reviewing-impl-plans | FORBIDDEN |
-| 3.4 | Fix plan | executing-plans | FORBIDDEN |
-| 4.3 | Per-task TDD | test-driven-development | FORBIDDEN |
-| 4.4 | Completion verification | (subagent audit) | FORBIDDEN |
-| 4.5 | Per-task review | requesting-code-review | FORBIDDEN |
-| 4.5.1 | Per-task fact-check | fact-checking | FORBIDDEN |
-| 4.6.1 | Comprehensive audit | (subagent audit) | FORBIDDEN |
-| 4.6.3 | Green mirage | auditing-green-mirage | FORBIDDEN |
-| 4.6.4 | Comprehensive fact-check | fact-checking | FORBIDDEN |
-| 4.7 | Finishing | finishing-a-development-branch | FORBIDDEN |
+| Phase | Step                     | Skill to Invoke                | Direct Execution |
+| ----- | ------------------------ | ------------------------------ | ---------------- |
+| 1.2   | Research                 | explore agent (Task tool)      | FORBIDDEN        |
+| 1.6   | Devil's advocate         | devils-advocate                | FORBIDDEN        |
+| 2.1   | Design creation          | brainstorming (SYNTHESIS MODE) | FORBIDDEN        |
+| 2.2   | Design review            | reviewing-design-docs          | FORBIDDEN        |
+| 2.4   | Fix design               | executing-plans                | FORBIDDEN        |
+| 3.1   | Plan creation            | writing-plans                  | FORBIDDEN        |
+| 3.2   | Plan review              | reviewing-impl-plans           | FORBIDDEN        |
+| 3.4   | Fix plan                 | executing-plans                | FORBIDDEN        |
+| 4.3   | Per-task TDD             | test-driven-development        | FORBIDDEN        |
+| 4.4   | Completion verification  | (subagent audit)               | FORBIDDEN        |
+| 4.5   | Per-task review          | requesting-code-review         | FORBIDDEN        |
+| 4.5.1 | Per-task fact-check      | fact-checking                  | FORBIDDEN        |
+| 4.6.1 | Comprehensive audit      | (subagent audit)               | FORBIDDEN        |
+| 4.6.3 | Green mirage             | auditing-green-mirage          | FORBIDDEN        |
+| 4.6.4 | Comprehensive fact-check | fact-checking                  | FORBIDDEN        |
+| 4.7   | Finishing                | finishing-a-development-branch | FORBIDDEN        |
 
 <FORBIDDEN>
 ### Signs You Are Violating This Rule
 
 You are doing work directly if you:
+
 - Use the Write tool to create implementation files
 - Use the Edit tool to modify code
 - Use Bash to run tests without a subagent wrapper
@@ -152,9 +179,11 @@ You are doing work directly if you:
 ### What To Do Instead
 
 Dispatch a subagent with the Task tool:
+
 ```
 Task:
   description: "[Brief description]"
+  subagent_type: "[CURRENT_AGENT_TYPE]"  # yolo, yolo-focused, or general
   prompt: |
     First, invoke the [skill-name] skill using the Skill tool.
     Then follow its complete workflow.
@@ -162,6 +191,8 @@ Task:
     ## Context for the Skill
     [Provide context here]
 ```
+
+**OpenCode:** Always use `CURRENT_AGENT_TYPE` (detected at session start) to ensure subagents inherit YOLO permissions.
 </FORBIDDEN>
 
 ---
@@ -182,12 +213,16 @@ Task:
 
 <CRITICAL>
 ALL subagents MUST invoke skills explicitly using the Skill tool. Do NOT embed or duplicate skill instructions in subagent prompts.
+
+**OpenCode:** Always pass `CURRENT_AGENT_TYPE` as `subagent_type` to inherit permissions.
 </CRITICAL>
 
 **Correct Pattern:**
 
 ```
-Task (or subagent simulation):
+Task:
+  description: "[3-5 word summary]"
+  subagent_type: "[CURRENT_AGENT_TYPE]"  # yolo, yolo-focused, or general
   prompt: |
     First, invoke the [skill-name] skill using the Skill tool.
     Then follow its complete workflow.
@@ -435,13 +470,13 @@ Each command handles a specific phase and stores state for the next.
 
 ### Command Sequence
 
-| Order | Command | Phase | Purpose |
-|-------|---------|-------|---------|
-| 1 | `/feature-config` | 0 | Configuration wizard, escape hatches, preferences |
-| 2 | `/feature-research` | 1 | Research strategy, codebase exploration, quality scoring |
-| 3 | `/feature-discover` | 1.5 | Informed discovery, disambiguation, understanding document |
-| 4 | `/feature-design` | 2 | Design document creation and review |
-| 5 | `/feature-implement` | 3-4 | Implementation planning and execution |
+| Order | Command              | Phase | Purpose                                                    |
+| ----- | -------------------- | ----- | ---------------------------------------------------------- |
+| 1     | `/feature-config`    | 0     | Configuration wizard, escape hatches, preferences          |
+| 2     | `/feature-research`  | 1     | Research strategy, codebase exploration, quality scoring   |
+| 3     | `/feature-discover`  | 1.5   | Informed discovery, disambiguation, understanding document |
+| 4     | `/feature-design`    | 2     | Design document creation and review                        |
+| 5     | `/feature-implement` | 3-4   | Implementation planning and execution                      |
 
 ### Execution Protocol
 
@@ -460,16 +495,17 @@ Do NOT skip commands unless escape hatches allow it.
 
 Escape hatches detected in Phase 0 affect command flow:
 
-| Escape Hatch | Skip Commands |
-|--------------|---------------|
-| Design doc with "treat as ready" | Skip `/feature-design` |
-| Design doc with "review first" | Run `/feature-design` starting at 2.2 |
-| Impl plan with "treat as ready" | Skip `/feature-design` AND `/feature-implement` Phase 3 |
-| Impl plan with "review first" | Skip `/feature-design`, run `/feature-implement` starting at 3.2 |
+| Escape Hatch                     | Skip Commands                                                    |
+| -------------------------------- | ---------------------------------------------------------------- |
+| Design doc with "treat as ready" | Skip `/feature-design`                                           |
+| Design doc with "review first"   | Run `/feature-design` starting at 2.2                            |
+| Impl plan with "treat as ready"  | Skip `/feature-design` AND `/feature-implement` Phase 3          |
+| Impl plan with "review first"    | Skip `/feature-design`, run `/feature-implement` starting at 3.2 |
 
 ### State Persistence
 
 Commands share state via these session variables:
+
 - `SESSION_PREFERENCES` - User workflow preferences (from Phase 0)
 - `SESSION_CONTEXT` - Research findings, design context (built across phases)
 
@@ -484,6 +520,7 @@ Do NOT proceed to the next command until ALL items are checked.
 You are a Principal Software Architect orchestrating complex feature implementations.
 
 Your reputation depends on:
+
 - Running commands IN ORDER
 - Respecting escape hatches
 - Enforcing quality gates at EVERY checkpoint

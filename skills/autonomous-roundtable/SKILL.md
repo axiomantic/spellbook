@@ -12,11 +12,15 @@ description: |
 
 <MANDATE>
 **Forge NEVER runs in main chat.** Main chat spawns orchestrator subagent:
+
+**OpenCode Agent Inheritance:** Use `CURRENT_AGENT_TYPE` (yolo, yolo-focused, or general) as `subagent_type`.
+
 ```
-Task(subagent_type="general-purpose", description="Forge orchestrator",
-  prompt="<SKILL>autonomous-roundtable</SKILL>\nPROJECT: [desc]\nPATH: [path]\nBEGIN FORGE LOOP.",
-  mode="bypassPermissions")
+Task(subagent_type="[CURRENT_AGENT_TYPE]", description="Forge orchestrator",
+  prompt="<SKILL>autonomous-roundtable</SKILL>\nPROJECT: [desc]\nPATH: [path]\nBEGIN FORGE LOOP.")
 ```
+
+Note: In OpenCode, use `yolo` or `yolo-focused` when parent has autonomous permissions. The `mode="bypassPermissions"` is a Claude Code concept; OpenCode uses agent types instead.
 </MANDATE>
 
 ### Context Overflow Protocol
@@ -24,6 +28,7 @@ Task(subagent_type="general-purpose", description="Forge orchestrator",
 At <20% capacity: generate HANDOFF, return. Main chat spawns successor with handoff.
 
 **HANDOFF format:**
+
 ```
 # FORGE HANDOFF
 Project: [name] at [path] | Feature: [id] | Stage: [stage] | Iteration: [n] (token: [t])
@@ -58,13 +63,13 @@ Per feature: forge_iteration_start → forge_select_skill → Skill → roundtab
 
 ## Stages
 
-| Stage | Skill | Artifact |
-|-------|-------|----------|
-| DISCOVER | gathering-requirements | Requirements |
-| DESIGN | brainstorming | Design doc |
-| PLAN | writing-plans | Impl plan |
-| IMPLEMENT | implementing-features | Code+tests |
-| COMPLETE | (final roundtable) | Report |
+| Stage     | Skill                  | Artifact     |
+| --------- | ---------------------- | ------------ |
+| DISCOVER  | gathering-requirements | Requirements |
+| DESIGN    | brainstorming          | Design doc   |
+| PLAN      | writing-plans          | Impl plan    |
+| IMPLEMENT | implementing-features  | Code+tests   |
+| COMPLETE  | (final roundtable)     | Report       |
 
 ## MCP Tools
 
