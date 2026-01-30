@@ -861,3 +861,96 @@ class TestSessionCleanup:
         # Clean up
         _session_states.clear()
         _session_activity.clear()
+
+
+class TestTelemetryConfig:
+    """Tests for telemetry configuration functions."""
+
+    def test_telemetry_enable_creates_config(self, tmp_path, monkeypatch):
+        """Test that telemetry_enable creates config record."""
+        from spellbook_mcp.config_tools import telemetry_enable, telemetry_status
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        result = telemetry_enable(db_path=db_path)
+
+        assert result["status"] == "enabled"
+        assert result["endpoint_url"] is None
+
+        # Verify via status
+        status = telemetry_status(db_path=db_path)
+        assert status["enabled"] is True
+
+    def test_telemetry_enable_with_custom_endpoint(self, tmp_path, monkeypatch):
+        """Test telemetry_enable with custom endpoint URL."""
+        from spellbook_mcp.config_tools import telemetry_enable, telemetry_status
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        result = telemetry_enable(
+            endpoint_url="https://custom.endpoint.com/telemetry",
+            db_path=db_path,
+        )
+
+        assert result["status"] == "enabled"
+        assert result["endpoint_url"] == "https://custom.endpoint.com/telemetry"
+
+    def test_telemetry_disable(self, tmp_path, monkeypatch):
+        """Test that telemetry_disable sets enabled to False."""
+        from spellbook_mcp.config_tools import (
+            telemetry_enable, telemetry_disable, telemetry_status
+        )
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        # Enable first
+        telemetry_enable(db_path=db_path)
+
+        # Then disable
+        result = telemetry_disable(db_path=db_path)
+        assert result["status"] == "disabled"
+
+        # Verify via status
+        status = telemetry_status(db_path=db_path)
+        assert status["enabled"] is False
+
+    def test_telemetry_status_when_not_configured(self, tmp_path, monkeypatch):
+        """Test telemetry_status when no config exists."""
+        from spellbook_mcp.config_tools import telemetry_status
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        status = telemetry_status(db_path=db_path)
+
+        assert status["enabled"] is False
+        assert status["endpoint_url"] is None
+        assert status["last_sync"] is None
+
+    def test_telemetry_preserves_endpoint_on_disable(self, tmp_path, monkeypatch):
+        """Test that disabling telemetry preserves the endpoint URL."""
+        from spellbook_mcp.config_tools import (
+            telemetry_enable, telemetry_disable, telemetry_status
+        )
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        # Enable with endpoint
+        telemetry_enable(endpoint_url="https://example.com", db_path=db_path)
+
+        # Disable
+        telemetry_disable(db_path=db_path)
+
+        # Endpoint should still be there
+        status = telemetry_status(db_path=db_path)
+        assert status["enabled"] is False
+        assert status["endpoint_url"] == "https://example.com"

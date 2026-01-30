@@ -129,3 +129,95 @@ class TestMCPServerSwarmToolsIntegration:
             assert hasattr(tool, 'description'), f"{tool_name} missing description"
             assert tool.description is not None, f"{tool_name} description is None"
             assert len(tool.description) > 50, f"{tool_name} description too short"
+
+
+class TestAnalyticsSummaryTool:
+    """Tests for spellbook_analytics_summary MCP tool."""
+
+    def test_analytics_summary_returns_metrics(self, tmp_path, monkeypatch):
+        """Test that analytics summary returns skill metrics from database."""
+        from spellbook_mcp.db import init_db, get_connection, get_db_path
+        from spellbook_mcp.skill_analyzer import OUTCOME_COMPLETED
+
+        # Set up test database
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+        monkeypatch.setattr(
+            "spellbook_mcp.db.get_db_path",
+            lambda: db_path
+        )
+
+        # Insert test data
+        conn = get_connection(str(db_path))
+        conn.execute("""
+            INSERT INTO skill_outcomes
+            (skill_name, skill_version, session_id, project_encoded, start_time, outcome, tokens_used)
+            VALUES
+            ('debugging', 'v1', 's1', 'test-project', '2026-01-26T10:00:00', 'completed', 1000),
+            ('debugging', 'v1', 's2', 'test-project', '2026-01-26T11:00:00', 'completed', 1500),
+            ('debugging', 'v2', 's3', 'test-project', '2026-01-26T12:00:00', 'abandoned', 500)
+        """)
+        conn.commit()
+
+        # Import the function (not the tool decorator version)
+        from spellbook_mcp.skill_analyzer import get_analytics_summary
+
+        result = get_analytics_summary(
+            project_encoded="test-project",
+            days=30,
+        )
+
+        assert result["total_outcomes"] == 3
+        assert "by_skill" in result
+        assert "debugging" in result["by_skill"]
+
+
+class TestTelemetryTools:
+    """Tests for telemetry MCP tools."""
+
+    def test_telemetry_enable_via_server(self, tmp_path, monkeypatch):
+        """Test telemetry enable through server function."""
+        from spellbook_mcp.db import init_db, get_db_path
+        from spellbook_mcp.config_tools import telemetry_enable, telemetry_status
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        result = telemetry_enable(db_path=str(db_path))
+        assert result["status"] == "enabled"
+
+        status = telemetry_status(db_path=str(db_path))
+        assert status["enabled"] is True
+
+    def test_telemetry_disable(self, tmp_path):
+        """Test telemetry disable through server function."""
+        from spellbook_mcp.db import init_db
+        from spellbook_mcp.config_tools import telemetry_enable, telemetry_disable, telemetry_status
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Enable first
+        telemetry_enable(db_path=str(db_path))
+
+        # Then disable
+        result = telemetry_disable(db_path=str(db_path))
+        assert result["status"] == "disabled"
+
+        # Verify via status
+        status = telemetry_status(db_path=str(db_path))
+        assert status["enabled"] is False
+
+    def test_telemetry_status_when_not_configured(self, tmp_path):
+        """Test telemetry_status when no config exists."""
+        from spellbook_mcp.db import init_db
+        from spellbook_mcp.config_tools import telemetry_status
+
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        status = telemetry_status(db_path=str(db_path))
+
+        assert status["enabled"] is False
+        assert status["endpoint_url"] is None
+        assert status["last_sync"] is None
