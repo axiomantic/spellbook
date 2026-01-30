@@ -377,19 +377,111 @@ if (request.match(/refactor|reorganize|extract|migrate|split|consolidate/i)) {
 
 Refactoring is NOT greenfield. Behavior preservation is the primary constraint. See Refactoring Mode section in `/feature-implement`.
 
+### 0.7 Task Complexity Classification
+
+<CRITICAL>
+The complexity tier determines which phases the executor must follow.
+The tier is DERIVED from mechanical heuristics, not proposed by the executor.
+The executor runs the checks, shows the results, and the tier follows from the matrix.
+The user confirms or overrides. The executor CANNOT override.
+
+Anti-rationalization reminder: If you feel the urge to classify a task as simpler
+than the heuristics indicate, that is Pattern 1 (Scope Minimization). Trust the numbers.
+</CRITICAL>
+
+#### Step 1: Run Mechanical Heuristics
+
+Run these bash commands to gather signals:
+
+```bash
+# HEURISTIC 1: File Count Estimate
+# Replace <pattern> with terms from the user's request
+echo "=== FILE COUNT ESTIMATE ==="
+grep -rl "<relevant-pattern>" <project-root>/src --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null | wc -l
+
+# HEURISTIC 3: Test Impact
+echo "=== TEST IMPACT ==="
+grep -rl "<affected-module-or-file>" <project-root>/tests <project-root>/**/__tests__ <project-root>/**/*.test.* <project-root>/**/*.spec.* 2>/dev/null | wc -l
+
+# HEURISTIC 5: Integration Points
+echo "=== INTEGRATION POINTS ==="
+grep -rl "import.*<affected-module>" <project-root>/src 2>/dev/null | wc -l
+```
+
+For HEURISTIC 2 (Behavioral Change) and HEURISTIC 4 (Structural Change), analyze the user's request:
+
+- **Behavioral Change**: Does the request mention new endpoints, UI changes, user flow changes, new features visible to users, or changed API responses? YES/NO.
+- **Structural Change**: Does the request mention adding new files, new modules, new interfaces, data schema changes, or migrations? YES/NO.
+
+#### Step 2: Derive Tier from Matrix
+
+| Tier | File Count | Behavioral Change | Test Impact | Structural Change | Integration Points |
+|------|-----------|-------------------|-------------|-------------------|--------------------|
+| **TRIVIAL** | 1-2 | None | 0 test files | None (values only) | 0 |
+| **SIMPLE** | 1-5 | Minor or none | < 3 test files | None or minimal | 0-2 |
+| **STANDARD** | 3-15 | Yes | 3+ test files | Some new files/interfaces | 2-5 |
+| **COMPLEX** | 10+ | Significant | New test suites needed | New modules/schemas | 5+ |
+
+**Tie-breaking:** Always classify UP when heuristics span tiers. When in doubt between Trivial and Simple, choose Simple.
+
+**TRIVIAL boundary (narrow and falsifiable):**
+- Changes ONLY literal values (strings, numbers, booleans, URLs)
+- Does NOT change structure (no new keys, no removed keys, no type changes)
+- Zero behavioral impact (no user-visible change, no API change)
+- Zero test changes (no test files reference the changed values)
+- If ANY of these conditions is not met, the task is NOT Trivial
+
+#### Step 3: Present and Confirm
+
+```markdown
+## Complexity Classification
+
+### Heuristic Results
+
+| Heuristic | Result | Signal |
+|-----------|--------|--------|
+| File count | ~[N] files | [command output summary] |
+| Behavioral change | [Yes/No] | [reason] |
+| Test impact | [N] test files | [command output summary] |
+| Structural change | [Yes/No] | [reason] |
+| Integration points | [N] | [command output summary] |
+
+### Derived Tier: **[TIER]**
+
+Rationale: [1-2 sentence explanation derived from heuristic results]
+
+**Confirm or override?** (Say "confirm" or specify a different tier with reason)
+```
+
+Store confirmed tier in `SESSION_PREFERENCES.complexity_tier`.
+
+#### Step 4: Route by Tier
+
+| Tier | Next Action |
+|------|-------------|
+| **TRIVIAL** | Exit skill. Log: "Task classified as TRIVIAL. Exiting implementing-features. Proceed with direct change." |
+| **SIMPLE** | Skip to Simple Path. Next: Lightweight Research (inline). |
+| **STANDARD** | Proceed to `/feature-research` (Phase 1). |
+| **COMPLEX** | Proceed to `/feature-research` (Phase 1). |
+
 ---
 
 ## Phase 0 Complete
 
-Before proceeding to Phase 1, verify:
+Before proceeding, verify:
 
 - [ ] Escape hatches detected (or confirmed none)
 - [ ] Motivation clarified (WHY)
 - [ ] Feature essence clarified (WHAT)
 - [ ] All 4 workflow preferences collected and stored
 - [ ] Refactoring mode detected if applicable
+- [ ] **Complexity tier classified and confirmed by user**
+- [ ] **Tier routing determined (TRIVIAL exits, SIMPLE follows simple path, STANDARD/COMPLEX proceed to Phase 1)**
 
 If ANY unchecked: Complete Phase 0. Do NOT proceed.
 
-**Next:** Run `/feature-research` to begin Phase 1.
+**Next (by tier):**
+- TRIVIAL: Exit skill
+- SIMPLE: Lightweight Research (inline, then /feature-implement)
+- STANDARD/COMPLEX: Run `/feature-research` to begin Phase 1
 ``````````

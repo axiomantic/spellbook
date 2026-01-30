@@ -8,6 +8,47 @@ Phase 2 of the implementing-features workflow. Run after `/feature-discover` com
 
 **Prerequisites:** Phase 1.5 complete, SESSION_CONTEXT.design_context populated.
 
+<CRITICAL>
+## Prerequisite Verification
+
+Before ANY Phase 2 work begins, run this verification:
+
+```bash
+# ══════════════════════════════════════════════════════════════
+# PREREQUISITE CHECK: feature-design (Phase 2)
+# ══════════════════════════════════════════════════════════════
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
+
+echo "=== Phase 2 Prerequisites ==="
+
+# CHECK 1: Complexity tier must be STANDARD or COMPLEX
+echo "Required: complexity_tier in (standard, complex)"
+echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
+# If tier is TRIVIAL or SIMPLE, this phase should NOT be running.
+
+# CHECK 2: Understanding document must exist (Phase 1.5 artifact)
+echo "Required: Understanding document exists"
+ls ~/.local/spellbook/docs/$PROJECT_ENCODED/understanding/ 2>/dev/null || echo "FAIL: No understanding document found"
+
+# CHECK 3: Completeness score must be 100%
+echo "Required: Phase 1.5 completeness score = 100%"
+echo "Verify: SESSION_CONTEXT.design_context populated with no TBD values"
+
+# CHECK 4: Devil's advocate was dispatched
+echo "Required: Devil's advocate review completed"
+```
+
+**If ANY check fails:** STOP. Do not proceed. Return to the appropriate phase.
+
+**Anti-rationalization reminder:** If you are tempted to skip this check because
+"the feature is well-understood" or "we can design without the full discovery,"
+that is Pattern 6 (Phase Collapse). Each phase produces distinct artifacts for
+distinct reasons. The understanding document IS the input to design. Without it,
+design is guesswork.
+</CRITICAL>
+
 ## Invariant Principles
 
 1. **Discovery precedes design** - Design only after design_context is complete; never design without research findings

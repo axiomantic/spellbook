@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.8] - 2026-01-30
+
+### Added
+- **Mechanical phase-skip prevention** - implementing-features skill now enforces phase sequencing with bash artifact checks at sub-command entry points
+  - Each sub-command (feature-research, feature-discover, feature-design, feature-implement) has a MANDATORY PREREQUISITE CHECK block that verifies prior phase artifacts exist before proceeding
+  - Checks include tier verification, artifact existence (ls commands), and anti-rationalization reminders
+- **Task Complexity Router** - New Phase 0.7 in feature-config classifies tasks into 4 tiers using mechanical heuristics
+  - 5 heuristics: file count (grep-based), behavioral change, test impact, structural change, integration points
+  - Tier derivation matrix maps heuristic results to Trivial/Simple/Standard/Complex
+  - Executor proposes tier from heuristics, user confirms or overrides
+  - Trivial exits the skill entirely; Simple follows a reduced-ceremony path; Standard/Complex run full workflow
+- **Simple Path workflow** - Reduced-ceremony path for simple tasks (Config -> Lightweight Research -> Inline Plan -> Implement)
+  - Quantitative guardrails enforce boundaries (max 5 research files, 5 plan steps, 5 impl files, 3 test files)
+  - Exceeding any guardrail triggers mandatory upgrade to Standard tier
+  - No external artifacts produced; research summary and plan are inline
+- **Anti-Rationalization Framework** - Dedicated section in SKILL.md naming 7 common LLM shortcut patterns
+  - Scope Minimization, Expertise Override, Time Pressure, Similarity Shortcut, Competence Assertion, Phase Collapse, Escape Hatch Abuse
+  - Each pattern has signal phrases for detection and explicit counters
+  - Brief anti-rationalization reminders at each prerequisite check point in sub-commands
+- **Phase Transition Protocol** - Mechanical verification between phase transitions in SKILL.md
+  - Anti-Skip Circuit Breaker with bash verification template
+  - Complexity Upgrade Protocol for mid-execution tier changes when Simple path guardrails are exceeded
+- **Tier-aware routing in feature-implement** - Prerequisite check branches on complexity tier
+  - Simple tier navigates directly to Phase 4 (skipping Phase 3 planning)
+  - Standard/Complex tiers require design document verification via ls
+
+### Changed
+- **SKILL.md Workflow Overview** - Expanded to include Phase 0.7, tier routing branches, and Simple Path appendix
+- **SKILL.md Command Sequence table** - Added "Tier" column showing which complexity tiers use each command
+- **SKILL.md SessionPreferences** - Added `complexity_tier` and `complexity_heuristics` fields
+- **feature-config Phase 0 Complete checklist** - Added complexity tier classification and tier routing items
+
 ## [0.9.7] - 2026-01-30
 
 ### Added

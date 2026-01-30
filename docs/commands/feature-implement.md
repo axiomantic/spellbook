@@ -9,6 +9,53 @@ Phases 3-4 of the implementing-features workflow. Run after `/feature-design` co
 
 **Prerequisites:** Phase 2 complete, design document reviewed and approved.
 
+<CRITICAL>
+## Prerequisite Verification
+
+Before ANY Phase 3-4 work begins, run this verification:
+
+```bash
+# ══════════════════════════════════════════════════════════════
+# PREREQUISITE CHECK: feature-implement (Phase 3-4)
+# ══════════════════════════════════════════════════════════════
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
+
+echo "=== Phase 3-4 Prerequisites ==="
+
+# CHECK 1: Determine entry path by complexity tier
+TIER="[SESSION_PREFERENCES.complexity_tier]"
+echo "Complexity tier: $TIER"
+
+if [ "$TIER" = "simple" ]; then
+  echo "SIMPLE path: Skipping Phase 3 (no external plan needed)"
+  echo "Required: Lightweight research completed (inline)"
+  echo "Required: Inline plan confirmed by user (<=5 steps)"
+  echo "Navigate directly to the '## Phase 4: Implementation' section header."
+  echo "Skip all Phase 3 content. Entering at Phase 4 directly."
+else
+  # CHECK 2 (STANDARD/COMPLEX): Design document must exist
+  echo "Required: Design document exists"
+  ls ~/.local/spellbook/docs/$PROJECT_ENCODED/plans/*-design.md 2>/dev/null || echo "FAIL: No design document found"
+
+  # CHECK 3 (STANDARD/COMPLEX): Design review must be complete
+  echo "Required: Design review completed"
+fi
+
+# CHECK 4 (ALL tiers): No escape hatch conflict
+echo "Verify: escape_hatch routing is consistent with current entry point"
+```
+
+**If ANY check fails:** STOP. Do not proceed. Return to the appropriate phase.
+
+**Anti-rationalization reminder:** If you are tempted to skip this check because
+"the design is simple enough to hold in your head" or "we can plan as we go,"
+that is Pattern 3 (Time Pressure) or Pattern 5 (Competence Assertion).
+Implementation without a plan produces implementation that must be re-done.
+Run the check. 5 seconds of verification prevents 2 hours of rework.
+</CRITICAL>
+
 ## Invariant Principles
 
 1. **Design precedes implementation** - Never implement without an approved design document and implementation plan

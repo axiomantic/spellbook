@@ -5,6 +5,40 @@
 ``````````markdown
 # Feature Research (Phase 1)
 
+<CRITICAL>
+## Prerequisite Verification
+
+Before ANY Phase 1 work begins, run this verification:
+
+```bash
+# ══════════════════════════════════════════════════════════════
+# PREREQUISITE CHECK: feature-research (Phase 1)
+# ══════════════════════════════════════════════════════════════
+
+echo "=== Phase 1 Prerequisites ==="
+
+# CHECK 1: Complexity tier must be STANDARD or COMPLEX
+echo "Required: complexity_tier in (standard, complex)"
+echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
+# If tier is TRIVIAL or SIMPLE, this phase should NOT be running.
+# TRIVIAL exits the skill; SIMPLE uses lightweight inline research.
+
+# CHECK 2: Phase 0 must be complete
+echo "Required: Phase 0 checklist 100% complete"
+echo "Verify: motivation, feature_essence, preferences all populated"
+
+# CHECK 3: No escape hatch skipping to Phase 3+
+echo "Required: No impl plan escape hatch active"
+echo "Verify: SESSION_PREFERENCES.escape_hatch.type != 'impl_plan'"
+```
+
+**If ANY check fails:** STOP. Do not proceed. Return to the appropriate phase.
+
+**Anti-rationalization reminder:** If you are tempted to skip this check because
+"you already know the tier" or "Phase 0 was obviously complete," that is Pattern 2
+(Expertise Override). Run the check. It takes 5 seconds.
+</CRITICAL>
+
 ## Invariant Principles
 
 1. **Research before design** - Understand the codebase and surface unknowns before any design work begins

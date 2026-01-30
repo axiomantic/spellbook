@@ -209,6 +209,109 @@ Task:
 
 5. **Autonomous Means Thorough**: In autonomous mode, treat suggestions as mandatory. Fix root causes, not symptoms. Choose highest-quality fixes.
 
+---
+
+## Anti-Rationalization Framework
+
+<CRITICAL>
+LLM executors are prone to constructing plausible-sounding arguments for skipping phases.
+This section names the patterns and provides mechanical countermeasures.
+
+If you catch yourself building a case for why a phase can be skipped: STOP.
+That IS the rationalization. Run the prerequisite check instead.
+</CRITICAL>
+
+### Named Rationalization Patterns
+
+| # | Pattern | Signal Phrases | Counter |
+|---|---------|---------------|---------|
+| 1 | **Scope Minimization** | "This is just a...", "It's only a...", "Simple change" | Run mechanical heuristics. Numbers decide, not prose. |
+| 2 | **Expertise Override** | "I already know...", "Obviously we should..." | Knowledge does not replace process. Research validates assumptions. |
+| 3 | **Time Pressure** | "To save time...", "For efficiency...", "We can skip this since..." | Shortcuts cause rework. 10-minute phase skip causes 2-hour debug. |
+| 4 | **Similarity Shortcut** | "Just like the last feature...", "Same pattern as..." | Similar is not identical. Discovery finds unique edge cases. |
+| 5 | **Competence Assertion** | "I'm confident...", "No need to check..." | Confidence is not evidence. Even experts need quality gates. |
+| 6 | **Phase Collapse** | "I'll combine research and discovery...", "These are essentially the same..." | Phases have distinct outputs and quality gates. Collapsing skips gates. |
+| 7 | **Escape Hatch Abuse** | "The user's description is basically a design doc..." | Escape hatches require EXPLICIT artifacts at SPECIFIC paths. Prose is not an artifact. |
+
+### Valid Skip Reasons (Exhaustive List)
+
+The ONLY valid reasons to skip or shorten a phase:
+
+1. **Escape hatch**: Real artifact at a real path, detected in Phase 0
+2. **TRIVIAL tier**: Exits skill entirely (value-only change, zero behavioral impact, zero test impact)
+3. **SIMPLE tier**: Follows the Simple path (has its own reduced but rigorous phases)
+4. **Explicit user skip**: User said "skip this phase" with full awareness of what is being skipped
+
+Any other reason is a rationalization. No exceptions.
+
+### Enforcement Rule
+
+```
+IF you_are_constructing_argument_to_skip THEN
+  STOP
+  RUN prerequisite_check()
+  IF prerequisite_check.passes THEN
+    phase_is_required = true
+  ELSE
+    address_prerequisite_failure()
+  END
+END
+```
+
+---
+
+## Phase Transition Protocol
+
+<CRITICAL>
+Every phase transition requires mechanical verification. No phase can be skipped
+without a bash-verifiable reason.
+</CRITICAL>
+
+### Transition Verification
+
+Before ANY phase transition, the executor MUST:
+
+1. Run the prerequisite check for the NEXT phase
+2. Confirm the CURRENT phase's completion checklist is 100%
+3. State the complexity tier and confirm routing is correct
+
+### Anti-Skip Circuit Breaker
+
+If the executor attempts to skip a phase without mechanical justification, the following
+circuit breaker activates:
+
+```bash
+# Circuit Breaker Check
+# Run this when tempted to skip any phase
+
+echo "=== ANTI-SKIP CIRCUIT BREAKER ==="
+echo "Phase being skipped: [PHASE_NAME]"
+echo ""
+echo "Valid skip reasons (check ALL that apply):"
+echo "  [ ] Escape hatch artifact exists at specific path"
+echo "  [ ] Complexity tier is TRIVIAL (exiting skill)"
+echo "  [ ] Complexity tier is SIMPLE (following simple path)"
+echo "  [ ] User explicitly said 'skip this phase'"
+echo ""
+echo "If NONE checked: phase skip is a RATIONALIZATION."
+echo "Run the phase. Trust the process."
+echo "================================="
+```
+
+If zero boxes are checked, the phase MUST be executed. There are no other valid reasons.
+
+### Complexity Upgrade Protocol
+
+If during execution the task reveals greater complexity than classified:
+
+1. **STOP** current work immediately
+2. **RE-RUN** heuristic evaluation with new information
+3. **PRESENT** updated classification to user
+4. **GET** confirmation before continuing
+5. **RESTART** from the appropriate phase if tier changed upward
+
+---
+
 ## Skill Invocation Pattern
 
 <CRITICAL>
@@ -284,15 +387,23 @@ Phase 0: Configuration Wizard
   ├─ 0.1: Escape hatch detection
   ├─ 0.2: Motivation clarification (WHY)
   ├─ 0.3: Core feature clarification (WHAT)
-  └─ 0.4: Workflow preferences + store SESSION_PREFERENCES
+  ├─ 0.4: Workflow preferences + store SESSION_PREFERENCES
+  ├─ 0.5: Continuation detection
+  ├─ 0.6: Detect refactoring mode
+  └─ 0.7: Complexity Router (mechanical heuristics -> tier classification)
     ↓
-Phase 1: Research
+    ├─[TRIVIAL]──> EXIT SKILL (log: "Trivial change, no workflow needed")
+    ├─[SIMPLE]───> Simple Path (see below)
+    ├─[STANDARD]─> Full workflow (below)
+    └─[COMPLEX]──> Full workflow (below, may add parallel tracks)
+    ↓
+Phase 1: Research (STANDARD/COMPLEX only)
   ├─ 1.1: Research strategy planning
   ├─ 1.2: Execute research (subagent)
   ├─ 1.3: Ambiguity extraction
   └─ 1.4: GATE: Research Quality Score = 100%
     ↓
-Phase 1.5: Informed Discovery
+Phase 1.5: Informed Discovery (STANDARD/COMPLEX only)
   ├─ 1.5.0: Disambiguation session (resolve ambiguities)
   ├─ 1.5.1: Generate 7-category discovery questions
   ├─ 1.5.2: Conduct discovery wizard (AskUserQuestion + ARH)
@@ -302,18 +413,18 @@ Phase 1.5: Informed Discovery
   ├─ 1.5.6: Create Understanding Document
   └─ 1.6: Invoke devils-advocate skill
     ↓
-Phase 2: Design (skip if escape hatch)
+Phase 2: Design (STANDARD/COMPLEX only; skip if escape hatch)
   ├─ 2.1: Subagent invokes brainstorming (SYNTHESIS MODE)
   ├─ 2.2: Subagent invokes reviewing-design-docs
   ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous)
   └─ 2.4: Subagent invokes executing-plans to fix
     ↓
-Phase 3: Implementation Planning (skip if impl plan escape hatch)
+Phase 3: Implementation Planning (STANDARD/COMPLEX only; skip if impl plan escape hatch)
   ├─ 3.1: Subagent invokes writing-plans
   ├─ 3.2: Subagent invokes reviewing-impl-plans
   ├─ 3.3: GATE: User approval per mode
   ├─ 3.4: Subagent invokes executing-plans to fix
-  ├─ 3.4.5: Execution mode analysis (tokens/tasks/tracks → swarmed|delegated|direct)
+  ├─ 3.4.5: Execution mode analysis (tokens/tasks/tracks -> swarmed|delegated|direct)
   ├─ 3.5: Generate work packets (if swarmed)
   └─ 3.6: Session handoff (TERMINAL - if swarmed, EXIT here)
     ↓
@@ -332,6 +443,11 @@ Phase 4: Implementation (if delegated/direct)
   ├─ 4.6.4: Comprehensive fact-checking
   ├─ 4.6.5: Pre-PR fact-checking
   └─ 4.7: Subagent invokes finishing-a-development-branch
+
+Simple Path (SIMPLE tier only):
+  ├─ S1: Lightweight Research (explore subagent, <=5 files, 1-paragraph summary)
+  ├─ S2: Inline Plan (<=5 numbered steps in conversation, user confirms)
+  └─ S3: Implementation (feature-implement with TDD + code review, no green mirage/fact-check)
 ```
 
 ---
@@ -358,6 +474,14 @@ interface SessionPreferences {
     num_parallel_tracks: number;
   };
   refactoring_mode?: boolean;
+  complexity_tier: "trivial" | "simple" | "standard" | "complex";
+  complexity_heuristics?: {
+    file_count: number;
+    behavioral_change: boolean;
+    test_impact: number;       // count of test files affected
+    structural_change: boolean;
+    integration_points: number;
+  };
 }
 
 interface SessionContext {
@@ -470,13 +594,13 @@ Each command handles a specific phase and stores state for the next.
 
 ### Command Sequence
 
-| Order | Command              | Phase | Purpose                                                    |
-| ----- | -------------------- | ----- | ---------------------------------------------------------- |
-| 1     | `/feature-config`    | 0     | Configuration wizard, escape hatches, preferences          |
-| 2     | `/feature-research`  | 1     | Research strategy, codebase exploration, quality scoring   |
-| 3     | `/feature-discover`  | 1.5   | Informed discovery, disambiguation, understanding document |
-| 4     | `/feature-design`    | 2     | Design document creation and review                        |
-| 5     | `/feature-implement` | 3-4   | Implementation planning and execution                      |
+| Order | Command | Phase | Purpose | Tier |
+|-------|---------|-------|---------|------|
+| 1 | `/feature-config` | 0 | Configuration wizard, escape hatches, preferences, **complexity classification** | ALL |
+| 2 | `/feature-research` | 1 | Research strategy, codebase exploration, quality scoring | STANDARD, COMPLEX |
+| 3 | `/feature-discover` | 1.5 | Informed discovery, disambiguation, understanding document | STANDARD, COMPLEX |
+| 4 | `/feature-design` | 2 | Design document creation and review | STANDARD, COMPLEX |
+| 5 | `/feature-implement` | 3-4 | Implementation planning and execution | ALL (Simple skips Phase 3) |
 
 ### Execution Protocol
 
@@ -490,6 +614,43 @@ Do NOT skip commands unless escape hatches allow it.
 3. **Discover:** Run `/feature-discover` after research complete
 4. **Design:** Run `/feature-design` after discovery complete (unless escape hatch)
 5. **Implement:** Run `/feature-implement` after design complete (unless escape hatch)
+
+### Tier-Based Routing
+
+After `/feature-config` completes (including Phase 0.7):
+
+**TRIVIAL tier:**
+- Exit the skill entirely
+- Log: "Task classified as TRIVIAL. No workflow needed. Proceed with direct implementation."
+- The user implements the change directly without skill orchestration
+
+**SIMPLE tier:**
+- Skip `/feature-research`, `/feature-discover`, `/feature-design`
+- Run lightweight research inline (explore subagent, <=5 files, 1-paragraph summary)
+- Create inline plan (<=5 numbered steps in conversation)
+- Get user confirmation on plan
+- Run `/feature-implement` (skips Phase 3, enters at Phase 4)
+- TDD and code review subagents still required
+- Green mirage audit and fact-checking SKIPPED
+
+**STANDARD tier:**
+- Run all commands in order (current behavior)
+
+**COMPLEX tier:**
+- Run all commands in order (current behavior)
+- Execution mode analysis in Phase 3.4.5 may trigger swarmed execution
+
+### Simple Path Guardrails
+
+| Guardrail | Limit | Exceeded Action |
+|-----------|-------|-----------------|
+| Research files read | 5 | Upgrade to Standard, restart at Phase 1 |
+| Research output | 1 paragraph | Upgrade to Standard, restart at Phase 1 |
+| Plan steps | 5 | Upgrade to Standard, restart at Phase 3 |
+| Implementation files | 5 | Pause, re-classify, restart if upgraded |
+| Test files | 3 | Pause, re-classify, restart if upgraded |
+
+If ANY guardrail is hit, trigger the Complexity Upgrade Protocol.
 
 ### Escape Hatch Routing
 

@@ -5,6 +5,40 @@
 ``````````markdown
 # Feature Discovery (Phase 1.5)
 
+<CRITICAL>
+## Prerequisite Verification
+
+Before ANY Phase 1.5 work begins, run this verification:
+
+```bash
+# ══════════════════════════════════════════════════════════════
+# PREREQUISITE CHECK: feature-discover (Phase 1.5)
+# ══════════════════════════════════════════════════════════════
+
+echo "=== Phase 1.5 Prerequisites ==="
+
+# CHECK 1: Complexity tier must be STANDARD or COMPLEX
+echo "Required: complexity_tier in (standard, complex)"
+echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
+# If tier is TRIVIAL or SIMPLE, this phase should NOT be running.
+
+# CHECK 2: Phase 1 must be complete
+echo "Required: Phase 1 research complete"
+echo "Verify: SESSION_CONTEXT.research_findings populated"
+echo "Verify: Research Quality Score = 100% (or user-bypassed)"
+
+# CHECK 3: Research subagent was dispatched (not done in main context)
+echo "Required: Research was done by subagent"
+```
+
+**If ANY check fails:** STOP. Do not proceed. Return to Phase 1.
+
+**Anti-rationalization reminder:** If you are tempted to skip this check because
+"the research was thorough enough" or "we already understand the codebase,"
+that is Pattern 4 (Similarity Shortcut) or Pattern 2 (Expertise Override).
+Run the check. Trust the process.
+</CRITICAL>
+
 ## Invariant Principles
 
 1. **Research informs questions** - All discovery questions derive from research findings; never ask what research already answered
