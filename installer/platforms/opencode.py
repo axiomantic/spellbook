@@ -6,6 +6,7 @@ OpenCode (https://github.com/anomalyco/opencode) supports:
 - MCP for session/swarm management tools (connects to HTTP daemon)
 - Native skill discovery via Agent Skills (https://agentskills.io)
 - Custom agents via opencode.json
+- Instructions config for injecting system-level behavioral standards
 
 Note: OpenCode uses its own skill system (Agent Skills), not ~/.claude/skills/.
 Skills for OpenCode should be placed in ~/.config/opencode/skills/ or configured
@@ -18,6 +19,11 @@ be running - use `python3 scripts/spellbook-server.py start` to start it.
 OpenCode MCP config uses:
 - "type": "local" for stdio servers (command-based)
 - "type": "remote" for HTTP servers (URL-based)
+
+System Prompt Injection: Spellbook installs Claude Code behavioral standards via
+the `instructions` config array. This applies to ALL agents in OpenCode, ensuring
+consistent high-quality software engineering assistance. The system prompt file
+is symlinked to ~/.config/opencode/instructions/claude-code-system-prompt.md.
 
 Reference: https://opencode.ai/docs/mcp-servers
 """
@@ -96,6 +102,105 @@ def _update_opencode_config(
     return (True, action)
 
 
+def _update_opencode_instructions(
+    config_path: Path, instructions_path: str, dry_run: bool = False
+) -> Tuple[bool, str]:
+    """Add or update the instructions array in OpenCode config.
+
+    The instructions config tells OpenCode to load additional system-level
+    instructions for all agents. We add our Claude Code behavioral standards
+    while preserving any existing user-configured instructions.
+
+    Args:
+        config_path: Path to opencode.json
+        instructions_path: Path to add to the instructions array
+        dry_run: If True, don't actually modify the config
+
+    Returns:
+        Tuple of (success, message)
+    """
+    if dry_run:
+        return (True, "would add instructions path")
+
+    # Ensure parent directory exists
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Read existing config or create new
+    config = {}
+    if config_path.exists():
+        try:
+            content = config_path.read_text(encoding="utf-8")
+            config = json.loads(content)
+        except json.JSONDecodeError:
+            pass
+
+    # Ensure instructions is a list
+    if "instructions" not in config:
+        config["instructions"] = []
+    elif not isinstance(config["instructions"], list):
+        # Convert to list if it's a single string
+        config["instructions"] = [config["instructions"]]
+
+    # Add our instructions path if not already present
+    if instructions_path not in config["instructions"]:
+        config["instructions"].append(instructions_path)
+        action = "added instructions path"
+    else:
+        action = "instructions path already configured"
+
+    # Ensure schema is set
+    if "$schema" not in config:
+        config["$schema"] = "https://opencode.ai/config.json"
+
+    # Write config
+    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    return (True, action)
+
+
+def _remove_opencode_instructions(
+    config_path: Path, instructions_path: str, dry_run: bool = False
+) -> Tuple[bool, str]:
+    """Remove an instructions path from OpenCode config.
+
+    Args:
+        config_path: Path to opencode.json
+        instructions_path: Path to remove from the instructions array
+        dry_run: If True, don't actually modify the config
+
+    Returns:
+        Tuple of (success, message)
+    """
+    if not config_path.exists():
+        return (True, "config not found")
+
+    if dry_run:
+        return (True, "would remove instructions path")
+
+    try:
+        content = config_path.read_text(encoding="utf-8")
+        config = json.loads(content)
+    except json.JSONDecodeError:
+        return (True, "config is not valid JSON")
+
+    if "instructions" not in config:
+        return (True, "no instructions configured")
+
+    instructions = config["instructions"]
+    if not isinstance(instructions, list):
+        instructions = [instructions]
+
+    if instructions_path not in instructions:
+        return (True, "instructions path was not configured")
+
+    # Remove our instructions path
+    instructions.remove(instructions_path)
+    config["instructions"] = instructions
+
+    # Write config back
+    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    return (True, "removed instructions path")
+
+
 def _remove_opencode_mcp_config(
     config_path: Path, dry_run: bool = False
 ) -> Tuple[bool, str]:
@@ -163,6 +268,33 @@ class OpenCodeInstaller(PlatformInstaller):
         """Get the source path for the spellbook-forged plugin."""
         return self.spellbook_dir / "extensions" / "opencode" / "spellbook-forged"
 
+    @property
+    def instructions_dir(self) -> Path:
+        """Get the OpenCode instructions directory.
+
+        OpenCode loads instruction files from paths listed in the
+        `instructions` config array. We install to a dedicated directory.
+        """
+        return self.config_dir / "instructions"
+
+    @property
+    def system_prompt_source(self) -> Path:
+        """Get the source path for the Claude Code system prompt."""
+        return self.spellbook_dir / "extensions" / "opencode" / "claude-code-system-prompt.md"
+
+    @property
+    def system_prompt_target(self) -> Path:
+        """Get the target path for the Claude Code system prompt symlink."""
+        return self.instructions_dir / "claude-code-system-prompt.md"
+
+    @property
+    def system_prompt_config_path(self) -> str:
+        """Get the path to use in the instructions config array.
+
+        Uses ~ for home directory to be portable across systems.
+        """
+        return "~/.config/opencode/instructions/claude-code-system-prompt.md"
+
     def detect(self) -> PlatformStatus:
         """Detect OpenCode installation status."""
         # Check for AGENTS.md
@@ -171,16 +303,25 @@ class OpenCodeInstaller(PlatformInstaller):
 
         # Check for MCP config
         has_mcp = False
+        has_instructions = False
         if self.opencode_config_file.exists():
             try:
                 config = json.loads(self.opencode_config_file.read_text(encoding="utf-8"))
                 has_mcp = "spellbook" in config.get("mcp", {})
+                # Check if our instructions path is in the config
+                instructions = config.get("instructions", [])
+                if isinstance(instructions, str):
+                    instructions = [instructions]
+                has_instructions = self.system_prompt_config_path in instructions
             except json.JSONDecodeError:
                 pass
 
         # Check for plugin
         plugin_target = self.plugins_dir / "spellbook-forged"
         has_plugin = plugin_target.is_symlink() or plugin_target.is_dir()
+
+        # Check for system prompt symlink
+        has_system_prompt = self.system_prompt_target.is_symlink() or self.system_prompt_target.is_file()
 
         return PlatformStatus(
             platform=self.platform_id,
@@ -191,6 +332,8 @@ class OpenCodeInstaller(PlatformInstaller):
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,
                 "plugin_installed": has_plugin,
+                "system_prompt_installed": has_system_prompt,
+                "instructions_configured": has_instructions,
             },
         )
 
@@ -283,6 +426,41 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Install Claude Code system prompt (behavioral standards)
+        if self.system_prompt_source.exists():
+            # Ensure instructions directory exists
+            if not self.dry_run:
+                self.instructions_dir.mkdir(parents=True, exist_ok=True)
+
+            # Create symlink for the system prompt file
+            prompt_result = create_symlink(
+                self.system_prompt_source, self.system_prompt_target, self.dry_run
+            )
+            results.append(
+                InstallResult(
+                    component="system_prompt",
+                    platform=self.platform_id,
+                    success=prompt_result.success,
+                    action=prompt_result.action,
+                    message=f"system prompt: {prompt_result.action}",
+                )
+            )
+
+            # Register the instructions path in opencode.json
+            if prompt_result.success:
+                instr_success, instr_msg = _update_opencode_instructions(
+                    self.opencode_config_file, self.system_prompt_config_path, self.dry_run
+                )
+                results.append(
+                    InstallResult(
+                        component="instructions_config",
+                        platform=self.platform_id,
+                        success=instr_success,
+                        action="installed" if "added" in instr_msg else "skipped",
+                        message=f"instructions config: {instr_msg}",
+                    )
+                )
+
         return results
 
     def uninstall(self) -> List["InstallResult"]:
@@ -354,6 +532,38 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Remove system prompt symlink
+        if self.system_prompt_target.exists() or self.system_prompt_target.is_symlink():
+            prompt_result = remove_symlink(
+                self.system_prompt_target,
+                verify_source=self.system_prompt_source,
+                dry_run=self.dry_run,
+            )
+            results.append(
+                InstallResult(
+                    component="system_prompt",
+                    platform=self.platform_id,
+                    success=prompt_result.success,
+                    action=prompt_result.action,
+                    message=f"system prompt: {prompt_result.action}",
+                )
+            )
+
+        # Remove instructions path from config
+        instr_success, instr_msg = _remove_opencode_instructions(
+            self.opencode_config_file, self.system_prompt_config_path, self.dry_run
+        )
+        if "removed" in instr_msg:
+            results.append(
+                InstallResult(
+                    component="instructions_config",
+                    platform=self.platform_id,
+                    success=instr_success,
+                    action="removed",
+                    message=f"instructions config: {instr_msg}",
+                )
+            )
+
         return results
 
     def get_context_files(self) -> List[Path]:
@@ -368,5 +578,9 @@ class OpenCodeInstaller(PlatformInstaller):
         plugin_target = self.plugins_dir / "spellbook-forged"
         if plugin_target.is_symlink():
             symlinks.append(plugin_target)
+
+        # System prompt symlink
+        if self.system_prompt_target.is_symlink():
+            symlinks.append(self.system_prompt_target)
 
         return symlinks
