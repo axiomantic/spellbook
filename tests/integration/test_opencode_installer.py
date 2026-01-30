@@ -25,6 +25,12 @@ def spellbook_dir(tmp_path):
     # Create AGENTS.spellbook.md for context generation
     (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook Context\n\nTest content.")
 
+    # Create spellbook-forged plugin directory
+    plugin_dir = spellbook / "extensions" / "opencode" / "spellbook-forged"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "index.ts").write_text("// Plugin stub")
+    (plugin_dir / "package.json").write_text('{"name": "spellbook-forged"}')
+
     return spellbook
 
 
@@ -281,8 +287,8 @@ class TestOpenCodeInstaller:
         assert len(files) == 1
         assert files[0] == opencode_config_dir / "AGENTS.md"
 
-    def test_get_symlinks_returns_empty(self, spellbook_dir, opencode_config_dir):
-        """Test get_symlinks returns empty list (OpenCode doesn't use symlinks)."""
+    def test_get_symlinks_returns_empty_before_install(self, spellbook_dir, opencode_config_dir):
+        """Test get_symlinks returns empty list before installation."""
         from installer.platforms.opencode import OpenCodeInstaller
 
         installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
@@ -377,6 +383,143 @@ class TestOpenCodeConfig:
 
         assert success is True
         assert "was not configured" in msg
+
+
+class TestOpenCodePlugin:
+    """Tests for OpenCode plugin installation."""
+
+    def test_install_creates_plugin_symlink(self, spellbook_dir, opencode_config_dir):
+        """Test that install creates spellbook-forged plugin symlink."""
+        from installer.platforms.opencode import OpenCodeInstaller
+
+        installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
+        results = installer.install()
+
+        # Check plugins directory was created
+        plugins_dir = opencode_config_dir / "plugins"
+        assert plugins_dir.exists()
+
+        # Check plugin symlink was created
+        plugin_symlink = plugins_dir / "spellbook-forged"
+        assert plugin_symlink.is_symlink()
+        assert plugin_symlink.resolve() == (spellbook_dir / "extensions" / "opencode" / "spellbook-forged").resolve()
+
+        # Check results contain plugin component
+        plugin_result = next((r for r in results if r.component == "plugin"), None)
+        assert plugin_result is not None
+        assert plugin_result.success is True
+        assert "spellbook-forged" in plugin_result.message
+
+    def test_install_updates_existing_plugin_symlink(self, spellbook_dir, opencode_config_dir):
+        """Test that install updates existing plugin symlink."""
+        from installer.platforms.opencode import OpenCodeInstaller
+
+        # Create existing symlink pointing elsewhere
+        plugins_dir = opencode_config_dir / "plugins"
+        plugins_dir.mkdir(parents=True)
+        plugin_symlink = plugins_dir / "spellbook-forged"
+        plugin_symlink.symlink_to("/tmp/old-plugin")
+
+        installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
+        results = installer.install()
+
+        # Check symlink was updated
+        assert plugin_symlink.is_symlink()
+        assert plugin_symlink.resolve() == (spellbook_dir / "extensions" / "opencode" / "spellbook-forged").resolve()
+
+        # Check results show update
+        plugin_result = next((r for r in results if r.component == "plugin"), None)
+        assert plugin_result is not None
+        assert plugin_result.action == "updated"
+
+    def test_detect_shows_plugin_status(self, spellbook_dir, opencode_config_dir):
+        """Test that detect shows plugin installation status."""
+        from installer.platforms.opencode import OpenCodeInstaller
+
+        installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
+
+        # Before install
+        status = installer.detect()
+        assert status.details["plugin_installed"] is False
+
+        # After install
+        installer.install()
+        status = installer.detect()
+        assert status.details["plugin_installed"] is True
+
+    def test_uninstall_removes_plugin_symlink(self, spellbook_dir, opencode_config_dir):
+        """Test that uninstall removes plugin symlink."""
+        from installer.platforms.opencode import OpenCodeInstaller
+
+        # First install
+        installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
+        installer.install()
+
+        # Verify plugin exists
+        plugin_symlink = opencode_config_dir / "plugins" / "spellbook-forged"
+        assert plugin_symlink.is_symlink()
+
+        # Uninstall
+        results = installer.uninstall()
+
+        # Check plugin was removed
+        assert not plugin_symlink.exists()
+
+        # Check results contain plugin component
+        plugin_result = next((r for r in results if r.component == "plugin"), None)
+        assert plugin_result is not None
+        assert plugin_result.action == "removed"
+
+    def test_get_symlinks_includes_plugin(self, spellbook_dir, opencode_config_dir):
+        """Test that get_symlinks returns plugin symlink."""
+        from installer.platforms.opencode import OpenCodeInstaller
+
+        installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
+
+        # Before install - no symlinks
+        symlinks = installer.get_symlinks()
+        assert len(symlinks) == 0
+
+        # After install - plugin symlink included
+        installer.install()
+        symlinks = installer.get_symlinks()
+        assert len(symlinks) == 1
+        assert symlinks[0].name == "spellbook-forged"
+
+    def test_install_skips_plugin_if_source_missing(self, tmp_path, opencode_config_dir):
+        """Test that install skips plugin if source directory doesn't exist."""
+        from installer.platforms.opencode import OpenCodeInstaller
+
+        # Create spellbook dir WITHOUT plugin
+        spellbook = tmp_path / "spellbook"
+        spellbook.mkdir()
+        (spellbook / ".version").write_text("0.1.0")
+        (spellbook / "AGENTS.spellbook.md").write_text("# Test")
+
+        installer = OpenCodeInstaller(spellbook, opencode_config_dir, "0.1.0")
+        results = installer.install()
+
+        # Check no plugin result (it's skipped silently)
+        plugin_result = next((r for r in results if r.component == "plugin"), None)
+        assert plugin_result is None
+
+        # Check plugins directory was NOT created
+        assert not (opencode_config_dir / "plugins").exists()
+
+    def test_dry_run_does_not_create_plugin(self, spellbook_dir, opencode_config_dir):
+        """Test that dry_run=True does not create plugin symlink."""
+        from installer.platforms.opencode import OpenCodeInstaller
+
+        installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0", dry_run=True)
+        results = installer.install()
+
+        # Check plugins directory was NOT created
+        assert not (opencode_config_dir / "plugins").exists()
+
+        # Check results show what would happen
+        plugin_result = next((r for r in results if r.component == "plugin"), None)
+        assert plugin_result is not None
+        assert plugin_result.success is True
 
 
 class TestOpenCodeInConfig:

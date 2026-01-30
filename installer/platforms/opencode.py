@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, List, Tuple
 
 from ..components.context_files import generate_codex_context
 from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT
+from ..components.symlinks import create_symlink, remove_symlink
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
@@ -150,6 +151,23 @@ class OpenCodeInstaller(PlatformInstaller):
         """
         return self.config_dir / "opencode.json"
 
+    @property
+    def plugins_dir(self) -> Path:
+        """Get the OpenCode plugins directory.
+        
+        OpenCode loads plugins from:
+        1. .opencode/plugins/ (project-local)
+        2. ~/.config/opencode/plugins/ (global)
+        
+        We install to the global plugins directory.
+        """
+        return self.config_dir / "plugins"
+
+    @property
+    def spellbook_forged_plugin_source(self) -> Path:
+        """Get the source path for the spellbook-forged plugin."""
+        return self.spellbook_dir / "extensions" / "opencode" / "spellbook-forged"
+
     def detect(self) -> PlatformStatus:
         """Detect OpenCode installation status."""
         # Check for AGENTS.md
@@ -165,6 +183,10 @@ class OpenCodeInstaller(PlatformInstaller):
             except json.JSONDecodeError:
                 pass
 
+        # Check for plugin
+        plugin_target = self.plugins_dir / "spellbook-forged"
+        has_plugin = plugin_target.is_symlink() or plugin_target.is_dir()
+
         return PlatformStatus(
             platform=self.platform_id,
             available=self.config_dir.exists(),
@@ -173,6 +195,7 @@ class OpenCodeInstaller(PlatformInstaller):
             details={
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,
+                "plugin_installed": has_plugin,
             },
         )
 
@@ -246,6 +269,25 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Install spellbook-forged plugin
+        plugin_source = self.spellbook_forged_plugin_source
+        if plugin_source.exists():
+            # Ensure plugins directory exists
+            if not self.dry_run:
+                self.plugins_dir.mkdir(parents=True, exist_ok=True)
+
+            plugin_target = self.plugins_dir / "spellbook-forged"
+            plugin_result = create_symlink(plugin_source, plugin_target, self.dry_run)
+            results.append(
+                InstallResult(
+                    component="plugin",
+                    platform=self.platform_id,
+                    success=plugin_result.success,
+                    action=plugin_result.action,
+                    message=f"plugin (spellbook-forged): {plugin_result.action}",
+                )
+            )
+
         return results
 
     def uninstall(self) -> List["InstallResult"]:
@@ -299,6 +341,24 @@ class OpenCodeInstaller(PlatformInstaller):
             )
         )
 
+        # Remove spellbook-forged plugin symlink
+        plugin_target = self.plugins_dir / "spellbook-forged"
+        if plugin_target.exists() or plugin_target.is_symlink():
+            plugin_result = remove_symlink(
+                plugin_target,
+                verify_source=self.spellbook_forged_plugin_source,
+                dry_run=self.dry_run,
+            )
+            results.append(
+                InstallResult(
+                    component="plugin",
+                    platform=self.platform_id,
+                    success=plugin_result.success,
+                    action=plugin_result.action,
+                    message=f"plugin (spellbook-forged): {plugin_result.action}",
+                )
+            )
+
         return results
 
     def get_context_files(self) -> List[Path]:
@@ -306,8 +366,12 @@ class OpenCodeInstaller(PlatformInstaller):
         return [self.config_dir / "AGENTS.md"]
 
     def get_symlinks(self) -> List[Path]:
-        """Get all symlinks created by this platform.
-        
-        OpenCode doesn't use symlinks for configuration.
-        """
-        return []
+        """Get all symlinks created by this platform."""
+        symlinks = []
+
+        # Plugin symlink
+        plugin_target = self.plugins_dir / "spellbook-forged"
+        if plugin_target.is_symlink():
+            symlinks.append(plugin_target)
+
+        return symlinks

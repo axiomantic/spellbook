@@ -3,6 +3,25 @@
 
 If you are reading this file, you are at the START of a new session. Execute these steps IN ORDER before responding to the user:
 
+### Step 0: Platform Detection
+Identify which AI coding assistant you are running in. Check environment variables:
+
+```bash
+env | grep -iE '(opencode|claude|codex|gemini)' | head -20
+```
+
+**Known indicators:**
+| Environment Variable | Platform | Assistant Name |
+|---------------------|----------|----------------|
+| `OPENCODE=1` | OpenCode | OpenCode |
+| `CLAUDE_PROJECT_DIR` or `CLAUDE_ENV_FILE` | Claude Code | Claude |
+| `CODEX_SANDBOX` or `CODEX_SANDBOX_NETWORK_DISABLED` | Codex | Codex |
+| `GEMINI_CLI=1` | Gemini CLI | Gemini |
+
+Note: Crush does not set identifying environment variables. If no known indicator is found, default to "Claude" as the assistant name.
+
+Use the detected assistant name in greetings and self-references.
+
 ### Step 1: Session Mode Initialization
 1. Call `spellbook_session_init` MCP tool (if available)
 2. Handle response per Session Mode table below
