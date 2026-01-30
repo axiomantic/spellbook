@@ -906,26 +906,38 @@ def experiment_results(experiment_id: str, db_path: Optional[str] = None) -> dic
         }
 
     # Build comparison
+    # Note: For A/B/n tests with multiple treatment variants, this comparison
+    # only evaluates control vs the best-performing treatment. For comprehensive
+    # multi-variant analysis, examine the per-variant metrics in results directly.
     comparison = {}
     variant_names = list(results.keys())
     if len(variant_names) >= 2 and "control" in results:
         control = results["control"]
-        treatment_name = [n for n in variant_names if n != "control"][0]
-        treatment = results[treatment_name]
-
         control_cr = control["metrics"]["completion_rate"]
-        treatment_cr = treatment["metrics"]["completion_rate"]
+        
+        # Find the best-performing treatment variant
+        treatment_variants = [(n, results[n]) for n in variant_names if n != "control"]
+        if treatment_variants:
+            # Sort by completion rate descending to get best treatment
+            treatment_variants.sort(
+                key=lambda x: x[1]["metrics"]["completion_rate"],
+                reverse=True
+            )
+            treatment_name, treatment = treatment_variants[0]
+            treatment_cr = treatment["metrics"]["completion_rate"]
 
-        comparison = {
-            "completion_rate_delta": round(treatment_cr - control_cr, 3),
-            "token_efficiency_delta": round(
-                (treatment["metrics"]["avg_tokens_used"] or 0) - (control["metrics"]["avg_tokens_used"] or 0), 0
-            ),
-            "correction_rate_delta": round(
-                (treatment["metrics"]["avg_corrections"] or 0) - (control["metrics"]["avg_corrections"] or 0), 1
-            ),
-            "preliminary_winner": treatment_name if treatment_cr > control_cr else "control",
-        }
+            comparison = {
+                "completion_rate_delta": round(treatment_cr - control_cr, 3),
+                "token_efficiency_delta": round(
+                    (treatment["metrics"]["avg_tokens_used"] or 0) - (control["metrics"]["avg_tokens_used"] or 0), 0
+                ),
+                "correction_rate_delta": round(
+                    (treatment["metrics"]["avg_corrections"] or 0) - (control["metrics"]["avg_corrections"] or 0), 1
+                ),
+                "preliminary_winner": treatment_name if treatment_cr > control_cr else "control",
+                # For A/B/n tests, indicate which treatment was compared
+                "compared_treatment": treatment_name if len(treatment_variants) > 1 else None,
+            }
 
     return {
         "success": True,
