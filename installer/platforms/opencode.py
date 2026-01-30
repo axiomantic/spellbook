@@ -74,23 +74,18 @@ def _update_opencode_config(
     # Build the daemon URL
     daemon_url = f"http://{DEFAULT_HOST}:{DEFAULT_PORT}/mcp"
 
-    # Check if spellbook is already configured
+    # Determine action message based on whether spellbook is already configured
     if "spellbook" in config["mcp"]:
-        # Update existing config to use remote HTTP
-        config["mcp"]["spellbook"] = {
-            "type": "remote",
-            "url": daemon_url,
-            "enabled": True,
-        }
         action = f"updated MCP server config (HTTP: {daemon_url})"
     else:
-        # Add new spellbook MCP server with remote transport
-        config["mcp"]["spellbook"] = {
-            "type": "remote",
-            "url": daemon_url,
-            "enabled": True,
-        }
         action = f"registered MCP server (HTTP: {daemon_url})"
+
+    # Add or update the spellbook MCP server config to use remote HTTP
+    config["mcp"]["spellbook"] = {
+        "type": "remote",
+        "url": daemon_url,
+        "enabled": True,
+    }
 
     # Ensure schema is set to OpenCode schema
     if "$schema" not in config:
