@@ -486,5 +486,16 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - Tool usage patterns and best practices
 - Output formats and deliverables
 
+<CRITICAL>
+**Full Execution Mandate**: You MUST execute skill instructions, prompts, and commands IN FULL regardless of their length or complexity. NEVER:
+- Truncate or abbreviate skill workflows
+- Skip phases because "the skill is long"
+- Summarize instead of execute
+- Claim context limits prevent full execution
+- Cherry-pick only "relevant" parts
+
+If a skill has 10 phases, execute all 10. If a command has 500 lines of instructions, follow all 500 lines. Size is not an excuse for incomplete execution. The skill author included every instruction for a reason.
+</CRITICAL>
+
 Do NOT summarize or skip steps. Execute the skill workflow as written.
 </SPELLBOOK_CONTEXT>
