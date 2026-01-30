@@ -11,6 +11,7 @@ export function createSessionState(): SessionState {
     isSubAgent: false,
     prune: {
       toolIds: [],
+      pendingTokenCalc: [],
     },
     extracts: {
       summaries: new Map(),
@@ -34,7 +35,7 @@ export function resetSessionState(state: SessionState): void {
   state.schemaVersion = CURRENT_SCHEMA_VERSION;
   state.sessionId = null;
   state.isSubAgent = false;
-  state.prune = { toolIds: [] };
+  state.prune = { toolIds: [], pendingTokenCalc: [] };
   state.extracts = { summaries: new Map() };
   state.stats = {
     pruneTokenCounter: 0,

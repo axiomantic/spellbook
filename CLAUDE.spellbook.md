@@ -76,6 +76,15 @@ The skill's discovery phase will gather requirements properly. Your job is to re
 - NEVER put co-authorship footers or "generated with Claude" comments in commits
 - NEVER tag GitHub issues in commit messages (e.g., `fixes #123`). This notifies subscribers prematurely. Tags go in PR title/description only, added manually by the user.
 - ALWAYS check git history (diff since merge base) before making claims about what a branch introduced
+
+### Skill Execution
+- ALWAYS follow skill instructions COMPLETELY, regardless of length
+- NEVER skip phases, steps, or checkpoints because instructions are "long" or "verbose"
+- NEVER summarize or abbreviate skill workflows - execute them as written
+- Skills are detailed expert workflows with quality gates for good reasons
+- If a skill has 10 phases, execute all 10 phases
+- If a skill output is truncated, use the Task tool to have an explore agent read the full content
+- "The skill is quite long" is NEVER a valid reason to skip steps
 </CRITICAL>
 
 ## Core Philosophy

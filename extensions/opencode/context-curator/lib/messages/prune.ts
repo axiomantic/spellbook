@@ -8,6 +8,45 @@ function isToolPart(part: Part): part is Part & { type: "tool"; callID: string; 
   return part.type === "tool" && "callID" in part;
 }
 
+/**
+ * Estimate tokens for a string (rough approximation: ~4 chars per token)
+ */
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+/**
+ * Calculate token savings for specific tool IDs from messages
+ */
+export function calculateTokenSavings(
+  toolIds: string[],
+  messages: WithParts[],
+  state: SessionState
+): number {
+  if (toolIds.length === 0) return 0;
+  
+  const targetIds = new Set(toolIds);
+  let totalTokens = 0;
+  
+  for (const msg of messages) {
+    if (isMessageCompacted(state, msg)) continue;
+    
+    const parts = msg.parts;
+    if (!Array.isArray(parts)) continue;
+    
+    for (const part of parts) {
+      if (isToolPart(part) && targetIds.has(part.callID)) {
+        const output = part.state?.output;
+        if (output && typeof output === "string") {
+          totalTokens += estimateTokens(output);
+        }
+      }
+    }
+  }
+  
+  return totalTokens;
+}
+
 export function prune(
   state: SessionState,
   logger: Logger,

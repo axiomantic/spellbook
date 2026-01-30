@@ -58,12 +58,10 @@ export function createExtractTool(deps: {
       
       if (!state.prune.toolIds.includes(tool_id)) {
         state.prune.toolIds.push(tool_id);
+        // Add to pending list for token calculation in message transform handler
+        state.prune.pendingTokenCalc.push(tool_id);
         state.stats.prunesByStrategy["extract"] = 
           (state.stats.prunesByStrategy["extract"] || 0) + 1;
-      }
-      
-      if (state.sessionId) {
-        mcpClient.trackPrune(state.sessionId, [tool_id], 0, "extract").catch(() => {});
       }
       
       logger.debugLog(`Extract tool stored summary for ${tool_id}`);

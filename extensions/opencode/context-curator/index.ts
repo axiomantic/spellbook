@@ -39,7 +39,8 @@ const plugin: Plugin = async (ctx) => {
     try {
       const response = await ctx.client.session.messages({ path: { id: sessionId } });
       return (response.data || response) as WithParts[];
-    } catch {
+    } catch (error) {
+      logger.warn("Failed to fetch messages for session", { sessionId, error });
       return [];
     }
   };

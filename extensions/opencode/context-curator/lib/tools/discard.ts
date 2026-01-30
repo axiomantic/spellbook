@@ -75,14 +75,10 @@ export function createDiscardTool(deps: {
 
       if (newPruneIds.length > 0) {
         state.prune.toolIds.push(...newPruneIds);
+        // Add to pending list for token calculation in message transform handler
+        state.prune.pendingTokenCalc.push(...newPruneIds);
         state.stats.prunesByStrategy["discard"] =
           (state.stats.prunesByStrategy["discard"] || 0) + newPruneIds.length;
-
-        if (state.sessionId) {
-          mcpClient
-            .trackPrune(state.sessionId, newPruneIds, 0, "discard")
-            .catch(() => {});
-        }
 
         logger.debugLog(
           `Discard tool marked ${newPruneIds.length} tools for pruning`,

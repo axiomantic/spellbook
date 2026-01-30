@@ -58,6 +58,7 @@ In `opencode.json`:
       "commands": { "enabled": true },
       "protectedFilePatterns": [
         "**/CLAUDE.md",
+        "**/AGENTS.md",
         "**/.env*"
       ]
     }

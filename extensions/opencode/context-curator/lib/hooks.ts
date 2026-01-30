@@ -11,7 +11,7 @@ import {
   syncToolCache,
 } from "./state/index.js";
 import { deduplicate, supersedeWrites, purgeErrors } from "./strategies/index.js";
-import { prune, insertPruneToolContext, getLastUserMessage } from "./messages/index.js";
+import { prune, insertPruneToolContext, getLastUserMessage, calculateTokenSavings } from "./messages/index.js";
 import { getSystemPrompt } from "./prompts/system.js";
 
 const INTERNAL_AGENT_SIGNATURES = [
@@ -63,6 +63,30 @@ export function createChatMessageTransformHandler(
     deduplicate(state, logger, config, output.messages);
     supersedeWrites(state, logger, config, output.messages);
     purgeErrors(state, logger, config, output.messages);
+
+    // Process pending manual discards/extracts and calculate their token savings
+    if (state.prune.pendingTokenCalc.length > 0) {
+      const pendingIds = [...state.prune.pendingTokenCalc];
+      const tokensSaved = calculateTokenSavings(pendingIds, output.messages, state);
+      
+      if (tokensSaved > 0) {
+        state.stats.totalPruneTokens += tokensSaved;
+        logger.debugLog(`Calculated ${tokensSaved} tokens saved from manual prune`, { ids: pendingIds });
+      }
+      
+      // Track to MCP server
+      if (state.sessionId && tokensSaved > 0) {
+        // Determine strategy based on whether extracts exist
+        const hasExtracts = pendingIds.some(id => state.extracts.summaries.has(id));
+        const strategy = hasExtracts ? "extract" : "discard";
+        mcpClient
+          .trackPrune(state.sessionId, pendingIds, tokensSaved, strategy)
+          .catch(() => {});
+      }
+      
+      // Clear pending list
+      state.prune.pendingTokenCalc = [];
+    }
 
     prune(state, logger, config, output.messages);
     insertPruneToolContext(state, config, logger, output.messages);

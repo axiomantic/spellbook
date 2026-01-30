@@ -53,26 +53,33 @@ export function createMcpClient(port: number, logger: Logger): McpClient {
   return {
     async trackPrune(sessionId, toolIds, tokensSaved, strategy) {
       try {
-        await fetchWithTimeout(`${baseUrl}/curator/track`, {
+        await fetchWithTimeout(`${baseUrl}/tool/mcp_curator_track_prune`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, toolIds, tokensSaved, strategy }),
+          body: JSON.stringify({
+            session_id: sessionId,
+            tool_ids: toolIds,
+            tokens_saved: tokensSaved,
+            strategy,
+          }),
         });
         logger.debugLog("MCP track prune success", { sessionId, strategy, tokensSaved });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
-        logger.warn(`MCP tracking failed (continuing without analytics): ${message}`);
+        logger.warn(`MCP tracking failed (continuing without analytics): ${message}`, { error });
       }
     },
     
     async getStats(sessionId) {
       try {
-        const response = await fetchWithTimeout(`${baseUrl}/curator/stats?session_id=${sessionId}`, {
-          method: "GET",
+        const response = await fetchWithTimeout(`${baseUrl}/tool/mcp_curator_get_stats`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sessionId }),
         });
         
         if (!response.ok) {
-          logger.warn(`MCP stats request failed: ${response.status}`);
+          logger.warn(`MCP stats request failed: ${response.statusText}`, { status: response.status });
           return null;
         }
         
@@ -80,7 +87,7 @@ export function createMcpClient(port: number, logger: Logger): McpClient {
         return data as CuratorStats;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
-        logger.warn(`MCP stats failed (continuing without): ${message}`);
+        logger.warn(`MCP stats failed (continuing without): ${message}`, { error });
         return null;
       }
     },

@@ -30,7 +30,17 @@ export class Logger {
     const prefix = `[${timestamp}] [context-curator] [${level}]`;
     
     if (data) {
-      return `${prefix} ${message} ${JSON.stringify(data)}`;
+      const dataStr = JSON.stringify(data, (key, value) => {
+        if (value instanceof Error) {
+          return {
+            message: value.message,
+            stack: value.stack,
+            name: value.name,
+          };
+        }
+        return value;
+      });
+      return `${prefix} ${message} ${dataStr}`;
     }
     return `${prefix} ${message}`;
   }

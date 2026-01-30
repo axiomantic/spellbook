@@ -39,6 +39,8 @@ export interface SessionStats {
  */
 export interface PruneState {
   toolIds: string[];
+  /** Tool IDs from manual discard/extract that need token calculation */
+  pendingTokenCalc: string[];
 }
 
 /**
