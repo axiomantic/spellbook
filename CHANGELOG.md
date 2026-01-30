@@ -23,6 +23,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `/advanced-code-review-review` - Phase 3 deep review
   - `/advanced-code-review-verify` - Phase 4 verification
   - `/advanced-code-review-report` - Phase 5 report generation
+- **Session Resume** - Automatic continuation of prior work sessions
+  - Detects recent sessions (<24h) and offers to resume
+  - Generates boot prompts following handoff.md Section 0 format
+  - Tracks active skill, phase, pending todos, workflow pattern
+  - Continuation intent detection: explicit ("continue"), fresh start ("new session"), or neutral
+  - Planning document detection from recent files
+  - Pending todos counter with corruption detection
+- **A/B Testing Framework** - Full experiment management for skill versions
+  - `experiment_create` - Create experiments with control/treatment variants
+  - `experiment_start`, `experiment_pause`, `experiment_complete` - Lifecycle management
+  - `experiment_status`, `experiment_list` - Query experiments
+  - `experiment_results` - Compare variant performance with metrics
+  - Deterministic variant assignment based on session ID
+  - Telemetry sync for outcome-to-experiment linking
+  - Database schema: experiments, variants, assignments tables
+- **Context Curator Plugin** (OpenCode) - Intelligent context management for long sessions
+  - Automatic pruning strategies: `supersede-writes`, `purge-errors`
+  - LLM-driven discard tool for selective context removal
+  - MCP client with graceful degradation
+  - Tool cache synchronization
+  - Message pruning and context injection
+  - Session state management with versioning
+  - Curator analytics MCP tools for tracking prune events
 
 ### Changed
 - **AGENTS.md size limit guidance** - Added documentation for splitting large skills into orchestrator + commands pattern
@@ -31,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Orchestrator pattern reinforcement** - Updated CLAUDE.spellbook.md and workflow skills
   - Clarified orchestrator role: dispatch subagents, don't do work in main context
   - Added OpenCode agent inheritance (YOLO type propagation to subagents)
+
+### Fixed
+- **OpenCode HTTP transport** - Use HTTP transport to connect to spellbook MCP daemon instead of stdio
+- **Deprecated datetime.utcnow()** - Replaced with datetime.now(UTC) throughout codebase
 
 ## [0.9.6] - 2026-01-30
 
