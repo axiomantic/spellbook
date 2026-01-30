@@ -101,6 +101,13 @@ from spellbook_mcp.pr_distill.fetch import parse_pr_identifier, fetch_pr as do_f
 # Skill analyzer import
 from spellbook_mcp.skill_analyzer import analyze_sessions as do_analyze_skill_usage
 
+# Curator tools import
+from spellbook_mcp.curator_tools import (
+    init_curator_tables,
+    curator_track_prune,
+    curator_get_stats,
+)
+
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
 
@@ -1256,6 +1263,49 @@ def analyze_skill_usage(
     )
 
 
+# ============================================================================
+# Context Curator Tools
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+async def mcp_curator_track_prune(
+    session_id: str,
+    tool_ids: list,
+    tokens_saved: int,
+    strategy: str,
+) -> dict:
+    """
+    Track a pruning event for analytics.
+
+    Args:
+        session_id: The session identifier
+        tool_ids: List of tool IDs that were pruned
+        tokens_saved: Estimated tokens saved by this prune
+        strategy: The strategy that triggered the prune
+
+    Returns:
+        Status dict with event_id
+    """
+    return await curator_track_prune(session_id, tool_ids, tokens_saved, strategy)
+
+
+@mcp.tool()
+@inject_recovery_context
+async def mcp_curator_get_stats(session_id: str) -> dict:
+    """
+    Get cumulative pruning statistics for a session.
+
+    Args:
+        session_id: The session identifier
+
+    Returns:
+        Statistics dict with totals and breakdowns
+    """
+    return await curator_get_stats(session_id)
+
+
 if __name__ == "__main__":
     # Initialize database and start watcher thread
     db_path = str(get_db_path())
@@ -1263,6 +1313,9 @@ if __name__ == "__main__":
 
     # Initialize Forged schema (idempotent)
     init_forged_schema()
+
+    # Initialize Curator tables (idempotent)
+    init_curator_tables()
 
     _watcher = SessionWatcher(db_path)
     _watcher.start()
