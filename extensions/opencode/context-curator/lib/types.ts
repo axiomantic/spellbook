@@ -1,4 +1,4 @@
-import type { Message, Part } from "@opencode-ai/sdk/v2";
+import type { Message, Part } from "@opencode-ai/sdk";
 
 /**
  * Message with parts array for processing

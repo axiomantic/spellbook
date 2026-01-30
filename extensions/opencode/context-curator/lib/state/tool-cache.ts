@@ -1,7 +1,7 @@
 import type { CuratorConfig } from "../types.js";
 import type { Logger } from "../logger.js";
 import type { SessionState, WithParts, ToolParameterEntry } from "../types.js";
-import type { Part } from "@opencode-ai/sdk/v2";
+import type { Part } from "@opencode-ai/sdk";
 
 function isToolPart(part: Part): part is Part & { type: "tool"; callID: string; tool: string; state: { status: string; input?: Record<string, unknown>; error?: string } } {
   return part.type === "tool" && "callID" in part;

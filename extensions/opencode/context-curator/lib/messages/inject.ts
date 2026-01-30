@@ -1,4 +1,4 @@
-import type { Part } from "@opencode-ai/sdk/v2";
+import type { Part } from "@opencode-ai/sdk";
 import type { CuratorConfig } from "../types.js";
 import type { Logger } from "../logger.js";
 import type { SessionState, WithParts } from "../types.js";
