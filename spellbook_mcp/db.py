@@ -174,6 +174,7 @@ def init_db(db_path: str = None) -> None:
             tokens_used INTEGER DEFAULT 0,
             corrections INTEGER DEFAULT 0,
             retries INTEGER DEFAULT 0,
+            experiment_variant_id TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(session_id, skill_name, start_time)
         )
@@ -196,6 +197,16 @@ def init_db(db_path: str = None) -> None:
         ON skill_outcomes(project_encoded)
     """)
 
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_skill_outcomes_session_id
+        ON skill_outcomes(session_id)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_skill_outcomes_experiment_variant_id
+        ON skill_outcomes(experiment_variant_id)
+    """)
+
     # Telemetry config table (singleton)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS telemetry_config (
@@ -205,6 +216,71 @@ def init_db(db_path: str = None) -> None:
             last_sync TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
+    """)
+
+    # A/B Test Management tables
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS experiments (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            skill_name TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'created',
+            description TEXT,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            started_at TIMESTAMP,
+            completed_at TIMESTAMP
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_experiments_skill_name
+        ON experiments(skill_name)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_experiments_status
+        ON experiments(status)
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS experiment_variants (
+            id TEXT PRIMARY KEY,
+            experiment_id TEXT NOT NULL,
+            variant_name TEXT NOT NULL,
+            skill_version TEXT,
+            weight INTEGER NOT NULL DEFAULT 50,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (experiment_id) REFERENCES experiments(id) ON DELETE CASCADE,
+            UNIQUE(experiment_id, variant_name)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_experiment_variants_experiment_id
+        ON experiment_variants(experiment_id)
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS variant_assignments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            experiment_id TEXT NOT NULL,
+            session_id TEXT NOT NULL,
+            variant_id TEXT NOT NULL,
+            assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (experiment_id) REFERENCES experiments(id) ON DELETE CASCADE,
+            FOREIGN KEY (variant_id) REFERENCES experiment_variants(id) ON DELETE CASCADE,
+            UNIQUE(experiment_id, session_id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_variant_assignments_experiment_id
+        ON variant_assignments(experiment_id)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_variant_assignments_session_id
+        ON variant_assignments(session_id)
     """)
 
     conn.commit()

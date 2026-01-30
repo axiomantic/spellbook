@@ -1,6 +1,7 @@
 """Tests for skill usage analyzer."""
 
 import pytest
+from datetime import datetime
 from spellbook_mcp.skill_analyzer import (
     extract_skill_invocations,
     aggregate_metrics,
@@ -10,7 +11,12 @@ from spellbook_mcp.skill_analyzer import (
     _detect_correction,
     _extract_version,
     SkillInvocation,
+    SkillOutcome,
+    persist_outcome,
+    OUTCOME_COMPLETED,
+    OUTCOME_ABANDONED,
 )
+from spellbook_mcp.db import init_db, get_connection
 
 
 class TestToolUseExtraction:
@@ -340,6 +346,19 @@ class TestMetricsAggregation:
 class TestSkillOutcome:
     """Test SkillOutcome dataclass and conversion from SkillInvocation."""
 
+    def test_skill_outcome_creation(self):
+        outcome = SkillOutcome(
+            skill_name="debugging",
+            session_id="session-123",
+            project_encoded="test-project",
+            start_time=datetime.now(),
+            outcome=OUTCOME_COMPLETED,
+            tokens_used=1000,
+        )
+        assert outcome.skill_name == "debugging"
+        assert outcome.session_id == "session-123"
+        assert outcome.outcome == OUTCOME_COMPLETED
+
     def test_from_invocation_completed(self):
         """Test conversion of completed invocation."""
         from spellbook_mcp.skill_analyzer import SkillOutcome, OUTCOME_COMPLETED
@@ -409,6 +428,10 @@ class TestSkillOutcome:
         outcome = SkillOutcome.from_invocation(inv, "session-123", "project")
         assert outcome.outcome == ""  # Not yet determined
 
+    def test_outcome_constants(self):
+        assert OUTCOME_COMPLETED == "completed"
+        assert OUTCOME_ABANDONED == "abandoned"
+
 
 class TestPersistOutcome:
     """Test persistence functions."""
@@ -449,6 +472,32 @@ class TestPersistOutcome:
         assert row[0] == "debugging"
         assert row[1] == OUTCOME_COMPLETED
         assert row[2] == 500
+
+    def test_persist_outcome_with_experiment_variant(self, tmp_path):
+        db_path = str(tmp_path / "test.db")
+        init_db(db_path)
+
+        outcome = SkillOutcome(
+            skill_name="debugging",
+            session_id="session-456",
+            project_encoded="test-project",
+            start_time=datetime.now(),
+            outcome=OUTCOME_ABANDONED,
+            tokens_used=500,
+        )
+
+        persist_outcome(outcome, db_path=db_path, experiment_variant_id="variant-123")
+
+        # Verify it was persisted with experiment_variant_id
+        conn = get_connection(db_path)
+        cursor = conn.execute(
+            "SELECT experiment_variant_id FROM skill_outcomes WHERE session_id = ?",
+            ("session-456",)
+        )
+        row = cursor.fetchone()
+
+        assert row is not None
+        assert row[0] == "variant-123"
 
     def test_persist_outcome_upserts_on_duplicate(self, tmp_path):
         """Test that duplicate outcomes are updated, not duplicated."""
