@@ -218,6 +218,28 @@ def init_db(db_path: str = None) -> None:
         )
     """)
 
+    # Workflow state for automatic session recovery
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS workflow_state (
+            id INTEGER PRIMARY KEY,
+            project_path TEXT NOT NULL UNIQUE,
+            state_json TEXT NOT NULL,
+            trigger TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_workflow_state_project
+        ON workflow_state(project_path)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_workflow_state_updated
+        ON workflow_state(updated_at)
+    """)
+
     # A/B Test Management tables
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS experiments (

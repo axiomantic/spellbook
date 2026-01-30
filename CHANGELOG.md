@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.6] - 2026-01-30
+
+### Added
+- **OpenCode Claude Code behavioral standards** - Inject Claude Code's system prompts into OpenCode via `instructions` config
+  - Synthesized prompt covers: read-before-modify, security awareness, anti-over-engineering, git safety, professional objectivity
+  - Applies to ALL agents universally (beneath YOLO mode, always active)
+  - Installed as symlink to `~/.config/opencode/instructions/claude-code-system-prompt.md`
+- **OpenCode YOLO agents** - Two new agent definitions for autonomous execution
+  - `yolo`: Full permissions, all tools enabled, auto-approve all operations
+  - `yolo-focused`: Same permissions but with focused behavioral guidelines
+- **Workflow state MCP tools** - New tools for managing feature workflow state
+  - `workflow_state_get`, `workflow_state_set`, `workflow_state_clear`
+  - Persistent storage in spellbook database
+- **Phased slash commands** - Decomposed large skills into focused command sequences
+  - `/feature-*`: discover, research, design, config, implement
+  - `/dead-code-*`: setup, analyze, report, implement
+  - `/simplify-*`: analyze, transform, verify
+
+### Changed
+- **Skill size reduction** - Major skills condensed to fit OpenCode's 50KB tool output limit
+  - `implementing-features`: 90KB → under 50KB (phased command approach)
+  - `finding-dead-code`: Reduced and split into phased commands
+  - `simplify`: Reduced and split into phased commands
+- **Handoff command enhanced** - More comprehensive context preservation for session continuation
+
 ## [0.9.5] - 2026-01-26
 
 ### Fixed

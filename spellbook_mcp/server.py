@@ -38,6 +38,7 @@ from typing import List, Dict, Any, Optional
 import os
 import json
 import time
+from datetime import datetime, timezone
 
 # All imports use full package paths - no sys.path manipulation needed
 from spellbook_mcp.path_utils import get_project_dir
@@ -63,6 +64,7 @@ from spellbook_mcp.config_tools import (
     telemetry_enable as do_telemetry_enable,
     telemetry_disable as do_telemetry_disable,
     telemetry_status as do_telemetry_status,
+    get_spellbook_dir,
 )
 from spellbook_mcp.compaction_detector import (
     check_for_compaction,
@@ -1234,6 +1236,376 @@ def forge_process_roundtable_response(
         stage=stage,
         iteration=iteration,
     )
+
+
+# ============================================================================
+# Skill Instruction Tools
+# ============================================================================
+
+
+def _extract_section(content: str, section_name: str) -> str | None:
+    """Extract a named section from skill content.
+
+    Tries XML-style tags first: <SECTION>...</SECTION>
+    Then tries markdown headers: ## Section Name ... (until next ##)
+
+    Args:
+        content: Full skill content
+        section_name: Name of section to extract
+
+    Returns:
+        Extracted section content, or None if not found
+    """
+    import re
+
+    # Try XML-style tags first: <SECTION>...</SECTION>
+    pattern = f"<{section_name}>(.*?)</{section_name}>"
+    match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+
+    # Try markdown headers: ## Section Name ... (until next ## or end)
+    pattern = f"##\\s+{section_name}[^#]*?(?=##|$)"
+    match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
+    if match:
+        return match.group(0).strip()
+
+    return None
+
+
+@mcp.tool()
+@inject_recovery_context
+def skill_instructions_get(
+    skill_name: str,
+    sections: list = None,
+) -> dict:
+    """
+    Fetch skill instructions from SKILL.md file.
+
+    Used to extract behavioral constraints for injection after compaction.
+    If sections specified, returns only those sections.
+
+    Args:
+        skill_name: Name of the skill (e.g., "implementing-features")
+        sections: Optional list of section names to extract (e.g., ["FORBIDDEN", "REQUIRED", "ROLE"])
+                  If None, returns full content.
+
+    Returns:
+        {
+            "success": True/False,
+            "skill_name": str,
+            "path": str,  # Path to SKILL.md
+            "content": str,  # Full content or extracted sections
+            "sections": {  # If sections param provided
+                "FORBIDDEN": "...",
+                "REQUIRED": "...",
+                ...
+            },
+            "error": str  # If success is False
+        }
+    """
+    # Resolve skill path
+    spellbook_dir = get_spellbook_dir()
+    skill_path = spellbook_dir / "skills" / skill_name / "SKILL.md"
+
+    # Check if skill exists
+    if not skill_path.exists():
+        return {
+            "success": False,
+            "skill_name": skill_name,
+            "path": str(skill_path),
+            "error": f"Skill not found: {skill_path}",
+        }
+
+    # Read skill content
+    try:
+        content = skill_path.read_text()
+    except OSError as e:
+        return {
+            "success": False,
+            "skill_name": skill_name,
+            "path": str(skill_path),
+            "error": f"Failed to read skill file: {e}",
+        }
+
+    # If no sections requested, return full content
+    if not sections:
+        return {
+            "success": True,
+            "skill_name": skill_name,
+            "path": str(skill_path),
+            "content": content,
+        }
+
+    # Extract requested sections
+    extracted_sections = {}
+    for section_name in sections:
+        section_content = _extract_section(content, section_name)
+        if section_content is not None:
+            extracted_sections[section_name] = section_content
+
+    # Build combined content from found sections
+    combined_content = "\n\n".join(
+        f"## {name}\n{text}" for name, text in extracted_sections.items()
+    )
+
+    return {
+        "success": True,
+        "skill_name": skill_name,
+        "path": str(skill_path),
+        "content": combined_content,
+        "sections": extracted_sections,
+    }
+
+
+# ============================================================================
+# Workflow State Tools
+# ============================================================================
+
+
+def _deep_merge(base: dict, updates: dict) -> dict:
+    """Recursively merge updates into base dict."""
+    result = base.copy()
+    for key, value in updates.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        elif key in result and isinstance(result[key], list) and isinstance(value, list):
+            # For lists, append new items (useful for skill_stack, subagents)
+            result[key] = result[key] + value
+        else:
+            result[key] = value
+    return result
+
+
+@mcp.tool()
+@inject_recovery_context
+def workflow_state_save(
+    project_path: str,
+    state: dict,
+    trigger: str = "manual",
+) -> dict:
+    """
+    Persist workflow state to database.
+
+    Called by plugin on session.compacting hook or manually via /handoff.
+    Overwrites previous state for project (only latest matters).
+
+    Args:
+        project_path: Absolute path to project directory
+        state: WorkflowState dict (from handoff Section 1.20)
+        trigger: "manual" | "auto" | "checkpoint"
+
+    Returns:
+        {"success": True/False, "project_path": str, "trigger": str, "error": str?}
+    """
+    from spellbook_mcp.db import get_connection
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        state_json = json.dumps(state)
+        now = datetime.now(timezone.utc).isoformat()
+
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO workflow_state
+                (project_path, state_json, trigger, created_at, updated_at)
+            VALUES
+                (?, ?, ?, COALESCE(
+                    (SELECT created_at FROM workflow_state WHERE project_path = ?),
+                    ?
+                ), ?)
+            """,
+            (project_path, state_json, trigger, project_path, now, now),
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "project_path": project_path,
+            "trigger": trigger,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "project_path": project_path,
+            "trigger": trigger,
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+@inject_recovery_context
+def workflow_state_load(
+    project_path: str,
+    max_age_hours: float = 24.0,
+) -> dict:
+    """
+    Load persisted workflow state for project.
+
+    Returns None-like response if no state exists or state is too old.
+    Called by plugin on session.created to check for resumable work.
+
+    Args:
+        project_path: Absolute path to project directory
+        max_age_hours: Maximum age of state to consider valid (default 24h)
+
+    Returns:
+        {
+            "success": True/False,
+            "found": True/False,
+            "state": dict | None,  # The WorkflowState if found and fresh
+            "age_hours": float | None,
+            "trigger": str | None,
+            "error": str?
+        }
+    """
+    from spellbook_mcp.db import get_connection
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT state_json, trigger, updated_at
+            FROM workflow_state
+            WHERE project_path = ?
+            """,
+            (project_path,),
+        )
+        row = cursor.fetchone()
+
+        if row is None:
+            return {
+                "success": True,
+                "found": False,
+                "state": None,
+                "age_hours": None,
+                "trigger": None,
+            }
+
+        state_json, trigger, updated_at_str = row
+
+        # Parse updated_at timestamp
+        # Handle both ISO format with Z and without timezone
+        if updated_at_str.endswith("Z"):
+            updated_at_str = updated_at_str[:-1] + "+00:00"
+        if "+" not in updated_at_str and updated_at_str.count(":") < 3:
+            # No timezone info, assume UTC
+            updated_at = datetime.fromisoformat(updated_at_str).replace(
+                tzinfo=timezone.utc
+            )
+        else:
+            updated_at = datetime.fromisoformat(updated_at_str)
+
+        now = datetime.now(timezone.utc)
+        age_hours = (now - updated_at).total_seconds() / 3600.0
+
+        if age_hours > max_age_hours:
+            return {
+                "success": True,
+                "found": False,
+                "state": None,
+                "age_hours": age_hours,
+                "trigger": trigger,
+            }
+
+        state = json.loads(state_json)
+
+        return {
+            "success": True,
+            "found": True,
+            "state": state,
+            "age_hours": age_hours,
+            "trigger": trigger,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "found": False,
+            "state": None,
+            "age_hours": None,
+            "trigger": None,
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+@inject_recovery_context
+def workflow_state_update(
+    project_path: str,
+    updates: dict,
+) -> dict:
+    """
+    Incrementally update workflow state.
+
+    Called by plugin on tool.execute.after to track:
+    - Skill invocations (add to skill_stack)
+    - Subagent spawns (add to subagents)
+    - Todo changes
+
+    Args:
+        project_path: Absolute path to project directory
+        updates: Partial WorkflowState dict to merge
+
+    Returns:
+        {"success": True/False, "project_path": str, "error": str?}
+    """
+    from spellbook_mcp.db import get_connection
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Load existing state (if any)
+        cursor.execute(
+            """
+            SELECT state_json
+            FROM workflow_state
+            WHERE project_path = ?
+            """,
+            (project_path,),
+        )
+        row = cursor.fetchone()
+
+        if row is None:
+            # No existing state, create new with updates as base
+            base_state = {}
+        else:
+            base_state = json.loads(row[0])
+
+        # Deep merge updates into existing state
+        merged_state = _deep_merge(base_state, updates)
+
+        state_json = json.dumps(merged_state)
+        now = datetime.now(timezone.utc).isoformat()
+
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO workflow_state
+                (project_path, state_json, trigger, created_at, updated_at)
+            VALUES
+                (?, ?, 'auto', COALESCE(
+                    (SELECT created_at FROM workflow_state WHERE project_path = ?),
+                    ?
+                ), ?)
+            """,
+            (project_path, state_json, project_path, now, now),
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "project_path": project_path,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "project_path": project_path,
+            "error": str(e),
+        }
 
 
 # ============================================================================

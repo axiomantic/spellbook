@@ -36,7 +36,7 @@
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
   - [Skills (42 total)](#skills-42-total)
-  - [Commands (19 total)](#commands-19-total)
+  - [Commands (31 total)](#commands-31-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -140,14 +140,26 @@ Reusable workflows for structured development:
 [assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 
-### Commands (19 total)
+### Commands (31 total)
 
 | Command | Description |
 |---------|-------------|
 | [/crystallize] | Transform SOPs into agentic CoT prompts |
+| [/dead-code-setup] | Initialize dead code analysis with git safety and scope selection |
+| [/dead-code-analyze] | Extract and triage code items for dead code verification |
+| [/dead-code-report] | Generate dead code findings report with deletion plan |
+| [/dead-code-implement] | Execute approved deletions with verification |
 | [/handoff] | Custom session compaction |
 | [/distill-session] | Extract knowledge from sessions |
+| [/feature-config] | Phase 0 configuration wizard for feature workflow |
+| [/feature-discover] | Phase 1.5 informed discovery with disambiguation |
+| [/feature-research] | Phase 1 codebase research and ambiguity detection |
+| [/feature-design] | Phase 2 design document creation and review |
+| [/feature-implement] | Phase 4 implementation with TDD and code review |
 | [/simplify] | Code complexity reduction |
+| [/simplify-analyze] | Analyze code for simplification opportunities |
+| [/simplify-transform] | Apply simplification transformations |
+| [/simplify-verify] | Verify simplification preserved behavior |
 | [/address-pr-feedback] | Handle PR review comments |
 | [/move-project] | Relocate projects safely |
 | [/audit-green-mirage] | Test suite audit |
@@ -167,9 +179,21 @@ Reusable workflows for structured development:
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
 [/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
+[/dead-code-setup]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-setup/
+[/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
+[/dead-code-report]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-report/
+[/dead-code-implement]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-implement/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
+[/feature-config]: https://axiomantic.github.io/spellbook/latest/commands/feature-config/
+[/feature-discover]: https://axiomantic.github.io/spellbook/latest/commands/feature-discover/
+[/feature-research]: https://axiomantic.github.io/spellbook/latest/commands/feature-research/
+[/feature-design]: https://axiomantic.github.io/spellbook/latest/commands/feature-design/
+[/feature-implement]: https://axiomantic.github.io/spellbook/latest/commands/feature-implement/
 [/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/
+[/simplify-analyze]: https://axiomantic.github.io/spellbook/latest/commands/simplify-analyze/
+[/simplify-transform]: https://axiomantic.github.io/spellbook/latest/commands/simplify-transform/
+[/simplify-verify]: https://axiomantic.github.io/spellbook/latest/commands/simplify-verify/
 [/address-pr-feedback]: https://axiomantic.github.io/spellbook/latest/commands/address-pr-feedback/
 [/move-project]: https://axiomantic.github.io/spellbook/latest/commands/move-project/
 [/audit-green-mirage]: https://axiomantic.github.io/spellbook/latest/commands/audit-green-mirage/

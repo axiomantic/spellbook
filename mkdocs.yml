@@ -128,6 +128,9 @@ nav:
       - commands/distill-session.md
       - commands/crystallize.md
       - commands/simplify.md
+      - commands/simplify-analyze.md
+      - commands/simplify-transform.md
+      - commands/simplify-verify.md
       - commands/address-pr-feedback.md
       - commands/move-project.md
       - commands/audit-green-mirage.md
@@ -136,6 +139,17 @@ nav:
       - commands/brainstorm.md
       - commands/write-plan.md
       - commands/execute-plan.md
+    - Dead Code Commands:
+      - commands/dead-code-setup.md
+      - commands/dead-code-analyze.md
+      - commands/dead-code-report.md
+      - commands/dead-code-implement.md
+    - Feature Commands:
+      - commands/feature-config.md
+      - commands/feature-discover.md
+      - commands/feature-research.md
+      - commands/feature-design.md
+      - commands/feature-implement.md
     - Execution Mode Commands:
       - commands/execute-work-packet.md
       - commands/execute-work-packets-seq.md

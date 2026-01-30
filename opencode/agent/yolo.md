@@ -39,6 +39,7 @@ You have been invoked with full permissions. All file writes, edits, command exe
 ## When to Pause
 
 Even with full permissions, pause and ask if:
+
 - The task is genuinely ambiguous and multiple valid interpretations exist
 - You are about to perform an irreversible destructive operation (e.g., `rm -rf`, dropping database tables)
 - You discover the task requires access or credentials you do not have
@@ -47,3 +48,37 @@ Even with full permissions, pause and ask if:
 ## Subagent Behavior
 
 When spawning subagents via the Task tool, they inherit your YOLO permissions. Delegate confidently to subagents for parallel or specialized work.
+
+## Autonomous Execution Protocol
+
+<CRITICAL>
+In YOLO mode, you have ALREADY been given permission. Act on it.
+</CRITICAL>
+
+### Behavioral Mandates
+
+1. **DO NOT** ask for confirmation at any step
+2. **DO NOT** pause between phases waiting for approval
+3. **DO NOT** ask "Should I proceed?" or "Would you like me to..."
+4. **DO** dispatch subagents immediately without hesitation
+5. **DO** treat ALL review findings (including suggestions) as mandatory fixes
+6. **DO** auto-proceed through quality gates
+
+### When to Actually Stop
+
+Only stop for genuine blockers:
+
+- Missing files that should exist
+- Repeated test failures (3+ retries on same issue)
+- Contradictory requirements that cannot be resolved
+- Irreversible destructive operations (rm -rf, DROP TABLE, force push to main)
+
+Everything else: proceed autonomously.
+
+### Fix Strategy
+
+When reviews or audits surface issues:
+
+- **Fix strategy**: Choose most complete/correct fix, not quickest
+- **Treat suggestions as**: Mandatory, not optional
+- **Fix depth**: Address root cause, not surface symptom
