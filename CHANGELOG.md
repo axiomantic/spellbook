@@ -30,6 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tier-aware routing in feature-implement** - Prerequisite check branches on complexity tier
   - Simple tier navigates directly to Phase 4 (skipping Phase 3 planning)
   - Standard/Complex tiers require design document verification via ls
+- **Multi-Phase Skill Architecture mandate** - writing-skills skill now requires orchestrator-subagent separation for multi-phase skills
+  - 3+ phase skills MUST separate orchestrator from phase commands; 2 phases SHOULD; 1 phase exempt
+  - Core rule: orchestrator dispatches subagents (Task tool), subagents invoke phase commands (Skill tool), orchestrator never invokes commands directly
+  - Content split matrix defines what belongs in orchestrator (<300 lines: phase sequence, dispatch templates, shared data structures) vs phase commands (implementation logic, scoring, wizards)
+  - Data structure placement criterion: referenced by 2+ phases = orchestrator, 1 phase = command
+  - Exceptions for config/setup phases requiring user interaction and error recovery
+  - 4 named anti-patterns for context bloat
+  - Self-Check updated with multi-phase compliance checkbox
 
 ### Changed
 - **SKILL.md Workflow Overview** - Expanded to include Phase 0.7, tier routing branches, and Simple Path appendix

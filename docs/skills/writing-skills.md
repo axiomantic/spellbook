@@ -305,6 +305,49 @@ How future Claude finds your skill:
 - [ ] Push to fork if configured
 - [ ] Consider PR if broadly useful
 
+## Multi-Phase Skill Architecture
+
+Skills with multiple phases face a structural decision: what belongs in the orchestrator SKILL.md versus phase commands invoked by subagents?
+
+**When this applies:**
+
+| Phase Count | Requirement |
+|-------------|-------------|
+| 1 phase | Exempt. Self-contained SKILL.md is fine. |
+| 2 phases | SHOULD separate into orchestrator + commands. |
+| 3+ phases | MUST separate. Orchestrator dispatches, commands implement. |
+
+**The Core Rule:** The orchestrator dispatches subagents (Task tool). Subagents invoke phase commands (Skill tool). The orchestrator NEVER invokes phase commands directly into its own context.
+
+**Content Split:**
+
+| Orchestrator SKILL.md | Phase Commands |
+|----------------------|----------------|
+| Phase sequence and transitions | All phase implementation logic |
+| Dispatch templates per phase | Scoring formulas and rubrics |
+| Shared data structures (referenced by 2+ phases) | Discovery wizards and prompts |
+| Quality gate thresholds | Detailed checklists and protocols |
+| Anti-patterns / FORBIDDEN section | Review and verification steps |
+
+**Data structure placement:** If referenced by 2+ phases, define in orchestrator. If referenced by 1 phase only, define in that phase's command.
+
+**Soft target:** ~300 lines for orchestrator SKILL.md. The hard rule is about content types: orchestrators contain coordination logic, never implementation logic.
+
+**Exceptions:**
+- Config/setup phases requiring direct user interaction MAY run in orchestrator context
+- Error recovery MAY load phase context temporarily to diagnose failures
+
+**Canonical example:** implementing-features uses 5 commands across 6+ phases. The orchestrator defines phase sequence, dispatch templates, and shared data structures. Each phase command (discover, design, execute-plan, etc.) contains its own implementation logic.
+
+**Anti-Patterns:**
+
+| Anti-Pattern | Why It Fails |
+|-------------|-------------|
+| Orchestrator invokes Skill tool for a phase command | Loads phase logic into orchestrator context, defeating separation |
+| Orchestrator embeds phase logic directly | Monolithic file; orchestrator context bloats with implementation detail |
+| Subagent prompt duplicates command instructions | Drift between prompt and command; maintenance burden doubles |
+| Monolithic SKILL.md exceeding 500 lines with phase implementation | Signal that phase logic should be extracted to commands |
+
 ## Self-Check
 
 Before completing:
@@ -314,6 +357,7 @@ Before completing:
 - [ ] YAML frontmatter has `name` and `description`
 - [ ] Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
 - [ ] Token budget met: <500 words core instructions
+- [ ] Multi-phase architecture: 3+ phase skills separate orchestrator from phase commands
 - [ ] No workflow summary in description
 - [ ] Rationalization table built (for discipline skills)
 
