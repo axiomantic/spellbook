@@ -162,6 +162,48 @@ nav:
       - commands/execute-work-packet.md
       - commands/execute-work-packets-seq.md
       - commands/merge-work-packets.md
+    - Audit Mirage Commands:
+      - commands/audit-mirage-analyze.md
+      - commands/audit-mirage-cross.md
+      - commands/audit-mirage-report.md
+    - Encyclopedia Commands:
+      - commands/encyclopedia-build.md
+      - commands/encyclopedia-validate.md
+    - Fact Check Commands:
+      - commands/fact-check-extract.md
+      - commands/fact-check-report.md
+      - commands/fact-check-verify.md
+    - Finish Branch Commands:
+      - commands/finish-branch-cleanup.md
+      - commands/finish-branch-execute.md
+    - Fix Tests Commands:
+      - commands/fix-tests-execute.md
+      - commands/fix-tests-parse.md
+    - Merge Worktree Commands:
+      - commands/merge-worktree-execute.md
+      - commands/merge-worktree-resolve.md
+      - commands/merge-worktree-verify.md
+    - Reflexion Commands:
+      - commands/reflexion-analyze.md
+    - Request Review Commands:
+      - commands/request-review-artifacts.md
+      - commands/request-review-execute.md
+      - commands/request-review-plan.md
+    - Review Design Commands:
+      - commands/review-design-checklist.md
+      - commands/review-design-report.md
+      - commands/review-design-verify.md
+    - Review Plan Commands:
+      - commands/review-plan-behavior.md
+      - commands/review-plan-completeness.md
+      - commands/review-plan-contracts.md
+      - commands/review-plan-inventory.md
+    - Code Review Subcommands:
+      - commands/code-review-feedback.md
+      - commands/code-review-give.md
+      - commands/code-review-tarot.md
+    - Skill Commands:
+      - commands/write-skill-test.md
     - Session Commands:
       - commands/mode.md
   - Agents:

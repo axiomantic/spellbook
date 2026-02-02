@@ -36,7 +36,7 @@
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
   - [Skills (42 total)](#skills-42-total)
-  - [Commands (31 total)](#commands-31-total)
+  - [Commands (66 total)](#commands-66-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -142,7 +142,7 @@ Reusable workflows for structured development:
 [assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 
-### Commands (31 total)
+### Commands (66 total)
 
 | Command | Description |
 |---------|-------------|
@@ -182,6 +182,36 @@ Reusable workflows for structured development:
 | [/advanced-code-review-review] | Phase 3: Deep multi-pass code review |
 | [/advanced-code-review-verify] | Phase 4: Verification and fact-checking of findings |
 | [/advanced-code-review-report] | Phase 5: Report generation and artifact output |
+| [/fact-check-extract] | Extract and triage claims from code |
+| [/fact-check-verify] | Verify claims against source with evidence |
+| [/fact-check-report] | Generate findings report with bibliography |
+| [/review-plan-inventory] | Context, inventory, and work item classification |
+| [/review-plan-contracts] | Interface contract audit |
+| [/review-plan-behavior] | Behavior verification and fabrication detection |
+| [/review-plan-completeness] | Completeness checks and escalation |
+| [/audit-mirage-analyze] | Per-file anti-pattern analysis with scoring |
+| [/audit-mirage-cross] | Cross-cutting analysis across test suite |
+| [/audit-mirage-report] | Report generation and fix plan |
+| [/review-design-checklist] | Document inventory and completeness checklist |
+| [/review-design-verify] | Hand-waving detection and interface verification |
+| [/review-design-report] | Implementation simulation, findings, and remediation |
+| [/fix-tests-parse] | Parse and classify test failures |
+| [/fix-tests-execute] | Fix execution with TDD loop and verification |
+| [/request-review-plan] | Review planning and scope analysis |
+| [/request-review-execute] | Execute review with checklists |
+| [/request-review-artifacts] | Generate review artifacts and reports |
+| [/encyclopedia-build] | Research, build, and write encyclopedia |
+| [/encyclopedia-validate] | Validate encyclopedia accuracy |
+| [/merge-worktree-execute] | Execute worktree merge sequence |
+| [/merge-worktree-resolve] | Resolve merge conflicts |
+| [/merge-worktree-verify] | Verify merge and cleanup |
+| [/finish-branch-execute] | Analyze branch and execute chosen strategy |
+| [/finish-branch-cleanup] | Post-merge cleanup |
+| [/code-review-feedback] | Process received code review feedback |
+| [/code-review-give] | Review others' code |
+| [/code-review-tarot] | Roundtable-style collaborative review |
+| [/write-skill-test] | Skill testing with pressure scenarios |
+| [/reflexion-analyze] | Full reflexion analysis workflow |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -221,6 +251,36 @@ Reusable workflows for structured development:
 [/advanced-code-review-review]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-review/
 [/advanced-code-review-verify]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-verify/
 [/advanced-code-review-report]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-report/
+[/fact-check-extract]: https://axiomantic.github.io/spellbook/latest/commands/fact-check-extract/
+[/fact-check-verify]: https://axiomantic.github.io/spellbook/latest/commands/fact-check-verify/
+[/fact-check-report]: https://axiomantic.github.io/spellbook/latest/commands/fact-check-report/
+[/review-plan-inventory]: https://axiomantic.github.io/spellbook/latest/commands/review-plan-inventory/
+[/review-plan-contracts]: https://axiomantic.github.io/spellbook/latest/commands/review-plan-contracts/
+[/review-plan-behavior]: https://axiomantic.github.io/spellbook/latest/commands/review-plan-behavior/
+[/review-plan-completeness]: https://axiomantic.github.io/spellbook/latest/commands/review-plan-completeness/
+[/audit-mirage-analyze]: https://axiomantic.github.io/spellbook/latest/commands/audit-mirage-analyze/
+[/audit-mirage-cross]: https://axiomantic.github.io/spellbook/latest/commands/audit-mirage-cross/
+[/audit-mirage-report]: https://axiomantic.github.io/spellbook/latest/commands/audit-mirage-report/
+[/review-design-checklist]: https://axiomantic.github.io/spellbook/latest/commands/review-design-checklist/
+[/review-design-verify]: https://axiomantic.github.io/spellbook/latest/commands/review-design-verify/
+[/review-design-report]: https://axiomantic.github.io/spellbook/latest/commands/review-design-report/
+[/fix-tests-parse]: https://axiomantic.github.io/spellbook/latest/commands/fix-tests-parse/
+[/fix-tests-execute]: https://axiomantic.github.io/spellbook/latest/commands/fix-tests-execute/
+[/request-review-plan]: https://axiomantic.github.io/spellbook/latest/commands/request-review-plan/
+[/request-review-execute]: https://axiomantic.github.io/spellbook/latest/commands/request-review-execute/
+[/request-review-artifacts]: https://axiomantic.github.io/spellbook/latest/commands/request-review-artifacts/
+[/encyclopedia-build]: https://axiomantic.github.io/spellbook/latest/commands/encyclopedia-build/
+[/encyclopedia-validate]: https://axiomantic.github.io/spellbook/latest/commands/encyclopedia-validate/
+[/merge-worktree-execute]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-execute/
+[/merge-worktree-resolve]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-resolve/
+[/merge-worktree-verify]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-verify/
+[/finish-branch-execute]: https://axiomantic.github.io/spellbook/latest/commands/finish-branch-execute/
+[/finish-branch-cleanup]: https://axiomantic.github.io/spellbook/latest/commands/finish-branch-cleanup/
+[/code-review-feedback]: https://axiomantic.github.io/spellbook/latest/commands/code-review-feedback/
+[/code-review-give]: https://axiomantic.github.io/spellbook/latest/commands/code-review-give/
+[/code-review-tarot]: https://axiomantic.github.io/spellbook/latest/commands/code-review-tarot/
+[/write-skill-test]: https://axiomantic.github.io/spellbook/latest/commands/write-skill-test/
+[/reflexion-analyze]: https://axiomantic.github.io/spellbook/latest/commands/reflexion-analyze/
 
 ### Agents (7 total)
 

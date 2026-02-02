@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.9] - 2026-02-02
+
+### Changed
+- **Multi-Phase Skill Architecture compliance** - Refactored all 12 non-compliant skills to separate orchestrator SKILL.md from phase command files
+  - Orchestrators slimmed to keep only: phase sequence, dispatch templates, shared data structures (referenced by 2+ phases), quality gates, anti-patterns
+  - Phase-specific implementation logic, scoring formulas, checklists, and review protocols moved to dedicated command files
+  - 30 new command files created in `commands/` directory, each with YAML frontmatter and self-contained for subagent independence
+  - Shared data structures intentionally duplicated in relevant command files for subagent self-containment
+
+### Skills Refactored
+
+| Skill | Before | After | Command Files |
+|-------|--------|-------|---------------|
+| fact-checking | 324 lines | 233 lines | fact-check-extract, fact-check-verify, fact-check-report |
+| reviewing-impl-plans | 443 lines | 189 lines | review-plan-inventory, review-plan-contracts, review-plan-behavior, review-plan-completeness |
+| auditing-green-mirage | 543 lines | 238 lines | audit-mirage-analyze, audit-mirage-cross, audit-mirage-report |
+| reviewing-design-docs | 275 lines | 121 lines | review-design-checklist, review-design-verify, review-design-report |
+| fixing-tests | 391 lines | 226 lines | fix-tests-parse, fix-tests-execute |
+| requesting-code-review | 206 lines | 90 lines | request-review-plan, request-review-execute, request-review-artifacts |
+| project-encyclopedia | 273 lines | 180 lines | encyclopedia-build, encyclopedia-validate |
+| merging-worktrees | 263 lines | 179 lines | merge-worktree-execute, merge-worktree-resolve, merge-worktree-verify |
+| finishing-a-development-branch | 255 lines | 179 lines | finish-branch-execute, finish-branch-cleanup |
+| code-review | 285 lines | 157 lines | code-review-feedback, code-review-give, code-review-tarot |
+| writing-skills | 365 lines | 312 lines | write-skill-test |
+| reflexion | 171 lines | 124 lines | reflexion-analyze |
+
+### New Command Files (30 total)
+- `commands/fact-check-extract.md` - Phase 2-3: Extract and triage claims from code
+- `commands/fact-check-verify.md` - Phase 4-5: Verify claims against source with evidence
+- `commands/fact-check-report.md` - Phase 6-7: Generate findings report with bibliography
+- `commands/review-plan-inventory.md` - Phase 1: Context, inventory, and work item classification
+- `commands/review-plan-contracts.md` - Phase 2: Interface contract audit (type/schema/event/file)
+- `commands/review-plan-behavior.md` - Phase 3: Behavior verification and fabrication detection
+- `commands/review-plan-completeness.md` - Phase 4-5: Completeness checks and escalation
+- `commands/audit-mirage-analyze.md` - Phase 1-2: Per-file anti-pattern analysis with scoring
+- `commands/audit-mirage-cross.md` - Phase 3: Cross-cutting analysis across test suite
+- `commands/audit-mirage-report.md` - Phase 4-5: Report generation and fix plan
+- `commands/review-design-checklist.md` - Phase 1-2: Document inventory and completeness checklist
+- `commands/review-design-verify.md` - Phase 3-4: Hand-waving detection and interface verification
+- `commands/review-design-report.md` - Phase 5-7: Implementation simulation, findings, and remediation
+- `commands/fix-tests-parse.md` - Phase 1: Parse and classify test failures
+- `commands/fix-tests-execute.md` - Phase 2-4: Fix execution with TDD loop and verification
+- `commands/request-review-plan.md` - Phase 1: Review planning and scope analysis
+- `commands/request-review-execute.md` - Phase 2: Execute review with checklists
+- `commands/request-review-artifacts.md` - Phase 3: Generate review artifacts and reports
+- `commands/encyclopedia-build.md` - Phase 1-3: Research, build, and write encyclopedia
+- `commands/encyclopedia-validate.md` - Phase 4: Validate encyclopedia accuracy
+- `commands/merge-worktree-execute.md` - Phase 1: Execute worktree merge sequence
+- `commands/merge-worktree-resolve.md` - Phase 2: Resolve merge conflicts
+- `commands/merge-worktree-verify.md` - Phase 3: Verify merge and cleanup
+- `commands/finish-branch-execute.md` - Phase 1-2: Analyze branch and execute chosen strategy
+- `commands/finish-branch-cleanup.md` - Phase 3: Post-merge cleanup
+- `commands/code-review-feedback.md` - Feedback mode: Process received code review feedback
+- `commands/code-review-give.md` - Give mode: Review others' code
+- `commands/code-review-tarot.md` - Tarot mode: Roundtable-style collaborative review
+- `commands/write-skill-test.md` - Phase 5: Skill testing with pressure scenarios
+- `commands/reflexion-analyze.md` - Full reflexion analysis workflow
+
 ## [0.9.8] - 2026-01-30
 
 ### Added

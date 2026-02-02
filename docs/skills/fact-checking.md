@@ -20,10 +20,10 @@ Professional reputation depends on evidence-backed conclusions. Are you sure?
 
 <ARH_INTEGRATION>
 Uses Adaptive Response Handler for user responses during triage:
-- RESEARCH_REQUEST ("research", "check", "verify") → Dispatch research subagent
-- UNKNOWN ("don't know", "not sure") → Dispatch analysis subagent
-- CLARIFICATION (ends with ?) → Answer, then re-ask
-- SKIP ("skip", "move on") → Proceed to next item
+- RESEARCH_REQUEST ("research", "check", "verify") -> Dispatch research subagent
+- UNKNOWN ("don't know", "not sure") -> Dispatch analysis subagent
+- CLARIFICATION (ends with ?) -> Answer, then re-ask
+- SKIP ("skip", "move on") -> Proceed to next item
 </ARH_INTEGRATION>
 
 <analysis>
@@ -52,6 +52,36 @@ Before ANY action:
 
 ---
 
+## Shared Data Structures
+
+### Verdict Table
+
+| Verdict | Meaning | Evidence Required |
+|---------|---------|-------------------|
+| Verified | Claim is accurate | test output, code trace, docs, benchmark |
+| Refuted | Claim is false | failing test, contradicting code |
+| Incomplete | True but missing context | base verified + missing elements |
+| Inconclusive | Cannot determine | document attempts, why insufficient |
+| Ambiguous | Wording unclear | multiple interpretations explained |
+| Misleading | Technically true, implies falsehood | what reader assumes vs reality |
+| Jargon-heavy | Too technical for audience | unexplained terms, accessible version |
+| Stale | Was true, no longer applies | when true, what changed, current state |
+| Extraneous | Unnecessary/redundant | value analysis shows no added info |
+
+### Bibliography Formats
+
+| Type | Format |
+|------|--------|
+| Code trace | `file:lines - finding` |
+| Test | `command - result` |
+| Web source | `Title - URL - "excerpt"` |
+| Git history | `commit/issue - finding` |
+| Documentation | `Docs: source section - URL` |
+| Benchmark | `Benchmark: method - results` |
+| Paper/RFC | `Citation - section - URL` |
+
+---
+
 ## Workflow
 
 ### Phase 0: Configuration
@@ -73,142 +103,20 @@ Autonomous mode detected ("Mode: AUTONOMOUS")? Enable all automatically.
 | B. Uncommitted | `git diff --name-only` + `git diff --cached --name-only` |
 | C. Full repo | All code/doc patterns |
 
-### Phase 2: Claim Extraction
+### Phases 2-3: Claim Extraction and Triage
 
-**Sources**:
-| Source | Patterns |
-|--------|----------|
-| Comments | `//`, `#`, `/* */`, `"""`, `'''`, `<!-- -->`, `--` |
-| Docstrings | Function/class/module documentation |
-| Markdown | README, CHANGELOG, docs/*.md |
-| Commits | `git log --format=%B` for branch commits |
-| PR descriptions | Via `gh pr view` |
-| Naming | `validateX`, `safeX`, `isX`, `ensureX` |
+**Subagent dispatch:** Invoke `fact-check-extract` command.
+**Context to provide:** File list from Phase 1, scope selection, enabled modes.
 
-**Categories**:
-| Category | Examples | Agent |
-|----------|----------|-------|
-| Technical | "O(n log n)", "matches RFC 5322", "handles UTF-8" | CorrectnessAgent |
-| Behavior | "returns null when...", "throws if...", "never blocks" | CorrectnessAgent |
-| Security | "sanitized", "XSS-safe", "bcrypt hashed", "no injection" | SecurityAgent |
-| Concurrency | "thread-safe", "reentrant", "atomic", "lock-free" | ConcurrencyAgent |
-| Performance | "O(n)", "cached 5m", "lazy-loaded", benchmarks | PerformanceAgent |
-| Invariant/state | "never null after init", "always sorted", "immutable" | CorrectnessAgent |
-| Side effects | "pure function", "idempotent", "no side effects" | CorrectnessAgent |
-| Dependencies | "requires Node 18+", "compatible with Postgres 14" | ConfigurationAgent |
-| Configuration | "defaults to 30s", "env var X controls Y" | ConfigurationAgent |
-| Historical | "workaround for Chrome bug", "fixes #123" | HistoricalAgent |
-| TODO/FIXME | Referenced issues, "temporary" hacks | HistoricalAgent |
-| Examples | Code examples in docs/README | DocumentationAgent |
-| Test coverage | "covered by tests in test_foo.py" | DocumentationAgent |
-| External refs | URLs, RFC citations, spec references | DocumentationAgent |
+### Phases 4-5: Parallel Verification and Verdicts
 
-Also flag: **Ambiguous**, **Misleading**, **Jargon-heavy**
+**Subagent dispatch:** Invoke `fact-check-verify` command.
+**Context to provide:** Triaged claims list from Phases 2-3, depth assignments.
 
-### Phase 3: Triage
+### Phases 6-7: Report and Learning
 
-<RULE>Present ALL claims upfront. User must see full scope before verification.</RULE>
-
-Display grouped by category with depth recommendations:
-
-```
-## Claims Found: 23
-
-### Security (4 claims)
-1. [MEDIUM] src/auth.ts:34 - "passwords hashed with bcrypt"
-2. [DEEP] src/db.ts:89 - "SQL injection safe via parameterization"
-...
-
-Adjust depths? (Enter numbers to change, or 'continue')
-```
-
-**Depth Definitions**:
-| Depth | Approach | When to Use |
-|-------|----------|-------------|
-| Shallow | Read code, reason about behavior | Simple, self-evident claims |
-| Medium | Trace execution paths, analyze control flow | Most claims |
-| Deep | Execute tests, run benchmarks, instrument | Critical/numeric claims |
-
-ARH pattern for responses: DIRECT_ANSWER (accept, proceed), RESEARCH_REQUEST (dispatch analysis), UNKNOWN (analyze, regenerate), SKIP (use defaults).
-
-### Phase 4: Parallel Verification
-
-<RULE>Check AgentDB BEFORE verifying. Store findings AFTER.</RULE>
-
-```typescript
-// Before: check existing
-const existing = await agentdb.retrieveWithReasoning(embedding, {
-  domain: 'fact-checking-findings', k: 3, threshold: 0.92
-});
-if (existing.memories[0]?.similarity > 0.92) return existing.memories[0].pattern;
-
-// After: store finding
-await agentdb.insertPattern({
-  type: 'verification-finding',
-  domain: 'fact-checking-findings',
-  pattern_data: { claim, location, verdict, evidence, sources }
-});
-```
-
-Spawn category agents via swarm-orchestration (hierarchical topology):
-- SecurityAgent, CorrectnessAgent, PerformanceAgent
-- ConcurrencyAgent, DocumentationAgent, HistoricalAgent, ConfigurationAgent
-
-### Phase 5: Verdicts
-
-<RULE>Every verdict MUST have concrete evidence. NO exceptions.</RULE>
-
-| Verdict | Meaning | Evidence Required |
-|---------|---------|-------------------|
-| Verified | Claim is accurate | test output, code trace, docs, benchmark |
-| Refuted | Claim is false | failing test, contradicting code |
-| Incomplete | True but missing context | base verified + missing elements |
-| Inconclusive | Cannot determine | document attempts, why insufficient |
-| Ambiguous | Wording unclear | multiple interpretations explained |
-| Misleading | Technically true, implies falsehood | what reader assumes vs reality |
-| Jargon-heavy | Too technical for audience | unexplained terms, accessible version |
-| Stale | Was true, no longer applies | when true, what changed, current state |
-| Extraneous | Unnecessary/redundant | value analysis shows no added info |
-
-### Phase 6: Report
-
-Sections: Header, Summary, Findings by Category, Bibliography, Implementation Plan
-
-**Bibliography Formats**:
-| Type | Format |
-|------|--------|
-| Code trace | `file:lines - finding` |
-| Test | `command - result` |
-| Web source | `Title - URL - "excerpt"` |
-| Git history | `commit/issue - finding` |
-| Documentation | `Docs: source section - URL` |
-| Benchmark | `Benchmark: method - results` |
-| Paper/RFC | `Citation - section - URL` |
-
-### Phase 6.5: Clarity Mode (if enabled)
-
-Generate glossaries/key facts from verified claims (confidence > 0.7).
-
-**Targets**: `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `*_AGENT.md`, `*_AI.md`
-
-**Glossary Entry**: `- **[Term]**: [1-2 sentence definition]. [Usage context.]`
-
-**Key Fact Categories**: Architecture, Behavior, Integration, Error Handling, Performance
-
-Update existing sections or append before `---` separators.
-
-### Phase 7: Learning
-
-Store trajectories in ReasoningBank:
-```typescript
-await reasoningBank.insertPattern({
-  type: 'verification-trajectory',
-  domain: 'fact-checking-learning',
-  pattern: { claimText, claimType, depthUsed, verdict, timeSpent, evidenceQuality }
-});
-```
-
-Applications: depth prediction, strategy selection, ordering optimization, false positive reduction.
+**Subagent dispatch:** Invoke `fact-check-report` command.
+**Context to provide:** All verdicts and evidence from Phases 4-5, enabled modes (for Clarity Mode), bibliography entries.
 
 ### Phase 8: Fixes
 
@@ -262,9 +170,9 @@ Offer resume on next invocation.
 <EXAMPLE>
 **User**: "Factcheck my current branch"
 
-**Phase 1**: Scope selection → User selects "A. Branch changes"
+**Phase 1**: Scope selection -> User selects "A. Branch changes"
 
-**Phase 2**: Extract claims → Found 8 claims in 5 files
+**Phase 2**: Extract claims -> Found 8 claims in 5 files
 
 **Phase 3**: Triage display with depths:
 ```

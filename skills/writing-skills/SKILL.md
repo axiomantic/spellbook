@@ -144,45 +144,31 @@ Edit skill without testing? Same violation.
 
 ## RED-GREEN-REFACTOR
 
-**RED - Write Failing Test (Baseline):**
+The full RED-GREEN-REFACTOR implementation (pressure scenarios, baseline testing, skill writing, loophole closure, rationalization tables, red flags, and creation checklist) is in the `write-skill-test` command. Dispatch a subagent to execute it.
 
-Run pressure scenario with subagent WITHOUT the skill. Document:
-- What choices did they make?
-- What rationalizations did they use (verbatim quotes)?
-- Which pressures triggered violations?
+**Phase summary:**
 
-This is "watch the test fail" - you must see what agents naturally do.
+1. **RED** - Run pressure scenarios WITHOUT skill. Document baseline failures and rationalizations verbatim.
+2. **GREEN** - Write minimal skill addressing specific baseline failures. Verify compliance with same scenarios.
+3. **REFACTOR** - Close new loopholes. Build rationalization table. Re-test until bulletproof.
 
-**GREEN - Write Minimal Skill:**
+**Dispatch template:**
+```
+Task(
+  description: "RED-GREEN-REFACTOR skill testing",
+  prompt: """
+First, invoke the write-skill-test command using the Skill tool.
+Then follow its complete workflow.
 
-Write skill addressing those specific rationalizations. Don't add extra content for hypothetical cases. Run same scenarios WITH skill. Agent should now comply.
+## Context
 
-**REFACTOR - Close Loopholes:**
-
-Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
-
-## Bulletproofing Discipline Skills
-
-Build rationalization table from testing:
-
-| Excuse | Reality |
-|--------|---------|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "Skill is obviously clear" | Clear to you ≠ clear to other agents. Test it. |
-| "It's just a reference" | References can have gaps. Test retrieval. |
-| "Testing is overkill" | Untested skills have issues. Always. |
-| "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
-| "No time to test" | Deploying untested wastes more time fixing later. |
-
-**Red flags list (agents self-check):**
-- Code before test
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
+Skill purpose: [what the skill should do]
+Skill type: [discipline/technique/pattern/reference]
+Target location: skills/<name>/SKILL.md
+Pressure scenarios to test: [describe scenarios]
+"""
+)
+```
 
 ## Token Efficiency
 
@@ -210,9 +196,9 @@ Build rationalization table from testing:
 **One excellent example beats many mediocre ones.**
 
 Choose most relevant language:
-- Testing techniques → TypeScript/JavaScript
-- System debugging → Shell/Python
-- Data processing → Python
+- Testing techniques: TypeScript/JavaScript
+- System debugging: Shell/Python
+- Data processing: Python
 
 **Good example:** Complete, runnable, well-commented explaining WHY, from real scenario, ready to adapt.
 
@@ -225,7 +211,7 @@ Choose most relevant language:
 - Process loops where you might stop too early
 - "When to use A vs B" decisions
 
-**Never use for:** Reference material (→ tables), Code examples (→ markdown), Linear instructions (→ numbered lists).
+**Never use for:** Reference material (use tables), Code examples (use markdown), Linear instructions (use numbered lists).
 
 ## Anti-Patterns
 
@@ -260,45 +246,6 @@ How future Claude finds your skill:
 - Generic labels without semantic meaning
 - Narrative storytelling about specific sessions
 </FORBIDDEN>
-
-## Skill Creation Checklist
-
-**Use TodoWrite to create todos for EACH item.**
-
-**RED Phase:**
-- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
-- [ ] Run scenarios WITHOUT skill - document baseline verbatim
-- [ ] Identify patterns in rationalizations/failures
-
-**GREEN Phase:**
-- [ ] Name uses only letters, numbers, hyphens
-- [ ] YAML frontmatter with name and description (<1024 chars)
-- [ ] Description starts "Use when..." - triggers only, NO workflow
-- [ ] Description in third person
-- [ ] Keywords throughout (errors, symptoms, tools)
-- [ ] Clear overview with core principle
-- [ ] Address specific baseline failures from RED
-- [ ] One excellent example (not multi-language)
-- [ ] Run scenarios WITH skill - verify compliance
-
-**REFACTOR Phase:**
-- [ ] Identify NEW rationalizations from testing
-- [ ] Add explicit counters (for discipline skills)
-- [ ] Build rationalization table from all test iterations
-- [ ] Create red flags list
-- [ ] Re-test until bulletproof
-
-**Quality Checks:**
-- [ ] Quick reference table for scanning
-- [ ] Common mistakes section
-- [ ] Small flowchart only if decision non-obvious
-- [ ] No narrative storytelling
-- [ ] Supporting files only for tools or heavy reference
-
-**Deploy:**
-- [ ] Commit skill to git
-- [ ] Push to fork if configured
-- [ ] Consider PR if broadly useful
 
 ## Multi-Phase Skill Architecture
 

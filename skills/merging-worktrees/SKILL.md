@@ -13,10 +13,10 @@ Integration Architect trained in version control precision and interconnectivity
 
 <ARH_INTEGRATION>
 This skill uses Adaptive Response Handler pattern for conflict resolution:
-- RESEARCH_REQUEST ("research", "check", "verify") → Dispatch subagent to analyze git history
-- UNKNOWN ("don't know", "not sure") → Dispatch analysis subagent to show context
-- CLARIFICATION (ends with ?) → Answer, then re-ask original question
-- SKIP ("skip", "move on") → Mark as manual resolution needed
+- RESEARCH_REQUEST ("research", "check", "verify") -> Dispatch subagent to analyze git history
+- UNKNOWN ("don't know", "not sure") -> Dispatch analysis subagent to show context
+- CLARIFICATION (ends with ?) -> Answer, then re-ask original question
+- SKIP ("skip", "move on") -> Mark as manual resolution needed
 </ARH_INTEGRATION>
 
 <CRITICAL>
@@ -83,113 +83,29 @@ If NO to any: STOP and address before proceeding.
 ```markdown
 ## Merge Order
 ### Round 1 (no dependencies)
-- [ ] setup-worktree → base-branch
+- [ ] setup-worktree -> base-branch
 
 ### Round 2 (depends on Round 1)
-- [ ] api-worktree → base-branch (parallel)
-- [ ] ui-worktree → base-branch (parallel)
+- [ ] api-worktree -> base-branch (parallel)
+- [ ] ui-worktree -> base-branch (parallel)
 
 ### Round 3 (depends on Round 2)
-- [ ] integration-worktree → base-branch
+- [ ] integration-worktree -> base-branch
 ```
 
 <RULE>ALWAYS create checklist via TodoWrite before starting merge operations.</RULE>
 
 ### Phase 2: Sequential Round Merging
 
-For each round, merge worktrees in dependency order:
-
-```bash
-# Checkout and update base
-cd [main-repo-path]
-git checkout [base-branch]
-git pull origin [base-branch]
-
-# Merge each worktree in round
-WORKTREE_BRANCH=$(cd [worktree-path] && git branch --show-current)
-git merge $WORKTREE_BRANCH --no-edit
-```
-
-**If merge succeeds:** Log success, continue to next worktree.
-
-**If conflicts:** Proceed to Phase 3, then continue with remaining worktrees.
-
-**Run tests after EACH round:**
-```bash
-pytest  # or npm test, cargo test, etc.
-```
-
-**If tests fail:**
-1. Invoke `systematic-debugging` skill
-2. Fix issues, commit fixes
-3. Re-run tests until passing
-4. Do NOT proceed to next round until green
+Dispatch: `/merge-worktree-execute`
 
 ### Phase 3: Conflict Resolution
 
-<RULE>When merge conflicts occur, delegate to `resolving-merge-conflicts` skill with interface contract context.</RULE>
+Dispatch: `/merge-worktree-resolve`
 
-Invoke resolving-merge-conflicts with:
-- Interface contracts (from implementation plan)
-- Worktree purpose (what this worktree implemented)
-- Expected interfaces (type signatures, function contracts)
+### Phases 4-5: Final Verification + Cleanup
 
-**After resolution - Contract Verification:**
-
-| Check | Action if Failed |
-|-------|------------------|
-| Type signatures match contract | Fix to match contract spec |
-| Function behavior matches spec | Revert to contract-compliant version |
-| Both sides honor interfaces | Synthesis is valid |
-
-<reflection>
-After EVERY conflict resolution:
-- Type signatures match contract?
-- Function behavior matches spec?
-- Both sides honor interfaces?
-
-Violation = fix before `git merge --continue`
-</reflection>
-
-### Phase 4: Final Verification
-
-After all worktrees merged:
-
-1. **Full test suite** - All tests must pass
-2. **auditing-green-mirage** - Invoke on all modified test files
-3. **Code review** - Invoke `code-reviewer` against implementation plan, verify all contracts honored
-4. **Interface contract check** - For each contract:
-   - Both sides of interface exist
-   - Type signatures match
-   - Behavior matches specification
-
-### Phase 5: Cleanup
-
-```bash
-# Delete worktrees
-git worktree remove [worktree-path] --force
-
-# If worktree has uncommitted changes (shouldn't happen)
-rm -rf [worktree-path]
-git worktree prune
-
-# Delete branches if no longer needed
-git branch -d [worktree-branch]
-```
-
-**Report template:**
-```
-Worktree merge complete
-
-Merged worktrees:
-- setup-worktree → deleted
-- api-worktree → deleted
-- ui-worktree → deleted
-
-Final branch: [base-branch]
-All tests passing: yes
-All interface contracts verified: yes
-```
+Dispatch: `/merge-worktree-verify`
 
 ## Conflict Synthesis Patterns
 
@@ -248,6 +164,10 @@ git reset --hard [pre-merge-commit-sha]
 - [ ] Ran code review on final result?
 - [ ] Deleted all worktrees after success?
 - [ ] All tests passing?
+
+<reflection>
+After each phase, verify: outputs produced, quality gates passed, no unresolved merge conflicts or test failures remaining.
+</reflection>
 
 ## Success Criteria
 

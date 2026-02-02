@@ -77,110 +77,17 @@ Before creating encyclopedia, understand what already exists:
 4. Test configuration and commands
 5. Build/run commands
 
-### Phase 2: Glossary Construction
+### Phases 2-5: Build Content
 
-Identify project-specific terms that:
-- Appear frequently in code/docs
-- Have meanings specific to this project
-- Would confuse a new contributor
+Dispatch subagent with the `encyclopedia-build` command.
 
-**Format:**
-```markdown
-## Glossary
+Subagent builds: Glossary (Phase 2), Architecture Skeleton (Phase 3), Decision Log (Phase 4), Entry Points & Testing (Phase 5).
 
-| Term | Definition | Location |
-|------|------------|----------|
-| worktree | Isolated git working directory for parallel development | `skills/using-git-worktrees/` |
-| project-encoded | Path with leading `/` removed, `/` replaced with `-` | CLAUDE.md |
-```
+### Phase 6: Validate & Write
 
-<RULE>
-Only include terms that aren't obvious from general programming knowledge.
-"API" doesn't need definition. "WorkPacket" in this codebase does.
-</RULE>
+Dispatch subagent with the `encyclopedia-validate` command.
 
-### Phase 3: Architecture Skeleton
-
-Create minimal mermaid diagram showing:
-- 3-5 key components (not every file)
-- Primary data flows
-- External boundaries (APIs, databases, services)
-
-```markdown
-## Architecture
-
-```mermaid
-graph TD
-    CLI[CLI Entry] --> Core[Core Engine]
-    Core --> Storage[(Storage Layer)]
-    Core --> External[External APIs]
-```
-
-**Key boundaries:**
-- CLI handles user interaction only
-- Core contains all business logic
-- Storage is abstracted behind interfaces
-```
-
-<FORBIDDEN>
-- Diagrams with more than 7 nodes (too detailed)
-- Including internal implementation structure
-- Showing every file or class
-</FORBIDDEN>
-
-### Phase 4: Decision Log
-
-Document WHY decisions were made, not just WHAT exists.
-
-```markdown
-## Decisions
-
-| Decision | Alternatives Considered | Rationale | Date |
-|----------|------------------------|-----------|------|
-| SQLite over PostgreSQL | Postgres, MySQL | Single-file deployment, no server | 2024-01 |
-| Monorepo structure | Multi-repo | Shared tooling, atomic commits | 2024-02 |
-```
-
-<RULE>
-Decisions are stable. Past choices don't change. This section ages well.
-Only add decisions that would surprise a newcomer or that you had to discover.
-</RULE>
-
-### Phase 5: Entry Points & Testing
-
-```markdown
-## Entry Points
-
-| Entry | Path | Purpose |
-|-------|------|---------|
-| Main CLI | `src/cli.py` | Primary user interface |
-| API Server | `src/server.py` | REST API for integrations |
-| Worker | `src/worker.py` | Background job processor |
-
-## Testing
-
-- **Command**: `uv run pytest tests/`
-- **Framework**: pytest with fixtures in `conftest.py`
-- **Coverage**: `uv run pytest --cov=src tests/`
-- **Key patterns**: Factory fixtures, mock external APIs
-```
-
-### Phase 6: Assembly & Validation
-
-Assemble sections. Validate:
-
-```
-<reflection>
-- [ ] Total lines < 1000
-- [ ] No implementation details (would change frequently)
-- [ ] No duplication of README/CLAUDE.md content
-- [ ] Every glossary term is project-specific
-- [ ] Architecture diagram has <= 7 nodes
-- [ ] Decisions explain WHY, not just WHAT
-</reflection>
-```
-
-Write to: `~/.local/spellbook/docs/<project-encoded>/encyclopedia.md`
+Subagent assembles all sections, validates against quality checklist, and writes to output path.
 
 ## Refresh Workflow
 
@@ -271,3 +178,7 @@ Before completing encyclopedia work:
 - [ ] Mtime reflects current date
 
 If ANY unchecked: Revise before completing.
+
+<reflection>
+After each phase, verify: outputs produced match template sections, no duplication of existing docs, content stays within context budget, staleness metadata is current.
+</reflection>
