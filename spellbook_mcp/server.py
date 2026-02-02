@@ -41,7 +41,12 @@ import time
 from datetime import datetime, timezone
 
 # All imports use full package paths - no sys.path manipulation needed
-from spellbook_mcp.path_utils import get_project_dir
+from spellbook_mcp.path_utils import (
+    get_project_dir,
+    get_project_dir_from_context,
+    get_project_dir_for_path,
+    get_project_path_from_context,
+)
 from spellbook_mcp.session_ops import (
     split_by_char_limit,
     list_sessions_with_samples,
@@ -138,7 +143,7 @@ mcp = FastMCP("spellbook")
 
 @mcp.tool()
 @inject_recovery_context
-def find_session(name: str, limit: int = 10) -> List[Dict[str, Any]]:
+async def find_session(ctx: Context, name: str, limit: int = 10) -> List[Dict[str, Any]]:
     """
     Find sessions by name using case-insensitive substring matching.
 
@@ -152,7 +157,7 @@ def find_session(name: str, limit: int = 10) -> List[Dict[str, Any]]:
     Returns:
         List of session metadata dictionaries matching the search query
     """
-    project_dir = get_project_dir()
+    project_dir = await get_project_dir_from_context(ctx)
 
     # Return empty list if project directory doesn't exist (new project)
     if not project_dir.exists():
@@ -208,11 +213,11 @@ def split_session(session_path: str, start_line: int, char_limit: int) -> List[L
 
 @mcp.tool()
 @inject_recovery_context
-def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
+async def list_sessions(ctx: Context, limit: int = 5) -> List[Dict[str, Any]]:
     """
     List recent sessions for current project with rich metadata and content samples.
 
-    Auto-detects project directory from current working directory.
+    Auto-detects project directory from MCP client roots.
     Returns sessions sorted by last activity (most recent first).
 
     Args:
@@ -221,7 +226,7 @@ def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
     Returns:
         List of session metadata dictionaries
     """
-    project_dir = get_project_dir()
+    project_dir = await get_project_dir_from_context(ctx)
 
     # Return empty list if project directory doesn't exist (new project)
     if not project_dir.exists():
@@ -231,7 +236,8 @@ def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
 
 @mcp.tool()
 @inject_recovery_context
-def spawn_claude_session(
+async def spawn_claude_session(
+    ctx: Context,
     prompt: str,
     working_directory: str = None,
     terminal: str = None
@@ -241,7 +247,7 @@ def spawn_claude_session(
 
     Args:
         prompt: Initial prompt/command to send to Claude
-        working_directory: Directory to start in (defaults to cwd)
+        working_directory: Directory to start in (defaults to client cwd)
         terminal: Terminal program (auto-detected if not specified)
 
     Returns:
@@ -251,7 +257,7 @@ def spawn_claude_session(
         terminal = detect_terminal()
 
     if working_directory is None:
-        working_directory = os.getcwd()
+        working_directory = await get_project_path_from_context(ctx)
 
     return spawn_terminal_window(terminal, prompt, working_directory)
 
@@ -461,7 +467,7 @@ def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_session_init(ctx: Context) -> dict:
+async def spellbook_session_init(ctx: Context) -> dict:
     """
     Initialize a spellbook session.
 
@@ -474,7 +480,8 @@ def spellbook_session_init(ctx: Context) -> dict:
             "fun_mode": "yes"|"no"|"unset"  // legacy key
         }
     """
-    return session_init(_get_session_id(ctx))
+    project_path = await get_project_path_from_context(ctx)
+    return session_init(_get_session_id(ctx), project_path=project_path)
 
 
 @mcp.tool()
@@ -544,7 +551,7 @@ def _get_tool_names() -> List[str]:
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_check_compaction() -> dict:
+async def spellbook_check_compaction(ctx: Context) -> dict:
     """
     Check for recent compaction events in the current session.
 
@@ -558,8 +565,7 @@ def spellbook_check_compaction() -> dict:
             "session_file": str | None
         }
     """
-    import os
-    project_path = os.getcwd()
+    project_path = await get_project_path_from_context(ctx)
 
     # Check for new compaction events
     event = check_for_compaction(project_path)
@@ -576,7 +582,7 @@ def spellbook_check_compaction() -> dict:
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_context_ping(ctx: Context) -> str:
+async def spellbook_context_ping(ctx: Context) -> str:
     """
     Ping tool that checks for pending compaction recovery context.
 
@@ -590,8 +596,7 @@ def spellbook_context_ping(ctx: Context) -> str:
     Returns:
         String with <system-reminder> if recovery needed, otherwise simple ack
     """
-    import os
-    project_path = os.getcwd()
+    project_path = await get_project_path_from_context(ctx)
 
     # First, check for any new compaction events
     check_for_compaction(project_path)
@@ -1655,7 +1660,8 @@ def analyze_skill_usage(
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_analytics_summary(
+async def spellbook_analytics_summary(
+    ctx: Context,
     project_path: str = None,
     days: int = 30,
     skill: str = None,
@@ -1679,13 +1685,15 @@ def spellbook_analytics_summary(
             "period_days": int
         }
     """
-    import os
+    from spellbook_mcp.path_utils import encode_cwd
+
     project_encoded = None
     if project_path:
-        project_encoded = project_path.replace("/", "-").lstrip("-")
-    elif project_path is None:
-        # Use current directory
-        project_encoded = os.getcwd().replace("/", "-").lstrip("-")
+        project_encoded = encode_cwd(project_path)
+    else:
+        # Use client's working directory from MCP roots
+        client_path = await get_project_path_from_context(ctx)
+        project_encoded = encode_cwd(client_path)
 
     return do_get_analytics_summary(
         project_encoded=project_encoded,

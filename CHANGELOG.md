@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.10] - 2026-02-02
+
+### Fixed
+- **Session counts shared between projects** - MCP tools now use the client's working directory from MCP roots instead of the server's `os.getcwd()`. This fixes sessions appearing shared across all projects because the MCP server process has a different cwd than Claude Code.
+  - Added `get_project_path_from_context()` and `get_project_dir_from_context()` async functions to extract project path from MCP roots
+  - Converted `find_session`, `list_sessions`, `spawn_claude_session`, `spellbook_check_compaction`, `spellbook_context_ping`, `spellbook_session_init`, and `spellbook_analytics_summary` to async
+  - Updated `inject_recovery_context` decorator to support async functions
+  - Falls back to `os.getcwd()` when roots are unavailable for backward compatibility
+
 ## [0.9.9] - 2026-02-02
 
 ### Changed

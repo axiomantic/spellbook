@@ -2,6 +2,11 @@
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
+from urllib.parse import urlparse
+
+if TYPE_CHECKING:
+    from fastmcp import Context
 
 
 def encode_cwd(cwd: str) -> str:
@@ -43,6 +48,9 @@ def get_project_dir() -> Path:
     """
     Get session storage directory for current project.
 
+    DEPRECATED: Use get_project_dir_from_context() for MCP tools to get
+    the correct client working directory instead of the server's cwd.
+
     Auto-detects project directory based on current working directory
     and encodes it for storage under the spellbook config directory.
 
@@ -57,3 +65,73 @@ def get_project_dir() -> Path:
     encoded = encode_cwd(cwd)
 
     return get_spellbook_config_dir() / 'projects' / encoded
+
+
+def get_project_dir_for_path(project_path: str) -> Path:
+    """
+    Get session storage directory for a specific project path.
+
+    Args:
+        project_path: Absolute path to project directory
+
+    Returns:
+        Path to project's session directory
+    """
+    encoded = encode_cwd(project_path)
+    return get_spellbook_config_dir() / 'projects' / encoded
+
+
+async def get_project_path_from_context(ctx: "Context") -> str:
+    """
+    Extract project path from MCP context roots.
+
+    MCP clients (like Claude Code) expose their working directory via the
+    roots capability. This function retrieves the first root URI and extracts
+    the filesystem path from it.
+
+    Falls back to os.getcwd() if:
+    - Context is None
+    - No roots are available
+    - Root URI is not a file:// URI
+
+    Args:
+        ctx: FastMCP Context object
+
+    Returns:
+        Absolute filesystem path to the project directory
+    """
+    if ctx is None:
+        return os.getcwd()
+
+    try:
+        roots = await ctx.list_roots()
+        if roots and len(roots) > 0:
+            # Root URI is like file:///Users/alice/project
+            uri = str(roots[0].uri)
+            if uri.startswith('file://'):
+                # Parse the URI and extract the path
+                parsed = urlparse(uri)
+                return parsed.path
+    except Exception:
+        # Fall back to cwd if roots unavailable
+        pass
+
+    return os.getcwd()
+
+
+async def get_project_dir_from_context(ctx: "Context") -> Path:
+    """
+    Get session storage directory using MCP context roots.
+
+    This is the preferred method for MCP tools to determine the project
+    directory, as it uses the client's actual working directory rather
+    than the MCP server's cwd.
+
+    Args:
+        ctx: FastMCP Context object
+
+    Returns:
+        Path to project's session directory
+    """
+    project_path = await get_project_path_from_context(ctx)
+    return get_project_dir_for_path(project_path)

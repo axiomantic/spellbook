@@ -265,7 +265,8 @@ def random_line(file_path: Path) -> str:
 
 def session_init(
     session_id: Optional[str] = None,
-    continuation_message: Optional[str] = None
+    continuation_message: Optional[str] = None,
+    project_path: Optional[str] = None
 ) -> dict:
     """Initialize a spellbook session with optional continuation detection.
 
@@ -286,6 +287,7 @@ def session_init(
                     If None, uses default session for backward compatibility.
         continuation_message: User's first message for resume detection (optional).
                             Pass the raw first message to enable continuation detection.
+        project_path: Project path for resume detection. If None, falls back to os.getcwd().
 
     Returns:
         Dict with:
@@ -369,16 +371,20 @@ def session_init(
             }
 
     # Add resume fields
-    result.update(_get_resume_context(continuation_message))
+    result.update(_get_resume_context(continuation_message, project_path))
 
     return result
 
 
-def _get_resume_context(continuation_message: Optional[str]) -> dict:
+def _get_resume_context(
+    continuation_message: Optional[str],
+    project_path: Optional[str] = None
+) -> dict:
     """Get resume context based on continuation message.
 
     Args:
         continuation_message: User's first message (optional)
+        project_path: Project path (defaults to os.getcwd() if not provided)
 
     Returns:
         Dict with resume_available and optional resume_* fields
@@ -389,8 +395,9 @@ def _get_resume_context(continuation_message: Optional[str]) -> dict:
         get_resume_fields,
     )
 
-    # Get project path
-    project_path = os.getcwd()
+    # Get project path - use provided path or fall back to cwd
+    if project_path is None:
+        project_path = os.getcwd()
 
     # Get database path
     try:
