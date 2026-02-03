@@ -35,7 +35,7 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (43 total)](#skills-43-total)
+  - [Skills (45 total)](#skills-45-total)
   - [Commands (68 total)](#commands-68-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
@@ -81,17 +81,17 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (43 total)
+### Skills (45 total)
 
 Reusable workflows for structured development:
 
 | Category | Skills |
 |----------|--------|
 | **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [using-git-worktrees]†, [finishing-a-development-branch]† |
-| **Code Quality** | [enforcing-code-quality], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
+| **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [nim-pr-guide] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
@@ -120,7 +120,7 @@ Reusable workflows for structured development:
 [async-await-patterns]: https://axiomantic.github.io/spellbook/latest/skills/async-await-patterns/
 [using-lsp-tools]: https://axiomantic.github.io/spellbook/latest/skills/using-lsp-tools/
 [managing-artifacts]: https://axiomantic.github.io/spellbook/latest/skills/managing-artifacts/
-[nim-pr-guide]: https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/
+[code-review]: https://axiomantic.github.io/spellbook/latest/skills/code-review/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
 [instruction-engineering]: https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/
