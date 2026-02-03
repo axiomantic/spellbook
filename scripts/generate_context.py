@@ -34,8 +34,15 @@ def get_spellbook_config_dir() -> Path:
 
 # Direct implementation of skill discovery (no dependency on skill_ops)
 def find_skills(skill_dirs: List[Path]) -> List[Dict[str, str]]:
-    """Find all skills in the given directories."""
+    """Find all skills in the given directories.
+    
+    Deduplicates by skill name - first occurrence wins.
+    Handles YAML block scalar descriptions (| and >).
+    """
+    import re
     skills = []
+    seen_names = set()
+    
     for skill_dir in skill_dirs:
         if not skill_dir.exists():
             continue
@@ -49,13 +56,46 @@ def find_skills(skill_dirs: List[Path]) -> List[Dict[str, str]]:
                     if content.startswith("---"):
                         parts = content.split("---", 2)
                         if len(parts) >= 3:
-                            import re
                             frontmatter = parts[1]
                             name_match = re.search(r'name:\s*(.+)', frontmatter)
-                            desc_match = re.search(r'description:\s*(.+)', frontmatter)
                             if name_match:
                                 name = name_match.group(1).strip().strip('"\'')
-                                desc = desc_match.group(1).strip().strip('"\'') if desc_match else "No description"
+                                
+                                # Skip if we've already seen this skill name
+                                if name in seen_names:
+                                    continue
+                                seen_names.add(name)
+                                
+                                # Skip deprecated skills
+                                if name == "receiving-code-review":
+                                    continue
+                                
+                                # Parse description, handling YAML block scalars
+                                desc = "No description"
+                                desc_match = re.search(r'description:\s*([|>])?(.+)?', frontmatter)
+                                if desc_match:
+                                    block_indicator = desc_match.group(1)
+                                    inline_value = desc_match.group(2)
+                                    
+                                    if block_indicator:
+                                        # YAML block scalar (| or >) - extract indented lines
+                                        desc_start = desc_match.end()
+                                        remaining = frontmatter[desc_start:]
+                                        lines = remaining.split('\n')
+                                        desc_lines = []
+                                        for line in lines:
+                                            # Stop at next key (non-indented, non-empty line with colon)
+                                            if line and not line.startswith(' ') and ':' in line:
+                                                break
+                                            # Collect indented content
+                                            if line.startswith('  ') or line.startswith('\t'):
+                                                desc_lines.append(line.strip())
+                                            elif line.strip() == '':
+                                                continue  # Skip blank lines
+                                        desc = ' '.join(desc_lines) if desc_lines else "No description"
+                                    elif inline_value:
+                                        desc = inline_value.strip().strip('"\'')
+                                
                                 skills.append({"name": name, "description": desc})
     return skills
 

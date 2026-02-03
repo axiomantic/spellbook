@@ -23,18 +23,52 @@ CONTEXT_FILES = [
 ]
 
 
+def get_template_content() -> str:
+    """Extract the template content from CLAUDE.spellbook.md, excluding the skill registry.
+    
+    The skill registry starts at '# Spellbook Skill Registry' and is regenerated each time.
+    """
+    if not CLAUDE_MD.exists():
+        return ""
+    
+    content = CLAUDE_MD.read_text(encoding="utf-8")
+    
+    # Find and strip the skill registry section (it gets regenerated)
+    marker = "# Spellbook Skill Registry"
+    if marker in content:
+        idx = content.index(marker)
+        # Also strip the preceding '---' separator if present
+        content = content[:idx].rstrip()
+        if content.endswith("---"):
+            content = content[:-3].rstrip()
+    
+    return content
+
+
 def generate_context(output_path: Path) -> str:
     """Generate context content using generate_context.py."""
-    cmd = [
-        sys.executable,
-        str(GENERATE_SCRIPT),
-        "--include", str(CLAUDE_MD),
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"Error generating context: {result.stderr}", file=sys.stderr)
-        sys.exit(1)
-    return result.stdout
+    # Get template content without the old skill registry
+    template_content = get_template_content()
+    
+    # Write to temp file for include
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8') as f:
+        f.write(template_content)
+        temp_path = f.name
+    
+    try:
+        cmd = [
+            sys.executable,
+            str(GENERATE_SCRIPT),
+            "--include", temp_path,
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Error generating context: {result.stderr}", file=sys.stderr)
+            sys.exit(1)
+        return result.stdout
+    finally:
+        Path(temp_path).unlink(missing_ok=True)
 
 
 def main():

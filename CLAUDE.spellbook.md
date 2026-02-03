@@ -487,92 +487,48 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 ## Available Skills
 
 - **advanced-code-review**: Multi-phase code review with verification. For reviewing others' code with historical context tracking.
-- **advanced-code-review**: Multi-phase code review with verification. For reviewing others' code with historical context tracking.
-- **analyzing-domains**: |
-- **analyzing-domains**: |
-- **analyzing-skill-usage**: |
-- **analyzing-skill-usage**: |
-- **assembling-context**: |
-- **assembling-context**: |
-- **async-await-patterns**: Use when writing JavaScript or TypeScript code with asynchronous operations
+- **analyzing-domains**: Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when implementing-features Phase 1.2 detects unfamiliar domain.
+- **analyzing-skill-usage**: Use when evaluating skill performance, A/B testing skill versions, or identifying weak skills. Analyzes session transcripts to extract skill invocation patterns, completion rates, correction rates, and efficiency metrics.
+- **assembling-context**: Use when preparing context for subagents or managing token budgets. Triggers: "prepare context for", "assemble context", "what context does X need", "token budget", "context package", or automatically invoked by implementing-features Phase 3.5 (work packets) and Phase 4.2 (parallel subagents).
 - **async-await-patterns**: Use when writing JavaScript or TypeScript code with asynchronous operations
 - **auditing-green-mirage**: Use when reviewing test suites, after test runs pass, or when user asks about test quality
-- **auditing-green-mirage**: Use when reviewing test suites, after test runs pass, or when user asks about test quality
-- **autonomous-roundtable**: |
-- **autonomous-roundtable**: |
-- **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
+- **autonomous-roundtable**: Use when user requests project-level autonomous development, says "forge", or provides a project description for autonomous implementation. Meta-orchestrator for the Forged system.
 - **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
 - **code-review**: Use when reviewing code (self-review, processing feedback, reviewing others, or auditing). Modes: --self (default), --feedback, --give <target>, --audit
-- **code-review**: Use when reviewing code (self-review, processing feedback, reviewing others, or auditing). Modes: --self (default), --feedback, --give <target>, --audit
 - **debugging**: Use when debugging bugs, test failures, or unexpected behavior
-- **debugging**: Use when debugging bugs, test failures, or unexpected behavior
-- **dehallucination**: |
-- **dehallucination**: |
-- **designing-workflows**: |
-- **designing-workflows**: |
-- **devils-advocate**: Use before design phase to challenge assumptions and surface risks
+- **dehallucination**: Use when roundtable feedback indicates hallucination concerns, or as a quality gate before stage transitions in the Forged workflow. Provides confidence assessment for claims, citation requirements, hallucination detection patterns, and recovery protocols.
+- **designing-workflows**: Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when implementing-features Phase 2.1 detects workflow patterns.
 - **devils-advocate**: Use before design phase to challenge assumptions and surface risks
 - **dispatching-parallel-agents**: Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks
-- **dispatching-parallel-agents**: Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks
-- **distilling-prs**: Use when reviewing large PRs to surface changes requiring human attention
 - **distilling-prs**: Use when reviewing large PRs to surface changes requiring human attention
 - **emotional-stakes**: Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
-- **emotional-stakes**: Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
-- **enforcing-code-quality**: |
-- **enforcing-code-quality**: |
+- **enforcing-code-quality**: Use when writing or modifying code. Enforces production-quality standards, prohibits common shortcuts, and ensures pre-existing issues are addressed. Invoked automatically by implementing-features and test-driven-development.
 - **executing-plans**: Use when you have a written implementation plan to execute
-- **executing-plans**: Use when you have a written implementation plan to execute
-- **fact-checking**: >
-- **fact-checking**: >
-- **finding-dead-code**: >
-- **finding-dead-code**: >
-- **finishing-a-development-branch**: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
+- **fact-checking**: Use when reviewing code changes, auditing documentation accuracy, validating technical claims before merge, or user says "verify claims", "factcheck", "audit documentation", "validate comments", "are these claims accurate".
+- **finding-dead-code**: Use when reviewing code changes, auditing new features, cleaning up PRs, or user says "find dead code", "find unused code", "check for unnecessary additions", "what can I remove".
 - **finishing-a-development-branch**: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 - **fixing-tests**: Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests
-- **fixing-tests**: Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests
 - **fun-mode**: Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
-- **fun-mode**: Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
-- **gathering-requirements**: |
-- **gathering-requirements**: |
-- **implementing-features**: |
-- **implementing-features**: |
-- **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts
+- **gathering-requirements**: Use when starting the DISCOVER stage of the Forged workflow, or when feature requirements are unclear. Uses tarot archetype perspectives (Queen for user needs, Emperor for constraints, Hermit for security, Priestess for scope) to ensure comprehensive requirements capture.
+- **implementing-features**: Use when building, creating, or adding functionality. Triggers: "implement X", "build Y", "add feature Z", "create X", "start a new project", "Would be great to...", "I want to...", "We need...", "Can we add...", "Let's add...". Also for: new projects, repos, templates, greenfield development. NOT for: bug fixes, pure research, or questions about existing code.
 - **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts
 - **managing-artifacts**: Use when generating documents, reports, plans, audits, or when asked where to save files. Triggers on "save report", "write plan", "where should I put", "project-encoded path
-- **managing-artifacts**: Use when generating documents, reports, plans, audits, or when asked where to save files. Triggers on "save report", "write plan", "where should I put", "project-encoded path
 - **merging-worktrees**: Use when merging parallel worktrees back together after parallel implementation
-- **merging-worktrees**: Use when merging parallel worktrees back together after parallel implementation
-- **optimizing-instructions**: |
-- **optimizing-instructions**: |
+- **optimizing-instructions**: Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability. Triggers: "optimize instructions", "reduce tokens", "compress skill", "make this shorter", "too verbose".
 - **project-encyclopedia**: <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.
-- **project-encyclopedia**: <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.
-- **receiving-code-review**: Use when you have received code review feedback and need to process it. [DEPRECATED] Routes to code-review --feedback
-- **receiving-code-review**: Use when you have received code review feedback and need to process it. [DEPRECATED] Routes to code-review --feedback
-- **reflexion**: |
-- **reflexion**: |
-- **requesting-code-review**: Use when completing tasks, implementing major features, or before merging
+- **reflexion**: Use when roundtable returns ITERATE verdict in the Forged workflow. Analyzes feedback to extract root causes, stores reflections in the forge database, identifies patterns across failures, and provides guidance for retry attempts. Prevents repeated mistakes across iterations.
 - **requesting-code-review**: Use when completing tasks, implementing major features, or before merging
 - **resolving-merge-conflicts**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
-- **resolving-merge-conflicts**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
-- **reviewing-design-docs**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
 - **reviewing-design-docs**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
 - **reviewing-impl-plans**: Use when reviewing implementation plans before execution, especially plans derived from design documents
-- **reviewing-impl-plans**: Use when reviewing implementation plans before execution, especially plans derived from design documents
-- **smart-reading**: Use when reading files or command output of unknown size to avoid blind truncation and context loss
 - **smart-reading**: Use when reading files or command output of unknown size to avoid blind truncation and context loss
 - **tarot-mode**: Use when session returns mode.type='tarot' - tarot archetypes collaborate via roundtable dialogue with instruction-engineering embedded
-- **tarot-mode**: Use when session returns mode.type='tarot' - tarot archetypes collaborate via roundtable dialogue with instruction-engineering embedded
-- **test-driven-development**: Use when implementing any feature or bugfix, before writing implementation code
 - **test-driven-development**: Use when implementing any feature or bugfix, before writing implementation code
 - **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans
-- **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans
-- **using-lsp-tools**: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
 - **using-lsp-tools**: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
 - **using-skills**: Use when starting any conversation
-- **using-skills**: Use when starting any conversation
+- **writing-commands**: Use when creating new commands, editing existing commands, or reviewing command quality. Triggers on "write command", "new command", "review command", "fix command
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
-- **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
-- **writing-skills**: Use when creating new skills, editing existing skills, or verifying skills work before deployment
 - **writing-skills**: Use when creating new skills, editing existing skills, or verifying skills work before deployment
 
 ## CRITICAL: Skill Activation Protocol
