@@ -69,6 +69,8 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/simplify-transform](simplify-transform.md) | Apply verified simplifications with user approval. Part of simplify-* family. | spellbook |
 | [/simplify-verify](simplify-verify.md) | Verify simplification candidates pass all gates. Part of simplify-* family. | spellbook |
 | [/systematic-debugging](systematic-debugging.md) | 4-phase root cause debugging methodology. Use when encountering bugs, test failu... | spellbook |
+| [/test-bar](test-bar.md) | Generate a floating QA test overlay for the current branch's UI changes. Use whe... | spellbook |
+| [/test-bar-remove](test-bar-remove.md) | Remove test bar artifacts injected by /test-bar. Use when user says /test-bar-re... | spellbook |
 | [/verify](verify.md) | Run verification commands and confirm output before making success claims. Use b... | spellbook |
 | [/write-plan](write-plan.md) | Create detailed implementation plan with bite-sized tasks. Use when starting any... | [superpowers](https://github.com/obra/superpowers) |
 | [/write-skill-test](write-skill-test.md) | RED-GREEN-REFACTOR implementation for writing-skills: Baseline testing, minimal ... | spellbook |

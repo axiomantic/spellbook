@@ -35,8 +35,8 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (42 total)](#skills-42-total)
-  - [Commands (66 total)](#commands-66-total)
+  - [Skills (43 total)](#skills-43-total)
+  - [Commands (68 total)](#commands-68-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -81,7 +81,7 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (42 total)
+### Skills (43 total)
 
 Reusable workflows for structured development:
 
@@ -92,7 +92,7 @@ Reusable workflows for structured development:
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [nim-pr-guide] |
-| **Meta** | [using-skills]†, [writing-skills]†, [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
@@ -129,6 +129,7 @@ Reusable workflows for structured development:
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
 [project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
 [analyzing-skill-usage]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-skill-usage/
+[writing-commands]: https://axiomantic.github.io/spellbook/latest/skills/writing-commands/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
@@ -142,7 +143,7 @@ Reusable workflows for structured development:
 [assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 
-### Commands (66 total)
+### Commands (68 total)
 
 | Command | Description |
 |---------|-------------|
@@ -212,6 +213,8 @@ Reusable workflows for structured development:
 | [/code-review-tarot] | Roundtable-style collaborative review |
 | [/write-skill-test] | Skill testing with pressure scenarios |
 | [/reflexion-analyze] | Full reflexion analysis workflow |
+| [/test-bar] | Generate floating QA test overlay for visual testing |
+| [/test-bar-remove] | Clean removal of test-bar overlay |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -281,6 +284,8 @@ Reusable workflows for structured development:
 [/code-review-tarot]: https://axiomantic.github.io/spellbook/latest/commands/code-review-tarot/
 [/write-skill-test]: https://axiomantic.github.io/spellbook/latest/commands/write-skill-test/
 [/reflexion-analyze]: https://axiomantic.github.io/spellbook/latest/commands/reflexion-analyze/
+[/test-bar]: https://axiomantic.github.io/spellbook/latest/commands/test-bar/
+[/test-bar-remove]: https://axiomantic.github.io/spellbook/latest/commands/test-bar-remove/
 
 ### Agents (7 total)
 

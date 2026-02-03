@@ -109,6 +109,7 @@ nav:
     - Meta Skills:
       - skills/using-skills.md
       - skills/writing-skills.md
+      - skills/writing-commands.md
       - skills/instruction-engineering.md
       - skills/optimizing-instructions.md
       - skills/emotional-stakes.md
@@ -204,6 +205,9 @@ nav:
       - commands/code-review-tarot.md
     - Skill Commands:
       - commands/write-skill-test.md
+    - Test Bar Commands:
+      - commands/test-bar.md
+      - commands/test-bar-remove.md
     - Session Commands:
       - commands/mode.md
   - Agents:
