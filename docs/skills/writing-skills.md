@@ -149,45 +149,31 @@ Edit skill without testing? Same violation.
 
 ## RED-GREEN-REFACTOR
 
-**RED - Write Failing Test (Baseline):**
+The full RED-GREEN-REFACTOR implementation (pressure scenarios, baseline testing, skill writing, loophole closure, rationalization tables, red flags, and creation checklist) is in the `write-skill-test` command. Dispatch a subagent to execute it.
 
-Run pressure scenario with subagent WITHOUT the skill. Document:
-- What choices did they make?
-- What rationalizations did they use (verbatim quotes)?
-- Which pressures triggered violations?
+**Phase summary:**
 
-This is "watch the test fail" - you must see what agents naturally do.
+1. **RED** - Run pressure scenarios WITHOUT skill. Document baseline failures and rationalizations verbatim.
+2. **GREEN** - Write minimal skill addressing specific baseline failures. Verify compliance with same scenarios.
+3. **REFACTOR** - Close new loopholes. Build rationalization table. Re-test until bulletproof.
 
-**GREEN - Write Minimal Skill:**
+**Dispatch template:**
+```
+Task(
+  description: "RED-GREEN-REFACTOR skill testing",
+  prompt: """
+First, invoke the write-skill-test command using the Skill tool.
+Then follow its complete workflow.
 
-Write skill addressing those specific rationalizations. Don't add extra content for hypothetical cases. Run same scenarios WITH skill. Agent should now comply.
+## Context
 
-**REFACTOR - Close Loopholes:**
-
-Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
-
-## Bulletproofing Discipline Skills
-
-Build rationalization table from testing:
-
-| Excuse | Reality |
-|--------|---------|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "Skill is obviously clear" | Clear to you ≠ clear to other agents. Test it. |
-| "It's just a reference" | References can have gaps. Test retrieval. |
-| "Testing is overkill" | Untested skills have issues. Always. |
-| "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
-| "No time to test" | Deploying untested wastes more time fixing later. |
-
-**Red flags list (agents self-check):**
-- Code before test
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
+Skill purpose: [what the skill should do]
+Skill type: [discipline/technique/pattern/reference]
+Target location: skills/<name>/SKILL.md
+Pressure scenarios to test: [describe scenarios]
+"""
+)
+```
 
 ## Token Efficiency
 
@@ -215,9 +201,9 @@ Build rationalization table from testing:
 **One excellent example beats many mediocre ones.**
 
 Choose most relevant language:
-- Testing techniques → TypeScript/JavaScript
-- System debugging → Shell/Python
-- Data processing → Python
+- Testing techniques: TypeScript/JavaScript
+- System debugging: Shell/Python
+- Data processing: Python
 
 **Good example:** Complete, runnable, well-commented explaining WHY, from real scenario, ready to adapt.
 
@@ -230,7 +216,7 @@ Choose most relevant language:
 - Process loops where you might stop too early
 - "When to use A vs B" decisions
 
-**Never use for:** Reference material (→ tables), Code examples (→ markdown), Linear instructions (→ numbered lists).
+**Never use for:** Reference material (use tables), Code examples (use markdown), Linear instructions (use numbered lists).
 
 ## Anti-Patterns
 
@@ -266,44 +252,48 @@ How future Claude finds your skill:
 - Narrative storytelling about specific sessions
 </FORBIDDEN>
 
-## Skill Creation Checklist
+## Multi-Phase Skill Architecture
 
-**Use TodoWrite to create todos for EACH item.**
+Skills with multiple phases face a structural decision: what belongs in the orchestrator SKILL.md versus phase commands invoked by subagents?
 
-**RED Phase:**
-- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
-- [ ] Run scenarios WITHOUT skill - document baseline verbatim
-- [ ] Identify patterns in rationalizations/failures
+**When this applies:**
 
-**GREEN Phase:**
-- [ ] Name uses only letters, numbers, hyphens
-- [ ] YAML frontmatter with name and description (<1024 chars)
-- [ ] Description starts "Use when..." - triggers only, NO workflow
-- [ ] Description in third person
-- [ ] Keywords throughout (errors, symptoms, tools)
-- [ ] Clear overview with core principle
-- [ ] Address specific baseline failures from RED
-- [ ] One excellent example (not multi-language)
-- [ ] Run scenarios WITH skill - verify compliance
+| Phase Count | Requirement |
+|-------------|-------------|
+| 1 phase | Exempt. Self-contained SKILL.md is fine. |
+| 2 phases | SHOULD separate into orchestrator + commands. |
+| 3+ phases | MUST separate. Orchestrator dispatches, commands implement. |
 
-**REFACTOR Phase:**
-- [ ] Identify NEW rationalizations from testing
-- [ ] Add explicit counters (for discipline skills)
-- [ ] Build rationalization table from all test iterations
-- [ ] Create red flags list
-- [ ] Re-test until bulletproof
+**The Core Rule:** The orchestrator dispatches subagents (Task tool). Subagents invoke phase commands (Skill tool). The orchestrator NEVER invokes phase commands directly into its own context.
 
-**Quality Checks:**
-- [ ] Quick reference table for scanning
-- [ ] Common mistakes section
-- [ ] Small flowchart only if decision non-obvious
-- [ ] No narrative storytelling
-- [ ] Supporting files only for tools or heavy reference
+**Content Split:**
 
-**Deploy:**
-- [ ] Commit skill to git
-- [ ] Push to fork if configured
-- [ ] Consider PR if broadly useful
+| Orchestrator SKILL.md | Phase Commands |
+|----------------------|----------------|
+| Phase sequence and transitions | All phase implementation logic |
+| Dispatch templates per phase | Scoring formulas and rubrics |
+| Shared data structures (referenced by 2+ phases) | Discovery wizards and prompts |
+| Quality gate thresholds | Detailed checklists and protocols |
+| Anti-patterns / FORBIDDEN section | Review and verification steps |
+
+**Data structure placement:** If referenced by 2+ phases, define in orchestrator. If referenced by 1 phase only, define in that phase's command.
+
+**Soft target:** ~300 lines for orchestrator SKILL.md. The hard rule is about content types: orchestrators contain coordination logic, never implementation logic.
+
+**Exceptions:**
+- Config/setup phases requiring direct user interaction MAY run in orchestrator context
+- Error recovery MAY load phase context temporarily to diagnose failures
+
+**Canonical example:** implementing-features uses 5 commands across 6+ phases. The orchestrator defines phase sequence, dispatch templates, and shared data structures. Each phase command (discover, design, execute-plan, etc.) contains its own implementation logic.
+
+**Anti-Patterns:**
+
+| Anti-Pattern | Why It Fails |
+|-------------|-------------|
+| Orchestrator invokes Skill tool for a phase command | Loads phase logic into orchestrator context, defeating separation |
+| Orchestrator embeds phase logic directly | Monolithic file; orchestrator context bloats with implementation detail |
+| Subagent prompt duplicates command instructions | Drift between prompt and command; maintenance burden doubles |
+| Monolithic SKILL.md exceeding 500 lines with phase implementation | Signal that phase logic should be extracted to commands |
 
 ## Self-Check
 
@@ -314,6 +304,7 @@ Before completing:
 - [ ] YAML frontmatter has `name` and `description`
 - [ ] Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
 - [ ] Token budget met: <500 words core instructions
+- [ ] Multi-phase architecture: 3+ phase skills separate orchestrator from phase commands
 - [ ] No workflow summary in description
 - [ ] Rationalization table built (for discipline skills)
 

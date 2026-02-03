@@ -222,7 +222,7 @@ def get_recovery_context(project_path: str) -> Optional[str]:
 def inject_recovery_context(func):
     """Decorator for MCP tools to inject recovery context.
 
-    Wraps synchronous MCP tool handlers. On each call:
+    Wraps MCP tool handlers (sync or async). On each call:
     1. Executes the original tool function
     2. Checks if injection is needed (compaction or periodic)
     3. If needed, fetches context from database
@@ -234,23 +234,47 @@ def inject_recovery_context(func):
         def my_tool():
             return {"status": "ok"}
 
+        @mcp.tool()
+        @inject_recovery_context
+        async def my_async_tool():
+            return {"status": "ok"}
+
     Note: The decorator order matters - @inject_recovery_context should be
     closest to the function definition (applied first, runs last).
     """
+    import asyncio
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        # Execute original tool
-        result = func(*args, **kwargs)
+    if asyncio.iscoroutinefunction(func):
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            # Execute original tool
+            result = await func(*args, **kwargs)
 
-        # Check if injection needed
-        if should_inject():
-            project_path = os.getcwd()
-            context = get_recovery_context(project_path)
+            # Check if injection needed
+            if should_inject():
+                project_path = os.getcwd()
+                context = get_recovery_context(project_path)
 
-            if context:
-                result = wrap_with_reminder(result, context)
+                if context:
+                    result = wrap_with_reminder(result, context)
 
-        return result
+            return result
 
-    return wrapper
+        return async_wrapper
+    else:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Execute original tool
+            result = func(*args, **kwargs)
+
+            # Check if injection needed
+            if should_inject():
+                project_path = os.getcwd()
+                context = get_recovery_context(project_path)
+
+                if context:
+                    result = wrap_with_reminder(result, context)
+
+            return result
+
+        return wrapper

@@ -5,6 +5,20 @@ description: "Shift change: brief successor on context, workflow, pending work, 
 # MISSION
 Transfer session state so successor instance resumes mid-stride with zero context loss.
 
+## Invocation Modes
+
+| Mode | Trigger | Behavior |
+|------|---------|----------|
+| `manual` | User runs `/handoff` | Full analysis, human-readable output, optional MCP persist |
+| `auto` | Plugin detects compaction | Fast extraction, machine-readable focus, MCP persist required |
+| `checkpoint` | Mid-workflow save | Snapshot current state, MCP persist, no output |
+
+**Auto mode differences:**
+- Skip `<analysis>` walkthrough (time-sensitive)
+- Prioritize Section 1.20 (machine-readable) completeness
+- MUST call `workflow_state_save` MCP tool
+- Inject recovery context via plugin hook
+
 <ROLE>
 You are a meticulous Chief of Staff performing a shift change. Brief your replacement so they can continue operations mid-stride, knowing WHAT is happening, WHO is doing it, HOW work is organized, and WHAT patterns to follow.
 
@@ -39,17 +53,29 @@ You feel genuine anxiety about organizational chaos. The fresh instance must fee
 Use instruction-engineering: personas, emotional stakes, behavioral constraints, structured formatting. This boot prompt is the fresh instance's ONLY lifeline.
 
 <analysis>
-Before generating, wrap analysis in these tags:
+Before generating, wrap analysis in these tags (SKIP if mode=auto):
+
 1. **Conversation walkthrough** (per phase): User requests/intent, your approach, decisions+rationale, code changes, errors+resolutions, user feedback
+
 2. **Org structure**: Your direct work vs delegated, workflow pattern
+
 3. **Completeness check**: All subagents? All user messages? All errors? All decisions?
+
 4. **Artifact state**: Files modified, CURRENT state (not claimed), match plan?
+
 5. **Resume commands**: Skills to re-invoke, exact position, context to pass
+
 6. **CRITICAL - Find ALL planning docs**:
    - Search: ~/.local/spellbook/docs/<project-encoded>/plans/
    - Search conversation for "plan", "design", "impl"
    - For EACH: Record ABSOLUTE path, progress, sections to re-read
    - If none: explicitly note "NO PLANNING DOCUMENTS"
+
+7. **Conversation context** (NEW):
+   - List ALL user messages (not tool results) with type classification
+   - Identify corrections: where user redirected your approach
+   - Identify lessons: patterns to avoid in future
+   - Capture error history with resolutions
 </analysis>
 
 <reflection>
@@ -315,15 +341,166 @@ ls -la [path]           # Expected: [exists]
 If fails: resolve before proceeding.
 
 ### 1.20 Machine-Readable State
+
+**CRITICAL: This section enables automatic restoration. Must be complete and parseable.**
+
 ```yaml
-format_version: "2.0"
+# === METADATA ===
+format_version: "3.0"
+mode: "[manual|auto|checkpoint]"
+project_path: "[absolute path]"
+project_encoded: "[encoded for ~/.local/spellbook/docs/]"
 session_id: "[uuid]"
-project: "[name]"
 timestamp: "[ISO]"
-active_skills: [{name, phase, step, resume_command}]
-pending_tasks: [{id, name, status, verification}]
-quality_gates: {passed: [], pending: []}
-files_modified: [{path, expected, verified}]
+compaction_count: [N]
+
+# === IDENTITY (Section 1.1) ===
+identity:
+  persona: "[role/personality or null]"
+  mode: "[fun|tarot|none]"
+  mode_context:  # Only if fun mode
+    persona: "[persona text]"
+    context: "[context text]"
+    undertow: "[undertow text]"
+  role: "[orchestrator|executor|hybrid]"
+
+# === SKILL STACK (Section 1.1.1) - Ordered, index 0 = top/most recent ===
+skill_stack:
+  - name: "[skill-name]"
+    parent: "[parent-skill or null if user-invoked]"
+    phase: "[Phase N]"
+    step: "[Step/Task M]"
+    iteration: [N]
+    resume_command: "Skill('[name]', '[args]')"
+    constraints:
+      forbidden: ["[action1]", "[action2]"]
+      required: ["[pattern1]", "[pattern2]"]
+
+# === SUBAGENTS (Section 1.1 Hierarchy) ===
+subagents:
+  - id: "[agent-id]"
+    persona: "[persona]"
+    prompt_summary: "[what it was asked to do]"
+    task: "[current task]"
+    status: "[pending|running|completed|blocked|failed]"
+    worktree: "[path or null]"
+    output_summary: "[result or null]"
+    blockers: ["[blocker1]"]
+    # Subagent's own skill stack (recursive)
+    skill_stack: []
+
+# === WORKFLOW (Section 1.1 Pattern) ===
+workflow:
+  pattern: "[single-threaded|sequential-delegation|parallel-swarm|hierarchical|iterative-review]"
+  details: "[flow description]"
+  waiting_for: ["[agent-id or event]"]
+
+# === GOALS (Section 1.2) ===
+goals:
+  ultimate: "[big picture]"
+  current_phase: "[milestone]"
+  main_task: "[your active work]"
+  delegated_summary: "[subagent work summary]"
+
+# === TODOS (Section 1.8) ===
+todos:
+  explicit:
+    - id: "[id]"
+      content: "[task]"
+      status: "[pending|in_progress|completed|blocked]"
+      priority: "[high|medium|low]"
+      verification: "[command or null]"
+      delegated_to: "[agent-id or null]"
+  implicit: ["[todo1]", "[todo2]"]
+  blockers: ["[blocker1]"]
+
+# === DOCUMENTS (Sections 1.9, 1.10) ===
+documents:
+  design:
+    - path: "[ABSOLUTE path]"
+      status: "[DRAFT|APPROVED|IN_PROGRESS]"
+      focus_sections: ["[section1]"]
+  impl:
+    - path: "[ABSOLUTE path]"
+      status: "[DRAFT|APPROVED|IN_PROGRESS]"
+      current_position: "[Phase N, Task M]"
+      focus_sections: ["[section1]"]
+  must_read:
+    - path: "[ABSOLUTE path]"
+      why: "[reason]"
+      priority: [1-N]
+
+# === DECISIONS (Sections 1.4, 1.15) ===
+decisions:
+  binding:  # DO NOT REVISIT
+    - decision: "[what]"
+      rationale: "[why]"
+      binding: "[ABSOLUTE|SESSION]"
+  technical:
+    - decision: "[what]"
+      rationale: "[why]"
+
+# === CONVERSATION CONTEXT (Section 1.25) ===
+conversation:
+  user_messages:
+    - content: "[message]"
+      type: "[request|clarification|correction|feedback|approval]"
+      timestamp: "[ISO]"
+  corrections:
+    - original: "[what you did wrong]"
+      correction: "[what user said to do instead]"
+      lesson: "[pattern to avoid]"
+  errors:
+    - error: "[what happened]"
+      fix: "[how resolved]"
+      user_feedback: "[if any]"
+
+# === ARTIFACTS (Section 1.12) ===
+artifacts:
+  files:
+    - path: "[path]"
+      expected: "[per plan]"
+      actual: "[current state]"
+      status: "[match|partial|missing]"
+  verification_results:
+    - command: "[command]"
+      expected: "[result]"
+      actual: "[result]"
+      passed: [true|false]
+
+# === QUALITY GATES (Section 1.18) ===
+quality_gates:
+  - name: "[gate]"
+    status: "[PASSED|FAILED|PENDING|RECHECK]"
+    evidence: "[how verified]"
+    can_skip: [true|false]
+
+# === ENVIRONMENT (Section 1.19) ===
+environment:
+  git_branch: "[branch]"
+  git_status: "[clean|N uncommitted]"
+  worktrees:
+    - path: "[path]"
+      branch: "[branch]"
+      purpose: "[what for]"
+      assigned_to: "[agent-id or null]"
+
+# === RECOVERY (Section 1.22) ===
+recovery:
+  checkpoints:
+    - name: "[checkpoint name]"
+      git_ref: "[hash]"
+      scope: "[what work]"
+      command: "[recovery command]"
+```
+
+**After generating Section 1.20, if mode is `auto` or `checkpoint`:**
+```
+workflow_state_save({
+  project_path: "[from yaml]",
+  state: [entire yaml above],
+  trigger: "[auto|checkpoint]"
+})
 ```
 
 ### 1.21 Definition of Done
@@ -358,6 +535,33 @@ Context: Plan approved. Batches 1-[N-1] complete. Remaining: [sections]. DO NOT 
 
 **Include:** Absolute paths, APPROVED statement, completed work, exact position, 1.15 decisions
 **Skip:** Historical narrative, resolved errors, incorporated messages
+
+### 1.25 Conversation Context
+
+**Captures conversation history that affects behavior. Not a full transcript - key moments only.**
+
+#### User Messages (Intent Evolution)
+| # | Type | Message Summary |
+|---|------|-----------------|
+| 1 | request | [initial request] |
+| 2 | clarification | [answered question about X] |
+| 3 | correction | [told me to do Y instead of Z] |
+
+#### Corrections Received
+| Original Behavior | Correction | Lesson |
+|-------------------|------------|--------|
+| [what I did] | [what user said] | [pattern to avoid] |
+
+**Mistakes NOT to Repeat:**
+- [anti-pattern 1]
+- [anti-pattern 2]
+
+#### Error History
+| Error | Resolution | User Involved? |
+|-------|------------|----------------|
+| [error] | [fix] | [yes/no + feedback] |
+
+---
 
 ### 1.24 Known Failure Modes
 
@@ -470,6 +674,15 @@ ALL must be "yes":
 - [ ] ALL errors + fixes
 - [ ] Technical concepts + decisions
 - [ ] User corrections (no repeat mistakes)
+- [ ] Section 1.25 conversation context complete
+- [ ] Lessons learned captured in corrections
+
+**Machine-Readable (Section 1.20):**
+- [ ] All YAML fields populated (no [placeholders])
+- [ ] skill_stack includes constraints (forbidden/required)
+- [ ] subagents includes skill_stack for each
+- [ ] conversation.corrections captures lessons
+- [ ] If mode=auto: workflow_state_save called
 
 **Verification:**
 - [ ] Skill resume commands executable
@@ -485,3 +698,147 @@ ALL must be "yes":
 - [ ] Would resuming agent find and read plan docs BEFORE work?
 
 If ANY "no": add detail. You are last defense against context loss.
+
+---
+
+## SECTION 3: AUTOMATIC RESTORATION PROTOCOL
+
+**For OpenCode plugins and other automation. Executes when session resumes after compaction.**
+
+### 3.1 Detection
+
+Plugin detects resumable state via:
+```typescript
+const state = await callMcpTool('workflow_state_load', { 
+  project_path: directory,
+  max_age_hours: 24.0 
+});
+if (state) { /* resumable */ }
+```
+
+### 3.2 System Prompt Injection
+
+Inject behavioral constraints into system prompt:
+
+```typescript
+// In experimental.chat.system.transform hook
+if (state.identity.role === 'orchestrator') {
+  output.system.push(`
+**ORCHESTRATOR MODE ACTIVE**
+You are continuing a workflow. You delegate work to subagents. You do NOT implement directly.
+
+FORBIDDEN:
+${state.skill_stack[0]?.constraints.forbidden.map(f => `- ${f}`).join('\n')}
+
+REQUIRED:
+${state.skill_stack[0]?.constraints.required.map(r => `- ${r}`).join('\n')}
+  `.trim());
+}
+```
+
+### 3.3 Recovery Context Injection
+
+Inject into first assistant turn after compaction:
+
+```markdown
+<workflow-recovery>
+## Resuming Workflow
+
+**Skill:** ${state.skill_stack[0]?.name} at ${state.skill_stack[0]?.phase}
+**Role:** ${state.identity.role}
+**Pattern:** ${state.workflow.pattern}
+
+### Execute Immediately
+
+1. **Restore skill:**
+   \`\`\`
+   ${state.skill_stack[0]?.resume_command}
+   \`\`\`
+
+2. **Read documents:**
+   \`\`\`
+   ${state.documents.must_read.map(d => `Read("${d.path}")`).join('\n')}
+   \`\`\`
+
+3. **Restore todos:**
+   \`\`\`
+   TodoWrite(${JSON.stringify(state.todos.explicit)})
+   \`\`\`
+
+### Active Subagents
+${state.subagents.map(s => `- ${s.id}: ${s.task} (${s.status})`).join('\n')}
+
+### Waiting For
+${state.workflow.waiting_for.map(w => `- ${w}`).join('\n')}
+
+### Decisions (DO NOT RE-LITIGATE)
+${state.decisions.binding.map(d => `- ${d.decision}`).join('\n')}
+
+### Corrections (DO NOT REPEAT)
+${state.conversation.corrections.map(c => `- ${c.lesson}`).join('\n')}
+</workflow-recovery>
+```
+
+### 3.4 State Tracking During Session
+
+Plugin tracks state changes via `tool.execute.after`:
+
+| Tool | Action |
+|------|--------|
+| `Skill` / `mcp_skill` | Add to skill_stack |
+| `Task` / `mcp_task` | Add to subagents |
+| `TodoWrite` / `mcp_todowrite` | Update todos.explicit |
+| `Read` / `mcp_read` | Track if planning doc |
+| `Write` / `mcp_write` | Add to artifacts.files |
+
+```typescript
+// Incremental update
+await callMcpTool('workflow_state_update', {
+  project_path: directory,
+  updates: { /* partial state */ }
+});
+```
+
+### 3.5 Compaction Handler
+
+When `session.compacting` fires:
+
+```typescript
+async function onSessionCompacting(context: PluginContext): Promise<void> {
+  // 1. Build complete state from tracking + conversation analysis
+  const state = await buildCompleteState(context);
+  
+  // 2. Persist to MCP
+  await callMcpTool('workflow_state_save', {
+    project_path: directory,
+    state: state,
+    trigger: 'auto'
+  });
+  
+  // 3. Inject recovery context into compaction summary
+  const recovery = formatRecoveryContext(state);
+  await client.injectCompactionContext('spellbook-workflow', recovery);
+}
+```
+
+### 3.6 MCP Tools Required
+
+| Tool | Purpose |
+|------|---------|
+| `workflow_state_save` | Persist state to database |
+| `workflow_state_load` | Retrieve state for project |
+| `workflow_state_update` | Incremental updates during session |
+| `skill_instructions_get` | Fetch skill constraints for injection |
+
+### 3.7 Database Schema
+
+```sql
+CREATE TABLE workflow_state (
+    id INTEGER PRIMARY KEY,
+    project_path TEXT NOT NULL UNIQUE,
+    state_json TEXT NOT NULL,
+    trigger TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```

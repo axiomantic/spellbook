@@ -38,9 +38,15 @@ from typing import List, Dict, Any, Optional
 import os
 import json
 import time
+from datetime import datetime, timezone
 
 # All imports use full package paths - no sys.path manipulation needed
-from spellbook_mcp.path_utils import get_project_dir
+from spellbook_mcp.path_utils import (
+    get_project_dir,
+    get_project_dir_from_context,
+    get_project_dir_for_path,
+    get_project_path_from_context,
+)
 from spellbook_mcp.session_ops import (
     split_by_char_limit,
     list_sessions_with_samples,
@@ -60,6 +66,10 @@ from spellbook_mcp.config_tools import (
     session_init,
     session_mode_set,
     session_mode_get,
+    telemetry_enable as do_telemetry_enable,
+    telemetry_disable as do_telemetry_disable,
+    telemetry_status as do_telemetry_status,
+    get_spellbook_dir,
 )
 from spellbook_mcp.compaction_detector import (
     check_for_compaction,
@@ -99,7 +109,29 @@ from spellbook_mcp.pr_distill.config import load_config as load_pr_config
 from spellbook_mcp.pr_distill.fetch import parse_pr_identifier, fetch_pr as do_fetch_pr
 
 # Skill analyzer import
-from spellbook_mcp.skill_analyzer import analyze_sessions as do_analyze_skill_usage
+from spellbook_mcp.skill_analyzer import (
+    analyze_sessions as do_analyze_skill_usage,
+    get_analytics_summary as do_get_analytics_summary,
+)
+
+# A/B test imports
+from spellbook_mcp.ab_test import (
+    experiment_create as do_experiment_create,
+    experiment_start as do_experiment_start,
+    experiment_pause as do_experiment_pause,
+    experiment_complete as do_experiment_complete,
+    experiment_status as do_experiment_status,
+    experiment_list as do_experiment_list,
+    experiment_results as do_experiment_results,
+    ABTestError,
+)
+
+# Curator tools import
+from spellbook_mcp.curator_tools import (
+    init_curator_tables,
+    curator_track_prune,
+    curator_get_stats,
+)
 
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
@@ -111,7 +143,7 @@ mcp = FastMCP("spellbook")
 
 @mcp.tool()
 @inject_recovery_context
-def find_session(name: str, limit: int = 10) -> List[Dict[str, Any]]:
+async def find_session(ctx: Context, name: str, limit: int = 10) -> List[Dict[str, Any]]:
     """
     Find sessions by name using case-insensitive substring matching.
 
@@ -125,7 +157,7 @@ def find_session(name: str, limit: int = 10) -> List[Dict[str, Any]]:
     Returns:
         List of session metadata dictionaries matching the search query
     """
-    project_dir = get_project_dir()
+    project_dir = await get_project_dir_from_context(ctx)
 
     # Return empty list if project directory doesn't exist (new project)
     if not project_dir.exists():
@@ -181,11 +213,11 @@ def split_session(session_path: str, start_line: int, char_limit: int) -> List[L
 
 @mcp.tool()
 @inject_recovery_context
-def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
+async def list_sessions(ctx: Context, limit: int = 5) -> List[Dict[str, Any]]:
     """
     List recent sessions for current project with rich metadata and content samples.
 
-    Auto-detects project directory from current working directory.
+    Auto-detects project directory from MCP client roots.
     Returns sessions sorted by last activity (most recent first).
 
     Args:
@@ -194,7 +226,7 @@ def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
     Returns:
         List of session metadata dictionaries
     """
-    project_dir = get_project_dir()
+    project_dir = await get_project_dir_from_context(ctx)
 
     # Return empty list if project directory doesn't exist (new project)
     if not project_dir.exists():
@@ -204,7 +236,8 @@ def list_sessions(limit: int = 5) -> List[Dict[str, Any]]:
 
 @mcp.tool()
 @inject_recovery_context
-def spawn_claude_session(
+async def spawn_claude_session(
+    ctx: Context,
     prompt: str,
     working_directory: str = None,
     terminal: str = None
@@ -214,7 +247,7 @@ def spawn_claude_session(
 
     Args:
         prompt: Initial prompt/command to send to Claude
-        working_directory: Directory to start in (defaults to cwd)
+        working_directory: Directory to start in (defaults to client cwd)
         terminal: Terminal program (auto-detected if not specified)
 
     Returns:
@@ -224,7 +257,7 @@ def spawn_claude_session(
         terminal = detect_terminal()
 
     if working_directory is None:
-        working_directory = os.getcwd()
+        working_directory = await get_project_path_from_context(ctx)
 
     return spawn_terminal_window(terminal, prompt, working_directory)
 
@@ -434,7 +467,7 @@ def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_session_init(ctx: Context) -> dict:
+async def spellbook_session_init(ctx: Context) -> dict:
     """
     Initialize a spellbook session.
 
@@ -447,7 +480,8 @@ def spellbook_session_init(ctx: Context) -> dict:
             "fun_mode": "yes"|"no"|"unset"  // legacy key
         }
     """
-    return session_init(_get_session_id(ctx))
+    project_path = await get_project_path_from_context(ctx)
+    return session_init(_get_session_id(ctx), project_path=project_path)
 
 
 @mcp.tool()
@@ -517,7 +551,7 @@ def _get_tool_names() -> List[str]:
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_check_compaction() -> dict:
+async def spellbook_check_compaction(ctx: Context) -> dict:
     """
     Check for recent compaction events in the current session.
 
@@ -531,8 +565,7 @@ def spellbook_check_compaction() -> dict:
             "session_file": str | None
         }
     """
-    import os
-    project_path = os.getcwd()
+    project_path = await get_project_path_from_context(ctx)
 
     # Check for new compaction events
     event = check_for_compaction(project_path)
@@ -549,7 +582,7 @@ def spellbook_check_compaction() -> dict:
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_context_ping(ctx: Context) -> str:
+async def spellbook_context_ping(ctx: Context) -> str:
     """
     Ping tool that checks for pending compaction recovery context.
 
@@ -563,8 +596,7 @@ def spellbook_context_ping(ctx: Context) -> str:
     Returns:
         String with <system-reminder> if recovery needed, otherwise simple ack
     """
-    import os
-    project_path = os.getcwd()
+    project_path = await get_project_path_from_context(ctx)
 
     # First, check for any new compaction events
     check_for_compaction(project_path)
@@ -1212,6 +1244,376 @@ def forge_process_roundtable_response(
 
 
 # ============================================================================
+# Skill Instruction Tools
+# ============================================================================
+
+
+def _extract_section(content: str, section_name: str) -> str | None:
+    """Extract a named section from skill content.
+
+    Tries XML-style tags first: <SECTION>...</SECTION>
+    Then tries markdown headers: ## Section Name ... (until next ##)
+
+    Args:
+        content: Full skill content
+        section_name: Name of section to extract
+
+    Returns:
+        Extracted section content, or None if not found
+    """
+    import re
+
+    # Try XML-style tags first: <SECTION>...</SECTION>
+    pattern = f"<{section_name}>(.*?)</{section_name}>"
+    match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+
+    # Try markdown headers: ## Section Name ... (until next ## or end)
+    pattern = f"##\\s+{section_name}[^#]*?(?=##|$)"
+    match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
+    if match:
+        return match.group(0).strip()
+
+    return None
+
+
+@mcp.tool()
+@inject_recovery_context
+def skill_instructions_get(
+    skill_name: str,
+    sections: list = None,
+) -> dict:
+    """
+    Fetch skill instructions from SKILL.md file.
+
+    Used to extract behavioral constraints for injection after compaction.
+    If sections specified, returns only those sections.
+
+    Args:
+        skill_name: Name of the skill (e.g., "implementing-features")
+        sections: Optional list of section names to extract (e.g., ["FORBIDDEN", "REQUIRED", "ROLE"])
+                  If None, returns full content.
+
+    Returns:
+        {
+            "success": True/False,
+            "skill_name": str,
+            "path": str,  # Path to SKILL.md
+            "content": str,  # Full content or extracted sections
+            "sections": {  # If sections param provided
+                "FORBIDDEN": "...",
+                "REQUIRED": "...",
+                ...
+            },
+            "error": str  # If success is False
+        }
+    """
+    # Resolve skill path
+    spellbook_dir = get_spellbook_dir()
+    skill_path = spellbook_dir / "skills" / skill_name / "SKILL.md"
+
+    # Check if skill exists
+    if not skill_path.exists():
+        return {
+            "success": False,
+            "skill_name": skill_name,
+            "path": str(skill_path),
+            "error": f"Skill not found: {skill_path}",
+        }
+
+    # Read skill content
+    try:
+        content = skill_path.read_text()
+    except OSError as e:
+        return {
+            "success": False,
+            "skill_name": skill_name,
+            "path": str(skill_path),
+            "error": f"Failed to read skill file: {e}",
+        }
+
+    # If no sections requested, return full content
+    if not sections:
+        return {
+            "success": True,
+            "skill_name": skill_name,
+            "path": str(skill_path),
+            "content": content,
+        }
+
+    # Extract requested sections
+    extracted_sections = {}
+    for section_name in sections:
+        section_content = _extract_section(content, section_name)
+        if section_content is not None:
+            extracted_sections[section_name] = section_content
+
+    # Build combined content from found sections
+    combined_content = "\n\n".join(
+        f"## {name}\n{text}" for name, text in extracted_sections.items()
+    )
+
+    return {
+        "success": True,
+        "skill_name": skill_name,
+        "path": str(skill_path),
+        "content": combined_content,
+        "sections": extracted_sections,
+    }
+
+
+# ============================================================================
+# Workflow State Tools
+# ============================================================================
+
+
+def _deep_merge(base: dict, updates: dict) -> dict:
+    """Recursively merge updates into base dict."""
+    result = base.copy()
+    for key, value in updates.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        elif key in result and isinstance(result[key], list) and isinstance(value, list):
+            # For lists, append new items (useful for skill_stack, subagents)
+            result[key] = result[key] + value
+        else:
+            result[key] = value
+    return result
+
+
+@mcp.tool()
+@inject_recovery_context
+def workflow_state_save(
+    project_path: str,
+    state: dict,
+    trigger: str = "manual",
+) -> dict:
+    """
+    Persist workflow state to database.
+
+    Called by plugin on session.compacting hook or manually via /handoff.
+    Overwrites previous state for project (only latest matters).
+
+    Args:
+        project_path: Absolute path to project directory
+        state: WorkflowState dict (from handoff Section 1.20)
+        trigger: "manual" | "auto" | "checkpoint"
+
+    Returns:
+        {"success": True/False, "project_path": str, "trigger": str, "error": str?}
+    """
+    from spellbook_mcp.db import get_connection
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        state_json = json.dumps(state)
+        now = datetime.now(timezone.utc).isoformat()
+
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO workflow_state
+                (project_path, state_json, trigger, created_at, updated_at)
+            VALUES
+                (?, ?, ?, COALESCE(
+                    (SELECT created_at FROM workflow_state WHERE project_path = ?),
+                    ?
+                ), ?)
+            """,
+            (project_path, state_json, trigger, project_path, now, now),
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "project_path": project_path,
+            "trigger": trigger,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "project_path": project_path,
+            "trigger": trigger,
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+@inject_recovery_context
+def workflow_state_load(
+    project_path: str,
+    max_age_hours: float = 24.0,
+) -> dict:
+    """
+    Load persisted workflow state for project.
+
+    Returns None-like response if no state exists or state is too old.
+    Called by plugin on session.created to check for resumable work.
+
+    Args:
+        project_path: Absolute path to project directory
+        max_age_hours: Maximum age of state to consider valid (default 24h)
+
+    Returns:
+        {
+            "success": True/False,
+            "found": True/False,
+            "state": dict | None,  # The WorkflowState if found and fresh
+            "age_hours": float | None,
+            "trigger": str | None,
+            "error": str?
+        }
+    """
+    from spellbook_mcp.db import get_connection
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT state_json, trigger, updated_at
+            FROM workflow_state
+            WHERE project_path = ?
+            """,
+            (project_path,),
+        )
+        row = cursor.fetchone()
+
+        if row is None:
+            return {
+                "success": True,
+                "found": False,
+                "state": None,
+                "age_hours": None,
+                "trigger": None,
+            }
+
+        state_json, trigger, updated_at_str = row
+
+        # Parse updated_at timestamp
+        # Handle both ISO format with Z and without timezone
+        if updated_at_str.endswith("Z"):
+            updated_at_str = updated_at_str[:-1] + "+00:00"
+        if "+" not in updated_at_str and updated_at_str.count(":") < 3:
+            # No timezone info, assume UTC
+            updated_at = datetime.fromisoformat(updated_at_str).replace(
+                tzinfo=timezone.utc
+            )
+        else:
+            updated_at = datetime.fromisoformat(updated_at_str)
+
+        now = datetime.now(timezone.utc)
+        age_hours = (now - updated_at).total_seconds() / 3600.0
+
+        if age_hours > max_age_hours:
+            return {
+                "success": True,
+                "found": False,
+                "state": None,
+                "age_hours": age_hours,
+                "trigger": trigger,
+            }
+
+        state = json.loads(state_json)
+
+        return {
+            "success": True,
+            "found": True,
+            "state": state,
+            "age_hours": age_hours,
+            "trigger": trigger,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "found": False,
+            "state": None,
+            "age_hours": None,
+            "trigger": None,
+            "error": str(e),
+        }
+
+
+@mcp.tool()
+@inject_recovery_context
+def workflow_state_update(
+    project_path: str,
+    updates: dict,
+) -> dict:
+    """
+    Incrementally update workflow state.
+
+    Called by plugin on tool.execute.after to track:
+    - Skill invocations (add to skill_stack)
+    - Subagent spawns (add to subagents)
+    - Todo changes
+
+    Args:
+        project_path: Absolute path to project directory
+        updates: Partial WorkflowState dict to merge
+
+    Returns:
+        {"success": True/False, "project_path": str, "error": str?}
+    """
+    from spellbook_mcp.db import get_connection
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Load existing state (if any)
+        cursor.execute(
+            """
+            SELECT state_json
+            FROM workflow_state
+            WHERE project_path = ?
+            """,
+            (project_path,),
+        )
+        row = cursor.fetchone()
+
+        if row is None:
+            # No existing state, create new with updates as base
+            base_state = {}
+        else:
+            base_state = json.loads(row[0])
+
+        # Deep merge updates into existing state
+        merged_state = _deep_merge(base_state, updates)
+
+        state_json = json.dumps(merged_state)
+        now = datetime.now(timezone.utc).isoformat()
+
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO workflow_state
+                (project_path, state_json, trigger, created_at, updated_at)
+            VALUES
+                (?, ?, 'auto', COALESCE(
+                    (SELECT created_at FROM workflow_state WHERE project_path = ?),
+                    ?
+                ), ?)
+            """,
+            (project_path, state_json, project_path, now, now),
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "project_path": project_path,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "project_path": project_path,
+            "error": str(e),
+        }
+
+
+# ============================================================================
 # Skill Analysis Tools
 # ============================================================================
 
@@ -1256,6 +1658,332 @@ def analyze_skill_usage(
     )
 
 
+@mcp.tool()
+@inject_recovery_context
+async def spellbook_analytics_summary(
+    ctx: Context,
+    project_path: str = None,
+    days: int = 30,
+    skill: str = None,
+) -> dict:
+    """Get skill analytics summary from persisted outcomes.
+
+    Queries the local skill_outcomes database for aggregated metrics.
+    Unlike analyze_skill_usage which reads session files, this returns
+    metrics from persistent storage.
+
+    Args:
+        project_path: Filter to specific project (defaults to current)
+        days: Time window in days (default 30)
+        skill: Filter to specific skill (defaults to all)
+
+    Returns:
+        {
+            "total_outcomes": int,
+            "by_skill": {skill_name: metrics dict},
+            "weak_skills": [top 5 by failure_score],
+            "period_days": int
+        }
+    """
+    from spellbook_mcp.path_utils import encode_cwd
+
+    project_encoded = None
+    if project_path:
+        project_encoded = encode_cwd(project_path)
+    else:
+        # Use client's working directory from MCP roots
+        client_path = await get_project_path_from_context(ctx)
+        project_encoded = encode_cwd(client_path)
+
+    return do_get_analytics_summary(
+        project_encoded=project_encoded,
+        days=days,
+        skill=skill,
+    )
+
+
+# ============================================================================
+# Context Curator Tools
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+async def mcp_curator_track_prune(
+    session_id: str,
+    tool_ids: list,
+    tokens_saved: int,
+    strategy: str,
+) -> dict:
+    """
+    Track a pruning event for analytics.
+
+    Args:
+        session_id: The session identifier
+        tool_ids: List of tool IDs that were pruned
+        tokens_saved: Estimated tokens saved by this prune
+        strategy: The strategy that triggered the prune
+
+    Returns:
+        Status dict with event_id
+    """
+    return await curator_track_prune(session_id, tool_ids, tokens_saved, strategy)
+
+
+# ============================================================================
+# A/B Test Management Tools
+# ============================================================================
+
+
+async def mcp_curator_get_stats(session_id: str) -> dict:
+    """
+    Get cumulative pruning statistics for a session.
+
+    Args:
+        session_id: The session identifier
+
+    Returns:
+        Statistics dict with totals and breakdowns
+    """
+    return await curator_get_stats(session_id)
+
+
+# ============================================================================
+# A/B Test Management Tools
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+def experiment_create(
+    name: str,
+    skill_name: str,
+    variants: list,
+    description: str = None,
+) -> dict:
+    """Create a new A/B test experiment with defined variants.
+
+    Args:
+        name: Human-readable unique identifier (1-100 chars)
+        skill_name: Target skill to test (e.g., "implementing-features")
+        variants: List of variant dicts with:
+            - name: Variant name (e.g., "control", "treatment")
+            - skill_version: Optional version string (None for control)
+            - weight: Assignment weight (0-100, all must sum to 100)
+        description: Optional experiment description
+
+    Returns:
+        {
+            "success": True,
+            "experiment_id": "uuid",
+            "name": str,
+            "skill_name": str,
+            "status": "created",
+            "variants": [{id, name, skill_version, weight}, ...]
+        }
+
+    Errors:
+        - EXPERIMENT_EXISTS: Name already taken
+        - INVALID_VARIANTS: Weights don't sum to 100 or no control variant
+    """
+    try:
+        return do_experiment_create(
+            name=name,
+            skill_name=skill_name,
+            variants=variants,
+            description=description,
+        )
+    except ABTestError as e:
+        return e.to_mcp_response()
+
+
+@mcp.tool()
+@inject_recovery_context
+def experiment_start(experiment_id: str) -> dict:
+    """Activate an experiment for variant assignment.
+
+    Sessions invoking the skill will be deterministically assigned to variants.
+
+    Args:
+        experiment_id: UUID of experiment to start
+
+    Returns:
+        {"success": True, "experiment_id": str, "status": "active", "started_at": str}
+
+    Errors:
+        - EXPERIMENT_NOT_FOUND: Invalid experiment_id
+        - INVALID_STATUS_TRANSITION: Experiment not in created/paused status
+        - CONCURRENT_EXPERIMENT: Another experiment for this skill is active
+    """
+    try:
+        return do_experiment_start(experiment_id)
+    except ABTestError as e:
+        return e.to_mcp_response()
+
+
+@mcp.tool()
+@inject_recovery_context
+def experiment_pause(experiment_id: str) -> dict:
+    """Pause an active experiment.
+
+    No new variant assignments will be made. Existing assignments continue
+    tracking outcomes.
+
+    Args:
+        experiment_id: UUID of experiment to pause
+
+    Returns:
+        {"success": True, "experiment_id": str, "status": "paused"}
+    """
+    try:
+        return do_experiment_pause(experiment_id)
+    except ABTestError as e:
+        return e.to_mcp_response()
+
+
+@mcp.tool()
+@inject_recovery_context
+def experiment_complete(experiment_id: str) -> dict:
+    """Mark experiment as completed and freeze data.
+
+    No further assignments or outcome modifications.
+
+    Args:
+        experiment_id: UUID of experiment to complete
+
+    Returns:
+        {"success": True, "experiment_id": str, "status": "completed", "completed_at": str}
+    """
+    try:
+        return do_experiment_complete(experiment_id)
+    except ABTestError as e:
+        return e.to_mcp_response()
+
+
+@mcp.tool()
+@inject_recovery_context
+def experiment_status(experiment_id: str) -> dict:
+    """Get current status and summary metrics for an experiment.
+
+    Args:
+        experiment_id: UUID of experiment
+
+    Returns:
+        {
+            "success": True,
+            "experiment": {id, name, skill_name, status, description, timestamps},
+            "variants": [{id, name, skill_version, weight, sessions_assigned, outcomes_recorded}],
+            "total_sessions": int,
+            "total_outcomes": int
+        }
+    """
+    try:
+        return do_experiment_status(experiment_id)
+    except ABTestError as e:
+        return e.to_mcp_response()
+
+
+@mcp.tool()
+@inject_recovery_context
+def experiment_list(
+    status: str = None,
+    skill_name: str = None,
+) -> dict:
+    """List experiments with optional filters.
+
+    Args:
+        status: Filter by status (created, active, paused, completed)
+        skill_name: Filter by target skill
+
+    Returns:
+        {
+            "success": True,
+            "experiments": [{id, name, skill_name, status, created_at, variants_count, total_sessions}],
+            "total": int
+        }
+    """
+    return do_experiment_list(status=status, skill_name=skill_name)
+
+
+@mcp.tool()
+@inject_recovery_context
+def experiment_results(experiment_id: str) -> dict:
+    """Compare variant performance with detailed metrics.
+
+    Args:
+        experiment_id: UUID of experiment
+
+    Returns:
+        {
+            "success": True,
+            "experiment_id": str,
+            "name": str,
+            "skill_name": str,
+            "status": str,
+            "duration_days": int,
+            "results": {
+                "control": {variant_id, skill_version, sessions, outcomes, metrics},
+                "treatment": {...}
+            },
+            "comparison": {
+                completion_rate_delta, token_efficiency_delta,
+                correction_rate_delta, preliminary_winner
+            }
+        }
+    """
+    try:
+        return do_experiment_results(experiment_id)
+    except ABTestError as e:
+        return e.to_mcp_response()
+
+
+# ============================================================================
+# Telemetry Tools
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_telemetry_enable(endpoint_url: str = None) -> dict:
+    """Enable anonymous telemetry aggregation.
+
+    Telemetry is opt-in and privacy-preserving:
+    - No session IDs, project paths, or user data
+    - No corrections (require content inspection)
+    - Only bucketed durations and token counts
+    - Minimum 5 samples before any aggregate is shared
+
+    Args:
+        endpoint_url: Custom endpoint (optional, future use)
+
+    Returns:
+        {"status": "enabled", "endpoint_url": str|None}
+    """
+    return do_telemetry_enable(endpoint_url=endpoint_url)
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_telemetry_disable() -> dict:
+    """Disable telemetry. Local persistence continues unaffected.
+
+    Returns:
+        {"status": "disabled"}
+    """
+    return do_telemetry_disable()
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_telemetry_status() -> dict:
+    """Get current telemetry configuration.
+
+    Returns:
+        {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
+    """
+    return do_telemetry_status()
+
+
 if __name__ == "__main__":
     # Initialize database and start watcher thread
     db_path = str(get_db_path())
@@ -1263,6 +1991,9 @@ if __name__ == "__main__":
 
     # Initialize Forged schema (idempotent)
     init_forged_schema()
+
+    # Initialize Curator tables (idempotent)
+    init_curator_tables()
 
     _watcher = SessionWatcher(db_path)
     _watcher.start()

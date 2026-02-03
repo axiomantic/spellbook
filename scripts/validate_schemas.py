@@ -38,6 +38,13 @@ except ImportError:
     print("Warning: tiktoken not installed, using word-based token estimation")
     ENCODER = None
 
+# Opencode tool output truncation limits (with safety buffer)
+# Source: opencode/src/tool/truncation.ts:10-11
+# Hard limits: 2000 lines OR 51,200 bytes (50KB)
+# We use conservative limits to ensure content is never truncated
+MAX_LINES = 1900  # Buffer of 100 lines
+MAX_BYTES = 49152  # Buffer of 2KB (48KB)
+
 
 class ValidationResult(NamedTuple):
     path: str
@@ -48,6 +55,7 @@ class ValidationResult(NamedTuple):
     warnings: list[str]
     token_count: int
     line_count: int
+    byte_count: int
 
 
 def count_tokens(text: str) -> int:
@@ -119,11 +127,32 @@ def count_invariant_principles(content: str) -> int:
     return len(matches)
 
 
+def check_truncation_limits(content: str, errors: list[str]) -> None:
+    """Check if content exceeds opencode tool output truncation limits."""
+    line_count = len(content.splitlines())
+    byte_count = len(content.encode("utf-8"))
+
+    if line_count > MAX_LINES:
+        errors.append(
+            f"Exceeds line limit: {line_count} lines > {MAX_LINES} max "
+            f"(opencode truncates at 2000 lines)"
+        )
+
+    if byte_count > MAX_BYTES:
+        errors.append(
+            f"Exceeds size limit: {byte_count:,} bytes > {MAX_BYTES:,} max "
+            f"(opencode truncates at 51,200 bytes)"
+        )
+
+
 def validate_skill(path: Path) -> ValidationResult:
     """Validate a skill against the skill schema."""
     content = path.read_text()
     errors = []
     warnings = []
+
+    # Check truncation limits first (hard error)
+    check_truncation_limits(content, errors)
 
     frontmatter, body = parse_frontmatter(content)
 
@@ -189,6 +218,7 @@ def validate_skill(path: Path) -> ValidationResult:
         warnings=warnings,
         token_count=token_count,
         line_count=len(content.splitlines()),
+        byte_count=len(content.encode("utf-8")),
     )
 
 
@@ -197,6 +227,9 @@ def validate_command(path: Path) -> ValidationResult:
     content = path.read_text()
     errors = []
     warnings = []
+
+    # Check truncation limits first (hard error)
+    check_truncation_limits(content, errors)
 
     frontmatter, body = parse_frontmatter(content)
 
@@ -253,6 +286,7 @@ def validate_command(path: Path) -> ValidationResult:
         warnings=warnings,
         token_count=token_count,
         line_count=len(content.splitlines()),
+        byte_count=len(content.encode("utf-8")),
     )
 
 
@@ -261,6 +295,9 @@ def validate_agent(path: Path) -> ValidationResult:
     content = path.read_text()
     errors = []
     warnings = []
+
+    # Check truncation limits first (hard error)
+    check_truncation_limits(content, errors)
 
     frontmatter, body = parse_frontmatter(content)
 
@@ -326,6 +363,7 @@ def validate_agent(path: Path) -> ValidationResult:
         warnings=warnings,
         token_count=token_count,
         line_count=len(content.splitlines()),
+        byte_count=len(content.encode("utf-8")),
     )
 
 
@@ -371,7 +409,7 @@ def main():
 
         print(f"\n{icon} [{result.item_type.upper()}] {result.name} ({status})")
         print(f"  Path: {result.path}")
-        print(f"  Lines: {result.line_count}, Tokens: {result.token_count}")
+        print(f"  Lines: {result.line_count}, Bytes: {result.byte_count:,}, Tokens: {result.token_count}")
 
         if result.errors:
             print("  Errors:")
@@ -403,8 +441,11 @@ def main():
     # Token statistics
     total_tokens = sum(r.token_count for r in results)
     total_lines = sum(r.line_count for r in results)
+    total_bytes = sum(r.byte_count for r in results)
     print(f"\nTotal tokens: {total_tokens}")
     print(f"Total lines: {total_lines}")
+    print(f"Total bytes: {total_bytes:,}")
+    print(f"\nTruncation limits: {MAX_LINES} lines / {MAX_BYTES:,} bytes per file")
 
     # Generate JSON report if requested
     if "--json" in sys.argv:
@@ -417,6 +458,11 @@ def main():
                 "warnings": total_warnings,
                 "total_tokens": total_tokens,
                 "total_lines": total_lines,
+                "total_bytes": total_bytes,
+                "truncation_limits": {
+                    "max_lines": MAX_LINES,
+                    "max_bytes": MAX_BYTES,
+                },
             },
             "results": [
                 {
@@ -428,6 +474,7 @@ def main():
                     "warnings": r.warnings,
                     "token_count": r.token_count,
                     "line_count": r.line_count,
+                    "byte_count": r.byte_count,
                 }
                 for r in results
             ],

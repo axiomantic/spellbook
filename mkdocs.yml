@@ -78,6 +78,7 @@ nav:
     - Code Quality Skills:
       - skills/enforcing-code-quality.md
       - skills/code-review.md
+      - skills/advanced-code-review.md
       - skills/auditing-green-mirage.md
       - skills/fixing-tests.md
       - skills/fact-checking.md
@@ -103,10 +104,11 @@ nav:
     - Specialized Skills:
       - skills/async-await-patterns.md
       - skills/using-lsp-tools.md
-      - skills/nim-pr-guide.md
+      - skills/managing-artifacts.md
     - Meta Skills:
       - skills/using-skills.md
       - skills/writing-skills.md
+      - skills/writing-commands.md
       - skills/instruction-engineering.md
       - skills/optimizing-instructions.md
       - skills/emotional-stakes.md
@@ -128,6 +130,9 @@ nav:
       - commands/distill-session.md
       - commands/crystallize.md
       - commands/simplify.md
+      - commands/simplify-analyze.md
+      - commands/simplify-transform.md
+      - commands/simplify-verify.md
       - commands/address-pr-feedback.md
       - commands/move-project.md
       - commands/audit-green-mirage.md
@@ -136,10 +141,72 @@ nav:
       - commands/brainstorm.md
       - commands/write-plan.md
       - commands/execute-plan.md
+    - Dead Code Commands:
+      - commands/dead-code-setup.md
+      - commands/dead-code-analyze.md
+      - commands/dead-code-report.md
+      - commands/dead-code-implement.md
+    - Feature Commands:
+      - commands/feature-config.md
+      - commands/feature-discover.md
+      - commands/feature-research.md
+      - commands/feature-design.md
+      - commands/feature-implement.md
+    - Code Review Commands:
+      - commands/advanced-code-review-plan.md
+      - commands/advanced-code-review-context.md
+      - commands/advanced-code-review-review.md
+      - commands/advanced-code-review-verify.md
+      - commands/advanced-code-review-report.md
     - Execution Mode Commands:
       - commands/execute-work-packet.md
       - commands/execute-work-packets-seq.md
       - commands/merge-work-packets.md
+    - Audit Mirage Commands:
+      - commands/audit-mirage-analyze.md
+      - commands/audit-mirage-cross.md
+      - commands/audit-mirage-report.md
+    - Encyclopedia Commands:
+      - commands/encyclopedia-build.md
+      - commands/encyclopedia-validate.md
+    - Fact Check Commands:
+      - commands/fact-check-extract.md
+      - commands/fact-check-report.md
+      - commands/fact-check-verify.md
+    - Finish Branch Commands:
+      - commands/finish-branch-cleanup.md
+      - commands/finish-branch-execute.md
+    - Fix Tests Commands:
+      - commands/fix-tests-execute.md
+      - commands/fix-tests-parse.md
+    - Merge Worktree Commands:
+      - commands/merge-worktree-execute.md
+      - commands/merge-worktree-resolve.md
+      - commands/merge-worktree-verify.md
+    - Reflexion Commands:
+      - commands/reflexion-analyze.md
+    - Request Review Commands:
+      - commands/request-review-artifacts.md
+      - commands/request-review-execute.md
+      - commands/request-review-plan.md
+    - Review Design Commands:
+      - commands/review-design-checklist.md
+      - commands/review-design-report.md
+      - commands/review-design-verify.md
+    - Review Plan Commands:
+      - commands/review-plan-behavior.md
+      - commands/review-plan-completeness.md
+      - commands/review-plan-contracts.md
+      - commands/review-plan-inventory.md
+    - Code Review Subcommands:
+      - commands/code-review-feedback.md
+      - commands/code-review-give.md
+      - commands/code-review-tarot.md
+    - Skill Commands:
+      - commands/write-skill-test.md
+    - Test Bar Commands:
+      - commands/test-bar.md
+      - commands/test-bar-remove.md
     - Session Commands:
       - commands/mode.md
   - Agents:

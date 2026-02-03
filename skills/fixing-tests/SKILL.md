@@ -21,6 +21,15 @@ This skill fixes tests. NOT features. NOT infrastructure. Direct path: Understan
 4. **Verify proves value.** Unverified fixes are unfinished fixes.
 5. **Scope discipline.** Fix tests, not features. No over-engineering, no under-testing.
 
+## Inputs
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| `test_output` | No | Test failure output to analyze (for `run_and_fix` mode) |
+| `audit_report` | No | Green mirage audit findings with patterns and YAML block |
+| `target_tests` | No | Specific test files or functions to fix (for `general_instructions` mode) |
+| `test_command` | No | Command to run tests; defaults to project standard |
+
 ## Input Modes
 
 Detect mode from user input, build work items accordingly.
@@ -55,47 +64,13 @@ interface WorkItem {
 }
 ```
 
+<analysis>
+Before each phase, identify: inputs available, gaps in understanding, classification decisions needed (input mode, error type, production bug vs test issue).
+</analysis>
+
 ## Phase 0: Input Processing
 
-### For audit_report mode
-
-Parse YAML block between `---` markers:
-
-```yaml
-findings:
-  - id: "finding-1"
-    priority: critical
-    test_file: "tests/test_auth.py"
-    test_function: "test_login_success"
-    line_number: 45
-    pattern: 2
-    pattern_name: "Partial Assertions"
-    blind_spot: "Login could return malformed user object"
-    depends_on: []
-
-remediation_plan:
-  phases:
-    - phase: 1
-      findings: ["finding-1"]
-```
-
-Use `remediation_plan.phases` for execution order. Honor `depends_on` dependencies.
-
-**Fallback parsing** (if no YAML block):
-1. Split by `**Finding #N:**` headers
-2. Extract priority from section header
-3. Parse file/line from `**File:**`
-4. Extract pattern from `**Pattern:**`
-5. Extract code blocks for current_code, suggested_fix
-6. Extract blind_spot from `**Blind Spot:**`
-
-### Commit strategy (optional ask)
-
-A) Per-fix (recommended) - each fix separate commit
-B) Batch by file
-C) Single commit
-
-Default to (A).
+Dispatch subagent with `/fix-tests-parse` command. Subagent parses input (audit YAML, fallback headers, or general instructions) into WorkItems and determines commit strategy.
 
 ## Phase 1: Discovery (run_and_fix only)
 
@@ -109,34 +84,7 @@ Parse failures into WorkItems with error_type, message, stack trace, expected/ac
 
 ## Phase 2: Fix Execution
 
-Process by priority: critical > important > minor.
-
-### 2.1 Investigation
-
-<analysis>
-For EACH work item:
-- What does test claim to do? (name, docstring)
-- What is actually wrong? (error, audit finding)
-- What production code involved?
-</analysis>
-
-<RULE>Always read before fixing. Never guess at code structure.</RULE>
-
-1. Read test file (specific function + setup/teardown)
-2. Read production code being tested
-3. If audit_report: suggested fix is starting point, verify it makes sense
-
-### 2.2 Fix Type Classification
-
-| Situation | Fix Type |
-|-----------|----------|
-| Weak assertions (green mirage) | Strengthen assertions |
-| Missing edge cases | Add test cases |
-| Wrong expectations | Correct expectations |
-| Broken setup | Fix setup, not weaken test |
-| Flaky (timing/ordering) | Fix isolation/determinism |
-| Tests implementation details | Rewrite to test behavior |
-| **Production code buggy** | STOP and report |
+Dispatch subagent with `/fix-tests-execute` command. Subagent investigates, classifies, fixes, verifies, and commits each WorkItem.
 
 ### 2.3 Production Bug Protocol
 
@@ -162,106 +110,6 @@ Your choice: ___
 
 Do NOT silently fix production bugs as "test fixes."
 </CRITICAL>
-
-### 2.4 Fix Examples
-
-**Green Mirage Fix (Pattern 2: Partial Assertions):**
-
-```python
-# BEFORE: Checks existence only
-def test_generate_report():
-    report = generate_report(data)
-    assert report is not None
-    assert len(report) > 0
-
-# AFTER: Validates actual content
-def test_generate_report():
-    report = generate_report(data)
-    assert report == {
-        "title": "Expected Title",
-        "sections": [...expected sections...],
-        "generated_at": mock_timestamp
-    }
-    # OR at minimum:
-    assert report["title"] == "Expected Title"
-    assert len(report["sections"]) == 3
-    assert all(s["valid"] for s in report["sections"])
-```
-
-**Edge Case Addition:**
-
-```python
-def test_generate_report_empty_data():
-    """Edge case: empty input."""
-    with pytest.raises(ValueError, match="Data cannot be empty"):
-        generate_report([])
-
-def test_generate_report_malformed_data():
-    """Edge case: malformed input."""
-    result = generate_report({"invalid": "structure"})
-    assert result["error"] == "Invalid data format"
-```
-
-**Flaky Test Fix:**
-
-```python
-# BEFORE: Sleep and hope
-def test_async_operation():
-    start_operation()
-    time.sleep(1)  # Hope it's done!
-    assert get_result() is not None
-
-# AFTER: Deterministic waiting
-def test_async_operation():
-    start_operation()
-    result = wait_for_result(timeout=5)  # Polls with timeout
-    assert result == expected_value
-```
-
-**Implementation-Coupling Fix:**
-
-```python
-# BEFORE: Tests implementation
-def test_user_save():
-    user = User(name="test")
-    user.save()
-    assert user._db_connection.execute.called_with("INSERT...")
-
-# AFTER: Tests behavior
-def test_user_save():
-    user = User(name="test")
-    user.save()
-    loaded = User.find_by_name("test")
-    assert loaded is not None
-    assert loaded.name == "test"
-```
-
-### 2.5 Verify Fix
-
-```bash
-# Run fixed test
-pytest path/to/test.py::test_function -v
-
-# Check file for side effects
-pytest path/to/test.py -v
-```
-
-Verification checklist:
-- [ ] Specific test passes
-- [ ] Other tests in file still pass
-- [ ] Fix would actually catch the failure it should catch
-
-### 2.6 Commit (per-fix strategy)
-
-```bash
-git add path/to/test.py
-git commit -m "fix(tests): strengthen assertions in test_function
-
-- [What was weak/broken]
-- [What fix does]
-- Pattern: N - [Pattern name] (if from audit)
-"
-```
 
 ## Phase 3: Batch Processing
 

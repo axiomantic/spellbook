@@ -35,8 +35,8 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (42 total)](#skills-42-total)
-  - [Commands (19 total)](#commands-19-total)
+  - [Skills (45 total)](#skills-45-total)
+  - [Commands (68 total)](#commands-68-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -81,18 +81,18 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (42 total)
+### Skills (45 total)
 
 Reusable workflows for structured development:
 
 | Category | Skills |
 |----------|--------|
 | **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [using-git-worktrees]†, [finishing-a-development-branch]† |
-| **Code Quality** | [enforcing-code-quality], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
+| **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [nim-pr-guide] |
-| **Meta** | [using-skills]†, [writing-skills]†, [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
@@ -104,6 +104,7 @@ Reusable workflows for structured development:
 [debugging]: https://axiomantic.github.io/spellbook/latest/skills/debugging/
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
 [enforcing-code-quality]: https://axiomantic.github.io/spellbook/latest/skills/enforcing-code-quality/
+[advanced-code-review]: https://axiomantic.github.io/spellbook/latest/skills/advanced-code-review/
 [auditing-green-mirage]: https://axiomantic.github.io/spellbook/latest/skills/auditing-green-mirage/
 [fixing-tests]: https://axiomantic.github.io/spellbook/latest/skills/fixing-tests/
 [fact-checking]: https://axiomantic.github.io/spellbook/latest/skills/fact-checking/
@@ -118,7 +119,8 @@ Reusable workflows for structured development:
 [resolving-merge-conflicts]: https://axiomantic.github.io/spellbook/latest/skills/resolving-merge-conflicts/
 [async-await-patterns]: https://axiomantic.github.io/spellbook/latest/skills/async-await-patterns/
 [using-lsp-tools]: https://axiomantic.github.io/spellbook/latest/skills/using-lsp-tools/
-[nim-pr-guide]: https://axiomantic.github.io/spellbook/latest/skills/nim-pr-guide/
+[managing-artifacts]: https://axiomantic.github.io/spellbook/latest/skills/managing-artifacts/
+[code-review]: https://axiomantic.github.io/spellbook/latest/skills/code-review/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
 [instruction-engineering]: https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/
@@ -127,6 +129,7 @@ Reusable workflows for structured development:
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
 [project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
 [analyzing-skill-usage]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-skill-usage/
+[writing-commands]: https://axiomantic.github.io/spellbook/latest/skills/writing-commands/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
 [fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
 [tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
@@ -140,14 +143,26 @@ Reusable workflows for structured development:
 [assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 
-### Commands (19 total)
+### Commands (68 total)
 
 | Command | Description |
 |---------|-------------|
 | [/crystallize] | Transform SOPs into agentic CoT prompts |
+| [/dead-code-setup] | Initialize dead code analysis with git safety and scope selection |
+| [/dead-code-analyze] | Extract and triage code items for dead code verification |
+| [/dead-code-report] | Generate dead code findings report with deletion plan |
+| [/dead-code-implement] | Execute approved deletions with verification |
 | [/handoff] | Custom session compaction |
 | [/distill-session] | Extract knowledge from sessions |
+| [/feature-config] | Phase 0 configuration wizard for feature workflow |
+| [/feature-discover] | Phase 1.5 informed discovery with disambiguation |
+| [/feature-research] | Phase 1 codebase research and ambiguity detection |
+| [/feature-design] | Phase 2 design document creation and review |
+| [/feature-implement] | Phase 4 implementation with TDD and code review |
 | [/simplify] | Code complexity reduction |
+| [/simplify-analyze] | Analyze code for simplification opportunities |
+| [/simplify-transform] | Apply simplification transformations |
+| [/simplify-verify] | Verify simplification preserved behavior |
 | [/address-pr-feedback] | Handle PR review comments |
 | [/move-project] | Relocate projects safely |
 | [/audit-green-mirage] | Test suite audit |
@@ -163,13 +178,62 @@ Reusable workflows for structured development:
 | [/mode] | Switch session mode (fun/tarot/off) |
 | [/pr-distill] | Analyze PR, categorize changes by review necessity |
 | [/pr-distill-bless] | Save discovered pattern for future distillations |
+| [/advanced-code-review-plan] | Phase 1: Strategic planning for code review |
+| [/advanced-code-review-context] | Phase 2: Context analysis and previous review loading |
+| [/advanced-code-review-review] | Phase 3: Deep multi-pass code review |
+| [/advanced-code-review-verify] | Phase 4: Verification and fact-checking of findings |
+| [/advanced-code-review-report] | Phase 5: Report generation and artifact output |
+| [/fact-check-extract] | Extract and triage claims from code |
+| [/fact-check-verify] | Verify claims against source with evidence |
+| [/fact-check-report] | Generate findings report with bibliography |
+| [/review-plan-inventory] | Context, inventory, and work item classification |
+| [/review-plan-contracts] | Interface contract audit |
+| [/review-plan-behavior] | Behavior verification and fabrication detection |
+| [/review-plan-completeness] | Completeness checks and escalation |
+| [/audit-mirage-analyze] | Per-file anti-pattern analysis with scoring |
+| [/audit-mirage-cross] | Cross-cutting analysis across test suite |
+| [/audit-mirage-report] | Report generation and fix plan |
+| [/review-design-checklist] | Document inventory and completeness checklist |
+| [/review-design-verify] | Hand-waving detection and interface verification |
+| [/review-design-report] | Implementation simulation, findings, and remediation |
+| [/fix-tests-parse] | Parse and classify test failures |
+| [/fix-tests-execute] | Fix execution with TDD loop and verification |
+| [/request-review-plan] | Review planning and scope analysis |
+| [/request-review-execute] | Execute review with checklists |
+| [/request-review-artifacts] | Generate review artifacts and reports |
+| [/encyclopedia-build] | Research, build, and write encyclopedia |
+| [/encyclopedia-validate] | Validate encyclopedia accuracy |
+| [/merge-worktree-execute] | Execute worktree merge sequence |
+| [/merge-worktree-resolve] | Resolve merge conflicts |
+| [/merge-worktree-verify] | Verify merge and cleanup |
+| [/finish-branch-execute] | Analyze branch and execute chosen strategy |
+| [/finish-branch-cleanup] | Post-merge cleanup |
+| [/code-review-feedback] | Process received code review feedback |
+| [/code-review-give] | Review others' code |
+| [/code-review-tarot] | Roundtable-style collaborative review |
+| [/write-skill-test] | Skill testing with pressure scenarios |
+| [/reflexion-analyze] | Full reflexion analysis workflow |
+| [/test-bar] | Generate floating QA test overlay for visual testing |
+| [/test-bar-remove] | Clean removal of test-bar overlay |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
 [/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
+[/dead-code-setup]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-setup/
+[/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
+[/dead-code-report]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-report/
+[/dead-code-implement]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-implement/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
+[/feature-config]: https://axiomantic.github.io/spellbook/latest/commands/feature-config/
+[/feature-discover]: https://axiomantic.github.io/spellbook/latest/commands/feature-discover/
+[/feature-research]: https://axiomantic.github.io/spellbook/latest/commands/feature-research/
+[/feature-design]: https://axiomantic.github.io/spellbook/latest/commands/feature-design/
+[/feature-implement]: https://axiomantic.github.io/spellbook/latest/commands/feature-implement/
 [/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/
+[/simplify-analyze]: https://axiomantic.github.io/spellbook/latest/commands/simplify-analyze/
+[/simplify-transform]: https://axiomantic.github.io/spellbook/latest/commands/simplify-transform/
+[/simplify-verify]: https://axiomantic.github.io/spellbook/latest/commands/simplify-verify/
 [/address-pr-feedback]: https://axiomantic.github.io/spellbook/latest/commands/address-pr-feedback/
 [/move-project]: https://axiomantic.github.io/spellbook/latest/commands/move-project/
 [/audit-green-mirage]: https://axiomantic.github.io/spellbook/latest/commands/audit-green-mirage/
@@ -185,6 +249,43 @@ Reusable workflows for structured development:
 [/mode]: https://axiomantic.github.io/spellbook/latest/commands/mode/
 [/pr-distill]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill/
 [/pr-distill-bless]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill-bless/
+[/advanced-code-review-plan]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-plan/
+[/advanced-code-review-context]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-context/
+[/advanced-code-review-review]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-review/
+[/advanced-code-review-verify]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-verify/
+[/advanced-code-review-report]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-report/
+[/fact-check-extract]: https://axiomantic.github.io/spellbook/latest/commands/fact-check-extract/
+[/fact-check-verify]: https://axiomantic.github.io/spellbook/latest/commands/fact-check-verify/
+[/fact-check-report]: https://axiomantic.github.io/spellbook/latest/commands/fact-check-report/
+[/review-plan-inventory]: https://axiomantic.github.io/spellbook/latest/commands/review-plan-inventory/
+[/review-plan-contracts]: https://axiomantic.github.io/spellbook/latest/commands/review-plan-contracts/
+[/review-plan-behavior]: https://axiomantic.github.io/spellbook/latest/commands/review-plan-behavior/
+[/review-plan-completeness]: https://axiomantic.github.io/spellbook/latest/commands/review-plan-completeness/
+[/audit-mirage-analyze]: https://axiomantic.github.io/spellbook/latest/commands/audit-mirage-analyze/
+[/audit-mirage-cross]: https://axiomantic.github.io/spellbook/latest/commands/audit-mirage-cross/
+[/audit-mirage-report]: https://axiomantic.github.io/spellbook/latest/commands/audit-mirage-report/
+[/review-design-checklist]: https://axiomantic.github.io/spellbook/latest/commands/review-design-checklist/
+[/review-design-verify]: https://axiomantic.github.io/spellbook/latest/commands/review-design-verify/
+[/review-design-report]: https://axiomantic.github.io/spellbook/latest/commands/review-design-report/
+[/fix-tests-parse]: https://axiomantic.github.io/spellbook/latest/commands/fix-tests-parse/
+[/fix-tests-execute]: https://axiomantic.github.io/spellbook/latest/commands/fix-tests-execute/
+[/request-review-plan]: https://axiomantic.github.io/spellbook/latest/commands/request-review-plan/
+[/request-review-execute]: https://axiomantic.github.io/spellbook/latest/commands/request-review-execute/
+[/request-review-artifacts]: https://axiomantic.github.io/spellbook/latest/commands/request-review-artifacts/
+[/encyclopedia-build]: https://axiomantic.github.io/spellbook/latest/commands/encyclopedia-build/
+[/encyclopedia-validate]: https://axiomantic.github.io/spellbook/latest/commands/encyclopedia-validate/
+[/merge-worktree-execute]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-execute/
+[/merge-worktree-resolve]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-resolve/
+[/merge-worktree-verify]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-verify/
+[/finish-branch-execute]: https://axiomantic.github.io/spellbook/latest/commands/finish-branch-execute/
+[/finish-branch-cleanup]: https://axiomantic.github.io/spellbook/latest/commands/finish-branch-cleanup/
+[/code-review-feedback]: https://axiomantic.github.io/spellbook/latest/commands/code-review-feedback/
+[/code-review-give]: https://axiomantic.github.io/spellbook/latest/commands/code-review-give/
+[/code-review-tarot]: https://axiomantic.github.io/spellbook/latest/commands/code-review-tarot/
+[/write-skill-test]: https://axiomantic.github.io/spellbook/latest/commands/write-skill-test/
+[/reflexion-analyze]: https://axiomantic.github.io/spellbook/latest/commands/reflexion-analyze/
+[/test-bar]: https://axiomantic.github.io/spellbook/latest/commands/test-bar/
+[/test-bar-remove]: https://axiomantic.github.io/spellbook/latest/commands/test-bar-remove/
 
 ### Agents (7 total)
 

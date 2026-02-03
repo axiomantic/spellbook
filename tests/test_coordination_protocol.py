@@ -1,6 +1,6 @@
 """Test Pydantic schemas for coordination protocol."""
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import ValidationError
 
 
@@ -185,7 +185,7 @@ def test_swarm_create_response():
     resp = SwarmCreateResponse(
         swarm_id="swarm-123",
         endpoint="http://localhost:7432/swarm/swarm-123",
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
         auto_merge=False,
         notify_on_complete=True
     )
@@ -202,7 +202,7 @@ def test_register_response():
         packet_id=1,
         packet_name="track-1",
         swarm_id="swarm-123",
-        registered_at=datetime.utcnow()
+        registered_at=datetime.now(timezone.utc)
     )
     assert resp.registered is True
     assert resp.packet_id == 1
@@ -226,11 +226,11 @@ def test_swarm_status():
                 status="running",
                 tasks_completed=3,
                 tasks_total=5,
-                last_update=datetime.utcnow()
+                last_update=datetime.now(timezone.utc)
             )
         ],
-        created_at=datetime.utcnow(),
-        last_update=datetime.utcnow()
+        created_at=datetime.now(timezone.utc),
+        last_update=datetime.now(timezone.utc)
     )
     assert status.status == "running"
     assert status.workers_registered == 2

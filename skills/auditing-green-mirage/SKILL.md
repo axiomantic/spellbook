@@ -1,7 +1,7 @@
 ---
 name: auditing-green-mirage
 description: "Use when reviewing test suites, after test runs pass, or when user asks about test quality"
-version: 1.1.0
+version: 2.0.0
 ---
 
 <ROLE>
@@ -91,389 +91,84 @@ Before auditing, create complete inventory:
 - Total production modules: Z
 ```
 
-### Phase 2: Systematic Line-by-Line Audit
+### Phase 2-3: Systematic Audit and 8 Green Mirage Patterns
 
-For EACH test file, work through EVERY test function:
+<!-- PHASE COMMAND: audit-mirage-analyze -->
+<!-- SUBAGENT: Dispatch subagent(s) to perform line-by-line audit. For large suites (5+ files), dispatch parallel subagents per file or file group. Each subagent loads the audit-mirage-analyze command for full templates and all 8 patterns. -->
 
+Subagent prompt template:
 ```
-### Test: `test_function_name` (file.py:line)
+Read the audit-mirage-analyze command file for the complete audit template and all 8 Green Mirage Patterns.
 
-**Purpose (from name/docstring):** What this test claims to verify
+## Context
+- Test file(s) to audit: [paths]
+- Production file(s) under test: [paths]
+- Inventory from Phase 1: [paste inventory]
 
-**Setup Analysis:**
-- Line X: [what's being set up]
-- Line Y: [dependencies/mocks introduced]
-- Concern: [any setup that hides real behavior?]
+For EACH test function:
+1. Apply the systematic line-by-line audit template
+2. Trace every code path through production code
+3. Check against ALL 8 Green Mirage Patterns
+4. Record verdict (SOLID / GREEN MIRAGE / PARTIAL) with evidence
 
-**Action Analysis:**
-- Line Z: [the actual operation being tested]
-- Code path: function() -> calls X -> calls Y -> returns
-- Side effects: [files created, state modified, etc.]
-
-**Assertion Analysis:**
-- Line A: `assert condition` - Would catch: [what failures] / Would miss: [what failures]
-
-**Verdict:** SOLID | GREEN MIRAGE | PARTIAL
-**Gap (if any):** [Specific scenario that passes test but breaks production]
-**Fix (if any):** [Concrete code to add]
+Return: List of findings with verdicts, gaps, and fix code per the template.
 ```
-
-#### Code Path Tracing
-
-For each test action, trace the COMPLETE path:
-
-```
-test_function()
-  |-> production_function(args)
-        |-> helper_function()
-        |     |-> external_call() [mocked? real?]
-        |     |-> returns value
-        |-> processes result
-        |-> returns final
-  |-> assertion checks final
-
-Questions at each step:
-- Is this step tested or assumed to work?
-- If this step returned garbage, would the test catch it?
-- Are error paths tested or only happy paths?
-```
-
-### Phase 3: The 8 Green Mirage Patterns
-
-Check EVERY test against ALL patterns:
-
-#### Pattern 1: Existence vs. Validity
-**Symptom:** Checking something exists without validating correctness.
-```python
-# GREEN MIRAGE
-assert output_file.exists()
-assert len(result) > 0
-assert response is not None
-```
-**Question:** If the content was garbage, would this catch it?
-
-#### Pattern 2: Partial Assertions (CODE SMELL - INVESTIGATE DEEPER)
-**Symptom:** Using `in`, substring checks, or partial matches instead of complete values.
-
-This pattern is a STRONG CODE SMELL requiring deeper investigation. Tests should shine a bright light on data, not make a quick glance.
-
-```python
-# GREEN MIRAGE - Partial assertions hide bugs
-assert 'SELECT' in query           # Garbage SQL could contain SELECT
-assert 'error' not in output       # Wrong output might not have 'error'
-assert expected_id in result       # Result could have wrong structure
-assert key in response_dict        # Value at key could be garbage
-```
-
-**SOLID tests assert COMPLETE objects:**
-```python
-# SOLID - Full assertions expose everything
-assert query == "SELECT id, name FROM users WHERE active = true"
-assert result == {"id": 123, "name": "test", "status": "active"}
-```
-
-**Investigation Required:**
-1. WHY is this a partial assertion? What is the test avoiding checking?
-2. WHAT could be wrong with the unchecked parts?
-3. HOW would a complete assertion change this test?
-
-#### Pattern 3: Shallow String/Value Matching
-**Symptom:** Checking keywords without validating structure.
-```python
-# GREEN MIRAGE
-assert 'SELECT' in query
-assert 'error' not in output
-assert result.status == 'success'  # But is the data correct?
-```
-**Question:** Could syntactically broken output still contain this keyword?
-
-#### Pattern 4: Lack of Consumption
-**Symptom:** Never USING the generated output in a way that validates it.
-```python
-# GREEN MIRAGE
-generated_code = compiler.generate()
-assert generated_code  # Never compiled!
-
-result = api.fetch_data()
-assert result  # Never deserialized or used!
-```
-**Question:** Is this output ever compiled/parsed/executed/deserialized?
-
-#### Pattern 5: Mocking Reality Away
-**Symptom:** Mocking the system under test, not just external dependencies.
-```python
-# GREEN MIRAGE - tests the mock, not the code
-@mock.patch('mymodule.core_logic')
-def test_processing(mock_logic):
-    mock_logic.return_value = expected
-    result = process()  # core_logic never runs!
-```
-**Question:** Is the ACTUAL code path exercised, or just mocks?
-
-#### Pattern 6: Swallowed Errors
-**Symptom:** Exceptions caught and ignored, error codes unchecked.
-```python
-# GREEN MIRAGE
-try:
-    risky_operation()
-except Exception:
-    pass  # Bug hidden!
-
-result = command()  # Return code ignored
-```
-**Question:** Would this test fail if an exception was raised?
-
-#### Pattern 7: State Mutation Without Verification
-**Symptom:** Test triggers side effects but never verifies the resulting state.
-```python
-# GREEN MIRAGE
-user.update_profile(new_data)
-assert user.update_profile  # Checked call happened, not result
-
-db.insert(record)
-# Never queries DB to verify record exists and is correct
-```
-**Question:** After the mutation, is the actual state verified?
-
-#### Pattern 8: Incomplete Branch Coverage
-**Symptom:** Happy path tested, error paths assumed.
-```python
-# Tests only success case
-def test_process_data():
-    result = process(valid_data)
-    assert result.success
-
-# Missing: test_process_invalid_data, test_process_empty, test_process_malformed
-```
-**Question:** What happens when input is invalid/empty/malformed/boundary?
 
 ### Phase 4: Cross-Test Analysis
 
-After auditing individual tests, analyze the suite as a whole:
+<!-- PHASE COMMAND: audit-mirage-cross -->
+<!-- SUBAGENT: Dispatch subagent to analyze suite-level gaps. Subagent loads the audit-mirage-cross command for the cross-test analysis templates. -->
 
+Subagent prompt template:
 ```
-## Functions/Methods Never Tested
-- module.function_a() - no direct test
-- module.function_b() - only tested as side effect
+Read the audit-mirage-cross command file for cross-test analysis templates.
 
-## Error Paths Never Tested
-- What happens when X fails?
-- What happens when Y returns None?
+## Context
+- Production files: [paths]
+- Test files: [paths]
+- Phase 2-3 findings: [summary of individual test verdicts]
 
-## Edge Cases Never Tested
-- Empty input
-- Maximum size input
-- Boundary values
-- Concurrent access
+Analyze the suite as a whole:
+1. Functions/methods never directly tested
+2. Error paths never tested
+3. Edge cases never tested
+4. Test isolation issues
 
-## Test Isolation Issues
-- Tests that depend on other tests (shared state)
-- Tests that depend on external state
-- Tests that don't clean up
+Return: Suite-level gap analysis per the templates.
 ```
 
-### Phase 5: Findings Report
+### Phase 5-6: Findings Report and Output
 
-<CRITICAL>
-The findings report MUST include both:
+<!-- PHASE COMMAND: audit-mirage-report -->
+<!-- SUBAGENT: Dispatch subagent to compile the final report. Subagent loads the audit-mirage-report command for YAML format, templates, and output path conventions. -->
+
+Subagent prompt template:
+```
+Read the audit-mirage-report command file for the complete report format, YAML template, and output conventions.
+
+## Context
+- Phase 1 inventory: [paste]
+- Phase 2-3 findings: [paste all findings with verdicts, line numbers, fix code]
+- Phase 4 cross-test gaps: [paste suite-level analysis]
+- Project root: [path]
+
+Compile the full audit report:
 1. Machine-parseable YAML block at START
-2. Human-readable summary and detailed findings
+2. Human-readable summary
+3. Detailed findings with all required fields
+4. Remediation plan with dependency-ordered phases
+5. Write to the correct output path
 
-This enables the fixing-tests skill to consume the output directly.
-</CRITICAL>
-
-#### Machine-Parseable YAML Block
-
-```yaml
----
-# GREEN MIRAGE AUDIT REPORT
-# Generated: [ISO 8601 timestamp]
-
-audit_metadata:
-  timestamp: "2024-01-15T10:30:00Z"
-  test_files_audited: 5
-  test_functions_audited: 47
-  production_files_touched: 12
-
-summary:
-  total_tests: 47
-  solid: 31
-  green_mirage: 12
-  partial: 4
-
-patterns_found:
-  pattern_1_existence_vs_validity: 3
-  pattern_2_partial_assertions: 4
-  pattern_3_shallow_matching: 2
-  pattern_4_lack_of_consumption: 1
-  pattern_5_mocking_reality: 0
-  pattern_6_swallowed_errors: 1
-  pattern_7_state_mutation: 1
-  pattern_8_incomplete_branches: 4
-
-findings:
-  - id: "finding-1"
-    priority: critical          # critical | important | minor
-    test_file: "tests/test_auth.py"
-    test_function: "test_login_success"
-    line_number: 45
-    pattern: 2
-    pattern_name: "Partial Assertions"
-    effort: trivial             # trivial | moderate | significant
-    depends_on: []              # IDs of findings that must be fixed first
-    blind_spot: "Login could return malformed user object and test would pass"
-    production_impact: "Broken user sessions in production"
-
-  - id: "finding-2"
-    priority: critical
-    test_file: "tests/test_auth.py"
-    test_function: "test_logout"
-    line_number: 78
-    pattern: 7
-    pattern_name: "State Mutation Without Verification"
-    effort: moderate
-    depends_on: ["finding-1"]   # Shares fixtures with finding-1
-    blind_spot: "Session not actually cleared, just returns success"
-    production_impact: "Session persistence after logout"
-
-remediation_plan:
-  phases:
-    - phase: 1
-      name: "Foundation fixes"
-      findings: ["finding-1"]
-      rationale: "Other tests depend on auth fixtures"
-
-    - phase: 2
-      name: "Auth suite completion"
-      findings: ["finding-2"]
-      rationale: "Depends on phase 1 fixtures"
-
-  total_effort_estimate: "2-3 hours"
-  recommended_approach: sequential  # sequential | parallel | mixed
----
+Return: File path of written report and inline summary.
 ```
 
-#### Effort Estimation Guidelines
+## Effort Estimation Guidelines
 
 | Effort | Criteria | Examples |
 |--------|----------|----------|
 | **trivial** | < 5 minutes, single assertion change | Add `.to_equal(expected)` instead of `.to_be_truthy()` |
 | **moderate** | 5-30 minutes, requires reading production code | Add state verification, strengthen partial assertions |
 | **significant** | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
-
-#### Dependency Detection
-
-Identify dependencies between findings:
-
-| Dependency Type | Detection | YAML Format |
-|-----------------|-----------|-------------|
-| Shared fixtures | Two tests share setup | `depends_on: ["finding-1"]` |
-| Cascading assertions | Test A's output feeds test B | `depends_on: ["finding-3"]` |
-| File-level batching | Multiple findings in one file | Note in rationale |
-| Independent | No dependencies | `depends_on: []` |
-
-#### Human-Readable Summary
-
-```
-## Audit Summary
-
-Total Tests Audited: X
-|-- SOLID (would catch failures): Y
-|-- GREEN MIRAGE (would miss failures): Z
-|-- PARTIAL (some gaps): W
-
-Patterns Found:
-|-- Pattern 1 (Existence vs. Validity): N instances
-|-- Pattern 2 (Partial Assertions): N instances
-|-- Pattern 3 (Shallow Matching): N instances
-|-- Pattern 4 (Lack of Consumption): N instances
-|-- Pattern 5 (Mocking Reality): N instances
-|-- Pattern 6 (Swallowed Errors): N instances
-|-- Pattern 7 (State Mutation): N instances
-|-- Pattern 8 (Incomplete Branches): N instances
-
-Effort Breakdown:
-|-- Trivial fixes: N (< 5 min each)
-|-- Moderate fixes: N (5-30 min each)
-|-- Significant fixes: N (30+ min each)
-
-Estimated Total Remediation: [X hours]
-```
-
-#### Detailed Findings Template
-
-For each critical finding:
-
-```
----
-**Finding #1: [Descriptive Title]**
-
-| Field | Value |
-|-------|-------|
-| ID | `finding-1` |
-| Priority | CRITICAL |
-| File | `path/to/test.py::test_function` (line X) |
-| Pattern | 2 - Partial Assertions |
-| Effort | trivial / moderate / significant |
-| Depends On | None / [finding-N, ...] |
-
-**Current Code:**
-```python
-[exact code from test]
-```
-
-**Blind Spot:**
-[Specific scenario where broken code passes this test]
-
-**Trace:**
-```
-test_function()
-  |-> production_function(args)
-        |-> returns garbage
-  |-> assertion checks [partial thing]
-  |-> PASSES despite garbage because [reason]
-```
-
-**Production Impact:**
-[What would break in production that this test misses]
-
-**Consumption Fix:**
-```python
-[exact code to add/change]
-```
-
-**Why This Fix Works:**
-[How the fix would catch the failure]
-
----
-```
-
-### Phase 6: Report Output
-
-Write to: `$SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/audits/auditing-green-mirage-<YYYY-MM-DD>-<HHMMSS>.md`
-
-Project encoding:
-```bash
-PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
-mkdir -p "$SPELLBOOK_CONFIG_DIR/docs/${PROJECT_ENCODED}/audits"
-```
-
-**If not in git repo:** Ask user if they want to run `git init`. If no, use: `$SPELLBOOK_CONFIG_DIR/docs/_no-repo/$(basename "$PWD")/audits/`
-
-Final user output:
-```
-## Audit Complete
-
-Report: ~/.local/spellbook/docs/<project-encoded>/audits/auditing-green-mirage-<timestamp>.md
-
-Summary:
-- Tests audited: X
-- Green mirages found: Y
-- Estimated fix time: Z
-
-Next Steps:
-/fixing-tests [report-path]
-```
 
 ## Anti-Patterns
 

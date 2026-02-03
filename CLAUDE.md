@@ -2,6 +2,19 @@
 
 Development instructions for spellbook codebase. User-facing template: `CLAUDE.spellbook.md`.
 
+## Supported Platforms
+
+| Platform | GitHub | Config Location | MCP Transport |
+|----------|--------|-----------------|---------------|
+| Claude Code | [anthropics/claude-code](https://github.com/anthropics/claude-code) | `~/.claude/` | HTTP daemon |
+| OpenCode | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
+| Codex | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | stdio |
+| Gemini CLI | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | extension |
+| Crush | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | stdio |
+
+**Note:** There are multiple projects named "opencode". We support **anomalyco/opencode** (92K+ stars),
+not the archived opencode-ai/opencode (which became charmbracelet/crush).
+
 ## Invariant Principles
 
 1. **Library vs Repo distinction**: Library items (`skills/`, `commands/`) ship to users and require docs. Repo items (`.claude/skills/`) are internal only.
@@ -26,7 +39,7 @@ spellbook/
 ├── commands/            # Library commands (shipped)
 ├── agents/              # Agent definitions
 ├── installer/           # Multi-platform installer
-│   ├── platforms/       # claude_code, gemini, opencode, codex
+│   ├── platforms/       # claude_code, opencode, codex, gemini, crush
 │   └── components/      # context_files, symlinks, mcp
 ├── spellbook_mcp/       # MCP server
 ├── scripts/             # Build/maintenance
@@ -68,6 +81,39 @@ Updates: TOC in README.md, docs from skills/commands/agents.
 **Skills**: Create `skills/<name>/SKILL.md` with `name`/`description` frontmatter. Auto-discovered by MCP.
 
 **Commands**: Create `commands/<name>.md` with `description` frontmatter. Hooks generate docs.
+
+## Size Limits and Splitting
+
+Pre-commit hooks enforce size limits to prevent truncation on platforms like OpenCode:
+- **Skills**: 1900 lines max, 49KB max
+- **Commands**: Similar limits apply
+
+### When a Skill Exceeds Limits
+
+**Do NOT trim content to fit.** Instead, split into a skill + commands pattern:
+
+1. **Skill becomes orchestrator**: The SKILL.md is a thin wrapper that defines the workflow phases and dispatches to commands
+2. **Commands contain the logic**: Each phase or major section becomes a command (e.g., `advanced-code-review-plan.md`, `advanced-code-review-verify.md`)
+3. **Skill invokes commands**: Use `/command-name` syntax to delegate
+
+**Example structure for a large skill:**
+
+```
+skills/advanced-code-review/
+  SKILL.md              # ~200 lines - orchestrator only
+commands/
+  advanced-code-review-plan.md      # Phase 1 logic
+  advanced-code-review-context.md   # Phase 2 logic  
+  advanced-code-review-review.md    # Phase 3 logic
+  advanced-code-review-verify.md    # Phase 4 logic
+  advanced-code-review-report.md    # Phase 5 logic
+```
+
+**Benefits:**
+- Each piece stays under limits
+- Commands are reusable independently
+- Easier to test and maintain
+- Follows the orchestrator pattern (skill coordinates, commands execute)
 
 ## Platform Installers
 

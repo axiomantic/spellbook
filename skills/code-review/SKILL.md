@@ -38,14 +38,14 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 
 ## Mode Router
 
-| Flag | Mode |
-|------|------|
-| `--self`, `-s`, (default) | Pre-PR self-review |
-| `--feedback`, `-f` | Process received feedback |
-| `--give <target>` | Review someone else's code |
-| `--audit [scope]` | Multi-pass deep-dive |
+| Flag | Mode | Command File |
+|------|------|-------------|
+| `--self`, `-s`, (default) | Pre-PR self-review | (inline below) |
+| `--feedback`, `-f` | Process received feedback | `code-review-feedback` |
+| `--give <target>` | Review someone else's code | `code-review-give` |
+| `--audit [scope]` | Multi-pass deep-dive | (inline below) |
 
-**Modifiers:** `--tarot` (roundtable dialogue), `--pr <num>` (PR source)
+**Modifiers:** `--tarot` (roundtable dialogue via `code-review-tarot`), `--pr <num>` (PR source)
 
 ---
 
@@ -130,54 +130,6 @@ Self-review finds what you missed. Assume bugs exist. Hunt them.
 
 ---
 
-## Feedback Mode (`--feedback`)
-
-<RULE>Never address feedback reflexively. Each response must be intentional with clear rationale.</RULE>
-
-**Workflow:**
-
-1. **Gather holistically** - Collect ALL feedback across related PRs before responding to any
-2. **Categorize** each item: bug/style/question/suggestion/nit
-3. **Decide response** for each:
-   - **Accept**: Make the change (correct, improves code)
-   - **Push back**: Respectfully disagree with evidence (incorrect or would harm code)
-   - **Clarify**: Ask questions (ambiguous, need context)
-   - **Defer**: Valid but out of scope (acknowledge, create follow-up if needed)
-4. **Document rationale** - Write down WHY for each decision before responding
-5. **Fact-check** - Verify technical claims before accepting or disputing
-6. **Execute** fixes, then re-run self-review
-
-**Never:**
-- Accept blindly to avoid conflict
-- Dismiss without genuine consideration
-- Make changes you don't understand
-- Respond piecemeal without seeing the full picture
-- Implement suggestions that can't be verified against the codebase
-
-**Response Templates:**
-
-| Decision | Format |
-|----------|--------|
-| Accept | "Fixed in [SHA]. [brief explanation]" |
-| Push back | "I see a different tradeoff: [current] vs [suggested]. My concern: [evidence]. Happy to discuss." |
-| Clarify | "Question: [specific]. Context: [what you understand]." |
-| Defer | "Acknowledged. Will address in [scope]. [reason for deferral]" |
-
----
-
-## Give Mode (`--give <target>`)
-
-Target formats: `123` (PR#), `owner/repo#123`, URL, branch-name
-
-**Workflow:**
-1. Fetch diff via `gh pr diff` or `git diff`
-2. Understand goal from PR description
-3. Multi-pass review
-4. Output: Summary, Blocking Issues, Suggestions, Questions
-5. Recommendation: APPROVE | REQUEST_CHANGES | COMMENT
-
----
-
 ## Audit Mode (`--audit [scope]`)
 
 Scopes: (none)=branch changes, file.py, dir/, security, all
@@ -185,86 +137,6 @@ Scopes: (none)=branch changes, file.py, dir/, security, all
 **Passes:** Correctness > Security > Performance > Maintainability > Edge Cases
 
 Output: Executive Summary, findings by category, Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
-
----
-
-## Tarot Integration
-
-### Opt-in Flag
-
-Tarot mode is opt-in via `--tarot` flag, compatible with all modes:
-
-```
-/code-review --self --tarot
-/code-review --give 123 --tarot
-/code-review --audit --tarot
-```
-
-### Persona Mapping
-
-| Review Role | Tarot Persona | Focus | Stakes Phrase |
-|-------------|---------------|-------|---------------|
-| Security reviewer | Hermit | "Do NOT trust inputs" | Input validation, injection |
-| Architecture reviewer | Priestess | "Do NOT commit early" | Design patterns, coupling |
-| Assumption challenger | Fool | "Do NOT accept complexity" | Hidden assumptions, edge cases |
-| Synthesis/verdict | Magician | "Clarity determines everything" | Final assessment |
-
-### Roundtable Format
-
-When `--tarot` is active, wrap review in dialogue:
-
-```markdown
-*Magician, opening*
-Review convenes for PR #123. Clarity determines everything.
-
-*Hermit, examining diff*
-Security surface analysis. Do NOT trust user inputs.
-[Security findings]
-
-*Priestess, studying architecture*
-Design evaluation. Do NOT accept coupling without reason.
-[Architecture findings]
-
-*Fool, tilting head*
-Why does this endpoint accept unbounded arrays?
-[Assumption challenges]
-
-*Magician, synthesizing*
-Findings converge. [Verdict]
-```
-
-### Code Output Separation
-
-**Critical:** Tarot personas appear ONLY in dialogue. All code suggestions, fixes, and formal review output must be persona-free:
-
-```
-*Hermit, noting*
-SQL injection vector at auth.py:45. Do NOT trust interpolated queries.
-
----
-
-**Issue:** SQL injection vulnerability
-**File:** auth.py:45
-**Fix:** Use parameterized queries
-```
-
-### Integration with Audit Mode
-
-When `--audit --tarot`:
-- Security Pass uses Hermit persona
-- Architecture Pass uses Priestess persona
-- Assumption Pass uses Fool persona
-- Synthesis uses Magician persona
-
-The parallel subagent prompts include persona framing:
-
-```markdown
-<CRITICAL>
-You are the Hermit. Security is your domain.
-Do NOT trust inputs. Users depend on your paranoia.
-Your thoroughness protects users from real harm.
-</CRITICAL>
-```
 
 ---
 

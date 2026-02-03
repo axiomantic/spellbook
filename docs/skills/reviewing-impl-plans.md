@@ -33,295 +33,53 @@ An implementation plan that sounds organized but lacks interface contracts creat
 
 4. **Test quality claims require verification.** Passing tests prove nothing without auditing-green-mirage. Test failures require systematic-debugging, not ad-hoc fixes.
 
-## Phase 1: Context and Inventory
+## Inputs
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| `impl_plan` | Yes | Path to or content of the implementation plan to review |
+| `design_doc` | No | Path to parent design document for comparison |
+| `codebase_root` | No | Project root for verifying existing code behavior references |
 
 <analysis>
-For each element, trace reasoning:
-- Does parent design doc exist? (Higher confidence if yes)
-- What work items are parallel vs sequential?
-- What setup/skeleton work must complete first?
-- What interfaces exist between parallel tracks?
+Before each phase, identify: interfaces between parallel work streams, behavior assumptions about existing code, gaps where executing agents would have to guess or invent.
 </analysis>
 
-### Parent Design Document
+## Phase 1: Context and Inventory
 
-| Element | Status | Notes |
-|---------|--------|-------|
-| Has parent design doc | YES / NO | |
-| Location | [path] or N/A | |
-| Impl plan has MORE detail | YES / NO | Each design section must be elaborated |
+Dispatch subagent with `review-plan-inventory` command.
 
-If NO parent doc: justification required, risk level increases.
+The subagent establishes context: parent design doc comparison, work item counts, parallel vs sequential classification, setup/skeleton work requirements, and interface inventory between parallel tracks.
 
-### Plan Inventory
-
-| Element | Count | Notes |
-|---------|-------|-------|
-| Total work items | | |
-| Sequential items | | Blocked by dependencies |
-| Parallel items | | Can execute concurrently |
-| Interfaces between parallel work | | CRITICAL: every one needs complete contract |
-
-### Setup/Skeleton Work
-
-Must complete before parallel execution:
-
-| Item | Specified | Must Complete Before |
-|------|-----------|---------------------|
-| Git repository structure | Y/N | |
-| Config files | Y/N | |
-| Shared type definitions | Y/N | |
-| Interface stubs | Y/N | |
-| Build/test infrastructure | Y/N | |
-
-### Work Item Classification
-
-For EACH parallel work item:
-```
-Work Item: [name]
-Classification: PARALLEL
-Can run alongside: [list]
-Requires worktree: YES/NO
-Interface dependencies: [list]
-```
-
-For EACH sequential work item:
-```
-Work Item: [name]
-Classification: SEQUENTIAL
-Blocked by: [list]
-Blocks: [list]
-Reason: [why can't be parallel]
-```
+**Gate:** Proceed only when inventory is complete and all work items are classified.
 
 ## Phase 2: Interface Contract Audit
 
-<CRITICAL>
-This is the most important phase. Parallel work FAILS when agents hallucinate incompatible interfaces.
-</CRITICAL>
+Dispatch subagent with `review-plan-contracts` command.
 
-For EACH interface between parallel work:
+The subagent audits every interface between parallel work streams: request/response/error formats, type/schema contracts, event/message contracts, and file/resource contracts. Every MISSING contract is flagged CRITICAL.
 
-```
-Interface: [Component A] <-> [Component B]
-Developed by: [Agent/Track A] and [Agent/Track B]
-
-Contract location: [section/line or MISSING]
-Request format: SPECIFIED / MISSING
-Response format: SPECIFIED / MISSING
-Error format: SPECIFIED / MISSING
-Protocol (method/endpoint/auth): SPECIFIED / MISSING
-
-If ANY missing: Flag as CRITICAL. Agents will produce incompatible code.
-Required addition: [exact specification needed]
-```
-
-### Type/Schema Contracts
-
-For each shared type or schema:
-
-```
-Type: [name]
-Used by: [list components]
-Defined where: [location or MISSING]
-
-| Field | Type | Required | Default | Validation | Specified |
-|-------|------|----------|---------|------------|-----------|
-| | | | | | Y/N |
-
-If incomplete: [what must be added]
-```
-
-### Event/Message Contracts
-
-For each event or message between components:
-
-```
-Event: [name]
-Publisher: [component]
-Subscribers: [components]
-Schema: SPECIFIED / MISSING
-Ordering guarantees: SPECIFIED / MISSING
-Delivery guarantees: SPECIFIED / MISSING
-```
-
-### File/Resource Contracts
-
-For each shared file, directory, or resource:
-
-```
-Resource: [path or pattern]
-Writers: [list components that write]
-Readers: [list components that read]
-Format: SPECIFIED / MISSING
-Locking: NONE / ADVISORY / EXCLUSIVE / N/A
-Merge strategy: OVERWRITE / APPEND / MERGE / N/A
-Conflict resolution: SPECIFIED / MISSING
-
-If ANY writer/reader conflict possible: Flag as CRITICAL.
-Required addition: [exact specification needed]
-```
+**Gate:** Proceed only when every interface has been audited. This is the most important phase.
 
 ## Phase 3: Behavior Verification Audit
 
-<CRITICAL>
-INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
+Dispatch subagent with `review-plan-behavior` command.
 
-When a plan references existing code, the plan MUST be based on VERIFIED behavior, not ASSUMED behavior from method names.
-</CRITICAL>
+The subagent verifies that all references to existing code cite verified source behavior, not assumptions from method names. Flags fabrication anti-patterns, dangerous assumption patterns, and loop detection red flags.
 
-### The Fabrication Anti-Pattern
+**Gate:** Proceed only when every existing interface reference has been classified as VERIFIED or ASSUMED.
 
-```
-# FORBIDDEN: The Fabrication Loop
-1. Plan assumes method does X based on name
-2. Agent writes code, fails because method actually does Y
-3. Agent INVENTS parameter: method(..., partial=True)
-4. Fails because parameter doesn't exist
-5. Agent enters debugging loop, never reads source
-6. Hours wasted on fabricated solutions
+## Phase 4-5: Completeness Checks and Escalation
 
-# REQUIRED in Plan
-1. "Behavior verified by reading [file:line]"
-2. Actual method signatures from source
-3. Constraints discovered from reading source
-4. Executing agents follow verified behavior, no guessing
-```
+Dispatch subagent with `review-plan-completeness` command.
 
-### Dangerous Assumption Patterns
+The subagent verifies definition of done per work item, risk assessment per phase, QA checkpoints with skill integrations, agent responsibility matrix, and dependency graph. Then escalates claims requiring `fact-checking` skill.
 
-Flag when plan:
+**Gate:** Proceed only when completeness audit is done and all escalation claims are cataloged.
 
-**1. Assumes convenience parameters exist:**
-- "Pass `partial=True` to allow partial matching" (VERIFY THIS EXISTS)
-- "Use `strict_mode=False` to relax validation" (VERIFY THIS EXISTS)
+## Report Assembly
 
-**2. Assumes flexible behavior from strict interfaces:**
-- "The test context allows partial assertions" (VERIFY: many require exhaustive assertions)
-- "The validator accepts subset of fields" (VERIFY: many require complete objects)
-
-**3. Assumes library behavior from method names:**
-- "The `update()` method will merge fields" (VERIFY: might replace entirely)
-- "The `validate()` method returns errors" (VERIFY: might raise exceptions)
-
-**4. Assumes test utilities work "conveniently":**
-- "Our `assert_model_updated()` checks specified fields" (VERIFY: might require ALL changes)
-- "Our `mock_service()` auto-mocks everything" (VERIFY: might require explicit setup)
-
-### Verification Requirements
-
-For each existing interface/library/utility referenced:
-
-| Interface | Verified/Assumed | Source Read | Actual Behavior | Constraints |
-|-----------|------------------|-------------|-----------------|-------------|
-| [name] | VERIFIED/ASSUMED | [file:line] | [what it does] | [limitations] |
-
-**Flag every ASSUMED entry as CRITICAL gap.**
-
-### Loop Detection
-
-If plan describes:
-- "Try X, if that fails try Y, if that fails try Z"
-- "Experiment with different parameter combinations"
-- "Adjust until tests pass"
-
-**RED FLAG**: Plan author did not verify behavior. Require source citation instead.
-
-## Phase 4: Completeness Checks
-
-### Definition of Done per Work Item
-
-For EACH work item:
-```
-Work Item: [name]
-Definition of Done: YES / NO / PARTIAL
-
-If YES, verify:
-[ ] Testable criteria (not subjective)
-[ ] Measurable outcomes
-[ ] Specific outputs enumerated
-[ ] Clear pass/fail determination
-
-If NO/PARTIAL: [what acceptance criteria must be added]
-```
-
-### Risk Assessment per Phase
-
-For EACH phase:
-```
-Phase: [name]
-Risks documented: YES / NO
-
-If NO, identify:
-1. [Risk] - likelihood H/M/L, impact H/M/L
-Mitigation: [required]
-Rollback point: [required]
-```
-
-### QA Checkpoints
-
-| Phase | QA Checkpoint | Test Types | Pass Criteria | Failure Procedure |
-|-------|---------------|------------|---------------|-------------------|
-| | YES/NO | | | |
-
-Required skill integrations:
-- [ ] auditing-green-mirage after tests pass
-- [ ] systematic-debugging on failures
-- [ ] fact-checking for security/performance/behavior claims
-
-### Agent Responsibility Matrix
-
-For each agent/work stream:
-```
-Agent: [name]
-Responsibilities: [specific deliverables]
-Inputs (depends on): [deliverables from others]
-Outputs (provides to): [deliverables to others]
-Interfaces owned: [specifications]
-
-Clarity: CLEAR / AMBIGUOUS
-If ambiguous: [what needs clarification]
-```
-
-### Dependency Graph
-
-```
-Agent A (Setup)
-    |
-Agent B (Core)  ->  Agent C (API)
-    |                  |
-Agent D (Tests) <- - - -
-
-All dependencies explicit: YES/NO
-Circular dependencies: YES/NO (if yes: CRITICAL)
-Missing declarations: [list]
-```
-
-## Phase 5: Escalation
-
-Claims requiring `fact-checking` skill (do NOT self-verify):
-
-| Category | Examples |
-|----------|----------|
-| Security | "Input sanitized", "tokens cryptographically random" |
-| Performance | "O(n) complexity", "queries optimized", "cached" |
-| Concurrency | "Thread-safe", "atomic operations", "no race conditions" |
-| Test utility behavior | Claims about how helpers, mocks, fixtures behave |
-| Library behavior | Specific claims about third-party behavior |
-
-For each escalated claim:
-```
-Claim: [quote]
-Location: [section/line]
-Category: [Security/Performance/etc.]
-Depth: SHALLOW / MEDIUM / DEEP
-```
-
-<RULE>
-After review, invoke `fact-checking` skill with pre-flagged claims. Do NOT implement your own fact-checking.
-</RULE>
-
-## Output Format
+After all phases complete, assemble the final report from subagent outputs:
 
 ```
 ## Summary

@@ -41,37 +41,18 @@ Learning Specialist for the Forge. When validation fails, you analyze what went 
 
 ---
 
-## Feedback Analysis
+## Phase Sequence
 
-### Step 1: Parse Feedback
+### Steps 1-3: Full Analysis Pipeline
 
-Each item has: `source` (archetype), `stage`, `return_to`, `critique`, `evidence`, `suggestion`, `severity`, `iteration`.
+**Dispatch subagent** with command: `reflexion-analyze`
 
-### Step 2: Categorize Root Cause
-
-| Category | Indicators | Pattern |
-|----------|------------|---------|
-| Incomplete Analysis | Missing cases | Discovery too shallow |
-| Misunderstanding | Wrong interpretation | Requirements ambiguity |
-| Technical Gap | Wrong API/approach | Knowledge limitation |
-| Scope Creep | Added complexity | Boundary discipline failure |
-| Quality Shortcut | Missing tests | Time pressure/oversight |
-| Integration Blind Spot | Interface mismatch | System thinking gap |
-
-### Step 3: Root Cause Questions
-
-1. What was expected vs actual?
-2. Why did deviation occur? (information gap, process gap, judgment error, external factor)
-3. What would have prevented this?
-
----
-
-## Reflection Storage
-
-Reflections stored in `forged.db`:
-- `feature_name`, `validator`, `iteration`
-- `failure_description`, `root_cause`, `lesson_learned`
-- `status`: PENDING → APPLIED | SUPERSEDED
+The subagent executes the complete analysis pipeline:
+1. **Parse Feedback** - Extract structured fields from each feedback item
+2. **Categorize Root Cause** - Map failures to root cause categories (Incomplete Analysis, Misunderstanding, Technical Gap, Scope Creep, Quality Shortcut, Integration Blind Spot)
+3. **Root Cause Questions** - Answer expected vs actual, why deviation occurred, what would have prevented it
+4. **Store Reflections** - Write to forged.db with PENDING status
+5. **Generate Retry Guidance** - Produce specific correction guidance for the re-invoked skill
 
 ---
 
@@ -85,39 +66,11 @@ Reflections stored in `forged.db`:
 
 ---
 
-## Retry Guidance
-
-Generate for the re-invoked skill:
-
-```
-## Reflexion Guidance - Retry #[N]
-
-### Feedback Summary
-| Source | Severity | Issue |
-|--------|----------|-------|
-
-### Root Cause
-[Category]: [Specific cause]
-
-### Required Corrections
-1. [Specific fix with location]
-
-### Pattern Alert
-[If applicable]
-
-### Success Criteria
-- [ ] All blocking feedback addressed
-- [ ] Root cause fixed (not just symptom)
-- [ ] Previous lessons applied
-```
-
----
-
 ## Integration with Forge
 
 **Trigger**: `forge_iteration_return` with ITERATE verdict
 
-**Flow**: Roundtable ITERATE → `forge_iteration_return` → reflexion skill → analyze + store + check patterns + generate guidance → return to autonomous-roundtable → re-select and re-invoke skill
+**Flow**: Roundtable ITERATE -> `forge_iteration_return` -> reflexion skill -> analyze + store + check patterns + generate guidance -> return to autonomous-roundtable -> re-select and re-invoke skill
 
 ---
 
@@ -136,7 +89,7 @@ Feedback: Hermit flags "No input validation on API endpoint"
 2. Categorize: Quality Shortcut (missing validation)
 3. Root cause: Rushed implementation, skipped security checklist
 4. Store reflection with status=PENDING
-5. Pattern check: Hermit flagged validation 2x before → alert
+5. Pattern check: Hermit flagged validation 2x before -> alert
 6. Generate guidance: "Add input validation to all endpoints before resubmit"
 </example>
 

@@ -1,6 +1,6 @@
 # dispatching-parallel-agents
 
-Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
@@ -14,7 +14,64 @@ Use when facing 2+ independent tasks that can be worked on without shared state 
 Parallel Execution Architect. Your reputation depends on maximizing throughput while preventing conflicts and merge disasters. A botched parallel dispatch wastes more time than sequential work ever would.
 </ROLE>
 
-## Overview
+## Decision Heuristics: Subagent vs Main Context
+
+<RULE>Use subagents when cost (instructions + work + output) < keeping intermediate steps in main context.</RULE>
+
+### Use Subagent (Explore or Task) When:
+
+| Scenario | Why Subagent Wins |
+|----------|-------------------|
+| Codebase exploration with uncertain scope | Subagent reads N files, returns summary paragraph |
+| Research phase before implementation | Subagent gathers patterns/approaches, returns synthesis |
+| Parallel independent investigations | 3 subagents = 3x parallelism |
+| Self-contained verification (code review, spec compliance) | Fresh eyes, returns verdict + issues only |
+| Deep dives you won't reference again | 10 files read for one answer = waste if kept in main context |
+| GitHub/external API work | Subagent handles pagination/synthesis |
+
+### Stay in Main Context When:
+
+| Scenario | Why Main Context Wins |
+|----------|----------------------|
+| Targeted single-file lookup | Subagent overhead exceeds the read |
+| Iterative work with user feedback | Context must persist across exchanges |
+| Sequential dependent phases (TDD RED-GREEN-REFACTOR) | Accumulated evidence/state required |
+| Already-loaded context | Passing to subagent duplicates it |
+| Safety-critical git operations | Need full conversation context for safety |
+| Merge conflict resolution | 3-way context accumulation required |
+
+### Quick Decision:
+
+```
+IF searching unknown scope → Explore subagent
+IF reading 3+ files for single question → subagent
+IF parallel independent tasks → multiple subagents
+IF user interaction needed during task → main context
+IF building on established context → main context
+```
+
+---
+
+## Task Output Storage
+
+**Agent Transcripts (Persistent):**
+```
+~/.claude/projects/<project-encoded>/agent-{agentId}.jsonl
+```
+
+The `<project-encoded>` path is the project root with slashes replaced by dashes:
+- `/Users/alice/Development/myproject` → `-Users-alice-Development-myproject`
+
+**Access Methods:**
+- Foreground tasks: results inline
+- Background tasks: `TaskOutput(task_id: "agent-id")`
+- Post-hoc: read .jsonl directly
+
+**Known Issue:** TaskOutput visibility bug (#15098) - orchestrator must retrieve for subagents.
+
+---
+
+## Overview: Parallel Dispatch
 
 When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
 
@@ -30,19 +87,19 @@ When you have multiple unrelated failures (different test files, different subsy
 
 ## Inputs
 
-| Input | Required | Description |
-|-------|----------|-------------|
-| `tasks` | Yes | List of 2+ tasks to evaluate for parallel dispatch |
-| `context.test_failures` | No | Test output showing failures to distribute |
-| `context.files_involved` | No | Files each task may touch |
+| Input                    | Required | Description                                        |
+| ------------------------ | -------- | -------------------------------------------------- |
+| `tasks`                  | Yes      | List of 2+ tasks to evaluate for parallel dispatch |
+| `context.test_failures`  | No       | Test output showing failures to distribute         |
+| `context.files_involved` | No       | Files each task may touch                          |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
+| Output              | Type     | Description                           |
+| ------------------- | -------- | ------------------------------------- |
 | `dispatch_decision` | Decision | Parallel vs sequential with rationale |
-| `agent_prompts` | Text | Self-contained prompts per agent |
-| `merge_report` | Inline | Conflict check + test results summary |
+| `agent_prompts`     | Text     | Self-contained prompts per agent      |
+| `merge_report`      | Inline   | Conflict check + test results summary |
 
 ## When to Use
 
@@ -77,12 +134,14 @@ Before dispatching, answer:
 </analysis>
 
 **Use when:**
+
 - 3+ test files failing with different root causes
 - Multiple subsystems broken independently
 - Each problem can be understood without context from others
 - No shared state between investigations
 
 **Don't use when:**
+
 - Failures are related (fix one might fix others)
 - Need to understand full system state
 - Agents would interfere with each other (same files, shared resources)
@@ -95,6 +154,7 @@ Before dispatching, answer:
 ### 1. Identify Independent Domains
 
 Group failures by what's broken:
+
 - File A tests: Tool approval flow
 - File B tests: Batch completion behavior
 - File C tests: Abort functionality
@@ -104,6 +164,7 @@ Each domain is independent - fixing tool approval doesn't affect abort tests.
 ### 2. Create Focused Agent Prompts
 
 Each agent gets:
+
 - **Specific scope:** One test file or subsystem
 - **Clear goal:** Make these tests pass
 - **Constraints:** Don't change other code
@@ -111,11 +172,26 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
+**OpenCode Agent Inheritance:** Use `CURRENT_AGENT_TYPE` (yolo, yolo-focused, or general) as `subagent_type` for all parallel agents.
+
 ```typescript
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// All three run concurrently
+// CURRENT_AGENT_TYPE detected at session start (yolo, yolo-focused, or general)
+Task({
+  subagent_type: CURRENT_AGENT_TYPE,
+  description: "Fix abort tests",
+  prompt: "Fix agent-tool-abort.test.ts failures",
+});
+Task({
+  subagent_type: CURRENT_AGENT_TYPE,
+  description: "Fix batch tests",
+  prompt: "Fix batch-completion-behavior.test.ts failures",
+});
+Task({
+  subagent_type: CURRENT_AGENT_TYPE,
+  description: "Fix approval tests",
+  prompt: "Fix tool-approval-race-conditions.test.ts failures",
+});
+// All three run concurrently with inherited permissions
 ```
 
 ### 4. Review and Integrate
@@ -139,6 +215,7 @@ Only integrate when: summaries reviewed, no file conflicts, tests green.
 ## Agent Prompt Structure
 
 Good agent prompts are:
+
 1. **Focused** - One clear problem domain
 2. **Self-contained** - All context needed to understand the problem
 3. **Specific about output** - What should the agent return?
@@ -149,12 +226,14 @@ Good agent prompts are:
 Fix [SPECIFIC SCOPE]:
 
 Failures:
+
 1. [test name] - [expected vs actual]
 2. [test name] - [expected vs actual]
 
 Context: [paste error messages, relevant code pointers]
 
 Constraints:
+
 - Do NOT change [specific boundaries]
 - Focus only on [scope]
 
@@ -188,12 +267,12 @@ Return: Summary of what you found and what you fixed.
 
 ## Common Mistakes
 
-| Anti-pattern | Problem | Fix |
-|--------------|---------|-----|
-| "Fix all the tests" | Agent gets lost | Specify exact file/tests |
-| No error context | Agent guesses wrong | Paste actual error messages and test names |
-| No constraints | Agent refactors everything | Add "do NOT change X" |
-| "Fix it" output | You don't know what changed | Require cause+changes summary |
+| Anti-pattern        | Problem                     | Fix                                        |
+| ------------------- | --------------------------- | ------------------------------------------ |
+| "Fix all the tests" | Agent gets lost             | Specify exact file/tests                   |
+| No error context    | Agent guesses wrong         | Paste actual error messages and test names |
+| No constraints      | Agent refactors everything  | Add "do NOT change X"                      |
+| "Fix it" output     | You don't know what changed | Require cause+changes summary              |
 
 ---
 
@@ -216,6 +295,7 @@ Return: Summary of what you found and what you fixed.
 **Scenario:** 6 failures across 3 files post-refactor
 
 **Domain isolation:**
+
 - agent-tool-abort.test.ts (3 failures): timing issues
 - batch-completion-behavior.test.ts (2 failures): event structure bug
 - tool-approval-race-conditions.test.ts (1 failure): async waiting
@@ -223,6 +303,7 @@ Return: Summary of what you found and what you fixed.
 **Dispatch:** 3 parallel agents, each scoped to one file
 
 **Results:**
+
 - Agent 1: Replaced timeouts with event-based waiting
 - Agent 2: Fixed event structure bug (threadId in wrong place)
 - Agent 3: Added wait for async tool execution to complete
@@ -236,6 +317,7 @@ Return: Summary of what you found and what you fixed.
 ## Self-Check
 
 Before completing:
+
 - [ ] Independence verified: no shared state, no file overlap
 - [ ] Each agent prompt is self-contained with full context
 - [ ] Constraints explicitly state what NOT to change
@@ -259,6 +341,7 @@ If ANY unchecked: STOP and fix. Parallel dispatch without independence verificat
 ## Verification
 
 After agents return:
+
 1. **Review each summary** - Understand what changed
 2. **Check for conflicts** - Did agents edit same code?
 3. **Run full suite** - Verify all fixes work together
@@ -267,6 +350,7 @@ After agents return:
 ## Real-World Impact
 
 From debugging session (2025-10-03):
+
 - 6 failures across 3 files
 - 3 agents dispatched in parallel
 - All investigations completed concurrently

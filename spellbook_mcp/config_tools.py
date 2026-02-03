@@ -1,11 +1,15 @@
 """Configuration management and session initialization for spellbook."""
 
 import json
+import logging
 import os
 import random
+import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 # Session-specific state keyed by session_id (in-memory, resets on MCP server restart)
 # This allows session-only mode changes that don't persist to config
@@ -259,23 +263,38 @@ def random_line(file_path: Path) -> str:
         return ""
 
 
-def session_init(session_id: Optional[str] = None) -> dict:
-    """Initialize a spellbook session.
+def session_init(
+    session_id: Optional[str] = None,
+    continuation_message: Optional[str] = None,
+    project_path: Optional[str] = None
+) -> dict:
+    """Initialize a spellbook session with optional continuation detection.
 
-    Resolution order:
+    Resolution order for mode:
     1. Session state (in-memory, session-only override)
     2. session_mode config key
     3. fun_mode legacy config key
     4. Unset
 
+    When continuation_message is provided:
+    1. Queries for recent resumable session (<24h)
+    2. Detects continuation intent from message
+    3. Returns resume fields if "continue" or "neutral" intent
+    4. Returns resume_available=False if "fresh_start" intent
+
     Args:
         session_id: Session identifier for multi-session isolation.
                     If None, uses default session for backward compatibility.
+        continuation_message: User's first message for resume detection (optional).
+                            Pass the raw first message to enable continuation detection.
+        project_path: Project path for resume detection. If None, falls back to os.getcwd().
 
     Returns:
         Dict with:
         - mode: {"type": "fun"|"tarot"|"none"|"unset", ...mode-specific data}
         - fun_mode: "yes"|"no"|"unset" (legacy key for backward compatibility)
+        - resume_available: bool
+        - resume_* fields if resume is available
     """
     # Check session state first (in-memory override)
     session_state = _get_session_state(session_id)
@@ -298,54 +317,225 @@ def session_init(session_id: Optional[str] = None) -> dict:
         # Fall back to legacy boolean
         effective_mode = "fun" if legacy_fun_mode else "none"
 
+    # Build mode result
+    result: dict = {}
+
     # Handle unset
     if effective_mode is None:
-        return {
+        result = {
             "mode": {"type": "unset"},
             "fun_mode": "unset",  # Legacy key
         }
-
     # Handle explicitly disabled
-    if effective_mode == "none":
-        return {
+    elif effective_mode == "none":
+        result = {
             "mode": {"type": "none"},
             "fun_mode": "no",  # Legacy key
         }
-
     # Handle tarot mode
-    if effective_mode == "tarot":
-        return {
+    elif effective_mode == "tarot":
+        result = {
             "mode": {"type": "tarot"},
             "fun_mode": "no",  # Legacy key - tarot is not fun-mode
         }
-
     # Handle fun mode
-    spellbook_dir = get_spellbook_dir()
-    fun_assets = spellbook_dir / "skills" / "fun-mode"
+    else:
+        spellbook_dir = get_spellbook_dir()
+        fun_assets = spellbook_dir / "skills" / "fun-mode"
 
-    # Verify the assets directory exists
-    if not fun_assets.is_dir():
+        # Verify the assets directory exists
+        if not fun_assets.is_dir():
+            result = {
+                "mode": {"type": "fun", "error": f"fun-mode assets not found at {fun_assets}"},
+                "fun_mode": "yes",
+                "error": f"fun-mode assets not found at {fun_assets}",
+            }
+        else:
+            # Select random values once to ensure consistency
+            persona = random_line(fun_assets / "personas.txt")
+            context = random_line(fun_assets / "contexts.txt")
+            undertow = random_line(fun_assets / "undertows.txt")
+
+            result = {
+                "mode": {
+                    "type": "fun",
+                    "persona": persona,
+                    "context": context,
+                    "undertow": undertow,
+                },
+                # Legacy keys for backward compatibility
+                "fun_mode": "yes",
+                "persona": persona,
+                "context": context,
+                "undertow": undertow,
+            }
+
+    # Add resume fields
+    result.update(_get_resume_context(continuation_message, project_path))
+
+    return result
+
+
+def _get_resume_context(
+    continuation_message: Optional[str],
+    project_path: Optional[str] = None
+) -> dict:
+    """Get resume context based on continuation message.
+
+    Args:
+        continuation_message: User's first message (optional)
+        project_path: Project path (defaults to os.getcwd() if not provided)
+
+    Returns:
+        Dict with resume_available and optional resume_* fields
+    """
+    from spellbook_mcp.db import get_db_path
+    from spellbook_mcp.resume import (
+        detect_continuation_intent,
+        get_resume_fields,
+    )
+
+    # Get project path - use provided path or fall back to cwd
+    if project_path is None:
+        project_path = os.getcwd()
+
+    # Get database path
+    try:
+        db_path = str(get_db_path())
+    except Exception:
+        # If no database, no resume available
+        return {"resume_available": False}
+
+    # Query for recent session
+    resume_fields = get_resume_fields(project_path, db_path)
+
+    # If no recent session available, return early
+    if not resume_fields.get("resume_available"):
+        return {"resume_available": False}
+
+    # If no continuation message provided, return resume fields unchanged
+    if not continuation_message:
+        return dict(resume_fields)
+
+    # Detect user intent
+    intent = detect_continuation_intent(
+        continuation_message,
+        has_recent_session=True  # We know there's a recent session
+    )
+
+    # Fresh start overrides resume
+    if intent["intent"] == "fresh_start":
+        return {"resume_available": False}
+
+    # Return resume fields for continue or neutral intent
+    return dict(resume_fields)
+
+
+def telemetry_enable(endpoint_url: str = None, db_path: str = None) -> dict:
+    """Enable anonymous telemetry aggregation.
+
+    Args:
+        endpoint_url: Optional custom endpoint (default: future Anthropic endpoint)
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        {"status": "enabled", "endpoint_url": str|None} or {"status": "error", "message": str}
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    try:
+        conn = get_connection(db_path)
+        conn.execute("""
+            INSERT INTO telemetry_config (id, enabled, endpoint_url, updated_at)
+            VALUES (1, 1, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(id) DO UPDATE SET
+                enabled = 1,
+                endpoint_url = COALESCE(excluded.endpoint_url, endpoint_url),
+                updated_at = CURRENT_TIMESTAMP
+        """, (endpoint_url,))
+        conn.commit()
+    except sqlite3.Error as e:
+        logger.error(f"Database error enabling telemetry: {e}")
+        return {"status": "error", "message": str(e)}
+
+    return {"status": "enabled", "endpoint_url": endpoint_url}
+
+
+def telemetry_disable(db_path: str = None) -> dict:
+    """Disable telemetry. Local persistence continues.
+
+    Args:
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        {"status": "disabled"} or {"status": "error", "message": str}
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    try:
+        conn = get_connection(db_path)
+        conn.execute("""
+            INSERT INTO telemetry_config (id, enabled, updated_at)
+            VALUES (1, 0, CURRENT_TIMESTAMP)
+            ON CONFLICT(id) DO UPDATE SET
+                enabled = 0,
+                updated_at = CURRENT_TIMESTAMP
+        """)
+        conn.commit()
+    except sqlite3.Error as e:
+        logger.error(f"Database error disabling telemetry: {e}")
+        return {"status": "error", "message": str(e)}
+
+    return {"status": "disabled"}
+
+
+def telemetry_status(db_path: str = None) -> dict:
+    """Get current telemetry configuration.
+
+    Args:
+        db_path: Path to database (defaults to standard location)
+
+    Returns:
+        {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
+        or includes "status": "error", "message": str on failure
+    """
+    from spellbook_mcp.db import get_connection, get_db_path
+
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    try:
+        conn = get_connection(db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT enabled, endpoint_url, last_sync FROM telemetry_config WHERE id = 1
+        """)
+        row = cursor.fetchone()
+    except sqlite3.Error as e:
+        logger.error(f"Database error getting telemetry status: {e}")
         return {
-            "mode": {"type": "fun", "error": f"fun-mode assets not found at {fun_assets}"},
-            "fun_mode": "yes",
-            "error": f"fun-mode assets not found at {fun_assets}",
+            "enabled": False,
+            "endpoint_url": None,
+            "last_sync": None,
+            "status": "error",
+            "message": str(e),
         }
 
-    # Select random values once to ensure consistency
-    persona = random_line(fun_assets / "personas.txt")
-    context = random_line(fun_assets / "contexts.txt")
-    undertow = random_line(fun_assets / "undertows.txt")
+    if row is None:
+        return {
+            "enabled": False,
+            "endpoint_url": None,
+            "last_sync": None,
+        }
 
     return {
-        "mode": {
-            "type": "fun",
-            "persona": persona,
-            "context": context,
-            "undertow": undertow,
-        },
-        # Legacy keys for backward compatibility
-        "fun_mode": "yes",
-        "persona": persona,
-        "context": context,
-        "undertow": undertow,
+        "enabled": bool(row[0]),
+        "endpoint_url": row[1],
+        "last_sync": row[2],
     }

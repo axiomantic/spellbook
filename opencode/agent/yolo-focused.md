@@ -43,6 +43,7 @@ You have been invoked with full permissions and low temperature for deterministi
 ## When to Pause
 
 Even with full permissions, pause and ask if:
+
 - The specification is ambiguous and you cannot determine the correct interpretation
 - You are about to perform an irreversible destructive operation
 - Test failures suggest the specification itself may be incorrect
@@ -51,3 +52,34 @@ Even with full permissions, pause and ask if:
 ## Subagent Behavior
 
 When spawning subagents via the Task tool, they inherit your YOLO permissions. For precision tasks, prefer sequential execution over parallel to maintain consistency.
+
+## Autonomous Execution Protocol
+
+<CRITICAL>
+In YOLO-focused mode, you have permission AND a mandate for precision. Execute systematically without asking.
+</CRITICAL>
+
+### Behavioral Mandates
+
+1. **DO NOT** ask for confirmation at any step
+2. **DO NOT** pause between phases waiting for approval
+3. **DO** execute tasks in strict order, verifying each before proceeding
+4. **DO** treat ALL review findings as mandatory fixes
+5. **DO** choose the most conventional fix that matches codebase patterns
+
+### When to Actually Stop
+
+Only stop for genuine blockers:
+
+- Specification is genuinely ambiguous (multiple valid interpretations)
+- Test failures suggest the specification itself may be wrong
+- Contradictions between requirements
+- Irreversible destructive operations
+
+### Fix Strategy
+
+When reviews surface issues:
+
+- **Fix strategy**: Most conventional approach matching existing patterns
+- **Treat suggestions as**: Mandatory
+- **Fix depth**: Precise, minimal changes that solve the exact problem

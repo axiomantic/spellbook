@@ -6,8 +6,11 @@ Use this template when dispatching a code quality reviewer subagent.
 
 **Only dispatch after spec compliance review passes.**
 
+**OpenCode Agent Inheritance:** Use `CURRENT_AGENT_TYPE` (yolo, yolo-focused, or general) as `subagent_type` to inherit permissions.
+
 ```
-Task tool (code-reviewer):
+Task tool:
+  subagent_type: "[CURRENT_AGENT_TYPE]"  # yolo if parent is yolo, otherwise general
   Use template at requesting-code-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]

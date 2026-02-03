@@ -5,14 +5,138 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.5] - 2026-01-26
+## [0.9.5] - 2026-02-02
 
-### Fixed
-- **MCP daemon PATH for CLI tools** - launchd/systemd services now set PATH correctly so tools like `gh` are accessible
-  - macOS: Includes Homebrew paths for both Apple Silicon (`/opt/homebrew/bin`) and Intel (`/usr/local/bin`)
-  - Linux: Includes Linuxbrew, `~/.local/bin`, `~/.cargo/bin`
+### Added
+- **writing-commands skill** - Skill for creating and reviewing spellbook commands
+  - Command schema with required sections: MISSION, Invariant Principles, Phases, FORBIDDEN
+  - Paired command pattern for create/remove workflows (e.g., test-bar/test-bar-remove)
+  - Quality checklist for command review mode
+  - Reasoning tags (`<analysis>`, `<reflection>`) enforcement
+- **test-bar command** - Generate floating QA test overlay for visual testing
+  - Analyzes branch diff to identify conditional rendering paths
+  - Creates one-click scenario buttons for each visual state
+  - Dev-only guard with `__DEV__` or `NODE_ENV` checks
+  - Manifest tracking for clean removal
+- **test-bar-remove command** - Clean removal of test-bar overlay
+  - Reads manifest created by test-bar
+  - Surgically removes injected code
+  - Verifies clean removal with git status check
+- **Managing Artifacts skill** - New skill for artifact storage and project-encoded paths
+  - Triggers on: "save report", "write plan", "where should I put", "project-encoded"
+  - Covers artifact directory structure, project encoding, open source handling
+- **Advanced Code Review skill** - New 5-phase code review workflow with verification
+  - Phase 1: Strategic Planning - scope analysis, risk categorization, priority ordering
+  - Phase 2: Context Analysis - load previous reviews, PR history, declined items
+  - Phase 3: Deep Review - multi-pass code analysis, finding generation
+  - Phase 4: Verification - fact-check findings, remove false positives
+  - Phase 5: Report Generation - produce final deliverables
+  - Tracks previous review decisions (declined, partial agreement, alternatives)
+  - Claim extraction algorithm verifies findings against actual code
+  - Outputs to `~/.local/spellbook/docs/<project>/reviews/`
+- **Code Review Commands** - 5 phase-specific commands for advanced-code-review
+  - `/advanced-code-review-plan` - Phase 1 strategic planning
+  - `/advanced-code-review-context` - Phase 2 context analysis
+  - `/advanced-code-review-review` - Phase 3 deep review
+  - `/advanced-code-review-verify` - Phase 4 verification
+  - `/advanced-code-review-report` - Phase 5 report generation
+- **Session Resume** - Automatic continuation of prior work sessions
+  - Detects recent sessions (<24h) and offers to resume
+  - Generates boot prompts following handoff.md Section 0 format
+  - Tracks active skill, phase, pending todos, workflow pattern
+  - Continuation intent detection: explicit ("continue"), fresh start ("new session"), or neutral
+  - Planning document detection from recent files
+  - Pending todos counter with corruption detection
+- **A/B Testing Framework** - Full experiment management for skill versions
+  - `experiment_create` - Create experiments with control/treatment variants
+  - `experiment_start`, `experiment_pause`, `experiment_complete` - Lifecycle management
+  - `experiment_status`, `experiment_list` - Query experiments
+  - `experiment_results` - Compare variant performance with metrics
+  - Deterministic variant assignment based on session ID
+  - Telemetry sync for outcome-to-experiment linking
+  - Database schema: experiments, variants, assignments tables
+- **Context Curator Plugin** (OpenCode) - Intelligent context management for long sessions
+  - Automatic pruning strategies: `supersede-writes`, `purge-errors`
+  - LLM-driven discard tool for selective context removal
+  - MCP client with graceful degradation
+  - Tool cache synchronization
+  - Message pruning and context injection
+  - Session state management with versioning
+  - Curator analytics MCP tools for tracking prune events
+- **OpenCode Claude Code behavioral standards** - Inject Claude Code's system prompts into OpenCode via `instructions` config
+  - Synthesized prompt covers: read-before-modify, security awareness, anti-over-engineering, git safety, professional objectivity
+  - Applies to ALL agents universally (beneath YOLO mode, always active)
+  - Installed as symlink to `~/.config/opencode/instructions/claude-code-system-prompt.md`
+- **OpenCode YOLO agents** - Two new agent definitions for autonomous execution
+  - `yolo`: Full permissions, all tools enabled, auto-approve all operations
+  - `yolo-focused`: Same permissions but with focused behavioral guidelines
+- **Workflow state MCP tools** - New tools for managing feature workflow state
+  - `workflow_state_get`, `workflow_state_set`, `workflow_state_clear`
+  - Persistent storage in spellbook database
+- **Phased slash commands** - Decomposed large skills into focused command sequences
+  - `/feature-*`: discover, research, design, config, implement
+  - `/dead-code-*`: setup, analyze, report, implement
+  - `/simplify-*`: analyze, transform, verify
+- **Mechanical phase-skip prevention** - implementing-features skill now enforces phase sequencing with bash artifact checks at sub-command entry points
+  - Each sub-command (feature-research, feature-discover, feature-design, feature-implement) has a MANDATORY PREREQUISITE CHECK block that verifies prior phase artifacts exist before proceeding
+  - Checks include tier verification, artifact existence (ls commands), and anti-rationalization reminders
+- **Task Complexity Router** - New Phase 0.7 in feature-config classifies tasks into 4 tiers using mechanical heuristics
+  - 5 heuristics: file count (grep-based), behavioral change, test impact, structural change, integration points
+  - Tier derivation matrix maps heuristic results to Trivial/Simple/Standard/Complex
+  - Executor proposes tier from heuristics, user confirms or overrides
+  - Trivial exits the skill entirely; Simple follows a reduced-ceremony path; Standard/Complex run full workflow
+- **Simple Path workflow** - Reduced-ceremony path for simple tasks (Config -> Lightweight Research -> Inline Plan -> Implement)
+  - Quantitative guardrails enforce boundaries (max 5 research files, 5 plan steps, 5 impl files, 3 test files)
+  - Exceeding any guardrail triggers mandatory upgrade to Standard tier
+  - No external artifacts produced; research summary and plan are inline
+- **Anti-Rationalization Framework** - Dedicated section in SKILL.md naming 7 common LLM shortcut patterns
+  - Scope Minimization, Expertise Override, Time Pressure, Similarity Shortcut, Competence Assertion, Phase Collapse, Escape Hatch Abuse
+  - Each pattern has signal phrases for detection and explicit counters
+  - Brief anti-rationalization reminders at each prerequisite check point in sub-commands
+- **Phase Transition Protocol** - Mechanical verification between phase transitions in SKILL.md
+  - Anti-Skip Circuit Breaker with bash verification template
+  - Complexity Upgrade Protocol for mid-execution tier changes when Simple path guardrails are exceeded
+- **Tier-aware routing in feature-implement** - Prerequisite check branches on complexity tier
+  - Simple tier navigates directly to Phase 4 (skipping Phase 3 planning)
+  - Standard/Complex tiers require design document verification via ls
+- **Multi-Phase Skill Architecture mandate** - writing-skills skill now requires orchestrator-subagent separation for multi-phase skills
+  - 3+ phase skills MUST separate orchestrator from phase commands; 2 phases SHOULD; 1 phase exempt
+  - Core rule: orchestrator dispatches subagents (Task tool), subagents invoke phase commands (Skill tool), orchestrator never invokes commands directly
+  - Content split matrix defines what belongs in orchestrator (<300 lines: phase sequence, dispatch templates, shared data structures) vs phase commands (implementation logic, scoring, wizards)
+  - Data structure placement criterion: referenced by 2+ phases = orchestrator, 1 phase = command
+  - Exceptions for config/setup phases requiring user interaction and error recovery
+  - 4 named anti-patterns for context bloat
+  - Self-Check updated with multi-phase compliance checkbox
+- **Skill analyzer tests** - 31 unit tests covering extraction, correction detection, version parsing, metrics aggregation
 
 ### Changed
+- **Multi-Phase Skill Architecture compliance** - Refactored all 12 non-compliant skills to separate orchestrator SKILL.md from phase command files
+  - Orchestrators slimmed to keep only: phase sequence, dispatch templates, shared data structures (referenced by 2+ phases), quality gates, anti-patterns
+  - Phase-specific implementation logic, scoring formulas, checklists, and review protocols moved to dedicated command files
+  - 30 new command files created in `commands/` directory, each with YAML frontmatter and self-contained for subagent independence
+  - Shared data structures intentionally duplicated in relevant command files for subagent self-containment
+- **CLAUDE.spellbook.md template optimization** - Reduced from 41KB to 22KB (~19KB savings)
+  - Removed redundant skill registry (skills are natively discovered by coding assistants)
+  - Extracted subagent decision heuristics to `dispatching-parallel-agents` skill
+  - Extracted artifact management content to new `managing-artifacts` skill
+  - Extracted task output storage to `dispatching-parallel-agents` skill
+  - Trimmed glossary to essential terms only
+- **Enhanced dispatching-parallel-agents skill** - Now includes subagent decision heuristics and task output storage
+- **AGENTS.md size limit guidance** - Added documentation for splitting large skills into orchestrator + commands pattern
+  - Skills exceeding 1900 lines / 49KB should be split, not trimmed
+  - Skill becomes thin orchestrator, commands contain phase logic
+- **Orchestrator pattern reinforcement** - Updated CLAUDE.spellbook.md and workflow skills
+  - Clarified orchestrator role: dispatch subagents, don't do work in main context
+  - Added OpenCode agent inheritance (YOLO type propagation to subagents)
+- **Skill size reduction** - Major skills condensed to fit OpenCode's 50KB tool output limit
+  - `implementing-features`: 90KB → under 50KB (phased command approach)
+  - `finding-dead-code`: Reduced and split into phased commands
+  - `simplify`: Reduced and split into phased commands
+- **Handoff command enhanced** - More comprehensive context preservation for session continuation
+- **SKILL.md Workflow Overview** - Expanded to include Phase 0.7, tier routing branches, and Simple Path appendix
+- **SKILL.md Command Sequence table** - Added "Tier" column showing which complexity tiers use each command
+- **SKILL.md SessionPreferences** - Added `complexity_tier` and `complexity_heuristics` fields
+- **feature-config Phase 0 Complete checklist** - Added complexity tier classification and tier routing items
 - **Intentional PR feedback framework** - Expanded `code-review --feedback` mode with structured response workflow
   - Gather feedback holistically across related PRs before responding
   - Categorize each item: Accept / Push back / Clarify / Defer
@@ -23,8 +147,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added † markers to indicate Superpowers-derived items
   - Created dedicated Acknowledgments table with verified mappings
 
-### Added
-- **Skill analyzer tests** - 31 unit tests covering extraction, correction detection, version parsing, metrics aggregation
+### Fixed
+- **Session counts shared between projects** - MCP tools now use the client's working directory from MCP roots instead of the server's `os.getcwd()`. This fixes sessions appearing shared across all projects because the MCP server process has a different cwd than Claude Code.
+  - Added `get_project_path_from_context()` and `get_project_dir_from_context()` async functions to extract project path from MCP roots
+  - Converted `find_session`, `list_sessions`, `spawn_claude_session`, `spellbook_check_compaction`, `spellbook_context_ping`, `spellbook_session_init`, and `spellbook_analytics_summary` to async
+  - Updated `inject_recovery_context` decorator to support async functions
+  - Falls back to `os.getcwd()` when roots are unavailable for backward compatibility
+- **OpenCode HTTP transport** - Use HTTP transport to connect to spellbook MCP daemon instead of stdio
+- **Deprecated datetime.utcnow()** - Replaced with datetime.now(UTC) throughout codebase
+- **MCP daemon PATH for CLI tools** - launchd/systemd services now set PATH correctly so tools like `gh` are accessible
+  - macOS: Includes Homebrew paths for both Apple Silicon (`/opt/homebrew/bin`) and Intel (`/usr/local/bin`)
+  - Linux: Includes Linuxbrew, `~/.local/bin`, `~/.cargo/bin`
+
+### Skills Refactored (12 total)
+
+| Skill | Before | After | Command Files |
+|-------|--------|-------|---------------|
+| fact-checking | 324 lines | 233 lines | fact-check-extract, fact-check-verify, fact-check-report |
+| reviewing-impl-plans | 443 lines | 189 lines | review-plan-inventory, review-plan-contracts, review-plan-behavior, review-plan-completeness |
+| auditing-green-mirage | 543 lines | 238 lines | audit-mirage-analyze, audit-mirage-cross, audit-mirage-report |
+| reviewing-design-docs | 275 lines | 121 lines | review-design-checklist, review-design-verify, review-design-report |
+| fixing-tests | 391 lines | 226 lines | fix-tests-parse, fix-tests-execute |
+| requesting-code-review | 206 lines | 90 lines | request-review-plan, request-review-execute, request-review-artifacts |
+| project-encyclopedia | 273 lines | 180 lines | encyclopedia-build, encyclopedia-validate |
+| merging-worktrees | 263 lines | 179 lines | merge-worktree-execute, merge-worktree-resolve, merge-worktree-verify |
+| finishing-a-development-branch | 255 lines | 179 lines | finish-branch-execute, finish-branch-cleanup |
+| code-review | 285 lines | 157 lines | code-review-feedback, code-review-give, code-review-tarot |
+| writing-skills | 365 lines | 312 lines | write-skill-test |
+| reflexion | 171 lines | 124 lines | reflexion-analyze |
+
+### New Command Files (32 total)
+- `commands/test-bar.md` - Generate floating QA test overlay for visual testing
+- `commands/test-bar-remove.md` - Clean removal of test-bar overlay
+- `commands/fact-check-extract.md` - Phase 2-3: Extract and triage claims from code
+- `commands/fact-check-verify.md` - Phase 4-5: Verify claims against source with evidence
+- `commands/fact-check-report.md` - Phase 6-7: Generate findings report with bibliography
+- `commands/review-plan-inventory.md` - Phase 1: Context, inventory, and work item classification
+- `commands/review-plan-contracts.md` - Phase 2: Interface contract audit (type/schema/event/file)
+- `commands/review-plan-behavior.md` - Phase 3: Behavior verification and fabrication detection
+- `commands/review-plan-completeness.md` - Phase 4-5: Completeness checks and escalation
+- `commands/audit-mirage-analyze.md` - Phase 1-2: Per-file anti-pattern analysis with scoring
+- `commands/audit-mirage-cross.md` - Phase 3: Cross-cutting analysis across test suite
+- `commands/audit-mirage-report.md` - Phase 4-5: Report generation and fix plan
+- `commands/review-design-checklist.md` - Phase 1-2: Document inventory and completeness checklist
+- `commands/review-design-verify.md` - Phase 3-4: Hand-waving detection and interface verification
+- `commands/review-design-report.md` - Phase 5-7: Implementation simulation, findings, and remediation
+- `commands/fix-tests-parse.md` - Phase 1: Parse and classify test failures
+- `commands/fix-tests-execute.md` - Phase 2-4: Fix execution with TDD loop and verification
+- `commands/request-review-plan.md` - Phase 1: Review planning and scope analysis
+- `commands/request-review-execute.md` - Phase 2: Execute review with checklists
+- `commands/request-review-artifacts.md` - Phase 3: Generate review artifacts and reports
+- `commands/encyclopedia-build.md` - Phase 1-3: Research, build, and write encyclopedia
+- `commands/encyclopedia-validate.md` - Phase 4: Validate encyclopedia accuracy
+- `commands/merge-worktree-execute.md` - Phase 1: Execute worktree merge sequence
+- `commands/merge-worktree-resolve.md` - Phase 2: Resolve merge conflicts
+- `commands/merge-worktree-verify.md` - Phase 3: Verify merge and cleanup
+- `commands/finish-branch-execute.md` - Phase 1-2: Analyze branch and execute chosen strategy
+- `commands/finish-branch-cleanup.md` - Phase 3: Post-merge cleanup
+- `commands/code-review-feedback.md` - Feedback mode: Process received code review feedback
+- `commands/code-review-give.md` - Give mode: Review others' code
+- `commands/code-review-tarot.md` - Tarot mode: Roundtable-style collaborative review
+- `commands/write-skill-test.md` - Phase 5: Skill testing with pressure scenarios
+- `commands/reflexion-analyze.md` - Full reflexion analysis workflow
 
 ## [0.9.4] - 2026-01-26
 

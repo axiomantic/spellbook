@@ -4,16 +4,45 @@ import pytest
 import json
 import os
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 
 
-def test_find_session_integration(tmp_path, monkeypatch):
+@pytest.fixture
+def mock_context_for_path():
+    """Create a mock context that returns a specific project directory."""
+    def _make_mock(project_dir):
+        mock_root = MagicMock()
+        mock_root.uri = f'file://{project_dir}'
+        mock_ctx = MagicMock()
+        mock_ctx.list_roots = AsyncMock(return_value=[mock_root])
+        return mock_ctx
+    return _make_mock
+
+
+@pytest.fixture
+def spellbook_config_dir(tmp_path, monkeypatch):
+    """Set up a temporary spellbook config directory."""
+    config_dir = tmp_path / "spellbook-config"
+    config_dir.mkdir()
+    monkeypatch.setenv('SPELLBOOK_CONFIG_DIR', str(config_dir))
+    return config_dir
+
+
+@pytest.mark.asyncio
+async def test_find_session_integration(tmp_path, mock_context_for_path, spellbook_config_dir):
     """Test find_session tool end-to-end."""
     from spellbook_mcp import server
+    from spellbook_mcp.path_utils import encode_cwd
 
-    project_dir = tmp_path / "projects" / "test-project"
-    project_dir.mkdir(parents=True)
+    # Simulate a project at /Users/test/myproject
+    fake_project_path = "/Users/test/myproject"
+    encoded = encode_cwd(fake_project_path)
 
-    session1 = project_dir / "auth-flow.jsonl"
+    # Create the session storage directory under spellbook config
+    session_dir = spellbook_config_dir / "projects" / encoded
+    session_dir.mkdir(parents=True)
+
+    session1 = session_dir / "auth-flow.jsonl"
     with open(session1, 'w') as f:
         f.write(json.dumps({
             "slug": "auth-flow",
@@ -22,7 +51,7 @@ def test_find_session_integration(tmp_path, monkeypatch):
             "message": {"content": "Implement auth"}
         }) + '\n')
 
-    session2 = project_dir / "api-design.jsonl"
+    session2 = session_dir / "api-design.jsonl"
     with open(session2, 'w') as f:
         f.write(json.dumps({
             "slug": "api-design",
@@ -36,23 +65,24 @@ def test_find_session_integration(tmp_path, monkeypatch):
             "sessionId": "xyz"
         }) + '\n')
 
-    monkeypatch.setattr('spellbook_mcp.server.get_project_dir', lambda: project_dir)
+    # Mock context returns the fake project path
+    mock_ctx = mock_context_for_path(fake_project_path)
 
     # Test search by slug (use .fn to access underlying function)
-    result = server.find_session.fn(name="auth", limit=10)
+    result = await server.find_session.fn(ctx=mock_ctx, name="auth", limit=10)
     assert len(result) == 2
     # Verify correct sessions matched (both contain "auth")
     slugs = {r['slug'] for r in result}
     assert slugs == {'auth-flow', 'api-design'}
 
     # Test search by custom title only
-    result = server.find_session.fn(name="Authentication API", limit=10)
+    result = await server.find_session.fn(ctx=mock_ctx, name="Authentication API", limit=10)
     assert len(result) == 1
     assert result[0]['slug'] == 'api-design'
     assert result[0]['custom_title'] == "Authentication API"
 
     # Test empty search (returns all)
-    result = server.find_session.fn(name="", limit=10)
+    result = await server.find_session.fn(ctx=mock_ctx, name="", limit=10)
     assert len(result) == 2
     slugs = {r['slug'] for r in result}
     assert slugs == {'auth-flow', 'api-design'}
@@ -97,14 +127,21 @@ def test_split_session_integration(tmp_path):
         assert 0 <= start < end <= 10, f"Invalid chunk [{start}, {end}]"
 
 
-def test_list_sessions_integration(tmp_path, monkeypatch):
+@pytest.mark.asyncio
+async def test_list_sessions_integration(tmp_path, mock_context_for_path, spellbook_config_dir):
     """Test list_sessions tool end-to-end."""
     from spellbook_mcp import server
+    from spellbook_mcp.path_utils import encode_cwd
 
-    project_dir = tmp_path / "projects" / "test-project"
-    project_dir.mkdir(parents=True)
+    # Simulate a project at /Users/test/myproject
+    fake_project_path = "/Users/test/myproject"
+    encoded = encode_cwd(fake_project_path)
 
-    session = project_dir / "test-session.jsonl"
+    # Create the session storage directory under spellbook config
+    session_dir = spellbook_config_dir / "projects" / encoded
+    session_dir.mkdir(parents=True)
+
+    session = session_dir / "test-session.jsonl"
     with open(session, 'w') as f:
         f.write(json.dumps({
             "slug": "test-session",
@@ -127,9 +164,9 @@ def test_list_sessions_integration(tmp_path, monkeypatch):
             "sessionId": "abc"
         }) + '\n')
 
-    monkeypatch.setattr('spellbook_mcp.server.get_project_dir', lambda: project_dir)
+    mock_ctx = mock_context_for_path(fake_project_path)
 
-    result = server.list_sessions.fn(limit=5)
+    result = await server.list_sessions.fn(ctx=mock_ctx, limit=5)
 
     assert len(result) == 1
     assert result[0]['slug'] == 'test-session'
@@ -139,25 +176,29 @@ def test_list_sessions_integration(tmp_path, monkeypatch):
     assert result[0]['first_user_message'] == 'First message'
 
 
-def test_find_session_empty_project(tmp_path, monkeypatch):
+@pytest.mark.asyncio
+async def test_find_session_empty_project(tmp_path, mock_context_for_path, spellbook_config_dir):
     """Test find_session with non-existent project directory."""
     from spellbook_mcp import server
 
-    non_existent = tmp_path / "nonexistent"
-    monkeypatch.setattr('spellbook_mcp.server.get_project_dir', lambda: non_existent)
+    # Use a path that won't have any session storage created
+    non_existent = "/nonexistent/project"
+    mock_ctx = mock_context_for_path(non_existent)
 
-    result = server.find_session.fn(name="anything", limit=10)
+    result = await server.find_session.fn(ctx=mock_ctx, name="anything", limit=10)
     assert result == []
 
 
-def test_list_sessions_empty_project(tmp_path, monkeypatch):
+@pytest.mark.asyncio
+async def test_list_sessions_empty_project(tmp_path, mock_context_for_path, spellbook_config_dir):
     """Test list_sessions with non-existent project directory."""
     from spellbook_mcp import server
 
-    non_existent = tmp_path / "nonexistent"
-    monkeypatch.setattr('spellbook_mcp.server.get_project_dir', lambda: non_existent)
+    # Use a path that won't have any session storage created
+    non_existent = "/nonexistent/project"
+    mock_ctx = mock_context_for_path(non_existent)
 
-    result = server.list_sessions.fn(limit=5)
+    result = await server.list_sessions.fn(ctx=mock_ctx, limit=5)
     assert result == []
 
 

@@ -46,6 +46,8 @@ Technical Specification Auditor. Reputation depends on catching gaps that would 
 </reflection>
 ```
 
+---
+
 ## Phase 1: Document Inventory
 
 ```
@@ -55,193 +57,37 @@ Technical Specification Auditor. Reputation depends on catching gaps that would 
 ## Diagrams: [type] - line X
 ```
 
-## Phase 2: Completeness Checklist
+---
 
-Mark: **SPECIFIED** | **VAGUE** | **MISSING** | **N/A** (justify N/A)
+## Phases 2-3: Completeness Checklist + Hand-Waving Detection
 
-| Category | Items |
-|----------|-------|
-| Architecture | System diagram, component boundaries, data flow, control flow, state management, sync/async boundaries |
-| Data | Models with field specs, schema, validation rules, transformations, storage formats |
-| API/Protocol | Endpoints, request/response schemas, error codes, auth, rate limits, versioning |
-| Filesystem | Directory structure, module responsibilities, naming conventions, key classes, imports |
-| Errors | Categories, propagation paths, recovery mechanisms, retry policies, failure modes |
-| Edge Cases | Enumerated cases, boundary conditions, null handling, max limits, concurrency |
-| Dependencies | All listed, version constraints, fallback behavior, API contracts |
-| Migration | Steps, rollback, data migration, backwards compat (or `N/A - BREAKING OK`) |
+Evaluate every category for specification completeness. Detect vague language, assumed knowledge, and magic numbers.
 
-### REST API Design Checklist
+**Execute:** `/review-design-checklist`
 
-<RULE>
-Apply this checklist when API/Protocol category is marked SPECIFIED or VAGUE. These items encode Richardson Maturity Model, Postel's Law, and Hyrum's Law considerations.
-</RULE>
+**Outputs:** Completeness matrix with SPECIFIED/VAGUE/MISSING verdicts, vague language inventory, assumed knowledge list, magic number list
 
-**Richardson Maturity Model (Level 2+ required for "SPECIFIED"):**
+---
 
-| Level | Requirement | Check |
-|-------|-------------|-------|
-| L0 | Single endpoint, POST everything | Reject as VAGUE |
-| L1 | Resources identified by URIs | `/users/123` not `/getUser?id=123` |
-| L2 | HTTP verbs used correctly | GET=read, POST=create, PUT=replace, PATCH=update, DELETE=remove |
-| L3 | HATEOAS (hypermedia) | Optional but note if claimed |
+## Phases 4-5: Interface Verification + Implementation Simulation
 
-**Postel's Law Compliance:**
+Verify all interface claims against source code. Escalate unverifiable claims to factchecker. Simulate implementation per component to surface gaps.
 
-```
-"Be conservative in what you send, be liberal in what you accept"
-```
+**Execute:** `/review-design-verify`
 
-| Aspect | Check |
-|--------|-------|
-| Request validation | Specified: required fields, optional fields, extra field handling |
-| Response structure | Specified: guaranteed fields, optional fields, extension points |
-| Versioning | Specified: how backwards compatibility maintained |
-| Deprecation | Specified: how deprecated fields/endpoints communicated |
+**Outputs:** Verification table, factchecker escalations, per-component implementation simulation
 
-**Hyrum's Law Awareness:**
+---
 
-```
-"With sufficient users, all observable behaviors become dependencies"
-```
+## Phases 6-7: Findings Report + Remediation Plan
 
-Flag these as requiring explicit specification:
-- Response field ordering (clients may depend on it)
-- Error message text (clients may parse it)
-- Timing/performance characteristics (clients may assume them)
-- Default values (clients may rely on them)
+Compile scored findings report and prioritized remediation plan.
 
-**API Specification Checklist:**
+**Execute:** `/review-design-report`
 
-```
-[ ] HTTP methods match CRUD semantics
-[ ] Resource URIs are nouns, not verbs
-[ ] Versioning strategy specified (URL, header, or content-type)
-[ ] Authentication mechanism documented
-[ ] Rate limiting specified (limits, headers, retry-after)
-[ ] Error response schema consistent across endpoints
-[ ] Pagination strategy for list endpoints
-[ ] Filtering/sorting parameters documented
-[ ] Request size limits specified
-[ ] Timeout expectations documented
-[ ] Idempotency requirements for non-GET methods
-[ ] CORS policy if browser-accessible
-```
+**Outputs:** Score table, numbered findings with location and remediation, P1/P2/P3 remediation plan with factcheck and additions sections
 
-**Error Response Standard:**
-
-Verify error responses specify:
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Human-readable message",
-    "details": [{"field": "email", "issue": "invalid format"}]
-  }
-}
-```
-
-Mark VAGUE if: error format varies by endpoint or leaves structure to implementation.
-
-## Phase 3: Hand-Waving Detection
-
-### Vague Language
-
-Flag: "etc.", "as needed", "TBD", "implementation detail", "standard approach", "straightforward", "details omitted"
-
-Format: `**Vague #N** | Loc: [X] | Text: "[quote]" | Missing: [specific]`
-
-### Assumed Knowledge
-
-Unspecified: algorithm choices, data structures, config values, naming conventions
-
-### Magic Numbers
-
-Unjustified: buffer sizes, timeouts, retry counts, rate limits, thresholds
-
-## Phase 4: Interface Verification
-
-<analysis>
-INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
-`assert_model_updated(model, field=value)` might assert only those fields, require ALL changes, or behave differently.
-</analysis>
-
-<reflection>
-YOU DO NOT KNOW until you READ THE SOURCE.
-</reflection>
-
-### Fabrication Anti-Pattern
-
-| Wrong | Right |
-|-------|-------|
-| Assume from name | Read docstring, source |
-| Code fails → invent parameter | Find usage examples |
-| Keep inventing | Write from VERIFIED behavior |
-
-### Verification Table
-
-| Interface | Verified/Assumed | Source Read | Notes |
-|-----------|-----------------|-------------|-------|
-
-**Every ASSUMED = critical gap.**
-
-### Factchecker Escalation
-
-Trigger: security claims, performance claims, concurrency claims, numeric claims, external references
-
-Format: `**Escalate:** [claim] | Loc: [X] | Category: [Y] | Depth: SHALLOW/MEDIUM/DEEP`
-
-## Phase 5: Implementation Simulation
-
-Per component:
-```
-### Component: [name]
-**Implement now?** YES/NO
-**Questions:** [list]
-**Must invent:** [what] - should specify: [why]
-**Must guess:** [shape] - should specify: [why]
-```
-
-## Phase 6: Findings Report
-
-```
-## Score
-| Category | Specified | Vague | Missing | N/A |
-|----------|-----------|-------|---------|-----|
-
-Hand-Waving: N | Assumed: M | Magic Numbers: P | Escalated: Q
-```
-
-### Findings Format
-
-```
-**#N: [Title]**
-Loc: [X]
-Current: [quote]
-Problem: [why insufficient]
-Would guess: [decisions]
-Required: [exact fix]
-```
-
-## Phase 7: Remediation Plan
-
-```
-### P1: Critical (Blocks Implementation)
-1. [ ] [addition + acceptance criteria]
-
-### P2: Important
-1. [ ] [clarification]
-
-### P3: Minor
-1. [ ] [improvement]
-
-### Factcheck Verification
-1. [ ] [claim] - [category] - [depth]
-
-### Additions
-- [ ] Diagram: [type] showing [what]
-- [ ] Table: [topic] specifying [what]
-- [ ] Section: [name] covering [what]
-```
+---
 
 <FORBIDDEN>
 - Approving documents with unresolved TBD/TODO markers

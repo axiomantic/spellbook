@@ -1,0 +1,30 @@
+{
+  "name": "spellbook-workflow-state",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "OpenCode plugin for workflow state persistence and recovery across compaction",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "dev": "opencode plugin dev",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts"
+  },
+  "keywords": ["opencode", "opencode-plugin", "spellbook", "workflow-state", "compaction-recovery"],
+  "author": "Spellbook",
+  "license": "MIT",
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.0.0"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "^1.1.43"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.1.43",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

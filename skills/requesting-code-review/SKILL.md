@@ -45,80 +45,31 @@ After each phase, verify:
 
 Reference: `patterns/code-review-formats.md` for output schemas.
 
-### Phase 1: PLANNING
-**Input:** User request, git state
-**Output:** Review scope definition
+### Phases 1-2: Planning + Context
 
-1. Determine git range (BASE_SHA..HEAD_SHA)
-2. List files to review (exclude generated, vendor, lockfiles)
-3. Identify plan/spec document if available
-4. Estimate review complexity (file count, line count)
+Determine git range, list files, identify plan/spec, estimate complexity, then assemble reviewer context bundle with plan excerpts, related code, and prior findings.
 
-**Exit criteria:** Git range defined, file list confirmed
+**Execute:** `/request-review-plan`
 
-### Phase 2: CONTEXT
-**Input:** Phase 1 outputs
-**Output:** Reviewer context bundle
+**Outputs:** Review scope definition, reviewer context bundle
 
-1. Extract relevant plan excerpts (what should have been built)
-2. Gather related code context (imports, dependencies)
-3. Note any prior review findings if re-review
-4. Prepare context for code-reviewer agent
+**Self-Check:** Git range defined, file list confirmed, context bundle ready for dispatch.
 
-**Exit criteria:** Context bundle ready for dispatch
+### Phases 3-6: Dispatch + Triage + Execute + Gate
 
-### Phase 3: DISPATCH
-**Input:** Phase 2 context
-**Output:** Review findings from agent
+Invoke code-reviewer agent, triage findings by severity, execute fixes (Critical first), then apply quality gate for proceed/block decision.
 
-Agent: `agents/code-reviewer.md`
+**Execute:** `/request-review-execute`
 
-The code-reviewer agent provides:
-- Approval Decision Matrix (verdict determination)
-- Evidence Collection Protocol (systematic evidence gathering)
-- Review Gates (ordered checklist: Security, Correctness, Plan Compliance, Quality, Polish)
-- Suggestion Format (GitHub suggestion blocks)
-- Collaborative communication style
+**Outputs:** Review findings, triage report, fix report, gate decision
 
-1. Invoke code-reviewer agent with context
-2. Pass: files, plan reference, git range, description
-3. Block until agent returns findings
-4. Validate findings have required fields (location, evidence)
+**Self-Check:** Valid findings received, triaged, blocking findings addressed, clear verdict.
 
-**Exit criteria:** Valid findings received
+### Artifact Contract
 
-### Phase 4: TRIAGE
-**Input:** Phase 3 findings
-**Output:** Categorized, prioritized findings
+Directory structure, phase artifact table, manifest schema, and SHA persistence rule.
 
-1. Sort findings by severity (Critical first)
-2. Group by file for efficient fixing
-3. Identify quick wins vs substantial fixes
-4. Flag any findings needing clarification
-
-**Exit criteria:** Findings triaged and prioritized
-
-### Phase 5: EXECUTE
-**Input:** Phase 4 triaged findings
-**Output:** Fixes applied
-
-1. Address Critical findings first (blocking)
-2. Address High findings (blocking threshold)
-3. Address Medium/Low as time permits
-4. Document deferred items with rationale
-
-**Exit criteria:** Blocking findings addressed
-
-### Phase 6: GATE
-**Input:** Phase 5 fix status
-**Output:** Proceed/block decision
-
-1. Apply severity gate rules (see Gate Rules below)
-2. Determine if re-review needed
-3. Update review status
-4. Report final verdict
-
-**Exit criteria:** Clear proceed/block decision with rationale
+**Reference:** `/request-review-artifacts`
 
 ## Gate Rules
 
@@ -132,73 +83,6 @@ Reference: `patterns/code-review-taxonomy.md` for severity definitions.
 | Any High unfixed without rationale | BLOCKED - fix or document deferral |
 | >=3 High unfixed | BLOCKED - systemic issues |
 | Only Medium/Low/Nit unfixed | MAY PROCEED |
-
-### Re-Review Triggers
-
-**MUST re-review when:**
-- Critical finding was fixed (verify fix correctness)
-- >=3 High findings fixed (check for regressions)
-- Fix adds >100 lines of new code
-- Fix modifies files outside original review scope
-
-**MAY skip re-review when:**
-- Only Low/Nit/Medium addressed
-- Fix is mechanical (rename, formatting, typo)
-
-### Deferral Documentation
-
-When deferring a High finding, document:
-1. Finding ID and summary
-2. Reason for deferral (time constraint, follow-up planned, risk accepted)
-3. Follow-up tracking (ticket number, target date)
-4. Explicit acknowledgment of risk
-
-<CRITICAL>
-No Critical finding may be deferred. Critical = must fix before merge.
-</CRITICAL>
-
-## Artifact Contract
-
-Each phase produces deterministic output files for traceability and resume capability.
-
-### Artifact Directory
-
-```
-~/.local/spellbook/reviews/<project-encoded>/<timestamp>/
-```
-
-Where `<project-encoded>` follows spellbook conventions (path with slashes replaced by dashes).
-
-### Phase Artifacts
-
-| Phase | Artifact | Description |
-|-------|----------|-------------|
-| 1 | `review-manifest.json` | Git range, file list, metadata |
-| 2 | `context-bundle.md` | Plan excerpts, code context |
-| 3 | `review-findings.json` | Raw findings from agent |
-| 4 | `triage-report.md` | Prioritized, grouped findings |
-| 5 | `fix-report.md` | What was fixed, what deferred |
-| 6 | `gate-decision.md` | Final verdict with rationale |
-
-### Manifest Schema
-
-```json
-{
-  "timestamp": "ISO 8601",
-  "project": "project name",
-  "branch": "branch name",
-  "base_sha": "merge base commit",
-  "reviewed_sha": "head commit at review time",
-  "files": ["list of reviewed files"],
-  "complexity": {
-    "file_count": 0,
-    "line_count": 0,
-    "estimated_effort": "small|medium|large"
-  }
-}
-```
-
-### SHA Persistence
 
 <CRITICAL>
 Always use `reviewed_sha` from manifest for inline comments.

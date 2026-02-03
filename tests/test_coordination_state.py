@@ -2,7 +2,7 @@
 import re
 import pytest
 from pathlib import Path
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 
 
 @pytest.fixture
@@ -294,7 +294,7 @@ def test_cleanup_old_swarms(state_manager):
     )
 
     # Create an old swarm by directly manipulating the database
-    old_date = (datetime.utcnow() - timedelta(days=10)).isoformat() + "Z"
+    old_date = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat().replace("+00:00", "Z")
     conn = state_manager._get_connection()
     try:
         conn.execute("""
