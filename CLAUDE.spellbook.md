@@ -501,6 +501,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **devils-advocate**: Use before design phase to challenge assumptions and surface risks
 - **dispatching-parallel-agents**: Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks
 - **distilling-prs**: Use when reviewing large PRs to surface changes requiring human attention
+- **documenting-tools**: Use when writing MCP tools, API endpoints, CLI commands, or any function that an LLM will invoke. Triggers: 'document this tool', 'write tool docs', 'MCP tool', 'API documentation'.
 - **emotional-stakes**: Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
 - **enforcing-code-quality**: Use when writing or modifying code. Enforces production-quality standards, prohibits common shortcuts, and ensures pre-existing issues are addressed. Invoked automatically by implementing-features and test-driven-development.
 - **executing-plans**: Use when you have a written implementation plan to execute

@@ -88,6 +88,36 @@ IF NO to ANY: revert changes to that section.
 6. Verify capability preservation
 7. Calculate savings, present diff
 
+## Large File Strategy (>500 lines)
+
+For files exceeding 500 lines, use parallelization:
+
+1. **Split into sections**: Identify logical boundaries (phases, categories)
+2. **Dispatch parallel subagents**: Each analyzes one section for compression opportunities
+   ```
+   Task: "Analyze lines 1-200 of [file] for compression. Return: redundancies found, suggested compressions, estimated savings."
+   Task: "Analyze lines 201-400 of [file] for compression. Return: redundancies found, suggested compressions, estimated savings."
+   ```
+3. **Orchestrator merges**: Collect findings, check for cross-section dependencies
+4. **Resolve conflicts**: If Section A references Section B's content, coordinate changes
+5. **Apply atomically**: Make all changes in single edit to maintain consistency
+
+## Verification Protocol
+
+Before declaring optimization complete, verify NO capability loss:
+
+1. **Identify 3 representative use cases** from original instructions
+2. **Mentally trace** each use case through the optimized instructions
+3. **Compare**: Does optimized produce equivalent behavior?
+
+| Use Case | Original Handles? | Optimized Handles? | Status |
+|----------|-------------------|-------------------|--------|
+| [Case 1] | Yes | ? | |
+| [Case 2] | Yes | ? | |
+| [Case 3] | Yes | ? | |
+
+If ANY use case degrades: revert that specific optimization.
+
 ## Output Format
 
 ```markdown

@@ -206,6 +206,74 @@ Critical Issues:
 5. **If score < 80%**: Command needs revision before use
 6. **If critical issues found**: Fix immediately, do not just report
 
+## Command Testing Protocol
+
+Before deploying a new command, verify it works:
+
+1. **Dry run**: Load command, explain what you WOULD do (don't execute)
+2. **Happy path**: Execute against a known-good scenario
+3. **Error path**: Execute against a known-bad scenario
+4. **Edge case**: Execute with unusual but valid input
+
+All 4 must produce correct behavior. Document test results.
+
+## Example: Complete Command
+
+```markdown
+---
+description: "Verify test passes before committing. Use when user says /verify or before any git commit."
+---
+
+# MISSION
+
+Run the test suite and report pass/fail status. Block commit if tests fail.
+
+<ROLE>
+QA Gate. Your job is to prevent broken code from being committed. A false pass is worse than a false fail.
+</ROLE>
+
+## Invariant Principles
+
+1. **Tests must actually run**: A skipped test suite is a failed verification
+2. **Full output captured**: Truncated output hides failures
+3. **Exit code is truth**: Parse exit code, not output text
+
+## Protocol
+
+1. Run: `npm test 2>&1 | tee /tmp/test-output.txt`
+2. Check exit code: `echo $?`
+3. If exit code = 0: Report "Tests passing. Safe to commit."
+4. If exit code != 0: Report failures and block.
+
+## Output
+
+```
+Verification: [PASS|FAIL]
+Tests run: N
+Failures: [list or "none"]
+```
+
+<FORBIDDEN>
+- Reporting PASS if any test failed
+- Running only a subset of tests without user approval
+- Suppressing test output
+- Proceeding with commit after FAIL
+</FORBIDDEN>
+
+<analysis>
+Before running tests:
+- Is this the correct test command for this project?
+- Are there any test flags that should be included?
+</analysis>
+
+<reflection>
+After running tests:
+- Did all tests actually run (not skipped)?
+- Is the exit code consistent with the output?
+- Are there any warnings that should be surfaced?
+</reflection>
+```
+
 ## Token Efficiency
 
 Commands load fully into context. Every token counts.

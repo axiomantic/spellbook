@@ -44,6 +44,9 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/fix-tests-execute](fix-tests-execute.md) | Phase 2 of fixing-tests: Fix Execution - investigate, classify, fix, verify, and... | spellbook |
 | [/fix-tests-parse](fix-tests-parse.md) | Phase 0 of fixing-tests: Input Processing - parse audit reports and build work i... | spellbook |
 | [/handoff](handoff.md) | Shift change: brief successor on context, workflow, pending work, and verificati... | spellbook |
+| [/ie-techniques](ie-techniques.md) | Reference for the 16 proven instruction engineering techniques. Invoke via /ie-t... | spellbook |
+| [/ie-template](ie-template.md) | Template and example for engineered instructions. Invoke via /ie-template when d... | spellbook |
+| [/ie-tool-docs](ie-tool-docs.md) | Guidance for writing tool/function documentation. Invoke via /ie-tool-docs when ... | spellbook |
 | [/merge-work-packets](merge-work-packets.md) | Verify all tracks complete, invoke merging-worktrees, run QA gates, report final... | spellbook |
 | [/merge-worktree-execute](merge-worktree-execute.md) | Phase 2: Sequential Round Merging - merge worktrees in dependency order with tes... | spellbook |
 | [/merge-worktree-resolve](merge-worktree-resolve.md) | Phase 3: Conflict Resolution - delegate to resolving-merge-conflicts with interf... | spellbook |

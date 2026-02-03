@@ -116,6 +116,7 @@ nav:
       - skills/smart-reading.md
       - skills/project-encyclopedia.md
       - skills/analyzing-skill-usage.md
+      - skills/documenting-tools.md
     - Session Skills:
       - skills/fun-mode.md
       - skills/tarot-mode.md
@@ -204,6 +205,10 @@ nav:
       - commands/code-review-tarot.md
     - Skill Commands:
       - commands/write-skill-test.md
+    - Instruction Engineering Commands:
+      - commands/ie-techniques.md
+      - commands/ie-template.md
+      - commands/ie-tool-docs.md
     - Test Bar Commands:
       - commands/test-bar.md
       - commands/test-bar-remove.md
