@@ -93,6 +93,7 @@ async def get_project_path_from_context(ctx: "Context") -> str:
     - Context is None
     - No roots are available
     - Root URI is not a file:// URI
+    - The list_roots() call times out or is aborted
 
     Args:
         ctx: FastMCP Context object
@@ -100,11 +101,15 @@ async def get_project_path_from_context(ctx: "Context") -> str:
     Returns:
         Absolute filesystem path to the project directory
     """
+    import asyncio
+
     if ctx is None:
         return os.getcwd()
 
     try:
-        roots = await ctx.list_roots()
+        # Add timeout to prevent indefinite hangs if client doesn't respond
+        # Use 1 second timeout - list_roots should be fast
+        roots = await asyncio.wait_for(ctx.list_roots(), timeout=1.0)
         if roots and len(roots) > 0:
             # Root URI is like file:///Users/alice/project
             uri = str(roots[0].uri)
@@ -112,8 +117,10 @@ async def get_project_path_from_context(ctx: "Context") -> str:
                 # Parse the URI and extract the path
                 parsed = urlparse(uri)
                 return parsed.path
-    except Exception:
+    except BaseException:
         # Fall back to cwd if roots unavailable
+        # Use BaseException to catch asyncio.CancelledError and AbortError
+        # which are not subclasses of Exception
         pass
 
     return os.getcwd()

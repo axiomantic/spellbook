@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.6] - 2026-02-03
+
+### Fixed
+- **MCP session init timeout** - Fixed `spellbook_session_init` hanging/aborting when `ctx.list_roots()` fails
+  - Changed exception handler from `except Exception` to `except BaseException` to catch `asyncio.CancelledError` and `AbortError`
+  - Added 1-second timeout to `list_roots()` call to prevent indefinite hangs
+  - Gracefully falls back to `os.getcwd()` if client doesn't respond
+
 ## [0.9.5] - 2026-02-02
 
 ### Added
