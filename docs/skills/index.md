@@ -74,7 +74,10 @@ Skills about skills and subagent orchestration:
 |-------|-------------|
 | [using-skills](using-skills.md) | Understanding how to invoke and use skills |
 | [writing-skills](writing-skills.md) | Creating new skills |
+| [writing-commands](writing-commands.md) | Creating new commands |
 | [instruction-engineering](instruction-engineering.md) | Effective prompt engineering for subagents and LLMs |
+| [optimizing-instructions](optimizing-instructions.md) | Reducing token usage in instruction files |
+| [documenting-tools](documenting-tools.md) | Writing documentation for MCP tools and APIs |
 | [dispatching-parallel-agents](dispatching-parallel-agents.md) | Parallel subagent orchestration |
 | [smart-reading](smart-reading.md) | Reading files/output without blind truncation |
 
