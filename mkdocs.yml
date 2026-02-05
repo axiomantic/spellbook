@@ -130,6 +130,7 @@ nav:
       - commands/handoff.md
       - commands/distill-session.md
       - commands/crystallize.md
+      - commands/design-assessment.md
       - commands/simplify.md
       - commands/simplify-analyze.md
       - commands/simplify-transform.md

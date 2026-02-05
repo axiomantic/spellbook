@@ -290,6 +290,25 @@ Skills with multiple phases face a structural decision: what belongs in the orch
 | Subagent prompt duplicates command instructions | Drift between prompt and command; maintenance burden doubles |
 | Monolithic SKILL.md exceeding 500 lines with phase implementation | Signal that phase logic should be extracted to commands |
 
+## Assessment Framework Integration
+
+**For skills that produce evaluative output** (verdicts, findings, scores, pass/fail):
+
+1. Run `/design-assessment` with the target type being evaluated
+2. Copy relevant sections from the generated framework into the skill:
+   - **Dimensions table** for evaluation criteria
+   - **Severity levels** for finding classification
+   - **Finding schema** for output structure
+   - **Verdict logic** for decision rules
+3. Reference the vocabulary consistently throughout the skill
+
+**Benefits:**
+- Consistent vocabulary across evaluative skills (CRITICAL/HIGH/MEDIUM/LOW/NIT)
+- Standardized finding schemas enable cross-skill comparison
+- Clear verdict logic prevents ambiguous outcomes
+
+**Example skills with evaluative output:** code-review, auditing-green-mirage, fact-checking, reviewing-design-docs
+
 ## Self-Check
 
 Before completing:

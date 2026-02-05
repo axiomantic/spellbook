@@ -219,6 +219,25 @@ Before deploying a new command, verify it works:
 
 All 4 must produce correct behavior. Document test results.
 
+## Assessment Framework Integration
+
+**For commands that produce evaluative output** (verdicts, findings, scores, pass/fail):
+
+1. Run `/design-assessment` with the target type being evaluated
+2. Copy relevant sections from the generated framework into the command:
+   - **Dimensions table** for evaluation criteria
+   - **Severity levels** for finding classification
+   - **Finding schema** for output structure
+   - **Verdict logic** for decision rules
+3. Reference the vocabulary consistently throughout the command
+
+**Benefits:**
+- Consistent vocabulary across evaluative commands (CRITICAL/HIGH/MEDIUM/LOW/NIT)
+- Standardized finding schemas enable cross-command comparison
+- Clear verdict logic prevents ambiguous outcomes
+
+**Example commands with evaluative output:** verify, audit-green-mirage, code-review-give, fact-check-verify
+
 ## Example: Complete Command
 
 ```markdown

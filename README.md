@@ -36,7 +36,7 @@
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
   - [Skills (46 total)](#skills-46-total)
-  - [Commands (71 total)](#commands-71-total)
+  - [Commands (72 total)](#commands-72-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -144,7 +144,7 @@ Reusable workflows for structured development:
 [assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 
-### Commands (71 total)
+### Commands (72 total)
 
 | Command | Description |
 |---------|-------------|
@@ -153,6 +153,7 @@ Reusable workflows for structured development:
 | [/dead-code-analyze] | Extract and triage code items for dead code verification |
 | [/dead-code-report] | Generate dead code findings report with deletion plan |
 | [/dead-code-implement] | Execute approved deletions with verification |
+| [/design-assessment] | Generate assessment frameworks for evaluative skills/commands |
 | [/handoff] | Custom session compaction |
 | [/distill-session] | Extract knowledge from sessions |
 | [/feature-config] | Phase 0 configuration wizard for feature workflow |
@@ -227,6 +228,7 @@ Reusable workflows for structured development:
 [/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
 [/dead-code-report]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-report/
 [/dead-code-implement]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-implement/
+[/design-assessment]: https://axiomantic.github.io/spellbook/latest/commands/design-assessment/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
 [/feature-config]: https://axiomantic.github.io/spellbook/latest/commands/feature-config/

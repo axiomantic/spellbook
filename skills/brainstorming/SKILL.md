@@ -97,6 +97,54 @@ mkdir -p ~/.local/spellbook/docs/$PROJECT_ENCODED/plans
 - Use `using-git-worktrees` for isolation
 - Use `writing-plans` for implementation plan
 
+## Design Quality Assessment
+
+After completing a design document, assess its quality using `/design-assessment`:
+
+### When to Assess
+
+| Scenario | Action |
+|----------|--------|
+| Design for evaluative skill/command | Run `/design-assessment --mode=autonomous` to generate framework for the design |
+| Complex design with multiple stakeholders | Run assessment to validate completeness |
+| Design review requested | Use assessment dimensions as review criteria |
+
+### Assessment Protocol
+
+1. **Generate framework**: `/design-assessment` with target type `document`
+2. **Score dimensions**: Rate each dimension 0-5 using the generated rubric
+3. **Document findings**: Use finding schema for any issues discovered
+4. **Determine verdict**: Apply verdict logic to decide if design is ready
+
+### Quality Gate
+
+Design is ready for implementation when:
+- All blocking dimensions (completeness, clarity, accuracy) score >= 3
+- No CRITICAL or HIGH findings
+- Verdict is READY
+
+### Integration with Synthesis Mode
+
+In synthesis mode, run assessment autonomously:
+1. Generate document assessment framework
+2. Self-score the design against dimensions
+3. If any blocking dimension < 3: pause and report gaps
+4. If verdict is NOT_READY or NEEDS_WORK: report gaps to user and iterate on design before proceeding
+
+### Error Handling
+
+If `/design-assessment` fails (command not found, execution error, timeout):
+- Warn user: "Design assessment unavailable, proceeding without quality gate"
+- Continue to implementation planning (degraded mode)
+- Log the failure for debugging
+
+<analysis>
+Before proceeding to implementation planning:
+- Has the design been assessed against standard dimensions?
+- Are all blocking dimensions scoring >= 3?
+- Have any CRITICAL or HIGH findings been addressed?
+</analysis>
+
 <FORBIDDEN>
 - Asking multiple questions in one message (cognitive overload)
 - Committing to approach without presenting alternatives

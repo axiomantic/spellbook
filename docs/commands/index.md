@@ -25,6 +25,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/dead-code-implement](dead-code-implement.md) | Implement dead code deletions with user approval. Part of dead-code-* family. | spellbook |
 | [/dead-code-report](dead-code-report.md) | Generate dead code findings report with implementation plan. Part of dead-code-*... | spellbook |
 | [/dead-code-setup](dead-code-setup.md) | Git safety and scope selection for dead code analysis. Part of dead-code-* famil... | spellbook |
+| [/design-assessment](design-assessment.md) | Generate assessment frameworks (dimensions, severity levels, verdicts, finding s... | spellbook |
 | [/distill-session](distill-session.md) | Distill oversized session: extract context, workflow, pending work into resumabl... | spellbook |
 | [/encyclopedia-build](encyclopedia-build.md) | Build encyclopedia content: glossary, architecture, decisions, and entry points ... | spellbook |
 | [/encyclopedia-validate](encyclopedia-validate.md) | Assemble and validate encyclopedia, write to output path (Phase 6) | spellbook |
