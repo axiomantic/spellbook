@@ -187,6 +187,21 @@ Do NOT ask for more data. You already have it from experiments.
 
 Test ONE theory at a time, fully -> Run ALL experiments for that theory -> Theory is only proven with CLEAR SCIENTIFIC EVIDENCE -> Move to next theory only when current is disproven.
 
+<CRITICAL>
+**Isolated Testing Protocol:** Before running ANY experiment:
+1. Invoke `isolated-testing` skill
+2. Design the COMPLETE repro test (procedure, predictions, command)
+3. Get approval (unless autonomous mode)
+4. Execute ONCE
+5. If bug reproduces: FULL STOP - announce and wait (or proceed to fix if autonomous)
+
+**Chaos is FORBIDDEN:**
+- "Let me try..." / "Maybe if I..." / "What about..."
+- Running without designed test
+- Multiple changes between experiments
+- Continuing after reproduction
+</CRITICAL>
+
 ## Hunch Verification
 
 <CRITICAL>

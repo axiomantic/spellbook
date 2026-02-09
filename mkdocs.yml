@@ -74,6 +74,7 @@ nav:
       - skills/test-driven-development.md
       - skills/debugging.md
       - skills/verifying-hunches.md
+      - skills/isolated-testing.md
       - skills/using-git-worktrees.md
       - skills/finishing-a-development-branch.md
     - Code Quality Skills:

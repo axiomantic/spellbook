@@ -35,7 +35,7 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (48 total)](#skills-48-total)
+  - [Skills (49 total)](#skills-49-total)
   - [Commands (74 total)](#commands-74-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
@@ -81,13 +81,13 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (48 total)
+### Skills (49 total)
 
 Reusable workflows for structured development:
 
 | Category | Skills |
 |----------|--------|
-| **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [using-git-worktrees]†, [finishing-a-development-branch]† |
+| **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
@@ -103,6 +103,7 @@ Reusable workflows for structured development:
 [test-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/
 [debugging]: https://axiomantic.github.io/spellbook/latest/skills/debugging/
 [verifying-hunches]: https://axiomantic.github.io/spellbook/latest/skills/verifying-hunches/
+[isolated-testing]: https://axiomantic.github.io/spellbook/latest/skills/isolated-testing/
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
 [enforcing-code-quality]: https://axiomantic.github.io/spellbook/latest/skills/enforcing-code-quality/
 [advanced-code-review]: https://axiomantic.github.io/spellbook/latest/skills/advanced-code-review/

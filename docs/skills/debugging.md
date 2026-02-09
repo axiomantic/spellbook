@@ -17,6 +17,7 @@ Use when debugging bugs, test failures, or unexpected behavior
 4. **Track State**: Fix attempts accumulate across methodology invocations until bug verified fixed.
 5. **Evidence Over Intuition**: "I think it's fixed" is not verification.
 6. **Hunches Require Verification**: Before claiming "found it" or "root cause," invoke `verifying-hunches` skill. Eureka is hypothesis until tested.
+7. **Isolated Testing**: One theory, one test, full stop. No mixing theories, no "trying things," no chaos. Invoke `isolated-testing` skill before ANY experiment execution.
 
 ## Entry Points
 
@@ -172,6 +173,21 @@ Invoke selected methodology:
 **Hunch Interception:** When you feel like saying "I found it," "this is the issue," or "I think I see what's happening" - STOP. Invoke `verifying-hunches` skill before claiming discovery. Every eureka is a hypothesis until tested.
 </CRITICAL>
 
+<CRITICAL>
+**Isolated Testing Mandate:** Before running ANY experiment or test:
+1. Invoke `isolated-testing` skill
+2. Design the complete repro test BEFORE execution
+3. Get approval (unless autonomous mode)
+4. Test ONE theory at a time
+5. STOP on reproduction - do not continue investigating
+
+Chaos indicators (STOP if you catch yourself):
+- "Let me try..." / "Maybe if I..." / "What about..."
+- Making changes without a designed test
+- Testing multiple theories simultaneously
+- Continuing after bug reproduces
+</CRITICAL>
+
 ### After Each Fix Attempt
 
 ```python
@@ -315,6 +331,10 @@ Actions:
 - Claim "it works now" without evidence
 - Say "I found it" or "root cause is X" without invoking verifying-hunches
 - Rediscover same theory after it was disproven (check hypothesis registry)
+- "Let me try" / "maybe if I" / "what about" (chaos debugging)
+- Test multiple theories simultaneously (no isolation)
+- Run experiments without designed repro test (action without design)
+- Continue investigating after bug reproduces (stop on reproduction)
 </FORBIDDEN>
 
 ## Self-Check
