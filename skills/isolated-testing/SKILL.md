@@ -31,16 +31,41 @@ After each test: Did I follow the protocol? Did I stop on reproduction? Am I res
 3. **Stop on Reproduction.** Bug repros = STOP investigating. Announce. Wait (unless autonomous, then proceed to fix phase).
 4. **Uncertainty is Not Urgency.** The pressure to "do something" is the enemy. Deliberation resolves uncertainty, not action.
 5. **Evidence is Binary.** Repro or no-repro. Proved or disproved. No "partially confirmed" or "seems related."
+6. **Know Your Code State.** Before EVERY test, verify: Am I on clean baseline? What modifications exist? Is this the state I intend to test?
+7. **Queue Discipline.** Theories are tested in order. No skipping to "the one that feels right." No adding new theories mid-test.
 
 ---
 
 ## The Protocol
 
+### Step 0: Verify Code State
+
+<CRITICAL>
+Before selecting a theory, confirm your code state:
+
+```
+CODE STATE CHECK:
+- Baseline: [commit SHA / version / description]
+- Current state: [clean / modified]
+- Modifications: [none / list what's changed]
+- Intended test state: [clean baseline / with modification X]
+```
+
+If you don't know your code state, STOP. Return to clean baseline before proceeding.
+</CRITICAL>
+
 ### Step 1: Select ONE Theory
 
 From your theory list, select the FIRST untested theory. Not "the one I feel good about." The FIRST one.
 
+**Queue discipline:** You MUST test theories in order. No skipping. No "but this one seems more likely."
+
 ```
+THEORY QUEUE:
+1. [Theory 1] - Status: [UNTESTED/TESTING/DISPROVED/CONFIRMED]
+2. [Theory 2] - Status: UNTESTED
+3. [Theory 3] - Status: UNTESTED
+
 Currently testing: Theory [N]: [description]
 Status: UNTESTED -> TESTING
 ```
@@ -148,7 +173,13 @@ DO NOT:
 ## Chaos Detection
 
 <FORBIDDEN>
-If you catch yourself doing ANY of these, STOP IMMEDIATELY and return to Step 1:
+If you catch yourself doing ANY of these, STOP IMMEDIATELY and return to Step 0:
+
+**Code state violations:**
+- Testing without knowing what code state you're on
+- Forgetting what modifications you've made
+- Assuming you're on clean baseline without verifying
+- Making changes without recording them
 
 **Action without design:**
 - "Let me try..." (try WHAT? designed HOW?)
@@ -156,6 +187,12 @@ If you catch yourself doing ANY of these, STOP IMMEDIATELY and return to Step 1:
 - "What about..." (brainstorming, not testing)
 - "Quick test..." (no such thing)
 - "See if..." (prediction unclear)
+
+**Queue violations:**
+- Skipping theories to test "the likely one"
+- Adding new theories mid-test without completing current
+- Jumping between theories without marking status
+- Testing theory 3 before theories 1 and 2 are resolved
 
 **Mixing theories:**
 - Changing multiple things between tests
@@ -168,6 +205,7 @@ If you catch yourself doing ANY of these, STOP IMMEDIATELY and return to Step 1:
 - Running before approval (non-autonomous)
 - Making changes instead of observing
 - "Fixing" before reproduction confirmed
+- Elaborate fix attempts before proving bug exists
 
 **Continuation after reproduction:**
 - "Let me verify that's really it"

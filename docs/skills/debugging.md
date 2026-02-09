@@ -11,13 +11,15 @@ Use when debugging bugs, test failures, or unexpected behavior
 
 ## Invariant Principles
 
-1. **Triage Before Methodology**: Classify symptom. Simple bugs get direct fixes; complex bugs get structured methodology.
-2. **3-Fix Rule**: Three failed attempts signal architectural problem. Stop thrashing, question architecture.
-3. **Verification Non-Negotiable**: No fix is complete without evidence. Always invoke `/verify` after claiming resolution.
-4. **Track State**: Fix attempts accumulate across methodology invocations until bug verified fixed.
-5. **Evidence Over Intuition**: "I think it's fixed" is not verification.
-6. **Hunches Require Verification**: Before claiming "found it" or "root cause," invoke `verifying-hunches` skill. Eureka is hypothesis until tested.
-7. **Isolated Testing**: One theory, one test, full stop. No mixing theories, no "trying things," no chaos. Invoke `isolated-testing` skill before ANY experiment execution.
+1. **Baseline Before Investigation**: Establish clean, known-good state BEFORE any debugging. No baseline = no debugging.
+2. **Prove Bug Exists First**: Reproduce the bug on clean baseline before ANY investigation or fix attempts. No repro = no bug.
+3. **Triage Before Methodology**: Classify symptom. Simple bugs get direct fixes; complex bugs get structured methodology.
+4. **3-Fix Rule**: Three failed attempts signal architectural problem. Stop thrashing, question architecture.
+5. **Verification Non-Negotiable**: No fix is complete without evidence. Always invoke `/verify` after claiming resolution.
+6. **Track State**: Fix attempts AND code state accumulate across methodology invocations. Always know what state you're testing.
+7. **Evidence Over Intuition**: "I think it's fixed" is not verification.
+8. **Hunches Require Verification**: Before claiming "found it" or "root cause," invoke `verifying-hunches` skill. Eureka is hypothesis until tested.
+9. **Isolated Testing**: One theory, one test, full stop. No mixing theories, no "trying things," no chaos. Invoke `isolated-testing` skill before ANY experiment execution.
 
 ## Entry Points
 
@@ -35,9 +37,118 @@ Use when debugging bugs, test failures, or unexpected behavior
 fix_attempts: 0       // Tracks attempts in this session
 current_bug: null     // Symptom description
 methodology: null     // "scientific" | "systematic" | null
+baseline_established: false  // Is clean baseline confirmed?
+bug_reproduced: false        // Has bug been reproduced on clean baseline?
+code_state: "unknown"        // "clean" | "modified" | "unknown"
 ```
 
 Reset on: new bug, explicit request, verified fix.
+
+---
+
+## Phase 0: Prerequisites
+
+<CRITICAL>
+**THIS PHASE IS MANDATORY.** You cannot proceed to triage or investigation without completing Phase 0.
+
+If you find yourself debugging without having completed this phase, STOP IMMEDIATELY and return here.
+</CRITICAL>
+
+### 0.1 Establish Clean Baseline
+
+**Before ANY investigation, you MUST have a known-good reference state.**
+
+```
+BASELINE CHECKLIST:
+[ ] What is the "clean" state? (upstream main, last known working commit, fresh install)
+[ ] Have I verified I can reach that clean state?
+[ ] What does "working correctly" look like on clean state?
+[ ] Have I tested clean state to confirm it works?
+```
+
+**If working with external code (upstream repo, dependency):**
+```bash
+# Example: establish clean baseline
+git stash                    # Save any local changes
+git checkout main            # Or upstream branch
+git pull                     # Get latest
+# Build/run from clean state
+# Verify expected behavior works
+```
+
+**Record the baseline:**
+```
+BASELINE ESTABLISHED:
+- Reference: [commit SHA / version / state description]
+- Verified working: [yes/no + what you tested]
+- Date: [timestamp]
+```
+
+### 0.2 Prove Bug Exists
+
+<CRITICAL>
+**HARD GATE: You cannot investigate or fix a bug you haven't reproduced.**
+
+"Someone reported X" is not reproduction.
+"I think I saw Y" is not reproduction.
+"The code looks wrong" is not reproduction.
+
+**Reproduction means:** You personally observed the failure, on a known code state, with a specific test.
+</CRITICAL>
+
+**Reproduction requirements:**
+1. Start from CLEAN baseline (from 0.1)
+2. Run SPECIFIC test/action that should trigger bug
+3. Observe ACTUAL failure (error message, wrong output, crash)
+4. Record EXACT steps and output
+
+```
+BUG REPRODUCTION:
+- Code state: [clean baseline from 0.1]
+- Steps to reproduce:
+  1. [exact step]
+  2. [exact step]
+  3. [exact step]
+- Expected: [what should happen]
+- Actual: [what actually happened - paste output]
+- Reproduced: [YES / NO]
+```
+
+**If bug does NOT reproduce on clean baseline:**
+```
+BUG NOT REPRODUCED on clean baseline.
+
+Options:
+A) The bug doesn't exist (or is already fixed)
+B) Reproduction steps are incomplete
+C) Bug is environment-specific
+
+DO NOT proceed to investigation. Either:
+- Refine reproduction steps
+- Check if bug was already fixed
+- Investigate environment differences
+```
+
+### 0.3 Code State Tracking
+
+**Throughout debugging, ALWAYS know what state you're testing.**
+
+Before EVERY test, record:
+```
+CODE STATE CHECK:
+- Am I on clean baseline? [yes/no]
+- What modifications exist? [list changes]
+- Is this the state I INTEND to test? [yes/no]
+```
+
+<FORBIDDEN>
+- Testing without knowing code state
+- Making changes and forgetting what you changed
+- Assuming you're on clean state without verifying
+- "Let me try this change" without recording it
+</FORBIDDEN>
+
+---
 
 ## Phase 1: Triage
 
@@ -323,30 +434,53 @@ Actions:
 ## Anti-Patterns
 
 <FORBIDDEN>
+**Phase 0 violations:**
+- Skip baseline establishment (no clean reference state)
+- Investigate without reproducing bug first (prove it exists!)
+- Test on unknown code state (always know what you're testing)
+- Forget what modifications you've made
+- Assume you're on clean state without verifying
+
+**Investigation violations:**
 - Skip verification after fix claim
 - Ignore 3-fix warning
 - "Just fix it" for complex bugs without warning
 - Exceed 3 attempts without architectural discussion
 - Apply fix without understanding root cause
 - Claim "it works now" without evidence
+
+**Methodology violations:**
 - Say "I found it" or "root cause is X" without invoking verifying-hunches
 - Rediscover same theory after it was disproven (check hypothesis registry)
 - "Let me try" / "maybe if I" / "what about" (chaos debugging)
 - Test multiple theories simultaneously (no isolation)
 - Run experiments without designed repro test (action without design)
 - Continue investigating after bug reproduces (stop on reproduction)
+
+**Winging it:**
+- Debugging without loading this skill
+- Skipping phases because "it's obvious"
+- Making elaborate fixes before proving bug exists
 </FORBIDDEN>
 
 ## Self-Check
 
-Before completing debug session:
+**Before starting investigation:**
+```
+[ ] Phase 0 completed (baseline + reproduction)
+[ ] Clean baseline established and recorded
+[ ] Bug reproduced on clean baseline with specific steps
+[ ] Code state is known and tracked
+```
 
+**Before completing debug session:**
 ```
 [ ] Fix attempts tracked throughout session
 [ ] 3-fix rule checked if attempts >= 3
 [ ] Verification command invoked after fix
 [ ] User informed of session outcome
 [ ] If methodology skipped, warning was shown
+[ ] Code returned to clean state (or changes documented)
 ```
 
 If NO to any item, go back and complete it.
