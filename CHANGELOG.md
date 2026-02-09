@@ -31,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Theory tracker with explicit status management
   - Integrated into debugging, scientific-debugging, systematic-debugging
 - **sharpening-prompts skill** - QA workflow for LLM instruction review
+- **debugging Phase 0: Prerequisites** - Mandatory gates before any investigation
+  - 0.1 Establish clean baseline: known-good reference state required before debugging
+  - 0.2 Prove bug exists: hard gate requiring reproduction on clean baseline
+  - 0.3 Code state tracking: always know what state you're testing
+  - New invariant principles: baseline before investigation, prove bug exists first
+  - Prevents: winging it without methodology, testing modified code, elaborate fixes before proving bug exists
+- **isolated-testing code state tracking** - Enhanced theory testing discipline
+  - Step 0: Verify code state before selecting theory
+  - Queue discipline: test theories in order, no skipping to "the likely one"
+  - Code state violations added to FORBIDDEN section
 
 ## [0.9.7] - 2026-02-08
 
