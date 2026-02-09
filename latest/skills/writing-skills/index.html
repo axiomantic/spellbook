@@ -2646,6 +2646,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../commands/design-assessment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /design-assessment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../commands/simplify/" class="md-nav__link">
         
   
@@ -6579,26 +6607,45 @@
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>| Subagent prompt duplicates command instructions | Drift between prompt and command; maintenance burden doubles |
 <a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>| Monolithic SKILL.md exceeding 500 lines with phase implementation | Signal that phase logic should be extracted to commands |
 <a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="gu">## Assessment Framework Integration</span>
 <a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>Before completing:
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">- [ ]</span> RED phase documented: baseline agent behavior captured verbatim
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">- [ ]</span> GREEN phase verified: skill changes behavior in re-run
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; and contains only triggers
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="k">- [ ]</span> YAML frontmatter has <span class="sb">`name`</span> and <span class="sb">`description`</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="k">- [ ]</span> Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">- [ ]</span> Token budget met: &lt;500 words core instructions
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">- [ ]</span> Multi-phase architecture: 3+ phase skills separate orchestrator from phase commands
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">- [ ]</span> No workflow summary in description
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">- [ ]</span> Rationalization table built (for discipline skills)
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>If ANY unchecked: STOP and fix before declaring complete.
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>Creating skills IS TDD for process documentation. Same Iron Law: No skill without failing test first. Same cycle: RED (baseline) → GREEN (write skill) → REFACTOR (close loopholes). If you follow TDD for code, follow it for skills. Untested skills are untested code - they will break in production.
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="gs">**REQUIRED BACKGROUND:**</span> Understand test-driven-development skill before using this skill.
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="gs">**For skills that produce evaluative output**</span> (verdicts, findings, scores, pass/fail):
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">1.</span> Run <span class="sb">`/design-assessment`</span> with the target type being evaluated
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">2.</span> Copy relevant sections from the generated framework into the skill:
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Dimensions table**</span> for evaluation criteria
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Severity levels**</span> for finding classification
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Finding schema**</span> for output structure
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Verdict logic**</span> for decision rules
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">3.</span> Reference the vocabulary consistently throughout the skill
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="gs">**Benefits:**</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>Consistent vocabulary across evaluative skills (CRITICAL/HIGH/MEDIUM/LOW/NIT)
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>Standardized finding schemas enable cross-skill comparison
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">-</span><span class="w"> </span>Clear verdict logic prevents ambiguous outcomes
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="gs">**Example skills with evaluative output:**</span> code-review, auditing-green-mirage, fact-checking, reviewing-design-docs
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>Before completing:
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">- [ ]</span> RED phase documented: baseline agent behavior captured verbatim
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="k">- [ ]</span> GREEN phase verified: skill changes behavior in re-run
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; and contains only triggers
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="k">- [ ]</span> YAML frontmatter has <span class="sb">`name`</span> and <span class="sb">`description`</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="k">- [ ]</span> Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="k">- [ ]</span> Token budget met: &lt;500 words core instructions
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="k">- [ ]</span> Multi-phase architecture: 3+ phase skills separate orchestrator from phase commands
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="k">- [ ]</span> No workflow summary in description
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">- [ ]</span> Rationalization table built (for discipline skills)
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>If ANY unchecked: STOP and fix before declaring complete.
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>Creating skills IS TDD for process documentation. Same Iron Law: No skill without failing test first. Same cycle: RED (baseline) → GREEN (write skill) → REFACTOR (close loopholes). If you follow TDD for code, follow it for skills. Untested skills are untested code - they will break in production.
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="gs">**REQUIRED BACKGROUND:**</span> Understand test-driven-development skill before using this skill.
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
