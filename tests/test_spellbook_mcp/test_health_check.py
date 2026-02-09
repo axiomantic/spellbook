@@ -8,6 +8,46 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 
+@pytest.fixture
+def reset_health_check_state():
+    """Reset health check global state before each test."""
+    from spellbook_mcp import server
+
+    # Save original state
+    original_first_done = server._first_health_check_done
+    original_last_full = server._last_full_health_check_time
+
+    # Reset to initial state
+    server._first_health_check_done = False
+    server._last_full_health_check_time = 0.0
+
+    yield
+
+    # Restore original state
+    server._first_health_check_done = original_first_done
+    server._last_full_health_check_time = original_last_full
+
+
+@pytest.fixture
+def simulate_not_first_call():
+    """Simulate that first health check has already been done."""
+    from spellbook_mcp import server
+
+    # Save original state
+    original_first_done = server._first_health_check_done
+    original_last_full = server._last_full_health_check_time
+
+    # Set state as if first call already happened
+    server._first_health_check_done = True
+    server._last_full_health_check_time = time.time()
+
+    yield
+
+    # Restore original state
+    server._first_health_check_done = original_first_done
+    server._last_full_health_check_time = original_last_full
+
+
 class TestHealthCheckMCPTool:
     """Tests for the spellbook_health_check MCP tool."""
 
@@ -18,6 +58,33 @@ class TestHealthCheckMCPTool:
         result = server.spellbook_health_check.fn()
 
         assert result["status"] == "healthy"
+
+    def test_returns_unhealthy_when_database_missing(self, tmp_path, monkeypatch):
+        """MCP tool returns unhealthy when database is missing."""
+        from spellbook_mcp import server
+
+        # Point to nonexistent database
+        monkeypatch.setattr(
+            "spellbook_mcp.server.get_db_path",
+            lambda: str(tmp_path / "nonexistent.db")
+        )
+        # Setup valid directories to isolate database failure
+        config_dir = tmp_path / "config"
+        data_dir = tmp_path / "data"
+        skills_dir = tmp_path / "skills"
+        config_dir.mkdir()
+        data_dir.mkdir()
+        skills_dir.mkdir()
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
+        monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
+
+        result = server.spellbook_health_check.fn()
+
+        assert result["status"] == "unhealthy"
+        assert "domains" in result
+        assert "database" in result["domains"]
+        assert result["domains"]["database"]["status"] == "unhealthy"
 
     def test_returns_version(self, tmp_path, monkeypatch):
         """Test that health check returns version from .version file."""
@@ -62,6 +129,306 @@ class TestHealthCheckMCPTool:
         assert "uptime_seconds" in result
         assert isinstance(result["uptime_seconds"], (int, float))
         assert result["uptime_seconds"] >= 0
+
+
+class TestHealthCheckFullMode:
+    """Tests for the full parameter in spellbook_health_check."""
+
+    def test_quick_mode_returns_only_critical_domains(
+        self, tmp_path, monkeypatch, simulate_not_first_call
+    ):
+        """Quick mode (full=False) only checks database and filesystem.
+
+        Note: Uses simulate_not_first_call fixture because first call is always full.
+        """
+        from spellbook_mcp import server
+        from spellbook_mcp.db import init_db
+
+        # Setup directories
+        config_dir = tmp_path / "config"
+        data_dir = tmp_path / "data"
+        skills_dir = tmp_path / "skills"
+        config_dir.mkdir()
+        data_dir.mkdir()
+        skills_dir.mkdir()
+
+        # Setup database
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Patch get_db_path and directory paths
+        monkeypatch.setattr(
+            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+        )
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
+        monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
+
+        result = server.spellbook_health_check.fn(full=False)
+
+        # Quick mode should have domains
+        assert "domains" in result
+        assert result["check_mode"] == "quick"
+        domains = result["domains"]
+        assert "database" in domains
+        assert "filesystem" in domains
+        # Quick mode should NOT include optional domains
+        assert "watcher" not in domains
+        assert "github_cli" not in domains
+
+    def test_full_mode_returns_all_domains(self, tmp_path, monkeypatch):
+        """Full mode (full=True) checks all 6 domains."""
+        from spellbook_mcp import server
+        from spellbook_mcp.db import init_db
+        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        import subprocess
+
+        # Setup directories
+        config_dir = tmp_path / "config"
+        data_dir = tmp_path / "data"
+        skills_dir = tmp_path / "skills"
+        config_dir.mkdir()
+        data_dir.mkdir()
+        skills_dir.mkdir()
+
+        # Create a valid skill
+        skill = skills_dir / "test-skill"
+        skill.mkdir()
+        (skill / "SKILL.md").write_text("# Test Skill")
+
+        # Setup database
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Patch paths
+        monkeypatch.setattr(
+            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+        )
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
+        monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
+
+        # Mock gh CLI as unavailable
+        def mock_run(cmd, *args, **kwargs):
+            raise FileNotFoundError()
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        # Mock coordination config
+        def mock_load():
+            return CoordinationConfig(backend=CoordinationBackend.NONE)
+
+        monkeypatch.setattr(
+            "spellbook_mcp.health.load_coordination_config", mock_load
+        )
+
+        result = server.spellbook_health_check.fn(full=True)
+
+        # Full mode should check all domains
+        assert "domains" in result
+        domains = result["domains"]
+        assert "database" in domains
+        assert "filesystem" in domains
+        assert "watcher" in domains
+        assert "github_cli" in domains
+        assert "coordination" in domains
+        assert "skills" in domains
+
+    def test_first_call_is_full_mode(self, tmp_path, monkeypatch, reset_health_check_state):
+        """First call after server start is automatically full mode."""
+        from spellbook_mcp import server
+        from spellbook_mcp.db import init_db
+        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        import subprocess
+
+        # Setup directories
+        config_dir = tmp_path / "config"
+        data_dir = tmp_path / "data"
+        skills_dir = tmp_path / "skills"
+        config_dir.mkdir()
+        data_dir.mkdir()
+        skills_dir.mkdir()
+
+        # Create a valid skill
+        skill = skills_dir / "test-skill"
+        skill.mkdir()
+        (skill / "SKILL.md").write_text("# Test Skill")
+
+        # Setup database
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Patch paths
+        monkeypatch.setattr(
+            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+        )
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
+        monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
+
+        # Mock gh to avoid actual CLI calls
+        mock_gh_result = MagicMock()
+        mock_gh_result.stdout = "gh version 2.45.0 (2024-01-01)"
+        mock_gh_result.returncode = 0
+        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_gh_result)
+
+        # Mock coordination config
+        mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
+        mock_load = MagicMock(return_value=mock_config)
+        monkeypatch.setattr(
+            "spellbook_mcp.health.load_coordination_config", mock_load
+        )
+
+        # Call without full parameter - first call should be full
+        result = server.spellbook_health_check.fn()
+
+        # First call should be full mode (all domains)
+        assert "domains" in result
+        assert result["check_mode"] == "full_first_call"
+        domains = result["domains"]
+        assert "database" in domains
+        assert "filesystem" in domains
+        assert "watcher" in domains
+        assert "github_cli" in domains
+
+    def test_subsequent_calls_are_quick_mode(
+        self, tmp_path, monkeypatch, simulate_not_first_call
+    ):
+        """Subsequent calls (after first) default to quick mode."""
+        from spellbook_mcp import server
+        from spellbook_mcp.db import init_db
+
+        # Setup directories
+        config_dir = tmp_path / "config"
+        data_dir = tmp_path / "data"
+        skills_dir = tmp_path / "skills"
+        config_dir.mkdir()
+        data_dir.mkdir()
+        skills_dir.mkdir()
+
+        # Setup database
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Patch paths
+        monkeypatch.setattr(
+            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+        )
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
+        monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
+
+        # Call without full parameter - should be quick since not first call
+        result = server.spellbook_health_check.fn()
+
+        # Should be quick mode (only critical domains)
+        assert "domains" in result
+        assert result["check_mode"] == "quick"
+        domains = result["domains"]
+        assert "database" in domains
+        assert "filesystem" in domains
+        assert "watcher" not in domains
+
+    def test_periodic_full_check_after_interval(self, tmp_path, monkeypatch):
+        """Full check triggers automatically after interval expires."""
+        from spellbook_mcp import server
+        from spellbook_mcp.db import init_db
+        from spellbook_mcp.preferences import CoordinationConfig, CoordinationBackend
+        import subprocess
+
+        # Setup directories
+        config_dir = tmp_path / "config"
+        data_dir = tmp_path / "data"
+        skills_dir = tmp_path / "skills"
+        config_dir.mkdir()
+        data_dir.mkdir()
+        skills_dir.mkdir()
+
+        # Create a valid skill
+        skill = skills_dir / "test-skill"
+        skill.mkdir()
+        (skill / "SKILL.md").write_text("# Test Skill")
+
+        # Setup database
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Patch paths
+        monkeypatch.setattr(
+            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+        )
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
+        monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
+
+        # Mock gh to avoid actual CLI calls
+        mock_gh_result = MagicMock()
+        mock_gh_result.stdout = "gh version 2.45.0 (2024-01-01)"
+        mock_gh_result.returncode = 0
+        monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: mock_gh_result)
+
+        # Mock coordination config
+        mock_config = CoordinationConfig(backend=CoordinationBackend.NONE)
+        mock_load = MagicMock(return_value=mock_config)
+        monkeypatch.setattr(
+            "spellbook_mcp.health.load_coordination_config", mock_load
+        )
+
+        # Simulate first call already done, but interval has expired
+        server._first_health_check_done = True
+        server._last_full_health_check_time = (
+            time.time() - server.FULL_HEALTH_CHECK_INTERVAL_SECONDS - 1
+        )
+
+        try:
+            # Call without full parameter - should be full due to interval
+            result = server.spellbook_health_check.fn()
+
+            # Should be periodic full mode (all domains)
+            assert "domains" in result
+            assert result["check_mode"] == "full_periodic"
+            domains = result["domains"]
+            assert "database" in domains
+            assert "filesystem" in domains
+            assert "watcher" in domains
+            assert "github_cli" in domains
+        finally:
+            # Reset state
+            server._first_health_check_done = False
+            server._last_full_health_check_time = 0.0
+
+    def test_returns_checked_at_timestamp(self, tmp_path, monkeypatch):
+        """Health check returns ISO timestamp in checked_at field."""
+        from spellbook_mcp import server
+        from spellbook_mcp.db import init_db
+        from datetime import datetime
+
+        # Setup directories
+        config_dir = tmp_path / "config"
+        data_dir = tmp_path / "data"
+        skills_dir = tmp_path / "skills"
+        config_dir.mkdir()
+        data_dir.mkdir()
+        skills_dir.mkdir()
+
+        # Setup database
+        db_path = tmp_path / "test.db"
+        init_db(str(db_path))
+
+        # Patch paths
+        monkeypatch.setattr(
+            "spellbook_mcp.server.get_db_path", lambda: str(db_path)
+        )
+        monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
+        monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
+        monkeypatch.setenv("SPELLBOOK_DIR", str(skills_dir.parent))
+
+        result = server.spellbook_health_check.fn()
+
+        assert "checked_at" in result
+        # Should be parseable as ISO datetime
+        parsed = datetime.fromisoformat(result["checked_at"].replace("Z", "+00:00"))
+        assert parsed is not None
 
 
 class TestGetVersion:

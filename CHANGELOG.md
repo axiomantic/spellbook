@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.8] - 2026-02-09
+
+### Added
+- **Comprehensive health check** - Enhanced `spellbook_health_check` MCP tool with domain-specific checks
+  - 6 domain checks: database, watcher, filesystem, github_cli, coordination, skills
+  - Quick mode (liveness) vs full mode (readiness) with `full` parameter
+  - HealthStatus enum: HEALTHY, DEGRADED, UNHEALTHY, UNAVAILABLE, NOT_CONFIGURED
+  - Status aggregation with critical domain handling (database, filesystem are critical)
+  - Detailed domain results with latency tracking and diagnostic details
+  - New `spellbook_mcp/health.py` module (700+ lines)
+  - 93 new tests for health check functionality
+
 ## [0.9.7] - 2026-02-08
 
 ### Added
