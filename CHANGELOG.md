@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.7] - 2026-02-08
+
+### Added
+- **/design-assessment command** - Generate assessment frameworks for evaluative skills/commands
+  - Detects target type (code, document, api, test, claim, artifact, readiness)
+  - Generates dimension tables, severity levels, finding schemas, verdict logic
+  - Supports autonomous and interactive modes
+  - Integrates with brainstorming, writing-skills, and writing-commands skills
+
 ## [0.9.6] - 2026-02-03
 
 ### Fixed

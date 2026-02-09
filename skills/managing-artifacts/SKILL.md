@@ -119,3 +119,11 @@ When user asks to "add X to CLAUDE.md" for such a project:
 | Encyclopedia | `~/.local/spellbook/docs/<project>/encyclopedia.md` |
 | Session distill | `~/.local/spellbook/distilled/<project>/` |
 | Logs | `~/.local/spellbook/logs/` |
+
+<FORBIDDEN>
+- Writing generated artifacts to project directories
+- Creating docs/, plans/, reports/ folders inside projects
+- Adding instructions to CLAUDE.md in multi-contributor repos
+- Using relative paths instead of project-encoded paths
+- Skipping the open source detection check
+</FORBIDDEN>

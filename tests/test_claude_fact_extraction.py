@@ -254,7 +254,7 @@ class TestClaudeFactExtraction:
         assert facts.has_yaml_frontmatter is True, "Should have YAML frontmatter"
         assert facts.has_role_tag is True, "Should have <ROLE> tag"
         assert facts.has_forbidden_section is True, "Should have FORBIDDEN section"
-        assert facts.invariant_principles_count == 5, "Should have exactly 5 principles"
+        assert facts.invariant_principles_count == 6, "Should have exactly 6 principles"
         assert facts.description_follows_use_when_pattern is True, "Description should start with 'Use when'"
 
     @requires_claude
