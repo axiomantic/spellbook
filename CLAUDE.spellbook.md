@@ -522,6 +522,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **resolving-merge-conflicts**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
 - **reviewing-design-docs**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
 - **reviewing-impl-plans**: Use when reviewing implementation plans before execution, especially plans derived from design documents
+- **sharpening-prompts**: Use when reviewing LLM prompts, skill instructions, subagent prompts, or any text that will instruct an AI. Triggers: "review this prompt", "audit instructions", "sharpen prompt", "is this clear enough", "would an LLM understand this", "ambiguity check". Also invoked by instruction-engineering, reviewing-design-docs, and reviewing-impl-plans for instruction quality gates.
 - **smart-reading**: Use when reading files or command output of unknown size to avoid blind truncation and context loss
 - **tarot-mode**: Use when session returns mode.type='tarot' - tarot archetypes collaborate via roundtable dialogue with instruction-engineering embedded
 - **test-driven-development**: Use when implementing any feature or bugfix, before writing implementation code

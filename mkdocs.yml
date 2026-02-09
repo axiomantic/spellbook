@@ -110,6 +110,7 @@ nav:
       - skills/writing-skills.md
       - skills/writing-commands.md
       - skills/instruction-engineering.md
+      - skills/sharpening-prompts.md
       - skills/optimizing-instructions.md
       - skills/emotional-stakes.md
       - skills/dispatching-parallel-agents.md
@@ -210,6 +211,8 @@ nav:
       - commands/ie-techniques.md
       - commands/ie-template.md
       - commands/ie-tool-docs.md
+      - commands/sharpen-audit.md
+      - commands/sharpen-improve.md
     - Test Bar Commands:
       - commands/test-bar.md
       - commands/test-bar-remove.md

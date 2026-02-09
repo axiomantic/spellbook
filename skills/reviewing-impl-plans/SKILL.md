@@ -57,6 +57,8 @@ Dispatch subagent with `review-plan-contracts` command.
 
 The subagent audits every interface between parallel work streams: request/response/error formats, type/schema contracts, event/message contracts, and file/resource contracts. Every MISSING contract is flagged CRITICAL.
 
+**Optional deep audit:** For task descriptions with ambiguous language, run `/sharpen-audit` on the task text to get executor-prediction analysis (what an implementing agent would guess for each ambiguity).
+
 **Gate:** Proceed only when every interface has been audited. This is the most important phase.
 
 ## Phase 3: Behavior Verification Audit

@@ -68,6 +68,8 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/review-plan-contracts](review-plan-contracts.md) | Phase 2 of reviewing-impl-plans: Interface Contract Audit | spellbook |
 | [/review-plan-inventory](review-plan-inventory.md) | Phase 1 of reviewing-impl-plans: Context and Inventory analysis | spellbook |
 | [/scientific-debugging](scientific-debugging.md) | Rigorous theory-experiment debugging methodology. Use when debugging complex iss... | spellbook |
+| [/sharpen-audit](sharpen-audit.md) | Audit LLM prompts/instructions for ambiguity. Use when reviewing prompts, skill ... | spellbook |
+| [/sharpen-improve](sharpen-improve.md) | Rewrite LLM prompts to eliminate ambiguity. Use when you have a prompt that need... | spellbook |
 | [/simplify](simplify.md) | Orchestrates code simplification via verified transformations. Delegates to simp... | spellbook |
 | [/simplify-analyze](simplify-analyze.md) | Analyze code for simplification opportunities. Part of simplify-* family. | spellbook |
 | [/simplify-transform](simplify-transform.md) | Apply verified simplifications with user approval. Part of simplify-* family. | spellbook |
