@@ -16,6 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Detailed domain results with latency tracking and diagnostic details
   - New `spellbook_mcp/health.py` module (700+ lines)
   - 93 new tests for health check functionality
+- **verifying-hunches skill** - Prevents premature eureka claims during debugging
+  - Triggers on: "I found", "this is the issue", "root cause", "smoking gun", "aha", "got it"
+  - Eureka registry tracks hypotheses with UNTESTED/TESTING/CONFIRMED/DISPROVEN status
+  - Deja vu check prevents rediscovering same disproven theory after compaction
+  - Specificity requirements: exact location, mechanism, symptom link, testable prediction
+  - Test-before-claim protocol with prediction vs actual comparison
+  - Confidence calibration language ("hypothesis" not "found")
+- **isolated-testing skill** - Enforces methodical debugging with one-theory-one-test discipline
+  - Triggers on chaos indicators: "let me try", "maybe if I", "what about", rapid context switching
+  - Design-before-execute: write complete repro test before running anything
+  - Approval gate (skipped in autonomous/YOLO mode)
+  - FULL STOP on reproduction - announce and wait, no continued investigation
+  - Theory tracker with explicit status management
+  - Integrated into debugging, scientific-debugging, systematic-debugging
+- **sharpening-prompts skill** - QA workflow for LLM instruction review
 
 ## [0.9.7] - 2026-02-08
 
