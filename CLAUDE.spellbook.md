@@ -529,7 +529,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans
 - **using-lsp-tools**: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
 - **using-skills**: Use when starting any conversation
-- **verifying-hunches**: Use when about to claim you found a root cause, smoking gun, or likely culprit. Triggers: "I found it", "this is the issue", "I think I see what's happening", "this looks like the problem", "eureka", "the bug is", "root cause is". Intercepts premature conclusions and enforces verification.
+- **verifying-hunches**: Use when about to claim discovery during debugging. Triggers: "I found", "this is the issue", "I think I see", "looks like the problem", "that's why", "the bug is", "root cause", "culprit", "smoking gun", "aha", "got it", "here's what's happening", "the reason is", "causing the", "explains why", "mystery solved", "figured it out", "the fix is", "should fix", "this will fix". Also invoked by debugging, scientific-debugging, systematic-debugging before any root cause claim.
 - **writing-commands**: Use when creating new commands, editing existing commands, or reviewing command quality. Triggers on "write command", "new command", "review command", "fix command
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
 - **writing-skills**: Use when creating new skills, editing existing skills, or verifying skills work before deployment

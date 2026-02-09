@@ -154,6 +154,7 @@ You MUST complete each phase before proceeding to the next.
    - State clearly: "I think X is the root cause because Y"
    - Write it down
    - Be specific, not vague
+   - **CRITICAL:** Before claiming you "found it," invoke `verifying-hunches` skill
 
 2. **Test Minimally**
    - Make the SMALLEST possible change to test hypothesis
@@ -164,12 +165,23 @@ You MUST complete each phase before proceeding to the next.
    - Did it work? Yes → Phase 4
    - Didn't work? Form NEW hypothesis
    - DON'T add more fixes on top
+   - **Register disproven hypothesis** - prevents rediscovery after compaction
 
 4. **When You Don't Know**
    - Say "I don't understand X"
    - Don't pretend to know
    - Ask for help
    - Research more
+
+<HUNCH_CHECK>
+When you feel like saying "I found it" or "this is the root cause":
+1. STOP - that's a hypothesis, not a finding
+2. Invoke `verifying-hunches` skill
+3. Complete specificity check (exact location, mechanism, symptom link)
+4. Define falsification criteria
+5. Run test with prediction vs actual comparison
+6. Only claim "confirmed" after evidence matches prediction
+</HUNCH_CHECK>
 
 ### Phase 4: Implementation
 
@@ -230,6 +242,9 @@ If you catch yourself thinking:
 - Proposing solutions before tracing data flow
 - **"One more fix attempt" (when already tried 2+)**
 - **Each fix reveals new problem in different place**
+- **"I found it!" or "This is the issue!"** (premature eureka - invoke verifying-hunches)
+- **"I think I see what's happening"** (vague pattern-match - needs specificity)
+- **Same theory you had before** (déjà vu - check if previously disproven)
 
 **ALL of these mean: STOP. Return to Phase 1.**
 

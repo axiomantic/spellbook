@@ -14,6 +14,7 @@ description: "Use when debugging bugs, test failures, or unexpected behavior"
 3. **Verification Non-Negotiable**: No fix is complete without evidence. Always invoke `/verify` after claiming resolution.
 4. **Track State**: Fix attempts accumulate across methodology invocations until bug verified fixed.
 5. **Evidence Over Intuition**: "I think it's fixed" is not verification.
+6. **Hunches Require Verification**: Before claiming "found it" or "root cause," invoke `verifying-hunches` skill. Eureka is hypothesis until tested.
 
 ## Entry Points
 
@@ -165,6 +166,10 @@ Invoke selected methodology:
 - `/scientific-debugging` for hypothesis-driven investigation
 - `/systematic-debugging` for root cause tracing
 
+<CRITICAL>
+**Hunch Interception:** When you feel like saying "I found it," "this is the issue," or "I think I see what's happening" - STOP. Invoke `verifying-hunches` skill before claiming discovery. Every eureka is a hypothesis until tested.
+</CRITICAL>
+
 ### After Each Fix Attempt
 
 ```python
@@ -306,6 +311,8 @@ Actions:
 - Exceed 3 attempts without architectural discussion
 - Apply fix without understanding root cause
 - Claim "it works now" without evidence
+- Say "I found it" or "root cause is X" without invoking verifying-hunches
+- Rediscover same theory after it was disproven (check hypothesis registry)
 </FORBIDDEN>
 
 ## Self-Check

@@ -108,6 +108,7 @@ Now write your response following this exact template.
 <RULE>NO rankings - no "most likely", "60% probability", "ranked by likelihood"</RULE>
 <RULE>3+ experiments per theory with explicit prove/disprove criteria</RULE>
 <RULE>Present plan BEFORE execution - wait for approval</RULE>
+<RULE>Before claiming "found root cause" - invoke verifying-hunches skill to validate</RULE>
 
 ## Top 3 Forbidden Patterns
 
@@ -185,6 +186,20 @@ Do NOT ask for more data. You already have it from experiments.
 ## Systematic Execution
 
 Test ONE theory at a time, fully -> Run ALL experiments for that theory -> Theory is only proven with CLEAR SCIENTIFIC EVIDENCE -> Move to next theory only when current is disproven.
+
+## Hunch Verification
+
+<CRITICAL>
+When experiments support a theory and you feel ready to declare "found it":
+
+1. **STOP** - invoke `verifying-hunches` skill
+2. Register the hypothesis with specifics (location, mechanism, symptom link)
+3. Define falsification criteria (what would disprove this)
+4. Run the test-before-claim protocol
+5. Only after 2+ matching tests: mark CONFIRMED
+
+Premature "eureka" without this protocol is FORBIDDEN.
+</CRITICAL>
 
 <SELF_CHECK>
 Before submitting your response, verify:
