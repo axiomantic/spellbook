@@ -49,10 +49,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Blocklist: Write, Edit, Bash, Grep, Glob, Read (source files)
   - Narrates the exact failure pattern and correct pattern to internalize
   - Explains why orchestrator violations waste tokens and degrade quality
+- **writing-commands skill+commands split** - Split oversized skill (2340 tokens) into orchestrator + 3 commands
+  - Orchestrator SKILL.md: 128 lines (under 1500 token budget)
+  - `writing-commands-create`: command schema, naming, frontmatter, token efficiency, example
+  - `writing-commands-review`: quality checklist, anti-patterns, testing protocol
+  - `writing-commands-paired`: paired command protocol, assessment framework integration
 - **isolated-testing code state tracking** - Enhanced theory testing discipline
   - Step 0: Verify code state before selecting theory
   - Queue discipline: test theories in order, no skipping to "the likely one"
   - Code state violations added to FORBIDDEN section
+
+### Fixed
+- **Flaky token budget compliance tests** - Added 10% tolerance margin for LLM estimation variance
+  - Skills between 1500-1650 estimated tokens produce warnings (not failures)
+  - Skills over 1650 still fail (catches genuinely over-budget skills)
+  - Eliminates random pass/fail on borderline skills across runs
 
 ## [0.9.7] - 2026-02-08
 

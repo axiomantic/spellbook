@@ -209,6 +209,9 @@ nav:
       - commands/code-review-tarot.md
     - Skill Commands:
       - commands/write-skill-test.md
+      - commands/writing-commands-create.md
+      - commands/writing-commands-review.md
+      - commands/writing-commands-paired.md
     - Instruction Engineering Commands:
       - commands/ie-techniques.md
       - commands/ie-template.md

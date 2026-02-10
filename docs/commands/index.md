@@ -80,3 +80,6 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/verify](verify.md) | Run verification commands and confirm output before making success claims. Use b... | spellbook |
 | [/write-plan](write-plan.md) | Create detailed implementation plan with bite-sized tasks. Use when starting any... | [superpowers](https://github.com/obra/superpowers) |
 | [/write-skill-test](write-skill-test.md) | RED-GREEN-REFACTOR implementation for writing-skills: Baseline testing, minimal ... | spellbook |
+| [/writing-commands-create](writing-commands-create.md) | Create a new command file following the command schema. Use when writing-command... | spellbook |
+| [/writing-commands-paired](writing-commands-paired.md) | Create paired commands (create + remove) with proper artifact contracts. Use whe... | spellbook |
+| [/writing-commands-review](writing-commands-review.md) | Review and test a command against the quality checklist. Use when writing-comman... | spellbook |

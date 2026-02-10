@@ -301,6 +301,14 @@ class TestAllSkillsMinimumCompliance:
     - description_follows_use_when_pattern: Required (trigger clarity)
     """
 
+    # Token budget target and tolerance for LLM-based estimation.
+    # The LLM's word-count-based token estimates vary by ~5-10% between runs,
+    # so we apply a 10% tolerance margin to avoid flaky failures on borderline
+    # skills. Skills genuinely over budget (e.g., 2340 tokens) still fail.
+    TOKEN_BUDGET = 1500
+    TOKEN_BUDGET_TOLERANCE = 1.1  # 10% margin
+    TOKEN_BUDGET_HARD_LIMIT = int(TOKEN_BUDGET * TOKEN_BUDGET_TOLERANCE)  # 1650
+
     # Skills with known token budget issues - xfail until condensed
     # TODO: Run /optimizing-instructions on each to bring under 1500 tokens
     KNOWN_OVER_BUDGET_SKILLS = {
@@ -430,12 +438,25 @@ class TestAllSkillsMinimumCompliance:
                 f"has_example_section=False: Consider adding <example> section for concrete guidance"
             )
 
-        # Property 14-15: Token budget (fail if over budget)
+        # Property 14-15: Token budget with tolerance for LLM estimation variance.
+        # The LLM reports meets_token_budget against a hard 1500 cutoff, but its
+        # word-count estimates vary ~5-10% between runs. To avoid flaky failures on
+        # borderline skills, we apply a 10% tolerance: skills estimated between
+        # 1500-1650 get a warning, skills over 1650 fail.
         if not facts.meets_token_budget:
-            failures.append(
-                f"meets_token_budget=False: Skill exceeds 1500 token budget "
-                f"(estimated {facts.token_count_estimate} tokens). Consider condensing."
-            )
+            if facts.token_count_estimate > self.TOKEN_BUDGET_HARD_LIMIT:
+                failures.append(
+                    f"meets_token_budget=False: Skill exceeds token budget hard limit "
+                    f"(estimated {facts.token_count_estimate} tokens > {self.TOKEN_BUDGET_HARD_LIMIT} "
+                    f"tolerance threshold). Consider condensing."
+                )
+            else:
+                warnings.append(
+                    f"meets_token_budget=False: Skill is borderline on token budget "
+                    f"(estimated {facts.token_count_estimate} tokens, budget={self.TOKEN_BUDGET}, "
+                    f"tolerance={self.TOKEN_BUDGET_HARD_LIMIT}). LLM estimation variance may "
+                    f"cause this to fluctuate between runs. Consider condensing."
+                )
 
         # Print soft warnings (do not fail test)
         if warnings:

@@ -217,6 +217,9 @@ Reusable workflows for structured development:
 | [/code-review-give] | Review others' code |
 | [/code-review-tarot] | Roundtable-style collaborative review |
 | [/write-skill-test] | Skill testing with pressure scenarios |
+| [/writing-commands-create] | Command creation with schema, naming, and frontmatter |
+| [/writing-commands-review] | Command quality checklist and testing protocol |
+| [/writing-commands-paired] | Paired command protocol and assessment framework |
 | [/reflexion-analyze] | Full reflexion analysis workflow |
 | [/test-bar] | Generate floating QA test overlay for visual testing |
 | [/test-bar-remove] | Clean removal of test-bar overlay |
@@ -294,6 +297,9 @@ Reusable workflows for structured development:
 [/code-review-give]: https://axiomantic.github.io/spellbook/latest/commands/code-review-give/
 [/code-review-tarot]: https://axiomantic.github.io/spellbook/latest/commands/code-review-tarot/
 [/write-skill-test]: https://axiomantic.github.io/spellbook/latest/commands/write-skill-test/
+[/writing-commands-create]: https://axiomantic.github.io/spellbook/latest/commands/writing-commands-create/
+[/writing-commands-review]: https://axiomantic.github.io/spellbook/latest/commands/writing-commands-review/
+[/writing-commands-paired]: https://axiomantic.github.io/spellbook/latest/commands/writing-commands-paired/
 [/reflexion-analyze]: https://axiomantic.github.io/spellbook/latest/commands/reflexion-analyze/
 [/test-bar]: https://axiomantic.github.io/spellbook/latest/commands/test-bar/
 [/test-bar-remove]: https://axiomantic.github.io/spellbook/latest/commands/test-bar-remove/
