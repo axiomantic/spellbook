@@ -37,6 +37,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 0.3 Code state tracking: always know what state you're testing
   - New invariant principles: baseline before investigation, prove bug exists first
   - Prevents: winging it without methodology, testing modified code, elaborate fixes before proving bug exists
+- **"No Assumptions, No Jumping Ahead" inviolable rule** in CLAUDE.spellbook.md
+  - Prevents LLM from guessing user intent or jumping straight to design/implementation
+  - Requires exploring the space with user, asking questions, confirming approach before committing
+  - Self-check gate: "Did the user confirm this, or did I decide for them?"
+  - Reconciles with Intent Interpretation: invoke skill immediately, but linger in discovery phase
+
+### Changed
+- **implementing-features Context Minimization** - Rewritten with explicit tool allowlist/blocklist
+  - Allowlist: Task, AskUserQuestion, TaskCreate/Update/List, Read (plan docs only)
+  - Blocklist: Write, Edit, Bash, Grep, Glob, Read (source files)
+  - Narrates the exact failure pattern and correct pattern to internalize
+  - Explains why orchestrator violations waste tokens and degrade quality
 - **isolated-testing code state tracking** - Enhanced theory testing discipline
   - Step 0: Verify code state before selecting theory
   - Queue discipline: test theories in order, no skipping to "the likely one"

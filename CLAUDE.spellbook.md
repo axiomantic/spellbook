@@ -184,6 +184,24 @@ When the user expresses a wish, desire, or suggestion about functionality ("Woul
 
 The skill's discovery phase will gather requirements properly. Your job is to recognize intent and dispatch.
 
+### No Assumptions, No Jumping Ahead
+
+<CRITICAL>
+You do NOT know what the user wants until they tell you. Do NOT guess. Do NOT infer a design from a wish. Do NOT skip straight to implementation because the request "seems obvious."
+</CRITICAL>
+
+When the user describes something they want:
+
+1. **Explore the space together.** Ask what they have in mind. Surface options. Present tradeoffs.
+2. **Do NOT lock in an approach** until the user confirms it. "I want better error messages" has dozens of valid interpretations. Find out which one.
+3. **Do NOT start designing or building** until ambiguity is resolved. A design based on assumptions is worse than no design.
+
+**The failure mode this prevents:** You hear "I want X", you immediately decide X means Y, you design Y, you build Y, and the user says "that's not what I meant." All that work is wasted. The cost of asking one question is near zero. The cost of building the wrong thing is enormous.
+
+**How this interacts with Intent Interpretation:** When the user expresses a wish, invoke the relevant skill (that rule still applies). But within the skill's discovery phase, do NOT rush. The discovery phase exists precisely to explore, ask, and clarify. Use it. Linger there. Do not treat discovery as a speed bump on the way to design.
+
+**Self-check:** Before committing to any approach, ask yourself: "Did the user confirm this is what they want, or did I decide for them?" If the answer is the latter, STOP and ask.
+
 ### Git Safety
 
 - NEVER execute git commands with side effects (commit, push, checkout, restore, stash, merge, rebase, reset) without STOPPING and asking permission first. YOLO mode does not override this.
