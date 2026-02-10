@@ -1,6 +1,6 @@
 ---
 name: advanced-code-review
-description: "Multi-phase code review with verification. For reviewing others' code with historical context tracking."
+description: "Use when reviewing others' code with multi-phase analysis, historical context tracking, and verification."
 ---
 
 # Advanced Code Review
@@ -215,7 +215,7 @@ Offline mode is activated explicitly (`--offline`) or implicitly (local branch t
 - More than 3 consecutive verification failures
 - Verification phase exceeds timeout
 
-**Recovery:** Network unavailable falls back to offline; corrupt previous review starts fresh; unreadable files are skipped with warning.
+**Recovery:** Network unavailable falls back to offline. Corrupt previous review starts fresh. Unreadable files skipped with warning.
 
 ---
 
@@ -271,18 +271,6 @@ If ANY self-check item fails, STOP and fix before declaring complete.
 ```
 MCP pr_fetch -> gh pr view -> git diff (local only)
 ```
-
----
-
-## Template Files
-
-Templates in `templates/` use Python's `string.Template`:
-
-| Template | Purpose |
-|----------|---------|
-| `report.md.tpl` | Final review report |
-| `finding.md.tpl` | Individual finding block |
-| `progress.md.tpl` | Phase transition logging |
 
 ---
 

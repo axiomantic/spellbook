@@ -109,21 +109,7 @@ The test must:
 ### Step 3: Approval Gate
 
 <RULE>
-**Non-autonomous mode:** Present the repro test design. Ask:
-
-```javascript
-AskUserQuestion({
-  questions: [{
-    question: "Repro test designed for Theory [N]. May I execute?",
-    header: "Execute Test",
-    options: [
-      { label: "Yes, run the test", description: "Execute exactly as designed" },
-      { label: "Adjust test first", description: "Modify the test procedure before running" },
-      { label: "Skip this theory", description: "Mark as SKIPPED, move to next theory" }
-    ]
-  }]
-})
-```
+**Non-autonomous mode:** Present the repro test design. Ask user: "May I execute?" with options: run as designed, adjust first, or skip theory.
 
 **Autonomous mode (YOLO):** Announce intent, proceed without waiting.
 </RULE>
@@ -243,22 +229,6 @@ Update IMMEDIATELY after each test. This survives compaction.
 **This skill invokes:**
 - `verifying-hunches` (before claiming a theory is confirmed)
 - `test-driven-development` (when entering fix phase after reproduction)
-
----
-
-## The Zen of Testing
-
-```
-Uncertainty is not a fire.
-You do not need to put it out.
-You need to understand it.
-
-One theory.
-One test.
-One answer.
-
-Repeat until truth emerges.
-```
 
 ---
 

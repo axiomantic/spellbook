@@ -504,7 +504,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 
 ## Available Skills
 
-- **advanced-code-review**: Multi-phase code review with verification. For reviewing others' code with historical context tracking.
+- **advanced-code-review**: Use when reviewing others' code with multi-phase analysis, historical context tracking, and verification.
 - **analyzing-domains**: Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when implementing-features Phase 1.2 detects unfamiliar domain.
 - **analyzing-skill-usage**: Use when evaluating skill performance, A/B testing skill versions, or identifying weak skills. Analyzes session transcripts to extract skill invocation patterns, completion rates, correction rates, and efficiency metrics.
 - **assembling-context**: Use when preparing context for subagents or managing token budgets. Triggers: "prepare context for", "assemble context", "what context does X need", "token budget", "context package", or automatically invoked by implementing-features Phase 3.5 (work packets) and Phase 4.2 (parallel subagents).
