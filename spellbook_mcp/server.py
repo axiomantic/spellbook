@@ -78,6 +78,7 @@ from spellbook_mcp.compaction_detector import (
     get_recovery_reminder,
 )
 from spellbook_mcp.db import init_db, get_db_path
+from dataclasses import asdict
 from spellbook_mcp.health import run_health_check, HealthCheckResult
 from spellbook_mcp.watcher import SessionWatcher
 from spellbook_mcp.injection import inject_recovery_context
@@ -736,27 +737,10 @@ def spellbook_health_check(full: bool = False) -> dict:
         _last_full_health_check_time = time.time()
 
     # Convert dataclass to dict for JSON serialization
-    domains_dict = None
-    if result.domains:
-        domains_dict = {}
-        for domain_name, check in result.domains.items():
-            domains_dict[domain_name] = {
-                "domain": check.domain,
-                "status": check.status.value,
-                "message": check.message,
-                "latency_ms": check.latency_ms,
-                "details": check.details,
-            }
-
-    return {
-        "status": result.status.value,
-        "version": result.version,
-        "tools_available": result.tools_available,
-        "uptime_seconds": round(result.uptime_seconds, 1),
-        "domains": domains_dict,
-        "checked_at": result.checked_at,
-        "check_mode": check_mode,
-    }
+    result_dict = asdict(result)
+    result_dict["uptime_seconds"] = round(result.uptime_seconds, 1)
+    result_dict["check_mode"] = check_mode
+    return result_dict
 
 
 # PR Distill Tools

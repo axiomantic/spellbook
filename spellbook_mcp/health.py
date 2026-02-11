@@ -140,10 +140,10 @@ def _get_heartbeat_age(db_path: str) -> float | None:
             return None
         heartbeat_time = datetime.fromisoformat(row[0])
         # Handle timezone-aware datetimes properly (CRITICAL FIX from plan review)
-        now = datetime.now()
-        if heartbeat_time.tzinfo is not None:
-            # If heartbeat has timezone, use UTC now
-            now = datetime.now(timezone.utc)
+        if heartbeat_time.tzinfo is None:
+            # If heartbeat is naive, assume it's in UTC
+            heartbeat_time = heartbeat_time.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
         return (now - heartbeat_time).total_seconds()
     finally:
         cursor.close()

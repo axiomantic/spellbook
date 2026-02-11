@@ -216,14 +216,14 @@ class TestHelperFunctions:
         """_get_heartbeat_age should return seconds since heartbeat."""
         from spellbook_mcp.health import _get_heartbeat_age
         from spellbook_mcp.db import init_db, get_connection
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
 
-        # Insert a heartbeat 5 seconds ago
+        # Insert a heartbeat 5 seconds ago (UTC-aware)
         conn = get_connection(str(db_path))
-        past_time = (datetime.now() - timedelta(seconds=5)).isoformat()
+        past_time = (datetime.now(timezone.utc) - timedelta(seconds=5)).isoformat()
         conn.execute(
             "INSERT OR REPLACE INTO heartbeat (id, timestamp) VALUES (1, ?)",
             (past_time,)
@@ -332,16 +332,16 @@ class TestWatcherCheck:
         """Fresh heartbeat returns HEALTHY."""
         from spellbook_mcp.health import _check_watcher, HealthStatus
         from spellbook_mcp.db import init_db, get_connection
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
 
-        # Insert fresh heartbeat
+        # Insert fresh heartbeat (UTC-aware)
         conn = get_connection(str(db_path))
         conn.execute(
             "INSERT OR REPLACE INTO heartbeat (id, timestamp) VALUES (1, ?)",
-            (datetime.now().isoformat(),)
+            (datetime.now(timezone.utc).isoformat(),)
         )
         conn.commit()
 
@@ -358,14 +358,14 @@ class TestWatcherCheck:
         """Stale heartbeat (>30s) returns DEGRADED."""
         from spellbook_mcp.health import _check_watcher, HealthStatus
         from spellbook_mcp.db import init_db, get_connection
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
 
-        # Insert stale heartbeat (45 seconds ago)
+        # Insert stale heartbeat (45 seconds ago, UTC-aware)
         conn = get_connection(str(db_path))
-        stale_time = (datetime.now() - timedelta(seconds=45)).isoformat()
+        stale_time = (datetime.now(timezone.utc) - timedelta(seconds=45)).isoformat()
         conn.execute(
             "INSERT OR REPLACE INTO heartbeat (id, timestamp) VALUES (1, ?)",
             (stale_time,)
@@ -420,14 +420,14 @@ class TestWatcherCheck:
         """Heartbeat age should be in details."""
         from spellbook_mcp.health import _check_watcher
         from spellbook_mcp.db import init_db, get_connection
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
 
         db_path = tmp_path / "test.db"
         init_db(str(db_path))
 
-        # Insert heartbeat 10 seconds ago
+        # Insert heartbeat 10 seconds ago (UTC-aware)
         conn = get_connection(str(db_path))
-        past_time = (datetime.now() - timedelta(seconds=10)).isoformat()
+        past_time = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
         conn.execute(
             "INSERT OR REPLACE INTO heartbeat (id, timestamp) VALUES (1, ?)",
             (past_time,)
@@ -1088,7 +1088,7 @@ class TestRunHealthCheck:
         parsed = datetime.fromisoformat(result.checked_at.replace("Z", "+00:00"))
         assert parsed is not None
 
-    def test_run_health_check_default_is_quick(self, tmp_path):
+    def test_run_health_check_default_is_full(self, tmp_path):
         """quick parameter defaults to False (full check)."""
         from spellbook_mcp.health import run_health_check
         from spellbook_mcp.db import init_db
