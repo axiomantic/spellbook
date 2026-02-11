@@ -42,6 +42,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Requires exploring the space with user, asking questions, confirming approach before committing
   - Self-check gate: "Did the user confirm this, or did I decide for them?"
   - Reconciles with Intent Interpretation: invoke skill immediately, but linger in discovery phase
+- **deep-research skill** - Multi-threaded web research with verification and hallucination prevention
+  - Orchestrator skill + 3 commands: interview, plan, investigate
+  - Phase 0 (interview): 5-category structured interview, assumption extraction, Research Brief output
+  - Phase 1 (plan): thread decomposition, 4-phase source strategy (survey/extract/diversify/verify), round budgets
+  - Phase 2 (investigate): novel triplet search engine [Scope/Search/Extract] with plateau detection and micro-reports
+  - Phase 3 (verify): invokes existing fact-checking + dehallucination skills on findings
+  - Phase 4 (synthesize): template selection by research type (comparison/procedural/exploratory/evaluative)
+  - Subject Registry prevents entity dropout across parallel threads
+  - Conflict Register enforces dual-position documentation when sources disagree
+  - Override Protocol prevents silent changes to user-provided facts
+  - Plateau Circuit Breaker with 3 escalation levels and drift detection
+  - 6-level confidence tagging: VERIFIED, CORROBORATED, PLAUSIBLE, INFERRED, UNVERIFIED, CONTESTED
+  - Composes existing skills: fact-checking, dehallucination, smart-reading, dispatching-parallel-agents patterns
 
 ### Changed
 - **implementing-features Context Minimization** - Rewritten with explicit tool allowlist/blocklist

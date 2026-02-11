@@ -514,6 +514,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
 - **code-review**: Use when reviewing code (self-review, processing feedback, reviewing others, or auditing). Modes: --self (default), --feedback, --give <target>, --audit
 - **debugging**: Use when debugging bugs, test failures, or unexpected behavior
+- **deep-research**: Use when researching complex topics, evaluating technologies, investigating domains, or answering multi-faceted questions requiring web research. Triggers: "research X", "investigate Y", "evaluate options for Z", "what are the best approaches to", "help me understand", "deep dive into", "compare alternatives".
 - **dehallucination**: Use when roundtable feedback indicates hallucination concerns, or as a quality gate before stage transitions in the Forged workflow. Provides confidence assessment for claims, citation requirements, hallucination detection patterns, and recovery protocols.
 - **designing-workflows**: Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when implementing-features Phase 2.1 detects workflow patterns.
 - **devils-advocate**: Use before design phase to challenge assumptions and surface risks

@@ -103,6 +103,7 @@ nav:
       - skills/analyzing-domains.md
       - skills/assembling-context.md
       - skills/designing-workflows.md
+      - skills/deep-research.md
     - Specialized Skills:
       - skills/async-await-patterns.md
       - skills/using-lsp-tools.md
@@ -146,6 +147,10 @@ nav:
       - commands/brainstorm.md
       - commands/write-plan.md
       - commands/execute-plan.md
+    - Deep Research Commands:
+      - commands/deep-research-interview.md
+      - commands/deep-research-investigate.md
+      - commands/deep-research-plan.md
     - Dead Code Commands:
       - commands/dead-code-setup.md
       - commands/dead-code-analyze.md

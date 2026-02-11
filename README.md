@@ -36,7 +36,7 @@
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
   - [Skills (49 total)](#skills-49-total)
-  - [Commands (74 total)](#commands-74-total)
+  - [Commands (77 total)](#commands-77-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -90,7 +90,7 @@ Reusable workflows for structured development:
 | **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
-| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
+| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage], [documenting-tools] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
@@ -146,8 +146,9 @@ Reusable workflows for structured development:
 [analyzing-domains]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-domains/
 [assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
+[deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
 
-### Commands (74 total)
+### Commands (77 total)
 
 | Command | Description |
 |---------|-------------|
@@ -156,6 +157,9 @@ Reusable workflows for structured development:
 | [/dead-code-analyze] | Extract and triage code items for dead code verification |
 | [/dead-code-report] | Generate dead code findings report with deletion plan |
 | [/dead-code-implement] | Execute approved deletions with verification |
+| [/deep-research-interview] | Phase 0: Structured interview and Research Brief generation |
+| [/deep-research-investigate] | Phase 2: Triplet search engine with plateau detection and micro-reports |
+| [/deep-research-plan] | Phase 1: Thread decomposition, source strategy, and convergence criteria |
 | [/design-assessment] | Generate assessment frameworks for evaluative skills/commands |
 | [/handoff] | Custom session compaction |
 | [/distill-session] | Extract knowledge from sessions |
@@ -236,6 +240,9 @@ Reusable workflows for structured development:
 [/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
 [/dead-code-report]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-report/
 [/dead-code-implement]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-implement/
+[/deep-research-interview]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-interview/
+[/deep-research-investigate]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-investigate/
+[/deep-research-plan]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-plan/
 [/design-assessment]: https://axiomantic.github.io/spellbook/latest/commands/design-assessment/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
