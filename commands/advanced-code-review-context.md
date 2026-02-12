@@ -75,6 +75,7 @@ Load and interpret previous review items:
 | `DECLINED` | Author explicitly declined to fix | Do NOT re-raise (respect decision) |
 | `PARTIAL_AGREEMENT` | Some parts fixed, some pending | Note pending parts only |
 | `ALTERNATIVE_PROPOSED` | Author proposed different solution | Evaluate if alternative is adequate |
+| `ANSWERED` | Question was answered by contributor | Use answer as context; do NOT re-ask |
 
 ```python
 def load_previous_items(review_dir: Path) -> list[dict]:
@@ -84,12 +85,13 @@ def load_previous_items(review_dir: Path) -> list[dict]:
     Returns list of:
     {
         "id": "finding-prev-001",
-        "status": "declined" | "fixed" | "partial" | "alternative" | "pending",
+        "status": "declined" | "fixed" | "partial" | "alternative" | "pending" | "answered",
         "reason": "Performance tradeoff acceptable",  # for declined
         "fixed": ["item1"],                           # for partial
         "pending": ["item2"],                         # for partial
         "alternative_proposed": "Use LRU cache",      # for alternative
-        "accepted": true                              # for alternative
+        "accepted": true,                             # for alternative
+        "answer": "Upstream sends field X since v2.0",  # for answered
     }
     """
     items_path = review_dir / "previous-items.json"
@@ -154,7 +156,32 @@ def detect_recheck_requests(comments: list[str]) -> list[dict]:
     return requests
 ```
 
-## 2.5 Context Object Construction
+## 2.5 Identify Answered Questions
+
+<CRITICAL>
+When a reviewer posts a question and a contributor provides a substantive answer,
+that answer MUST be tracked to prevent re-asking in subsequent reviews.
+</CRITICAL>
+
+**What counts as "answered":**
+A question-severity item that received a direct, substantive response from a contributor:
+- Information provided: "Yes, the upstream sends this field"
+- Clarification given: "The reason for X is Y"
+- Confirmation provided: "That's correct, we handle it in..."
+- Explanation given: "This works because..."
+
+**What does NOT count as answered:**
+- No reply yet (Status: PENDING)
+- Reply from another bot (Status: PENDING)
+- Non-substantive reply: "ok", "thanks", "will look", "will fix" (Status: PENDING)
+- Counter-question without answering (Status: PENDING)
+- "I don't know" or defers to someone else (Status: PENDING)
+
+**Mark answered questions:**
+Set status to `ANSWERED` and store the contributor's answer in the `answer` field.
+Phase 3 (Deep Review) will use this answer as context instead of re-posting the question.
+
+## 2.6 Context Object Construction
 
 Build the context for Phase 3:
 
@@ -170,6 +197,7 @@ def build_context(manifest: dict, previous_dir: Path | None, pr_data: dict | Non
         "declined_items": [],
         "partial_items": [],
         "alternative_items": [],
+        "answered_items": [],
         "recheck_requests": []
     }
     
@@ -179,6 +207,7 @@ def build_context(manifest: dict, previous_dir: Path | None, pr_data: dict | Non
         context["declined_items"] = [i for i in items if i["status"] == "declined"]
         context["partial_items"] = [i for i in items if i["status"] == "partial"]
         context["alternative_items"] = [i for i in items if i["status"] == "alternative"]
+        context["answered_items"] = [i for i in items if i["status"] == "answered"]
     
     if pr_data:
         context["pr_context"] = {
@@ -193,7 +222,7 @@ def build_context(manifest: dict, previous_dir: Path | None, pr_data: dict | Non
     return context
 ```
 
-## 2.6 Output: context-analysis.md
+## 2.7 Output: context-analysis.md
 
 ```markdown
 # Context Analysis
@@ -234,7 +263,7 @@ def build_context(manifest: dict, previous_dir: Path | None, pr_data: dict | Non
 - "addressed in abc1234"
 ```
 
-## 2.7 Output: previous-items.json
+## 2.8 Output: previous-items.json
 
 ```json
 {
@@ -274,6 +303,7 @@ Before proceeding to Phase 3:
 - [ ] Previous items loaded with correct statuses
 - [ ] PR context fetched (if online and PR mode)
 - [ ] Re-check requests extracted
+- [ ] Did I identify ANSWERED items (questions that received substantive answers)?
 - [ ] context-analysis.md written
 - [ ] previous-items.json updated (or created empty)
 

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.9] - 2026-02-12
+
+### Added
+- **Answered-question tracking in review commands** - Prevents reviewers from re-asking questions that contributors already answered
+  - `ANSWERED` status added to previous items tracking in `advanced-code-review-context`
+  - `QUESTION` severity level added to taxonomy in `advanced-code-review-review`
+  - Detection criteria for substantive vs non-substantive answers (distinguishes real answers from "ok"/"will fix")
+  - Phase 3 enforcement rules: answered questions used as context, never re-asked
+  - Follow-up question guidance: new, materially different questions are OK
+  - `code-review-give` updated with `QUESTION` severity for information-seeking comments
+  - `code-review-feedback` updated with answered-question awareness for Clarify responses
+
 ## [0.9.8] - 2026-02-09
 
 ### Added

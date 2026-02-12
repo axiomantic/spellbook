@@ -36,6 +36,7 @@ Use precise severity definitions:
 | MEDIUM | Quality concern, technical debt | High complexity, missing error handling, code duplication |
 | LOW | Minor improvement, optimization | Inefficient algorithm (non-hot path), better naming |
 | NIT | Purely stylistic | Formatting, comment style, import order |
+| QUESTION | Information-seeking; needs contributor input | Confirm upstream sends field X, clarify error handling intent |
 | PRAISE | Noteworthy positive | Clever solution, good pattern usage, excellent tests |
 
 **Severity Decision Tree:**
@@ -59,6 +60,10 @@ Is it a minor improvement or optimization?
 
 Is it purely stylistic?
   -> Yes: NIT
+  -> No: Continue
+
+Does it require contributor input to resolve?
+  -> Yes: QUESTION
   -> No: PRAISE (if positive) or skip
 ```
 
@@ -89,7 +94,7 @@ Each finding follows this structure:
 | Field | Required | Nullable | Notes |
 |-------|----------|----------|-------|
 | id | Yes | No | Unique within review |
-| severity | Yes | No | One of CRITICAL/HIGH/MEDIUM/LOW/NIT/PRAISE |
+| severity | Yes | No | One of CRITICAL/HIGH/MEDIUM/LOW/NIT/QUESTION/PRAISE |
 | category | Yes | No | security/logic/error/type/test/perf/style/doc |
 | file | Yes | No | Relative path |
 | line | Yes | No | Start line (1-indexed) |
@@ -123,7 +128,12 @@ def should_raise_finding(finding: dict, context: dict) -> tuple[bool, str | None
     for alt in context["alternative_items"]:
         if alt["accepted"] and finding_matches_original(finding, alt):
             return (False, "alternative_accepted")
-    
+
+    # Check answered questions - do not re-ask
+    for answered in context["answered_items"]:
+        if finding_matches(finding, answered):
+            return (False, "answered")
+
     # Check partial items - only raise pending parts
     for partial in context["partial_items"]:
         if finding_matches_pending(finding, partial):
@@ -133,7 +143,42 @@ def should_raise_finding(finding: dict, context: dict) -> tuple[bool, str | None
     return (True, None)
 ```
 
-## 3.5 Category Definitions
+## 3.5 Handling Answered Questions
+
+<CRITICAL>
+When a contributor has answered a reviewer's question, you MUST NOT re-ask the same question.
+Use the answer as context when reviewing related code.
+</CRITICAL>
+
+**For items marked ANSWERED in the context:**
+
+a. **Read the stored answer**: The `answer` field contains the contributor's response
+
+b. **Do NOT re-post the question**: Re-asking an answered question is frustrating and
+   makes the reviewer appear broken
+
+c. **Use the answer as context**: When reviewing related code, incorporate the answer
+   into your understanding
+
+d. **Follow-up questions are OK ONLY if**:
+   - The answer was incomplete or ambiguous AND
+   - You have a NEW, more specific question AND
+   - The new question is materially different from the original
+
+**Example:**
+
+Original question: "Does the upstream service send field X?"
+Contributor answer: "Yes, since v2.0"
+
+- CORRECT: Use this knowledge when reviewing code that handles field X
+- CORRECT: Ask NEW question: "What format does field X use (ISO8601 vs epoch)?"
+- WRONG: Re-ask "Does upstream send field X?"
+- WRONG: Ask trivially similar "Confirm field X is sent?"
+- WRONG: Flag code as if field X might not exist (ignoring the answer)
+
+<RULE>Never re-ask a question marked ANSWERED unless the code changed in a way that invalidates the answer.</RULE>
+
+## 3.6 Category Definitions
 
 | Category | Scope |
 |----------|-------|
@@ -146,7 +191,7 @@ def should_raise_finding(finding: dict, context: dict) -> tuple[bool, str | None
 | style | Naming, formatting, dead code |
 | doc | Missing/wrong comments, outdated docs |
 
-## 3.6 Review Execution
+## 3.7 Review Execution
 
 For each file in priority order:
 
@@ -176,7 +221,7 @@ def review_file(file_path: str, diff: str, context: dict) -> list[dict]:
     return findings
 ```
 
-## 3.7 Noteworthy Collection
+## 3.8 Noteworthy Collection
 
 Collect positive observations for PRAISE findings:
 
@@ -191,7 +236,7 @@ NOTEWORTHY_PATTERNS = [
 ]
 ```
 
-## 3.8 Output: findings.json
+## 3.9 Output: findings.json
 
 ```json
 {
@@ -223,6 +268,7 @@ NOTEWORTHY_PATTERNS = [
       "MEDIUM": 3,
       "LOW": 2,
       "NIT": 1,
+      "QUESTION": 0,
       "PRAISE": 0
     },
     "by_category": {
@@ -237,7 +283,7 @@ NOTEWORTHY_PATTERNS = [
 }
 ```
 
-## 3.9 Output: findings.md
+## 3.10 Output: findings.md
 
 ```markdown
 # Review Findings
@@ -282,6 +328,7 @@ Before proceeding to Phase 4:
 - [ ] All files reviewed in priority order
 - [ ] All four passes completed per file
 - [ ] Declined items not re-raised
+- [ ] Answered questions not re-asked
 - [ ] Partial items annotated correctly
 - [ ] Each finding has required fields
 - [ ] findings.json written
