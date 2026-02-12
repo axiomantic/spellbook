@@ -1,5 +1,8 @@
 """Tests for comprehensive health check module."""
 
+import sqlite3
+import subprocess
+
 import pytest
 
 
@@ -35,6 +38,12 @@ class TestHealthStatusEnum:
         from spellbook_mcp.health import HealthStatus
 
         assert HealthStatus.NOT_CONFIGURED.value == "not_configured"
+
+    def test_starting_status_exists(self):
+        """HealthStatus.STARTING should exist with value 'starting'."""
+        from spellbook_mcp.health import HealthStatus
+
+        assert HealthStatus.STARTING.value == "starting"
 
     def test_status_is_str_enum(self):
         """HealthStatus should be a string enum for JSON serialization."""
@@ -201,6 +210,16 @@ class TestHelperFunctions:
         assert _compare_versions("2.30.1", "2.30.0") == 1
         assert _compare_versions("3.0.0", "2.99.99") == 1
 
+    def test_compare_versions_different_lengths(self):
+        """_compare_versions should handle different-length version strings."""
+        from spellbook_mcp.health import _compare_versions
+
+        # Trailing zero segments are equivalent
+        assert _compare_versions("2.30", "2.30.0") == 0
+        assert _compare_versions("2.30.0", "2.30") == 0
+        # Shorter version compared against longer with non-zero trailing
+        assert _compare_versions("2.9", "2.10.1") == -1
+
     def test_get_heartbeat_age_no_heartbeat(self, tmp_path):
         """_get_heartbeat_age should return None when no heartbeat exists."""
         from spellbook_mcp.health import _get_heartbeat_age
@@ -298,6 +317,27 @@ class TestDatabaseCheck:
         assert result.status == HealthStatus.UNHEALTHY
         assert "error" in result.message.lower()
 
+    def test_missing_critical_tables(self, tmp_path):
+        """Database without critical tables returns UNHEALTHY."""
+        import sqlite3
+        from spellbook_mcp.health import _check_database, HealthStatus
+
+        db_path = tmp_path / "empty_schema.db"
+        # Create a valid SQLite database but without the critical tables
+        conn = sqlite3.connect(str(db_path))
+        conn.execute("CREATE TABLE dummy (id INTEGER PRIMARY KEY)")
+        conn.commit()
+        conn.close()
+
+        result = _check_database(str(db_path))
+
+        assert result.status == HealthStatus.UNHEALTHY
+        assert "missing" in result.message.lower()
+        assert "missing_tables" in result.details
+        # All three critical tables should be missing
+        for table in ["souls", "heartbeat", "workflow_state"]:
+            assert table in result.details["missing_tables"]
+
     def test_database_wal_mode_detection(self, tmp_path):
         """Database check detects WAL mode."""
         from spellbook_mcp.health import _check_database
@@ -381,7 +421,7 @@ class TestWatcherCheck:
         assert result.details["heartbeat_age_seconds"] > 30.0
 
     def test_startup_grace_period(self, tmp_path):
-        """Within grace period, missing heartbeat returns HEALTHY."""
+        """Within grace period, missing heartbeat returns STARTING."""
         from spellbook_mcp.health import _check_watcher, HealthStatus
         from spellbook_mcp.db import init_db
 
@@ -395,8 +435,30 @@ class TestWatcherCheck:
             startup_grace_seconds=10.0
         )
 
-        assert result.status == HealthStatus.HEALTHY
+        assert result.status == HealthStatus.STARTING
         assert result.details["in_grace_period"] is True
+
+    def test_grace_period_exception_escalates_to_degraded(self, tmp_path, monkeypatch):
+        """Heartbeat query error during grace period escalates to DEGRADED."""
+        from spellbook_mcp.health import _check_watcher, HealthStatus
+        import spellbook_mcp.health as health_module
+
+        # Mock _get_heartbeat_age to raise an exception
+        def mock_get_heartbeat_age(db_path):
+            raise sqlite3.OperationalError("database is locked")
+
+        monkeypatch.setattr(health_module, "_get_heartbeat_age", mock_get_heartbeat_age)
+
+        # In grace period (5s uptime < 10s grace) but DB query fails
+        result = _check_watcher(
+            str(tmp_path / "test.db"),
+            server_uptime=5.0,
+            startup_grace_seconds=10.0,
+        )
+
+        assert result.status == HealthStatus.DEGRADED
+        assert result.details["in_grace_period"] is True
+        assert "error" in result.details
 
     def test_no_heartbeat_row_after_grace(self, tmp_path):
         """Missing heartbeat row after grace period returns DEGRADED."""
@@ -438,6 +500,38 @@ class TestWatcherCheck:
 
         assert "heartbeat_age_seconds" in result.details
         assert 8.0 < result.details["heartbeat_age_seconds"] < 15.0
+
+    def test_watcher_exception_returns_degraded(self, tmp_path, monkeypatch):
+        """Catch-all exception in watcher check returns DEGRADED."""
+        from spellbook_mcp.health import _check_watcher, HealthStatus
+        import spellbook_mcp.health as health_module
+
+        # Mock _get_heartbeat_age to succeed but make details construction fail
+        # We need an exception in the second try block (after heartbeat_age is fetched)
+        call_count = [0]
+        original_get = health_module._get_heartbeat_age
+
+        def mock_get_heartbeat_age(db_path):
+            return 5.0  # Return a valid age
+
+        monkeypatch.setattr(health_module, "_get_heartbeat_age", mock_get_heartbeat_age)
+
+        # Patch dict to force an error in the details construction
+        # Actually, the simpler way: just make _get_heartbeat_age raise a RuntimeError
+        # which will be caught by the first except clause
+        def mock_get_heartbeat_age_error(db_path):
+            raise RuntimeError("unexpected watcher error")
+
+        monkeypatch.setattr(health_module, "_get_heartbeat_age", mock_get_heartbeat_age_error)
+
+        result = _check_watcher(
+            str(tmp_path / "test.db"),
+            server_uptime=60.0,
+        )
+
+        assert result.status == HealthStatus.DEGRADED
+        assert "error" in result.message.lower()
+        assert "error" in result.details
 
 
 class TestFilesystemCheck:
@@ -485,6 +579,24 @@ class TestFilesystemCheck:
         assert result.status == HealthStatus.UNHEALTHY
         assert result.details["config_dir"]["exists"] is False
 
+    def test_missing_data_dir(self, tmp_path):
+        """Missing data directory returns UNHEALTHY."""
+        from spellbook_mcp.health import _check_filesystem, HealthStatus
+
+        config_dir = tmp_path / "config"
+        skills_dir = tmp_path / "skills"
+        config_dir.mkdir()
+        skills_dir.mkdir()
+
+        result = _check_filesystem(
+            config_dir=str(config_dir),
+            data_dir=str(tmp_path / "nonexistent"),
+            skills_dir=str(skills_dir),
+        )
+
+        assert result.status == HealthStatus.UNHEALTHY
+        assert result.details["data_dir"]["exists"] is False
+
     def test_missing_skills_dir(self, tmp_path):
         """Missing skills directory returns DEGRADED (optional)."""
         from spellbook_mcp.health import _check_filesystem, HealthStatus
@@ -524,9 +636,6 @@ class TestFilesystemCheck:
         assert result.details["config_dir"]["readable"] is True
         assert result.details["data_dir"]["readable"] is True
         assert result.details["skills_dir"]["readable"] is True
-
-
-import subprocess
 
 
 class TestGitHubCLICheck:
@@ -585,10 +694,7 @@ class TestGitHubCLICheck:
         """Unauthenticated gh returns DEGRADED."""
         from spellbook_mcp.health import _check_github_cli, HealthStatus
 
-        call_count = [0]
-
         def mock_run(cmd, *args, **kwargs):
-            call_count[0] += 1
             if "--version" in cmd:
                 return subprocess.CompletedProcess(
                     cmd, 0, stdout="gh version 2.45.0\n", stderr=""
@@ -630,6 +736,44 @@ class TestGitHubCLICheck:
         assert result.details["installed"] is True
         assert result.details["version"] == "2.45.0"
         assert result.details["authenticated"] is True
+
+    def test_gh_unparseable_version(self, monkeypatch):
+        """Unparseable gh version string returns UNAVAILABLE."""
+        from spellbook_mcp.health import _check_github_cli, HealthStatus
+
+        def mock_run(cmd, *args, **kwargs):
+            if "--version" in cmd:
+                return subprocess.CompletedProcess(
+                    cmd, 0, stdout="some garbage output\n", stderr=""
+                )
+            raise FileNotFoundError()
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        result = _check_github_cli()
+
+        assert result.status == HealthStatus.UNAVAILABLE
+        assert "parse" in result.message.lower()
+
+    def test_gh_auth_timeout(self, monkeypatch):
+        """Timeout during gh auth status returns DEGRADED."""
+        from spellbook_mcp.health import _check_github_cli, HealthStatus
+
+        def mock_run(cmd, *args, **kwargs):
+            if "--version" in cmd:
+                return subprocess.CompletedProcess(
+                    cmd, 0, stdout="gh version 2.45.0\n", stderr=""
+                )
+            if "auth" in cmd and "status" in cmd:
+                raise subprocess.TimeoutExpired(cmd="gh", timeout=2.0)
+            raise FileNotFoundError()
+
+        monkeypatch.setattr(subprocess, "run", mock_run)
+
+        result = _check_github_cli()
+
+        assert result.status == HealthStatus.DEGRADED
+        assert "auth" in result.message.lower() and "timed out" in result.message.lower()
 
 
 class TestCoordinationCheck:
@@ -883,6 +1027,18 @@ class TestStatusAggregation:
 
         assert _aggregate_status(domains) == HealthStatus.UNHEALTHY
 
+    def test_critical_unavailable_triggers_unhealthy(self):
+        """UNAVAILABLE on critical domain (e.g., database) -> overall UNHEALTHY."""
+        from spellbook_mcp.health import _aggregate_status, HealthStatus, DomainCheck
+
+        domains = {
+            "database": DomainCheck("database", HealthStatus.UNAVAILABLE, "DB gone"),
+            "filesystem": DomainCheck("filesystem", HealthStatus.HEALTHY, "OK"),
+            "watcher": DomainCheck("watcher", HealthStatus.HEALTHY, "OK"),
+        }
+
+        assert _aggregate_status(domains) == HealthStatus.UNHEALTHY
+
 
 class TestRunHealthCheck:
     """Test run_health_check orchestration function."""
@@ -1088,7 +1244,7 @@ class TestRunHealthCheck:
         parsed = datetime.fromisoformat(result.checked_at.replace("Z", "+00:00"))
         assert parsed is not None
 
-    def test_run_health_check_default_is_full(self, tmp_path):
+    def test_run_health_check_default_is_full(self, tmp_path, monkeypatch):
         """quick parameter defaults to False (full check)."""
         from spellbook_mcp.health import run_health_check
         from spellbook_mcp.db import init_db
@@ -1113,11 +1269,6 @@ class TestRunHealthCheck:
         init_db(str(db_path))
 
         # Mock gh CLI as unavailable
-        def mock_run(cmd, *args, **kwargs):
-            raise FileNotFoundError()
-
-        # Need to patch at module level
-        import spellbook_mcp.health
         original_run = subprocess.run
 
         def patched_run(*args, **kwargs):
@@ -1125,33 +1276,28 @@ class TestRunHealthCheck:
                 raise FileNotFoundError()
             return original_run(*args, **kwargs)
 
+        monkeypatch.setattr(subprocess, "run", patched_run)
+
         # Mock coordination config
         def mock_load():
             return CoordinationConfig(backend=CoordinationBackend.NONE)
 
-        import spellbook_mcp.health as health_module
-        original_load = health_module.load_coordination_config
-        health_module.load_coordination_config = mock_load
+        monkeypatch.setattr(
+            "spellbook_mcp.health.load_coordination_config", mock_load
+        )
 
-        try:
-            # Patch subprocess.run for gh check
-            subprocess.run = patched_run
+        # Call without quick parameter - should default to False (full mode)
+        result = run_health_check(
+            db_path=str(db_path),
+            config_dir=str(config_dir),
+            data_dir=str(data_dir),
+            skills_dir=str(skills_dir),
+            server_uptime=60.0,
+            version="0.9.6",
+            tools_available=[],
+        )
 
-            # Call without quick parameter - should default to False (full mode)
-            result = run_health_check(
-                db_path=str(db_path),
-                config_dir=str(config_dir),
-                data_dir=str(data_dir),
-                skills_dir=str(skills_dir),
-                server_uptime=60.0,
-                version="0.9.6",
-                tools_available=[],
-            )
-
-            # Full mode includes all domains
-            assert result.domains is not None
-            assert "watcher" in result.domains
-            assert "skills" in result.domains
-        finally:
-            subprocess.run = original_run
-            health_module.load_coordination_config = original_load
+        # Full mode includes all domains
+        assert result.domains is not None
+        assert "watcher" in result.domains
+        assert "skills" in result.domains

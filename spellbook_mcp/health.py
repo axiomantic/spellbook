@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from spellbook_mcp.db import get_connection
 from spellbook_mcp.preferences import CoordinationBackend, load_coordination_config
@@ -41,6 +41,7 @@ class HealthStatus(str, Enum):
     UNHEALTHY = "unhealthy"
     UNAVAILABLE = "unavailable"
     NOT_CONFIGURED = "not_configured"
+    STARTING = "starting"
 
 
 @dataclass
@@ -51,7 +52,7 @@ class DomainCheck:
     status: HealthStatus
     message: str
     latency_ms: Optional[float] = None
-    details: Optional[dict] = None
+    details: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -109,16 +110,15 @@ def _compare_versions(v1: str, v2: str) -> int:
     """
     parts1 = [_parse_version_part(x) for x in v1.split(".")]
     parts2 = [_parse_version_part(x) for x in v2.split(".")]
+    # Pad shorter list with zeros so "2.30" == "2.30.0"
+    max_len = max(len(parts1), len(parts2))
+    parts1.extend([0] * (max_len - len(parts1)))
+    parts2.extend([0] * (max_len - len(parts2)))
     for a, b in zip(parts1, parts2):
         if a < b:
             return -1
         if a > b:
             return 1
-    # Handle different-length version strings
-    if len(parts1) < len(parts2):
-        return -1
-    if len(parts1) > len(parts2):
-        return 1
     return 0
 
 
@@ -189,57 +189,59 @@ def _check_database(db_path: str) -> DomainCheck:
         # Establish connection and run checks
         conn = get_connection(db_path)
         cursor = conn.cursor()
+        try:
+            # Execute basic query
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
 
-        # Execute basic query
-        cursor.execute("SELECT 1")
-        cursor.fetchone()
+            # Check WAL mode
+            cursor.execute("PRAGMA journal_mode")
+            journal_mode = cursor.fetchone()[0]
+            wal_mode = journal_mode.upper() == "WAL"
 
-        # Check WAL mode
-        cursor.execute("PRAGMA journal_mode")
-        journal_mode = cursor.fetchone()[0]
-        wal_mode = journal_mode.upper() == "WAL"
+            # Count tables
+            cursor.execute(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
+            )
+            table_count = cursor.fetchone()[0]
 
-        # Count tables
-        cursor.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
-        )
-        table_count = cursor.fetchone()[0]
+            # Verify critical tables exist
+            critical_tables = ["souls", "heartbeat", "workflow_state"]
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )
+            existing_tables = {row[0] for row in cursor.fetchall()}
 
-        # Verify critical tables exist
-        critical_tables = ["souls", "heartbeat", "workflow_state"]
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        )
-        existing_tables = {row[0] for row in cursor.fetchall()}
+            missing_tables = [t for t in critical_tables if t not in existing_tables]
+            if missing_tables:
+                return DomainCheck(
+                    domain="database",
+                    status=HealthStatus.UNHEALTHY,
+                    message=f"Missing critical tables: {missing_tables}",
+                    latency_ms=(time.perf_counter() - start) * 1000,
+                    details={
+                        "path": db_path,
+                        "size_bytes": size_bytes,
+                        "tables": table_count,
+                        "wal_mode": wal_mode,
+                        "missing_tables": missing_tables,
+                    },
+                )
 
-        missing_tables = [t for t in critical_tables if t not in existing_tables]
-        if missing_tables:
             return DomainCheck(
                 domain="database",
-                status=HealthStatus.UNHEALTHY,
-                message=f"Missing critical tables: {missing_tables}",
+                status=HealthStatus.HEALTHY,
+                message="SQLite connection valid, schema verified",
                 latency_ms=(time.perf_counter() - start) * 1000,
                 details={
                     "path": db_path,
                     "size_bytes": size_bytes,
                     "tables": table_count,
                     "wal_mode": wal_mode,
-                    "missing_tables": missing_tables,
                 },
             )
-
-        return DomainCheck(
-            domain="database",
-            status=HealthStatus.HEALTHY,
-            message="SQLite connection valid, schema verified",
-            latency_ms=(time.perf_counter() - start) * 1000,
-            details={
-                "path": db_path,
-                "size_bytes": size_bytes,
-                "tables": table_count,
-                "wal_mode": wal_mode,
-            },
-        )
+        finally:
+            cursor.close()
 
     except sqlite3.Error as e:
         return DomainCheck(
@@ -284,9 +286,19 @@ def _check_watcher(
 
     try:
         heartbeat_age = _get_heartbeat_age(db_path)
+    except Exception as e:
+        # DB-level error (corrupt, table missing) escalates even during grace
+        return DomainCheck(
+            domain="watcher",
+            status=HealthStatus.DEGRADED,
+            message=f"Error checking heartbeat: {e}",
+            latency_ms=(time.perf_counter() - start) * 1000,
+            details={"error": str(e), "in_grace_period": in_grace_period},
+        )
 
+    try:
         # Build details dict
-        details = {
+        details: dict[str, Any] = {
             "heartbeat_age_seconds": heartbeat_age,
             "max_age_seconds": max_heartbeat_age,
             "in_grace_period": in_grace_period,
@@ -294,12 +306,12 @@ def _check_watcher(
         if grace_remaining is not None:
             details["grace_remaining_seconds"] = grace_remaining
 
-        # In grace period - always healthy
+        # In grace period - report STARTING, not HEALTHY
         if in_grace_period:
             return DomainCheck(
                 domain="watcher",
-                status=HealthStatus.HEALTHY,
-                message="In startup grace period",
+                status=HealthStatus.STARTING,
+                message="Watcher in startup grace period",
                 latency_ms=(time.perf_counter() - start) * 1000,
                 details=details,
             )
@@ -456,16 +468,8 @@ def _check_github_cli() -> DomainCheck:
         details["installed"] = True
         details["version"] = version
 
-    except FileNotFoundError:
-        return DomainCheck(
-            domain="github_cli",
-            status=HealthStatus.UNAVAILABLE,
-            message="GitHub CLI (gh) not installed",
-            latency_ms=(time.perf_counter() - start) * 1000,
-            details=details,
-        )
     except OSError:
-        # CRITICAL FIX: Catch OSError not just FileNotFoundError
+        # OSError covers FileNotFoundError (its subclass) and other OS-level errors
         return DomainCheck(
             domain="github_cli",
             status=HealthStatus.UNAVAILABLE,
@@ -477,9 +481,9 @@ def _check_github_cli() -> DomainCheck:
         return DomainCheck(
             domain="github_cli",
             status=HealthStatus.DEGRADED,
-            message="GitHub CLI check timed out (>2s)",
+            message=f"GitHub CLI check timed out (>{GH_TIMEOUT_SECONDS}s)",
             latency_ms=(time.perf_counter() - start) * 1000,
-            details={**details, "timeout_seconds": 2.0},
+            details={**details, "timeout_seconds": GH_TIMEOUT_SECONDS},
         )
 
     # Check version meets minimum
@@ -517,9 +521,9 @@ def _check_github_cli() -> DomainCheck:
         return DomainCheck(
             domain="github_cli",
             status=HealthStatus.DEGRADED,
-            message="gh auth check timed out (>2s)",
+            message=f"gh auth check timed out (>{GH_TIMEOUT_SECONDS}s)",
             latency_ms=(time.perf_counter() - start) * 1000,
-            details={**details, "timeout_seconds": 2.0},
+            details={**details, "timeout_seconds": GH_TIMEOUT_SECONDS},
         )
 
     return DomainCheck(
@@ -673,11 +677,12 @@ def _aggregate_status(domains: dict[str, DomainCheck]) -> HealthStatus:
     """Aggregate domain statuses into overall status.
 
     Algorithm:
-    1. If any CRITICAL domain is UNHEALTHY -> UNHEALTHY
+    1. If any CRITICAL domain is UNHEALTHY or UNAVAILABLE -> UNHEALTHY
     2. If any domain is DEGRADED or optional is UNHEALTHY -> DEGRADED
     3. Otherwise -> HEALTHY
 
-    Note: UNAVAILABLE and NOT_CONFIGURED do not affect aggregation.
+    Note: UNAVAILABLE (non-critical), NOT_CONFIGURED, and STARTING do not
+    affect aggregation.
 
     Args:
         domains: Dict mapping domain names to DomainCheck results
@@ -688,7 +693,7 @@ def _aggregate_status(domains: dict[str, DomainCheck]) -> HealthStatus:
     # Check critical domains first
     for domain_name in CRITICAL_DOMAINS:
         if domain_name in domains:
-            if domains[domain_name].status == HealthStatus.UNHEALTHY:
+            if domains[domain_name].status in (HealthStatus.UNHEALTHY, HealthStatus.UNAVAILABLE):
                 return HealthStatus.UNHEALTHY
 
     # Check for any degradation

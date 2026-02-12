@@ -38,6 +38,7 @@ from typing import List, Dict, Any, Optional
 import os
 import json
 import time
+from dataclasses import asdict
 from datetime import datetime, timezone
 
 # All imports use full package paths - no sys.path manipulation needed
@@ -46,6 +47,7 @@ from spellbook_mcp.path_utils import (
     get_project_dir_from_context,
     get_project_dir_for_path,
     get_project_path_from_context,
+    get_spellbook_config_dir,
 )
 from spellbook_mcp.session_ops import (
     split_by_char_limit,
@@ -78,8 +80,7 @@ from spellbook_mcp.compaction_detector import (
     get_recovery_reminder,
 )
 from spellbook_mcp.db import init_db, get_db_path
-from dataclasses import asdict
-from spellbook_mcp.health import run_health_check, HealthCheckResult
+from spellbook_mcp.health import run_health_check
 from spellbook_mcp.watcher import SessionWatcher
 from spellbook_mcp.injection import inject_recovery_context
 
@@ -708,39 +709,44 @@ def spellbook_health_check(full: bool = False) -> dict:
         check_mode = "full_periodic"
 
     # Get paths from environment or defaults
-    config_dir = os.environ.get(
-        "SPELLBOOK_CONFIG_DIR",
-        os.path.expanduser("~/.config/spellbook")
-    )
+    config_dir = str(get_spellbook_config_dir())
     data_dir = os.environ.get(
         "SPELLBOOK_DATA_DIR",
         os.path.expanduser("~/.local/spellbook")
     )
-    spellbook_dir = os.environ.get("SPELLBOOK_DIR", os.getcwd())
+    spellbook_dir = str(get_spellbook_dir())
     skills_dir = os.path.join(spellbook_dir, "skills")
 
-    # Run health check
-    result = run_health_check(
-        db_path=get_db_path(),
-        config_dir=config_dir,
-        data_dir=data_dir,
-        skills_dir=skills_dir,
-        server_uptime=time.time() - _server_start_time,
-        version=_get_version(),
-        tools_available=_get_tool_names(),
-        quick=not run_full,  # run_full=True means quick=False
-    )
+    try:
+        # Run health check
+        result = run_health_check(
+            db_path=get_db_path(),
+            config_dir=config_dir,
+            data_dir=data_dir,
+            skills_dir=skills_dir,
+            server_uptime=time.time() - _server_start_time,
+            version=_get_version(),
+            tools_available=_get_tool_names(),
+            quick=not run_full,  # run_full=True means quick=False
+        )
 
-    # Update tracking state if we ran a full check
-    if run_full:
-        _first_health_check_done = True
-        _last_full_health_check_time = time.time()
+        # Update tracking state if we ran a full check
+        if run_full:
+            _first_health_check_done = True
+            _last_full_health_check_time = time.time()
 
-    # Convert dataclass to dict for JSON serialization
-    result_dict = asdict(result)
-    result_dict["uptime_seconds"] = round(result.uptime_seconds, 1)
-    result_dict["check_mode"] = check_mode
-    return result_dict
+        # Convert dataclass to dict for JSON serialization
+        result_dict = asdict(result)
+        result_dict["uptime_seconds"] = round(result.uptime_seconds, 1)
+        result_dict["check_mode"] = check_mode
+        return result_dict
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "version": _get_version(),
+            "uptime_seconds": round(time.time() - _server_start_time, 1),
+        }
 
 
 # PR Distill Tools
