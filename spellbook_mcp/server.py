@@ -38,6 +38,7 @@ from typing import List, Dict, Any, Optional
 import os
 import json
 import time
+from dataclasses import asdict
 from datetime import datetime, timezone
 
 # All imports use full package paths - no sys.path manipulation needed
@@ -46,6 +47,7 @@ from spellbook_mcp.path_utils import (
     get_project_dir_from_context,
     get_project_dir_for_path,
     get_project_path_from_context,
+    get_spellbook_config_dir,
 )
 from spellbook_mcp.session_ops import (
     split_by_char_limit,
@@ -78,6 +80,7 @@ from spellbook_mcp.compaction_detector import (
     get_recovery_reminder,
 )
 from spellbook_mcp.db import init_db, get_db_path
+from spellbook_mcp.health import run_health_check
 from spellbook_mcp.watcher import SessionWatcher
 from spellbook_mcp.injection import inject_recovery_context
 
@@ -135,6 +138,11 @@ from spellbook_mcp.curator_tools import (
 
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
+
+# Health check state tracking
+_first_health_check_done = False
+_last_full_health_check_time: float = 0.0
+FULL_HEALTH_CHECK_INTERVAL_SECONDS = 300.0  # 5 minutes
 
 # Global watcher thread instance (initialized in __main__)
 _watcher = None
@@ -656,27 +664,89 @@ The above system-reminder should influence Claude's response if injection works.
 
 @mcp.tool()
 @inject_recovery_context
-def spellbook_health_check() -> dict:
+def spellbook_health_check(full: bool = False) -> dict:
     """
     Check the health of the spellbook MCP server.
 
     Returns server status, version, available tools, and uptime.
     Useful for verifying the server is running and responsive.
 
+    Automatically runs a full check:
+    - On the first call after server start
+    - Every 5 minutes (configurable via FULL_HEALTH_CHECK_INTERVAL_SECONDS)
+
+    Args:
+        full: If True, force comprehensive readiness check on all domains.
+              If False (default), run quick liveness check unless auto-full triggers.
+
     Returns:
         {
             "status": "healthy",
             "version": "0.2.1",
             "tools_available": ["spellbook_session_init", ...],
-            "uptime_seconds": 123.4
+            "uptime_seconds": 123.4,
+            "domains": {...},  # Present when full check runs
+            "checked_at": "2026-02-09T12:00:00Z"
         }
     """
-    return {
-        "status": "healthy",
-        "version": _get_version(),
-        "tools_available": _get_tool_names(),
-        "uptime_seconds": round(time.time() - _server_start_time, 1)
-    }
+    global _first_health_check_done, _last_full_health_check_time
+
+    # Determine if we should run a full check and why
+    check_mode = "quick"
+    run_full = False
+
+    if full:
+        # Explicit request always honored
+        run_full = True
+        check_mode = "full_explicit"
+    elif not _first_health_check_done:
+        # First check after server start should be full
+        run_full = True
+        check_mode = "full_first_call"
+    elif (time.time() - _last_full_health_check_time) >= FULL_HEALTH_CHECK_INTERVAL_SECONDS:
+        # Periodic full check (every FULL_HEALTH_CHECK_INTERVAL_SECONDS)
+        run_full = True
+        check_mode = "full_periodic"
+
+    # Get paths from environment or defaults
+    config_dir = str(get_spellbook_config_dir())
+    data_dir = os.environ.get(
+        "SPELLBOOK_DATA_DIR",
+        os.path.expanduser("~/.local/spellbook")
+    )
+    spellbook_dir = str(get_spellbook_dir())
+    skills_dir = os.path.join(spellbook_dir, "skills")
+
+    try:
+        # Run health check
+        result = run_health_check(
+            db_path=get_db_path(),
+            config_dir=config_dir,
+            data_dir=data_dir,
+            skills_dir=skills_dir,
+            server_uptime=time.time() - _server_start_time,
+            version=_get_version(),
+            tools_available=_get_tool_names(),
+            quick=not run_full,  # run_full=True means quick=False
+        )
+
+        # Update tracking state if we ran a full check
+        if run_full:
+            _first_health_check_done = True
+            _last_full_health_check_time = time.time()
+
+        # Convert dataclass to dict for JSON serialization
+        result_dict = asdict(result)
+        result_dict["uptime_seconds"] = round(result.uptime_seconds, 1)
+        result_dict["check_mode"] = check_mode
+        return result_dict
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "version": _get_version(),
+            "uptime_seconds": round(time.time() - _server_start_time, 1),
+        }
 
 
 # PR Distill Tools

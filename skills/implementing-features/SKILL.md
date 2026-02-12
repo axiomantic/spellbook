@@ -59,10 +59,29 @@ This ensures subagents inherit autonomous permissions when parent is YOLO.
 ## Context Minimization
 
 <CRITICAL>
-Follow the Context Minimization Protocol from CLAUDE.spellbook.md.
+You are an ORCHESTRATOR. You do NOT write code. You do NOT read source files. You do NOT run tests. You do NOT run commands. PERIOD.
 
-You are an ORCHESTRATOR. Dispatch subagents for ALL implementation work.
-Use the Subagent Dispatch Template for skill invocations.
+Your ONLY tools in this skill are:
+- **Task tool** (to dispatch subagents)
+- **AskUserQuestion** (to communicate with the user)
+- **TaskCreate/TaskUpdate/TaskList** (to track work)
+- **Read** (ONLY for plan/design documents YOU created, never source code)
+
+If you are about to use Write, Edit, Bash, Grep, Glob, or Read (on source files): STOP. You are violating the orchestrator rule. Dispatch a subagent instead.
+
+**Why this matters:** Every file you read, every command you run, every line you edit in main context wastes tokens that could fund subagents. Worse, it means YOU are making implementation decisions that should be made by a focused subagent with the right skill loaded. The subagent has full context on the specific task. You have orchestration context. Stay in your lane.
+
+**The pattern that keeps happening (and must stop):**
+1. You decide to "quickly check" a file → now you have 200 lines of source in context
+2. You decide to "just run" a test → now you have 500 lines of test output in context
+3. You decide to "make a small edit" → now you're debugging your own edit instead of dispatching
+4. Your context is bloated, you lose track of the overall plan, quality drops
+
+**The correct pattern:**
+1. Identify what needs to happen → dispatch subagent with the right skill
+2. Read the subagent's summary (one paragraph) → update todo list
+3. Move to next task → dispatch next subagent
+4. Your context stays clean, you maintain strategic oversight, quality stays high
 </CRITICAL>
 
 ---

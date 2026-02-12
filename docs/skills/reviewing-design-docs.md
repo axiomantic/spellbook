@@ -69,6 +69,8 @@ Evaluate every category for specification completeness. Detect vague language, a
 
 **Outputs:** Completeness matrix with SPECIFIED/VAGUE/MISSING verdicts, vague language inventory, assumed knowledge list, magic number list
 
+**Optional deep audit:** For specs with many VAGUE items, run `/sharpen-audit` on specific sections to get executor-prediction analysis (what an implementer would guess for each ambiguity).
+
 ---
 
 ## Phases 4-5: Interface Verification + Implementation Simulation

@@ -184,6 +184,24 @@ When the user expresses a wish, desire, or suggestion about functionality ("Woul
 
 The skill's discovery phase will gather requirements properly. Your job is to recognize intent and dispatch.
 
+### No Assumptions, No Jumping Ahead
+
+<CRITICAL>
+You do NOT know what the user wants until they tell you. Do NOT guess. Do NOT infer a design from a wish. Do NOT skip straight to implementation because the request "seems obvious."
+</CRITICAL>
+
+When the user describes something they want:
+
+1. **Explore the space together.** Ask what they have in mind. Surface options. Present tradeoffs.
+2. **Do NOT lock in an approach** until the user confirms it. "I want better error messages" has dozens of valid interpretations. Find out which one.
+3. **Do NOT start designing or building** until ambiguity is resolved. A design based on assumptions is worse than no design.
+
+**The failure mode this prevents:** You hear "I want X", you immediately decide X means Y, you design Y, you build Y, and the user says "that's not what I meant." All that work is wasted. The cost of asking one question is near zero. The cost of building the wrong thing is enormous.
+
+**How this interacts with Intent Interpretation:** When the user expresses a wish, invoke the relevant skill (that rule still applies). But within the skill's discovery phase, do NOT rush. The discovery phase exists precisely to explore, ask, and clarify. Use it. Linger there. Do not treat discovery as a speed bump on the way to design.
+
+**Self-check:** Before committing to any approach, ask yourself: "Did the user confirm this is what they want, or did I decide for them?" If the answer is the latter, STOP and ask.
+
 ### Git Safety
 
 - NEVER execute git commands with side effects (commit, push, checkout, restore, stash, merge, rebase, reset) without STOPPING and asking permission first. YOLO mode does not override this.
@@ -486,7 +504,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 
 ## Available Skills
 
-- **advanced-code-review**: Multi-phase code review with verification. For reviewing others' code with historical context tracking.
+- **advanced-code-review**: Use when reviewing others' code with multi-phase analysis, historical context tracking, and verification.
 - **analyzing-domains**: Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when implementing-features Phase 1.2 detects unfamiliar domain.
 - **analyzing-skill-usage**: Use when evaluating skill performance, A/B testing skill versions, or identifying weak skills. Analyzes session transcripts to extract skill invocation patterns, completion rates, correction rates, and efficiency metrics.
 - **assembling-context**: Use when preparing context for subagents or managing token budgets. Triggers: "prepare context for", "assemble context", "what context does X need", "token budget", "context package", or automatically invoked by implementing-features Phase 3.5 (work packets) and Phase 4.2 (parallel subagents).
@@ -496,6 +514,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **brainstorming**: Use before any creative work - creating features, building components, adding functionality, or modifying behavior
 - **code-review**: Use when reviewing code (self-review, processing feedback, reviewing others, or auditing). Modes: --self (default), --feedback, --give <target>, --audit
 - **debugging**: Use when debugging bugs, test failures, or unexpected behavior
+- **deep-research**: Use when researching complex topics, evaluating technologies, investigating domains, or answering multi-faceted questions requiring web research. Triggers: "research X", "investigate Y", "evaluate options for Z", "what are the best approaches to", "help me understand", "deep dive into", "compare alternatives".
 - **dehallucination**: Use when roundtable feedback indicates hallucination concerns, or as a quality gate before stage transitions in the Forged workflow. Provides confidence assessment for claims, citation requirements, hallucination detection patterns, and recovery protocols.
 - **designing-workflows**: Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when implementing-features Phase 2.1 detects workflow patterns.
 - **devils-advocate**: Use before design phase to challenge assumptions and surface risks
@@ -513,6 +532,7 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **gathering-requirements**: Use when starting the DISCOVER stage of the Forged workflow, or when feature requirements are unclear. Uses tarot archetype perspectives (Queen for user needs, Emperor for constraints, Hermit for security, Priestess for scope) to ensure comprehensive requirements capture.
 - **implementing-features**: Use when building, creating, or adding functionality. Triggers: "implement X", "build Y", "add feature Z", "create X", "start a new project", "Would be great to...", "I want to...", "We need...", "Can we add...", "Let's add...". Also for: new projects, repos, templates, greenfield development. NOT for: bug fixes, pure research, or questions about existing code.
 - **instruction-engineering**: Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts
+- **isolated-testing**: Use when testing theories during debugging, or when chaos is detected. Triggers: "let me try", "maybe if I", "what about", "quick test", "see if", rapid context switching, multiple changes without isolation. Enforces one-theory-one-test discipline. Invoked automatically by debugging, scientific-debugging, systematic-debugging before any experiment execution.
 - **managing-artifacts**: Use when generating documents, reports, plans, audits, or when asked where to save files. Triggers on "save report", "write plan", "where should I put", "project-encoded path
 - **merging-worktrees**: Use when merging parallel worktrees back together after parallel implementation
 - **optimizing-instructions**: Use when instruction files (skills, prompts, CLAUDE.md) are too long or need token reduction while preserving capability. Triggers: "optimize instructions", "reduce tokens", "compress skill", "make this shorter", "too verbose".
@@ -522,12 +542,14 @@ You are equipped with "Spellbook" - a library of expert agent skills.
 - **resolving-merge-conflicts**: Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files
 - **reviewing-design-docs**: Use when reviewing design documents, technical specifications, or architecture docs before implementation planning
 - **reviewing-impl-plans**: Use when reviewing implementation plans before execution, especially plans derived from design documents
+- **sharpening-prompts**: Use when reviewing LLM prompts, skill instructions, subagent prompts, or any text that will instruct an AI. Triggers: "review this prompt", "audit instructions", "sharpen prompt", "is this clear enough", "would an LLM understand this", "ambiguity check". Also invoked by instruction-engineering, reviewing-design-docs, and reviewing-impl-plans for instruction quality gates.
 - **smart-reading**: Use when reading files or command output of unknown size to avoid blind truncation and context loss
 - **tarot-mode**: Use when session returns mode.type='tarot' - tarot archetypes collaborate via roundtable dialogue with instruction-engineering embedded
 - **test-driven-development**: Use when implementing any feature or bugfix, before writing implementation code
 - **using-git-worktrees**: Use when starting feature work that needs isolation from current workspace or before executing implementation plans
 - **using-lsp-tools**: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
 - **using-skills**: Use when starting any conversation
+- **verifying-hunches**: Use when about to claim discovery during debugging. Triggers: "I found", "this is the issue", "I think I see", "looks like the problem", "that's why", "the bug is", "root cause", "culprit", "smoking gun", "aha", "got it", "here's what's happening", "the reason is", "causing the", "explains why", "mystery solved", "figured it out", "the fix is", "should fix", "this will fix". Also invoked by debugging, scientific-debugging, systematic-debugging before any root cause claim.
 - **writing-commands**: Use when creating new commands, editing existing commands, or reviewing command quality. Triggers on "write command", "new command", "review command", "fix command
 - **writing-plans**: Use when you have a spec or requirements for a multi-step task, before touching code
 - **writing-skills**: Use when creating new skills, editing existing skills, or verifying skills work before deployment

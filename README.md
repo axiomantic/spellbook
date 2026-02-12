@@ -35,8 +35,8 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (46 total)](#skills-46-total)
-  - [Commands (72 total)](#commands-72-total)
+  - [Skills (49 total)](#skills-49-total)
+  - [Commands (77 total)](#commands-77-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -81,18 +81,18 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (46 total)
+### Skills (49 total)
 
 Reusable workflows for structured development:
 
 | Category | Skills |
 |----------|--------|
-| **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [using-git-worktrees]†, [finishing-a-development-branch]† |
+| **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
-| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows] |
+| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts] |
-| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage], [documenting-tools] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage], [documenting-tools] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
@@ -102,6 +102,8 @@ Reusable workflows for structured development:
 [executing-plans]: https://axiomantic.github.io/spellbook/latest/skills/executing-plans/
 [test-driven-development]: https://axiomantic.github.io/spellbook/latest/skills/test-driven-development/
 [debugging]: https://axiomantic.github.io/spellbook/latest/skills/debugging/
+[verifying-hunches]: https://axiomantic.github.io/spellbook/latest/skills/verifying-hunches/
+[isolated-testing]: https://axiomantic.github.io/spellbook/latest/skills/isolated-testing/
 [using-git-worktrees]: https://axiomantic.github.io/spellbook/latest/skills/using-git-worktrees/
 [enforcing-code-quality]: https://axiomantic.github.io/spellbook/latest/skills/enforcing-code-quality/
 [advanced-code-review]: https://axiomantic.github.io/spellbook/latest/skills/advanced-code-review/
@@ -124,6 +126,7 @@ Reusable workflows for structured development:
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
 [instruction-engineering]: https://axiomantic.github.io/spellbook/latest/skills/instruction-engineering/
+[sharpening-prompts]: https://axiomantic.github.io/spellbook/latest/skills/sharpening-prompts/
 [optimizing-instructions]: https://axiomantic.github.io/spellbook/latest/skills/optimizing-instructions/
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
@@ -143,8 +146,9 @@ Reusable workflows for structured development:
 [analyzing-domains]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-domains/
 [assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
+[deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
 
-### Commands (72 total)
+### Commands (77 total)
 
 | Command | Description |
 |---------|-------------|
@@ -153,6 +157,9 @@ Reusable workflows for structured development:
 | [/dead-code-analyze] | Extract and triage code items for dead code verification |
 | [/dead-code-report] | Generate dead code findings report with deletion plan |
 | [/dead-code-implement] | Execute approved deletions with verification |
+| [/deep-research-interview] | Phase 0: Structured interview and Research Brief generation |
+| [/deep-research-investigate] | Phase 2: Triplet search engine with plateau detection and micro-reports |
+| [/deep-research-plan] | Phase 1: Thread decomposition, source strategy, and convergence criteria |
 | [/design-assessment] | Generate assessment frameworks for evaluative skills/commands |
 | [/handoff] | Custom session compaction |
 | [/distill-session] | Extract knowledge from sessions |
@@ -214,12 +221,17 @@ Reusable workflows for structured development:
 | [/code-review-give] | Review others' code |
 | [/code-review-tarot] | Roundtable-style collaborative review |
 | [/write-skill-test] | Skill testing with pressure scenarios |
+| [/writing-commands-create] | Command creation with schema, naming, and frontmatter |
+| [/writing-commands-review] | Command quality checklist and testing protocol |
+| [/writing-commands-paired] | Paired command protocol and assessment framework |
 | [/reflexion-analyze] | Full reflexion analysis workflow |
 | [/test-bar] | Generate floating QA test overlay for visual testing |
 | [/test-bar-remove] | Clean removal of test-bar overlay |
 | [/ie-techniques] | Reference for 16 proven instruction engineering techniques |
 | [/ie-template] | Template and example for engineered instructions |
 | [/ie-tool-docs] | Guidance for writing tool/function documentation |
+| [/sharpen-audit] | Audit prompts for ambiguity with executor predictions |
+| [/sharpen-improve] | Rewrite prompts to eliminate ambiguity |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -228,6 +240,9 @@ Reusable workflows for structured development:
 [/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
 [/dead-code-report]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-report/
 [/dead-code-implement]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-implement/
+[/deep-research-interview]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-interview/
+[/deep-research-investigate]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-investigate/
+[/deep-research-plan]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-plan/
 [/design-assessment]: https://axiomantic.github.io/spellbook/latest/commands/design-assessment/
 [/handoff]: https://axiomantic.github.io/spellbook/latest/commands/handoff/
 [/distill-session]: https://axiomantic.github.io/spellbook/latest/commands/distill-session/
@@ -289,12 +304,17 @@ Reusable workflows for structured development:
 [/code-review-give]: https://axiomantic.github.io/spellbook/latest/commands/code-review-give/
 [/code-review-tarot]: https://axiomantic.github.io/spellbook/latest/commands/code-review-tarot/
 [/write-skill-test]: https://axiomantic.github.io/spellbook/latest/commands/write-skill-test/
+[/writing-commands-create]: https://axiomantic.github.io/spellbook/latest/commands/writing-commands-create/
+[/writing-commands-review]: https://axiomantic.github.io/spellbook/latest/commands/writing-commands-review/
+[/writing-commands-paired]: https://axiomantic.github.io/spellbook/latest/commands/writing-commands-paired/
 [/reflexion-analyze]: https://axiomantic.github.io/spellbook/latest/commands/reflexion-analyze/
 [/test-bar]: https://axiomantic.github.io/spellbook/latest/commands/test-bar/
 [/test-bar-remove]: https://axiomantic.github.io/spellbook/latest/commands/test-bar-remove/
 [/ie-techniques]: https://axiomantic.github.io/spellbook/latest/commands/ie-techniques/
 [/ie-template]: https://axiomantic.github.io/spellbook/latest/commands/ie-template/
 [/ie-tool-docs]: https://axiomantic.github.io/spellbook/latest/commands/ie-tool-docs/
+[/sharpen-audit]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-audit/
+[/sharpen-improve]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-improve/
 
 ### Agents (7 total)
 

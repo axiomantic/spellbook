@@ -5,6 +5,79 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.8] - 2026-02-09
+
+### Added
+- **Comprehensive health check** - Enhanced `spellbook_health_check` MCP tool with domain-specific checks
+  - 6 domain checks: database, watcher, filesystem, github_cli, coordination, skills
+  - Quick mode (liveness) vs full mode (readiness) with `full` parameter
+  - HealthStatus enum: HEALTHY, DEGRADED, UNHEALTHY, UNAVAILABLE, NOT_CONFIGURED
+  - Status aggregation with critical domain handling (database, filesystem are critical)
+  - Detailed domain results with latency tracking and diagnostic details
+  - New `spellbook_mcp/health.py` module (700+ lines)
+  - 93 new tests for health check functionality
+- **verifying-hunches skill** - Prevents premature eureka claims during debugging
+  - Triggers on: "I found", "this is the issue", "root cause", "smoking gun", "aha", "got it"
+  - Eureka registry tracks hypotheses with UNTESTED/TESTING/CONFIRMED/DISPROVEN status
+  - Deja vu check prevents rediscovering same disproven theory after compaction
+  - Specificity requirements: exact location, mechanism, symptom link, testable prediction
+  - Test-before-claim protocol with prediction vs actual comparison
+  - Confidence calibration language ("hypothesis" not "found")
+- **isolated-testing skill** - Enforces methodical debugging with one-theory-one-test discipline
+  - Triggers on chaos indicators: "let me try", "maybe if I", "what about", rapid context switching
+  - Design-before-execute: write complete repro test before running anything
+  - Approval gate (skipped in autonomous/YOLO mode)
+  - FULL STOP on reproduction - announce and wait, no continued investigation
+  - Theory tracker with explicit status management
+  - Integrated into debugging, scientific-debugging, systematic-debugging
+- **sharpening-prompts skill** - QA workflow for LLM instruction review
+- **debugging Phase 0: Prerequisites** - Mandatory gates before any investigation
+  - 0.1 Establish clean baseline: known-good reference state required before debugging
+  - 0.2 Prove bug exists: hard gate requiring reproduction on clean baseline
+  - 0.3 Code state tracking: always know what state you're testing
+  - New invariant principles: baseline before investigation, prove bug exists first
+  - Prevents: winging it without methodology, testing modified code, elaborate fixes before proving bug exists
+- **"No Assumptions, No Jumping Ahead" inviolable rule** in CLAUDE.spellbook.md
+  - Prevents LLM from guessing user intent or jumping straight to design/implementation
+  - Requires exploring the space with user, asking questions, confirming approach before committing
+  - Self-check gate: "Did the user confirm this, or did I decide for them?"
+  - Reconciles with Intent Interpretation: invoke skill immediately, but linger in discovery phase
+- **deep-research skill** - Multi-threaded web research with verification and hallucination prevention
+  - Orchestrator skill + 3 commands: interview, plan, investigate
+  - Phase 0 (interview): 5-category structured interview, assumption extraction, Research Brief output
+  - Phase 1 (plan): thread decomposition, 4-phase source strategy (survey/extract/diversify/verify), round budgets
+  - Phase 2 (investigate): novel triplet search engine [Scope/Search/Extract] with plateau detection and micro-reports
+  - Phase 3 (verify): invokes existing fact-checking + dehallucination skills on findings
+  - Phase 4 (synthesize): template selection by research type (comparison/procedural/exploratory/evaluative)
+  - Subject Registry prevents entity dropout across parallel threads
+  - Conflict Register enforces dual-position documentation when sources disagree
+  - Override Protocol prevents silent changes to user-provided facts
+  - Plateau Circuit Breaker with 3 escalation levels and drift detection
+  - 6-level confidence tagging: VERIFIED, CORROBORATED, PLAUSIBLE, INFERRED, UNVERIFIED, CONTESTED
+  - Composes existing skills: fact-checking, dehallucination, smart-reading, dispatching-parallel-agents patterns
+
+### Changed
+- **implementing-features Context Minimization** - Rewritten with explicit tool allowlist/blocklist
+  - Allowlist: Task, AskUserQuestion, TaskCreate/Update/List, Read (plan docs only)
+  - Blocklist: Write, Edit, Bash, Grep, Glob, Read (source files)
+  - Narrates the exact failure pattern and correct pattern to internalize
+  - Explains why orchestrator violations waste tokens and degrade quality
+- **writing-commands skill+commands split** - Split oversized skill (2340 tokens) into orchestrator + 3 commands
+  - Orchestrator SKILL.md: 128 lines (under 1500 token budget)
+  - `writing-commands-create`: command schema, naming, frontmatter, token efficiency, example
+  - `writing-commands-review`: quality checklist, anti-patterns, testing protocol
+  - `writing-commands-paired`: paired command protocol, assessment framework integration
+- **isolated-testing code state tracking** - Enhanced theory testing discipline
+  - Step 0: Verify code state before selecting theory
+  - Queue discipline: test theories in order, no skipping to "the likely one"
+  - Code state violations added to FORBIDDEN section
+
+### Fixed
+- **Flaky token budget compliance tests** - Added 10% tolerance margin for LLM estimation variance
+  - Skills between 1500-1650 estimated tokens produce warnings (not failures)
+  - Skills over 1650 still fail (catches genuinely over-budget skills)
+  - Eliminates random pass/fail on borderline skills across runs
+
 ## [0.9.7] - 2026-02-08
 
 ### Added

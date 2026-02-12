@@ -51,68 +51,16 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 
 ## MCP Tool Integration
 
-### Available Tools
+| Tool | Purpose |
+|------|---------|
+| `pr_fetch(num_or_url)` | Fetch PR metadata and diff |
+| `pr_diff(raw_diff)` | Parse diff into FileDiff objects |
+| `pr_match_patterns(files, root)` | Heuristic pre-filtering |
+| `pr_files(pr_result)` | Extract file list |
 
-| Tool | Purpose | Used In |
-|------|---------|---------|
-| `pr_fetch` | Fetch PR metadata and diff | --self (with --pr), --give, --audit |
-| `pr_diff` | Parse unified diff into FileDiff objects | All modes with PR source |
-| `pr_match_patterns` | Heuristic pre-filtering of changes | --give, --audit |
-| `pr_files` | Extract file list from pr_fetch result | All modes with PR source |
+**Principle:** MCP tools for read/analyze. `gh` CLI for write operations (posting reviews, replies).
 
-### Tool Layering Principle
-
-- **MCP tools for read/analyze:** Deterministic, structured data
-- **gh CLI for write operations:** User-visible side effects
-
-### Usage Patterns
-
-**Fetching PR Data:**
-```python
-# By number (uses current repo context)
-pr_data = pr_fetch("123")
-
-# By URL (explicit repo)
-pr_data = pr_fetch("https://github.com/owner/repo/pull/123")
-```
-
-**Parsing Diff:**
-```python
-diff_result = pr_diff(pr_data["diff"])
-# Returns: {"files": [FileDiff, ...], "warnings": [...]}
-```
-
-**Pattern Matching:**
-```python
-match_result = pr_match_patterns(
-    files=diff_result["files"],
-    project_root=PROJECT_ROOT
-)
-# Returns: {"matched": {...}, "unmatched": [...], "patterns_checked": N}
-```
-
-### Fallback Behavior
-
-| Failure | Fallback | User Message |
-|---------|----------|--------------|
-| MCP unavailable | gh CLI | "Using gh CLI (MCP unavailable)" |
-| PR not found | Local diff | "PR not found. Reviewing local changes." |
-| Auth failure | Manual paste | "Auth failed. Paste PR diff manually." |
-
-### gh CLI Integration
-
-For write operations (posting reviews, replies):
-
-```bash
-# Post review with verdict
-gh pr review <num> --approve --body "review content"
-gh pr review <num> --request-changes --body "review content"
-gh pr review <num> --comment --body "review content"
-
-# Reply to comment thread
-gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies \
-  -f body="Fixed. [description]"
-```
+**Fallback:** MCP unavailable -> gh CLI -> local diff -> manual paste.
 
 ---
 

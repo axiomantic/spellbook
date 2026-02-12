@@ -64,6 +64,8 @@ This skill orchestrates prompt engineering through specialized commands:
 | `/ie-techniques` | 16 proven techniques reference | Selecting which techniques to apply |
 | `/ie-template` | Template + example | Drafting new prompts from scratch |
 | `/ie-tool-docs` | Tool documentation guidance | Writing MCP tools, APIs, CLI commands |
+| `/sharpen-audit` | Ambiguity detection | QA gate before finalizing prompts |
+| `/sharpen-improve` | Ambiguity resolution | Rewriting prompts to eliminate guesswork |
 
 ### Workflow
 
@@ -71,7 +73,8 @@ This skill orchestrates prompt engineering through specialized commands:
 2. **Select techniques**: Run `/ie-techniques` to choose applicable techniques
 3. **Draft prompt**: Run `/ie-template` for structure and example
 4. **Document tools**: If prompt involves tools, run `/ie-tool-docs`
-5. **Verify**: Run self-check before finalizing
+5. **Sharpen**: Run `/sharpen-audit` to find ambiguities, `/sharpen-improve` to fix them
+6. **Verify**: Run self-check before finalizing
 
 ---
 
@@ -133,6 +136,11 @@ Before completing any prompt engineering task:
 - [ ] Is this the shortest prompt that achieves the goal?
 - [ ] Can any section be removed without losing capability?
 - [ ] If extended (>200 lines): is justification documented?
+
+### Ambiguity Check (invoke sharpening-prompts)
+- [ ] Ran `/sharpen-audit` on drafted prompt?
+- [ ] No CRITICAL or HIGH findings remain?
+- [ ] All ambiguities resolved or explicitly documented?
 
 ### Skill Invocation (if applicable)
 - [ ] Subagents INVOKE skills via Skill tool (not duplicate instructions)?

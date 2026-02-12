@@ -148,28 +148,62 @@ You MUST complete each phase before proceeding to the next.
 
 ### Phase 3: Hypothesis and Testing
 
-**Scientific method:**
+<CRITICAL>
+**INVOKE `isolated-testing` SKILL BEFORE ANY EXPERIMENT.**
+
+This phase requires patience and discipline. You are not "trying things." You are testing hypotheses.
+</CRITICAL>
+
+**Isolated Testing Protocol:**
 
 1. **Form Single Hypothesis**
    - State clearly: "I think X is the root cause because Y"
    - Write it down
    - Be specific, not vague
+   - **CRITICAL:** Before claiming you "found it," invoke `verifying-hunches` skill
 
-2. **Test Minimally**
-   - Make the SMALLEST possible change to test hypothesis
-   - One variable at a time
-   - Don't fix multiple things at once
+2. **Design Repro Test BEFORE Execution**
+   - Write the COMPLETE test procedure
+   - Define what you will see if hypothesis is CORRECT
+   - Define what you will see if hypothesis is WRONG
+   - Get approval (unless autonomous mode)
 
-3. **Verify Before Continuing**
-   - Did it work? Yes → Phase 4
-   - Didn't work? Form NEW hypothesis
+3. **Execute ONCE**
+   - Run the test EXACTLY as designed
+   - Capture output
+   - Compare to predictions
+
+4. **Verdict**
+   - **REPRODUCED:** Bug reproduces under this hypothesis -> FULL STOP, announce, wait (or proceed to fix if autonomous)
+   - **DISPROVED:** Result matches "wrong" prediction -> Mark DISPROVED, form NEW hypothesis
+   - **INCONCLUSIVE:** Neither matches -> Note what happened, refine test or continue
    - DON'T add more fixes on top
+   - **Register disproven hypothesis** - prevents rediscovery after compaction
 
-4. **When You Don't Know**
+5. **When You Don't Know**
    - Say "I don't understand X"
    - Don't pretend to know
    - Ask for help
    - Research more
+
+<HUNCH_CHECK>
+When you feel like saying "I found it" or "this is the root cause":
+1. STOP - that's a hypothesis, not a finding
+2. Invoke `verifying-hunches` skill
+3. Complete specificity check (exact location, mechanism, symptom link)
+4. Define falsification criteria
+5. Run test with prediction vs actual comparison
+6. Only claim "confirmed" after evidence matches prediction
+</HUNCH_CHECK>
+
+<CHAOS_CHECK>
+If you catch yourself doing ANY of these, STOP and return to step 1:
+- "Let me try..." / "Maybe if I..." / "What about..."
+- Running without a designed test
+- Changing multiple things between tests
+- Continuing after bug reproduces
+- Testing theory A but making change related to theory B
+</CHAOS_CHECK>
 
 ### Phase 4: Implementation
 
@@ -230,6 +264,13 @@ If you catch yourself thinking:
 - Proposing solutions before tracing data flow
 - **"One more fix attempt" (when already tried 2+)**
 - **Each fix reveals new problem in different place**
+- **"I found it!" or "This is the issue!"** (premature eureka - invoke verifying-hunches)
+- **"I think I see what's happening"** (vague pattern-match - needs specificity)
+- **Same theory you had before** (deja vu - check if previously disproven)
+- **"Let me try..." / "Maybe if I..." / "What about..."** (chaos - invoke isolated-testing)
+- **Making changes without a designed test** (action without design)
+- **Testing multiple theories at once** (no isolation)
+- **Continuing after bug reproduced** (stop on reproduction)
 
 **ALL of these mean: STOP. Return to Phase 1.**
 

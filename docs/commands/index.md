@@ -25,6 +25,9 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/dead-code-implement](dead-code-implement.md) | Implement dead code deletions with user approval. Part of dead-code-* family. | spellbook |
 | [/dead-code-report](dead-code-report.md) | Generate dead code findings report with implementation plan. Part of dead-code-*... | spellbook |
 | [/dead-code-setup](dead-code-setup.md) | Git safety and scope selection for dead code analysis. Part of dead-code-* famil... | spellbook |
+| [/deep-research-interview](deep-research-interview.md) | Phase 0 of deep-research: Structured interview and Research Brief generation. Tr... | spellbook |
+| [/deep-research-investigate](deep-research-investigate.md) | Phase 2 of deep-research: Triplet search engine with plateau detection and micro... | spellbook |
+| [/deep-research-plan](deep-research-plan.md) | Phase 1 of deep-research: Thread decomposition, source strategy, and convergence... | spellbook |
 | [/design-assessment](design-assessment.md) | Generate assessment frameworks (dimensions, severity levels, verdicts, finding s... | spellbook |
 | [/distill-session](distill-session.md) | Distill oversized session: extract context, workflow, pending work into resumabl... | spellbook |
 | [/encyclopedia-build](encyclopedia-build.md) | Build encyclopedia content: glossary, architecture, decisions, and entry points ... | spellbook |
@@ -68,6 +71,8 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/review-plan-contracts](review-plan-contracts.md) | Phase 2 of reviewing-impl-plans: Interface Contract Audit | spellbook |
 | [/review-plan-inventory](review-plan-inventory.md) | Phase 1 of reviewing-impl-plans: Context and Inventory analysis | spellbook |
 | [/scientific-debugging](scientific-debugging.md) | Rigorous theory-experiment debugging methodology. Use when debugging complex iss... | spellbook |
+| [/sharpen-audit](sharpen-audit.md) | Audit LLM prompts/instructions for ambiguity. Use when reviewing prompts, skill ... | spellbook |
+| [/sharpen-improve](sharpen-improve.md) | Rewrite LLM prompts to eliminate ambiguity. Use when you have a prompt that need... | spellbook |
 | [/simplify](simplify.md) | Orchestrates code simplification via verified transformations. Delegates to simp... | spellbook |
 | [/simplify-analyze](simplify-analyze.md) | Analyze code for simplification opportunities. Part of simplify-* family. | spellbook |
 | [/simplify-transform](simplify-transform.md) | Apply verified simplifications with user approval. Part of simplify-* family. | spellbook |
@@ -78,3 +83,6 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/verify](verify.md) | Run verification commands and confirm output before making success claims. Use b... | spellbook |
 | [/write-plan](write-plan.md) | Create detailed implementation plan with bite-sized tasks. Use when starting any... | [superpowers](https://github.com/obra/superpowers) |
 | [/write-skill-test](write-skill-test.md) | RED-GREEN-REFACTOR implementation for writing-skills: Baseline testing, minimal ... | spellbook |
+| [/writing-commands-create](writing-commands-create.md) | Create a new command file following the command schema. Use when writing-command... | spellbook |
+| [/writing-commands-paired](writing-commands-paired.md) | Create paired commands (create + remove) with proper artifact contracts. Use whe... | spellbook |
+| [/writing-commands-review](writing-commands-review.md) | Review and test a command against the quality checklist. Use when writing-comman... | spellbook |
