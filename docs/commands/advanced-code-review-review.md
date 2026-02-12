@@ -37,6 +37,7 @@ Use precise severity definitions:
 | MEDIUM | Quality concern, technical debt | High complexity, missing error handling, code duplication |
 | LOW | Minor improvement, optimization | Inefficient algorithm (non-hot path), better naming |
 | NIT | Purely stylistic | Formatting, comment style, import order |
+| QUESTION | Information-seeking; needs contributor input | Confirm upstream sends field X, clarify error handling intent |
 | PRAISE | Noteworthy positive | Clever solution, good pattern usage, excellent tests |
 
 **Severity Decision Tree:**
@@ -60,6 +61,10 @@ Is it a minor improvement or optimization?
 
 Is it purely stylistic?
   -> Yes: NIT
+  -> No: Continue
+
+Does it require contributor input to resolve?
+  -> Yes: QUESTION
   -> No: PRAISE (if positive) or skip
 ```
 
@@ -90,7 +95,7 @@ Each finding follows this structure:
 | Field | Required | Nullable | Notes |
 |-------|----------|----------|-------|
 | id | Yes | No | Unique within review |
-| severity | Yes | No | One of CRITICAL/HIGH/MEDIUM/LOW/NIT/PRAISE |
+| severity | Yes | No | One of CRITICAL/HIGH/MEDIUM/LOW/NIT/QUESTION/PRAISE |
 | category | Yes | No | security/logic/error/type/test/perf/style/doc |
 | file | Yes | No | Relative path |
 | line | Yes | No | Start line (1-indexed) |
@@ -224,6 +229,7 @@ NOTEWORTHY_PATTERNS = [
       "MEDIUM": 3,
       "LOW": 2,
       "NIT": 1,
+      "QUESTION": 0,
       "PRAISE": 0
     },
     "by_category": {
