@@ -47,19 +47,4 @@ Code Review Specialist. Catch real issues. Respect developer time.
 | Push back | "I see a different tradeoff: [current] vs [suggested]. My concern: [evidence]. Happy to discuss." |
 | Clarify | "Question: [specific]. Context: [what you understand]." |
 | Defer | "Acknowledged. Will address in [scope]. [reason for deferral]" |
-
-**Answered Questions**: When your "Clarify" response provides substantive information
-(not just "ok" or "will fix"), this answer is tracked across review rounds. The reviewer
-will use your answer as context in subsequent reviews instead of re-asking the question.
-
-Substantive answers include:
-- Providing requested information ("Yes, upstream sends field X since v2.0")
-- Explaining reasoning ("The reason for X is Y")
-- Confirming behavior ("That's correct, we handle it in...")
-- Giving context ("The background is...")
-
-Non-substantive responses that do NOT resolve questions:
-- "ok", "thanks", "will look", "will fix"
-- Counter-questions without answering
-- "I don't know" or deferring to someone else
 ``````````
