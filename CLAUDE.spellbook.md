@@ -209,6 +209,27 @@ When the user describes something they want:
 - NEVER tag GitHub issues in commit messages (e.g., `fixes #123`). This notifies subscribers prematurely. Tags go in PR title/description only, added manually by the user.
 - ALWAYS check git history (diff since merge base) before making claims about what a branch introduced
 
+### Branch-Relative Documentation
+
+Changelogs, PR titles, PR descriptions, commit messages, and code comments describe the delta between the current branch HEAD and the merge base with the target branch. **Nothing else exists.**
+
+The only reality is `git diff $(git merge-base HEAD <target>)...HEAD`. If it's not in that diff, it didn't happen.
+
+**Required behavior:**
+
+- When writing or updating changelogs, PR descriptions, or PR titles, always derive content from the merge base diff at the moment of writing. Treat the branch as if it materialized in its current form all at once.
+- When HEAD changes (new commits, rebases, amends), re-evaluate all of the above against the current merge base. Actively delete and rewrite stale entries from prior iterations.
+- Never accumulate changelog entries session-by-session. A changelog is not a development diary.
+
+**Code comments must never be historical narratives:**
+
+- No "changed from X to Y", "previously did Z", "refactored from old approach", "CRITICAL FIX: now does X instead of Y".
+- If the comment references something that only existed in a prior iteration of the branch and is not on the target branch, it describes fiction. Delete it.
+- Comments that are only meaningful to someone who read a prior version of the branch are wrong. **Test: "Does this comment make sense to someone reading the code for the first time, with no knowledge of any prior implementation?"** If no, delete it.
+- Comments describe the present. Git describes the past.
+
+**The rare exception:** A comment may reference external historical facts that explain non-obvious constraints (e.g., "SQLite < 3.35 doesn't support RETURNING"). Even then, reframe as a present-tense constraint, not a narrative of change.
+
 ### Skill Execution
 
 - ALWAYS follow skill instructions COMPLETELY, regardless of length

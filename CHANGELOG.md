@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.9] - 2026-02-12
+
+### Added
+- **Branch-Relative Documentation rule** - New inviolable rule in CLAUDE.spellbook.md requiring changelogs, PR descriptions, PR titles, and code comments to reflect only the merge-base diff, not session-by-session development history. Includes prohibition on historical code comments and a first-time reader test.
+
 ## [0.9.8] - 2026-02-09
 
 ### Added
