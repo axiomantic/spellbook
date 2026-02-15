@@ -15,9 +15,9 @@ Usage as CLI (Claude Code hook protocol):
     # Exit code 0 = safe, exit code 2 = blocked
 
 Flags:
-    --mode standard|paranoid|permissive|audit   Security sensitivity level (audit = log only)
-    --check-output                              Switch to output checking mode
-    --get-mode                                  Print current security mode and exit
+    --mode standard|paranoid|permissive|audit|canary   Security sensitivity level
+    --check-output                                      Switch to output checking mode
+    --get-mode                                          Print current security mode and exit
 """
 
 import argparse
@@ -318,9 +318,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=["standard", "paranoid", "permissive", "audit"],
+        choices=["standard", "paranoid", "permissive", "audit", "canary"],
         default="standard",
-        help="Security sensitivity level (audit = log only, fail-open)",
+        help="Security sensitivity level (audit = log only, canary = scan output for canary tokens, both fail-open)",
     )
     parser.add_argument(
         "--check-output",
@@ -349,6 +349,32 @@ def main() -> None:
         except Exception:
             # Fail-open: audit failures never block work
             pass
+        sys.exit(0)
+
+    # Canary mode: scan tool output for registered canary tokens (fail-open)
+    if args.mode == "canary":
+        try:
+            raw = sys.stdin.read()
+            data = json.loads(raw)
+            output_content = data.get("tool_output", "")
+
+            if output_content:
+                from spellbook_mcp.security.tools import do_canary_check
+
+                db_path = os.environ.get("SPELLBOOK_DB_PATH")
+                result = do_canary_check(output_content, db_path=db_path)
+                if not result.get("clean", True):
+                    # Canary triggered: log warning to stderr (never block)
+                    print(
+                        "[canary-check] WARNING: canary token detected in tool output",
+                        file=sys.stderr,
+                    )
+        except Exception:
+            # Fail-open: canary check failures never block work
+            print(
+                "[canary-check] WARNING: canary check failed",
+                file=sys.stderr,
+            )
         sys.exit(0)
 
     try:

@@ -624,3 +624,120 @@ class TestCheckAuditMode:
         )
         # Audit mode is fail-open: exit 0 even on errors
         assert proc.returncode == 0
+
+
+# =============================================================================
+# --mode canary tests
+# =============================================================================
+
+
+class TestCheckCanaryMode:
+    """Tests for the --mode canary flag in check.py CLI.
+
+    Canary mode scans tool output for registered canary tokens.
+    It is fail-open: always exits 0, logs warnings to stderr on detection.
+    """
+
+    def _run_canary(
+        self, data: dict, *, db_path: str | None = None
+    ) -> subprocess.CompletedProcess:
+        """Run check.py with --mode canary and the given JSON data."""
+        import os
+
+        cmd = [
+            sys.executable,
+            "-m",
+            "spellbook_mcp.security.check",
+            "--mode",
+            "canary",
+        ]
+        env = os.environ.copy()
+        if db_path:
+            env["SPELLBOOK_DB_PATH"] = db_path
+        return subprocess.run(
+            cmd,
+            input=json.dumps(data),
+            capture_output=True,
+            text=True,
+            cwd="/Users/elijahrutschman/Development/spellbook/.worktrees/security-hardening",
+            env=env,
+        )
+
+    def test_canary_mode_accepted_as_choice(self):
+        """--mode canary should be a valid CLI flag choice."""
+        proc = self._run_canary({
+            "tool_name": "Bash",
+            "tool_input": {},
+            "tool_output": "normal output",
+        })
+        # Should not fail with argparse error
+        assert proc.returncode == 0
+
+    def test_canary_detected_in_output(self, tmp_path):
+        """When a registered canary token appears in tool output, log WARNING to stderr."""
+        import sqlite3
+
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "canary_mode.db")
+        init_db(db_path)
+
+        # Plant a canary token
+        conn = sqlite3.connect(db_path)
+        conn.execute(
+            "INSERT INTO canary_tokens (token, token_type, context) VALUES (?, ?, ?)",
+            ("CANARY-abc123def456-P", "prompt", "test canary"),
+        )
+        conn.commit()
+        conn.close()
+
+        proc = self._run_canary(
+            {
+                "tool_name": "Bash",
+                "tool_input": {},
+                "tool_output": "Output contains CANARY-abc123def456-P here",
+            },
+            db_path=db_path,
+        )
+        # Fail-open: always exits 0
+        assert proc.returncode == 0
+        # Should produce a warning on stderr
+        assert "canary" in proc.stderr.lower() or "WARNING" in proc.stderr
+
+    def test_clean_output_passes(self, tmp_path):
+        """When no canary tokens appear in output, exit 0 silently."""
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "canary_clean.db")
+        init_db(db_path)
+
+        proc = self._run_canary(
+            {
+                "tool_name": "Bash",
+                "tool_input": {},
+                "tool_output": "perfectly normal output with no canaries",
+            },
+            db_path=db_path,
+        )
+        assert proc.returncode == 0
+        # No warning on stderr for clean output
+        assert "canary" not in proc.stderr.lower()
+
+    def test_fail_open_on_errors(self):
+        """On any error (e.g., bad JSON, missing DB), exit 0 with stderr warning."""
+        cmd = [
+            sys.executable,
+            "-m",
+            "spellbook_mcp.security.check",
+            "--mode",
+            "canary",
+        ]
+        proc = subprocess.run(
+            cmd,
+            input="not valid json",
+            capture_output=True,
+            text=True,
+            cwd="/Users/elijahrutschman/Development/spellbook/.worktrees/security-hardening",
+        )
+        # Canary mode is fail-open: exit 0 even on errors
+        assert proc.returncode == 0

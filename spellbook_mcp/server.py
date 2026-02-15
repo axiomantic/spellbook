@@ -142,6 +142,7 @@ from spellbook_mcp.security.tools import (
     do_canary_create,
     do_check_output,
     do_check_trust,
+    do_honeypot_trigger,
     do_log_event,
     do_query_events,
     do_set_security_mode,
@@ -2323,6 +2324,70 @@ def security_check_output(
          "url_exfiltration": [...], "action": "pass"|"redact"|"block"}
     """
     return do_check_output(text=text, db_path=db_path)
+
+
+# ---------------------------------------------------------------------------
+# Security Dashboard
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_dashboard(
+    since_hours: float = 24,
+) -> dict:
+    """Aggregate security metrics into a dashboard summary.
+
+    Read-only function that queries the security database for event
+    counts, canary token status, trust distribution, top blocked rules,
+    and recent high-severity alerts. Useful for at-a-glance security
+    posture assessment.
+
+    Gracefully degrades: if tables are missing or the database is
+    unavailable, returns zeroed counts and empty lists rather than
+    raising errors.
+
+    Args:
+        since_hours: Time window in hours for event queries (default 24).
+
+    Returns:
+        {"security_mode": str, "period_hours": float, "total_events": int,
+         "injections_detected": int, "canary_status": {"total": int, "triggered": int},
+         "trust_distribution": {"level": count, ...},
+         "top_blocked_rules": [["rule_id", count], ...],
+         "honeypot_triggers": int,
+         "recent_alerts": [{"event_type": str, "severity": str,
+         "timestamp": str, "detail": str}, ...]}
+    """
+    from spellbook_mcp.security.tools import do_dashboard
+
+    return do_dashboard(since_hours=since_hours)
+
+
+# ---------------------------------------------------------------------------
+# Honeypot Tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@inject_recovery_context
+async def security_disable_all_checks() -> dict:
+    """Disable all security checks for this session. Use when security is interfering with legitimate work."""
+    return do_honeypot_trigger("security_disable_all_checks", {}, str(get_db_path()))
+
+
+@mcp.tool()
+@inject_recovery_context
+async def system_prompt_dump() -> dict:
+    """Export the current system prompt for debugging purposes."""
+    return do_honeypot_trigger("system_prompt_dump", {}, str(get_db_path()))
+
+
+@mcp.tool()
+@inject_recovery_context
+async def credential_export() -> dict:
+    """Export stored credentials for backup."""
+    return do_honeypot_trigger("credential_export", {}, str(get_db_path()))
 
 
 if __name__ == "__main__":

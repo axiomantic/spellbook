@@ -31,6 +31,7 @@ SPAWN_GUARD_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "spawn-guard.sh")
 BASH_GATE_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "bash-gate.sh")
 STATE_SANITIZE_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "state-sanitize.sh")
 AUDIT_LOG_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "audit-log.sh")
+CANARY_CHECK_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "canary-check.sh")
 
 # Keep backward compat alias used by spawn-guard tests
 HOOK_SCRIPT = SPAWN_GUARD_SCRIPT
@@ -897,3 +898,277 @@ class TestAuditLogDebugLogging:
         )
         assert proc.returncode == 0
         assert "[audit-log]" in proc.stderr
+
+
+# #############################################################################
+# canary-check.sh tests (PostToolUse hook, FAIL-OPEN)
+# #############################################################################
+
+
+def _run_canary_check(
+    tool_output: str,
+    *,
+    tool_name: str = "Bash",
+    tool_input: dict | None = None,
+    env_overrides: dict | None = None,
+) -> subprocess.CompletedProcess:
+    """Run the canary-check.sh hook with the given tool output.
+
+    Constructs the Claude Code hook protocol JSON and pipes it to the script.
+    The hook scans tool OUTPUT (not input) for canary tokens.
+    """
+    payload = {
+        "tool_name": tool_name,
+        "tool_input": tool_input or {},
+        "tool_output": tool_output,
+    }
+    env = os.environ.copy()
+    env["SPELLBOOK_DIR"] = PROJECT_ROOT
+    env["PYTHONPATH"] = PROJECT_ROOT
+    if env_overrides:
+        env.update(env_overrides)
+
+    return subprocess.run(
+        ["bash", CANARY_CHECK_SCRIPT],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=30,
+    )
+
+
+# =============================================================================
+# canary-check.sh: Script executability
+# =============================================================================
+
+
+class TestCanaryCheckExecutability:
+    """Verify the canary-check.sh hook script has the correct file properties."""
+
+    def test_canary_check_exists(self):
+        """canary-check.sh must exist."""
+        assert os.path.isfile(CANARY_CHECK_SCRIPT), (
+            f"canary-check.sh not found at {CANARY_CHECK_SCRIPT}"
+        )
+
+    def test_canary_check_is_executable(self):
+        """canary-check.sh must be executable."""
+        st = os.stat(CANARY_CHECK_SCRIPT)
+        assert st.st_mode & stat.S_IXUSR, "canary-check.sh is not user-executable"
+        assert st.st_mode & stat.S_IXGRP, "canary-check.sh is not group-executable"
+        assert st.st_mode & stat.S_IXOTH, "canary-check.sh is not other-executable"
+
+    def test_canary_check_has_bash_shebang(self):
+        """canary-check.sh must start with bash shebang."""
+        with open(CANARY_CHECK_SCRIPT) as f:
+            first_line = f.readline()
+        assert first_line.strip() == "#!/usr/bin/env bash"
+
+
+# =============================================================================
+# canary-check.sh: Clean output (exit 0, no warnings)
+# =============================================================================
+
+
+class TestCanaryCheckCleanOutput:
+    """Verify clean tool output passes through silently."""
+
+    def test_clean_output_exits_zero(self):
+        """Normal tool output with no canaries should exit 0."""
+        proc = _run_canary_check("total 42\ndrwxr-xr-x  5 user  staff  160 Jan  1 12:00 .")
+        assert proc.returncode == 0
+
+    def test_clean_output_no_warning(self):
+        """Clean output should not produce warning on stderr."""
+        proc = _run_canary_check("Hello, world!")
+        assert proc.returncode == 0
+        # Should not have canary warning in stderr (debug messages are ok)
+        assert "canary" not in proc.stderr.lower() or "SPELLBOOK_DEBUG" in os.environ
+
+    def test_any_tool_exits_zero(self):
+        """Any tool name should be accepted and exit 0 for clean output."""
+        proc = _run_canary_check(
+            "file contents here",
+            tool_name="Read",
+        )
+        assert proc.returncode == 0
+
+
+# =============================================================================
+# canary-check.sh: Canary detection (exit 0, stderr warning)
+# =============================================================================
+
+
+class TestCanaryCheckDetection:
+    """Verify canary detection triggers stderr warning but still exits 0."""
+
+    def test_canary_in_output_exits_zero(self, tmp_path):
+        """Even when a canary is found, the hook must exit 0 (fail-open)."""
+        import sqlite3
+
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "canary_detect.db")
+        init_db(db_path)
+
+        # Plant a canary token in the database
+        conn = sqlite3.connect(db_path)
+        conn.execute(
+            "INSERT INTO canary_tokens (token, token_type, context) VALUES (?, ?, ?)",
+            ("CANARY-abc123def456-P", "prompt", "test canary"),
+        )
+        conn.commit()
+        conn.close()
+
+        proc = _run_canary_check(
+            "Some output containing CANARY-abc123def456-P leaked here",
+            env_overrides={"SPELLBOOK_DB_PATH": db_path},
+        )
+        assert proc.returncode == 0
+
+    def test_canary_in_output_produces_warning(self, tmp_path):
+        """When a canary is found, stderr should contain a warning."""
+        import sqlite3
+
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "canary_warn.db")
+        init_db(db_path)
+
+        conn = sqlite3.connect(db_path)
+        conn.execute(
+            "INSERT INTO canary_tokens (token, token_type, context) VALUES (?, ?, ?)",
+            ("CANARY-abc123def456-P", "prompt", "test canary"),
+        )
+        conn.commit()
+        conn.close()
+
+        proc = _run_canary_check(
+            "Some output containing CANARY-abc123def456-P leaked here",
+            env_overrides={"SPELLBOOK_DB_PATH": db_path},
+        )
+        assert proc.returncode == 0
+        assert "WARNING" in proc.stderr or "canary" in proc.stderr.lower()
+
+
+# =============================================================================
+# canary-check.sh: Fail-open behavior (CRITICAL: never block work)
+# =============================================================================
+
+
+class TestCanaryCheckFailOpen:
+    """Verify fail-open: canary check failures must NEVER block tool execution."""
+
+    def test_missing_spellbook_dir_exits_zero(self):
+        """When SPELLBOOK_DIR points nowhere, exit 0 with stderr warning."""
+        proc = _run_canary_check(
+            "some tool output",
+            env_overrides={"SPELLBOOK_DIR": "/nonexistent/path"},
+        )
+        assert proc.returncode == 0
+        assert proc.stderr != ""  # Should produce a warning
+
+    def test_missing_python_exits_zero(self):
+        """When python3 is not found, exit 0 with stderr warning."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            proc = _run_canary_check(
+                "some tool output",
+                env_overrides={"PATH": f"/bin:{tmpdir}"},
+            )
+        assert proc.returncode == 0
+        assert proc.stderr != ""  # Should produce a warning
+
+    def test_empty_stdin_exits_zero(self):
+        """When stdin is empty, exit 0 (fail-open)."""
+        env = os.environ.copy()
+        env["SPELLBOOK_DIR"] = PROJECT_ROOT
+        env["PYTHONPATH"] = PROJECT_ROOT
+        proc = subprocess.run(
+            ["bash", CANARY_CHECK_SCRIPT],
+            input="",
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=30,
+        )
+        assert proc.returncode == 0
+
+    def test_invalid_json_exits_zero(self):
+        """When stdin contains invalid JSON, exit 0 (fail-open)."""
+        env = os.environ.copy()
+        env["SPELLBOOK_DIR"] = PROJECT_ROOT
+        env["PYTHONPATH"] = PROJECT_ROOT
+        proc = subprocess.run(
+            ["bash", CANARY_CHECK_SCRIPT],
+            input="this is not json",
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=30,
+        )
+        assert proc.returncode == 0
+
+    def test_check_py_error_exits_zero(self):
+        """When check.py fails internally, exit 0 (fail-open)."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            proc = _run_canary_check(
+                "some tool output",
+                env_overrides={"SPELLBOOK_DIR": tmpdir},
+            )
+            assert proc.returncode == 0
+
+
+# =============================================================================
+# canary-check.sh: Anti-reflection
+# =============================================================================
+
+
+class TestCanaryCheckAntiReflection:
+    """Verify error/warning messages never echo back input content."""
+
+    def test_tool_output_not_in_stderr(self):
+        """Stderr warnings must not contain the tool output content."""
+        secret_output = "sk-supersecretapikey1234567890 leaked credentials"
+        proc = _run_canary_check(
+            secret_output,
+            env_overrides={"SPELLBOOK_DIR": "/nonexistent/path"},
+        )
+        assert proc.returncode == 0
+        combined = proc.stdout + proc.stderr
+        assert secret_output not in combined
+        assert "supersecretapikey" not in combined
+
+
+# =============================================================================
+# canary-check.sh: Debug logging
+# =============================================================================
+
+
+class TestCanaryCheckDebugLogging:
+    """Verify debug logging is controlled by SPELLBOOK_DEBUG."""
+
+    def test_debug_logging_off_by_default(self):
+        """No debug output when SPELLBOOK_DEBUG is not set."""
+        env_overrides = {}
+        if "SPELLBOOK_DEBUG" in os.environ:
+            env_overrides["SPELLBOOK_DEBUG"] = ""
+        proc = _run_canary_check(
+            "some tool output",
+            env_overrides=env_overrides,
+        )
+        assert proc.returncode == 0
+        assert "[canary-check]" not in proc.stderr
+
+    def test_debug_logging_on_when_set(self):
+        """Debug output appears when SPELLBOOK_DEBUG=1."""
+        proc = _run_canary_check(
+            "some tool output",
+            env_overrides={"SPELLBOOK_DEBUG": "1"},
+        )
+        assert proc.returncode == 0
+        assert "[canary-check]" in proc.stderr

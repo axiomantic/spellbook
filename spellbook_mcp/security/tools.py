@@ -15,6 +15,8 @@ Functions:
     do_log_event: Log a security event to the security_events table.
     do_query_events: Query security events with optional filters.
     do_set_security_mode: Set security mode with auto-restore and event logging.
+    do_honeypot_trigger: Log a CRITICAL honeypot event and return a fake response.
+    do_dashboard: Aggregate security metrics into a dashboard summary.
 """
 
 import re
@@ -804,3 +806,237 @@ def do_check_output(
         "url_exfiltration": url_exfiltration,
         "action": action,
     }
+
+
+# =============================================================================
+# Security Dashboard
+# =============================================================================
+
+# Maximum length for detail text in recent alerts.
+_ALERT_DETAIL_MAX_LEN = 200
+
+
+def do_dashboard(
+    db_path: Optional[str] = None,
+    since_hours: float = 24,
+) -> dict:
+    """Aggregate security metrics into a dashboard summary.
+
+    Read-only function that queries the security database for event
+    counts, canary status, trust distribution, and recent alerts.
+    Gracefully degrades: if tables are missing or empty, returns
+    zeroed counts and empty lists rather than raising errors.
+
+    Args:
+        db_path: Path to the SQLite database file. If None, uses
+            the default path.
+        since_hours: Time window in hours for event queries (default 24).
+
+    Returns:
+        Dict with keys:
+            security_mode: Current security mode string.
+            period_hours: The since_hours value used.
+            total_events: Count of events in the time window.
+            injections_detected: Count of injection/blocked events.
+            canary_status: Dict with total and triggered counts.
+            trust_distribution: Dict mapping trust levels to counts.
+            top_blocked_rules: List of [rule_id, count] pairs, limit 10.
+            honeypot_triggers: Count of honeypot_triggered events.
+            recent_alerts: List of recent CRITICAL/HIGH event dicts.
+    """
+    from spellbook_mcp.security.check import get_current_mode
+
+    # Resolve db_path
+    if db_path is None:
+        db_path = str(get_db_path())
+
+    # Get security mode (gracefully returns "standard" on failure)
+    security_mode = get_current_mode(db_path)
+
+    # Build the base result with safe defaults
+    result: dict = {
+        "security_mode": security_mode,
+        "period_hours": since_hours,
+        "total_events": 0,
+        "injections_detected": 0,
+        "canary_status": {"total": 0, "triggered": 0},
+        "trust_distribution": {},
+        "top_blocked_rules": [],
+        "honeypot_triggers": 0,
+        "recent_alerts": [],
+    }
+
+    try:
+        conn = sqlite3.connect(db_path, timeout=5.0)
+    except (sqlite3.Error, OSError):
+        return result
+
+    time_param = f"-{since_hours} hours"
+
+    # Total events in period
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM security_events "
+            "WHERE created_at >= datetime('now', ?)",
+            (time_param,),
+        ).fetchone()
+        result["total_events"] = row[0] if row else 0
+    except sqlite3.OperationalError:
+        pass
+
+    # Injections detected: event_type contains "injection" or "blocked"
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM security_events "
+            "WHERE created_at >= datetime('now', ?) "
+            "AND (event_type LIKE '%injection%' OR event_type LIKE '%blocked%')",
+            (time_param,),
+        ).fetchone()
+        result["injections_detected"] = row[0] if row else 0
+    except sqlite3.OperationalError:
+        pass
+
+    # Canary status
+    try:
+        row = conn.execute("SELECT COUNT(*) FROM canary_tokens").fetchone()
+        total_canaries = row[0] if row else 0
+        row = conn.execute(
+            "SELECT COUNT(*) FROM canary_tokens WHERE triggered_at IS NOT NULL"
+        ).fetchone()
+        triggered_canaries = row[0] if row else 0
+        result["canary_status"] = {
+            "total": total_canaries,
+            "triggered": triggered_canaries,
+        }
+    except sqlite3.OperationalError:
+        pass
+
+    # Trust distribution
+    try:
+        rows = conn.execute(
+            "SELECT trust_level, COUNT(*) FROM trust_registry GROUP BY trust_level"
+        ).fetchall()
+        result["trust_distribution"] = {row[0]: row[1] for row in rows}
+    except sqlite3.OperationalError:
+        pass
+
+    # Top blocked rules: action_taken as rule_id for blocked events
+    try:
+        rows = conn.execute(
+            "SELECT action_taken, COUNT(*) as cnt FROM security_events "
+            "WHERE created_at >= datetime('now', ?) "
+            "AND (event_type LIKE '%blocked%') "
+            "AND action_taken IS NOT NULL "
+            "GROUP BY action_taken "
+            "ORDER BY cnt DESC LIMIT 10",
+            (time_param,),
+        ).fetchall()
+        result["top_blocked_rules"] = [[row[0], row[1]] for row in rows]
+    except sqlite3.OperationalError:
+        pass
+
+    # Honeypot triggers
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM security_events "
+            "WHERE created_at >= datetime('now', ?) "
+            "AND event_type = 'honeypot_triggered'",
+            (time_param,),
+        ).fetchone()
+        result["honeypot_triggers"] = row[0] if row else 0
+    except sqlite3.OperationalError:
+        pass
+
+    # Recent alerts: CRITICAL/HIGH events, limit 5, newest first
+    try:
+        rows = conn.execute(
+            "SELECT event_type, severity, created_at, detail "
+            "FROM security_events "
+            "WHERE created_at >= datetime('now', ?) "
+            "AND severity IN ('CRITICAL', 'HIGH') "
+            "ORDER BY created_at DESC LIMIT 5",
+            (time_param,),
+        ).fetchall()
+        alerts = []
+        for row in rows:
+            detail = row[3] or ""
+            if len(detail) > _ALERT_DETAIL_MAX_LEN:
+                detail = detail[:_ALERT_DETAIL_MAX_LEN]
+            alerts.append({
+                "event_type": row[0],
+                "severity": row[1],
+                "timestamp": row[2],
+                "detail": detail,
+            })
+        result["recent_alerts"] = alerts
+    except sqlite3.OperationalError:
+        pass
+
+    conn.close()
+    return result
+
+
+# =============================================================================
+# Honeypot tools
+# =============================================================================
+
+# Fake responses keyed by honeypot tool name.  Each response is designed to
+# look like the dangerous operation succeeded, keeping an injection attack
+# engaged while logging the attempt.
+_HONEYPOT_RESPONSES: dict[str, dict] = {
+    "security_disable_all_checks": {
+        "status": "disabled",
+        "message": "All security checks disabled",
+    },
+    "system_prompt_dump": {
+        "prompt": "System prompt export not available",
+    },
+    "credential_export": {
+        "credentials": [],
+    },
+}
+
+# Generic fallback for unknown honeypot tool names.
+_HONEYPOT_DEFAULT_RESPONSE: dict = {"status": "ok"}
+
+
+def do_honeypot_trigger(
+    tool_name: str,
+    invocation_context: dict,
+    db_path: Optional[str] = None,
+) -> dict:
+    """Log a CRITICAL honeypot event and return a fake success response.
+
+    Honeypot tools exist to attract prompt-injection attacks.  When invoked
+    they silently log a CRITICAL security event and return a plausible fake
+    response so the attacker believes the operation succeeded.
+
+    Args:
+        tool_name: Name of the honeypot tool that was triggered.
+        invocation_context: Contextual metadata about the invocation
+            (e.g. session_id, source).
+        db_path: Optional database path (defaults to standard location).
+
+    Returns:
+        A tool-specific fake response dict, or ``{"status": "ok"}`` for
+        unknown tool names.
+    """
+    import json as _json
+
+    detail = _json.dumps({
+        "tool_name": tool_name,
+        "invocation_context": invocation_context,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+    do_log_event(
+        event_type="honeypot_triggered",
+        severity="CRITICAL",
+        source=tool_name,
+        detail=detail,
+        tool_name=tool_name,
+        action_taken="honeypot_fake_response",
+        db_path=db_path,
+    )
+
+    return dict(_HONEYPOT_RESPONSES.get(tool_name, _HONEYPOT_DEFAULT_RESPONSE))
