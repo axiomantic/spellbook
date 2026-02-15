@@ -490,3 +490,137 @@ class TestCLIEntryPoint:
             cwd="/Users/elijahrutschman/Development/spellbook/.worktrees/security-hardening",
         )
         assert proc.returncode != 0
+
+
+# =============================================================================
+# --mode audit tests
+# =============================================================================
+
+
+class TestCheckAuditMode:
+    """Tests for the --mode audit flag in check.py CLI."""
+
+    def _run_audit(
+        self, data: dict, *, db_path: str | None = None
+    ) -> subprocess.CompletedProcess:
+        """Run check.py with --mode audit and the given JSON data."""
+        cmd = [
+            sys.executable,
+            "-m",
+            "spellbook_mcp.security.check",
+            "--mode",
+            "audit",
+        ]
+        env = None
+        if db_path:
+            import os
+
+            env = os.environ.copy()
+            env["SPELLBOOK_DB_PATH"] = db_path
+        return subprocess.run(
+            cmd,
+            input=json.dumps(data),
+            capture_output=True,
+            text=True,
+            cwd="/Users/elijahrutschman/Development/spellbook/.worktrees/security-hardening",
+            env=env,
+        )
+
+    def test_audit_mode_accepted_as_choice(self):
+        """--mode audit should be a valid CLI flag choice."""
+        proc = self._run_audit({
+            "tool_name": "Bash",
+            "tool_input": {"command": "ls -la"},
+        })
+        # Should not fail with argparse error (exit 2 from argparse = invalid choice)
+        # Audit mode should exit 0 on success
+        assert proc.returncode == 0
+
+    def test_audit_mode_exits_zero(self):
+        """Audit mode always exits 0 (fail-open)."""
+        proc = self._run_audit({
+            "tool_name": "Bash",
+            "tool_input": {"command": "rm -rf /"},
+        })
+        # Even for dangerous commands, audit mode just logs; it does not block
+        assert proc.returncode == 0
+
+    def test_audit_mode_logs_to_db(self, tmp_path):
+        """Audit mode writes a record to the security_events table."""
+        import sqlite3
+
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "audit_test.db")
+        init_db(db_path)
+
+        proc = self._run_audit(
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "ls -la"},
+            },
+            db_path=db_path,
+        )
+        assert proc.returncode == 0
+
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT event_type, severity, source, tool_name FROM security_events")
+        rows = cur.fetchall()
+        conn.close()
+
+        assert len(rows) == 1
+        event_type, severity, source, tool_name = rows[0]
+        assert event_type == "tool_call"
+        assert severity == "INFO"
+        assert source == "audit-log.sh"
+        assert tool_name == "Bash"
+
+    def test_audit_mode_truncates_detail(self, tmp_path):
+        """Audit mode truncates tool_input detail to prevent DB bloat."""
+        import sqlite3
+
+        from spellbook_mcp.db import init_db
+
+        db_path = str(tmp_path / "audit_trunc.db")
+        init_db(db_path)
+
+        long_command = "x" * 2000
+        proc = self._run_audit(
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": long_command},
+            },
+            db_path=db_path,
+        )
+        assert proc.returncode == 0
+
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT detail FROM security_events")
+        row = cur.fetchone()
+        conn.close()
+
+        assert row is not None
+        detail = row[0]
+        # Detail should be truncated (max 500 chars is a reasonable limit)
+        assert len(detail) <= 512
+
+    def test_audit_mode_invalid_json_exits_zero(self):
+        """Audit mode with invalid JSON should still exit 0 (fail-open)."""
+        cmd = [
+            sys.executable,
+            "-m",
+            "spellbook_mcp.security.check",
+            "--mode",
+            "audit",
+        ]
+        proc = subprocess.run(
+            cmd,
+            input="not valid json",
+            capture_output=True,
+            text=True,
+            cwd="/Users/elijahrutschman/Development/spellbook/.worktrees/security-hardening",
+        )
+        # Audit mode is fail-open: exit 0 even on errors
+        assert proc.returncode == 0
