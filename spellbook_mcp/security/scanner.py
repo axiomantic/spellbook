@@ -15,6 +15,7 @@ Provides three entry points:
 """
 
 import re
+import sys
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -365,3 +366,40 @@ def scan_changeset(
         )
 
     return results
+
+
+def _print_results(results: list[ScanResult]) -> bool:
+    """Print scan results to stderr and return whether any FAIL verdicts exist."""
+    has_fail = False
+    for result in results:
+        if result.verdict == "FAIL":
+            has_fail = True
+            for finding in result.findings:
+                print(
+                    f"{finding.file}:{finding.line}: [{finding.severity.name}] "
+                    f"{finding.rule_id} - {finding.message}",
+                    file=sys.stderr,
+                )
+    return has_fail
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+
+    if "--changeset" in args:
+        diff_text = sys.stdin.read()
+        results = scan_changeset(diff_text)
+        has_fail = _print_results(results)
+        sys.exit(1 if has_fail else 0)
+
+    elif "--skills" in args:
+        results = scan_directory("skills/")
+        has_fail = _print_results(results)
+        sys.exit(1 if has_fail else 0)
+
+    else:
+        print(
+            "Usage: python -m spellbook_mcp.security.scanner [--changeset | --skills]",
+            file=sys.stderr,
+        )
+        sys.exit(2)
