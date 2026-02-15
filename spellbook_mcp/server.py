@@ -274,6 +274,100 @@ async def spawn_claude_session(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
+    # --- MCP-level security guard ---
+    # Provides security for non-hook platforms (Crush, Codex) that lack
+    # PreToolUse hooks. Scans prompt for injection, enforces rate limit,
+    # and logs every invocation to the audit trail.
+    import sqlite3 as _sqlite3
+
+    from spellbook_mcp.security.check import check_tool_input as _check_tool_input
+    from spellbook_mcp.security.tools import do_log_event as _do_log_event
+
+    _db_path = str(get_db_path())
+    _session_id = _get_session_id(ctx)
+
+    # Scan prompt for injection patterns
+    _check_result = _check_tool_input(
+        "spawn_claude_session",
+        {"prompt": prompt},
+    )
+
+    if not _check_result["safe"]:
+        _first = _check_result["findings"][0]
+        _do_log_event(
+            event_type="spawn_blocked",
+            severity="HIGH",
+            source="spawn_guard",
+            detail=f"Injection pattern detected in spawn prompt: {_first['message']}",
+            tool_name="spawn_claude_session",
+            action_taken=f"blocked:{_first['rule_id']}",
+            db_path=_db_path,
+        )
+        return {
+            "blocked": True,
+            "reason": _first["message"],
+            "rule_id": _first["rule_id"],
+        }
+
+    # Rate limit: max 1 call per 5 minutes
+    try:
+        _conn = _sqlite3.connect(_db_path, timeout=5.0)
+        _conn.execute("""
+            CREATE TABLE IF NOT EXISTS spawn_rate_limit (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp REAL NOT NULL,
+                session_id TEXT
+            )
+        """)
+        _conn.commit()
+
+        _now = time.time()
+        _cutoff = _now - 300  # 5 minutes
+        _row = _conn.execute(
+            "SELECT COUNT(*) FROM spawn_rate_limit WHERE timestamp > ?",
+            (_cutoff,),
+        ).fetchone()
+
+        if _row[0] > 0:
+            _conn.close()
+            _do_log_event(
+                event_type="spawn_rate_limited",
+                severity="MEDIUM",
+                source="spawn_guard",
+                detail="Rate limit exceeded: max 1 spawn per 5 minutes",
+                tool_name="spawn_claude_session",
+                action_taken="blocked:rate_limit",
+                db_path=_db_path,
+            )
+            return {
+                "blocked": True,
+                "reason": "Rate limit exceeded: max 1 spawn per 5 minutes",
+                "rule_id": "RATE-LIMIT-001",
+            }
+
+        # Record this invocation for rate limiting
+        _conn.execute(
+            "INSERT INTO spawn_rate_limit (timestamp, session_id) VALUES (?, ?)",
+            (_now, _session_id),
+        )
+        _conn.commit()
+        _conn.close()
+    except _sqlite3.Error:
+        # Fail open: if rate limit DB is unavailable, allow the spawn
+        pass
+
+    # Log allowed invocation
+    _do_log_event(
+        event_type="spawn_allowed",
+        severity="INFO",
+        source="spawn_guard",
+        detail=f"Spawn allowed for session {_session_id}",
+        tool_name="spawn_claude_session",
+        action_taken="allowed",
+        db_path=_db_path,
+    )
+    # --- End security guard ---
+
     if terminal is None:
         terminal = detect_terminal()
 

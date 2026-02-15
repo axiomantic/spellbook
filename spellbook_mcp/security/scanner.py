@@ -7,6 +7,7 @@ Scans markdown files (SKILL.md, *.md) for:
 - Payload obfuscation patterns
 - Invisible/zero-width Unicode characters
 - High-entropy code blocks (possible encoded payloads)
+- Consent gaps (tools used in body but not declared in description)
 
 Scans Python files (*.py) for MCP tool security issues:
 - Shell injection via subprocess
@@ -18,12 +19,13 @@ Scans Python files (*.py) for MCP tool security issues:
 - Direct environment access
 - Unvalidated URL construction
 
-Provides five entry points:
+Provides six entry points:
 - scan_skill(): Scan a single markdown file
 - scan_directory(): Recursively scan a directory of markdown files
 - scan_changeset(): Scan a unified diff (for pre-commit hooks)
 - scan_python_file(): Scan a single Python file against MCP rules
 - scan_mcp_directory(): Recursively scan a directory of Python files
+- analyze_consent_gap(): Check for tools used but not declared in description
 """
 
 import re
@@ -162,6 +164,166 @@ def _extract_code_blocks(content: str) -> list[tuple[int, str]]:
     return blocks
 
 
+# =============================================================================
+# Consent Gap Analysis
+# =============================================================================
+
+# Tools grouped by risk level for consent gap severity mapping.
+# HIGH: Can execute code or modify files on disk.
+# MEDIUM: Can exfiltrate data or fetch external content.
+# LOW: Other tools with limited side effects.
+_CONSENT_TOOL_SEVERITY: dict[str, Severity] = {
+    "Bash": Severity.HIGH,
+    "spawn_claude_session": Severity.HIGH,
+    "Write": Severity.HIGH,
+    "Edit": Severity.HIGH,
+    "WebFetch": Severity.MEDIUM,
+    "WebSearch": Severity.MEDIUM,
+    "NotebookEdit": Severity.LOW,
+}
+
+# Tools whose names are common English words need context-aware patterns
+# to avoid false positives (e.g., "Write tests" vs "the Write tool").
+# These patterns match tool-usage contexts like "the Write tool",
+# "use Write to", "Write(" (function call style), etc.
+_TOOL_USAGE_PATTERNS: dict[str, re.Pattern[str]] = {
+    "Write": re.compile(
+        r"\b(?:the\s+)?Write\s+tool\b"
+        r"|\buse\s+(?:the\s+)?Write\b"
+        r"|\busing\s+(?:the\s+)?Write\b"
+        r"|\bWrite\s*\(",
+        re.IGNORECASE,
+    ),
+    "Edit": re.compile(
+        r"\b(?:the\s+)?Edit\s+tool\b"
+        r"|\buse\s+(?:the\s+)?Edit\b"
+        r"|\busing\s+(?:the\s+)?Edit\b"
+        r"|\bEdit\s*\(",
+        re.IGNORECASE,
+    ),
+}
+
+# Regex pattern to detect mcp__* tool references in skill body text.
+_MCP_TOOL_PATTERN = re.compile(r"\bmcp__[a-zA-Z0-9_]+")
+
+# Regex to extract YAML frontmatter block from markdown content.
+_FRONTMATTER_PATTERN = re.compile(
+    r"\A---\s*\n(.*?)\n---", re.DOTALL
+)
+
+# Simple YAML key extraction for the description field.
+_DESCRIPTION_PATTERN = re.compile(
+    r'^description:\s*["\']?(.*?)["\']?\s*$', re.MULTILINE
+)
+
+
+def _extract_frontmatter_description(content: str) -> str | None:
+    """Extract the description field from YAML frontmatter.
+
+    Returns None if no frontmatter or no description field is present.
+    """
+    fm_match = _FRONTMATTER_PATTERN.search(content)
+    if not fm_match:
+        return None
+    frontmatter = fm_match.group(1)
+    desc_match = _DESCRIPTION_PATTERN.search(frontmatter)
+    if not desc_match:
+        return None
+    return desc_match.group(1).strip()
+
+
+def _get_body_after_frontmatter(content: str) -> str:
+    """Return the content after the frontmatter block.
+
+    If no frontmatter is present, returns the full content.
+    """
+    fm_match = _FRONTMATTER_PATTERN.search(content)
+    if not fm_match:
+        return content
+    return content[fm_match.end():]
+
+
+def analyze_consent_gap(file_path: str, content: str) -> list[Finding]:
+    """Analyze a skill file for consent gaps.
+
+    Compares the frontmatter ``description`` field against actual
+    tool/capability references in the skill body. Flags tools that
+    appear in the body but are absent from the description.
+
+    Only processes files that have YAML frontmatter with a ``description``
+    field. Non-skill files are skipped gracefully (empty list returned).
+
+    Args:
+        file_path: Path to the skill file (used in Finding metadata).
+        content: Full text content of the skill file.
+
+    Returns:
+        List of Finding objects for each undeclared tool reference.
+    """
+    if not content:
+        return []
+
+    description = _extract_frontmatter_description(content)
+    if description is None:
+        return []
+
+    body = _get_body_after_frontmatter(content)
+    description_lower = description.lower()
+    findings: list[Finding] = []
+    consent_counter = 0
+
+    # Check named tools against body
+    for tool_name, severity in _CONSENT_TOOL_SEVERITY.items():
+        # For common English words (Write, Edit), use context-aware patterns
+        # to avoid false positives like "Write tests" or "Edit the file".
+        # For distinctive tool names (Bash, WebFetch, etc.), a simple word
+        # boundary match suffices.
+        if tool_name in _TOOL_USAGE_PATTERNS:
+            if not _TOOL_USAGE_PATTERNS[tool_name].search(body):
+                continue
+        else:
+            tool_pattern = re.compile(r"\b" + re.escape(tool_name) + r"\b")
+            if not tool_pattern.search(body):
+                continue
+        # Check if tool is mentioned in the description (case-insensitive)
+        if tool_name.lower() in description_lower:
+            continue
+        consent_counter += 1
+        findings.append(
+            Finding(
+                file=file_path,
+                line=0,
+                category=Category.ESCALATION,
+                severity=severity,
+                rule_id=f"CONSENT-{consent_counter:03d}",
+                message=f"Undeclared tool '{tool_name}' used in skill body but not mentioned in description",
+                evidence=f"Tool '{tool_name}' found in body, absent from description: \"{description}\"",
+                remediation=f"Add '{tool_name}' to the skill's frontmatter description field to declare its usage",
+            )
+        )
+
+    # Check for mcp__* tool references in body
+    mcp_tools_in_body = set(_MCP_TOOL_PATTERN.findall(body))
+    for mcp_tool in sorted(mcp_tools_in_body):
+        if mcp_tool.lower() in description_lower:
+            continue
+        consent_counter += 1
+        findings.append(
+            Finding(
+                file=file_path,
+                line=0,
+                category=Category.ESCALATION,
+                severity=Severity.LOW,
+                rule_id=f"CONSENT-{consent_counter:03d}",
+                message=f"Undeclared tool '{mcp_tool}' used in skill body but not mentioned in description",
+                evidence=f"Tool '{mcp_tool}' found in body, absent from description: \"{description}\"",
+                remediation=f"Add '{mcp_tool}' to the skill's frontmatter description field to declare its usage",
+            )
+        )
+
+    return findings
+
+
 def scan_skill(
     file_path: str, security_mode: str = "standard"
 ) -> ScanResult:
@@ -226,6 +388,9 @@ def scan_skill(
                         remediation="Review code block for encoded or obfuscated payloads",
                     )
                 )
+
+    # Consent gap analysis (only applies to skill files with frontmatter)
+    findings.extend(analyze_consent_gap(file_path, content))
 
     verdict = _determine_verdict(findings)
     return ScanResult(file=file_path, findings=findings, verdict=verdict)
@@ -600,9 +765,15 @@ def main(argv: list[str] | None = None) -> None:
             results = scan_mcp_directory(dir_arg)
             has_fail = _print_results(results)
             sys.exit(1 if has_fail else 0)
+        elif mode == "skill":
+            # Scan markdown files in directory (includes consent gap analysis)
+            dir_arg = args[idx + 2] if idx + 2 < len(args) else "."
+            results = scan_directory(dir_arg)
+            has_fail = _print_results(results)
+            sys.exit(1 if has_fail else 0)
         else:
             print(
-                f"Error: Unknown mode '{mode}'. Supported modes: mcp",
+                f"Error: Unknown mode '{mode}'. Supported modes: mcp, skill",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -611,7 +782,7 @@ def main(argv: list[str] | None = None) -> None:
         print(
             "Usage: python -m spellbook_mcp.security.scanner "
             "[--changeset | --staged | --base BRANCH | --commit RANGE "
-            "| --skills | --mode mcp DIR]",
+            "| --skills | --mode (mcp|skill) DIR]",
             file=sys.stderr,
         )
         sys.exit(2)

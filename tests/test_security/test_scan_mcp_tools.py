@@ -685,11 +685,12 @@ class TestCLIModeMCP:
         assert "MCP-001" in result.stderr
 
     def test_cli_usage_updated(self):
-        """Usage message mentions --mode mcp."""
+        """Usage message mentions --mode with mcp option."""
         result = subprocess.run(
             [sys.executable, "-m", "spellbook_mcp.security.scanner"],
             capture_output=True,
             text=True,
         )
         assert result.returncode == 2
-        assert "--mode mcp" in result.stderr
+        assert "--mode" in result.stderr
+        assert "mcp" in result.stderr

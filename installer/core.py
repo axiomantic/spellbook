@@ -12,6 +12,59 @@ from .platforms.base import PlatformInstaller
 from .version import check_upgrade_needed, read_version
 
 
+def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
+    """Validate a skill file for security issues before installation.
+
+    Runs the skill content through injection, exfiltration, escalation, and
+    obfuscation rule sets from spellbook_mcp.security.rules. Uses the
+    "standard" security mode, which flags CRITICAL and HIGH severity findings.
+
+    Args:
+        skill_path: Path to the skill file (typically SKILL.md).
+
+    Returns:
+        A tuple of (is_safe, issues) where:
+        - is_safe is True if no CRITICAL or HIGH findings were detected
+        - issues is a list of human-readable strings describing each finding
+    """
+    from spellbook_mcp.security.rules import (
+        ESCALATION_RULES,
+        EXFILTRATION_RULES,
+        INJECTION_RULES,
+        OBFUSCATION_RULES,
+        check_patterns,
+    )
+
+    if not skill_path.exists():
+        return (False, [f"Skill file does not exist: {skill_path}"])
+
+    try:
+        content = skill_path.read_text(encoding="utf-8")
+    except OSError as e:
+        return (False, [f"Failed to read skill file: {e}"])
+
+    all_findings: list[dict] = []
+    rule_sets = [
+        ("injection", INJECTION_RULES),
+        ("exfiltration", EXFILTRATION_RULES),
+        ("escalation", ESCALATION_RULES),
+        ("obfuscation", OBFUSCATION_RULES),
+    ]
+
+    for _category, rules in rule_sets:
+        findings = check_patterns(content, rules, security_mode="standard")
+        all_findings.extend(findings)
+
+    if not all_findings:
+        return (True, [])
+
+    issues = [
+        f"[{f['severity']}] {f['rule_id']}: {f['message']} (matched: {f['matched_text']!r})"
+        for f in all_findings
+    ]
+    return (False, issues)
+
+
 @dataclass
 class InstallResult:
     """Result of a single installation component."""
