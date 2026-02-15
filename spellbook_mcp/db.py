@@ -305,6 +305,82 @@ def init_db(db_path: str = None) -> None:
         ON variant_assignments(session_id)
     """)
 
+    # Security: trust registry for content verification
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS trust_registry (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content_hash TEXT NOT NULL,
+            source TEXT NOT NULL,
+            trust_level TEXT NOT NULL,
+            registered_at TEXT DEFAULT (datetime('now')),
+            expires_at TEXT,
+            registered_by TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_trust_content_hash
+        ON trust_registry(content_hash)
+    """)
+
+    # Security: event log for audit trail
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS security_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            source TEXT,
+            detail TEXT,
+            session_id TEXT,
+            tool_name TEXT,
+            action_taken TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_security_events_type
+        ON security_events(event_type)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_security_events_severity
+        ON security_events(severity)
+    """)
+
+    # Security: canary tokens for injection detection
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS canary_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token TEXT NOT NULL UNIQUE,
+            token_type TEXT NOT NULL,
+            context TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            triggered_at TEXT,
+            triggered_by TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_canary_token
+        ON canary_tokens(token)
+    """)
+
+    # Security: singleton security mode
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS security_mode (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            mode TEXT NOT NULL DEFAULT 'standard',
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_by TEXT,
+            auto_restore_at TEXT
+        )
+    """)
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO security_mode (id, mode) VALUES (1, 'standard')
+    """)
+
     conn.commit()
 
 

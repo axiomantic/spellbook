@@ -38,9 +38,8 @@ repos:
 
       - id: security-scan-changeset
         name: Scan changeset for security issues
-        entry: uv run python -m spellbook_mcp.security.scanner --changeset
+        entry: uv run python -m spellbook_mcp.security.scanner --staged
         language: system
-        stages: [manual]
         types: [markdown]
 
       - id: security-scan-skills

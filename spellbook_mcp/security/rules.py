@@ -45,6 +45,7 @@ class Category(Enum):
     EXFILTRATION = "exfiltration"
     ESCALATION = "escalation"
     OBFUSCATION = "obfuscation"
+    MCP_TOOL = "mcp_tool"
 
 
 # =============================================================================
@@ -306,6 +307,65 @@ _DANGEROUS_BASH_EXTRA: list[tuple[str, Severity, str, str]] = [
 DANGEROUS_BASH_PATTERNS: list[tuple[str, Severity, str, str]] = (
     ESCALATION_RULES + _DANGEROUS_BASH_EXTRA
 )
+
+# MCP tool-specific rules for scanning Python source code of MCP servers/tools.
+# Each rule is a tuple: (pattern, severity, rule_id, message)
+MCP_RULES: list[tuple[str, Severity, str, str]] = [
+    (
+        r"subprocess\.(run|call|Popen)\s*\(.*shell\s*=\s*True",
+        Severity.CRITICAL,
+        "MCP-001",
+        "Shell execution in MCP tool",
+    ),
+    (
+        r"(?<!\w)(eval|exec)\s*\(",
+        Severity.HIGH,
+        "MCP-002",
+        "Dynamic code execution",
+    ),
+    (
+        r"os\.path\.join\s*\(.*\+",
+        Severity.HIGH,
+        "MCP-003",
+        "Unsanitized path construction",
+    ),
+    (
+        r"# TODO.*valid|# FIXME.*check|# HACK",
+        Severity.MEDIUM,
+        "MCP-004",
+        "Missing input validation marker",
+    ),
+    (
+        r"\.read\(\s*\)",
+        Severity.MEDIUM,
+        "MCP-005",
+        "Unbounded file read",
+    ),
+    (
+        r"os\.environ\[|os\.getenv\(",
+        Severity.MEDIUM,
+        "MCP-006",
+        "Direct environment access",
+    ),
+    (
+        r'f".*\{.*\}.*".*execute|cursor\.execute\(.*f"',
+        Severity.HIGH,
+        "MCP-007",
+        "SQL string formatting",
+    ),
+    (
+        r'f"https?://.*\{|"https?://" \+',
+        Severity.MEDIUM,
+        "MCP-008",
+        "Unvalidated URL construction",
+    ),
+    (
+        r"os\.system\s*\(",
+        Severity.CRITICAL,
+        "MCP-009",
+        "OS system call",
+    ),
+]
 
 
 # =============================================================================

@@ -1,4 +1,4 @@
-"""Static analysis scanner for skills and commands.
+"""Static analysis scanner for skills, commands, and MCP tools.
 
 Scans markdown files (SKILL.md, *.md) for:
 - Prompt injection patterns
@@ -8,13 +8,26 @@ Scans markdown files (SKILL.md, *.md) for:
 - Invisible/zero-width Unicode characters
 - High-entropy code blocks (possible encoded payloads)
 
-Provides three entry points:
+Scans Python files (*.py) for MCP tool security issues:
+- Shell injection via subprocess
+- Dynamic code execution (eval/exec)
+- Unsanitized path construction
+- SQL injection via string formatting
+- OS system calls
+- Unbounded file reads
+- Direct environment access
+- Unvalidated URL construction
+
+Provides five entry points:
 - scan_skill(): Scan a single markdown file
-- scan_directory(): Recursively scan a directory
+- scan_directory(): Recursively scan a directory of markdown files
 - scan_changeset(): Scan a unified diff (for pre-commit hooks)
+- scan_python_file(): Scan a single Python file against MCP rules
+- scan_mcp_directory(): Recursively scan a directory of Python files
 """
 
 import re
+import subprocess
 import sys
 from fnmatch import fnmatch
 from pathlib import Path
@@ -24,6 +37,7 @@ from spellbook_mcp.security.rules import (
     EXFILTRATION_RULES,
     INJECTION_RULES,
     INVISIBLE_CHARS,
+    MCP_RULES,
     OBFUSCATION_RULES,
     Category,
     Finding,
@@ -368,6 +382,97 @@ def scan_changeset(
     return results
 
 
+def scan_python_file(
+    file_path: str, security_mode: str = "standard"
+) -> ScanResult:
+    """Scan a single Python file for MCP security issues.
+
+    Reads the file line-by-line and checks against MCP_RULES,
+    which detect common security antipatterns in MCP tool code
+    (shell injection, eval/exec, unsanitized paths, etc.).
+
+    Args:
+        file_path: Path to the Python file to scan.
+        security_mode: One of "standard", "paranoid", "permissive".
+
+    Returns:
+        ScanResult with findings and verdict.
+    """
+    path = Path(file_path)
+    if not path.exists():
+        return ScanResult(
+            file=file_path,
+            findings=[
+                Finding(
+                    file=file_path,
+                    line=0,
+                    category=Category.MCP_TOOL,
+                    severity=Severity.LOW,
+                    rule_id="SCAN-002",
+                    message="File not found",
+                    evidence=file_path,
+                    remediation="Verify file path is correct",
+                )
+            ],
+            verdict="FAIL",
+        )
+
+    content = path.read_text(encoding="utf-8", errors="replace")
+    if not content:
+        return ScanResult(file=file_path)
+
+    findings: list[Finding] = []
+    lines = content.split("\n")
+
+    for i, line in enumerate(lines, start=1):
+        matches = check_patterns(line, MCP_RULES, security_mode=security_mode)
+        for match in matches:
+            findings.append(
+                Finding(
+                    file=file_path,
+                    line=i,
+                    category=Category.MCP_TOOL,
+                    severity=_severity_from_name(match["severity"]),
+                    rule_id=match["rule_id"],
+                    message=match["message"],
+                    evidence=match["matched_text"],
+                    remediation=f"Review and remediate pattern matching {match['rule_id']}",
+                )
+            )
+
+    verdict = _determine_verdict(findings)
+    return ScanResult(file=file_path, findings=findings, verdict=verdict)
+
+
+def scan_mcp_directory(
+    dir_path: str, security_mode: str = "standard"
+) -> list[ScanResult]:
+    """Recursively scan a directory for MCP security issues in Python files.
+
+    Scans all *.py files found recursively.
+
+    Args:
+        dir_path: Path to the directory to scan.
+        security_mode: One of "standard", "paranoid", "permissive".
+
+    Returns:
+        List of ScanResult objects, one per scanned Python file.
+    """
+    path = Path(dir_path)
+    if not path.exists() or not path.is_dir():
+        return []
+
+    results: list[ScanResult] = []
+    py_files = sorted(path.rglob("*.py"))
+
+    for py_file in py_files:
+        results.append(
+            scan_python_file(str(py_file), security_mode=security_mode)
+        )
+
+    return results
+
+
 def _print_results(results: list[ScanResult]) -> bool:
     """Print scan results to stderr and return whether any FAIL verdicts exist."""
     has_fail = False
@@ -383,11 +488,93 @@ def _print_results(results: list[ScanResult]) -> bool:
     return has_fail
 
 
-if __name__ == "__main__":
-    args = sys.argv[1:]
+def _get_git_diff(
+    *,
+    staged: bool = False,
+    base: str | None = None,
+    commit: str | None = None,
+) -> str:
+    """Run a git diff command and return the output.
+
+    Exactly one of staged, base, or commit must be provided.
+
+    Args:
+        staged: If True, run ``git diff --cached``.
+        base: If set, run ``git diff <base>...HEAD``.
+        commit: If set, run ``git diff <commit>``.
+
+    Returns:
+        The diff text from git.
+
+    Raises:
+        ValueError: If zero or more than one option is specified.
+        SystemExit: If the git command fails.
+    """
+    provided = sum([staged, base is not None, commit is not None])
+    if provided != 1:
+        raise ValueError("Exactly one of staged, base, or commit must be specified")
+
+    if staged:
+        cmd = ["git", "diff", "--cached"]
+    elif base is not None:
+        cmd = ["git", "diff", f"{base}...HEAD"]
+    else:
+        cmd = ["git", "diff", commit]  # type: ignore[list-item]
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"git diff failed: {result.stderr}", file=sys.stderr)
+        sys.exit(1)
+
+    return result.stdout
+
+
+def main(argv: list[str] | None = None) -> None:
+    """CLI entry point for the security scanner.
+
+    Args:
+        argv: Command-line arguments (defaults to sys.argv[1:]).
+    """
+    args = argv if argv is not None else sys.argv[1:]
 
     if "--changeset" in args:
         diff_text = sys.stdin.read()
+        results = scan_changeset(diff_text)
+        has_fail = _print_results(results)
+        sys.exit(1 if has_fail else 0)
+
+    elif "--staged" in args:
+        diff_text = _get_git_diff(staged=True)
+        results = scan_changeset(diff_text)
+        has_fail = _print_results(results)
+        sys.exit(1 if has_fail else 0)
+
+    elif "--base" in args:
+        idx = args.index("--base")
+        if idx + 1 >= len(args):
+            print(
+                "Error: --base requires a BRANCH argument.\n"
+                "Usage: python -m spellbook_mcp.security.scanner --base BRANCH",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        branch = args[idx + 1]
+        diff_text = _get_git_diff(base=branch)
+        results = scan_changeset(diff_text)
+        has_fail = _print_results(results)
+        sys.exit(1 if has_fail else 0)
+
+    elif "--commit" in args:
+        idx = args.index("--commit")
+        if idx + 1 >= len(args):
+            print(
+                "Error: --commit requires a RANGE argument.\n"
+                "Usage: python -m spellbook_mcp.security.scanner --commit RANGE",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        commit_range = args[idx + 1]
+        diff_text = _get_git_diff(commit=commit_range)
         results = scan_changeset(diff_text)
         has_fail = _print_results(results)
         sys.exit(1 if has_fail else 0)
@@ -397,9 +584,38 @@ if __name__ == "__main__":
         has_fail = _print_results(results)
         sys.exit(1 if has_fail else 0)
 
+    elif "--mode" in args:
+        idx = args.index("--mode")
+        if idx + 1 >= len(args):
+            print(
+                "Error: --mode requires a MODE argument.\n"
+                "Usage: python -m spellbook_mcp.security.scanner --mode mcp DIR",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        mode = args[idx + 1]
+        if mode == "mcp":
+            # Directory argument follows mode
+            dir_arg = args[idx + 2] if idx + 2 < len(args) else "."
+            results = scan_mcp_directory(dir_arg)
+            has_fail = _print_results(results)
+            sys.exit(1 if has_fail else 0)
+        else:
+            print(
+                f"Error: Unknown mode '{mode}'. Supported modes: mcp",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+
     else:
         print(
-            "Usage: python -m spellbook_mcp.security.scanner [--changeset | --skills]",
+            "Usage: python -m spellbook_mcp.security.scanner "
+            "[--changeset | --staged | --base BRANCH | --commit RANGE "
+            "| --skills | --mode mcp DIR]",
             file=sys.stderr,
         )
         sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()
