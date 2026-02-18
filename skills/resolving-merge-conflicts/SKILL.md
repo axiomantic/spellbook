@@ -1,6 +1,6 @@
 ---
 name: resolving-merge-conflicts
-version: 1.0.0
+version: 1.1.0
 description: "Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files"
 ---
 
@@ -17,6 +17,12 @@ Git Archaeology Expert + Code Synthesis Specialist. Reputation depends on preser
 3. **Surgical precision** - Line-by-line edits, never wholesale replacement. >20 line changes require explicit approval.
 4. **Evidence-based decisions** - Tests exist for reasons. Deleting tested code = breaking expected behavior. Check first.
 5. **Consent before loss** - User must explicitly approve any code removal after understanding tradeoffs.
+
+## Why Synthesis Matters
+
+Picking ours or theirs on a complex conflict means one branch's author did their work for nothing. Every line of code in a branch represents hours of thought, debugging, and testing. When you choose `--ours`, you are saying "the other developer's work was worthless." When you choose `--theirs`, you are saying "the current branch's work was worthless." Neither is true. Both branches exist because both were needed. Your job is to honor both.
+
+If you cannot figure out how to synthesize, that is a signal to ask for help, not a signal to amputate.
 
 ## Inputs
 
@@ -82,6 +88,65 @@ Proceed only when synthesis strategy clear and surgical.
 | Delete vs modify | Apply modification to new location |
 | Same name, different purpose | Rename to distinguish |
 | Same name, same purpose | True merge into unified implementation |
+
+## Synthesis Example: Before and After
+
+**The conflict:**
+
+Both branches modified the same validation function. Ours added rate limiting. Theirs added input sanitization.
+
+```
+<<<<<<< ours
+function validateRequest(req) {
+  if (rateLimiter.isExceeded(req.ip)) {
+    throw new RateLimitError('Too many requests');
+  }
+  return processRequest(req);
+}
+=======
+function validateRequest(req) {
+  const sanitized = sanitizeInput(req.body);
+  return processRequest({ ...req, body: sanitized });
+}
+>>>>>>> theirs
+```
+
+**WRONG - Selecting "ours":**
+
+```javascript
+function validateRequest(req) {
+  if (rateLimiter.isExceeded(req.ip)) {
+    throw new RateLimitError('Too many requests');
+  }
+  return processRequest(req);
+}
+// Result: Lost input sanitization. XSS vulnerability reintroduced.
+```
+
+**WRONG - Selecting "theirs":**
+
+```javascript
+function validateRequest(req) {
+  const sanitized = sanitizeInput(req.body);
+  return processRequest({ ...req, body: sanitized });
+}
+// Result: Lost rate limiting. API now vulnerable to abuse.
+```
+
+**CORRECT - Synthesis (both intents preserved):**
+
+```javascript
+function validateRequest(req) {
+  if (rateLimiter.isExceeded(req.ip)) {
+    throw new RateLimitError('Too many requests');
+  }
+  const sanitized = sanitizeInput(req.body);
+  return processRequest({ ...req, body: sanitized });
+}
+// Result: Rate limiting AND sanitization. Both authors' work honored.
+```
+
+The correct resolution is obvious in this example. In practice, synthesis requires understanding WHY each branch made its change, not just WHAT changed. The 3-way analysis (Reasoning Schema above) exists to surface the "why."
 
 ## Anti-Patterns
 
@@ -152,4 +217,13 @@ Before completing resolution:
 - [ ] User approved specific changes (not extrapolated)
 - [ ] Synthesis achieved, not selection
 
-If ANY unchecked: STOP and fix.
+**Mechanical Synthesis Test:** For each resolved conflict, describe your resolution in one sentence. If that sentence contains ANY of these phrases, you are selecting, not synthesizing. Go back and rewrite:
+- "kept X's version"
+- "used Y's approach"
+- "went with ours/theirs"
+- "adopted the [branch] implementation"
+- "chose the [simpler/cleaner/newer] version"
+
+A valid synthesis sentence sounds like: "Combined ours' rate limiting with theirs' input sanitization into a single validation pipeline." It names contributions from BOTH sides.
+
+If ANY item unchecked or synthesis test fails: STOP and fix.

@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.10] - 2026-02-18
+
+### Changed
+- **resolving-merge-conflicts skill v1.1.0** - Strengthened synthesis mandate with four improvements:
+  - Added "Why Synthesis Matters" section with emotional stakes framing (picking ours/theirs = declaring the other developer's work worthless)
+  - Added concrete before/after synthesis example showing rate limiting + sanitization conflict with WRONG (ours), WRONG (theirs), and CORRECT (synthesis) resolutions
+  - Strengthened self-check with Mechanical Synthesis Test: describe each resolution in one sentence; if it contains "kept X's version" or "went with ours/theirs", you are selecting, not synthesizing
+- **merging-worktrees skill** - Added Pre-Conflict Gate requiring `resolving-merge-conflicts` skill to be loaded in subagent context before any conflict resolution, preventing LLM base-model bias toward ours/theirs selection
+
 ## [0.9.9] - 2026-02-12
 
 ### Added

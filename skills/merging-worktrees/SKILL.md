@@ -39,6 +39,19 @@ Skipping steps = lost features. Rushing = broken integrations. Undocumented deci
 4. **Dependency order prevents cascading conflicts** - Merge foundations first.
 5. **Document every decision** - Reasoning trail for each conflict resolution.
 
+## Pre-Conflict Gate
+
+<CRITICAL>
+Before resolving ANY merge conflict, the subagent handling resolution MUST have the `resolving-merge-conflicts` skill loaded in its context. Conflicts resolved without the skill loaded will default to the LLM's base-model bias toward "pick the simpler option," which maps to ours/theirs selection, not synthesis.
+
+When dispatching a conflict resolution subagent:
+1. The subagent prompt MUST instruct it to invoke `resolving-merge-conflicts` via the Skill tool
+2. The subagent prompt MUST include interface contract context from the implementation plan
+3. Do NOT resolve conflicts inline in the orchestrator context
+
+If you catch yourself resolving a conflict without having loaded the skill: STOP. Dispatch a subagent that loads it.
+</CRITICAL>
+
 ## Inputs/Outputs
 
 | Input | Required | Description |
