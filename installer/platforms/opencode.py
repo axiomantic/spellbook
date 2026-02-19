@@ -269,6 +269,16 @@ class OpenCodeInstaller(PlatformInstaller):
         return self.spellbook_dir / "extensions" / "opencode" / "spellbook-forged"
 
     @property
+    def security_plugin_source(self) -> Path:
+        """Get the source path for the spellbook-security plugin."""
+        return self.spellbook_dir / "hooks" / "opencode-plugin.ts"
+
+    @property
+    def security_plugin_target(self) -> Path:
+        """Get the target path for the installed spellbook-security plugin."""
+        return self.plugins_dir / "spellbook-security.ts"
+
+    @property
     def instructions_dir(self) -> Path:
         """Get the OpenCode instructions directory.
 
@@ -320,6 +330,9 @@ class OpenCodeInstaller(PlatformInstaller):
         plugin_target = self.plugins_dir / "spellbook-forged"
         has_plugin = plugin_target.is_symlink() or plugin_target.is_dir()
 
+        # Check for security plugin
+        has_security_plugin = self.security_plugin_target.is_file()
+
         # Check for system prompt symlink
         has_system_prompt = self.system_prompt_target.is_symlink() or self.system_prompt_target.is_file()
 
@@ -332,6 +345,7 @@ class OpenCodeInstaller(PlatformInstaller):
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,
                 "plugin_installed": has_plugin,
+                "security_plugin_installed": has_security_plugin,
                 "system_prompt_installed": has_system_prompt,
                 "instructions_configured": has_instructions,
             },
@@ -426,6 +440,32 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Install spellbook-security plugin (copy TypeScript file)
+        if self.security_plugin_source.exists():
+            if self.dry_run:
+                results.append(
+                    InstallResult(
+                        component="security_plugin",
+                        platform=self.platform_id,
+                        success=True,
+                        action="installed",
+                        message="security plugin: would be installed",
+                    )
+                )
+            else:
+                self.plugins_dir.mkdir(parents=True, exist_ok=True)
+                source_content = self.security_plugin_source.read_text(encoding="utf-8")
+                self.security_plugin_target.write_text(source_content, encoding="utf-8")
+                results.append(
+                    InstallResult(
+                        component="security_plugin",
+                        platform=self.platform_id,
+                        success=True,
+                        action="installed",
+                        message="security plugin: installed",
+                    )
+                )
+
         # Install Claude Code system prompt (behavioral standards)
         if self.system_prompt_source.exists():
             # Ensure instructions directory exists
@@ -486,10 +526,8 @@ class OpenCodeInstaller(PlatformInstaller):
                     )
                 )
             else:
-                action, backup_path = remove_demarcated_section(context_file)
+                action, _backup = remove_demarcated_section(context_file)
                 msg = f"AGENTS.md: {action}"
-                if backup_path:
-                    msg += f" (backup: {backup_path.name})"
                 results.append(
                     InstallResult(
                         component="AGENTS.md",
@@ -513,6 +551,20 @@ class OpenCodeInstaller(PlatformInstaller):
                 message=f"MCP server: {msg}",
             )
         )
+
+        # Remove spellbook-security plugin file
+        if self.security_plugin_target.exists():
+            if not self.dry_run:
+                self.security_plugin_target.unlink()
+            results.append(
+                InstallResult(
+                    component="security_plugin",
+                    platform=self.platform_id,
+                    success=True,
+                    action="removed",
+                    message="security plugin: removed",
+                )
+            )
 
         # Remove spellbook-forged plugin symlink
         plugin_target = self.plugins_dir / "spellbook-forged"

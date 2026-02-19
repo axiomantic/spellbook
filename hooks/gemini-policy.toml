@@ -1,0 +1,159 @@
+# Spellbook Security Policy for Gemini CLI
+# Install location: ~/.gemini/policies/spellbook-security.toml
+#
+# This policy file defines security rules for the Gemini CLI policy engine.
+# Rules use TOML [[rules]] arrays with fields:
+#   id            - unique rule identifier (SB-BASH-NNN)
+#   toolName      - tool to match (e.g., "Bash")
+#   commandRegex  - regex pattern to match against command text
+#   decision      - "deny" (block) or "ask_user" (require confirmation)
+#   priority      - rule priority (higher = evaluated first)
+#   deny_message  - message shown when a deny rule triggers
+
+# --- Destructive filesystem operations ---
+
+[[rules]]
+id = "SB-BASH-001"
+toolName = "Bash"
+commandRegex = "rm\\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r)\\s+/"
+decision = "deny"
+priority = 100
+deny_message = "Blocked: recursive forced deletion from root"
+
+[[rules]]
+id = "SB-BASH-001a"
+toolName = "Bash"
+commandRegex = "mkfs\\."
+decision = "deny"
+priority = 100
+deny_message = "Blocked: filesystem format command"
+
+[[rules]]
+id = "SB-BASH-001b"
+toolName = "Bash"
+commandRegex = "dd\\s+.*of\\s*=\\s*/dev/"
+decision = "deny"
+priority = 100
+deny_message = "Blocked: direct device write via dd"
+
+# --- Exfiltration via curl/wget ---
+
+[[rules]]
+id = "SB-BASH-002"
+toolName = "Bash"
+commandRegex = "(curl|wget)\\s+.*(-d\\s|--data|--upload-file|-T\\s|-F\\s|--form)"
+decision = "deny"
+priority = 90
+deny_message = "Blocked: data upload via curl/wget"
+
+[[rules]]
+id = "SB-BASH-002a"
+toolName = "Bash"
+commandRegex = "echo\\s+.*\\|\\s*(curl|wget|nc)"
+decision = "deny"
+priority = 90
+deny_message = "Blocked: piped exfiltration via curl/wget/nc"
+
+# --- Privilege escalation ---
+
+[[rules]]
+id = "SB-BASH-003"
+toolName = "Bash"
+commandRegex = "sudo\\s+"
+decision = "deny"
+priority = 95
+deny_message = "Blocked: sudo commands are not permitted"
+
+[[rules]]
+id = "SB-BASH-003a"
+toolName = "Bash"
+commandRegex = "chmod\\s+[0-7]*777"
+decision = "deny"
+priority = 80
+deny_message = "Blocked: world-writable permissions"
+
+# --- Credential and secret file access ---
+
+[[rules]]
+id = "SB-BASH-004"
+toolName = "Bash"
+commandRegex = "(cat|head|tail|less|more)\\s+.*\\.(env|pem|key|secret|cred)"
+decision = "deny"
+priority = 95
+deny_message = "Blocked: direct access to credential/secret files"
+
+[[rules]]
+id = "SB-BASH-004a"
+toolName = "Bash"
+commandRegex = "(cat|head|tail|less|more)\\s+.*(id_rsa|id_ed25519|id_ecdsa|authorized_keys)"
+decision = "deny"
+priority = 95
+deny_message = "Blocked: direct access to SSH key files"
+
+# --- Session spawning (require confirmation) ---
+
+[[rules]]
+id = "SB-BASH-005"
+toolName = "Bash"
+commandRegex = "spawn_claude_session"
+decision = "ask_user"
+priority = 85
+deny_message = "Requires confirmation: spawning a new Claude session"
+
+[[rules]]
+id = "SB-BASH-005a"
+toolName = "Bash"
+commandRegex = "--dangerously-skip-permissions"
+decision = "deny"
+priority = 100
+deny_message = "Blocked: permission bypass flag is not allowed"
+
+# --- Netcat listeners and reverse shells ---
+
+[[rules]]
+id = "SB-BASH-006"
+toolName = "Bash"
+commandRegex = "nc\\s+(-l|-e|--exec)"
+decision = "deny"
+priority = 95
+deny_message = "Blocked: netcat listener or reverse shell"
+
+# --- Remote transfer ---
+
+[[rules]]
+id = "SB-BASH-007"
+toolName = "Bash"
+commandRegex = "(ssh|scp|rsync)\\s+.*@"
+decision = "deny"
+priority = 85
+deny_message = "Blocked: remote transfer via SSH/SCP/rsync"
+
+# --- Data encoding for exfiltration ---
+
+[[rules]]
+id = "SB-BASH-008"
+toolName = "Bash"
+commandRegex = "base64\\s+(--encode|-e|<<)"
+decision = "deny"
+priority = 80
+deny_message = "Blocked: data encoding potentially for exfiltration"
+
+# --- DNS-based exfiltration ---
+
+[[rules]]
+id = "SB-BASH-009"
+toolName = "Bash"
+commandRegex = "(nslookup|dig)\\s+.*\\."
+decision = "deny"
+priority = 75
+deny_message = "Blocked: potential DNS-based exfiltration"
+
+# --- Dynamic code execution ---
+
+[[rules]]
+id = "SB-BASH-010"
+toolName = "Bash"
+commandRegex = "python[23]?\\s+.*-c\\s+.*__(import|builtins)__"
+decision = "deny"
+priority = 85
+deny_message = "Blocked: dynamic Python code execution with dangerous builtins"

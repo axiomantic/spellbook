@@ -35,3 +35,16 @@ repos:
         language: system
         pass_filenames: false
         files: ^(skills/|commands/|agents/)
+
+      - id: security-scan-changeset
+        name: Scan changeset for security issues
+        entry: uv run python -m spellbook_mcp.security.scanner --staged
+        language: system
+        types: [markdown]
+
+      - id: security-scan-skills
+        name: Scan skills for security issues
+        entry: uv run python -m spellbook_mcp.security.scanner --skills
+        language: system
+        stages: [manual]
+        files: ^skills/.*SKILL\.md$

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..components.context_files import generate_claude_context
+from ..components.hooks import install_hooks, uninstall_hooks
 from ..components.mcp import (
     check_claude_cli_available,
     get_spellbook_server_url,
@@ -39,10 +40,32 @@ class ClaudeCodeInstaller(PlatformInstaller):
     def platform_id(self) -> str:
         return "claude_code"
 
+    @property
+    def _default_config_dir(self) -> Path:
+        """The default/global Claude Code config directory (~/.claude)."""
+        return Path.home() / ".claude"
+
+    @property
+    def _is_custom_config_dir(self) -> bool:
+        """Whether config_dir differs from the default ~/.claude location."""
+        try:
+            return self.config_dir.resolve() != self._default_config_dir.resolve()
+        except OSError:
+            return str(self.config_dir) != str(self._default_config_dir)
+
+    @property
+    def _global_claude_md(self) -> Path:
+        """The global CLAUDE.md where spellbook content always lives."""
+        return self._default_config_dir / "CLAUDE.md"
+
     def detect(self) -> PlatformStatus:
-        """Detect Claude Code installation status."""
-        context_file = self.config_dir / "CLAUDE.md"
-        installed_version = get_installed_version(context_file)
+        """Detect Claude Code installation status.
+
+        Always checks ~/.claude/CLAUDE.md for installed version, since
+        spellbook content is always written to the global location.
+        """
+        global_claude_md = self._global_claude_md
+        installed_version = get_installed_version(global_claude_md)
 
         return PlatformStatus(
             platform=self.platform_id,
@@ -195,8 +218,11 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
 
-        # Install CLAUDE.md with demarcated section
-        context_file = self.config_dir / "CLAUDE.md"
+        # Install CLAUDE.md with demarcated section.
+        # Always write to ~/.claude/CLAUDE.md (the global location), regardless
+        # of what self.config_dir is. If config_dir is custom, also clean up any
+        # stale spellbook section from the custom dir's CLAUDE.md.
+        global_claude_md = self._global_claude_md
         spellbook_content = generate_claude_context(self.spellbook_dir)
 
         if spellbook_content:
@@ -212,8 +238,11 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
             else:
+                # Ensure global config dir exists
+                global_claude_md.parent.mkdir(parents=True, exist_ok=True)
+
                 action, backup_path = update_demarcated_section(
-                    context_file, spellbook_content, self.version
+                    global_claude_md, spellbook_content, self.version
                 )
                 msg = f"CLAUDE.md: {action}"
                 if backup_path:
@@ -227,6 +256,22 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         message=msg,
                     )
                 )
+
+                # If using a custom config_dir, clean up any stale spellbook
+                # section from the custom location's CLAUDE.md
+                if self._is_custom_config_dir:
+                    custom_claude_md = self.config_dir / "CLAUDE.md"
+                    cleanup_action, _backup = remove_demarcated_section(custom_claude_md)
+                    if cleanup_action == "removed":
+                        results.append(
+                            InstallResult(
+                                component="CLAUDE.md",
+                                platform=self.platform_id,
+                                success=True,
+                                action="removed",
+                                message=f"CLAUDE.md: removed stale spellbook section from custom config dir ({self.config_dir})",
+                            )
+                        )
 
         # Install MCP daemon and register with HTTP transport
         server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
@@ -286,6 +331,19 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Install security hooks in settings.local.json
+        settings_path = self.config_dir / "settings.local.json"
+        hook_result = install_hooks(settings_path, dry_run=self.dry_run)
+        results.append(
+            InstallResult(
+                component=hook_result.component,
+                platform=self.platform_id,
+                success=hook_result.success,
+                action=hook_result.action,
+                message=hook_result.message,
+            )
+        )
+
         return results
 
     def uninstall(self) -> List["InstallResult"]:
@@ -294,9 +352,11 @@ class ClaudeCodeInstaller(PlatformInstaller):
 
         results = []
 
-        # Remove demarcated section from CLAUDE.md
-        context_file = self.config_dir / "CLAUDE.md"
-        if context_file.exists():
+        # Remove demarcated section from CLAUDE.md.
+        # Always target ~/.claude/CLAUDE.md (the global location).
+        # If config_dir is custom, also check and clean the custom location.
+        global_claude_md = self._global_claude_md
+        if global_claude_md.exists():
             if self.dry_run:
                 results.append(
                     InstallResult(
@@ -308,10 +368,8 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
             else:
-                action, backup_path = remove_demarcated_section(context_file)
+                action, _backup = remove_demarcated_section(global_claude_md)
                 msg = f"CLAUDE.md: {action}"
-                if backup_path:
-                    msg += f" (backup: {backup_path.name})"
                 results.append(
                     InstallResult(
                         component="CLAUDE.md",
@@ -321,6 +379,33 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         message=msg,
                     )
                 )
+
+        # If using custom config_dir, also clean up any stale section there
+        if self._is_custom_config_dir:
+            custom_claude_md = self.config_dir / "CLAUDE.md"
+            if custom_claude_md.exists():
+                if self.dry_run:
+                    results.append(
+                        InstallResult(
+                            component="CLAUDE.md",
+                            platform=self.platform_id,
+                            success=True,
+                            action="removed",
+                            message="CLAUDE.md: would remove spellbook section from custom config dir",
+                        )
+                    )
+                else:
+                    custom_action, _backup = remove_demarcated_section(custom_claude_md)
+                    if custom_action == "removed":
+                        results.append(
+                            InstallResult(
+                                component="CLAUDE.md",
+                                platform=self.platform_id,
+                                success=True,
+                                action="removed",
+                                message=f"CLAUDE.md: removed stale spellbook section from custom config dir ({self.config_dir})",
+                            )
+                        )
 
         # Remove ALL symlinks in managed directories (handles orphaned symlinks too)
         cleanup_dirs = [
@@ -422,11 +507,28 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
 
+        # Uninstall security hooks from settings.local.json
+        settings_path = self.config_dir / "settings.local.json"
+        hook_result = uninstall_hooks(settings_path, dry_run=self.dry_run)
+        results.append(
+            InstallResult(
+                component=hook_result.component,
+                platform=self.platform_id,
+                success=hook_result.success,
+                action=hook_result.action,
+                message=hook_result.message,
+            )
+        )
+
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Get context files for this platform."""
-        return [self.config_dir / "CLAUDE.md"]
+        """Get context files for this platform.
+
+        Always returns the global ~/.claude/CLAUDE.md since spellbook
+        content is always written there.
+        """
+        return [self._global_claude_md]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

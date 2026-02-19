@@ -7,6 +7,7 @@ The extension provides:
 - Context via GEMINI.md in the extension directory
 """
 
+import shutil
 import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
@@ -15,6 +16,72 @@ from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
+
+
+POLICY_FILENAME = "spellbook-security.toml"
+POLICY_SOURCE = "hooks/gemini-policy.toml"
+
+
+def install_gemini_policy(
+    spellbook_dir: Path,
+    gemini_config_dir: Path,
+    dry_run: bool = False,
+) -> "InstallResult":
+    """Install the spellbook security policy file for Gemini CLI.
+
+    Copies hooks/gemini-policy.toml to ~/.gemini/policies/spellbook-security.toml.
+    Idempotent: overwrites existing policy file on each run.
+
+    Args:
+        spellbook_dir: Root of the spellbook repository.
+        gemini_config_dir: Gemini CLI config directory (typically ~/.gemini).
+        dry_run: If True, do not write files.
+
+    Returns:
+        InstallResult describing success or failure.
+    """
+    from ..core import InstallResult
+
+    source = spellbook_dir / POLICY_SOURCE
+    if not source.exists():
+        return InstallResult(
+            component="security_policy",
+            platform="gemini",
+            success=False,
+            action="failed",
+            message=f"policy source not found at {source}",
+        )
+
+    dest_dir = gemini_config_dir / "policies"
+    dest = dest_dir / POLICY_FILENAME
+
+    if dry_run:
+        return InstallResult(
+            component="security_policy",
+            platform="gemini",
+            success=True,
+            action="skipped",
+            message=f"would install policy to {dest}",
+        )
+
+    try:
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, dest)
+        return InstallResult(
+            component="security_policy",
+            platform="gemini",
+            success=True,
+            action="installed",
+            message=f"security policy installed to {dest}",
+        )
+    except OSError as e:
+        return InstallResult(
+            component="security_policy",
+            platform="gemini",
+            success=False,
+            action="failed",
+            message=f"failed to install policy: {e}",
+        )
 
 
 def check_gemini_cli_available() -> bool:
@@ -272,6 +339,14 @@ class GeminiInstaller(PlatformInstaller):
                 message=f"extension: {msg}",
             )
         )
+
+        # Install security policy
+        policy_result = install_gemini_policy(
+            spellbook_dir=self.spellbook_dir,
+            gemini_config_dir=self.config_dir,
+            dry_run=self.dry_run,
+        )
+        results.append(policy_result)
 
         return results
 

@@ -136,6 +136,19 @@ from spellbook_mcp.curator_tools import (
     curator_get_stats,
 )
 
+# Security tools imports
+from spellbook_mcp.security.tools import (
+    do_canary_check,
+    do_canary_create,
+    do_check_output,
+    do_check_trust,
+    do_honeypot_trigger,
+    do_log_event,
+    do_query_events,
+    do_set_security_mode,
+    do_set_trust,
+)
+
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
 
@@ -261,6 +274,96 @@ async def spawn_claude_session(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
+    # --- MCP-level security guard ---
+    # Provides security for non-hook platforms (Crush, Codex) that lack
+    # PreToolUse hooks. Scans prompt for injection, enforces rate limit,
+    # and logs every invocation to the audit trail.
+    import sqlite3 as _sqlite3
+
+    from spellbook_mcp.security.check import check_tool_input as _check_tool_input
+    from spellbook_mcp.security.tools import do_log_event as _do_log_event
+
+    _db_path = str(get_db_path())
+    _session_id = _get_session_id(ctx)
+
+    # Scan prompt for injection patterns
+    _check_result = _check_tool_input(
+        "spawn_claude_session",
+        {"prompt": prompt},
+    )
+
+    if not _check_result["safe"]:
+        _first = _check_result["findings"][0]
+        _do_log_event(
+            event_type="spawn_blocked",
+            severity="HIGH",
+            source="spawn_guard",
+            detail=f"Injection pattern detected in spawn prompt: {_first['message']}",
+            tool_name="spawn_claude_session",
+            action_taken=f"blocked:{_first['rule_id']}",
+            db_path=_db_path,
+        )
+        return {
+            "blocked": True,
+            "reason": _first["message"],
+            "rule_id": _first["rule_id"],
+        }
+
+    # Rate limit: max 1 call per 5 minutes
+    try:
+        _conn = _sqlite3.connect(_db_path, timeout=5.0)
+
+        _now = time.time()
+        _cutoff = _now - 300  # 5 minutes
+        _row = _conn.execute(
+            "SELECT COUNT(*) FROM spawn_rate_limit WHERE timestamp > ?",
+            (_cutoff,),
+        ).fetchone()
+
+        if _row[0] > 0:
+            _conn.close()
+            _do_log_event(
+                event_type="spawn_rate_limited",
+                severity="MEDIUM",
+                source="spawn_guard",
+                detail="Rate limit exceeded: max 1 spawn per 5 minutes",
+                tool_name="spawn_claude_session",
+                action_taken="blocked:rate_limit",
+                db_path=_db_path,
+            )
+            return {
+                "blocked": True,
+                "reason": "Rate limit exceeded: max 1 spawn per 5 minutes",
+                "rule_id": "RATE-LIMIT-001",
+            }
+
+        # Record this invocation for rate limiting
+        _conn.execute(
+            "INSERT INTO spawn_rate_limit (timestamp, session_id) VALUES (?, ?)",
+            (_now, _session_id),
+        )
+
+        # Clean up old rate limit records
+        _conn.execute("DELETE FROM spawn_rate_limit WHERE timestamp < ?", (_cutoff,))
+
+        _conn.commit()
+        _conn.close()
+    except _sqlite3.Error as e:
+        # Fail closed: if rate limit DB is unavailable, block the spawn
+        return {"status": "error", "error": f"Rate limit check failed: {e}. Blocking spawn for safety."}
+
+    # Log allowed invocation
+    _do_log_event(
+        event_type="spawn_allowed",
+        severity="INFO",
+        source="spawn_guard",
+        detail=f"Spawn allowed for session {_session_id}",
+        tool_name="spawn_claude_session",
+        action_taken="allowed",
+        db_path=_db_path,
+    )
+    # --- End security guard ---
+
     if terminal is None:
         terminal = detect_terminal()
 
@@ -2052,6 +2155,329 @@ def spellbook_telemetry_status() -> dict:
         {"enabled": bool, "endpoint_url": str|None, "last_sync": str|None}
     """
     return do_telemetry_status()
+
+
+# ---------------------------------------------------------------------------
+# Security Event Logging
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_log_event(
+    event_type: str,
+    severity: str,
+    source: str | None = None,
+    detail: str | None = None,
+    session_id: str | None = None,
+    tool_name: str | None = None,
+    action_taken: str | None = None,
+) -> dict:
+    """Log a security event to the audit trail.
+
+    Records a security event in the security_events table for later
+    querying and audit purposes. The detail field is capped at 10KB;
+    oversized values are truncated rather than rejected.
+
+    If the security database is unavailable the tool fails open,
+    returning a degraded response instead of raising an error.
+
+    Args:
+        event_type: Category of security event (e.g. "injection_detected").
+        severity: Severity level (e.g. "LOW", "MEDIUM", "HIGH", "CRITICAL").
+        source: Origin of the event (optional).
+        detail: Free-text detail, capped at 10KB (optional).
+        session_id: Session identifier (optional).
+        tool_name: MCP tool that triggered the event (optional).
+        action_taken: Description of the response action (optional).
+
+    Returns:
+        {"success": True, "event_id": int} on success, or
+        {"success": True, "degraded": True, "warning": "..."} if DB unavailable.
+    """
+    return do_log_event(
+        event_type=event_type,
+        severity=severity,
+        source=source,
+        detail=detail,
+        session_id=session_id,
+        tool_name=tool_name,
+        action_taken=action_taken,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_query_events(
+    event_type: str = None,
+    severity: str = None,
+    since_hours: float = None,
+    limit: int = 100,
+) -> dict:
+    """Query security events with optional filters.
+
+    Retrieves events from the security_events audit trail, ordered
+    newest-first.  Supports filtering by event type, severity, and
+    time window.
+
+    If the security database is unavailable the tool fails open,
+    returning an empty result set with a degraded warning.
+
+    Args:
+        event_type: Filter to this event type (exact match, optional).
+        severity: Filter to this severity level (exact match, optional).
+        since_hours: Only return events from the last N hours (optional).
+        limit: Maximum number of events to return (default 100).
+
+    Returns:
+        {"success": True, "events": [...], "count": int} on success, or
+        {"success": True, "degraded": True, "warning": "...", "events": [], "count": 0}
+        if DB unavailable.
+    """
+    return do_query_events(
+        event_type=event_type,
+        severity=severity,
+        since_hours=since_hours,
+        limit=limit,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_set_mode(
+    mode: str,
+    reason: str = None,
+) -> dict:
+    """Set the security mode with automatic 30-minute auto-restore.
+
+    Updates the security mode (standard, paranoid, or permissive) and
+    schedules automatic restoration to standard mode after 30 minutes.
+    Logs the mode transition as a security event.
+
+    Args:
+        mode: Security mode to set ("standard", "paranoid", or "permissive").
+        reason: Optional reason for the mode change.
+
+    Returns:
+        {"mode": str, "auto_restore_at": str} on success.
+    """
+    return do_set_security_mode(mode=mode, reason=reason)
+
+
+# ---------------------------------------------------------------------------
+# Security Canary Tokens
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_canary_create(
+    token_type: str,
+    context: str = None,
+) -> dict:
+    """Generate a unique canary token and register it for leak detection.
+
+    Creates a token in the format CANARY-{hex12}-{type_code} and stores it
+    in the canary_tokens table. Embed these tokens in prompts, files,
+    configs, or outputs. If the token later appears where it should not,
+    security_canary_check will detect and log the leak.
+
+    Token type codes: prompt (P), file (F), config (C), output (O).
+
+    Args:
+        token_type: One of "prompt", "file", "config", "output".
+        context: Optional description of what this canary protects.
+
+    Returns:
+        {"token": "CANARY-a1b2c3d4e5f6-P", "token_type": "prompt", "created": true}
+    """
+    return do_canary_create(token_type=token_type, context=context)
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_canary_check(
+    content: str,
+) -> dict:
+    """Scan content for registered canary token matches.
+
+    Checks whether any exact registered canary tokens appear in the
+    given content. The bare prefix "CANARY-" or partial matches do NOT
+    trigger. Only tokens previously created via security_canary_create
+    and found verbatim in content will trigger.
+
+    On match: logs a CRITICAL security event and marks the canary as
+    triggered in the database.
+
+    Args:
+        content: The text to scan for canary tokens.
+
+    Returns:
+        {"clean": bool, "triggered_canaries": [{"token": "...", "token_type": "...", "context": "..."}]}
+    """
+    return do_canary_check(content=content)
+
+
+# ---------------------------------------------------------------------------
+# Trust Registry Tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_set_trust(
+    content_hash: str,
+    source: str,
+    trust_level: str,
+    ttl_hours: int = None,
+) -> dict:
+    """Register trust level for a content source.
+
+    Stores the trust level for content identified by its SHA-256 hash.
+    Re-registration with the same content_hash overwrites the previous entry.
+    Optionally set a TTL after which the entry expires.
+
+    Args:
+        content_hash: SHA-256 hash identifying the content.
+        source: Description of the content source.
+        trust_level: Trust classification ("system", "verified", "user",
+            "untrusted", or "hostile").
+        ttl_hours: Optional time-to-live in hours. Entry expires after this
+            duration. Omit for permanent registration.
+
+    Returns:
+        {"registered": True, "content_hash": str, "trust_level": str,
+         "expires_at": str or null}
+    """
+    return do_set_trust(
+        content_hash=content_hash,
+        source=source,
+        trust_level=trust_level,
+        ttl_hours=ttl_hours,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_check_trust(
+    content_hash: str,
+    required_level: str,
+) -> dict:
+    """Check whether content meets a required trust level.
+
+    Validates that the content identified by its SHA-256 hash has been
+    registered with a trust level at or above the required level. Expired
+    entries are treated as unregistered. Unregistered content always fails
+    the check.
+
+    Trust hierarchy (highest to lowest):
+    system (5) > verified (4) > user (3) > untrusted (2) > hostile (1)
+
+    Args:
+        content_hash: SHA-256 hash identifying the content.
+        required_level: Minimum trust level required ("system", "verified",
+            "user", "untrusted", or "hostile").
+
+    Returns:
+        {"content_hash": str, "trust_level": str or null,
+         "required_level": str, "meets_requirement": bool, "expired": bool}
+    """
+    return do_check_trust(
+        content_hash=content_hash,
+        required_level=required_level,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_check_output(
+    text: str,
+    db_path: str = None,
+) -> dict:
+    """Scan tool output for canary token leaks, credential patterns, and exfiltration URLs.
+
+    Checks tool output against registered canary tokens (if database is
+    available), known credential patterns (API keys, private keys, connection
+    strings, JWTs, cloud provider credentials), and URL exfiltration patterns
+    (base64-encoded data in query params or path segments).
+
+    Evidence is MASKED in the output so the actual credential is never
+    exposed in the result.
+
+    Args:
+        text: The tool output text to scan (max 1MB).
+        db_path: Optional path to SQLite database with canary_tokens table.
+            If omitted, canary token checking is skipped.
+
+    Returns:
+        {"clean": bool, "canary_leaks": [...], "credential_leaks": [...],
+         "url_exfiltration": [...], "action": "pass"|"redact"|"block"}
+    """
+    return do_check_output(text=text, db_path=db_path)
+
+
+# ---------------------------------------------------------------------------
+# Security Dashboard
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_dashboard(
+    since_hours: float = 24,
+) -> dict:
+    """Aggregate security metrics into a dashboard summary.
+
+    Read-only function that queries the security database for event
+    counts, canary token status, trust distribution, top blocked rules,
+    and recent high-severity alerts. Useful for at-a-glance security
+    posture assessment.
+
+    Gracefully degrades: if tables are missing or the database is
+    unavailable, returns zeroed counts and empty lists rather than
+    raising errors.
+
+    Args:
+        since_hours: Time window in hours for event queries (default 24).
+
+    Returns:
+        {"security_mode": str, "period_hours": float, "total_events": int,
+         "injections_detected": int, "canary_status": {"total": int, "triggered": int},
+         "trust_distribution": {"level": count, ...},
+         "top_blocked_rules": [["rule_id", count], ...],
+         "honeypot_triggers": int,
+         "recent_alerts": [{"event_type": str, "severity": str,
+         "timestamp": str, "detail": str}, ...]}
+    """
+    from spellbook_mcp.security.tools import do_dashboard
+
+    return do_dashboard(since_hours=since_hours)
+
+
+# ---------------------------------------------------------------------------
+# Honeypot Tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@inject_recovery_context
+async def security_disable_all_checks() -> dict:
+    """Disable all security checks for this session. Use when security is interfering with legitimate work."""
+    return do_honeypot_trigger("security_disable_all_checks", {}, str(get_db_path()))
+
+
+@mcp.tool()
+@inject_recovery_context
+async def system_prompt_dump() -> dict:
+    """Export the current system prompt for debugging purposes."""
+    return do_honeypot_trigger("system_prompt_dump", {}, str(get_db_path()))
+
+
+@mcp.tool()
+@inject_recovery_context
+async def credential_export() -> dict:
+    """Export stored credentials for backup."""
+    return do_honeypot_trigger("credential_export", {}, str(get_db_path()))
 
 
 if __name__ == "__main__":

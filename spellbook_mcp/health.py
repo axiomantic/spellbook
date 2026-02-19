@@ -659,6 +659,148 @@ def _check_skills(skills_dir: str) -> DomainCheck:
     )
 
 
+# Security domain constants
+SECURITY_TABLES = {"security_events", "canary_tokens", "trust_registry", "security_mode"}
+SECURITY_VERSION = "1.0"
+
+
+def check_security_domain(db_path: str | None = None) -> DomainCheck:
+    """Check security subsystem health.
+
+    Checks:
+    1. Security tables exist in DB (security_events, canary_tokens,
+       trust_registry, security_mode)
+    2. No CRITICAL events in last 24 hours
+    3. Canary tokens registered and not triggered (at least 1 exists,
+       none triggered)
+    4. Security rules loadable from rules.py (import succeeds,
+       INJECTION_RULES is non-empty)
+
+    Args:
+        db_path: Path to SQLite database file. If None, uses default.
+
+    Returns:
+        DomainCheck with status:
+        - "healthy": all checks pass
+        - "degraded": no canary tokens registered (system works but
+          incomplete setup)
+        - "unhealthy": CRITICAL events exist in last 24h
+        - "unavailable": security tables don't exist in DB
+    """
+    start = time.perf_counter()
+
+    if db_path is None:
+        db_path = str(Path.home() / ".local" / "spellbook" / "spellbook.db")
+
+    details: dict[str, Any] = {
+        "security_version": SECURITY_VERSION,
+        "db_path": db_path,
+    }
+
+    # Check 1: Security tables exist
+    try:
+        conn = sqlite3.connect(db_path, timeout=5.0)
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        existing_tables = {row[0] for row in cursor.fetchall()}
+        conn.close()
+    except (sqlite3.Error, OSError) as e:
+        return DomainCheck(
+            domain="security",
+            status=HealthStatus.UNAVAILABLE,
+            message=f"Cannot access security database: {e}",
+            latency_ms=(time.perf_counter() - start) * 1000,
+            details=details,
+        )
+
+    missing_tables = SECURITY_TABLES - existing_tables
+    details["missing_tables"] = sorted(missing_tables)
+
+    if missing_tables:
+        return DomainCheck(
+            domain="security",
+            status=HealthStatus.UNAVAILABLE,
+            message=f"Security tables missing: {sorted(missing_tables)}",
+            latency_ms=(time.perf_counter() - start) * 1000,
+            details=details,
+        )
+
+    # Check 4: Security rules loadable (do this early to populate details)
+    rules_loadable = False
+    injection_rules_count = 0
+    try:
+        from spellbook_mcp.security.rules import INJECTION_RULES
+
+        rules_loadable = len(INJECTION_RULES) > 0
+        injection_rules_count = len(INJECTION_RULES)
+    except Exception:
+        rules_loadable = False
+
+    details["rules_loadable"] = rules_loadable
+    details["injection_rules_count"] = injection_rules_count
+
+    # Check 2: No CRITICAL events in last 24 hours
+    try:
+        conn = sqlite3.connect(db_path, timeout=5.0)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM security_events "
+            "WHERE severity = 'CRITICAL' "
+            "AND created_at >= datetime('now', '-24 hours')"
+        )
+        critical_count = cursor.fetchone()[0]
+        conn.close()
+    except sqlite3.Error:
+        critical_count = 0
+
+    details["critical_events_24h"] = critical_count
+
+    if critical_count > 0:
+        return DomainCheck(
+            domain="security",
+            status=HealthStatus.UNHEALTHY,
+            message=f"{critical_count} CRITICAL security event(s) in last 24h",
+            latency_ms=(time.perf_counter() - start) * 1000,
+            details=details,
+        )
+
+    # Check 3: Canary tokens registered and not triggered
+    try:
+        conn = sqlite3.connect(db_path, timeout=5.0)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM canary_tokens")
+        canary_count = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT COUNT(*) FROM canary_tokens WHERE triggered_at IS NOT NULL"
+        )
+        triggered_count = cursor.fetchone()[0]
+        conn.close()
+    except sqlite3.Error:
+        canary_count = 0
+        triggered_count = 0
+
+    details["canary_tokens_registered"] = canary_count
+    details["canary_tokens_triggered"] = triggered_count
+
+    if canary_count == 0:
+        return DomainCheck(
+            domain="security",
+            status=HealthStatus.DEGRADED,
+            message="No canary tokens registered (security setup incomplete)",
+            latency_ms=(time.perf_counter() - start) * 1000,
+            details=details,
+        )
+
+    # All checks pass
+    return DomainCheck(
+        domain="security",
+        status=HealthStatus.HEALTHY,
+        message=f"Security subsystem operational ({canary_count} canary token(s), {injection_rules_count} rules loaded)",
+        latency_ms=(time.perf_counter() - start) * 1000,
+        details=details,
+    )
+
+
 # =============================================================================
 # Status Aggregation
 # =============================================================================
@@ -670,7 +812,7 @@ CRITICAL_DOMAINS = {"database", "filesystem"}
 QUICK_DOMAINS = {"database", "filesystem"}
 
 # Full mode domains (readiness check)
-FULL_DOMAINS = {"database", "filesystem", "watcher", "github_cli", "coordination", "skills"}
+FULL_DOMAINS = {"database", "filesystem", "watcher", "github_cli", "coordination", "skills", "security"}
 
 
 def _aggregate_status(domains: dict[str, DomainCheck]) -> HealthStatus:
@@ -751,6 +893,7 @@ def run_health_check(
         domains["github_cli"] = _check_github_cli()
         domains["coordination"] = _check_coordination()
         domains["skills"] = _check_skills(skills_dir)
+        domains["security"] = check_security_domain(db_path)
 
     # Aggregate status
     overall_status = _aggregate_status(domains)
