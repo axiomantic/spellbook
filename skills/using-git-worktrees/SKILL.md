@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: "Use when starting feature work that needs isolation from current workspace or before executing implementation plans"
+description: "Use when starting feature work that needs isolation from current workspace, setting up parallel development tracks, or before executing implementation plans. Triggers: 'worktree', 'separate branch', 'isolate this work', 'don't mess up current work', 'work on two things at once', 'parallel workstreams', 'sandboxed workspace'."
 ---
 
 # Using Git Worktrees

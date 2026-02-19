@@ -1,6 +1,6 @@
 # gathering-requirements
 
-Use when starting the DISCOVER stage of the Forged workflow, or when feature requirements are unclear. Uses tarot archetype perspectives (Queen for user needs, Emperor for constraints, Hermit for security, Priestess for scope) to ensure comprehensive requirements capture.
+Use when eliciting or clarifying feature requirements, defining scope, identifying constraints, or capturing user needs. Triggers: 'what are the requirements', 'define the requirements', 'scope this feature', 'user stories', 'acceptance criteria', 'what should this do', 'what problem are we solving', 'what are the constraints'. Also invoked by implementing-features during DISCOVER stage and by the Forged workflow.
 
 ## Skill Content
 

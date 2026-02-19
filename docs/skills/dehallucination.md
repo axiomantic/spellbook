@@ -1,6 +1,6 @@
 # dehallucination
 
-Use when roundtable feedback indicates hallucination concerns, or as a quality gate before stage transitions in the Forged workflow. Provides confidence assessment for claims, citation requirements, hallucination detection patterns, and recovery protocols.
+Use when verifying that claims, references, or assertions are grounded in reality rather than fabricated. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Also invoked as quality gate by roundtable feedback, the Forged workflow, and after deep-research verification.
 
 ## Skill Content
 

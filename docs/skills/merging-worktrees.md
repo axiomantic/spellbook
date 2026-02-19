@@ -1,6 +1,6 @@
 # merging-worktrees
 
-Use when merging parallel worktrees back together after parallel implementation
+Use when merging parallel worktrees back together after parallel implementation, combining parallel development tracks, or unifying branches from dispatched parallel agents. Triggers: 'merge worktrees', 'combine parallel branches', 'integrate parallel work', 'all tracks complete', 'bring everything together'.
 
 ## Skill Content
 

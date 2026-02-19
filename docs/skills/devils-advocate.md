@@ -1,6 +1,6 @@
 # devils-advocate
 
-Use before design phase to challenge assumptions and surface risks
+Use when challenging assumptions, surfacing risks, or stress-testing designs and decisions. Triggers: 'challenge this', 'play devil's advocate', 'what could go wrong', 'poke holes', 'find the flaws', 'what am I missing', 'is this solid', 'red team this', 'what are the weaknesses', 'risk assessment', 'sanity check'. Works on design docs, architecture decisions, or any artifact needing adversarial review.
 
 ## Skill Content
 

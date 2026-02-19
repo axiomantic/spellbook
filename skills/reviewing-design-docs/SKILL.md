@@ -1,6 +1,6 @@
 ---
 name: reviewing-design-docs
-description: "Use when reviewing design documents, technical specifications, or architecture docs before implementation planning"
+description: "Use when reviewing design documents, technical specifications, architecture docs, RFCs, ADRs, or API designs for completeness and implementability. Triggers: 'review this design', 'is this spec complete', 'can someone implement from this', 'what's missing from this design', 'review this RFC', 'is this ready for implementation', 'audit this spec'. Core question: could an implementer code against this without guessing?"
 ---
 
 <ROLE>

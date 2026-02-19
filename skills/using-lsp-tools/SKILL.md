@@ -1,6 +1,6 @@
 ---
 name: using-lsp-tools
-description: Use when mcp-language-server tools are available and you need semantic code intelligence for navigation, refactoring, or type analysis
+description: "Use when mcp-language-server tools are available and you need semantic code intelligence. Triggers: 'find definition', 'find references', 'who calls this', 'rename symbol', 'type hierarchy', 'go to definition', 'where is this used', 'where is this defined', 'what type is this'. Provides navigation, refactoring, and type analysis via LSP."
 ---
 
 # Using LSP Tools

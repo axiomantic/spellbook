@@ -1,6 +1,6 @@
 # instruction-engineering
 
-Use when: (1) constructing prompts for subagents, (2) invoking the Task tool, or (3) writing/improving skill instructions or any LLM prompts
+Use when crafting, improving, or reviewing prompts, system prompts, skill instructions, or any text that instructs an LLM. Triggers: 'write a prompt', 'prompt engineering', 'improve this prompt', 'design a system prompt', 'write skill instructions', 'craft agent instructions'. Provides CSO (Claude Search Optimization) guidance for skill descriptions. Also invoked by writing-skills.
 
 ## Skill Content
 

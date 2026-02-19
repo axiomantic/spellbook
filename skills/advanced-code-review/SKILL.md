@@ -1,6 +1,6 @@
 ---
 name: advanced-code-review
-description: "Use when reviewing others' code with multi-phase analysis, historical context tracking, and verification."
+description: "Use when performing thorough multi-phase code review with historical context tracking and verification. Triggers: 'thorough review', 'deep review', 'review this branch in detail', 'full code review with report'. 5-phase process: strategic planning, context analysis, deep review, verification, report generation. More heavyweight than code-review; produces detailed artifacts. For quick review, use code-review instead."
 ---
 
 # Advanced Code Review

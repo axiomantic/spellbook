@@ -1,6 +1,6 @@
 ---
 name: tarot-mode
-description: "Use when session returns mode.type='tarot' - tarot archetypes collaborate via roundtable dialogue with instruction-engineering embedded"
+description: "Use when session returns mode.type='tarot', user says '/tarot', or requests roundtable dialogue with archetypes. Ten tarot archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) collaborate via visible roundtable with instruction-engineering embedded."
 ---
 
 # Tarot Mode

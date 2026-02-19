@@ -1,6 +1,6 @@
 ---
 name: debugging
-description: "Use when debugging bugs, test failures, or unexpected behavior"
+description: "Use when debugging bugs, test failures, or unexpected behavior. Triggers: 'why isn't this working', 'this doesn't work', 'X is broken', 'something's wrong', 'getting an error', 'exception in', 'stopped working', 'regression', 'crash', 'hang', 'flaky test', 'intermittent failure', or when user pastes a stack trace/error output. NOT for: test quality issues (use fixing-tests), adding new behavior (use implementing-features)."
 ---
 
 # Debugging

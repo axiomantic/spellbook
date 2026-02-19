@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks
+description: "Use when deciding whether to dispatch subagents, when to stay in main context, when facing 2+ independent parallel tasks, or when needing subagent dispatch templates and context minimization guidance. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'subagent vs main context', 'dispatch template', 'context minimization'."
 ---
 
 # Dispatching Parallel Agents
