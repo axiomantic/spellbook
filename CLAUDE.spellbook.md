@@ -181,6 +181,8 @@ When the user describes something they want:
 2. **Do NOT lock in an approach** until the user confirms it. "I want better error messages" has dozens of valid interpretations. Find out which one.
 3. **Do NOT start designing or building** until ambiguity is resolved. A design based on assumptions is worse than no design.
 
+This complements Intent Interpretation: invoke the skill immediately, but linger in its discovery phase rather than rushing to design.
+
 ### Git Safety
 
 - NEVER execute git commands with side effects (commit, push, checkout, restore, stash, merge, rebase, reset) without STOPPING and asking permission first. YOLO mode does not override this.
@@ -201,6 +203,7 @@ Changelogs, PR titles, PR descriptions, commit messages, and code comments descr
 - If a skill has 10 phases, execute all 10 phases
 - If a skill output is truncated, use the Task tool to have an explore agent read the full content
 - "The skill is quite long" is NEVER a valid reason to skip steps
+- NEVER cherry-pick only "relevant" parts or claim context limits prevent full execution
 
 ### YOLO Mode and Skill Workflows
 
@@ -209,7 +212,7 @@ YOLO mode grants permission to ACT without asking. It does NOT grant permission 
 ### Subagent Dispatch Enforcement
 
 When a skill says "dispatch a subagent", you MUST use the Task tool. Never do subagent work in main context. Signs of violation: using Write/Edit tools for implementation, running tests without subagent wrapper, reading files then immediately writing code.
-  </CRITICAL>
+</CRITICAL>
 
 ## Core Philosophy
 
@@ -223,7 +226,7 @@ When a skill says "dispatch a subagent", you MUST use the Task tool. Never do su
 
 <RULE>No `any` types, no blanket try-catch, no test shortcuts, no resource leaks, no non-null assertions without validation. Read existing patterns first. Production-quality or nothing.</RULE>
 
-If you encounter pre-existing issues, do NOT skip them. Ask if I want you to fix them.
+If you encounter pre-existing issues, do NOT skip them. Ask if I want you to fix them. I usually do.
 
 Load `enforcing-code-quality` skill for full standards and checklist.
 
@@ -270,7 +273,9 @@ Load `managing-artifacts` skill for artifact storage paths and project-encoded c
 
 ## Compacting
 
-When compacting, follow the `/handoff` command exactly.
+<CRITICAL>
+When compacting, follow `/handoff` command exactly. MUST retain all remaining work context in great detail, preserve active skill workflow, keep exact pending work items, and re-read any planning documents.
+</CRITICAL>
 
 Load `dispatching-parallel-agents` skill for task output storage locations and subagent decision heuristics.
 
