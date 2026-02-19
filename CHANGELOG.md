@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **CLAUDE.spellbook.md slimmed ~38%** (601 -> 372 lines, ~3,500 token savings per session)
+  - Removed duplicate Skill Execution section (was stated twice)
+  - Condensed Code Quality, Intent Interpretation, Subagent Dispatch Enforcement, Compacting, No Assumptions elaboration, and YOLO Mode sections to stubs referencing existing skills/commands
+  - Moved Context Minimization Protocol and Subagent Dispatch Template to `dispatching-parallel-agents` skill
+  - Moved Branch-Relative Documentation to `finishing-a-development-branch` skill
+  - Removed File Reading Protocol detail (already in `smart-reading` skill)
+  - Compressed all 49 Skill Registry descriptions from 20-60 words to 8-15 words each
+- **dispatching-parallel-agents skill** - Added Context Minimization Protocol and Subagent Dispatch Template sections (moved from CLAUDE.spellbook.md)
+- **finishing-a-development-branch skill** - Added Branch-Relative Documentation section (moved from CLAUDE.spellbook.md)
+
 ## [0.9.9] - 2026-02-12
 
 ### Added
