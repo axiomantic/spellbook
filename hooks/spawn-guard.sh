@@ -97,7 +97,7 @@ debug "Running security check"
 # Run check.py, capturing stdout and exit code separately.
 # PYTHONPATH ensures the module can be imported from the project root.
 set +e
-CHECK_OUTPUT="$(echo "${NORMALIZED_INPUT}" | PYTHONPATH="${PROJECT_ROOT}" python3 -m spellbook_mcp.security.check 2>/dev/null)"
+CHECK_OUTPUT="$(echo "${NORMALIZED_INPUT}" | PYTHONPATH="${PROJECT_ROOT}" python3 -m spellbook_mcp.security.check 2>>"${SPELLBOOK_SECURITY_LOG:-/dev/null}")"
 CHECK_EXIT=$?
 set -e
 

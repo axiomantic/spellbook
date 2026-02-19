@@ -381,6 +381,20 @@ def init_db(db_path: str = None) -> None:
         INSERT OR IGNORE INTO security_mode (id, mode) VALUES (1, 'standard')
     """)
 
+    # Spawn rate limiting for spawn_claude_session
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS spawn_rate_limit (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp REAL NOT NULL,
+            session_id TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_spawn_rate_limit_timestamp
+        ON spawn_rate_limit(timestamp)
+    """)
+
     conn.commit()
 
 

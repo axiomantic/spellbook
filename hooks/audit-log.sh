@@ -83,7 +83,7 @@ debug "Running audit logging"
 # PYTHONPATH ensures the module can be imported from the project root.
 # Audit mode is fail-open: check.py --mode audit always exits 0.
 set +e
-echo "${INPUT}" | PYTHONPATH="${PROJECT_ROOT}" python3 -m spellbook_mcp.security.check --mode audit 2>/dev/null
+echo "${INPUT}" | PYTHONPATH="${PROJECT_ROOT}" python3 -m spellbook_mcp.security.check --mode audit 2>>"${SPELLBOOK_SECURITY_LOG:-/dev/null}"
 CHECK_EXIT=$?
 set -e
 

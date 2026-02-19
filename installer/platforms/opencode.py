@@ -526,7 +526,7 @@ class OpenCodeInstaller(PlatformInstaller):
                     )
                 )
             else:
-                action = remove_demarcated_section(context_file)
+                action, _backup = remove_demarcated_section(context_file)
                 msg = f"AGENTS.md: {action}"
                 results.append(
                     InstallResult(

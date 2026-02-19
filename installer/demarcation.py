@@ -201,25 +201,32 @@ def update_demarcated_section(
     return (action, backup_path)
 
 
-def remove_demarcated_section(path: Path) -> Tuple[str, Optional[Path]]:
+def remove_demarcated_section(path: Path, backup: bool = True) -> Tuple[str, Optional[Path]]:
     """
     Remove the demarcated section, preserving user content.
 
+    Args:
+        path: Path to the file to modify.
+        backup: Whether to create a backup before modifying. Defaults to True.
+
     Returns: (action, backup_path)
-    - action: "removed", "unchanged" (if no section existed), "deleted" (empty file removed)
+        - action: "no_file", "not_found", or "removed"
+        - backup_path: Path to backup file if created, else None
     """
     if not path.exists():
-        return ("unchanged", None)
+        return ("no_file", None)
 
     parsed = parse_demarcated_file(path)
 
     if not parsed.spellbook_version:
-        return ("unchanged", None)
+        return ("not_found", None)
 
-    # Create backup
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_path = path.parent / f"{path.name}.backup.{timestamp}"
-    shutil.copy2(path, backup_path)
+    # Create backup before any modifications
+    backup_path = None
+    if backup:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = path.parent / f"{path.name}.backup.{timestamp}"
+        shutil.copy2(path, backup_path)
 
     # Combine user content and trailing content
     final_content = parsed.user_content
@@ -232,10 +239,10 @@ def remove_demarcated_section(path: Path) -> Tuple[str, Optional[Path]]:
     # Write just user content or delete empty file
     if final_content.strip():
         path.write_text(final_content.rstrip() + "\n", encoding="utf-8")
-        return ("removed", backup_path)
     else:
         path.unlink()
-        return ("deleted", backup_path)
+
+    return ("removed", backup_path)
 
 
 def get_installed_version(path: Path) -> Optional[str]:

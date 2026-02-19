@@ -261,7 +261,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 # section from the custom location's CLAUDE.md
                 if self._is_custom_config_dir:
                     custom_claude_md = self.config_dir / "CLAUDE.md"
-                    cleanup_action = remove_demarcated_section(custom_claude_md)
+                    cleanup_action, _backup = remove_demarcated_section(custom_claude_md)
                     if cleanup_action == "removed":
                         results.append(
                             InstallResult(
@@ -368,7 +368,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
             else:
-                action = remove_demarcated_section(global_claude_md)
+                action, _backup = remove_demarcated_section(global_claude_md)
                 msg = f"CLAUDE.md: {action}"
                 results.append(
                     InstallResult(
@@ -395,7 +395,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         )
                     )
                 else:
-                    custom_action = remove_demarcated_section(custom_claude_md)
+                    custom_action, _backup = remove_demarcated_section(custom_claude_md)
                     if custom_action == "removed":
                         results.append(
                             InstallResult(

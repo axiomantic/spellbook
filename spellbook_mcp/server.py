@@ -312,14 +312,6 @@ async def spawn_claude_session(
     # Rate limit: max 1 call per 5 minutes
     try:
         _conn = _sqlite3.connect(_db_path, timeout=5.0)
-        _conn.execute("""
-            CREATE TABLE IF NOT EXISTS spawn_rate_limit (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp REAL NOT NULL,
-                session_id TEXT
-            )
-        """)
-        _conn.commit()
 
         _now = time.time()
         _cutoff = _now - 300  # 5 minutes
@@ -350,11 +342,15 @@ async def spawn_claude_session(
             "INSERT INTO spawn_rate_limit (timestamp, session_id) VALUES (?, ?)",
             (_now, _session_id),
         )
+
+        # Clean up old rate limit records
+        _conn.execute("DELETE FROM spawn_rate_limit WHERE timestamp < ?", (_cutoff,))
+
         _conn.commit()
         _conn.close()
-    except _sqlite3.Error:
-        # Fail open: if rate limit DB is unavailable, allow the spawn
-        pass
+    except _sqlite3.Error as e:
+        # Fail closed: if rate limit DB is unavailable, block the spawn
+        return {"status": "error", "error": f"Rate limit check failed: {e}. Blocking spawn for safety."}
 
     # Log allowed invocation
     _do_log_event(
@@ -2171,11 +2167,11 @@ def spellbook_telemetry_status() -> dict:
 def security_log_event(
     event_type: str,
     severity: str,
-    source: str = None,
-    detail: str = None,
-    session_id: str = None,
-    tool_name: str = None,
-    action_taken: str = None,
+    source: str | None = None,
+    detail: str | None = None,
+    session_id: str | None = None,
+    tool_name: str | None = None,
+    action_taken: str | None = None,
 ) -> dict:
     """Log a security event to the audit trail.
 

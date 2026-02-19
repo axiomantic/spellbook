@@ -37,9 +37,9 @@ function runSecurityCheck(payload: string, extraArgs: string[] = []): { safe: bo
         return { safe: false, error: 'Security check failed' };
       }
     }
-    // Non-security errors (timeout, missing module, etc.) are logged but not blocking
+    // Non-security errors (timeout, missing module, etc.) fail closed
     console.error('[spellbook-security] Check error:', err.message || err);
-    return { safe: true };
+    return { safe: false };
   }
 }
 
