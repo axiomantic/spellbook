@@ -821,6 +821,14 @@ Examples:
         help="Skip interactive platform selection",
     )
     parser.add_argument(
+        "--update-only",
+        action="store_true",
+        help="Skip bootstrap phase (git clone, uv install). "
+             "Used by auto-update after git pull --ff-only. "
+             "When combined with --force, skips bootstrap but forces all "
+             "installation steps regardless of version.",
+    )
+    parser.add_argument(
         "--bootstrapped",
         action="store_true",
         help=argparse.SUPPRESS,  # Hidden flag - set after bootstrap phase
@@ -835,10 +843,17 @@ Examples:
     print_header()
 
     # Bootstrap phase
-    print_step("Checking prerequisites...")
-    print()
-
-    spellbook_dir = bootstrap(args)
+    if args.update_only:
+        # Skip bootstrap, find spellbook dir directly
+        spellbook_dir = find_spellbook_dir()
+        if not spellbook_dir:
+            print_error("Cannot find spellbook directory. --update-only requires existing install.")
+            return 1
+        print_success(f"Update-only mode: using {spellbook_dir}")
+    else:
+        print_step("Checking prerequisites...")
+        print()
+        spellbook_dir = bootstrap(args)
 
     print()
 

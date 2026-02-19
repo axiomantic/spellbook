@@ -149,6 +149,14 @@ from spellbook_mcp.security.tools import (
     do_set_trust,
 )
 
+# Auto-update imports
+from spellbook_mcp.update_tools import (
+    check_for_updates as do_check_for_updates,
+    apply_update as do_apply_update,
+    get_update_status as do_get_update_status,
+)
+from spellbook_mcp.update_watcher import UpdateWatcher
+
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
 
@@ -159,6 +167,9 @@ FULL_HEALTH_CHECK_INTERVAL_SECONDS = 300.0  # 5 minutes
 
 # Global watcher thread instance (initialized in __main__)
 _watcher = None
+
+# Global update watcher thread instance (initialized in __main__)
+_update_watcher = None
 
 mcp = FastMCP("spellbook")
 
@@ -2480,6 +2491,81 @@ async def credential_export() -> dict:
     return do_honeypot_trigger("credential_export", {}, str(get_db_path()))
 
 
+# ============================================================================
+# Auto-Update Tools
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_check_for_updates(
+    auto_apply: bool = False,
+) -> dict:
+    """
+    Check for spellbook updates and optionally apply them.
+
+    Performs a git fetch to check if a newer version of spellbook is
+    available. If auto_apply is True and an update is available (and not
+    a major version bump), applies it immediately.
+
+    Args:
+        auto_apply: If True, apply the update if available and not a
+                    major version bump (default: False).
+
+    Returns:
+        {
+            "update_available": bool,
+            "current_version": str,
+            "remote_version": str | None,
+            "is_major_bump": bool,
+            "changelog": str | None,
+            "applied": bool,
+            "error": str | None,
+        }
+    """
+    spellbook_dir = get_spellbook_dir()
+    result = do_check_for_updates(spellbook_dir)
+    result["applied"] = False
+
+    if (
+        auto_apply
+        and result.get("update_available")
+        and not result.get("is_major_bump")
+        and not result.get("error")
+    ):
+        apply_result = do_apply_update(spellbook_dir)
+        result["applied"] = apply_result.get("success", False)
+        if not apply_result.get("success"):
+            result["error"] = apply_result.get("error")
+
+    return result
+
+
+@mcp.tool()
+@inject_recovery_context
+def spellbook_get_update_status() -> dict:
+    """
+    Get the current update status without triggering a new check.
+
+    Aggregates all update-related config keys into a single response.
+
+    Returns:
+        {
+            "auto_update_enabled": bool,
+            "auto_update_paused": bool,
+            "current_version": str,
+            "available_update": dict | None,
+            "pending_major_update": dict | None,
+            "last_auto_update": dict | None,
+            "pre_update_sha": str | None,
+            "last_check": str | None,
+            "check_failures": int,
+        }
+    """
+    spellbook_dir = get_spellbook_dir()
+    return do_get_update_status(spellbook_dir)
+
+
 if __name__ == "__main__":
     # Initialize database and start watcher thread
     db_path = str(get_db_path())
@@ -2497,6 +2583,18 @@ if __name__ == "__main__":
     # Support both stdio (default) and HTTP transport modes
     # Set SPELLBOOK_MCP_TRANSPORT=streamable-http to run as HTTP server
     transport = os.environ.get("SPELLBOOK_MCP_TRANSPORT", "stdio")
+
+    # Start update watcher only if auto-update is not explicitly disabled
+    _auto_update_enabled = config_get("auto_update")
+    if _auto_update_enabled is not False:  # Default to enabled (None or True)
+        _update_watcher = UpdateWatcher(
+            str(get_spellbook_dir()),
+            transport=transport,
+            check_interval=float(
+                os.environ.get("SPELLBOOK_UPDATE_INTERVAL", "86400")
+            ),
+        )
+        _update_watcher.start()
 
     if transport == "streamable-http":
         host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")

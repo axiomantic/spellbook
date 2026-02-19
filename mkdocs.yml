@@ -109,6 +109,7 @@ nav:
       - skills/using-lsp-tools.md
       - skills/managing-artifacts.md
       - skills/security-auditing.md
+      - skills/generating-diagrams.md
     - Meta Skills:
       - skills/using-skills.md
       - skills/writing-skills.md

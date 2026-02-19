@@ -1,5 +1,6 @@
 """Configuration management and session initialization for spellbook."""
 
+import fcntl
 import json
 import logging
 import os
@@ -24,6 +25,9 @@ SESSION_TTL_DAYS = 3
 
 # Default session ID for backward compatibility (stdio single-session mode)
 DEFAULT_SESSION_ID = "__default__"
+
+# File-level lock for thread-safe config access
+CONFIG_LOCK_PATH = Path.home() / ".config" / "spellbook" / "config.lock"
 
 
 def _cleanup_stale_sessions() -> None:
@@ -133,7 +137,11 @@ def get_spellbook_dir() -> Path:
 
 
 def config_get(key: str) -> Optional[Any]:
-    """Read a config value from spellbook.json.
+    """Read a config value from spellbook.json with file-level locking.
+
+    Uses fcntl.flock(LOCK_SH) for thread-safe and cross-process-safe reads.
+    Falls back to unlocked read if lock acquisition fails (preserves existing
+    error contract: returns None on failure).
 
     Args:
         key: The config key to read
@@ -144,18 +152,38 @@ def config_get(key: str) -> Optional[Any]:
     config_path = get_config_path()
     if not config_path.exists():
         return None
+
+    fd = None
+    try:
+        CONFIG_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(str(CONFIG_LOCK_PATH), os.O_CREAT | os.O_RDWR)
+        fcntl.flock(fd, fcntl.LOCK_SH)
+    except OSError as e:
+        logger.warning(f"Could not acquire config read lock: {e}. Falling back to unlocked read.")
+        # Fall through to unlocked read below
+
     try:
         config = json.loads(config_path.read_text())
         return config.get(key)
     except (json.JSONDecodeError, OSError):
         return None
+    finally:
+        if fd is not None:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+                os.close(fd)
+            except OSError:
+                pass
 
 
 def config_set(key: str, value: Any) -> dict:
-    """Write a config value to spellbook.json.
+    """Write a config value to spellbook.json with file-level locking.
 
+    Uses fcntl.flock(LOCK_EX) for thread-safe and cross-process-safe writes.
     Creates the config file and parent directories if they don't exist.
-    Preserves other config values (read-modify-write).
+    Preserves other config values (read-modify-write). Falls back to unlocked
+    write if lock acquisition fails (preserves existing error contract:
+    returns {"status": "ok", ...}).
 
     Args:
         key: The config key to set
@@ -166,24 +194,41 @@ def config_set(key: str, value: Any) -> dict:
     """
     config_path = get_config_path()
 
-    # Read existing config or start fresh
-    config = {}
-    if config_path.exists():
-        try:
-            config = json.loads(config_path.read_text())
-        except (json.JSONDecodeError, OSError):
-            config = {}
+    fd = None
+    try:
+        CONFIG_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(str(CONFIG_LOCK_PATH), os.O_CREAT | os.O_RDWR)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+    except OSError as e:
+        logger.warning(f"Could not acquire config write lock: {e}. Falling back to unlocked write.")
+        # Fall through to unlocked write below
 
-    # Update the value
-    config[key] = value
+    try:
+        # Read existing config or start fresh
+        config = {}
+        if config_path.exists():
+            try:
+                config = json.loads(config_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                config = {}
 
-    # Ensure parent directory exists
-    config_path.parent.mkdir(parents=True, exist_ok=True)
+        # Update the value
+        config[key] = value
 
-    # Write back
-    config_path.write_text(json.dumps(config, indent=2) + "\n")
+        # Ensure parent directory exists
+        config_path.parent.mkdir(parents=True, exist_ok=True)
 
-    return {"status": "ok", "config": config}
+        # Write back
+        config_path.write_text(json.dumps(config, indent=2) + "\n")
+
+        return {"status": "ok", "config": config}
+    finally:
+        if fd is not None:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+                os.close(fd)
+            except OSError:
+                pass
 
 
 def session_mode_set(
@@ -261,6 +306,82 @@ def random_line(file_path: Path) -> str:
         return random.choice(lines) if lines else ""
     except OSError:
         return ""
+
+
+def _is_recent(iso_timestamp: str, hours: float = 24.0) -> bool:
+    """Check if an ISO timestamp is within the given hours from now.
+
+    Args:
+        iso_timestamp: ISO format timestamp string
+        hours: Maximum age in hours
+
+    Returns:
+        True if the timestamp is within the time window
+    """
+    try:
+        ts = datetime.fromisoformat(iso_timestamp)
+        age = (datetime.now() - ts).total_seconds() / 3600.0
+        return age < hours
+    except (ValueError, TypeError):
+        return False
+
+
+def _add_update_notification(result: dict) -> None:
+    """Add update notification to session_init result if applicable.
+
+    Checks config for recent auto-update, pending major update, available
+    update, and paused state. Adds an ``update_notification`` key to result.
+
+    **Intentional write side-effect:** When a recent auto-update notification
+    is shown, this function clears ``last_auto_update`` via ``config_set()``
+    to implement show-once behavior. This is acceptable for stdio mode where
+    one session equals one server process. For HTTP daemon mode (multiple
+    concurrent sessions), this is a known limitation: the first session to
+    call ``session_init`` will consume the notification.
+
+    Args:
+        result: The session_init result dict to modify in-place
+    """
+    last_auto_update = config_get("last_auto_update")
+    pending_major = config_get("pending_major_update")
+    available = config_get("available_update")
+
+    if last_auto_update:
+        applied_at = last_auto_update.get("applied_at", "")
+        if _is_recent(applied_at, hours=24):
+            result["update_notification"] = {
+                "type": "applied",
+                "version": last_auto_update["version"],
+                "from_version": last_auto_update.get("from_version"),
+            }
+            # Clear after showing once
+            config_set("last_auto_update", None)
+
+    elif pending_major:
+        result["update_notification"] = {
+            "type": "major_pending",
+            "version": pending_major["version"],
+            "message": (
+                f"Major update {pending_major['version']} available. "
+                "Run check_for_updates with auto_apply=True to install."
+            ),
+        }
+
+    elif available:
+        result["update_notification"] = {
+            "type": "available",
+            "version": available["version"],
+        }
+
+    # Always surface paused state if set
+    if config_get("auto_update_paused"):
+        result.setdefault("update_notification", {})
+        result["update_notification"]["paused"] = True
+        result["update_notification"]["paused_message"] = (
+            "Auto-update is paused (after rollback). "
+            "Run check_for_updates(auto_apply=True) or set "
+            "auto_update_paused=False to resume."
+        )
 
 
 def session_init(
@@ -369,6 +490,9 @@ def session_init(
                 "context": context,
                 "undertow": undertow,
             }
+
+    # Add update notification (if any)
+    _add_update_notification(result)
 
     # Add resume fields
     result.update(_get_resume_context(continuation_message, project_path))
