@@ -5,14 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.10] - 2026-02-18
+## [0.9.10] - 2026-02-19
 
 ### Changed
+- **CLAUDE.spellbook.md slimmed ~38%** (601 -> 372 lines, ~3,500 token savings per session)
+  - Removed duplicate Skill Execution section (was stated twice)
+  - Condensed Code Quality, Intent Interpretation, Subagent Dispatch Enforcement, Compacting, No Assumptions elaboration, and YOLO Mode sections to stubs referencing existing skills/commands
+  - Moved Context Minimization Protocol and Subagent Dispatch Template to `dispatching-parallel-agents` skill
+  - Moved Branch-Relative Documentation to `finishing-a-development-branch` skill
+  - Removed File Reading Protocol detail (already in `smart-reading` skill)
+  - Compressed all 49 Skill Registry descriptions from 20-60 words to 8-15 words each
 - **resolving-merge-conflicts skill v1.1.0** - Strengthened synthesis mandate with three improvements:
   - Added "Why Synthesis Matters" section with emotional stakes framing (picking ours/theirs = declaring the other developer's work worthless)
   - Added concrete before/after synthesis example showing rate limiting + sanitization conflict with WRONG (ours), WRONG (theirs), and CORRECT (synthesis) resolutions
   - Strengthened self-check with Mechanical Synthesis Test: describe each resolution in one sentence; if it contains "kept X's version" or "went with ours/theirs", you are selecting, not synthesizing
 - **merging-worktrees skill** - Added Pre-Conflict Gate requiring `resolving-merge-conflicts` skill to be loaded in subagent context before any conflict resolution, preventing LLM base-model bias toward ours/theirs selection
+- **dispatching-parallel-agents skill** - Added Context Minimization Protocol and Subagent Dispatch Template sections (moved from CLAUDE.spellbook.md)
+- **finishing-a-development-branch skill** - Added Branch-Relative Documentation section (moved from CLAUDE.spellbook.md)
+- **writing-skills skill** - Added "Writing Effective Skill Descriptions" section with description anatomy, trigger phrase guidance, model descriptions, anti-patterns table, and overlap disambiguation guidelines
+- **24 skill descriptions improved** - Added natural-language trigger phrases, anti-triggers, and disambiguation to skills rated NEEDS_IMPROVEMENT in trigger adequacy audit: test-driven-development, debugging, fixing-tests, code-review, requesting-code-review, writing-plans, brainstorming, devils-advocate, reviewing-design-docs, gathering-requirements, dehallucination, instruction-engineering, using-git-worktrees, merging-worktrees, dispatching-parallel-agents, smart-reading, using-skills, using-lsp-tools, documenting-tools, tarot-mode, distilling-prs, advanced-code-review, auditing-green-mirage, async-await-patterns
 
 ## [0.9.9] - 2026-02-12
 

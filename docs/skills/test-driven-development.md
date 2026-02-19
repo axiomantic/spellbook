@@ -1,6 +1,6 @@
 # test-driven-development
 
-Use when implementing any feature or bugfix, before writing implementation code
+Use when user explicitly requests test-driven development, says 'TDD', 'write tests first', 'red green refactor', 'test-first', or 'start with the test'. Also invoked as a sub-skill by implementing-features and executing-plans for each implementation task. NOT a replacement for implementing-features for full feature work.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

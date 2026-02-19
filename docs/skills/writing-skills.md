@@ -126,6 +126,94 @@ description: Use when executing implementation plans with independent tasks
 - Synonyms: "timeout/hang/freeze", "cleanup/teardown/afterEach"
 - Tools: Actual commands, library names, file types
 
+## Writing Effective Skill Descriptions
+
+The `description` field in SKILL.md frontmatter is the primary mechanism for matching user requests to skills. The LLM reads all descriptions and selects the best match. A poorly written description means the skill never fires when it should, or fires when it shouldn't.
+
+### Description Anatomy
+
+A good description has four parts:
+
+1. **Situation** (1 sentence): When this skill applies
+2. **Trigger phrases** (3-10 phrases): Natural language that users actually say
+3. **Anti-triggers** (optional): When NOT to use this skill, to disambiguate from overlapping skills
+4. **Invocation note** (optional): If primarily invoked by other skills, say so
+
+### The Golden Rule: User Phrasings, Not Abstract Situations
+
+<CRITICAL>
+Descriptions must contain the words users actually say, not abstract descriptions of situations.
+
+BAD: "Use when debugging bugs or unexpected behavior"
+GOOD: "Use when debugging bugs, test failures, or unexpected behavior. Triggers: 'why isn't this working', 'this is broken', 'getting an error', 'stopped working', 'regression', 'crash', 'flaky test', or when user pastes a stack trace."
+
+The BAD version describes the situation abstractly. The GOOD version includes the actual words users type when they need debugging help. Users say "this is broken" far more often than "I need to debug."
+</CRITICAL>
+
+### Checklist for Every Description
+
+- [ ] **Contains 3-10 trigger phrases** in quotes that match how users actually talk
+- [ ] **Leads with user intent**, not implementation details or internal workflow jargon
+- [ ] **Disambiguates from overlapping skills** with "NOT for" or "For X instead, use Y"
+- [ ] **Notes invocation path** if primarily called by other skills ("Also invoked by X")
+- [ ] **Avoids being too broad** ("Use when writing code" matches everything) or too narrow ("Use only during Phase 2.1 of the Forged workflow")
+- [ ] **No internal jargon** that only spellbook developers would know
+
+### Model Descriptions (from the library)
+
+**Best: `verifying-hunches`** -- Comprehensive trigger list drawn from natural speech:
+```
+"Use when about to claim discovery during debugging. Triggers: 'I found', 'this is the issue',
+'root cause', 'smoking gun', 'aha', 'got it', 'the fix is', 'should fix', 'this will fix'.
+Also invoked by debugging before any root cause claim."
+```
+Why it works: 20+ trigger phrases covering both excited discovery ("aha!", "got it") and confident claims ("root cause", "the fix is"). Notes auto-invocation path. Narrow enough to avoid false positives.
+
+**Best: `implementing-features`** -- Clear scope with anti-triggers:
+```
+"Use when building, creating, or adding functionality. Triggers: 'implement X', 'build Y',
+'add feature Z', 'Would be great to...', 'I want to...', 'We need...'.
+NOT for: bug fixes, pure research, or questions about existing code."
+```
+Why it works: Covers both direct commands ("implement X") and wish-phrasing ("Would be great to..."). The "NOT for" section prevents false matches on debugging or research requests.
+
+**Best: `isolated-testing`** -- Behavioral triggers beyond just words:
+```
+"Use when testing theories during debugging, or when chaos is detected.
+Triggers: 'let me try', 'maybe if I', 'quick test', rapid context switching,
+multiple changes without isolation."
+```
+Why it works: Includes behavioral patterns (rapid context switching, multiple changes without isolation) that the LLM can detect in its own actions, not just user text.
+
+### Common Description Anti-Patterns
+
+| Anti-Pattern | Example | Problem |
+|-------------|---------|---------|
+| **Abstract-only** | "Use when reviewing code" | No trigger phrases. "Review code" matches but "look at my changes" doesn't. |
+| **Jargon-first** | "Use when roundtable returns ITERATE verdict" | Users never say this. Internal workflow trigger with no user-facing phrases. |
+| **Too broad** | "Use when writing or modifying code" | Matches every coding task. Will fire constantly as a false positive. |
+| **Too narrow** | "Use before design phase only" | Limits to one temporal moment when the skill is useful at many stages. |
+| **Implementation detail** | "Modes: --self, --feedback, --give" | Users don't think in flags. They think "review my code" or "I got feedback." |
+| **Missing disambiguation** | "Use for code review" | Which of the 4 review skills? No "NOT for" or "instead use" guidance. |
+
+### System-Triggered vs. User-Triggered Skills
+
+Some skills are invoked by system events or other skills, not by users:
+- **System-only** (e.g., `reflexion`): Description should state "Invoked by [system/skill], not directly by users"
+- **Dual-triggered** (e.g., `tarot-mode`): Description should cover both the system trigger AND user-facing triggers
+- **User-only** (e.g., `debugging`): Description should focus entirely on user phrasings
+
+### The Overlap Problem
+
+When multiple skills cover similar territory (e.g., 4 review skills), each description MUST include:
+1. What makes THIS skill the right choice
+2. When to use a DIFFERENT skill instead
+
+Example for a review skill family:
+- `code-review`: "For focused single-pass review. NOT for: heavy multi-phase analysis (use advanced-code-review) or PR triage (use distilling-prs)."
+- `advanced-code-review`: "For thorough 5-phase analysis with historical context. NOT for: quick review (use code-review) or PR categorization (use distilling-prs)."
+- `distilling-prs`: "For triaging and categorizing PR changes. NOT for: deep code analysis (use advanced-code-review)."
+
 ## Iron Law
 
 ```

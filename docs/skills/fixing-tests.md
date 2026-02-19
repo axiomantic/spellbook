@@ -1,6 +1,6 @@
 # fixing-tests
 
-Use when tests are failing, test quality issues were identified, or user wants to fix/improve specific tests
+Use when tests themselves are broken, test quality is poor, or user wants to fix/improve tests. Triggers: 'test is broken', 'test is wrong', 'test is flaky', 'make tests pass', 'tests need updating', 'green mirage', 'tests pass but shouldn't', 'audit report findings', 'run and fix tests'. Three modes: fix specific tests, process green-mirage audit findings, and run-then-fix. NOT for: bugs in production code caught by correct tests (use debugging).
 
 ## Skill Content
 

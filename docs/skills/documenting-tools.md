@@ -1,6 +1,6 @@
 # documenting-tools
 
-Use when writing MCP tools, API endpoints, CLI commands, or any function that an LLM will invoke. Triggers: 'document this tool', 'write tool docs', 'MCP tool', 'API documentation'.
+Use when writing MCP tools, API endpoints, CLI commands, or any function that an LLM will invoke. Also use when LLMs misuse tools due to poor descriptions. Triggers: 'document this tool', 'write tool docs', 'MCP tool', 'tool description quality', 'model keeps calling this wrong', 'improve tool description'. For human-facing API docs, standard documentation practices apply instead.
 
 ## Skill Content
 

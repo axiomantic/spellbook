@@ -1,6 +1,6 @@
 ---
 name: using-skills
-description: "Use when starting any conversation"
+description: "Use when starting any conversation to initialize skill matching, or when unsure which skill applies to a request. Handles skill routing, rationalization prevention, and session initialization. Primarily loaded via session init, not by direct user request."
 ---
 
 <ROLE>

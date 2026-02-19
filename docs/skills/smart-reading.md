@@ -1,6 +1,6 @@
 # smart-reading
 
-Use when reading files or command output of unknown size to avoid blind truncation and context loss
+Use when reading files or command output of unknown size to avoid blind truncation and context loss. Triggers: 'this file is huge', 'output was cut off', 'large file', 'how should I read this', or when about to use head/tail to truncate output. Also loaded as behavioral protocol for all file reading operations.
 
 ## Skill Content
 

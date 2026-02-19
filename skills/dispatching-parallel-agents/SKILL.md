@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks
+description: "Use when deciding whether to dispatch subagents, when to stay in main context, when facing 2+ independent parallel tasks, or when needing subagent dispatch templates and context minimization guidance. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'subagent vs main context', 'dispatch template', 'context minimization'."
 ---
 
 # Dispatching Parallel Agents
@@ -306,6 +306,124 @@ Return: Summary of what you found and what you fixed.
 **Integration:** All fixes independent, zero conflicts, full suite green
 
 **Gain:** 3 problems solved in time of 1
+
+---
+
+## Context Minimization Protocol
+
+<CRITICAL>
+When orchestrating multi-step workflows (especially via skills like implementing-features, executing-plans, etc.), you are an ORCHESTRATOR, not an IMPLEMENTER.
+
+Your job is to COORDINATE subagents, not to DO the work yourself.
+Every line of code you read or write in main context is WASTED TOKENS.
+</CRITICAL>
+
+### FORBIDDEN in Main Context
+
+| Action               | Why Forbidden                      | Correct Approach             |
+| -------------------- | ---------------------------------- | ---------------------------- |
+| Reading source files | Wastes main context tokens         | Dispatch explore subagent    |
+| Writing/editing code | Implementation belongs in subagent | Dispatch TDD subagent        |
+| Running tests        | Test output bloats context         | Subagent runs and summarizes |
+| Analyzing errors     | Debugging is subagent work         | Dispatch debugging subagent  |
+| Searching codebase   | Research is subagent work          | Dispatch explore subagent    |
+
+### ALLOWED in Main Context
+
+- Dispatching subagents (Task tool)
+- Reading subagent result summaries
+- Updating todo list (TodoWrite tool)
+- Phase transitions and gate checks
+- User communication (questions, status updates)
+- Reading/writing plan documents (design docs, impl plans)
+
+### Self-Check Before Any Action
+
+Before EVERY action, ask yourself:
+
+```
+Am I about to read a source file? → STOP. Dispatch subagent.
+Am I about to edit code? → STOP. Dispatch subagent.
+Am I about to run a command? → STOP. Dispatch subagent.
+Am I about to analyze output? → STOP. Dispatch subagent.
+```
+
+If you catch yourself violating this, IMMEDIATELY stop and dispatch a subagent instead.
+
+---
+
+## Subagent Dispatch Template
+
+<CRITICAL>
+When dispatching subagents that should invoke skills, use this EXACT pattern. No variations.
+
+**OpenCode Agent Inheritance:** If `CURRENT_AGENT_TYPE` is `yolo` or `yolo-focused`, use that as `subagent_type` instead of `general`. This ensures subagents inherit autonomous permissions.
+</CRITICAL>
+
+```
+Task(
+  description: "[3-5 word summary]",
+  subagent_type: "[CURRENT_AGENT_TYPE or 'general']",
+  prompt: """
+First, invoke the [SKILL-NAME] skill using the Skill tool.
+Then follow its complete workflow.
+
+## Context for the Skill
+
+[ONLY provide context - file paths, requirements, constraints]
+[DO NOT provide implementation instructions]
+[DO NOT duplicate what the skill already knows]
+"""
+)
+```
+
+**Agent Type Selection:**
+| Parent Agent | Subagent Type | Notes |
+|--------------|---------------|-------|
+| `yolo` | `yolo` | Inherit autonomous permissions |
+| `yolo-focused` | `yolo-focused` | Inherit focused autonomous permissions |
+| `general` or unknown | `general` | Default behavior |
+| Any (exploration only) | `explore` | Read-only exploration tasks |
+
+### WRONG vs RIGHT Examples
+
+**WRONG - Doing work in main context:**
+
+```
+Let me read the config file to understand the structure...
+[reads file]
+Now I'll update line 45 to add the new field...
+[edits file]
+```
+
+**RIGHT - Delegating to subagent:**
+
+```
+Task(description: "Implement config field", prompt: "Invoke test-driven-development skill. Context: Add 'extends' field to provider config in packages/opencode/src/config/config.ts")
+[waits for subagent result]
+Subagent completed successfully. Proceeding to next task.
+```
+
+**WRONG - Instructions in subagent prompt:**
+
+```
+prompt: "Use TDD skill. First write a test that checks the extends field exists. Then implement by adding a z.string().optional() field after line 865. Make sure to update the description..."
+```
+
+**RIGHT - Context only in subagent prompt:**
+
+```
+prompt: "Invoke test-driven-development skill. Context: Add 'extends' field to Config.Provider schema. Location: packages/opencode/src/config/config.ts around line 865."
+```
+
+### Subagent Prompt Length Verification
+
+Before dispatching ANY subagent:
+
+1. Count lines in subagent prompt
+2. Estimate tokens: `lines * 7`
+3. If > 200 lines and no valid justification: compress before dispatch
+4. Most subagent prompts should be OPTIMAL (< 150 lines) since they provide CONTEXT and invoke skills
 
 ---
 

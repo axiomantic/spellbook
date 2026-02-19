@@ -1,6 +1,6 @@
 ---
 name: async-await-patterns
-description: Use when writing JavaScript or TypeScript code with asynchronous operations
+description: "Use when writing JavaScript or TypeScript code with asynchronous operations, fixing promise-related bugs, or converting callback/promise patterns to async/await. Triggers: 'promise chain', 'unhandled rejection', 'race condition in JS', 'callback hell', 'Promise.all', 'sequential vs parallel async', 'missing await'. Enforces async/await discipline over raw promises."
 ---
 
 <ROLE>
