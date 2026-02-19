@@ -25,6 +25,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **writing-skills skill** - Added "Writing Effective Skill Descriptions" section with description anatomy, trigger phrase guidance, model descriptions, anti-patterns table, and overlap disambiguation guidelines
 - **24 skill descriptions improved** - Added natural-language trigger phrases, anti-triggers, and disambiguation to skills rated NEEDS_IMPROVEMENT in trigger adequacy audit: test-driven-development, debugging, fixing-tests, code-review, requesting-code-review, writing-plans, brainstorming, devils-advocate, reviewing-design-docs, gathering-requirements, dehallucination, instruction-engineering, using-git-worktrees, merging-worktrees, dispatching-parallel-agents, smart-reading, using-skills, using-lsp-tools, documenting-tools, tarot-mode, distilling-prs, advanced-code-review, auditing-green-mirage, async-await-patterns
 
+### Added
+- **Security hardening: defense-in-depth** - Comprehensive security layer for prompt injection, privilege escalation, and data exfiltration protection
+  - Runtime input/output checking via `spellbook_mcp/security/` module (rules engine, scanner, tools)
+  - 7 Claude Code hooks: `bash-gate.sh`, `spawn-guard.sh`, `state-sanitize.sh`, `audit-log.sh`, `canary-check.sh` + OpenCode `opencode-plugin.ts`
+  - Gemini CLI security policy (`hooks/gemini-policy.toml`)
+  - Trust registry with security modes (standard/elevated/paranoid)
+  - Canary tokens for exfiltration detection
+  - Honeypot tools to trap injection attempts
+  - Workflow state validation with hostile pattern detection in `resume.py`
+  - Supply chain scanner (`scripts/scan_supply_chain.py`)
+  - Pre-commit security changeset scanning hook
+  - **security-auditing skill** for security review workflows
+  - Security sections added to CLAUDE.spellbook.md (output sanitization, injection awareness, least privilege, content trust boundaries, spawn protection, workflow state integrity, subagent trust tiers)
+  - Multi-platform installer support for hooks (Claude Code, OpenCode, Gemini)
+  - 20+ test files with ~1,000 security-specific tests
+
 ## [0.9.9] - 2026-02-12
 
 ### Added
