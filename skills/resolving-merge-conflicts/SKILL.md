@@ -219,7 +219,7 @@ Before completing resolution:
 
 **Mechanical Synthesis Test:** For each resolved conflict, describe your resolution in one sentence. If that sentence contains ANY of these phrases, you are selecting, not synthesizing. Go back and rewrite:
 - "kept X's version"
-- "used Y's approach"
+- "preferred Y's approach"
 - "went with ours/theirs"
 - "adopted the [branch] implementation"
 - "chose the [simpler/cleaner/newer] version"

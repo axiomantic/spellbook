@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.10] - 2026-02-18
 
 ### Changed
-- **resolving-merge-conflicts skill v1.1.0** - Strengthened synthesis mandate with four improvements:
+- **resolving-merge-conflicts skill v1.1.0** - Strengthened synthesis mandate with three improvements:
   - Added "Why Synthesis Matters" section with emotional stakes framing (picking ours/theirs = declaring the other developer's work worthless)
   - Added concrete before/after synthesis example showing rate limiting + sanitization conflict with WRONG (ours), WRONG (theirs), and CORRECT (synthesis) resolutions
   - Strengthened self-check with Mechanical Synthesis Test: describe each resolution in one sentence; if it contains "kept X's version" or "went with ours/theirs", you are selecting, not synthesizing
