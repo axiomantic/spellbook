@@ -666,7 +666,7 @@ def check_codex_mcp(verbose: bool = False) -> HealthCheckResult:
 
     Codex uses config.toml for MCP configuration with TOML format:
     [mcp_servers.spellbook]
-    command = "python3"
+    command = "python3"  # or sys.executable on Windows
     args = ["/path/to/server.py"]
     """
     result = HealthCheckResult(healthy=False, platform="codex")

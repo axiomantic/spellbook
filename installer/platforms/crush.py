@@ -89,7 +89,7 @@ def _update_crush_config(
     if "spellbook" in config["mcp"]:
         # Update existing config
         config["mcp"]["spellbook"]["type"] = "stdio"
-        config["mcp"]["spellbook"]["command"] = "python3"
+        config["mcp"]["spellbook"]["command"] = sys.executable
         config["mcp"]["spellbook"]["args"] = [str(server_path)]
         actions.append("updated MCP server")
     else:

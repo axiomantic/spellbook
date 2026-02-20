@@ -371,9 +371,9 @@ class CrossPlatformLock:
         lock_path: Path to the lock file.
         stale_seconds: Seconds after which a lock is considered stale.
         shared: If True, acquire a shared (read) lock. Only effective on Unix.
-        blocking: If True, context manager retries until lock is acquired or
-            timeout is reached. If False, raises LockHeldError immediately.
-        timeout: Maximum seconds to wait when blocking (default 10.0).
+        blocking: If True, acquire() blocks until lock is available using
+            the OS native blocking lock (fcntl.flock on Unix, msvcrt.LK_LOCK
+            on Windows). If False, acquire() returns immediately.
     """
 
     def __init__(
@@ -382,13 +382,11 @@ class CrossPlatformLock:
         stale_seconds: int = 3600,
         shared: bool = False,
         blocking: bool = False,
-        timeout: float = 10.0,
     ):
         self.lock_path = lock_path
         self.stale_seconds = stale_seconds
         self.shared = shared
         self.blocking = blocking
-        self.timeout = timeout
         self._fd: Optional[int] = None
 
     def acquire(self) -> bool:

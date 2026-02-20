@@ -42,7 +42,7 @@ jobs:
   python-tests:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
@@ -62,3 +62,6 @@ jobs:
 
     - name: Run Python tests
       run: uv run pytest tests/ -v --tb=short -x
+
+    - name: Verify installer
+      run: uv run install.py --dry-run
