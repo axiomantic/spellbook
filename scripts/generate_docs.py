@@ -17,6 +17,7 @@ SKILLS_DIR = REPO_ROOT / "skills"
 COMMANDS_DIR = REPO_ROOT / "commands"
 AGENTS_DIR = REPO_ROOT / "agents"
 DOCS_DIR = REPO_ROOT / "docs"
+DIAGRAMS_DIR = DOCS_DIR / "diagrams"
 
 # Skills that came from superpowers
 SUPERPOWERS_SKILLS = {
@@ -72,6 +73,32 @@ def extract_frontmatter(content: str) -> tuple[dict, str]:
     return frontmatter, parts[2].strip()
 
 
+def get_diagram_section(item_type: str, item_name: str) -> str:
+    """Return a diagram section if a diagram file exists for this item.
+
+    Args:
+        item_type: 'skills' or 'commands'
+        item_name: The item name (e.g., 'implementing-features')
+
+    Returns:
+        Markdown section with diagram content, or empty string if no diagram exists.
+    """
+    diagram_file = DIAGRAMS_DIR / item_type / f"{item_name}.md"
+    if not diagram_file.exists():
+        return ""
+
+    content = diagram_file.read_text()
+
+    # Strip the metadata comment line (first line starting with <!-- diagram-meta:)
+    lines = content.split("\n", 1)
+    if lines and lines[0].startswith("<!-- diagram-meta:"):
+        body = lines[1] if len(lines) > 1 else ""
+    else:
+        body = content
+
+    return f"\n## Workflow Diagram\n\n{body.strip()}\n\n"
+
+
 def generate_skill_doc(skill_dir: Path) -> str:
     """Generate documentation page for a skill."""
     skill_name = skill_dir.name
@@ -99,9 +126,15 @@ def generate_skill_doc(skill_dir: Path) -> str:
         parts.append(f"\n{description.rstrip()}\n")
     if attribution:
         parts.append(f"\n{attribution}")
-        parts.append("## Skill Content\n\n")
-    else:
-        parts.append("\n## Skill Content\n\n")
+
+    # Include diagram if available
+    diagram = get_diagram_section("skills", skill_name)
+    if diagram:
+        # Strip leading \n when preceded by attribution (which ends with \n\n)
+        # to avoid double blank lines that the markdown linter normalizes away
+        parts.append(diagram.lstrip("\n") if attribution else diagram)
+
+    parts.append("## Skill Content\n\n")
     parts.append("``````````markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
@@ -128,9 +161,13 @@ def generate_command_doc(command_file: Path) -> str:
     parts = [f"# /{command_name}\n"]
     if attribution:
         parts.append(f"\n{attribution}")
-        parts.append("## Command Content\n\n")
-    else:
-        parts.append("\n## Command Content\n\n")
+
+    # Include diagram if available
+    diagram = get_diagram_section("commands", command_name)
+    if diagram:
+        parts.append(diagram.lstrip("\n") if attribution else diagram)
+
+    parts.append("## Command Content\n\n")
     parts.append("``````````markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
@@ -157,9 +194,13 @@ def generate_agent_doc(agent_file: Path) -> str:
     parts = [f"# {agent_name}\n"]
     if attribution:
         parts.append(f"\n{attribution}")
-        parts.append("## Agent Content\n\n")
-    else:
-        parts.append("\n## Agent Content\n\n")
+
+    # Include diagram if available
+    diagram = get_diagram_section("agents", agent_name)
+    if diagram:
+        parts.append(diagram.lstrip("\n") if attribution else diagram)
+
+    parts.append("## Agent Content\n\n")
     parts.append("``````````markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
