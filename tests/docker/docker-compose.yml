@@ -1,0 +1,11 @@
+services:
+  integration-tests:
+    build:
+      context: ../..
+      dockerfile: tests/docker/Dockerfile
+    environment:
+      - SPELLBOOK_TEST=1
+      - HOME=/tmp/test-home
+    volumes:
+      - ../..:/app
+    working_dir: /app

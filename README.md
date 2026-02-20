@@ -35,8 +35,8 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (49 total)](#skills-49-total)
-  - [Commands (77 total)](#commands-77-total)
+  - [Skills (52 total)](#skills-52-total)
+  - [Commands (80 total)](#commands-80-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -81,7 +81,7 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (49 total)
+### Skills (52 total)
 
 Reusable workflows for structured development:
 
@@ -91,7 +91,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [security-auditing] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [security-auditing], [generating-diagrams] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage], [documenting-tools] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
@@ -123,6 +123,7 @@ Reusable workflows for structured development:
 [using-lsp-tools]: https://axiomantic.github.io/spellbook/latest/skills/using-lsp-tools/
 [managing-artifacts]: https://axiomantic.github.io/spellbook/latest/skills/managing-artifacts/
 [security-auditing]: https://axiomantic.github.io/spellbook/latest/skills/security-auditing/
+[generating-diagrams]: https://axiomantic.github.io/spellbook/latest/skills/generating-diagrams/
 [code-review]: https://axiomantic.github.io/spellbook/latest/skills/code-review/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
@@ -149,7 +150,7 @@ Reusable workflows for structured development:
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 [deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
 
-### Commands (77 total)
+### Commands (80 total)
 
 | Command | Description |
 |---------|-------------|

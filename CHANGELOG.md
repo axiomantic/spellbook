@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.11] - 2026-02-19
+
+### Added
+- **generating-diagrams skill** - New skill for creating Mermaid and Graphviz DOT workflow diagrams with source-traced nodes
+- **Diagram freshness system** - SHA256 hash-based validation for keeping diagrams in sync with source files
+  - `check_diagram_freshness.py`: pre-commit hook validates diagram hashes against source content
+  - `generate_diagrams.py`: manual generation script using Claude headless invocation
+  - Tiered coverage: mandatory for multi-phase skills/commands, optional for simple ones
+  - 139 Mermaid workflow diagrams generated (52 skills, 80 commands, 7 agents)
+  - Diagrams embedded in doc pages via `generate_docs.py` updates
+- **Auto-update system** - Two-phase update architecture for spellbook installations
+  - Detection phase: read-only git fetch inside MCP server
+  - Application phase: subprocess running installer with git-based rollback
+  - Transport-aware scheduling: stdio checks on startup only, HTTP daemons check on startup + configurable interval
+  - Major version consent gate, lock file concurrency protection, session greeting notifications
+  - New MCP tools: `spellbook_update_check`, `spellbook_update_apply`, `spellbook_update_config`
+
+### Removed
+- **Skill registry from CLAUDE.spellbook.md** - Platforms discover skills directly via native mechanisms, making the embedded registry redundant. Simplified `generate_context.py` and `update_context_files.py`.
+
 ## [0.9.10] - 2026-02-19
 
 ### Changed
@@ -1008,7 +1028,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.9.11...HEAD
+[0.9.11]: https://github.com/axiomantic/spellbook/compare/v0.9.10...v0.9.11
+[0.9.10]: https://github.com/axiomantic/spellbook/compare/v0.9.9...v0.9.10
+[0.9.9]: https://github.com/axiomantic/spellbook/compare/v0.9.8...v0.9.9
+[0.9.8]: https://github.com/axiomantic/spellbook/compare/v0.9.7...v0.9.8
+[0.9.7]: https://github.com/axiomantic/spellbook/compare/v0.9.6...v0.9.7
+[0.9.6]: https://github.com/axiomantic/spellbook/compare/v0.9.5...v0.9.6
+[0.9.5]: https://github.com/axiomantic/spellbook/compare/v0.9.4...v0.9.5
+[0.9.4]: https://github.com/axiomantic/spellbook/compare/v0.9.3...v0.9.4
+[0.9.3]: https://github.com/axiomantic/spellbook/compare/v0.9.2...v0.9.3
+[0.9.2]: https://github.com/axiomantic/spellbook/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/axiomantic/spellbook/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/axiomantic/spellbook/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/axiomantic/spellbook/compare/v0.7.7...v0.8.0

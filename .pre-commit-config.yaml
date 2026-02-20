@@ -13,7 +13,7 @@ repos:
         entry: uv run scripts/generate_docs.py
         language: system
         pass_filenames: false
-        files: ^(skills/|commands/|agents/)
+        files: ^(skills/|commands/|agents/|docs/diagrams/)
 
       - id: check-docs-completeness
         name: Check documentation completeness
@@ -23,11 +23,18 @@ repos:
         always_run: true
 
       - id: update-context-files
-        name: Update AGENTS.spellbook.md
+        name: Update context files
         entry: python3 scripts/update_context_files.py
         language: system
         pass_filenames: false
         files: ^(skills/|commands/|agents/|CLAUDE\.spellbook\.md)
+
+      - id: check-diagram-freshness
+        name: Check diagram freshness
+        entry: python3 scripts/check_diagram_freshness.py
+        language: system
+        pass_filenames: false
+        files: ^(skills/|commands/|agents/|docs/diagrams/)
 
       - id: validate-schemas
         name: Validate skill/command/agent schemas

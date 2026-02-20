@@ -2,11 +2,15 @@
 """
 Pre-commit hook to update context files.
 
-CLAUDE.spellbook.md is the installable template that gets inserted into user 
+CLAUDE.spellbook.md is the installable template that gets inserted into user
 config directories for Claude, Codex, and OpenCode. Gemini uses native extensions.
 
-Regenerates context files and checks if they need updating.
-If files changed, updates them and exits with error so user can re-stage.
+Previously, this hook regenerated a skill registry section and appended it to
+CLAUDE.spellbook.md. The skill registry has been removed because platforms
+discover skills directly from the skills directory.
+
+This hook now verifies that CLAUDE.spellbook.md content is consistent with the
+output of generate_context.py (which passes content through unchanged).
 """
 import subprocess
 import sys
@@ -24,38 +28,23 @@ CONTEXT_FILES = [
 
 
 def get_template_content() -> str:
-    """Extract the template content from CLAUDE.spellbook.md, excluding the skill registry.
-    
-    The skill registry starts at '# Spellbook Skill Registry' and is regenerated each time.
-    """
+    """Read the template content from CLAUDE.spellbook.md."""
     if not CLAUDE_MD.exists():
         return ""
-    
-    content = CLAUDE_MD.read_text(encoding="utf-8")
-    
-    # Find and strip the skill registry section (it gets regenerated)
-    marker = "# Spellbook Skill Registry"
-    if marker in content:
-        idx = content.index(marker)
-        # Also strip the preceding '---' separator if present
-        content = content[:idx].rstrip()
-        if content.endswith("---"):
-            content = content[:-3].rstrip()
-    
-    return content
+
+    return CLAUDE_MD.read_text(encoding="utf-8")
 
 
 def generate_context(output_path: Path) -> str:
     """Generate context content using generate_context.py."""
-    # Get template content without the old skill registry
     template_content = get_template_content()
-    
+
     # Write to temp file for include
     import tempfile
     with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False, encoding='utf-8') as f:
         f.write(template_content)
         temp_path = f.name
-    
+
     try:
         cmd = [
             sys.executable,
