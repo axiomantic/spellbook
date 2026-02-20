@@ -44,11 +44,19 @@ def classify_version_bump(installed: str, available: str) -> Optional[str]:
         "patch" if only the third component increased,
         None if no upgrade is needed (same version or downgrade).
     """
-    def parse(v: str) -> tuple[int, ...]:
-        return tuple(int(x) for x in v.strip().split(".")[:3])
+    def parse(v: str) -> Optional[tuple[int, ...]]:
+        try:
+            parts = tuple(int(x) for x in v.strip().split(".")[:3])
+        except ValueError:
+            return None
+        # Pad to 3 components
+        return (parts + (0, 0, 0))[:3]
 
     inst = parse(installed)
     avail = parse(available)
+
+    if inst is None or avail is None:
+        return None
 
     if avail <= inst:
         return None
@@ -110,10 +118,18 @@ def acquire_install_lock(lock_path: Path) -> Optional[int]:
 
             if pid and not _pid_exists(pid):
                 # Stale lock (dead PID), break it
-                fcntl.flock(fd, fcntl.LOCK_EX)
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    os.close(fd)
+                    return None
             elif time.time() - timestamp > LOCK_STALE_SECONDS:
                 # Stale lock (too old), break it
-                fcntl.flock(fd, fcntl.LOCK_EX)
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    os.close(fd)
+                    return None
             else:
                 # Lock is held by a live process
                 os.close(fd)
@@ -394,6 +410,7 @@ def apply_update(
         )
         if sha_proc.returncode == 0:
             result["pre_update_sha"] = sha_proc.stdout.strip()
+            config_set("pre_update_sha", result["pre_update_sha"])
     except (subprocess.TimeoutExpired, OSError):
         pass  # Non-fatal; rollback just won't be available
 
@@ -404,6 +421,24 @@ def apply_update(
         return result
 
     try:
+        # Fetch remote refs before pull
+        try:
+            fetch_proc = subprocess.run(
+                ["git", "-C", str(spellbook_dir), "fetch", remote, branch],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if fetch_proc.returncode != 0:
+                result["error"] = f"git fetch failed: {fetch_proc.stderr.strip()}"
+                return result
+        except subprocess.TimeoutExpired:
+            result["error"] = "git fetch timed out (60s)"
+            return result
+        except OSError as e:
+            result["error"] = f"git fetch error: {e}"
+            return result
+
         # Git pull --ff-only
         try:
             pull_proc = subprocess.run(
@@ -425,6 +460,7 @@ def apply_update(
 
         # Run installer
         install_script = spellbook_dir / "install.py"
+        installer_error = None
         try:
             install_proc = subprocess.run(
                 ["uv", "run", str(install_script),
@@ -435,13 +471,27 @@ def apply_update(
                 cwd=str(spellbook_dir),
             )
             if install_proc.returncode != 0:
-                result["error"] = f"Installer failed: {install_proc.stderr.strip()}"
-                return result
+                installer_error = f"Installer failed: {install_proc.stderr.strip()}"
         except subprocess.TimeoutExpired:
-            result["error"] = "Installer timed out (120s)"
-            return result
+            installer_error = "Installer timed out (120s)"
         except OSError as e:
-            result["error"] = f"Installer error: {e}"
+            installer_error = f"Installer error: {e}"
+
+        if installer_error and result["pre_update_sha"]:
+            try:
+                subprocess.run(
+                    ["git", "-C", str(spellbook_dir), "reset", "--hard",
+                     result["pre_update_sha"]],
+                    capture_output=True, text=True, timeout=30,
+                )
+            except (subprocess.TimeoutExpired, OSError):
+                pass
+            result["error"] = (
+                f"{installer_error}. Rolled back git tree to {result['pre_update_sha']}."
+            )
+            return result
+        elif installer_error:
+            result["error"] = installer_error
             return result
 
         # Post-flight: read new version
@@ -452,7 +502,6 @@ def apply_update(
 
         # Store state in config
         config_set("last_update_version", result["new_version"])
-        config_set("pre_update_sha", result["pre_update_sha"])
         # Set last_auto_update so session greeting notification fires
         # (covers both the watcher path and the MCP tool path)
         config_set("last_auto_update", {
@@ -501,6 +550,10 @@ def rollback_update(
     pre_update_sha = config_get("pre_update_sha")
     if not pre_update_sha:
         result["error"] = "No pre_update_sha stored. Nothing to rollback."
+        return result
+
+    if not re.match(r"^[0-9a-f]{40}$", pre_update_sha):
+        result["error"] = f"Invalid pre_update_sha format: {pre_update_sha!r}"
         return result
 
     # Get expected branch
@@ -578,6 +631,7 @@ def rollback_update(
         # Clear update state
         config_set("pre_update_sha", None)
         config_set("last_auto_update", None)
+        config_set("available_update", None)
 
         result["success"] = True
         result["rolled_back_to"] = pre_update_sha

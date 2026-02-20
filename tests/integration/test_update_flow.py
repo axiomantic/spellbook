@@ -21,8 +21,12 @@ def mock_git_repo(tmp_path):
         "GIT_COMMITTER_EMAIL": "t@t.t",
     }
 
-    # Create "remote" bare repo
-    subprocess.run(["git", "init", "--bare", str(remote)], check=True, env=env)
+    # Create "remote" bare repo (use -c init.defaultBranch=main for portability)
+    subprocess.run(
+        ["git", "-c", "init.defaultBranch=main", "init", "--bare", str(remote)],
+        check=True,
+        env=env,
+    )
 
     # Clone to create local repo
     subprocess.run(["git", "clone", str(remote), str(repo)], check=True, env=env)

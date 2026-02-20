@@ -330,13 +330,13 @@ def apply_filters(
 def build_prompt(item: SourceItem) -> str:
     """Build the prompt for Claude headless diagram generation."""
     source_rel = item.source_path.relative_to(REPO_ROOT)
-    kind_label = "skill" if item.kind == "skill" else "command"
+    kind_label = item.kind  # "skill", "command", or "agent"
 
     return f"""You are generating a diagram for the {kind_label} "{item.name}".
 
 Follow the generating-diagrams skill workflow:
 
-1. **Phase 1 - Analysis**: Read the source file at `{item.source_path}`. Identify the subject type (process/workflow, dependencies, states, etc.), scope the traversal to the file and any commands/skills it references, and select Mermaid as the format (unless node count exceeds ~100, then decompose).
+1. **Phase 1 - Analysis**: Read the source file at `{source_rel}`. Identify the subject type (process/workflow, dependencies, states, etc.), scope the traversal to the file and any commands/skills it references, and select Mermaid as the format (unless node count exceeds ~100, then decompose).
 
 2. **Phase 2 - Content Extraction**: Perform systematic depth-first traversal of the source. Extract all decision points, phase transitions, subagent dispatches, skill/command invocations, quality gates, loop/retry logic, terminal conditions, and conditional branches. Verify completeness: no orphan nodes, all branches represented, no placeholders.
 
@@ -417,6 +417,13 @@ def generate_diagram(
             item=item,
             status="failed",
             message="Claude returned empty output",
+        )
+
+    if "```mermaid" not in diagram_content:
+        return GenerationResult(
+            item=item,
+            status="failed",
+            message="Claude output does not contain a ```mermaid code block",
         )
 
     # Build the output file with metadata header

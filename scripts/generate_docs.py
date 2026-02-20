@@ -6,7 +6,6 @@
 """
 Generate documentation pages from SKILL.md, command, and agent files.
 """
-import re
 import sys
 from pathlib import Path
 
@@ -96,10 +95,13 @@ def get_diagram_section(item_type: str, item_name: str) -> str:
     else:
         body = content
 
+    if not body.strip():
+        return ""
+
     return f"\n## Workflow Diagram\n\n{body.strip()}\n\n"
 
 
-def generate_skill_doc(skill_dir: Path) -> str:
+def generate_skill_doc(skill_dir: Path) -> str | None:
     """Generate documentation page for a skill."""
     skill_name = skill_dir.name
     skill_file = skill_dir / "SKILL.md"

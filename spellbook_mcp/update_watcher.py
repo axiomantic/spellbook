@@ -96,6 +96,7 @@ class UpdateWatcher(threading.Thread):
             self._last_check_time = time.time()
         except Exception as e:
             self._consecutive_failures += 1
+            config_set("update_check_failures", self._consecutive_failures)
             logger.warning(f"Update check failed ({self._consecutive_failures}): {e}")
 
         # stdio: check once and done
@@ -116,6 +117,7 @@ class UpdateWatcher(threading.Thread):
                 self._last_check_time = time.time()
             except Exception as e:
                 self._consecutive_failures += 1
+                config_set("update_check_failures", self._consecutive_failures)
                 logger.warning(
                     f"Update check failed ({self._consecutive_failures}/{self._max_failures}): {e}"
                 )
@@ -214,7 +216,8 @@ class UpdateWatcher(threading.Thread):
     def _detect_default_branch(self) -> str:
         """Detect the default branch from the remote.
 
-        Runs ``git remote show <remote>`` and parses the HEAD branch line.
+        Runs ``git remote show -n <remote>`` and parses the HEAD branch line.
+        The ``-n`` flag avoids contacting the network (uses cached info).
         Caches result in config. Falls back to "main" on failure.
 
         Returns:
@@ -222,7 +225,7 @@ class UpdateWatcher(threading.Thread):
         """
         try:
             result = subprocess.run(
-                ["git", "-C", str(self.spellbook_dir), "remote", "show", self.remote],
+                ["git", "-C", str(self.spellbook_dir), "remote", "show", "-n", self.remote],
                 capture_output=True,
                 text=True,
                 timeout=30,

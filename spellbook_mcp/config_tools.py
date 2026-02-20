@@ -6,6 +6,7 @@ import logging
 import os
 import random
 import sqlite3
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
@@ -218,8 +219,24 @@ def config_set(key: str, value: Any) -> dict:
         # Ensure parent directory exists
         config_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Write back
-        config_path.write_text(json.dumps(config, indent=2) + "\n")
+        # Write atomically: write to temp file in same directory, then rename
+        fd_tmp, tmp_path = tempfile.mkstemp(
+            dir=str(config_path.parent), suffix=".tmp"
+        )
+        fd_tmp_closed = False
+        try:
+            os.write(fd_tmp, (json.dumps(config, indent=2) + "\n").encode())
+            os.close(fd_tmp)
+            fd_tmp_closed = True
+            os.rename(tmp_path, str(config_path))
+        except BaseException:
+            if not fd_tmp_closed:
+                os.close(fd_tmp)
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
         return {"status": "ok", "config": config}
     finally:

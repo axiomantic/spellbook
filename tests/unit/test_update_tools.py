@@ -508,14 +508,14 @@ class TestRollbackUpdate:
              patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
              patch("spellbook_mcp.update_tools.config_set") as mock_config_set:
             mock_config_get.side_effect = lambda key: {
-                "pre_update_sha": "abc123def456",
+                "pre_update_sha": "abc123def456" + "0" * 28,
                 "auto_update_branch": "main",
             }.get(key)
 
             result = rollback_update(spellbook_dir, lock_path=lock_path)
 
         assert result["success"] is True
-        assert result["rolled_back_to"] == "abc123def456"
+        assert result["rolled_back_to"] == "abc123def456" + "0" * 28
         assert result["auto_update_paused"] is True
         assert result["error"] is None
 
@@ -553,7 +553,7 @@ class TestRollbackUpdate:
         with patch("spellbook_mcp.update_tools.subprocess.run", side_effect=mock_subprocess_run), \
              patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
             mock_config_get.side_effect = lambda key: {
-                "pre_update_sha": "abc123",
+                "pre_update_sha": "abc123" + "0" * 34,
                 "auto_update_branch": "main",
             }.get(key)
 

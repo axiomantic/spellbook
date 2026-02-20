@@ -35,8 +35,8 @@
 
 - [Quick Install](#quick-install)
 - [What's Included](#whats-included)
-  - [Skills (49 total)](#skills-49-total)
-  - [Commands (77 total)](#commands-77-total)
+  - [Skills (52 total)](#skills-52-total)
+  - [Commands (80 total)](#commands-80-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -81,7 +81,7 @@ See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/
 
 ## What's Included
 
-### Skills (49 total)
+### Skills (52 total)
 
 Reusable workflows for structured development:
 
@@ -150,7 +150,7 @@ Reusable workflows for structured development:
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 [deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
 
-### Commands (77 total)
+### Commands (80 total)
 
 | Command | Description |
 |---------|-------------|
