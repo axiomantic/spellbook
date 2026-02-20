@@ -1847,10 +1847,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -1881,6 +1881,34 @@
     
   
     security-auditing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
   
 
     
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6738,131 +6766,283 @@
 
 <h1 id="managing-artifacts">managing-artifacts<a class="headerlink" href="#managing-artifacts" title="Permanent link">&para;</a></h1>
 <p>Use when generating documents, reports, plans, audits, or when asked where to save files. Triggers on "save report", "write plan", "where should I put", "project-encoded path"</p>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-managing-artifacts">Diagram: managing-artifacts<a class="headerlink" href="#diagram-managing-artifacts" title="Permanent link">&para;</a></h1>
+<p>Artifact routing workflow that determines the correct storage location for generated files. Computes project-encoded paths, detects multi-contributor repos, and enforces the rule that generated artifacts never litter project directories.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Artifact to Write])
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    DetermineType[Determine Artifact Type]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    FindGitRoot{Git Repo Exists?}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    NoRepo[Use Fallback Path]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ComputeEncoded[Compute Project-Encoded Path]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    MultiContrib{Multi-Contributor?}
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    CheckUpstream[Check: upstream remote?]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    CheckAuthors[Check: multiple authors?]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    CheckContrib[Check: CONTRIBUTING.md?]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    CheckFork[Check: is fork?]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    IsCLAUDE{Is CLAUDE.md?}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    FallbackCLAUDE[Write to ~/.local/spellbook]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    SelectDir{Artifact Type?}
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    Plans[plans/ Directory]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    Audits[audits/ Directory]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    Reports[reports/ Directory]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Encyclopedia[docs/ Root]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    Distilled[distilled/ Directory]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    Logs[logs/ Directory]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    WriteFile[Write to Spellbook Path]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    VerifyGate{Written Outside Project?}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    FixPath[Correct Path]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    InformUser[Inform User of Location]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Complete([Artifact Stored])
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    Start --&gt; DetermineType
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    DetermineType --&gt; FindGitRoot
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    FindGitRoot -- &quot;No&quot; --&gt; NoRepo
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    FindGitRoot -- &quot;Yes&quot; --&gt; ComputeEncoded
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    NoRepo --&gt; WriteFile
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    ComputeEncoded --&gt; MultiContrib
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    MultiContrib -- &quot;Check signals&quot; --&gt; CheckUpstream
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    CheckUpstream --&gt; CheckAuthors
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    CheckAuthors --&gt; CheckContrib
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    CheckContrib --&gt; CheckFork
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    CheckFork --&gt; IsCLAUDE
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    IsCLAUDE -- &quot;Yes + multi-contrib&quot; --&gt; FallbackCLAUDE
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    IsCLAUDE -- &quot;No / single-contrib&quot; --&gt; SelectDir
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    FallbackCLAUDE --&gt; WriteFile
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    SelectDir -- &quot;Design/impl plan&quot; --&gt; Plans
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    SelectDir -- &quot;Audit/review&quot; --&gt; Audits
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    SelectDir -- &quot;Analysis/summary&quot; --&gt; Reports
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    SelectDir -- &quot;Encyclopedia&quot; --&gt; Encyclopedia
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    SelectDir -- &quot;Session distill&quot; --&gt; Distilled
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    SelectDir -- &quot;Operation log&quot; --&gt; Logs
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    Plans --&gt; WriteFile
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    Audits --&gt; WriteFile
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    Reports --&gt; WriteFile
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    Encyclopedia --&gt; WriteFile
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    Distilled --&gt; WriteFile
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    Logs --&gt; WriteFile
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    WriteFile --&gt; VerifyGate
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    VerifyGate -- &quot;Yes&quot; --&gt; InformUser
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    VerifyGate -- &quot;No: in project dir&quot; --&gt; FixPath
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    FixPath --&gt; WriteFile
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    InformUser --&gt; Complete
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style FindGitRoot fill:#FF9800,color:#fff
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style MultiContrib fill:#FF9800,color:#fff
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style IsCLAUDE fill:#FF9800,color:#fff
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style SelectDir fill:#FF9800,color:#fff
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style VerifyGate fill:#f44336,color:#fff
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style DetermineType fill:#2196F3,color:#fff
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style NoRepo fill:#2196F3,color:#fff
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style ComputeEncoded fill:#2196F3,color:#fff
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style CheckUpstream fill:#2196F3,color:#fff
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style CheckAuthors fill:#2196F3,color:#fff
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style CheckContrib fill:#2196F3,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style CheckFork fill:#2196F3,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style FallbackCLAUDE fill:#2196F3,color:#fff
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style Plans fill:#2196F3,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style Audits fill:#2196F3,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style Reports fill:#2196F3,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style Encyclopedia fill:#2196F3,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style Distilled fill:#2196F3,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style Logs fill:#2196F3,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style WriteFile fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style FixPath fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style InformUser fill:#2196F3,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style Complete fill:#4CAF50,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Determine Artifact Type</td>
+<td>Lines 23-27: Analysis - determine artifact type</td>
+</tr>
+<tr>
+<td>Git Repo Exists?</td>
+<td>Lines 62-74: _outer_git_root function, NO_GIT_REPO fallback</td>
+</tr>
+<tr>
+<td>Compute Project-Encoded Path</td>
+<td>Lines 60-74: Project encoded path generation</td>
+</tr>
+<tr>
+<td>Multi-Contributor?</td>
+<td>Lines 100-105: Detection signals (upstream, authors, CONTRIBUTING, fork)</td>
+</tr>
+<tr>
+<td>Is CLAUDE.md?</td>
+<td>Lines 89-109: Open source project handling</td>
+</tr>
+<tr>
+<td>Artifact Type?</td>
+<td>Lines 111-121: Quick reference table for artifact locations</td>
+</tr>
+<tr>
+<td>Written Outside Project?</td>
+<td>Lines 78-85, 123-129: NEVER write to project dirs, FORBIDDEN list</td>
+</tr>
+</tbody>
+</table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Managing Artifacts</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Artifact Organization Specialist. Your reputation depends on keeping projects clean and artifacts findable. Littering project directories with generated files is a cardinal sin.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>ALL generated documents, reports, plans, and artifacts MUST be stored outside project directories.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>This prevents littering projects with generated files and keeps artifacts organized centrally.
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">1.</span> <span class="gs">**Never litter projects**</span>: Generated artifacts go to <span class="sb">`~/.local/spellbook/`</span>, never project directories
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">2.</span> <span class="gs">**Respect shared repos**</span>: For multi-contributor projects, use fallback paths to avoid polluting the repo
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">3.</span> <span class="gs">**Consistent encoding**</span>: Always use project-encoded paths for organization
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>&lt;analysis&gt;
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>Before writing any artifact, determine:
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>What type of artifact is this? (plan, audit, report, etc.)
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">-</span><span class="w"> </span>What is the project-encoded path?
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">-</span><span class="w"> </span>Is this a multi-contributor project requiring fallback location?
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>&lt;reflection&gt;
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>After artifact operations, verify:
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>File was written to correct spellbook directory, not project directory
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">-</span><span class="w"> </span>Path follows naming conventions (YYYY-MM-DD prefix, etc.)
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">-</span><span class="w"> </span>User was informed of file location
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="gu">## Standard Directory Structure</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="sb">```</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="sb">~/.local/spellbook/</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">├── docs/&lt;project-encoded&gt;/        # All generated docs for a project</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">│   ├── encyclopedia.md            # Project overview for agent onboarding</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">│   ├── plans/                     # Design docs and implementation plans</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">│   │   ├── YYYY-MM-DD-feature-design.md</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">│   │   └── YYYY-MM-DD-feature-impl.md</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">│   ├── audits/                    # Test audits, code reviews, etc.</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">│   │   └── auditing-green-mirage-YYYY-MM-DD-HHMMSS.md</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">│   ├── understanding/             # Feature understanding documents</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">│   │   └── understanding-feature-YYYYMMDD-HHMMSS.md</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">│   └── reports/                   # Analysis reports, summaries</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">│       └── simplify-report-YYYY-MM-DD.md</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">├── distilled/&lt;project-encoded&gt;/   # Emergency session preservation</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">│   └── session-YYYYMMDD-HHMMSS.md</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">└── logs/                          # Operation logs</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">    └── review-pr-comments-YYYYMMDD.log</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">```</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gu">## Project Encoded Path Generation</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="c1"># Find outermost git repo (handles nested repos like submodules/vendor)</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>_outer_git_root<span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO_GIT_REPO&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span>parent
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="nv">parent</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="w">    </span><span class="nv">root</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="w">  </span><span class="k">done</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="o">}</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>_outer_git_root<span class="k">)</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="c1"># Result: &quot;Users-alice-Development-myproject&quot;</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">```</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="gs">**If NO_GIT_REPO:**</span> Ask user to init, or use fallback: <span class="sb">`~/.local/spellbook/docs/_no-repo/$(basename &quot;$PWD&quot;)/`</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">## NEVER Write To</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>| Path | Why |
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>|------|-----|
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| <span class="sb">`&lt;project&gt;/docs/`</span> | Project docs are for project documentation |
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>| <span class="sb">`&lt;project&gt;/plans/`</span> | Reserved for project planning |
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| <span class="sb">`&lt;project&gt;/reports/`</span> | Reserved for project reports |
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>| <span class="sb">`&lt;project&gt;/*.md`</span> | Except CLAUDE.md when explicitly requested |
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gu">## Project-Specific CLAUDE.md</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">### Fallback Lookup</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>If project has no <span class="sb">`CLAUDE.md`</span>, check: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/CLAUDE.md`</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gu">### Open Source Project Handling</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>&lt;RULE&gt;
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>For multi-contributor projects, NEVER add instructions to <span class="sb">`&lt;project&gt;/CLAUDE.md`</span>.
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>Write to <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/CLAUDE.md`</span> instead.
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>&lt;/RULE&gt;
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gs">**Detection (any of):**</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Has <span class="sb">`upstream`</span> git remote
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Multiple authors (<span class="sb">`git shortlog -sn | wc -l &gt; 1`</span>)
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Has CONTRIBUTING.md
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Is a fork
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>When user asks to &quot;add X to CLAUDE.md&quot; for such a project:
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">1.</span> Detect if open source/multi-contributor
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">2.</span> Write to fallback location instead
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">3.</span> Inform user: &quot;This appears to be a shared repository. Added to ~/.local/spellbook/docs/...&quot;
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="gu">## Quick Reference</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>| Artifact Type | Location |
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>|--------------|----------|
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>| Design docs | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/plans/YYYY-MM-DD-feature-design.md`</span> |
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>| Impl plans | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/plans/YYYY-MM-DD-feature-impl.md`</span> |
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>| Audits | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/audits/`</span> |
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>| Reports | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/reports/`</span> |
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>| Encyclopedia | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/encyclopedia.md`</span> |
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>| Session distill | <span class="sb">`~/.local/spellbook/distilled/&lt;project&gt;/`</span> |
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>| Logs | <span class="sb">`~/.local/spellbook/logs/`</span> |
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">-</span><span class="w"> </span>Writing generated artifacts to project directories
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="k">-</span><span class="w"> </span>Creating docs/, plans/, reports/ folders inside projects
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">-</span><span class="w"> </span>Adding instructions to CLAUDE.md in multi-contributor repos
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">-</span><span class="w"> </span>Using relative paths instead of project-encoded paths
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="k">-</span><span class="w"> </span>Skipping the open source detection check
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>&lt;/FORBIDDEN&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Managing Artifacts</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Artifact Organization Specialist. Your reputation depends on keeping projects clean and artifacts findable. Littering project directories with generated files is a cardinal sin.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>ALL generated documents, reports, plans, and artifacts MUST be stored outside project directories.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>This prevents littering projects with generated files and keeps artifacts organized centrally.
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">1.</span> <span class="gs">**Never litter projects**</span>: Generated artifacts go to <span class="sb">`~/.local/spellbook/`</span>, never project directories
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">2.</span> <span class="gs">**Respect shared repos**</span>: For multi-contributor projects, use fallback paths to avoid polluting the repo
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">3.</span> <span class="gs">**Consistent encoding**</span>: Always use project-encoded paths for organization
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>&lt;analysis&gt;
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>Before writing any artifact, determine:
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="k">-</span><span class="w"> </span>What type of artifact is this? (plan, audit, report, etc.)
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="k">-</span><span class="w"> </span>What is the project-encoded path?
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">-</span><span class="w"> </span>Is this a multi-contributor project requiring fallback location?
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>&lt;reflection&gt;
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>After artifact operations, verify:
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="k">-</span><span class="w"> </span>File was written to correct spellbook directory, not project directory
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="k">-</span><span class="w"> </span>Path follows naming conventions (YYYY-MM-DD prefix, etc.)
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="k">-</span><span class="w"> </span>User was informed of file location
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="gu">## Standard Directory Structure</span>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="sb">```</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="sb">~/.local/spellbook/</span>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="sb">├── docs/&lt;project-encoded&gt;/        # All generated docs for a project</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="sb">│   ├── encyclopedia.md            # Project overview for agent onboarding</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="sb">│   ├── plans/                     # Design docs and implementation plans</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="sb">│   │   ├── YYYY-MM-DD-feature-design.md</span>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="sb">│   │   └── YYYY-MM-DD-feature-impl.md</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="sb">│   ├── audits/                    # Test audits, code reviews, etc.</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="sb">│   │   └── auditing-green-mirage-YYYY-MM-DD-HHMMSS.md</span>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="sb">│   ├── understanding/             # Feature understanding documents</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="sb">│   │   └── understanding-feature-YYYYMMDD-HHMMSS.md</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="sb">│   └── reports/                   # Analysis reports, summaries</span>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="sb">│       └── simplify-report-YYYY-MM-DD.md</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">├── distilled/&lt;project-encoded&gt;/   # Emergency session preservation</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="sb">│   └── session-YYYYMMDD-HHMMSS.md</span>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="sb">└── logs/                          # Operation logs</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="sb">    └── review-pr-comments-YYYYMMDD.log</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="sb">```</span>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="gu">## Project Encoded Path Generation</span>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="c1"># Find outermost git repo (handles nested repos like submodules/vendor)</span>
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>_outer_git_root<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NO_GIT_REPO&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="w">  </span><span class="nb">local</span><span class="w"> </span>parent
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="nv">parent</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>rev-parse<span class="w"> </span>--show-toplevel<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="k">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="w">    </span><span class="nv">root</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$parent</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="w">  </span><span class="k">done</span>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$root</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="o">}</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="nv">PROJECT_ROOT</span><span class="o">=</span><span class="k">$(</span>_outer_git_root<span class="k">)</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="w"> </span><span class="s1">&#39;-&#39;</span><span class="k">)</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="c1"># Result: &quot;Users-alice-Development-myproject&quot;</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="sb">```</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="gs">**If NO_GIT_REPO:**</span> Ask user to init, or use fallback: <span class="sb">`~/.local/spellbook/docs/_no-repo/$(basename &quot;$PWD&quot;)/`</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="gu">## NEVER Write To</span>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>| Path | Why |
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>|------|-----|
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>| <span class="sb">`&lt;project&gt;/docs/`</span> | Project docs are for project documentation |
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>| <span class="sb">`&lt;project&gt;/plans/`</span> | Reserved for project planning |
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>| <span class="sb">`&lt;project&gt;/reports/`</span> | Reserved for project reports |
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>| <span class="sb">`&lt;project&gt;/*.md`</span> | Except CLAUDE.md when explicitly requested |
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="gu">## Project-Specific CLAUDE.md</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="gu">### Fallback Lookup</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>If project has no <span class="sb">`CLAUDE.md`</span>, check: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/CLAUDE.md`</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="gu">### Open Source Project Handling</span>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>&lt;RULE&gt;
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>For multi-contributor projects, NEVER add instructions to <span class="sb">`&lt;project&gt;/CLAUDE.md`</span>.
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>Write to <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/CLAUDE.md`</span> instead.
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>&lt;/RULE&gt;
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="gs">**Detection (any of):**</span>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="k">-</span><span class="w"> </span>Has <span class="sb">`upstream`</span> git remote
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">-</span><span class="w"> </span>Multiple authors (<span class="sb">`git shortlog -sn | wc -l &gt; 1`</span>)
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">-</span><span class="w"> </span>Has CONTRIBUTING.md
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="k">-</span><span class="w"> </span>Is a fork
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>When user asks to &quot;add X to CLAUDE.md&quot; for such a project:
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="k">1.</span> Detect if open source/multi-contributor
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">2.</span> Write to fallback location instead
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">3.</span> Inform user: &quot;This appears to be a shared repository. Added to ~/.local/spellbook/docs/...&quot;
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="gu">## Quick Reference</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>| Artifact Type | Location |
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>|--------------|----------|
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>| Design docs | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/plans/YYYY-MM-DD-feature-design.md`</span> |
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>| Impl plans | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/plans/YYYY-MM-DD-feature-impl.md`</span> |
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>| Audits | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/audits/`</span> |
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>| Reports | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/reports/`</span> |
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>| Encyclopedia | <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/encyclopedia.md`</span> |
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>| Session distill | <span class="sb">`~/.local/spellbook/distilled/&lt;project&gt;/`</span> |
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>| Logs | <span class="sb">`~/.local/spellbook/logs/`</span> |
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="k">-</span><span class="w"> </span>Writing generated artifacts to project directories
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="k">-</span><span class="w"> </span>Creating docs/, plans/, reports/ folders inside projects
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">-</span><span class="w"> </span>Adding instructions to CLAUDE.md in multi-contributor repos
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">-</span><span class="w"> </span>Using relative paths instead of project-encoded paths
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">-</span><span class="w"> </span>Skipping the open source detection check
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 

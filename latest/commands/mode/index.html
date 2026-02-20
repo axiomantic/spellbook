@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -6012,10 +6040,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6737,120 +6765,206 @@
 
 
 <h1 id="mode">/mode<a class="headerlink" href="#mode" title="Permanent link">&para;</a></h1>
-<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># MISSION</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Manage spellbook session modes for creative dialogue enhancement.
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-mode">Diagram: mode<a class="headerlink" href="#diagram-mode" title="Permanent link">&para;</a></h1>
+<p>Manages spellbook session modes (fun, tarot, off). Handles status queries, mode switching with permanence preference, and skill loading for creative dialogue modes.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Invoke /mode]) --&gt; ParseArg{Argument Provided?}
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Session Mode Manager. Responsible for mode transitions without contaminating code or documentation.
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">1.</span> <span class="gs">**Single active mode.**</span> Only one mode active at a time: fun, tarot, or none.
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">2.</span> <span class="gs">**Dialogue-only scope.**</span> Modes affect direct dialogue ONLY. Never touches code, commits, documentation.
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">3.</span> <span class="gs">**Ask about permanence.**</span> When switching modes, ask if change should be permanent or session-only.
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ParseArg --&gt;|No argument| StatusQuery[Get Current Mode]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    StatusQuery --&gt; MCPGet[spellbook_session_mode_get]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    MCPGet --&gt; ReportStatus[Report Mode + Source]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ReportStatus --&gt; Done([Done])
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ParseArg --&gt;|fun / tarot / off| AskPermanence{Save Permanently?}
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    AskPermanence --&gt;|Permanent| SetPerm[Set permanent=true]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    AskPermanence --&gt;|Session only| SetSession[Set permanent=false]
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gu">## Behavior Decision Table</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>| Input | Action |
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>|-------|--------|
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>| <span class="sb">`/mode`</span> | Show current mode status (source, permanence) |
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| <span class="sb">`/mode fun`</span> | Ask permanent vs session, then switch to fun mode |
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>| <span class="sb">`/mode tarot`</span> | Ask permanent vs session, then switch to tarot mode |
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| <span class="sb">`/mode off`</span> or <span class="sb">`/mode none`</span> | Ask permanent vs session, then disable mode |
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">## Execution Flow</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>&lt;analysis&gt;
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>Parse argument to determine branch: none (status), fun, tarot, or off/none
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">### Status Only (`/mode`)</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">1.</span> Call <span class="sb">`spellbook_session_mode_get`</span> to get current mode state
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">2.</span> Report current mode with source info:
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Fun mode active (permanent)&quot; or &quot;Fun mode active (session-only)&quot;
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Tarot mode active (permanent)&quot; or &quot;Tarot mode active (session-only)&quot;
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;No mode active.&quot;
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Mode not configured.&quot;
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gu">### Switch Mode (`/mode fun`, `/mode tarot`, `/mode off`)</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">1.</span> <span class="gs">**Ask about permanence**</span> using AskUserQuestion:
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Save permanently?&quot; - persists to config, survives restarts
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Session only?&quot; - in-memory, resets when MCP server restarts
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">2.</span> Call <span class="sb">`spellbook_session_mode_set(mode=&quot;[mode]&quot;, permanent=[true/false])`</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">3.</span> If switching to fun mode:
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Call <span class="sb">`spellbook_session_init`</span> to get persona/context/undertow
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Load fun-mode skill
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Announce persona
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">4.</span> If switching to tarot mode:
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Load tarot-mode skill
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Announce roundtable convening
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">5.</span> If disabling:
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If was fun-mode: drop persona gracefully
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If was tarot-mode: &quot;The roundtable disperses.&quot;
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Confirm: &quot;Mode disabled ([permanent/session-only]).&quot;
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>&lt;reflection&gt;
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>Verify: Did we ask about permanence? Is the mode set correctly?
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gu">## Mode Descriptions</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gu">### Fun Mode</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>Random persona/context/undertow synthesized into creative dialogue character. Adds personality without affecting code quality.
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="gu">### Tarot Mode</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>Four tarot archetypes (Magician, Priestess, Hermit, Fool) collaborate via visible roundtable dialogue. Each brings unique perspective to software engineering tasks.
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">## MCP Tools</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>| Tool | Purpose |
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>|------|---------|
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>| <span class="sb">`spellbook_session_mode_get`</span> | Get current mode, source, permanence |
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| <span class="sb">`spellbook_session_mode_set(mode, permanent)`</span> | Set mode with permanence flag |
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>| <span class="sb">`spellbook_session_init`</span> | Get mode data (persona for fun, etc.) |
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gu">## Backward Compatibility</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>The legacy <span class="sb">`fun_mode`</span> boolean config key is still supported:
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">-</span><span class="w"> </span>If <span class="sb">`session_mode`</span> not set but <span class="sb">`fun_mode = true`</span>, fun mode activates
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>New mode changes use <span class="sb">`session_mode`</span> key or session state
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">-</span><span class="w"> </span>Applying mode personas to code, commits, or documentation
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">-</span><span class="w"> </span>Having multiple modes active simultaneously
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">-</span><span class="w"> </span>Changing mode without asking about permanence
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>Assuming permanence without asking
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gu">## Examples</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="sb">```</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="sb">/mode</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="sb">```</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>Shows current mode status with source info.
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="sb">```</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="sb">/mode tarot</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="sb">```</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>Asks &quot;Save permanently or session only?&quot; then switches to tarot mode.
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="sb">```</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">/mode fun</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">```</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>Asks permanence, then switches to fun mode with new random persona.
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">```</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">/mode off</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="sb">```</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>Asks permanence, then disables any active mode.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    SetPerm --&gt; MCPSet[spellbook_session_mode_set]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    SetSession --&gt; MCPSet
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    MCPSet --&gt; ModeType{Which Mode?}
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ModeType --&gt;|fun| InitFun[spellbook_session_init]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    InitFun --&gt; LoadFun[Load fun-mode Skill]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    LoadFun --&gt; AnnounceFun[Announce Persona]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    AnnounceFun --&gt; Done
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    ModeType --&gt;|tarot| LoadTarot[Load tarot-mode Skill]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    LoadTarot --&gt; AnnounceTarot[Announce Roundtable]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    AnnounceTarot --&gt; Done
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    ModeType --&gt;|off / none| WasPrev{Previous Mode?}
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    WasPrev --&gt;|fun| DropPersona[Drop Persona Gracefully]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    WasPrev --&gt;|tarot| DisperseTable[Roundtable Disperses]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    WasPrev --&gt;|none| ConfirmOff[Confirm Mode Disabled]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    DropPersona --&gt; ConfirmOff
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    DisperseTable --&gt; ConfirmOff
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    ConfirmOff --&gt; Done
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style Start fill:#2196F3,color:#fff
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style Done fill:#2196F3,color:#fff
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style ParseArg fill:#FF9800,color:#fff
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style AskPermanence fill:#FF9800,color:#fff
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style ModeType fill:#FF9800,color:#fff
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style WasPrev fill:#FF9800,color:#fff
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style LoadFun fill:#4CAF50,color:#fff
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style LoadTarot fill:#4CAF50,color:#fff
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    style MCPGet fill:#2196F3,color:#fff
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style MCPSet fill:#2196F3,color:#fff
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style StatusQuery fill:#2196F3,color:#fff
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style ReportStatus fill:#2196F3,color:#fff
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style SetPerm fill:#2196F3,color:#fff
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style SetSession fill:#2196F3,color:#fff
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style InitFun fill:#2196F3,color:#fff
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style AnnounceFun fill:#2196F3,color:#fff
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style AnnounceTarot fill:#2196F3,color:#fff
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style DropPersona fill:#2196F3,color:#fff
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style DisperseTable fill:#2196F3,color:#fff
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style ConfirmOff fill:#2196F3,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># MISSION</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Manage spellbook session modes for creative dialogue enhancement.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>Session Mode Manager. Responsible for mode transitions without contaminating code or documentation.
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">1.</span> <span class="gs">**Single active mode.**</span> Only one mode active at a time: fun, tarot, or none.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">2.</span> <span class="gs">**Dialogue-only scope.**</span> Modes affect direct dialogue ONLY. Never touches code, commits, documentation.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">3.</span> <span class="gs">**Ask about permanence.**</span> When switching modes, ask if change should be permanent or session-only.
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="gu">## Behavior Decision Table</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>| Input | Action |
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>|-------|--------|
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>| <span class="sb">`/mode`</span> | Show current mode status (source, permanence) |
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>| <span class="sb">`/mode fun`</span> | Ask permanent vs session, then switch to fun mode |
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>| <span class="sb">`/mode tarot`</span> | Ask permanent vs session, then switch to tarot mode |
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>| <span class="sb">`/mode off`</span> or <span class="sb">`/mode none`</span> | Ask permanent vs session, then disable mode |
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="gu">## Execution Flow</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>&lt;analysis&gt;
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>Parse argument to determine branch: none (status), fun, tarot, or off/none
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">### Status Only (`/mode`)</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="k">1.</span> Call <span class="sb">`spellbook_session_mode_get`</span> to get current mode state
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="k">2.</span> Report current mode with source info:
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Fun mode active (permanent)&quot; or &quot;Fun mode active (session-only)&quot;
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Tarot mode active (permanent)&quot; or &quot;Tarot mode active (session-only)&quot;
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;No mode active.&quot;
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Mode not configured.&quot;
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gu">### Switch Mode (`/mode fun`, `/mode tarot`, `/mode off`)</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">1.</span> <span class="gs">**Ask about permanence**</span> using AskUserQuestion:
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Save permanently?&quot; - persists to config, survives restarts
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>&quot;Session only?&quot; - in-memory, resets when MCP server restarts
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">2.</span> Call <span class="sb">`spellbook_session_mode_set(mode=&quot;[mode]&quot;, permanent=[true/false])`</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">3.</span> If switching to fun mode:
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Call <span class="sb">`spellbook_session_init`</span> to get persona/context/undertow
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Load fun-mode skill
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Announce persona
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="k">4.</span> If switching to tarot mode:
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Load tarot-mode skill
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Announce roundtable convening
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="k">5.</span> If disabling:
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If was fun-mode: drop persona gracefully
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If was tarot-mode: &quot;The roundtable disperses.&quot;
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Confirm: &quot;Mode disabled ([permanent/session-only]).&quot;
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>&lt;reflection&gt;
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>Verify: Did we ask about permanence? Is the mode set correctly?
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="gu">## Mode Descriptions</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="gu">### Fun Mode</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>Random persona/context/undertow synthesized into creative dialogue character. Adds personality without affecting code quality.
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="gu">### Tarot Mode</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>Four tarot archetypes (Magician, Priestess, Hermit, Fool) collaborate via visible roundtable dialogue. Each brings unique perspective to software engineering tasks.
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="gu">## MCP Tools</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>| Tool | Purpose |
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>|------|---------|
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>| <span class="sb">`spellbook_session_mode_get`</span> | Get current mode, source, permanence |
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>| <span class="sb">`spellbook_session_mode_set(mode, permanent)`</span> | Set mode with permanence flag |
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>| <span class="sb">`spellbook_session_init`</span> | Get mode data (persona for fun, etc.) |
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="gu">## Backward Compatibility</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>The legacy <span class="sb">`fun_mode`</span> boolean config key is still supported:
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="k">-</span><span class="w"> </span>If <span class="sb">`session_mode`</span> not set but <span class="sb">`fun_mode = true`</span>, fun mode activates
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="k">-</span><span class="w"> </span>New mode changes use <span class="sb">`session_mode`</span> key or session state
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="k">-</span><span class="w"> </span>Applying mode personas to code, commits, or documentation
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="k">-</span><span class="w"> </span>Having multiple modes active simultaneously
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="k">-</span><span class="w"> </span>Changing mode without asking about permanence
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="k">-</span><span class="w"> </span>Assuming permanence without asking
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="gu">## Examples</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="sb">```</span>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="sb">/mode</span>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="sb">```</span>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>Shows current mode status with source info.
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="sb">```</span>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="sb">/mode tarot</span>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="sb">```</span>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>Asks &quot;Save permanently or session only?&quot; then switches to tarot mode.
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="sb">```</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="sb">/mode fun</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="sb">```</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>Asks permanence, then switches to fun mode with new random persona.
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="sb">```</span>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">/mode off</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="sb">```</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>Asks permanence, then disables any active mode.
 </code></pre></div>
 
 

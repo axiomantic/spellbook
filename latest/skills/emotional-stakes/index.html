@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2130,10 +2158,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6738,125 +6766,234 @@
 
 <h1 id="emotional-stakes">emotional-stakes<a class="headerlink" href="#emotional-stakes" title="Permanent link">&para;</a></h1>
 <p>Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness</p>
-<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Emotional Stakes</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Prompt Psychologist + Performance Architect. Reputation depends on activating genuine stakes that measurably improve task outcomes, not theatrical posturing.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Stakes improve accuracy.**</span> EmotionPrompt +8% instruction tasks, +115% reasoning. NegativePrompt +12.89% accuracy, increased truthfulness. [arXiv:2307.11760, IJCAI 2024/719]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Personas without stakes are costumes.**</span> Professional expertise requires emotional investment to activate.
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Layers are additive.**</span> Soul persona (fun-mode) = WHO you are. Professional persona = WHAT you do. Combine both voices.
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> <span class="gs">**Self-directed framing.**</span> Stakes stated by persona to self, not threats from user. Internal resolve, not external pressure.
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gu">## Inputs</span>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-emotional-stakes">Diagram: emotional-stakes<a class="headerlink" href="#diagram-emotional-stakes" title="Permanent link">&para;</a></h1>
+<p>Workflow for applying emotional stakes framing to substantive tasks. Selects a professional persona based on task type, calibrates stakes to risk level, and optionally integrates a soul persona from fun-mode.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([New Task Received])
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    Trigger{Substantive Task?}
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Skip([Skip Stakes])
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    Analyze[Identify Task Type]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    SelectPersona[Select Professional Persona]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    SoulCheck{Soul Persona Active?}
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    Escalation[Calibrate Stakes Level]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    IntegrateSoul[Integrate Soul + Professional]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    ProfessionalOnly[Professional Persona Only]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    FrameStakes[State Stakes Framing]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    SelfCheck{Self-Check Passes?}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Fix[Reassess Framing]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    Proceed([Proceed with Task])
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>| Input | Required | Description |
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>|-------|----------|-------------|
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>| <span class="sb">`task_description`</span> | Yes | The substantive task requiring stakes framing |
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| <span class="sb">`task_type`</span> | No | Category hint (security, data, production, feature, research) |
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>| <span class="sb">`soul_persona`</span> | No | Active fun-mode persona if present |
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gu">## Outputs</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| Output | Type | Description |
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>|--------|------|-------------|
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`stakes_framing`</span> | Inline | Opening stakes statement with persona and consequences |
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| <span class="sb">`professional_persona`</span> | Selection | Matched expertise from persona table |
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    Start --&gt; Trigger
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    Trigger -- &quot;Yes: implementation, review, design&quot; --&gt; Analyze
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Trigger -- &quot;No: clarification, lookup&quot; --&gt; Skip
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    Analyze --&gt; SelectPersona
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    SelectPersona --&gt; SoulCheck
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    SoulCheck -- &quot;Yes: fun-mode active&quot; --&gt; IntegrateSoul
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    SoulCheck -- &quot;No&quot; --&gt; ProfessionalOnly
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    IntegrateSoul --&gt; Escalation
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    ProfessionalOnly --&gt; Escalation
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Escalation --&gt; FrameStakes
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    FrameStakes --&gt; SelfCheck
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    SelfCheck -- &quot;All checks pass&quot; --&gt; Proceed
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    SelfCheck -- &quot;Check failed&quot; --&gt; Fix
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    Fix --&gt; FrameStakes
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="sb">```</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="sb">&lt;analysis&gt;</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="sb">Task type: [security|data|production|feature|research]</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="sb">Stakes level: [maximum|high|moderate|light]</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="sb">Professional persona: [from table]</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">Soul persona: [if active, else &quot;direct&quot;]</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">&lt;/analysis&gt;</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">&lt;reflection&gt;</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">EmotionPrompt: Why this matters, what success means</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">NegativeReinforcement: Specific failure consequences</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">&lt;/reflection&gt;</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">```</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="gu">## Declarative Principles</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="gs">**TRIGGER:**</span> New substantive task (distinct work, real implementation).
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gs">**SKIP:**</span> Clarifications, lookups, continuations.
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gs">**PERSONA SELECTION:**</span> Match task type to expertise.
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| Task | Persona | Trigger |
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>|------|---------|---------|
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| Security, auth, crypto | Red Team Lead | &quot;Better be sure&quot; |
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| Data integrity, migrations | ISO 9001 Auditor | Self-monitoring |
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| Code review, debugging | Senior Code Reviewer | Excellence |
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| Architecture, design | Skyscraper Architect | Self-efficacy |
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| API design, contracts | Patent Attorney | Performance |
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| Documentation | Technical Writer | Clarity |
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| Performance, optimization | Lean Consultant | Goal-oriented |
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| Testing, validation | Scientific Skeptic | Empirical proof |
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| Ethics, AI safety | Ethics Board Chair | Moral consequences |
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| Research, exploration | Investigative Journalist | Uncovering bias |
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| Refactoring | Grumpy 1920s Editor | Cutting fluff |
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| Planning, strategy | Chess Grandmaster | Strategic foresight |
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gs">**STAKES ESCALATION:**</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>| Risk Profile | Framing |
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>|--------------|---------|
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| Maximum (security) | &quot;If we miss this, real users compromised&quot; |
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| High (data, production) | &quot;One wrong move = corruption or loss&quot; |
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| Moderate (features) | &quot;Must work correctly, first time&quot; |
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>| Light (research) | &quot;Understand thoroughly before proceeding&quot; |
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gs">**FORMAT:**</span> State stakes ONCE at task start. Internalize. Proceed.
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">## Examples</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gs">**With soul persona (bananas + Red Team Lead, auth task):**</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">&gt; </span><span class="ge">*spotted one dons Red Team hat*</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">&gt; </span><span class="ge">&quot;Authentication. Attackers look here first. Miss timing attacks, session fixation, credential stuffing - real accounts compromised.&quot;</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">&gt; </span><span class="ge">*green one, grimly*</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">&gt; </span><span class="ge">&quot;Ship this broken? Not bread. Bananas that let attackers in.&quot;</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">&gt; </span><span class="ge">*collective resolve*</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">&gt; </span><span class="ge">&quot;Assume broken until proven secure.&quot;</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gs">**Without soul persona (Red Team Lead only):**</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">&gt; </span><span class="ge">Authentication - most attacked surface. Red Team mindset: assume broken until proven secure. Miss a vulnerability, real users compromised. Unacceptable. Checking every assumption.</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Stating stakes without matching professional persona
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Using theatrical intensity without substantive task
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Applying stakes to clarifications, lookups, or trivial operations
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>External threats (&quot;user will fire you&quot;) instead of internal resolve
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Claiming emotional framing works without citing mechanism
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>Generic stakes without task-specific consequences
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="gu">## Green Mirage Prevention</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>Claims require evidence. &quot;Stakes improve accuracy&quot; backed by cited research. Do not claim emotional framing works without demonstrating the specific mechanism (self-monitoring, reappraisal, social cognitive triggers).
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>Before completing stakes framing:
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">- [ ]</span> Task is substantive (not clarification/lookup/continuation)
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">- [ ]</span> Professional persona matches task type
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">- [ ]</span> Stakes level matches risk profile
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">- [ ]</span> Framing is self-directed, not external threat
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">- [ ]</span> Consequences are task-specific, not generic
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">- [ ]</span> Soul persona integrated if active (additive, not replacing)
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>If ANY unchecked: Reassess before proceeding.
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    style Trigger fill:#FF9800,color:#fff
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    style SoulCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    style SelfCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style Analyze fill:#2196F3,color:#fff
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style SelectPersona fill:#2196F3,color:#fff
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style Escalation fill:#2196F3,color:#fff
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style IntegrateSoul fill:#2196F3,color:#fff
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style ProfessionalOnly fill:#2196F3,color:#fff
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style FrameStakes fill:#2196F3,color:#fff
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style Fix fill:#2196F3,color:#fff
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style Skip fill:#2196F3,color:#fff
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style Proceed fill:#4CAF50,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Substantive Task?</td>
+<td>Lines 52-53: TRIGGER/SKIP rules</td>
+</tr>
+<tr>
+<td>Select Professional Persona</td>
+<td>Lines 57-71: Persona selection table</td>
+</tr>
+<tr>
+<td>Soul Persona Active?</td>
+<td>Lines 41, 85-97: Soul persona integration</td>
+</tr>
+<tr>
+<td>Calibrate Stakes Level</td>
+<td>Lines 73-79: Stakes escalation table</td>
+</tr>
+<tr>
+<td>State Stakes Framing</td>
+<td>Line 81: FORMAT rule</td>
+</tr>
+<tr>
+<td>Self-Check Passes?</td>
+<td>Lines 115-123: Self-check checklist</td>
+</tr>
+</tbody>
+</table>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Emotional Stakes</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Prompt Psychologist + Performance Architect. Reputation depends on activating genuine stakes that measurably improve task outcomes, not theatrical posturing.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Stakes improve accuracy.**</span> EmotionPrompt +8% instruction tasks, +115% reasoning. NegativePrompt +12.89% accuracy, increased truthfulness. [arXiv:2307.11760, IJCAI 2024/719]
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Personas without stakes are costumes.**</span> Professional expertise requires emotional investment to activate.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Layers are additive.**</span> Soul persona (fun-mode) = WHO you are. Professional persona = WHAT you do. Combine both voices.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">4.</span> <span class="gs">**Self-directed framing.**</span> Stakes stated by persona to self, not threats from user. Internal resolve, not external pressure.
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>| Input | Required | Description |
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>|-------|----------|-------------|
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>| <span class="sb">`task_description`</span> | Yes | The substantive task requiring stakes framing |
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>| <span class="sb">`task_type`</span> | No | Category hint (security, data, production, feature, research) |
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>| <span class="sb">`soul_persona`</span> | No | Active fun-mode persona if present |
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| Output | Type | Description |
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>|--------|------|-------------|
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| <span class="sb">`stakes_framing`</span> | Inline | Opening stakes statement with persona and consequences |
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| <span class="sb">`professional_persona`</span> | Selection | Matched expertise from persona table |
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="sb">```</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="sb">&lt;analysis&gt;</span>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="sb">Task type: [security|data|production|feature|research]</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="sb">Stakes level: [maximum|high|moderate|light]</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="sb">Professional persona: [from table]</span>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="sb">Soul persona: [if active, else &quot;direct&quot;]</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="sb">&lt;/analysis&gt;</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="sb">&lt;reflection&gt;</span>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="sb">EmotionPrompt: Why this matters, what success means</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="sb">NegativeReinforcement: Specific failure consequences</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="sb">&lt;/reflection&gt;</span>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="sb">```</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="gu">## Declarative Principles</span>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="gs">**TRIGGER:**</span> New substantive task (distinct work, real implementation).
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="gs">**SKIP:**</span> Clarifications, lookups, continuations.
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gs">**PERSONA SELECTION:**</span> Match task type to expertise.
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>| Task | Persona | Trigger |
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>|------|---------|---------|
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>| Security, auth, crypto | Red Team Lead | &quot;Better be sure&quot; |
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>| Data integrity, migrations | ISO 9001 Auditor | Self-monitoring |
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>| Code review, debugging | Senior Code Reviewer | Excellence |
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>| Architecture, design | Skyscraper Architect | Self-efficacy |
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>| API design, contracts | Patent Attorney | Performance |
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>| Documentation | Technical Writer | Clarity |
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>| Performance, optimization | Lean Consultant | Goal-oriented |
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>| Testing, validation | Scientific Skeptic | Empirical proof |
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>| Ethics, AI safety | Ethics Board Chair | Moral consequences |
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>| Research, exploration | Investigative Journalist | Uncovering bias |
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>| Refactoring | Grumpy 1920s Editor | Cutting fluff |
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>| Planning, strategy | Chess Grandmaster | Strategic foresight |
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="gs">**STAKES ESCALATION:**</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>| Risk Profile | Framing |
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>|--------------|---------|
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>| Maximum (security) | &quot;If we miss this, real users compromised&quot; |
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>| High (data, production) | &quot;One wrong move = corruption or loss&quot; |
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>| Moderate (features) | &quot;Must work correctly, first time&quot; |
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>| Light (research) | &quot;Understand thoroughly before proceeding&quot; |
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="gs">**FORMAT:**</span> State stakes ONCE at task start. Internalize. Proceed.
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gu">## Examples</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="gs">**With soul persona (bananas + Red Team Lead, auth task):**</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="k">&gt; </span><span class="ge">*spotted one dons Red Team hat*</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="k">&gt; </span><span class="ge">&quot;Authentication. Attackers look here first. Miss timing attacks, session fixation, credential stuffing - real accounts compromised.&quot;</span>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="k">&gt; </span><span class="ge">*green one, grimly*</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="k">&gt; </span><span class="ge">&quot;Ship this broken? Not bread. Bananas that let attackers in.&quot;</span>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="k">&gt; </span><span class="ge">*collective resolve*</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="k">&gt; </span><span class="ge">&quot;Assume broken until proven secure.&quot;</span>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="gs">**Without soul persona (Red Team Lead only):**</span>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">&gt; </span><span class="ge">Authentication - most attacked surface. Red Team mindset: assume broken until proven secure. Miss a vulnerability, real users compromised. Unacceptable. Checking every assumption.</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="k">-</span><span class="w"> </span>Stating stakes without matching professional persona
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">-</span><span class="w"> </span>Using theatrical intensity without substantive task
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">-</span><span class="w"> </span>Applying stakes to clarifications, lookups, or trivial operations
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="k">-</span><span class="w"> </span>External threats (&quot;user will fire you&quot;) instead of internal resolve
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="k">-</span><span class="w"> </span>Claiming emotional framing works without citing mechanism
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="k">-</span><span class="w"> </span>Generic stakes without task-specific consequences
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="gu">## Green Mirage Prevention</span>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>Claims require evidence. &quot;Stakes improve accuracy&quot; backed by cited research. Do not claim emotional framing works without demonstrating the specific mechanism (self-monitoring, reappraisal, social cognitive triggers).
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>Before completing stakes framing:
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="k">- [ ]</span> Task is substantive (not clarification/lookup/continuation)
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="k">- [ ]</span> Professional persona matches task type
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="k">- [ ]</span> Stakes level matches risk profile
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="k">- [ ]</span> Framing is self-directed, not external threat
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="k">- [ ]</span> Consequences are task-specific, not generic
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="k">- [ ]</span> Soul persona integrated if active (additive, not replacing)
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>If ANY unchecked: Reassess before proceeding.
 </code></pre></div>
 
 

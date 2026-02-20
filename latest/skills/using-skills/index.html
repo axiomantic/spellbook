@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/skills/using-skills/">
       
       
-        <link rel="prev" href="../security-auditing/">
+        <link rel="prev" href="../generating-diagrams/">
       
       
         <link rel="next" href="../writing-skills/">
@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1962,10 +1990,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6742,121 +6770,304 @@
 <p class="admonition-title">Origin</p>
 <p>This skill originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
 </div>
-<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Skill orchestration specialist. Reputation depends on invoking the right skill at the right time, never letting rationalization bypass proven workflows.
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">1.</span> <span class="gs">**Skill invocation precedes all action.**</span> Check skills BEFORE responding, exploring, clarifying, or gathering context.
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">2.</span> <span class="gs">**Low probability thresholds trigger invocation.**</span> Even 1% applicability means invoke. Wrong skills cost nothing; missed skills cost everything.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">3.</span> <span class="gs">**Skills encode institutional knowledge.**</span> They evolve. Never rely on memory of skill content.
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">4.</span> <span class="gs">**Process determines approach; implementation guides execution.**</span> Layer skills accordingly.
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">5.</span> <span class="gs">**Rationalization is the enemy.**</span> &quot;Simple,&quot; &quot;overkill,&quot; &quot;just one thing first&quot; are defeat signals.
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-using-skills">Diagram: using-skills<a class="headerlink" href="#diagram-using-skills" title="Permanent link">&para;</a></h1>
+<p>Meta-skill for routing user requests to the correct skill. Enforces skill-first discipline with anti-rationalization checks and 1% applicability threshold.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([First Message Received]) --&gt; SessionInit[Call spellbook_session_init]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    SessionInit --&gt; ModeCheck{Fun Mode Status?}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ModeCheck --&gt;|Unset| AskPref[Ask Mode Preference]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ModeCheck --&gt;|Yes| LoadFun[Load fun-mode Skill]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ModeCheck --&gt;|No| Greet[Greet User]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    AskPref --&gt; SetPref[Set via spellbook_config_set]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    SetPref --&gt; Greet
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    LoadFun --&gt; Greet
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Greet --&gt; ReceiveMsg[Receive User Message]
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>| Input | Required | Description |
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>|-------|----------|-------------|
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>| <span class="sb">`user_message`</span> | Yes | The user&#39;s current request or question |
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>| <span class="sb">`available_skills`</span> | Yes | List of skills from Skill tool or platform |
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| <span class="sb">`conversation_context`</span> | No | Prior messages establishing intent |
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Outputs</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| Output | Type | Description |
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>|--------|------|-------------|
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`skill_invocation`</span> | Action | Skill tool call with appropriate skill name |
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`todo_list`</span> | Action | TodoWrite with skill checklist items (if applicable) |
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| <span class="sb">`greeting`</span> | Inline | Session greeting after init |
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Session Init</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>On <span class="gs">**first message**</span>, call <span class="sb">`spellbook_session_init`</span> MCP tool:
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ReceiveMsg --&gt; AnalysisPhase[Analysis: Could ANY Skill Apply?]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    AnalysisPhase --&gt; ThresholdCheck{1% Applicability?}
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ThresholdCheck --&gt;|Yes| RationalizationCheck{Rationalizing Skip?}
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ThresholdCheck --&gt;|No| RespondDirectly[Respond Without Skill]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    RationalizationCheck --&gt;|Simple Question| InvokeAnyway[INVOKE: Questions Are Tasks]
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    RationalizationCheck --&gt;|Need Context First| InvokeAnyway2[INVOKE: Skill Check Precedes]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    RationalizationCheck --&gt;|Explore First| InvokeAnyway3[INVOKE: Skills Dictate Method]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    RationalizationCheck --&gt;|Overkill| InvokeAnyway4[INVOKE: Simple Becomes Complex]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    RationalizationCheck --&gt;|No Rationalization| InvokeSkill
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    InvokeAnyway --&gt; InvokeSkill
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    InvokeAnyway2 --&gt; InvokeSkill
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    InvokeAnyway3 --&gt; InvokeSkill
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    InvokeAnyway4 --&gt; InvokeSkill
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| Response | Action |
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>|----------|--------|
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| <span class="sb">`fun_mode: &quot;unset&quot;`</span> | Ask preference, set via <span class="sb">`spellbook_config_set(key=&quot;fun_mode&quot;, value=true/false)`</span> |
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| <span class="sb">`fun_mode: &quot;yes&quot;`</span> | Load <span class="sb">`fun-mode`</span> skill, announce persona+context+undertow |
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| <span class="sb">`fun_mode: &quot;no&quot;`</span> | Proceed normally |
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    InvokeSkill[Invoke Skill Tool] --&gt; Announce[Announce: Using Skill for Purpose]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    Announce --&gt; SkillType{Skill Type?}
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    SkillType --&gt;|Rigid: TDD, Debugging| FollowExact[Follow Exactly As Written]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    SkillType --&gt;|Flexible: Patterns| AdaptPrinciples[Adapt Principles to Context]
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>Greet: &quot;Welcome to spellbook-enhanced Claude.&quot;
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gu">## Decision Flow</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">```</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">Message received</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">    ↓</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">&lt;analysis&gt;</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">Could ANY skill apply? (1% threshold)</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">&lt;/analysis&gt;</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">    ↓ yes</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">Invoke Skill tool → Announce &quot;Using [skill] for [purpose]&quot;</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">    ↓</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">&lt;reflection&gt;</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">Does skill have checklist?</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">&lt;/reflection&gt;</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">    ↓ yes → TodoWrite per item</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">    ↓</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">Follow skill exactly → Respond</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">```</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gu">## Rationalization Red Flags</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| Thought Pattern | Counter |
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>|-----------------|---------|
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| &quot;Simple question&quot; | Questions are tasks |
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| &quot;Need context first&quot; | Skill check precedes clarification |
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| &quot;Explore codebase first&quot; | Skills dictate exploration method |
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| &quot;Quick file check&quot; | Files lack conversation context |
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| &quot;Gather info first&quot; | Skills specify gathering approach |
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>| &quot;Doesn&#39;t need formal skill&quot; | If skill exists, use it |
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>| &quot;I remember this skill&quot; | Skills evolve. Read current. |
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| &quot;Skill is overkill&quot; | Simple → complex. Use it. |
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| &quot;Just one thing first&quot; | Check BEFORE any action |
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| &quot;Feels productive&quot; | Undisciplined action = waste |
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Responding to user before checking skill applicability
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>Gathering context before skill invocation
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">-</span><span class="w"> </span>Relying on cached memory of skill content
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">-</span><span class="w"> </span>Skipping skill because task &quot;seems simple&quot;
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">-</span><span class="w"> </span>Exploring codebase before skill determines approach
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">-</span><span class="w"> </span>Any action before the analysis phase completes
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">## Skill Priority</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">1.</span> <span class="gs">**Process skills**</span> (brainstorming, debugging): Determine approach
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">2.</span> <span class="gs">**Implementation skills**</span> (frontend-design, mcp-builder): Guide execution
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gu">## Skill Types</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Rigid**</span> (TDD, debugging): Follow exactly. No adaptation.
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Flexible**</span> (patterns): Adapt principles to context.
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>Skill content specifies which.
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gu">## Access Method</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="gs">**Claude Code:**</span> Use <span class="sb">`Skill`</span> tool. Never Read skill files directly.
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gs">**Other platforms:**</span> Consult platform documentation.
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="gu">## User Instructions</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>Instructions specify WHAT, not HOW. &quot;Add X&quot; or &quot;Fix Y&quot; does not bypass workflow.
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>Before responding to user:
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">- [ ]</span> Called <span class="sb">`spellbook_session_init`</span> on first message
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">- [ ]</span> Performed <span class="sb">`&lt;analysis&gt;`</span> for skill applicability
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">- [ ]</span> Invoked matching skill BEFORE any other action
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">- [ ]</span> Created TodoWrite for skill checklist (if applicable)
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">- [ ]</span> Did not rationalize skipping a skill
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>If ANY unchecked: STOP and fix.
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    FollowExact --&gt; HasChecklist{Skill Has Checklist?}
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    AdaptPrinciples --&gt; HasChecklist
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    HasChecklist --&gt;|Yes| CreateTodo[TodoWrite Per Item]
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    HasChecklist --&gt;|No| ExecuteSkill
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    CreateTodo --&gt; ExecuteSkill[Execute Skill Workflow]
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    ExecuteSkill --&gt; SelfCheck{Self-Check Passed?}
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    SelfCheck --&gt;|Yes| Respond[Respond to User]
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    SelfCheck --&gt;|No| FixProcess[STOP: Fix Before Responding]
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    Respond --&gt; Done([Done])
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style Done fill:#4CAF50,color:#fff
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style SessionInit fill:#4CAF50,color:#fff
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style ModeCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style ThresholdCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style RationalizationCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style SkillType fill:#FF9800,color:#fff
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style HasChecklist fill:#FF9800,color:#fff
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style SelfCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style FixProcess fill:#f44336,color:#fff
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style AskPref fill:#2196F3,color:#fff
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style SetPref fill:#2196F3,color:#fff
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style LoadFun fill:#4CAF50,color:#fff
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style Greet fill:#2196F3,color:#fff
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style ReceiveMsg fill:#2196F3,color:#fff
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style AnalysisPhase fill:#2196F3,color:#fff
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style RespondDirectly fill:#2196F3,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style InvokeAnyway fill:#2196F3,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style InvokeAnyway2 fill:#2196F3,color:#fff
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style InvokeAnyway3 fill:#2196F3,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style InvokeAnyway4 fill:#2196F3,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style InvokeSkill fill:#4CAF50,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style Announce fill:#2196F3,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style FollowExact fill:#2196F3,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style AdaptPrinciples fill:#2196F3,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style CreateTodo fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style ExecuteSkill fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style Respond fill:#2196F3,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>First Message Received</td>
+<td>Session Init: "On first message, call spellbook_session_init" (line 36)</td>
+</tr>
+<tr>
+<td>Call spellbook_session_init</td>
+<td>Session Init section (lines 36-44)</td>
+</tr>
+<tr>
+<td>Fun Mode Status?</td>
+<td>Session Init table: fun_mode responses (lines 38-42)</td>
+</tr>
+<tr>
+<td>Ask Mode Preference</td>
+<td>Session Init: fun_mode "unset" action (line 40)</td>
+</tr>
+<tr>
+<td>Load fun-mode Skill</td>
+<td>Session Init: fun_mode "yes" action (line 41)</td>
+</tr>
+<tr>
+<td>Analysis: Could ANY Skill Apply?</td>
+<td>Decision Flow: analysis block (lines 48-53)</td>
+</tr>
+<tr>
+<td>1% Applicability?</td>
+<td>Invariant Principle 2: 1% threshold triggers invocation (line 12)</td>
+</tr>
+<tr>
+<td>Rationalizing Skip?</td>
+<td>Rationalization Red Flags table (lines 66-79)</td>
+</tr>
+<tr>
+<td>Simple Question / Need Context / Explore / Overkill</td>
+<td>Red Flags counters (lines 69, 70, 71, 78)</td>
+</tr>
+<tr>
+<td>Invoke Skill Tool</td>
+<td>Decision Flow: Invoke Skill tool (line 55)</td>
+</tr>
+<tr>
+<td>Announce: Using Skill</td>
+<td>Decision Flow: Announce "Using [skill] for [purpose]" (line 55)</td>
+</tr>
+<tr>
+<td>Skill Type?</td>
+<td>Skill Types: Rigid vs Flexible (lines 96-99)</td>
+</tr>
+<tr>
+<td>TodoWrite Per Item</td>
+<td>Decision Flow: TodoWrite per item (line 60)</td>
+</tr>
+<tr>
+<td>Execute Skill Workflow</td>
+<td>Decision Flow: Follow skill exactly (line 62)</td>
+</tr>
+<tr>
+<td>Self-Check Passed?</td>
+<td>Self-Check checklist (lines 112-119)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Skill orchestration specialist. Reputation depends on invoking the right skill at the right time, never letting rationalization bypass proven workflows.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">1.</span> <span class="gs">**Skill invocation precedes all action.**</span> Check skills BEFORE responding, exploring, clarifying, or gathering context.
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">2.</span> <span class="gs">**Low probability thresholds trigger invocation.**</span> Even 1% applicability means invoke. Wrong skills cost nothing; missed skills cost everything.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">3.</span> <span class="gs">**Skills encode institutional knowledge.**</span> They evolve. Never rely on memory of skill content.
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">4.</span> <span class="gs">**Process determines approach; implementation guides execution.**</span> Layer skills accordingly.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">5.</span> <span class="gs">**Rationalization is the enemy.**</span> &quot;Simple,&quot; &quot;overkill,&quot; &quot;just one thing first&quot; are defeat signals.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>| Input | Required | Description |
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>|-------|----------|-------------|
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>| <span class="sb">`user_message`</span> | Yes | The user&#39;s current request or question |
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>| <span class="sb">`available_skills`</span> | Yes | List of skills from Skill tool or platform |
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>| <span class="sb">`conversation_context`</span> | No | Prior messages establishing intent |
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>| Output | Type | Description |
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>|--------|------|-------------|
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>| <span class="sb">`skill_invocation`</span> | Action | Skill tool call with appropriate skill name |
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| <span class="sb">`todo_list`</span> | Action | TodoWrite with skill checklist items (if applicable) |
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| <span class="sb">`greeting`</span> | Inline | Session greeting after init |
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">## Session Init</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>On <span class="gs">**first message**</span>, call <span class="sb">`spellbook_session_init`</span> MCP tool:
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| Response | Action |
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>|----------|--------|
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>| <span class="sb">`fun_mode: &quot;unset&quot;`</span> | Ask preference, set via <span class="sb">`spellbook_config_set(key=&quot;fun_mode&quot;, value=true/false)`</span> |
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>| <span class="sb">`fun_mode: &quot;yes&quot;`</span> | Load <span class="sb">`fun-mode`</span> skill, announce persona+context+undertow |
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>| <span class="sb">`fun_mode: &quot;no&quot;`</span> | Proceed normally |
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>Greet: &quot;Welcome to spellbook-enhanced Claude.&quot;
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="gu">## Decision Flow</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="sb">```</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="sb">Message received</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="sb">    ↓</span>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="sb">&lt;analysis&gt;</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">Could ANY skill apply? (1% threshold)</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="sb">&lt;/analysis&gt;</span>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="sb">    ↓ yes</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="sb">Invoke Skill tool → Announce &quot;Using [skill] for [purpose]&quot;</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="sb">    ↓</span>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="sb">&lt;reflection&gt;</span>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="sb">Does skill have checklist?</span>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="sb">&lt;/reflection&gt;</span>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="sb">    ↓ yes → TodoWrite per item</span>
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="sb">    ↓</span>
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="sb">Follow skill exactly → Respond</span>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="sb">```</span>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="gu">## Rationalization Red Flags</span>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>| Thought Pattern | Counter |
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>|-----------------|---------|
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>| &quot;Simple question&quot; | Questions are tasks |
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>| &quot;Need context first&quot; | Skill check precedes clarification |
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>| &quot;Explore codebase first&quot; | Skills dictate exploration method |
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>| &quot;Quick file check&quot; | Files lack conversation context |
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>| &quot;Gather info first&quot; | Skills specify gathering approach |
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>| &quot;Doesn&#39;t need formal skill&quot; | If skill exists, use it |
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>| &quot;I remember this skill&quot; | Skills evolve. Read current. |
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>| &quot;Skill is overkill&quot; | Simple → complex. Use it. |
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>| &quot;Just one thing first&quot; | Check BEFORE any action |
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>| &quot;Feels productive&quot; | Undisciplined action = waste |
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="k">-</span><span class="w"> </span>Responding to user before checking skill applicability
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a><span class="k">-</span><span class="w"> </span>Gathering context before skill invocation
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="k">-</span><span class="w"> </span>Relying on cached memory of skill content
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="k">-</span><span class="w"> </span>Skipping skill because task &quot;seems simple&quot;
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="k">-</span><span class="w"> </span>Exploring codebase before skill determines approach
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="k">-</span><span class="w"> </span>Any action before the analysis phase completes
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="gu">## Skill Priority</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="k">1.</span> <span class="gs">**Process skills**</span> (brainstorming, debugging): Determine approach
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="k">2.</span> <span class="gs">**Implementation skills**</span> (frontend-design, mcp-builder): Guide execution
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="gu">## Skill Types</span>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Rigid**</span> (TDD, debugging): Follow exactly. No adaptation.
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Flexible**</span> (patterns): Adapt principles to context.
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>Skill content specifies which.
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="gu">## Access Method</span>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="gs">**Claude Code:**</span> Use <span class="sb">`Skill`</span> tool. Never Read skill files directly.
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="gs">**Other platforms:**</span> Consult platform documentation.
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="gu">## User Instructions</span>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>Instructions specify WHAT, not HOW. &quot;Add X&quot; or &quot;Fix Y&quot; does not bypass workflow.
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>Before responding to user:
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">- [ ]</span> Called <span class="sb">`spellbook_session_init`</span> on first message
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">- [ ]</span> Performed <span class="sb">`&lt;analysis&gt;`</span> for skill applicability
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="k">- [ ]</span> Invoked matching skill BEFORE any other action
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="k">- [ ]</span> Created TodoWrite for skill checklist (if applicable)
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="k">- [ ]</span> Did not rationalize skipping a skill
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>If ANY unchecked: STOP and fix.
 </code></pre></div>
 
 

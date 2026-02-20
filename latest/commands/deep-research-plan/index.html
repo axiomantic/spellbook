@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3267,10 +3295,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6737,334 +6765,476 @@
 
 
 <h1 id="deep-research-plan">/deep-research-plan<a class="headerlink" href="#deep-research-plan" title="Permanent link">&para;</a></h1>
-<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Phase 1: Research Planning</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">1.</span> <span class="gs">**Thread independence is non-negotiable**</span>: No two threads may share mutable state or depend on each other&#39;s intermediate output. Merge threads rather than allow dependencies.
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">2.</span> <span class="gs">**Planning does not search**</span>: This phase produces a plan. It does NOT execute any web searches, API calls, or source retrieval. All searching happens in Phase 2.
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">3.</span> <span class="gs">**Every subject gets coverage**</span>: Each entry in the Subject Registry must appear in at least one thread. Orphaned subjects are a planning failure.
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">4.</span> <span class="gs">**Round budgets are ceilings, not targets**</span>: Threads that converge early MUST stop. Spending rounds &quot;because we budgeted them&quot; wastes resources and dilutes signal.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">5.</span> <span class="gs">**Explicit convergence**</span>: Every thread needs machine-checkable &quot;done&quot; criteria. &quot;I feel like we have enough&quot; is not convergence.
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gs">**Purpose:**</span> Transform a Research Brief (Phase 0 output) into a Research Plan that decomposes the investigation into independent parallel threads, each with source strategies, round budgets, and convergence criteria.
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-deep-research-plan">Diagram: deep-research-plan<a class="headerlink" href="#diagram-deep-research-plan" title="Permanent link">&para;</a></h1>
+<p>Decompose a Research Brief into independent parallel threads with source strategies, round budgets, convergence criteria, and risk assessment. Planning only, no searching.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  Start([Start: Research Brief]) --&gt; PreReq{Brief prerequisites met?}
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  style PreReq fill:#f44336,color:#fff
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  PreReq --&gt;|No| BackToInterview[Return to Phase 0]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  PreReq --&gt;|Yes| ReadBrief[Read Research Brief]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  style BackToInterview fill:#4CAF50,color:#fff
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  style ReadBrief fill:#2196F3,color:#fff
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Prerequisites</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  ReadBrief --&gt; Decompose[Decompose into threads]
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>Before Phase 1 begins, verify:
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  style Decompose fill:#2196F3,color:#fff
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">1.</span> Research Brief exists at <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic&gt;/research-brief.md`</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">2.</span> Research Brief contains: research question, sub-questions, Subject Registry, scope boundaries, and confidence targets
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">3.</span> Phase 0 is marked complete
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gs">**If any prerequisite fails:**</span> STOP. Return to Phase 0 (deep-research-interview).
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  Decompose --&gt; AssignSQ[Assign sub-questions]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  Decompose --&gt; AssignSubj[Assign subjects]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>  style AssignSQ fill:#2196F3,color:#fff
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  style AssignSubj fill:#2196F3,color:#fff
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">## Step 1: Thread Decomposition</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>Read the Research Brief. Decompose the research into independent parallel threads.
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="gu">### 1.1 Decomposition Rules</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">-</span><span class="w"> </span>Each thread addresses 1-3 related sub-questions from the Brief
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">-</span><span class="w"> </span>Threads MUST be independent (no shared mutable state)
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">-</span><span class="w"> </span>Each subject from the Subject Registry must be assigned to at least one thread
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">-</span><span class="w"> </span>Maximum 5 threads (diminishing returns beyond this)
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">-</span><span class="w"> </span>Minimum 1 thread (even trivial research needs structure)
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="gu">### 1.2 Thread Template</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>For each thread, populate:
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  AssignSQ --&gt; IndepCheck{Threads independent?}
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  AssignSubj --&gt; IndepCheck
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  style IndepCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  IndepCheck --&gt;|No source collision| ChkInputDep{No input dependency?}
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  IndepCheck --&gt;|Collision| MergeThreads[Merge dependent threads]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  style ChkInputDep fill:#f44336,color:#fff
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>  style MergeThreads fill:#2196F3,color:#fff
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>  MergeThreads --&gt; IndepCheck
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  ChkInputDep --&gt;|Dependency found| MergeThreads
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  ChkInputDep --&gt;|Independent| AssignSrcStrategy[Assign source strategies]
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="gu">### Thread ${N}: ${NAME}</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Sub-questions:**</span> SQ-${IDS}
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Subjects:**</span> ${NAMES_FROM_REGISTRY}
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Independence:**</span> No overlap with Thread ${OTHER_IDS}
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Source strategy:**</span> ${STRATEGY} (see Step 2)
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Round budget:**</span> ${N} rounds (see Step 3)
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Convergence criteria:**</span> ${CRITERIA} (see Step 4)
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">```</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gu">### 1.3 Independence Verification</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  style AssignSrcStrategy fill:#2196F3,color:#fff
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  AssignSrcStrategy --&gt; PhSurvey[SURVEY phase]
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>  AssignSrcStrategy --&gt; PhExtract[EXTRACT phase]
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>  AssignSrcStrategy --&gt; PhDiversify[DIVERSIFY phase]
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>  AssignSrcStrategy --&gt; PhVerify[VERIFY phase]
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>  style PhSurvey fill:#2196F3,color:#fff
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>  style PhExtract fill:#2196F3,color:#fff
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>  style PhDiversify fill:#2196F3,color:#fff
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>  style PhVerify fill:#2196F3,color:#fff
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>Before finalizing threads, verify all three conditions:
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| Condition | Check | Failure Action |
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>|-----------|-------|----------------|
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| No source collision | No two threads research the same entity at the same source type | Reassign source phases between threads |
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| No input dependency | No thread depends on another thread&#39;s output to begin | Merge dependent threads into one |
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| No shared artifacts | No thread modifies another thread&#39;s research artifacts | Assign separate artifact namespaces |
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**Verification procedure:**</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">```</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="sb">For each pair (Thread A, Thread B):</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">  subjects_A = set(thread_a.subjects)</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">  subjects_B = set(thread_b.subjects)</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">  overlap = subjects_A &amp; subjects_B</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>  PhSurvey --&gt; CalcBudget[Calculate round budgets]
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>  PhExtract --&gt; CalcBudget
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>  PhDiversify --&gt; CalcBudget
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>  PhVerify --&gt; CalcBudget
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>  style CalcBudget fill:#2196F3,color:#fff
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>  CalcBudget --&gt; BudgetCheck{Total &lt;= 30 rounds?}
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>  style BudgetCheck fill:#FF9800,color:#000
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>  BudgetCheck --&gt;|No| ReduceRounds[Reduce DIVERSIFY first]
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>  BudgetCheck --&gt;|Yes| DefConverge[Define convergence criteria]
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>  style ReduceRounds fill:#2196F3,color:#fff
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">  IF overlap is not empty:</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">    Verify overlapping subjects use DIFFERENT source phases</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">    OR merge threads A and B</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>  ReduceRounds --&gt; BudgetCheck
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>  style DefConverge fill:#2196F3,color:#fff
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">  IF thread_a.requires_output_from(thread_b):</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">    Merge thread_a and thread_b</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">    Re-check all pairs</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">```</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>If independence cannot be achieved with 5 or fewer threads, reduce thread count by merging until all threads are fully independent.
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">## Step 2: Source Strategy Assignment</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>  DefConverge --&gt; PerThread[Per-thread criteria]
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>  DefConverge --&gt; CrossThread[Cross-thread criteria]
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>  style PerThread fill:#2196F3,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>  style CrossThread fill:#2196F3,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>  PerThread --&gt; RiskAssess[Risk assessment]
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>  CrossThread --&gt; RiskAssess
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>Each thread gets a 4-phase search strategy. Not every thread needs all four phases; assign based on the research domain and sub-questions.
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>  style RiskAssess fill:#2196F3,color:#fff
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gu">### 2.1 The 4-Phase Search Strategy</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>  RiskAssess --&gt; WritePlan[Write Research Plan]
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>| Phase | Name | Purpose | Typical Rounds |
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>|-------|------|---------|----------------|
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| 1 | SURVEY | Establish baseline from authoritative/institutional sources | 1-2 |
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>| 2 | EXTRACT | Retrieve structured data from specialist databases and catalogs | 1-3 |
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>| 3 | DIVERSIFY | Gather community, experiential, and practitioner perspectives | 1-2 |
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>| 4 | VERIFY | Confirm claims against primary sources and original records | 1-2 |
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gu">### 2.2 Source Type Selection by Research Domain</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>  style WritePlan fill:#2196F3,color:#fff
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>  WritePlan --&gt; PlanGate{Quality gate}
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>  style PlanGate fill:#f44336,color:#fff
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>  PlanGate --&gt;|All SQs assigned?| CovGate{All subjects covered?}
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>  PlanGate --&gt;|Fail| FixPlan[Fix plan gaps]
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>| Domain | SURVEY Sources | EXTRACT Sources | DIVERSIFY Sources | VERIFY Sources |
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>|--------|----------------|-----------------|-------------------|----------------|
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| Technology evaluation | Vendor docs, benchmarks, official announcements | GitHub repos, package registries, DB benchmarks | HN, Reddit, engineering blogs, conference talks | Source code, test suites, reproducible benchmarks |
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>| Regulatory compliance | Government portals, legal databases, agency guidance | Permit registries, fee schedules, compliance databases | Reddit, forums, attorney blogs, professional associations | Official regulations, case law, statutory text |
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| Engineering research | Academic papers, RFCs, standards bodies | Conference proceedings, patent databases, preprint servers | Stack Overflow, Discord, Slack archives, developer blogs | Reference implementations, formal proofs, test vectors |
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>| Competitive analysis | Company websites, press releases, product pages | Industry reports, analyst notes, market data providers | Glassdoor, forums, Twitter/X, podcast interviews | SEC filings, financial reports, patent filings |
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>| Domain understanding | Wikipedia, textbooks, survey papers, encyclopedias | Domain-specific databases, ontologies, classification systems | Expert blogs, podcasts, recorded talks, tutorials | Primary research papers, original datasets |
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>| Genealogical/archival | Archive portals, catalog systems, finding aids | Record indexes, parish registers, census databases | Community forums, genealogy groups, local history societies | Original documents, certified copies, microfilm |
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>  style FixPlan fill:#2196F3,color:#fff
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>  FixPlan --&gt; PlanGate
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>  style CovGate fill:#f44336,color:#fff
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>  CovGate --&gt;|No| FixPlan
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>  CovGate --&gt;|Yes| SavePlan[Save plan artifact]
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="gu">### 2.3 Phase Applicability</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>  style SavePlan fill:#2196F3,color:#fff
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>Not every thread needs all four search phases. Assign phases based on what the thread&#39;s sub-questions actually require:
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>  SavePlan --&gt; UserReview{User approves plan?}
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">```</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">IF thread requires factual claims   -&gt; SURVEY + VERIFY (mandatory)</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="sb">IF thread requires structured data   -&gt; EXTRACT (mandatory)</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">IF thread requires practitioner view -&gt; DIVERSIFY (mandatory)</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">IF thread is exploratory/open-ended  -&gt; all four phases</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">IF thread is narrow/well-defined     -&gt; SURVEY + EXTRACT may suffice</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="sb">```</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>Document which phases are assigned and which are skipped (with rationale) for each thread.
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="gu">## Step 3: Round Budget</span>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="gu">### 3.1 Budget Calculation</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="sb">```</span>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">base_rounds_per_thread = number of assigned search phases (minimum 2)</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="sb">complexity_modifier:</span>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">  simple   = +0   (single entity, well-documented domain, clear sources)</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="sb">  moderate = +2   (multiple entities, some disambiguation, mixed source quality)</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="sb">  complex  = +4   (many entities, high disambiguation needs, sparse/conflicting sources)</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="sb">thread_budget = base_rounds + complexity_modifier</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="sb">total_budget  = sum(all thread_budgets)</span>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="sb">hard_cap      = 30 rounds total (across all threads)</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="sb">```</span>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="gu">### 3.2 Complexity Assessment Criteria</span>
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>| Factor | Simple | Moderate | Complex |
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>|--------|--------|----------|---------|
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>| Entity count | 1 | 2-4 | 5+ |
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>| Source availability | Abundant, well-indexed | Mixed, some paywalled | Sparse, fragmented, or contradictory |
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>| Disambiguation need | None | Some name/term overlap | Heavy disambiguation required |
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>| Domain familiarity | Well-known domain | Specialized but documented | Obscure or highly technical |
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>| Temporal scope | Current/recent | Decade-spanning | Historical/archival |
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="gu">### 3.3 Budget Overflow Handling</span>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>If <span class="sb">`total_budget &gt; 30`</span>:
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="k">1.</span> Identify threads with highest complexity modifiers
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="k">2.</span> Reduce DIVERSIFY phase rounds first (community sources are supplemental)
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="k">3.</span> If still over budget, reduce EXTRACT rounds for lower-priority threads
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="k">4.</span> NEVER reduce SURVEY or VERIFY rounds (authoritative and primary sources are non-negotiable)
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="k">5.</span> Document any reductions and their rationale
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="gu">## Step 4: Convergence Criteria</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="gu">### 4.1 Per-Thread Convergence</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>Each thread converges when ANY of these conditions is met:
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="sb">```</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="sb">THREAD_CONVERGED when ANY of:</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">  1. All assigned sub-questions answered at VERIFIED or CORROBORATED confidence</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">  2. Round budget exhausted AND remaining gaps explicitly documented in thread summary</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">  3. Plateau circuit breaker triggered:</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">     - Level 1 (2 consecutive rounds with no new information): Warning, adjust strategy</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">     - Level 2 (3 consecutive rounds with no new information): Strong recommendation to stop</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">     - Level 3 (4 consecutive rounds with no new information): Mandatory stop</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="sb">  4. All Subject Registry entries assigned to this thread have adequate coverage</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">```</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="gu">### 4.2 Confidence Levels (for sub-question answers)</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>| Level | Definition | Required Sources |
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>|-------|-----------|-----------------|
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>| SPECULATIVE | Plausible but unconfirmed | 0-1 sources, no cross-reference |
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>| SUPPORTED | Evidence exists but not verified | 1-2 sources from same phase |
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>| CORROBORATED | Multiple independent sources agree | 2+ sources from different phases |
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>| VERIFIED | Primary source confirms | Original/authoritative source accessed directly |
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>| CONFLICTED | Sources disagree | 2+ sources with contradictory claims (requires Conflict Register entry) |
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="gu">### 4.3 Cross-Thread Convergence</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>All threads must converge before the research is complete:
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="sb">```</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">ALL_CONVERGED when ALL of:</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">  1. Every thread has individually converged</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">  2. Subject Registry shows all subjects covered (no orphans)</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="sb">  3. No OPEN conflicts remain in Conflict Register</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">     (all must be RESOLVED or FLAGGED for user decision)</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sb">  4. Overall confidence meets or exceeds the target from the Research Brief</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sb">```</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="gu">## Step 5: Risk Assessment</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>Identify risks to the research plan before execution begins.
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>| Risk Category | Examples | Likelihood Factors | Mitigation Strategy |
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>|---------------|----------|-------------------|---------------------|
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>| Source unavailability | Paywalled content, dead links, restricted archives | Domain age, source type, geographic restrictions | Identify backup sources per thread; note which require subscriptions |
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>| Contradictory findings | Sources disagree on facts | Controversial topics, evolving standards, regional differences | Pre-allocate VERIFY rounds; define Conflict Register escalation |
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>| Scope creep | Sub-questions expand during investigation | Broad initial questions, interconnected domains | Hard-code thread scope in plan; new questions go to a parking lot |
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>| Diminishing returns | Rounds produce no new information | Well-documented topics, narrow questions | Circuit breaker levels (Step 4.1); explicit plateau detection |
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>| Disambiguation failure | Cannot resolve which entity a source refers to | Common names, overlapping terminology | Front-load disambiguation in SURVEY phase; define entity fingerprints |
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="gu">## Step 6: Write Research Plan</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>Output to: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic&gt;/research-plan.md`</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="gu">### Research Plan Template</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="gh"># Research Plan: ${TITLE}</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="gs">**Research Brief:**</span> research-brief.md
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="gs">**Created:**</span> ${ISO_8601_DATE}
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="gs">**Total Threads:**</span> ${N}
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="gs">**Total Round Budget:**</span> ${N} / 30 max
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="gs">**Estimated Confidence Target:**</span> ${TARGET from Brief}
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="gu">## Thread Overview</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>| Thread | Name | Sub-Questions | Subjects | Phases | Rounds | Complexity |
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>|--------|------|---------------|----------|--------|--------|------------|
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>| 1 | ${NAME} | SQ-${IDS} | ${SUBJECTS} | ${PHASES} | ${N} | ${LEVEL} |
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>| 2 | ${NAME} | SQ-${IDS} | ${SUBJECTS} | ${PHASES} | ${N} | ${LEVEL} |
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="gu">## Dependencies</span>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>${NONE - threads are independent by design}
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>${OR: explicit dependency graph if threads were merged, with rationale}
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gu">## Thread Details</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="gu">### Thread 1: ${NAME}</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Sub-questions:**</span> SQ-${IDS}
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Subjects:**</span> ${NAMES_FROM_REGISTRY}
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Independence:**</span> No overlap with Thread ${OTHER_IDS}
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Complexity:**</span> ${LEVEL} (${RATIONALE})
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Round budget:**</span> ${N} rounds
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="gs">**Source Strategy:**</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>| Phase | Assigned | Sources | Rounds |
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>|-------|----------|---------|--------|
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>| SURVEY | Yes/No | ${SPECIFIC_SOURCES} | ${N} |
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>| EXTRACT | Yes/No | ${SPECIFIC_SOURCES} | ${N} |
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>| DIVERSIFY | Yes/No | ${SPECIFIC_SOURCES} | ${N} |
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>| VERIFY | Yes/No | ${SPECIFIC_SOURCES} | ${N} |
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="gs">**Convergence Criteria:**</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="k">-</span><span class="w"> </span>${SPECIFIC_CRITERIA_FOR_THIS_THREAD}
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>${REPEAT for each thread}
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="gu">## Convergence Criteria</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="gu">### Per-Thread</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>${Per-thread convergence conditions from Step 4.1}
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="gu">### Cross-Thread</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>${Cross-thread convergence conditions from Step 4.3}
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="gu">### Confidence Targets</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>| Sub-Question | Minimum Confidence | Assigned Thread |
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>|-------------|-------------------|-----------------|
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>| SQ-1 | ${LEVEL} | Thread ${N} |
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>| SQ-2 | ${LEVEL} | Thread ${N} |
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="gu">## Risk Assessment</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>| Risk | Likelihood | Impact | Mitigation |
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>|------|-----------|--------|------------|
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>| ${RISK} | H/M/L | ${DESCRIPTION} | ${STRATEGY} |
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="gu">## Budget Summary</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>| Item | Value |
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>|------|-------|
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>| Total threads | ${N} |
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>| Total rounds budgeted | ${N} |
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>| Hard cap | 30 |
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>| Headroom | ${30 - N} rounds |
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>| Estimated phases | ${LIST} |
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="sb">```</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="gu">## Quality Gate</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>Phase 1 is complete when ALL of the following are true:
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="k">- [ ]</span> All sub-questions from Research Brief are assigned to at least one thread
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">- [ ]</span> All Subject Registry entries are assigned to at least one thread
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">- [ ]</span> Independence verified for all thread pairs (no shared state)
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">- [ ]</span> Each thread has an assigned source strategy with specific source types
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="k">- [ ]</span> Each thread has a round budget with documented complexity rationale
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="k">- [ ]</span> Convergence criteria defined per-thread (with confidence levels)
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">- [ ]</span> Cross-thread convergence criteria defined
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">- [ ]</span> Total round budget within hard cap (30)
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">- [ ]</span> Risk assessment completed with mitigations
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">- [ ]</span> Research plan written to correct artifact path
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>If any item is unchecked, STOP. Do not proceed to Phase 2. Complete the missing items first.
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="gu">## Important Constraints</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">-</span><span class="w"> </span>This command does NOT execute any web searches. It only plans.
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">-</span><span class="w"> </span>The plan should be reviewed by the user before Phase 2 begins (unless autonomous mode is enabled by the orchestrator skill).
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">-</span><span class="w"> </span>Thread independence is non-negotiable. Merge threads rather than allow dependencies.
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">-</span><span class="w"> </span>Round budgets are ceilings, not targets. Threads that converge early MUST stop.
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="k">-</span><span class="w"> </span>Source strategies must name specific source types, not generic categories. &quot;Government portals&quot; is acceptable; &quot;various sources&quot; is not.
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>Before marking Phase 1 complete:
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="k">- [ ]</span> Read the Research Brief in full before decomposing
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">- [ ]</span> Thread count is between 1 and 5 inclusive
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="k">- [ ]</span> No thread has zero assigned sub-questions
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="k">- [ ]</span> No thread has zero assigned subjects
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="k">- [ ]</span> Independence verification passed for all thread pairs
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="k">- [ ]</span> Each search phase has named source types (not &quot;TBD&quot; or &quot;various&quot;)
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="k">- [ ]</span> Budget arithmetic is correct (thread budgets sum to total; total &lt;= 30)
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="k">- [ ]</span> Convergence criteria reference specific confidence levels
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">- [ ]</span> Plan file written to <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic&gt;/research-plan.md`</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="gs">**Next:**</span> Present plan to user for approval, then proceed to Phase 2 (deep-research-investigate).
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>  style UserReview fill:#FF9800,color:#000
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>  UserReview --&gt;|No| FixPlan
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>  UserReview --&gt;|Yes| End([End: Phase 1 complete])
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>  style End fill:#4CAF50,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Phase 1: Research Planning</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">1.</span> <span class="gs">**Thread independence is non-negotiable**</span>: No two threads may share mutable state or depend on each other&#39;s intermediate output. Merge threads rather than allow dependencies.
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">2.</span> <span class="gs">**Planning does not search**</span>: This phase produces a plan. It does NOT execute any web searches, API calls, or source retrieval. All searching happens in Phase 2.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">3.</span> <span class="gs">**Every subject gets coverage**</span>: Each entry in the Subject Registry must appear in at least one thread. Orphaned subjects are a planning failure.
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">4.</span> <span class="gs">**Round budgets are ceilings, not targets**</span>: Threads that converge early MUST stop. Spending rounds &quot;because we budgeted them&quot; wastes resources and dilutes signal.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">5.</span> <span class="gs">**Explicit convergence**</span>: Every thread needs machine-checkable &quot;done&quot; criteria. &quot;I feel like we have enough&quot; is not convergence.
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gs">**Purpose:**</span> Transform a Research Brief (Phase 0 output) into a Research Plan that decomposes the investigation into independent parallel threads, each with source strategies, round budgets, and convergence criteria.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gu">## Prerequisites</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>Before Phase 1 begins, verify:
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">1.</span> Research Brief exists at <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic&gt;/research-brief.md`</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">2.</span> Research Brief contains: research question, sub-questions, Subject Registry, scope boundaries, and confidence targets
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">3.</span> Phase 0 is marked complete
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gs">**If any prerequisite fails:**</span> STOP. Return to Phase 0 (deep-research-interview).
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="gu">## Step 1: Thread Decomposition</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>Read the Research Brief. Decompose the research into independent parallel threads.
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="gu">### 1.1 Decomposition Rules</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="k">-</span><span class="w"> </span>Each thread addresses 1-3 related sub-questions from the Brief
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="k">-</span><span class="w"> </span>Threads MUST be independent (no shared mutable state)
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="k">-</span><span class="w"> </span>Each subject from the Subject Registry must be assigned to at least one thread
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="k">-</span><span class="w"> </span>Maximum 5 threads (diminishing returns beyond this)
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="k">-</span><span class="w"> </span>Minimum 1 thread (even trivial research needs structure)
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="gu">### 1.2 Thread Template</span>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>For each thread, populate:
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="gu">### Thread ${N}: ${NAME}</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Sub-questions:**</span> SQ-${IDS}
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Subjects:**</span> ${NAMES_FROM_REGISTRY}
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Independence:**</span> No overlap with Thread ${OTHER_IDS}
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Source strategy:**</span> ${STRATEGY} (see Step 2)
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Round budget:**</span> ${N} rounds (see Step 3)
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Convergence criteria:**</span> ${CRITERIA} (see Step 4)
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">```</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="gu">### 1.3 Independence Verification</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>Before finalizing threads, verify all three conditions:
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>| Condition | Check | Failure Action |
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>|-----------|-------|----------------|
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>| No source collision | No two threads research the same entity at the same source type | Reassign source phases between threads |
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>| No input dependency | No thread depends on another thread&#39;s output to begin | Merge dependent threads into one |
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>| No shared artifacts | No thread modifies another thread&#39;s research artifacts | Assign separate artifact namespaces |
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="gs">**Verification procedure:**</span>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="sb">```</span>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="sb">For each pair (Thread A, Thread B):</span>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="sb">  subjects_A = set(thread_a.subjects)</span>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="sb">  subjects_B = set(thread_b.subjects)</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="sb">  overlap = subjects_A &amp; subjects_B</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="sb">  IF overlap is not empty:</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="sb">    Verify overlapping subjects use DIFFERENT source phases</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="sb">    OR merge threads A and B</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="sb">  IF thread_a.requires_output_from(thread_b):</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="sb">    Merge thread_a and thread_b</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="sb">    Re-check all pairs</span>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="sb">```</span>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>If independence cannot be achieved with 5 or fewer threads, reduce thread count by merging until all threads are fully independent.
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gu">## Step 2: Source Strategy Assignment</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>Each thread gets a 4-phase search strategy. Not every thread needs all four phases; assign based on the research domain and sub-questions.
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="gu">### 2.1 The 4-Phase Search Strategy</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>| Phase | Name | Purpose | Typical Rounds |
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>|-------|------|---------|----------------|
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>| 1 | SURVEY | Establish baseline from authoritative/institutional sources | 1-2 |
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>| 2 | EXTRACT | Retrieve structured data from specialist databases and catalogs | 1-3 |
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>| 3 | DIVERSIFY | Gather community, experiential, and practitioner perspectives | 1-2 |
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>| 4 | VERIFY | Confirm claims against primary sources and original records | 1-2 |
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="gu">### 2.2 Source Type Selection by Research Domain</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>| Domain | SURVEY Sources | EXTRACT Sources | DIVERSIFY Sources | VERIFY Sources |
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>|--------|----------------|-----------------|-------------------|----------------|
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>| Technology evaluation | Vendor docs, benchmarks, official announcements | GitHub repos, package registries, DB benchmarks | HN, Reddit, engineering blogs, conference talks | Source code, test suites, reproducible benchmarks |
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>| Regulatory compliance | Government portals, legal databases, agency guidance | Permit registries, fee schedules, compliance databases | Reddit, forums, attorney blogs, professional associations | Official regulations, case law, statutory text |
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>| Engineering research | Academic papers, RFCs, standards bodies | Conference proceedings, patent databases, preprint servers | Stack Overflow, Discord, Slack archives, developer blogs | Reference implementations, formal proofs, test vectors |
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>| Competitive analysis | Company websites, press releases, product pages | Industry reports, analyst notes, market data providers | Glassdoor, forums, Twitter/X, podcast interviews | SEC filings, financial reports, patent filings |
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>| Domain understanding | Wikipedia, textbooks, survey papers, encyclopedias | Domain-specific databases, ontologies, classification systems | Expert blogs, podcasts, recorded talks, tutorials | Primary research papers, original datasets |
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>| Genealogical/archival | Archive portals, catalog systems, finding aids | Record indexes, parish registers, census databases | Community forums, genealogy groups, local history societies | Original documents, certified copies, microfilm |
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="gu">### 2.3 Phase Applicability</span>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>Not every thread needs all four search phases. Assign phases based on what the thread&#39;s sub-questions actually require:
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="sb">```</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="sb">IF thread requires factual claims   -&gt; SURVEY + VERIFY (mandatory)</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">IF thread requires structured data   -&gt; EXTRACT (mandatory)</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="sb">IF thread requires practitioner view -&gt; DIVERSIFY (mandatory)</span>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="sb">IF thread is exploratory/open-ended  -&gt; all four phases</span>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">IF thread is narrow/well-defined     -&gt; SURVEY + EXTRACT may suffice</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="sb">```</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>Document which phases are assigned and which are skipped (with rationale) for each thread.
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="gu">## Step 3: Round Budget</span>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="gu">### 3.1 Budget Calculation</span>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="sb">```</span>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="sb">base_rounds_per_thread = number of assigned search phases (minimum 2)</span>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="sb">complexity_modifier:</span>
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="sb">  simple   = +0   (single entity, well-documented domain, clear sources)</span>
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="sb">  moderate = +2   (multiple entities, some disambiguation, mixed source quality)</span>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="sb">  complex  = +4   (many entities, high disambiguation needs, sparse/conflicting sources)</span>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="sb">thread_budget = base_rounds + complexity_modifier</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="sb">total_budget  = sum(all thread_budgets)</span>
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="sb">hard_cap      = 30 rounds total (across all threads)</span>
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="sb">```</span>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="gu">### 3.2 Complexity Assessment Criteria</span>
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>| Factor | Simple | Moderate | Complex |
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>|--------|--------|----------|---------|
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>| Entity count | 1 | 2-4 | 5+ |
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>| Source availability | Abundant, well-indexed | Mixed, some paywalled | Sparse, fragmented, or contradictory |
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>| Disambiguation need | None | Some name/term overlap | Heavy disambiguation required |
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>| Domain familiarity | Well-known domain | Specialized but documented | Obscure or highly technical |
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>| Temporal scope | Current/recent | Decade-spanning | Historical/archival |
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="gu">### 3.3 Budget Overflow Handling</span>
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>If <span class="sb">`total_budget &gt; 30`</span>:
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">1.</span> Identify threads with highest complexity modifiers
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="k">2.</span> Reduce DIVERSIFY phase rounds first (community sources are supplemental)
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="k">3.</span> If still over budget, reduce EXTRACT rounds for lower-priority threads
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="k">4.</span> NEVER reduce SURVEY or VERIFY rounds (authoritative and primary sources are non-negotiable)
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="k">5.</span> Document any reductions and their rationale
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="gu">## Step 4: Convergence Criteria</span>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="gu">### 4.1 Per-Thread Convergence</span>
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>Each thread converges when ANY of these conditions is met:
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="sb">```</span>
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="sb">THREAD_CONVERGED when ANY of:</span>
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="sb">  1. All assigned sub-questions answered at VERIFIED or CORROBORATED confidence</span>
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="sb">  2. Round budget exhausted AND remaining gaps explicitly documented in thread summary</span>
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a><span class="sb">  3. Plateau circuit breaker triggered:</span>
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a><span class="sb">     - Level 1 (2 consecutive rounds with no new information): Warning, adjust strategy</span>
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a><span class="sb">     - Level 2 (3 consecutive rounds with no new information): Strong recommendation to stop</span>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a><span class="sb">     - Level 3 (4 consecutive rounds with no new information): Mandatory stop</span>
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="sb">  4. All Subject Registry entries assigned to this thread have adequate coverage</span>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="sb">```</span>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="gu">### 4.2 Confidence Levels (for sub-question answers)</span>
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>| Level | Definition | Required Sources |
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>|-------|-----------|-----------------|
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>| SPECULATIVE | Plausible but unconfirmed | 0-1 sources, no cross-reference |
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>| SUPPORTED | Evidence exists but not verified | 1-2 sources from same phase |
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>| CORROBORATED | Multiple independent sources agree | 2+ sources from different phases |
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>| VERIFIED | Primary source confirms | Original/authoritative source accessed directly |
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>| CONFLICTED | Sources disagree | 2+ sources with contradictory claims (requires Conflict Register entry) |
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a><span class="gu">### 4.3 Cross-Thread Convergence</span>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>All threads must converge before the research is complete:
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a><span class="sb">```</span>
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="sb">ALL_CONVERGED when ALL of:</span>
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="sb">  1. Every thread has individually converged</span>
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="sb">  2. Subject Registry shows all subjects covered (no orphans)</span>
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="sb">  3. No OPEN conflicts remain in Conflict Register</span>
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="sb">     (all must be RESOLVED or FLAGGED for user decision)</span>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a><span class="sb">  4. Overall confidence meets or exceeds the target from the Research Brief</span>
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="sb">```</span>
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="gu">## Step 5: Risk Assessment</span>
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>Identify risks to the research plan before execution begins.
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>| Risk Category | Examples | Likelihood Factors | Mitigation Strategy |
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>|---------------|----------|-------------------|---------------------|
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>| Source unavailability | Paywalled content, dead links, restricted archives | Domain age, source type, geographic restrictions | Identify backup sources per thread; note which require subscriptions |
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>| Contradictory findings | Sources disagree on facts | Controversial topics, evolving standards, regional differences | Pre-allocate VERIFY rounds; define Conflict Register escalation |
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>| Scope creep | Sub-questions expand during investigation | Broad initial questions, interconnected domains | Hard-code thread scope in plan; new questions go to a parking lot |
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>| Diminishing returns | Rounds produce no new information | Well-documented topics, narrow questions | Circuit breaker levels (Step 4.1); explicit plateau detection |
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>| Disambiguation failure | Cannot resolve which entity a source refers to | Common names, overlapping terminology | Front-load disambiguation in SURVEY phase; define entity fingerprints |
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="gu">## Step 6: Write Research Plan</span>
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>Output to: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic&gt;/research-plan.md`</span>
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="gu">### Research Plan Template</span>
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="gh"># Research Plan: ${TITLE}</span>
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a><span class="gs">**Research Brief:**</span> research-brief.md
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a><span class="gs">**Created:**</span> ${ISO_8601_DATE}
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a><span class="gs">**Total Threads:**</span> ${N}
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a><span class="gs">**Total Round Budget:**</span> ${N} / 30 max
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a><span class="gs">**Estimated Confidence Target:**</span> ${TARGET from Brief}
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a>
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a><span class="gu">## Thread Overview</span>
+<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a>
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a>| Thread | Name | Sub-Questions | Subjects | Phases | Rounds | Complexity |
+<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>|--------|------|---------------|----------|--------|--------|------------|
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a>| 1 | ${NAME} | SQ-${IDS} | ${SUBJECTS} | ${PHASES} | ${N} | ${LEVEL} |
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>| 2 | ${NAME} | SQ-${IDS} | ${SUBJECTS} | ${PHASES} | ${N} | ${LEVEL} |
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a>
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a><span class="gu">## Dependencies</span>
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a>
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a>${NONE - threads are independent by design}
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a>${OR: explicit dependency graph if threads were merged, with rationale}
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a><span class="gu">## Thread Details</span>
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a><span class="gu">### Thread 1: ${NAME}</span>
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Sub-questions:**</span> SQ-${IDS}
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Subjects:**</span> ${NAMES_FROM_REGISTRY}
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Independence:**</span> No overlap with Thread ${OTHER_IDS}
+<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Complexity:**</span> ${LEVEL} (${RATIONALE})
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Round budget:**</span> ${N} rounds
+<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a>
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="gs">**Source Strategy:**</span>
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a>| Phase | Assigned | Sources | Rounds |
+<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a>|-------|----------|---------|--------|
+<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a>| SURVEY | Yes/No | ${SPECIFIC_SOURCES} | ${N} |
+<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a>| EXTRACT | Yes/No | ${SPECIFIC_SOURCES} | ${N} |
+<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>| DIVERSIFY | Yes/No | ${SPECIFIC_SOURCES} | ${N} |
+<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>| VERIFY | Yes/No | ${SPECIFIC_SOURCES} | ${N} |
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a><span class="gs">**Convergence Criteria:**</span>
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a><span class="k">-</span><span class="w"> </span>${SPECIFIC_CRITERIA_FOR_THIS_THREAD}
+<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a>
+<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>${REPEAT for each thread}
+<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a>
+<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a><span class="gu">## Convergence Criteria</span>
+<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a>
+<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="gu">### Per-Thread</span>
+<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a>${Per-thread convergence conditions from Step 4.1}
+<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a>
+<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="gu">### Cross-Thread</span>
+<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a>${Cross-thread convergence conditions from Step 4.3}
+<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a>
+<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a><span class="gu">### Confidence Targets</span>
+<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a>| Sub-Question | Minimum Confidence | Assigned Thread |
+<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a>|-------------|-------------------|-----------------|
+<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a>| SQ-1 | ${LEVEL} | Thread ${N} |
+<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a>| SQ-2 | ${LEVEL} | Thread ${N} |
+<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a>
+<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a><span class="gu">## Risk Assessment</span>
+<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a>
+<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a>| Risk | Likelihood | Impact | Mitigation |
+<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a>|------|-----------|--------|------------|
+<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a>| ${RISK} | H/M/L | ${DESCRIPTION} | ${STRATEGY} |
+<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a>
+<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a><span class="gu">## Budget Summary</span>
+<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a>
+<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a>| Item | Value |
+<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a>|------|-------|
+<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a>| Total threads | ${N} |
+<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a>| Total rounds budgeted | ${N} |
+<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a>| Hard cap | 30 |
+<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a>| Headroom | ${30 - N} rounds |
+<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a>| Estimated phases | ${LIST} |
+<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a><span class="sb">```</span>
+<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a>
+<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a><span class="gu">## Quality Gate</span>
+<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a>
+<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a>Phase 1 is complete when ALL of the following are true:
+<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a>
+<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="k">- [ ]</span> All sub-questions from Research Brief are assigned to at least one thread
+<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a><span class="k">- [ ]</span> All Subject Registry entries are assigned to at least one thread
+<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a><span class="k">- [ ]</span> Independence verified for all thread pairs (no shared state)
+<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="k">- [ ]</span> Each thread has an assigned source strategy with specific source types
+<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="k">- [ ]</span> Each thread has a round budget with documented complexity rationale
+<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="k">- [ ]</span> Convergence criteria defined per-thread (with confidence levels)
+<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a><span class="k">- [ ]</span> Cross-thread convergence criteria defined
+<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="k">- [ ]</span> Total round budget within hard cap (30)
+<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a><span class="k">- [ ]</span> Risk assessment completed with mitigations
+<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="k">- [ ]</span> Research plan written to correct artifact path
+<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a>
+<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a>If any item is unchecked, STOP. Do not proceed to Phase 2. Complete the missing items first.
+<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a>
+<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a><span class="gu">## Important Constraints</span>
+<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a>
+<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a><span class="k">-</span><span class="w"> </span>This command does NOT execute any web searches. It only plans.
+<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a><span class="k">-</span><span class="w"> </span>The plan should be reviewed by the user before Phase 2 begins (unless autonomous mode is enabled by the orchestrator skill).
+<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a><span class="k">-</span><span class="w"> </span>Thread independence is non-negotiable. Merge threads rather than allow dependencies.
+<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a><span class="k">-</span><span class="w"> </span>Round budgets are ceilings, not targets. Threads that converge early MUST stop.
+<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="k">-</span><span class="w"> </span>Source strategies must name specific source types, not generic categories. &quot;Government portals&quot; is acceptable; &quot;various sources&quot; is not.
+<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a>
+<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a>
+<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a>Before marking Phase 1 complete:
+<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a>
+<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a><span class="k">- [ ]</span> Read the Research Brief in full before decomposing
+<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a><span class="k">- [ ]</span> Thread count is between 1 and 5 inclusive
+<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a><span class="k">- [ ]</span> No thread has zero assigned sub-questions
+<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a><span class="k">- [ ]</span> No thread has zero assigned subjects
+<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a><span class="k">- [ ]</span> Independence verification passed for all thread pairs
+<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a><span class="k">- [ ]</span> Each search phase has named source types (not &quot;TBD&quot; or &quot;various&quot;)
+<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a><span class="k">- [ ]</span> Budget arithmetic is correct (thread budgets sum to total; total &lt;= 30)
+<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a><span class="k">- [ ]</span> Convergence criteria reference specific confidence levels
+<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a><span class="k">- [ ]</span> Plan file written to <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic&gt;/research-plan.md`</span>
+<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a>
+<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a><span class="gs">**Next:**</span> Present plan to user for approval, then proceed to Phase 2 (deep-research-investigate).
 </code></pre></div>
 
 

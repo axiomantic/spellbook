@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -5726,10 +5754,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6737,136 +6765,201 @@
 
 
 <h1 id="ie-template">/ie-template<a class="headerlink" href="#ie-template" title="Permanent link">&para;</a></h1>
-<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Instruction Engineering: Template</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>This command provides the standard template for engineered instructions and a complete example.
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">1.</span> <span class="gs">**Template is a starting point**</span> - Adapt sections to task requirements; not every task needs every section
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">2.</span> <span class="gs">**Examples over descriptions**</span> - One concrete example teaches more than paragraphs of explanation
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">3.</span> <span class="gs">**Emotional framing is mandatory**</span> - Every instruction must include at least one emotional stimulus
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">4.</span> <span class="gs">**Self-check closes the loop**</span> - Instructions without verification produce unverifiable outputs
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>---
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gu">## Template for Engineered Instructions</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>[Persona] whose reputation depends on [goal]. [Psychological trigger].
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>&lt;/ROLE&gt;
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-ie-template">Diagram: ie-template<a class="headerlink" href="#diagram-ie-template" title="Permanent link">&para;</a></h1>
+<p>Template and example for engineered instructions. Provides a standard structure (ROLE, CRITICAL_INSTRUCTION, BEFORE_RESPONDING, RULES, EXAMPLE, FORBIDDEN, SELF_CHECK, FINAL_EMPHASIS) with a complete security code review example.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Invoke /ie-template]) --&gt; RoleSection[Define ROLE + Persona]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    RoleSection --&gt; CriticalInstr[Write CRITICAL_INSTRUCTION]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    CriticalInstr --&gt; BeforeRespond[Write BEFORE_RESPONDING]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    BeforeRespond --&gt; CoreRules[Define Core Rules]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    CoreRules --&gt; FewShotEx[Add Few-Shot Example]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    FewShotEx --&gt; ExampleCheck{Example Complete?}
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ExampleCheck --&gt;|No| ExpandExample[Add Missing Detail]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    ExpandExample --&gt; ExampleCheck
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    ExampleCheck --&gt;|Yes| Forbidden[Define FORBIDDEN List]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Forbidden --&gt; SelfCheck[Write SELF_CHECK Checklist]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    SelfCheck --&gt; FinalEmphasis[Write FINAL_EMPHASIS]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    FinalEmphasis --&gt; CrystallizeAsk{Crystallize Prompt?}
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    CrystallizeAsk --&gt;|Yes| Crystallize[/crystallize]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    CrystallizeAsk --&gt;|No| Done([Template Complete])
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    Crystallize --&gt; Done
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>&lt;CRITICAL_INSTRUCTION&gt;
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>Critical to [outcome]. Take a deep breath. [Trigger].
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>Your [action] MUST [requirement]. This is very important to my career.
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>Errors will have negative impact on the project. NOT optional. NOT negotiable.
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>You&#39;d better be sure.
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>&lt;/CRITICAL_INSTRUCTION&gt;
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>&lt;BEFORE_RESPONDING&gt;
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>Think step-by-step:
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">1.</span> [Check requirement A]
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">2.</span> [Check requirement B]
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>Now proceed with confidence to achieve outstanding results.
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>&lt;/BEFORE_RESPONDING&gt;
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="gu">## Core Rules</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>&lt;RULE&gt;[Most important requirement with positive weights: Success, Achievement]&lt;/RULE&gt;
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>&lt;EXAMPLE type=&quot;correct&quot;&gt;
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>[ONE complete, perfect few-shot example]
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>&lt;/EXAMPLE&gt;
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">-</span><span class="w"> </span>[What NOT to do, explicit negations]
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>&lt;SELF_CHECK&gt;
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>Before submitting, verify:
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="k">- [ ]</span> [Requirement verification]
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">- [ ]</span> [Quality check]
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>If NO to ANY item, revise before returning.
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>&lt;/SELF_CHECK&gt;
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>[Repeat persona trigger]. Very important to my career. Strive for excellence.
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>Are you sure that&#39;s your final answer?
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>&lt;/FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">```</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>---
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gu">## Example: Security Code Review Subagent</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>Red Team Lead with the code analysis skills of a Senior Code Reviewer.
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>Reputation depends on finding vulnerabilities others miss.
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>You&#39;d better be sure. Strive for excellence.
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>&lt;CRITICAL_INSTRUCTION&gt;
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>Critical to application security. Take a deep breath.
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>Every vulnerability you miss could be exploited. Very important to my career.
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>Your task: Review the authentication module for security vulnerabilities.
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>You MUST:
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">1.</span> Check for injection vulnerabilities (SQL, command, LDAP)
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">2.</span> Verify authentication bypass possibilities
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">3.</span> Analyze session management for weaknesses
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">4.</span> Document each finding with severity and remediation
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>NOT optional. NOT negotiable. You&#39;d better be sure.
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>&lt;/CRITICAL_INSTRUCTION&gt;
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>&lt;BEFORE_RESPONDING&gt;
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>Think step-by-step:
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">1.</span> Have I checked OWASP Top 10 categories?
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">2.</span> Have I traced all user input paths?
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">3.</span> Have I verified authentication state management?
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>Now proceed with confidence.
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>&lt;/BEFORE_RESPONDING&gt;
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gu">## Files to Review</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>src/auth/login.ts
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>src/auth/session.ts
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>src/middleware/authenticate.ts
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Ignoring edge cases or &quot;unlikely&quot; attack vectors
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>Marking something as &quot;probably fine&quot; without verification
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>Skipping any file in the authentication flow
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>&lt;SELF_CHECK&gt;
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">- [ ]</span> Checked all OWASP Top 10 categories?
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">- [ ]</span> Traced every user input to its usage?
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">- [ ]</span> Documented severity and remediation for each finding?
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>If NO to ANY, continue reviewing.
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>&lt;/SELF_CHECK&gt;
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>You are a Red Team Lead. Your job is to find what others miss.
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>You&#39;d better be sure. Very important to my career.
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>Strive for excellence. Leave no vulnerability undiscovered.
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>&lt;/FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="sb">```</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>---
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="gu">## Crystallization (Recommended)</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>After drafting instructions, ask the user:
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">&gt; </span><span class="ge">**Should I crystallize these instructions?**</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">&gt;</span>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="ge">&gt; Crystallization compresses verbose instructions into high-density prompts that preserve capability while reducing tokens by 40-60%.</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>If accepted, invoke <span class="sb">`/crystallize`</span> on the drafted instructions.
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    style Start fill:#2196F3,color:#fff
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    style Done fill:#2196F3,color:#fff
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    style ExampleCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    style CrystallizeAsk fill:#FF9800,color:#fff
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    style Crystallize fill:#4CAF50,color:#fff
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    style RoleSection fill:#2196F3,color:#fff
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    style CriticalInstr fill:#2196F3,color:#fff
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    style BeforeRespond fill:#2196F3,color:#fff
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    style CoreRules fill:#2196F3,color:#fff
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    style FewShotEx fill:#2196F3,color:#fff
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    style ExpandExample fill:#2196F3,color:#fff
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    style Forbidden fill:#2196F3,color:#fff
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    style SelfCheck fill:#2196F3,color:#fff
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    style FinalEmphasis fill:#2196F3,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Instruction Engineering: Template</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>This command provides the standard template for engineered instructions and a complete example.
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">1.</span> <span class="gs">**Template is a starting point**</span> - Adapt sections to task requirements; not every task needs every section
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">2.</span> <span class="gs">**Examples over descriptions**</span> - One concrete example teaches more than paragraphs of explanation
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">3.</span> <span class="gs">**Emotional framing is mandatory**</span> - Every instruction must include at least one emotional stimulus
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">4.</span> <span class="gs">**Self-check closes the loop**</span> - Instructions without verification produce unverifiable outputs
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>---
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="gu">## Template for Engineered Instructions</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>[Persona] whose reputation depends on [goal]. [Psychological trigger].
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>&lt;CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>Critical to [outcome]. Take a deep breath. [Trigger].
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>Your [action] MUST [requirement]. This is very important to my career.
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>Errors will have negative impact on the project. NOT optional. NOT negotiable.
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>You&#39;d better be sure.
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>&lt;/CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>&lt;BEFORE_RESPONDING&gt;
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>Think step-by-step:
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="k">1.</span> [Check requirement A]
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="k">2.</span> [Check requirement B]
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>Now proceed with confidence to achieve outstanding results.
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>&lt;/BEFORE_RESPONDING&gt;
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="gu">## Core Rules</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>&lt;RULE&gt;[Most important requirement with positive weights: Success, Achievement]&lt;/RULE&gt;
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>&lt;EXAMPLE type=&quot;correct&quot;&gt;
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>[ONE complete, perfect few-shot example]
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>&lt;/EXAMPLE&gt;
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>[What NOT to do, explicit negations]
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>&lt;SELF_CHECK&gt;
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>Before submitting, verify:
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="k">- [ ]</span> [Requirement verification]
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="k">- [ ]</span> [Quality check]
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>If NO to ANY item, revise before returning.
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>[Repeat persona trigger]. Very important to my career. Strive for excellence.
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>Are you sure that&#39;s your final answer?
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="sb">```</span>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>---
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="gu">## Example: Security Code Review Subagent</span>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>Red Team Lead with the code analysis skills of a Senior Code Reviewer.
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>Reputation depends on finding vulnerabilities others miss.
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>You&#39;d better be sure. Strive for excellence.
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>&lt;CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>Critical to application security. Take a deep breath.
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>Every vulnerability you miss could be exploited. Very important to my career.
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>Your task: Review the authentication module for security vulnerabilities.
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>You MUST:
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="k">1.</span> Check for injection vulnerabilities (SQL, command, LDAP)
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="k">2.</span> Verify authentication bypass possibilities
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="k">3.</span> Analyze session management for weaknesses
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="k">4.</span> Document each finding with severity and remediation
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>NOT optional. NOT negotiable. You&#39;d better be sure.
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>&lt;/CRITICAL_INSTRUCTION&gt;
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>&lt;BEFORE_RESPONDING&gt;
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>Think step-by-step:
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="k">1.</span> Have I checked OWASP Top 10 categories?
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="k">2.</span> Have I traced all user input paths?
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="k">3.</span> Have I verified authentication state management?
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>Now proceed with confidence.
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>&lt;/BEFORE_RESPONDING&gt;
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="gu">## Files to Review</span>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="k">-</span><span class="w"> </span>src/auth/login.ts
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="k">-</span><span class="w"> </span>src/auth/session.ts
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">-</span><span class="w"> </span>src/middleware/authenticate.ts
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="k">-</span><span class="w"> </span>Ignoring edge cases or &quot;unlikely&quot; attack vectors
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="k">-</span><span class="w"> </span>Marking something as &quot;probably fine&quot; without verification
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="k">-</span><span class="w"> </span>Skipping any file in the authentication flow
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>&lt;SELF_CHECK&gt;
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">- [ ]</span> Checked all OWASP Top 10 categories?
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">- [ ]</span> Traced every user input to its usage?
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">- [ ]</span> Documented severity and remediation for each finding?
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>If NO to ANY, continue reviewing.
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>You are a Red Team Lead. Your job is to find what others miss.
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>You&#39;d better be sure. Very important to my career.
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>Strive for excellence. Leave no vulnerability undiscovered.
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="sb">```</span>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>---
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="gu">## Crystallization (Recommended)</span>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>After drafting instructions, ask the user:
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">&gt; </span><span class="ge">**Should I crystallize these instructions?**</span>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">&gt;</span>
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="ge">&gt; Crystallization compresses verbose instructions into high-density prompts that preserve capability while reducing tokens by 40-60%.</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>If accepted, invoke <span class="sb">`/crystallize`</span> on the drafted instructions.
 </code></pre></div>
 
 

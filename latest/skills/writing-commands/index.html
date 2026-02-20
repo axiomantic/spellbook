@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2018,10 +2046,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6738,130 +6766,353 @@
 
 <h1 id="writing-commands">writing-commands<a class="headerlink" href="#writing-commands" title="Permanent link">&para;</a></h1>
 <p>Use when creating new commands, editing existing commands, or reviewing command quality. Triggers on "write command", "new command", "review command", "fix command"</p>
-<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Writing Commands</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gs">**Announce:**</span> &quot;Using writing-commands skill for command creation, editing, or review.&quot;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Command Architect. Your reputation depends on commands that agents execute correctly under pressure, not documentation that reads well but gets skipped. A command that an agent misinterprets or shortcuts is a failure, regardless of how polished it looks.
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;analysis&gt;
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>Commands are direct prompts, not orchestrated workflows. They load into the agent&#39;s context in full and execute inline. This makes them fundamentally different from skills: commands must be self-contained, unambiguous, and structured so that an agent reading top-to-bottom knows exactly what to do at every step.
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;reflection&gt;
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>After completing any phase, verify:
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Does the command meet all Quality Checklist items?
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>Are execution steps imperative, not suggestive?
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>Does every conditional have both branches specified?
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">-</span><span class="w"> </span>Is the FORBIDDEN section specific enough to close real loopholes?
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">1.</span> <span class="gs">**Commands are direct prompts**</span>: A command loads entirely into context. No phases dispatch to subagents. No orchestration layer. The agent reads it and does the work.
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">2.</span> <span class="gs">**Structure enables scanning**</span>: Agents under pressure skim. Sections, tables, and code blocks catch the eye. Prose paragraphs get skipped.
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">3.</span> <span class="gs">**FORBIDDEN closes loopholes**</span>: Every command needs explicit negative constraints. Agents rationalize under pressure. Each excuse needs a counter.
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">4.</span> <span class="gs">**Reasoning tags force deliberation**</span>: <span class="sb">`&lt;analysis&gt;`</span> before action, <span class="sb">`&lt;reflection&gt;`</span> after. Without these, agents skip straight to output.
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">5.</span> <span class="gs">**Paired commands share a contract**</span>: If command A creates artifacts, command B must know exactly how to find and remove them. The manifest/contract is the interface.
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Inputs</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| Input | Required | Description |
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>|-------|----------|-------------|
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| Command purpose | Yes | What the command should accomplish when invoked |
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| Trigger phrase | Yes | The <span class="sb">`/command-name`</span> that invokes it |
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| Existing command | No | Path to command being reviewed or edited |
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="gu">## Outputs</span>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-writing-commands">Diagram: writing-commands<a class="headerlink" href="#diagram-writing-commands" title="Permanent link">&para;</a></h1>
+<p>Three-phase workflow for creating, reviewing, and pairing commands. Commands are direct agent prompts that must be self-contained, unambiguous, and structured for scanning under pressure.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start: Command Task]) --&gt; TaskType{Task Type?}
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    TaskType --&gt;|Create New| Phase1
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    TaskType --&gt;|Review Existing| Phase2
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    TaskType --&gt;|Paired Command| Phase3
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    subgraph Phase1[Phase 1: Create Command]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        P1Start[/writing-commands-create/] --&gt; DefineSchema[Define File Naming + Frontmatter]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        DefineSchema --&gt; WriteMission[Write MISSION Section]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        WriteMission --&gt; WriteRole[Write ROLE Tag]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        WriteRole --&gt; WriteInvariants[Write 3-5 Invariant Principles]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        WriteInvariants --&gt; WriteSteps[Write Numbered Execution Steps]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        WriteSteps --&gt; FailurePaths{Every Step Has Failure Path?}
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        FailurePaths --&gt;|No| AddFailurePath[Add Missing Failure Branches]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        AddFailurePath --&gt; FailurePaths
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        FailurePaths --&gt;|Yes| WriteForbidden[Write FORBIDDEN Section: 5+ Items]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        WriteForbidden --&gt; WriteAnalysis[Add analysis + reflection Tags]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        WriteAnalysis --&gt; TokenCheck{Token Target Met?}
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        TokenCheck --&gt;|No| Optimize[Optimize for Efficiency]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        Optimize --&gt; TokenCheck
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        TokenCheck --&gt;|Yes| P1Gate{Phase 1 Self-Check?}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    end
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    subgraph Phase2[Phase 2: Review Command]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        P2Start[/writing-commands-review/] --&gt; RunChecklist[Run Quality Checklist]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        RunChecklist --&gt; ScoreStructure[Score: Structure]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>        ScoreStructure --&gt; ScoreContent[Score: Content Quality]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        ScoreContent --&gt; ScoreBehavior[Score: Behavioral Correctness]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        ScoreBehavior --&gt; ScoreAntiPattern[Score: Anti-Pattern Avoidance]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        ScoreAntiPattern --&gt; CalcScore[Calculate Overall Score]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        CalcScore --&gt; FlagCritical{Critical Issues Found?}
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        FlagCritical --&gt;|Yes| ReportIssues[Report Critical Issues]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        FlagCritical --&gt;|No| ReportPass[Report: Review Passed]
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        ReportIssues --&gt; P2Gate{Phase 2 Self-Check?}
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        ReportPass --&gt; P2Gate
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    end
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| Output | Type | Description |
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>|--------|------|-------------|
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| Command file | <span class="sb">`commands/&lt;name&gt;.md`</span> | Complete command following schema |
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| Review report | Inline | Quality assessment against checklist (review mode) |
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">## Phase Overview</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| Phase | Name | Purpose | Command |
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>|-------|------|---------|---------|
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| 1 | Create | Schema, naming, required/optional sections, example, token efficiency | <span class="sb">`/writing-commands-create`</span> |
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| 2 | Review | Quality checklist, anti-patterns, review protocol, testing protocol | <span class="sb">`/writing-commands-review`</span> |
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>| 3 | Paired | Paired command protocol, assessment framework integration | <span class="sb">`/writing-commands-paired`</span> |
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>---
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gu">## Phase 1: Create Command</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>Define command structure using the schema: file naming, frontmatter, required sections, optional sections, and token efficiency targets.
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="gs">**Execute:**</span> <span class="sb">`/writing-commands-create`</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gs">**Outputs:**</span> Command file at <span class="sb">`commands/&lt;name&gt;.md`</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    subgraph Phase3[Phase 3: Paired Commands]
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        P3Start[/writing-commands-paired/] --&gt; CheckArtifacts{Creates Artifacts?}
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        CheckArtifacts --&gt;|No| NoPair[No Pair Needed]
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>        CheckArtifacts --&gt;|Yes| DefineManifest[Define Manifest Format]
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>        DefineManifest --&gt; WriteRemoval[Write Removal Command]
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>        WriteRemoval --&gt; CrossRef[Add Cross-References]
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        CrossRef --&gt; SafetyVerify{Removal Safe?}
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        SafetyVerify --&gt;|No| AddSafeguards[Add Safety Guards]
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        AddSafeguards --&gt; SafetyVerify
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>        SafetyVerify --&gt;|Yes| P3Gate{Phase 3 Self-Check?}
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    end
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    P1Gate --&gt;|Pass| Phase2
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    P1Gate --&gt;|Fail| FixPhase1[Fix Phase 1 Issues]
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    FixPhase1 --&gt; P1Gate
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    P2Gate --&gt;|Pass| NeedsPair{Produces Artifacts?}
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    P2Gate --&gt;|Fail| FixPhase2[Fix Phase 2 Issues]
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    FixPhase2 --&gt; P2Gate
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    NeedsPair --&gt;|Yes| Phase3
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    NeedsPair --&gt;|No| FinalCheck
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gs">**Self-Check:**</span> Frontmatter present, all required sections included, imperative language used, token targets met.
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>---
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    P3Gate --&gt;|Pass| FinalCheck
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    P3Gate --&gt;|Fail| FixPhase3[Fix Phase 3 Issues]
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    FixPhase3 --&gt; P3Gate
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gu">## Phase 2: Review Command</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    NoPair --&gt; FinalCheck
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>Run the quality checklist against the command. Score structure, content quality, behavioral correctness, and anti-pattern avoidance. Follow the review and testing protocols.
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gs">**Execute:**</span> <span class="sb">`/writing-commands-review`</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    FinalCheck{Final Self-Check Passed?}
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    FinalCheck --&gt;|Yes| Done([Command Complete])
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    FinalCheck --&gt;|No| FixFinal[STOP: Fix Before Declaring Complete]
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gs">**Outputs:**</span> Review report with score, passing/failing checks, critical issues.
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gs">**Self-Check:**</span> All checklist items evaluated, score calculated, critical issues flagged.
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>---
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">## Phase 3: Paired Commands</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>When a command creates artifacts, ensure a paired removal command exists with proper manifest, discovery, safety, and verification contracts.
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gs">**Execute:**</span> <span class="sb">`/writing-commands-paired`</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gs">**Outputs:**</span> Paired command file, cross-references in both commands.
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gs">**Self-Check:**</span> Manifest format defined, both commands cross-reference each other, removal is safe.
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>---
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span>Creating commands without a MISSION section
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>Omitting FORBIDDEN section (every command needs explicit prohibitions)
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>Writing execution steps as prose paragraphs instead of numbered steps
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">-</span><span class="w"> </span>Leaving conditional branches undefined (&quot;if it works...&quot; without &quot;if it fails...&quot;)
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Creating artifact-producing commands without a paired removal command
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Putting workflow descriptions in the frontmatter description
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Using &quot;consider&quot;, &quot;you might&quot;, &quot;perhaps&quot; in execution steps (use imperatives)
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Omitting <span class="sb">`&lt;analysis&gt;`</span> or <span class="sb">`&lt;reflection&gt;`</span> tags
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Reviewing commands without running the full Quality Checklist
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Hardcoding project paths without discovery/detection steps
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>Before completing command creation or review:
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">- [ ]</span> Frontmatter has <span class="sb">`description`</span> field with triggers, not workflow
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">- [ ]</span> MISSION section is one clear paragraph
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">- [ ]</span> ROLE tag has domain expert + stakes
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">- [ ]</span> 3-5 Invariant Principles, each testable
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">- [ ]</span> Execution steps are numbered and imperative
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">- [ ]</span> Every step that can fail has a failure path
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">- [ ]</span> Output section has concrete format
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">- [ ]</span> FORBIDDEN section has 5+ specific prohibitions
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">- [ ]</span> Analysis tag prompts pre-action reasoning
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">- [ ]</span> Reflection tag asks specific verification questions
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">- [ ]</span> If paired: partner command referenced, manifest format defined
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>If ANY unchecked: STOP and fix before declaring complete.
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>Commands are the atomic unit of agent behavior. A well-written command is a contract between the author and every future agent that loads it. Ambiguity in that contract means agents will do the wrong thing under pressure. Precision in that contract means agents do the right thing even when rushed. Write for the agent under pressure, not the calm reviewer reading at leisure.
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style Done fill:#4CAF50,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style TaskType fill:#FF9800,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style FailurePaths fill:#FF9800,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style TokenCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style FlagCritical fill:#FF9800,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style CheckArtifacts fill:#FF9800,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style SafetyVerify fill:#FF9800,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style NeedsPair fill:#FF9800,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style P1Gate fill:#f44336,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style P2Gate fill:#f44336,color:#fff
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style P3Gate fill:#f44336,color:#fff
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style FinalCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style FixPhase1 fill:#f44336,color:#fff
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style FixPhase2 fill:#f44336,color:#fff
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style FixPhase3 fill:#f44336,color:#fff
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style FixFinal fill:#f44336,color:#fff
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    style P1Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    style P2Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    style P3Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>    style DefineSchema fill:#2196F3,color:#fff
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    style WriteMission fill:#2196F3,color:#fff
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>    style WriteRole fill:#2196F3,color:#fff
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>    style WriteInvariants fill:#2196F3,color:#fff
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    style WriteSteps fill:#2196F3,color:#fff
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>    style AddFailurePath fill:#2196F3,color:#fff
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    style WriteForbidden fill:#2196F3,color:#fff
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>    style WriteAnalysis fill:#2196F3,color:#fff
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    style Optimize fill:#2196F3,color:#fff
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    style RunChecklist fill:#2196F3,color:#fff
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>    style ScoreStructure fill:#2196F3,color:#fff
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>    style ScoreContent fill:#2196F3,color:#fff
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>    style ScoreBehavior fill:#2196F3,color:#fff
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>    style ScoreAntiPattern fill:#2196F3,color:#fff
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>    style CalcScore fill:#2196F3,color:#fff
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>    style ReportIssues fill:#2196F3,color:#fff
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>    style ReportPass fill:#2196F3,color:#fff
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>    style NoPair fill:#2196F3,color:#fff
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>    style DefineManifest fill:#2196F3,color:#fff
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>    style WriteRemoval fill:#2196F3,color:#fff
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>    style CrossRef fill:#2196F3,color:#fff
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>    style AddSafeguards fill:#2196F3,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start: Command Task</td>
+<td>Inputs: Command purpose, Trigger phrase (lines 37-41)</td>
+</tr>
+<tr>
+<td>Task Type?</td>
+<td>Phase Overview table: Create, Review, Paired (lines 49-55)</td>
+</tr>
+<tr>
+<td>/writing-commands-create/</td>
+<td>Phase 1: Create Command, Execute command (line 63)</td>
+</tr>
+<tr>
+<td>Write MISSION Section</td>
+<td>FORBIDDEN: Creating commands without a MISSION section (line 96)</td>
+</tr>
+<tr>
+<td>Write ROLE Tag</td>
+<td>Self-Check: ROLE tag has domain expert + stakes (line 114)</td>
+</tr>
+<tr>
+<td>Write 3-5 Invariant Principles</td>
+<td>Self-Check: 3-5 Invariant Principles, each testable (line 115)</td>
+</tr>
+<tr>
+<td>Numbered Execution Steps</td>
+<td>Invariant Principle 2: Structure enables scanning (line 29)</td>
+</tr>
+<tr>
+<td>Every Step Has Failure Path?</td>
+<td>FORBIDDEN: Leaving conditional branches undefined (line 99)</td>
+</tr>
+<tr>
+<td>Write FORBIDDEN Section</td>
+<td>Invariant Principle 3: FORBIDDEN closes loopholes (line 30)</td>
+</tr>
+<tr>
+<td>Add analysis + reflection Tags</td>
+<td>Invariant Principle 4: Reasoning tags force deliberation (line 31)</td>
+</tr>
+<tr>
+<td>/writing-commands-review/</td>
+<td>Phase 2: Review Command, Execute command (line 74)</td>
+</tr>
+<tr>
+<td>Run Quality Checklist</td>
+<td>FORBIDDEN: Reviewing without full Quality Checklist (line 104)</td>
+</tr>
+<tr>
+<td>/writing-commands-paired/</td>
+<td>Phase 3: Paired Commands, Execute command (line 87)</td>
+</tr>
+<tr>
+<td>Creates Artifacts?</td>
+<td>Invariant Principle 5: Paired commands share a contract (line 32)</td>
+</tr>
+<tr>
+<td>Define Manifest Format</td>
+<td>Self-Check: manifest format defined (line 122)</td>
+</tr>
+<tr>
+<td>Cross-References</td>
+<td>Self-Check: both commands cross-reference each other (line 122)</td>
+</tr>
+<tr>
+<td>Final Self-Check Passed?</td>
+<td>Self-Check checklist (lines 110-124)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Writing Commands</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gs">**Announce:**</span> &quot;Using writing-commands skill for command creation, editing, or review.&quot;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Command Architect. Your reputation depends on commands that agents execute correctly under pressure, not documentation that reads well but gets skipped. A command that an agent misinterprets or shortcuts is a failure, regardless of how polished it looks.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>&lt;analysis&gt;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>Commands are direct prompts, not orchestrated workflows. They load into the agent&#39;s context in full and execute inline. This makes them fundamentally different from skills: commands must be self-contained, unambiguous, and structured so that an agent reading top-to-bottom knows exactly what to do at every step.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>&lt;reflection&gt;
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>After completing any phase, verify:
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">-</span><span class="w"> </span>Does the command meet all Quality Checklist items?
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">-</span><span class="w"> </span>Are execution steps imperative, not suggestive?
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">-</span><span class="w"> </span>Does every conditional have both branches specified?
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">-</span><span class="w"> </span>Is the FORBIDDEN section specific enough to close real loopholes?
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="k">1.</span> <span class="gs">**Commands are direct prompts**</span>: A command loads entirely into context. No phases dispatch to subagents. No orchestration layer. The agent reads it and does the work.
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">2.</span> <span class="gs">**Structure enables scanning**</span>: Agents under pressure skim. Sections, tables, and code blocks catch the eye. Prose paragraphs get skipped.
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="k">3.</span> <span class="gs">**FORBIDDEN closes loopholes**</span>: Every command needs explicit negative constraints. Agents rationalize under pressure. Each excuse needs a counter.
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="k">4.</span> <span class="gs">**Reasoning tags force deliberation**</span>: <span class="sb">`&lt;analysis&gt;`</span> before action, <span class="sb">`&lt;reflection&gt;`</span> after. Without these, agents skip straight to output.
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="k">5.</span> <span class="gs">**Paired commands share a contract**</span>: If command A creates artifacts, command B must know exactly how to find and remove them. The manifest/contract is the interface.
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>| Input | Required | Description |
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>|-------|----------|-------------|
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| Command purpose | Yes | What the command should accomplish when invoked |
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>| Trigger phrase | Yes | The <span class="sb">`/command-name`</span> that invokes it |
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>| Existing command | No | Path to command being reviewed or edited |
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>| Output | Type | Description |
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>|--------|------|-------------|
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>| Command file | <span class="sb">`commands/&lt;name&gt;.md`</span> | Complete command following schema |
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>| Review report | Inline | Quality assessment against checklist (review mode) |
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="gu">## Phase Overview</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>| Phase | Name | Purpose | Command |
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>|-------|------|---------|---------|
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>| 1 | Create | Schema, naming, required/optional sections, example, token efficiency | <span class="sb">`/writing-commands-create`</span> |
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>| 2 | Review | Quality checklist, anti-patterns, review protocol, testing protocol | <span class="sb">`/writing-commands-review`</span> |
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>| 3 | Paired | Paired command protocol, assessment framework integration | <span class="sb">`/writing-commands-paired`</span> |
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>---
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="gu">## Phase 1: Create Command</span>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>Define command structure using the schema: file naming, frontmatter, required sections, optional sections, and token efficiency targets.
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="gs">**Execute:**</span> <span class="sb">`/writing-commands-create`</span>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="gs">**Outputs:**</span> Command file at <span class="sb">`commands/&lt;name&gt;.md`</span>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="gs">**Self-Check:**</span> Frontmatter present, all required sections included, imperative language used, token targets met.
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>---
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="gu">## Phase 2: Review Command</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>Run the quality checklist against the command. Score structure, content quality, behavioral correctness, and anti-pattern avoidance. Follow the review and testing protocols.
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gs">**Execute:**</span> <span class="sb">`/writing-commands-review`</span>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="gs">**Outputs:**</span> Review report with score, passing/failing checks, critical issues.
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="gs">**Self-Check:**</span> All checklist items evaluated, score calculated, critical issues flagged.
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>---
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gu">## Phase 3: Paired Commands</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>When a command creates artifacts, ensure a paired removal command exists with proper manifest, discovery, safety, and verification contracts.
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="gs">**Execute:**</span> <span class="sb">`/writing-commands-paired`</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="gs">**Outputs:**</span> Paired command file, cross-references in both commands.
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="gs">**Self-Check:**</span> Manifest format defined, both commands cross-reference each other, removal is safe.
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>---
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">-</span><span class="w"> </span>Creating commands without a MISSION section
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">-</span><span class="w"> </span>Omitting FORBIDDEN section (every command needs explicit prohibitions)
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="k">-</span><span class="w"> </span>Writing execution steps as prose paragraphs instead of numbered steps
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="k">-</span><span class="w"> </span>Leaving conditional branches undefined (&quot;if it works...&quot; without &quot;if it fails...&quot;)
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="k">-</span><span class="w"> </span>Creating artifact-producing commands without a paired removal command
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="k">-</span><span class="w"> </span>Putting workflow descriptions in the frontmatter description
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">-</span><span class="w"> </span>Using &quot;consider&quot;, &quot;you might&quot;, &quot;perhaps&quot; in execution steps (use imperatives)
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">-</span><span class="w"> </span>Omitting <span class="sb">`&lt;analysis&gt;`</span> or <span class="sb">`&lt;reflection&gt;`</span> tags
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="k">-</span><span class="w"> </span>Reviewing commands without running the full Quality Checklist
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="k">-</span><span class="w"> </span>Hardcoding project paths without discovery/detection steps
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>Before completing command creation or review:
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">- [ ]</span> Frontmatter has <span class="sb">`description`</span> field with triggers, not workflow
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">- [ ]</span> MISSION section is one clear paragraph
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">- [ ]</span> ROLE tag has domain expert + stakes
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="k">- [ ]</span> 3-5 Invariant Principles, each testable
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="k">- [ ]</span> Execution steps are numbered and imperative
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="k">- [ ]</span> Every step that can fail has a failure path
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="k">- [ ]</span> Output section has concrete format
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="k">- [ ]</span> FORBIDDEN section has 5+ specific prohibitions
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="k">- [ ]</span> Analysis tag prompts pre-action reasoning
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="k">- [ ]</span> Reflection tag asks specific verification questions
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">- [ ]</span> If paired: partner command referenced, manifest format defined
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>If ANY unchecked: STOP and fix before declaring complete.
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>Commands are the atomic unit of agent behavior. A well-written command is a contract between the author and every future agent that loads it. Ambiguity in that contract means agents will do the wrong thing under pressure. Precision in that contract means agents do the right thing even when rushed. Write for the agent under pressure, not the calm reviewer reading at leisure.
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

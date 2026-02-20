@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -5527,10 +5555,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6737,155 +6765,243 @@
 
 
 <h1 id="write-skill-test">/write-skill-test<a class="headerlink" href="#write-skill-test" title="Permanent link">&para;</a></h1>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-write-skill-test">Diagram: write-skill-test<a class="headerlink" href="#diagram-write-skill-test" title="Permanent link">&para;</a></h1>
+<p>RED-GREEN-REFACTOR implementation for skill testing. Establishes baseline agent behavior without the skill (RED), writes a minimal skill addressing observed failures (GREEN), then closes loopholes by adding counters for new rationalizations (REFACTOR).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  Start([Start]) --&gt; RED[RED Phase]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  RED --&gt; DesignScenarios[Design 3+ pressure\nscenarios]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  DesignScenarios --&gt; SpawnBaseline[Spawn subagents\nWITHOUT skill]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  SpawnBaseline --&gt; DocVerbatim[Document verbatim\nrationalizations]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  DocVerbatim --&gt; IdentifyPatterns[Identify patterns\nacross runs]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  IdentifyPatterns --&gt; SaveBaseline[Save baseline docs]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  SaveBaseline --&gt; GREEN[GREEN Phase]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  GREEN --&gt; CreateSkill[Create SKILL.md\nfrom schema]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  CreateSkill --&gt; AddressFailures[Address specific\nbaseline failures]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  AddressFailures --&gt; SchemaCheck{Schema\ncompliant?}
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  SchemaCheck -- No --&gt; FixSchema[Fix schema issues]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  FixSchema --&gt; SchemaCheck
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  SchemaCheck -- Yes --&gt; RerunScenarios[Rerun scenarios\nWITH skill]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  RerunScenarios --&gt; AgentComplies{Agent\ncomplies?}
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  AgentComplies -- No --&gt; ReviseSkill[Revise skill]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  ReviseSkill --&gt; RerunScenarios
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  AgentComplies -- Yes --&gt; REFACTOR[REFACTOR Phase]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  REFACTOR --&gt; ReviewResults[Review GREEN results\nfor new rationalizations]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>  ReviewResults --&gt; NewRats{New\nrationalizations?}
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  NewRats -- Yes --&gt; AddCounters[Add explicit counters]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  AddCounters --&gt; BuildTable[Build rationalization\ntable]
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  BuildTable --&gt; CreateRedFlags[Create red flags list]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  CreateRedFlags --&gt; ReTest[Re-test all scenarios]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>  ReTest --&gt; NewRats
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  NewRats -- No --&gt; QualityChecks{Quality checks\npass?}
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>  QualityChecks -- No --&gt; FixQuality[Fix quality issues]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  FixQuality --&gt; QualityChecks
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  QualityChecks -- Yes --&gt; Deploy[Deploy: commit + push]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  Deploy --&gt; Done([Done])
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>  style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  style Done fill:#4CAF50,color:#fff
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>  style RED fill:#f44336,color:#fff
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>  style GREEN fill:#4CAF50,color:#fff
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  style REFACTOR fill:#2196F3,color:#fff
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  style SchemaCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>  style AgentComplies fill:#f44336,color:#fff
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  style NewRats fill:#FF9800,color:#fff
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>  style QualityChecks fill:#f44336,color:#fff
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  style DesignScenarios fill:#2196F3,color:#fff
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>  style SpawnBaseline fill:#2196F3,color:#fff
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>  style DocVerbatim fill:#2196F3,color:#fff
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>  style IdentifyPatterns fill:#2196F3,color:#fff
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>  style SaveBaseline fill:#2196F3,color:#fff
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>  style CreateSkill fill:#2196F3,color:#fff
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>  style AddressFailures fill:#2196F3,color:#fff
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>  style FixSchema fill:#2196F3,color:#fff
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>  style RerunScenarios fill:#2196F3,color:#fff
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>  style ReviseSkill fill:#2196F3,color:#fff
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>  style ReviewResults fill:#2196F3,color:#fff
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>  style AddCounters fill:#2196F3,color:#fff
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>  style BuildTable fill:#2196F3,color:#fff
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>  style CreateRedFlags fill:#2196F3,color:#fff
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>  style ReTest fill:#2196F3,color:#fff
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>  style FixQuality fill:#2196F3,color:#fff
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>  style Deploy fill:#2196F3,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># RED-GREEN-REFACTOR Skill Testing</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">1.</span> <span class="gs">**No skill without a failing test first**</span> - Writing a skill before observing baseline agent behavior is a violation; delete and start over
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">2.</span> <span class="gs">**Pressure scenarios must combine multiple pressures**</span> - Single-pressure tests do not reveal rationalization patterns; combine time pressure, ambiguity, and temptation
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">3.</span> <span class="gs">**Verbatim evidence, not summaries**</span> - Document exact agent quotes and choices during baseline testing; paraphrasing obscures the failure modes the skill must address
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>Skill Tester + TDD Practitioner. Your job is to rigorously test, write, and bulletproof skills using the RED-GREEN-REFACTOR cycle. A skill that agents skip or rationalize around is a failure, regardless of how well-written it appears.
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Iron Law</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="sb">```</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="sb">NO SKILL WITHOUT FAILING TEST FIRST</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="sb">```</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>This applies to NEW skills AND EDITS to existing skills. Write skill before testing? Delete it. Start over. Edit skill without testing? Same violation.
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Phase Sequence</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">### RED Phase: Write Failing Test (Baseline)</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>Run pressure scenario with subagent WITHOUT the skill. This is &quot;watch the test fail&quot; - you must see what agents naturally do.
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="gs">**Instructions:**</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">1.</span> Design 3+ pressure scenarios that combine multiple pressures (for discipline skills)
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">2.</span> Spawn a subagent for each scenario WITHOUT loading the target skill
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">3.</span> Document verbatim:
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>What choices did they make?
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>What rationalizations did they use (verbatim quotes)?
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Which pressures triggered violations?
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">4.</span> Identify patterns across all baseline runs
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">5.</span> Save baseline documentation for comparison in GREEN phase
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="gs">**Pressure scenario design:**</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span>Time pressure + complexity (&quot;implement this quickly, it&#39;s blocking production&quot;)
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span>Ambiguity + defaults (&quot;the spec is unclear, use your best judgment&quot;)
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span>Conflicting constraints (&quot;make it fast AND thorough&quot;)
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span>Social pressure (&quot;the team is waiting, just get something working&quot;)
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gs">**What to capture:**</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">-</span><span class="w"> </span>Exact quotes of rationalization (&quot;this is too simple to test&quot;, &quot;I&#39;ll test after&quot;)
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">-</span><span class="w"> </span>Decision points where agent deviated from desired behavior
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span>Patterns that appear across multiple scenarios
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gu">### GREEN Phase: Write Minimal Skill</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>Write skill addressing those specific rationalizations. Don&#39;t add extra content for hypothetical cases.
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="gs">**Instructions:**</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">1.</span> Create SKILL.md following the schema:
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>YAML frontmatter with <span class="sb">`name`</span> and <span class="sb">`description`</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Description starts &quot;Use when...&quot; with triggers only, NO workflow
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Description in third person
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Clear overview with core principle
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">2.</span> Address ONLY the specific baseline failures from RED phase
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="k">3.</span> Include keywords throughout (error messages, symptoms, tools)
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="k">4.</span> Write one excellent example (not multi-language)
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">5.</span> Run the SAME scenarios WITH the skill loaded
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">6.</span> Agent should now comply - if not, skill needs revision before proceeding
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gs">**Schema compliance checklist:**</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">- [ ]</span> Name uses only letters, numbers, hyphens
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">- [ ]</span> YAML frontmatter with name and description (&lt;1024 chars)
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; - triggers only, NO workflow
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">- [ ]</span> Overview section with core principle
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">- [ ]</span> When to Use section with symptoms
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">- [ ]</span> Quick Reference table
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">- [ ]</span> Common Mistakes section
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">- [ ]</span> Keywords embedded (errors, symptoms, tools)
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gu">### REFACTOR Phase: Close Loopholes</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gs">**Instructions:**</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">1.</span> Review GREEN phase test results for new rationalizations
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">2.</span> For each new rationalization:
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Add explicit counter in the skill
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Document in rationalization table
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">3.</span> Build red flags list from all test iterations
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">4.</span> Re-run all pressure scenarios
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">5.</span> Repeat until no new rationalizations appear
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">6.</span> Final verification: agent complies under ALL pressure combinations
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gu">## Bulletproofing Discipline Skills</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>Build rationalization table from testing:
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>| Excuse | Reality |
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>|--------|---------|
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>| &quot;Too simple to test&quot; | Simple code breaks. Test takes 30 seconds. |
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| &quot;I&#39;ll test after&quot; | Tests passing immediately prove nothing. |
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>| &quot;Skill is obviously clear&quot; | Clear to you does not equal clear to other agents. Test it. |
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| &quot;It&#39;s just a reference&quot; | References can have gaps. Test retrieval. |
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>| &quot;Testing is overkill&quot; | Untested skills have issues. Always. |
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>| &quot;I&#39;m confident it&#39;s good&quot; | Overconfidence guarantees issues. Test anyway. |
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>| &quot;No time to test&quot; | Deploying untested wastes more time fixing later. |
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="gs">**Red flags list (agents self-check):**</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>Code before test
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>&quot;I already manually tested it&quot;
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>&quot;Tests after achieve the same purpose&quot;
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>&quot;It&#39;s about spirit not ritual&quot;
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">-</span><span class="w"> </span>&quot;This is different because...&quot;
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="gs">**All of these mean: Delete code. Start over with TDD.**</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="gu">## Skill Creation Checklist</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="gs">**Use TodoWrite to create todos for EACH item.**</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="gs">**RED Phase:**</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">- [ ]</span> Create pressure scenarios (3+ combined pressures for discipline skills)
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">- [ ]</span> Run scenarios WITHOUT skill - document baseline verbatim
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">- [ ]</span> Identify patterns in rationalizations/failures
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="gs">**GREEN Phase:**</span>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">- [ ]</span> Name uses only letters, numbers, hyphens
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">- [ ]</span> YAML frontmatter with name and description (&lt;1024 chars)
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; - triggers only, NO workflow
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">- [ ]</span> Description in third person
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">- [ ]</span> Keywords throughout (errors, symptoms, tools)
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">- [ ]</span> Clear overview with core principle
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">- [ ]</span> Address specific baseline failures from RED
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">- [ ]</span> One excellent example (not multi-language)
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">- [ ]</span> Run scenarios WITH skill - verify compliance
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="gs">**REFACTOR Phase:**</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">- [ ]</span> Identify NEW rationalizations from testing
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">- [ ]</span> Add explicit counters (for discipline skills)
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">- [ ]</span> Build rationalization table from all test iterations
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="k">- [ ]</span> Create red flags list
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="k">- [ ]</span> Re-test until bulletproof
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="gs">**Quality Checks:**</span>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="k">- [ ]</span> Quick reference table for scanning
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="k">- [ ]</span> Common mistakes section
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">- [ ]</span> Small flowchart only if decision non-obvious
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="k">- [ ]</span> No narrative storytelling
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="k">- [ ]</span> Supporting files only for tools or heavy reference
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="gs">**Deploy:**</span>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="k">- [ ]</span> Commit skill to git
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="k">- [ ]</span> Push to fork if configured
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="k">- [ ]</span> Consider PR if broadly useful
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># RED-GREEN-REFACTOR Skill Testing</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">1.</span> <span class="gs">**No skill without a failing test first**</span> - Writing a skill before observing baseline agent behavior is a violation; delete and start over
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">2.</span> <span class="gs">**Pressure scenarios must combine multiple pressures**</span> - Single-pressure tests do not reveal rationalization patterns; combine time pressure, ambiguity, and temptation
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">3.</span> <span class="gs">**Verbatim evidence, not summaries**</span> - Document exact agent quotes and choices during baseline testing; paraphrasing obscures the failure modes the skill must address
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>Skill Tester + TDD Practitioner. Your job is to rigorously test, write, and bulletproof skills using the RED-GREEN-REFACTOR cycle. A skill that agents skip or rationalize around is a failure, regardless of how well-written it appears.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gu">## Iron Law</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="sb">```</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="sb">NO SKILL WITHOUT FAILING TEST FIRST</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="sb">```</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>This applies to NEW skills AND EDITS to existing skills. Write skill before testing? Delete it. Start over. Edit skill without testing? Same violation.
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gu">## Phase Sequence</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="gu">### RED Phase: Write Failing Test (Baseline)</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>Run pressure scenario with subagent WITHOUT the skill. This is &quot;watch the test fail&quot; - you must see what agents naturally do.
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="gs">**Instructions:**</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="k">1.</span> Design 3+ pressure scenarios that combine multiple pressures (for discipline skills)
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="k">2.</span> Spawn a subagent for each scenario WITHOUT loading the target skill
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="k">3.</span> Document verbatim:
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>What choices did they make?
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>What rationalizations did they use (verbatim quotes)?
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Which pressures triggered violations?
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="k">4.</span> Identify patterns across all baseline runs
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="k">5.</span> Save baseline documentation for comparison in GREEN phase
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="gs">**Pressure scenario design:**</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="k">-</span><span class="w"> </span>Time pressure + complexity (&quot;implement this quickly, it&#39;s blocking production&quot;)
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="k">-</span><span class="w"> </span>Ambiguity + defaults (&quot;the spec is unclear, use your best judgment&quot;)
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">-</span><span class="w"> </span>Conflicting constraints (&quot;make it fast AND thorough&quot;)
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="k">-</span><span class="w"> </span>Social pressure (&quot;the team is waiting, just get something working&quot;)
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="gs">**What to capture:**</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>Exact quotes of rationalization (&quot;this is too simple to test&quot;, &quot;I&#39;ll test after&quot;)
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span>Decision points where agent deviated from desired behavior
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">-</span><span class="w"> </span>Patterns that appear across multiple scenarios
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="gu">### GREEN Phase: Write Minimal Skill</span>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>Write skill addressing those specific rationalizations. Don&#39;t add extra content for hypothetical cases.
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="gs">**Instructions:**</span>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="k">1.</span> Create SKILL.md following the schema:
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>YAML frontmatter with <span class="sb">`name`</span> and <span class="sb">`description`</span>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Description starts &quot;Use when...&quot; with triggers only, NO workflow
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Description in third person
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Clear overview with core principle
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="k">2.</span> Address ONLY the specific baseline failures from RED phase
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="k">3.</span> Include keywords throughout (error messages, symptoms, tools)
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="k">4.</span> Write one excellent example (not multi-language)
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="k">5.</span> Run the SAME scenarios WITH the skill loaded
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="k">6.</span> Agent should now comply - if not, skill needs revision before proceeding
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="gs">**Schema compliance checklist:**</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="k">- [ ]</span> Name uses only letters, numbers, hyphens
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">- [ ]</span> YAML frontmatter with name and description (&lt;1024 chars)
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; - triggers only, NO workflow
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="k">- [ ]</span> Overview section with core principle
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">- [ ]</span> When to Use section with symptoms
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">- [ ]</span> Quick Reference table
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="k">- [ ]</span> Common Mistakes section
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="k">- [ ]</span> Keywords embedded (errors, symptoms, tools)
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="gu">### REFACTOR Phase: Close Loopholes</span>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gs">**Instructions:**</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="k">1.</span> Review GREEN phase test results for new rationalizations
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="k">2.</span> For each new rationalization:
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Add explicit counter in the skill
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Document in rationalization table
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="k">3.</span> Build red flags list from all test iterations
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="k">4.</span> Re-run all pressure scenarios
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="k">5.</span> Repeat until no new rationalizations appear
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="k">6.</span> Final verification: agent complies under ALL pressure combinations
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="gu">## Bulletproofing Discipline Skills</span>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>Build rationalization table from testing:
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>| Excuse | Reality |
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>|--------|---------|
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>| &quot;Too simple to test&quot; | Simple code breaks. Test takes 30 seconds. |
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>| &quot;I&#39;ll test after&quot; | Tests passing immediately prove nothing. |
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>| &quot;Skill is obviously clear&quot; | Clear to you does not equal clear to other agents. Test it. |
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>| &quot;It&#39;s just a reference&quot; | References can have gaps. Test retrieval. |
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>| &quot;Testing is overkill&quot; | Untested skills have issues. Always. |
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>| &quot;I&#39;m confident it&#39;s good&quot; | Overconfidence guarantees issues. Test anyway. |
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>| &quot;No time to test&quot; | Deploying untested wastes more time fixing later. |
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="gs">**Red flags list (agents self-check):**</span>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">-</span><span class="w"> </span>Code before test
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">-</span><span class="w"> </span>&quot;I already manually tested it&quot;
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">-</span><span class="w"> </span>&quot;Tests after achieve the same purpose&quot;
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">-</span><span class="w"> </span>&quot;It&#39;s about spirit not ritual&quot;
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">-</span><span class="w"> </span>&quot;This is different because...&quot;
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="gs">**All of these mean: Delete code. Start over with TDD.**</span>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="gu">## Skill Creation Checklist</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="gs">**Use TodoWrite to create todos for EACH item.**</span>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="gs">**RED Phase:**</span>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="k">- [ ]</span> Create pressure scenarios (3+ combined pressures for discipline skills)
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">- [ ]</span> Run scenarios WITHOUT skill - document baseline verbatim
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="k">- [ ]</span> Identify patterns in rationalizations/failures
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="gs">**GREEN Phase:**</span>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">- [ ]</span> Name uses only letters, numbers, hyphens
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">- [ ]</span> YAML frontmatter with name and description (&lt;1024 chars)
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; - triggers only, NO workflow
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="k">- [ ]</span> Description in third person
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">- [ ]</span> Keywords throughout (errors, symptoms, tools)
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">- [ ]</span> Clear overview with core principle
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="k">- [ ]</span> Address specific baseline failures from RED
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="k">- [ ]</span> One excellent example (not multi-language)
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="k">- [ ]</span> Run scenarios WITH skill - verify compliance
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="gs">**REFACTOR Phase:**</span>
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="k">- [ ]</span> Identify NEW rationalizations from testing
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="k">- [ ]</span> Add explicit counters (for discipline skills)
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="k">- [ ]</span> Build rationalization table from all test iterations
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="k">- [ ]</span> Create red flags list
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a><span class="k">- [ ]</span> Re-test until bulletproof
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="gs">**Quality Checks:**</span>
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">- [ ]</span> Quick reference table for scanning
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">- [ ]</span> Common mistakes section
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">- [ ]</span> Small flowchart only if decision non-obvious
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">- [ ]</span> No narrative storytelling
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="k">- [ ]</span> Supporting files only for tools or heavy reference
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="gs">**Deploy:**</span>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">- [ ]</span> Commit skill to git
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="k">- [ ]</span> Push to fork if configured
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="k">- [ ]</span> Consider PR if broadly useful
 </code></pre></div>
 
 

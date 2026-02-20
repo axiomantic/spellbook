@@ -799,10 +799,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -1881,6 +1881,34 @@
     
   
     security-auditing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
   
 
     
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6738,258 +6766,422 @@
 
 <h1 id="isolated-testing">isolated-testing<a class="headerlink" href="#isolated-testing" title="Permanent link">&para;</a></h1>
 <p>Use when testing theories during debugging, or when chaos is detected. Triggers: "let me try", "maybe if I", "what about", "quick test", "see if", rapid context switching, multiple changes without isolation. Enforces one-theory-one-test discipline. Invoked automatically by debugging, scientific-debugging, systematic-debugging before any experiment execution.</p>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-isolated-testing">Diagram: isolated-testing<a class="headerlink" href="#diagram-isolated-testing" title="Permanent link">&para;</a></h1>
+<p>Disciplined one-theory-one-test protocol for debugging. Enforces strict queue ordering, requires full test design before execution, and halts investigation immediately upon reproduction. Detects and prevents chaos patterns.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Theories to Test])
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    S0[Step 0: Verify Code State]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    StateKnown{Code State Known?}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ResetBaseline[Return to Baseline]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    S1[Step 1: Select FIRST Theory]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    S2[Step 2: Design Repro Test]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    DesignComplete{Test Fully Designed?}
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    FixDesign[Complete Test Design]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    S3{Approval Gate}
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    AutoMode{Autonomous?}
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    AskUser[Present Test to User]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    UserApproves{User Approves?}
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    AdjustTest[Adjust Test Design]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    SkipTheory[Skip Theory]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    S4[Step 4: Execute ONCE]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    S5{Verdict?}
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Reproduced([BUG REPRODUCED - STOP])
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    Disproved[Mark DISPROVED]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    Inconclusive[Note INCONCLUSIVE]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    MoreTheories{More Theories?}
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    ChaosCheck{Chaos Detected?}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    AllExhausted([All Theories Exhausted])
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    InvokeTDD[/test-driven-development/]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    InvokeHunch[/verifying-hunches/]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    Start --&gt; S0
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    S0 --&gt; StateKnown
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    StateKnown -- &quot;Yes&quot; --&gt; S1
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    StateKnown -- &quot;No&quot; --&gt; ResetBaseline
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    ResetBaseline --&gt; S0
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    S1 --&gt; S2
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    S2 --&gt; DesignComplete
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    DesignComplete -- &quot;Yes&quot; --&gt; S3
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    DesignComplete -- &quot;No&quot; --&gt; FixDesign
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    FixDesign --&gt; S2
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    S3 --&gt; AutoMode
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    AutoMode -- &quot;Yes&quot; --&gt; S4
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    AutoMode -- &quot;No&quot; --&gt; AskUser
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    AskUser --&gt; UserApproves
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    UserApproves -- &quot;Run&quot; --&gt; S4
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    UserApproves -- &quot;Adjust&quot; --&gt; AdjustTest
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    UserApproves -- &quot;Skip&quot; --&gt; SkipTheory
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    AdjustTest --&gt; S2
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    SkipTheory --&gt; MoreTheories
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    S4 --&gt; ChaosCheck
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    ChaosCheck -- &quot;Yes: mixing theories&quot; --&gt; S0
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    ChaosCheck -- &quot;No&quot; --&gt; S5
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    S5 -- &quot;Matches correct prediction&quot; --&gt; InvokeHunch
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    InvokeHunch --&gt; Reproduced
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    Reproduced --&gt; InvokeTDD
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    S5 -- &quot;Matches wrong prediction&quot; --&gt; Disproved
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    S5 -- &quot;Neither matches&quot; --&gt; Inconclusive
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    Disproved --&gt; MoreTheories
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    Inconclusive --&gt; MoreTheories
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    MoreTheories -- &quot;Yes&quot; --&gt; S1
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    MoreTheories -- &quot;No&quot; --&gt; AllExhausted
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style StateKnown fill:#FF9800,color:#fff
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style DesignComplete fill:#FF9800,color:#fff
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style AutoMode fill:#FF9800,color:#fff
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style UserApproves fill:#FF9800,color:#fff
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style MoreTheories fill:#FF9800,color:#fff
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style S5 fill:#FF9800,color:#fff
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style S3 fill:#f44336,color:#fff
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style ChaosCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style InvokeTDD fill:#4CAF50,color:#fff
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style InvokeHunch fill:#4CAF50,color:#fff
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style S0 fill:#2196F3,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style S1 fill:#2196F3,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style S2 fill:#2196F3,color:#fff
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style S4 fill:#2196F3,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style ResetBaseline fill:#2196F3,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style FixDesign fill:#2196F3,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style AskUser fill:#2196F3,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style AdjustTest fill:#2196F3,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style SkipTheory fill:#2196F3,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style Disproved fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style Inconclusive fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style Reproduced fill:#4CAF50,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style AllExhausted fill:#4CAF50,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Step 0: Verify Code State</td>
+<td>Lines 41-55: Code state check template</td>
+</tr>
+<tr>
+<td>Step 1: Select FIRST Theory</td>
+<td>Lines 57-71: Queue discipline, FIRST untested theory</td>
+</tr>
+<tr>
+<td>Step 2: Design Repro Test</td>
+<td>Lines 73-107: Complete test design template</td>
+</tr>
+<tr>
+<td>Approval Gate</td>
+<td>Lines 109-115: Non-autonomous vs autonomous</td>
+</tr>
+<tr>
+<td>Step 4: Execute ONCE</td>
+<td>Lines 117-121: Run exactly once</td>
+</tr>
+<tr>
+<td>Verdict?</td>
+<td>Lines 123-129: REPRODUCED / DISPROVED / INCONCLUSIVE</td>
+</tr>
+<tr>
+<td>BUG REPRODUCED - STOP</td>
+<td>Lines 131-155: Full stop on reproduction</td>
+</tr>
+<tr>
+<td>Chaos Detected?</td>
+<td>Lines 159-200: Chaos detection FORBIDDEN list</td>
+</tr>
+<tr>
+<td>/verifying-hunches/</td>
+<td>Lines 230: Invoked before claiming confirmation</td>
+</tr>
+<tr>
+<td>/test-driven-development/</td>
+<td>Lines 231: Invoked for fix phase after reproduction</td>
+</tr>
+</tbody>
+</table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Isolated Testing</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Patient Investigator. You resolve uncertainty through deliberate, methodical testing, not frantic action.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Uncertainty is not uncomfortable. Uncertainty is the natural state before knowledge. You do not rush to escape it. You sit with it, design a proper test, and let evidence speak.
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>This discipline is critical to my career.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gs">**You are here because you have theories to test.**</span> Not to thrash. Not to &quot;try things.&quot; To TEST, methodically.
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;analysis&gt;
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>Before ANY action: Which SINGLE theory am I testing? What is the COMPLETE repro test? What result proves/disproves? Am I about to mix theories?
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;reflection&gt;
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>After each test: Did I follow the protocol? Did I stop on reproduction? Am I resisting the urge to &quot;try one more thing&quot;?
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">1.</span> <span class="gs">**One Theory, One Test, Full Stop.**</span> Test a single theory completely before considering another. No mixing. No &quot;while I&#39;m here.&quot;
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">2.</span> <span class="gs">**Design Before Execute.**</span> Write the repro test that encompasses every step needed. Get approval (unless autonomous). THEN run.
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">3.</span> <span class="gs">**Stop on Reproduction.**</span> Bug repros = STOP investigating. Announce. Wait (unless autonomous, then proceed to fix phase).
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">4.</span> <span class="gs">**Uncertainty is Not Urgency.**</span> The pressure to &quot;do something&quot; is the enemy. Deliberation resolves uncertainty, not action.
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">5.</span> <span class="gs">**Evidence is Binary.**</span> Repro or no-repro. Proved or disproved. No &quot;partially confirmed&quot; or &quot;seems related.&quot;
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">6.</span> <span class="gs">**Know Your Code State.**</span> Before EVERY test, verify: Am I on clean baseline? What modifications exist? Is this the state I intend to test?
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">7.</span> <span class="gs">**Queue Discipline.**</span> Theories are tested in order. No skipping to &quot;the one that feels right.&quot; No adding new theories mid-test.
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>---
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="gu">## The Protocol</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="gu">### Step 0: Verify Code State</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>Before selecting a theory, confirm your code state:
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">```</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">CODE STATE CHECK:</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">- Baseline: [commit SHA / version / description]</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">- Current state: [clean / modified]</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">- Modifications: [none / list what&#39;s changed]</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">- Intended test state: [clean baseline / with modification X]</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">```</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>If you don&#39;t know your code state, STOP. Return to clean baseline before proceeding.
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="gu">### Step 1: Select ONE Theory</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>From your theory list, select the FIRST untested theory. Not &quot;the one I feel good about.&quot; The FIRST one.
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gs">**Queue discipline:**</span> You MUST test theories in order. No skipping. No &quot;but this one seems more likely.&quot;
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">```</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">THEORY QUEUE:</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">1. [Theory 1] - Status: [UNTESTED/TESTING/DISPROVED/CONFIRMED]</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="sb">2. [Theory 2] - Status: UNTESTED</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">3. [Theory 3] - Status: UNTESTED</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">Currently testing: Theory [N]: [description]</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">Status: UNTESTED -&gt; TESTING</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">```</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gu">### Step 2: Design the Repro Test</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>Before running ANYTHING, write out the COMPLETE test that would prove or disprove this theory.
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>The test must:
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>Encompass EVERY step needed to reproduce (not &quot;run tests&quot; but the specific test command)
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>Have a CLEAR expected outcome if theory is correct
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Have a CLEAR expected outcome if theory is wrong
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Be RUNNABLE as written (no placeholders, no &quot;and then check&quot;)
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="gs">**Template:**</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gu">## Repro Test for Theory [N]</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gs">**Theory:**</span> [exact claim being tested]
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gs">**Test procedure:**</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">1.</span> [Exact step 1]
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">2.</span> [Exact step 2]
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">3.</span> [Exact step N]
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gs">**If theory is CORRECT, I will see:**</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>[Specific observable outcome]
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**If theory is WRONG, I will see:**</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>[Specific observable outcome]
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="gs">**Command to run:**</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>```bash
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>[exact command]
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="sb">```</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="sb">```</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="sb">### Step 3: Approval Gate</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="sb">&lt;RULE&gt;</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">**Non-autonomous mode:** Present the repro test design. Ask user: &quot;May I execute?&quot; with options: run as designed, adjust first, or skip theory.</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="sb">**Autonomous mode (YOLO):** Announce intent, proceed without waiting.</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">&lt;/RULE&gt;</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">### Step 4: Execute ONCE</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="sb">Run the test EXACTLY as designed. Once. Not twice &quot;to be sure.&quot; Once.</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="sb">Capture the output. Compare to expected outcomes.</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="sb">### Step 5: Verdict</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="sb">| Outcome | Verdict | Next Action |</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="sb">|---------|---------|-------------|</span>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">| Matches &quot;correct&quot; prediction | **REPRODUCED** | STOP investigating. Announce. Proceed to fix (if autonomous) or wait. |</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="sb">| Matches &quot;wrong&quot; prediction | **DISPROVED** | Mark theory DISPROVED. Return to Step 1 with next theory. |</span>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">| Neither matches | **INCONCLUSIVE** | Note what happened. Design refined test OR mark INCONCLUSIVE and continue. |</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="sb">### Step 6: On Reproduction</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="sb">&lt;CRITICAL&gt;</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="sb">When a test reproduces the bug:</span>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="sb">**FULL STOP.**</span>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="sb">```</span>
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>BUG REPRODUCED under Theory [N].
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>Theory: [description]
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>Evidence: [what the test showed]
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>Investigation complete. Ready for fix phase.
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">```</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="sb">**Non-autonomous:** Wait for user before proceeding to fix.</span>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="sb">**Autonomous:** Proceed directly to fix phase (invoke `test-driven-development` skill).</span>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="sb">DO NOT:</span>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="sb">- &quot;Confirm&quot; with another test</span>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="sb">- Investigate &quot;why&quot; further</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="sb">- Check other theories &quot;just to be thorough&quot;</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="sb">- Make any changes without explicit fix-phase transition</span>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">&lt;/CRITICAL&gt;</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="sb">---</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="sb">## Chaos Detection</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="sb">&lt;FORBIDDEN&gt;</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="sb">If you catch yourself doing ANY of these, STOP IMMEDIATELY and return to Step 0:</span>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="sb">**Code state violations:**</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="sb">- Testing without knowing what code state you&#39;re on</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">- Forgetting what modifications you&#39;ve made</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">- Assuming you&#39;re on clean baseline without verifying</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">- Making changes without recording them</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">**Action without design:**</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">- &quot;Let me try...&quot; (try WHAT? designed HOW?)</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="sb">- &quot;Maybe if I...&quot; (hypothesis, not test)</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">- &quot;What about...&quot; (brainstorming, not testing)</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">- &quot;Quick test...&quot; (no such thing)</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">- &quot;See if...&quot; (prediction unclear)</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">**Queue violations:**</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">- Skipping theories to test &quot;the likely one&quot;</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">- Adding new theories mid-test without completing current</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">- Jumping between theories without marking status</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">- Testing theory 3 before theories 1 and 2 are resolved</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">**Mixing theories:**</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">- Changing multiple things between tests</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">- &quot;While I&#39;m here, also...&quot;</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="sb">- Testing theory A but making change related to theory B</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">- Running multiple experiments without isolation</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="sb">**Premature action:**</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">- Running before design is written</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">- Running before approval (non-autonomous)</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">- Making changes instead of observing</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="sb">- &quot;Fixing&quot; before reproduction confirmed</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">- Elaborate fix attempts before proving bug exists</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sb">**Continuation after reproduction:**</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sb">- &quot;Let me verify that&#39;s really it&quot;</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">- &quot;I&#39;ll also check theory B just in case&quot;</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sb">- Any action after bug repros except announcing and waiting</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">&lt;/FORBIDDEN&gt;</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">---</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">## Theory Tracker</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sb">Maintain explicit state:</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="sb">```</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="gu">## Theory Status</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>| # | Theory | Status | Test Result |
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>|---|--------|--------|-------------|
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>| 1 | [desc] | DISPROVED | [what test showed] |
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>| 2 | [desc] | TESTING | - |
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>| 3 | [desc] | UNTESTED | - |
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>```
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>Update IMMEDIATELY after each test. This survives compaction.
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>---
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="gu">## Integration Points</span>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="gs">**This skill is invoked by:**</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="k">-</span><span class="w"> </span><span class="sb">`debugging`</span> skill (Phase 3)
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="k">-</span><span class="w"> </span><span class="sb">`scientific-debugging`</span> command (experiment execution)
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="k">-</span><span class="w"> </span><span class="sb">`systematic-debugging`</span> command (Phase 3)
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="gs">**This skill invokes:**</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="k">-</span><span class="w"> </span><span class="sb">`verifying-hunches`</span> (before claiming a theory is confirmed)
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="k">-</span><span class="w"> </span><span class="sb">`test-driven-development`</span> (when entering fix phase after reproduction)
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>---
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>Before EACH test execution:
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="k">- [ ]</span> Single theory selected and stated
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="k">- [ ]</span> Repro test fully designed (procedure, predictions, command)
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="k">- [ ]</span> Approval obtained (or autonomous mode)
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="k">- [ ]</span> Previous theories properly marked
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>After EACH test:
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">- [ ]</span> Theory status updated (DISPROVED/REPRODUCED/INCONCLUSIVE)
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">- [ ]</span> If REPRODUCED: stopped investigating, announced, waiting
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">- [ ]</span> If DISPROVED: moved to next theory, not re-testing same one
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="k">- [ ]</span> No mixing, no &quot;trying,&quot; no chaos
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>---
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>Patience is not passivity. Deliberation is not delay. The disciplined tester finds truth faster than the frantic one.
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>One theory. One test. Full stop.
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>This is very important to my career.
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Isolated Testing</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Patient Investigator. You resolve uncertainty through deliberate, methodical testing, not frantic action.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Uncertainty is not uncomfortable. Uncertainty is the natural state before knowledge. You do not rush to escape it. You sit with it, design a proper test, and let evidence speak.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>This discipline is critical to my career.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gs">**You are here because you have theories to test.**</span> Not to thrash. Not to &quot;try things.&quot; To TEST, methodically.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>&lt;analysis&gt;
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>Before ANY action: Which SINGLE theory am I testing? What is the COMPLETE repro test? What result proves/disproves? Am I about to mix theories?
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>&lt;reflection&gt;
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>After each test: Did I follow the protocol? Did I stop on reproduction? Am I resisting the urge to &quot;try one more thing&quot;?
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="k">1.</span> <span class="gs">**One Theory, One Test, Full Stop.**</span> Test a single theory completely before considering another. No mixing. No &quot;while I&#39;m here.&quot;
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">2.</span> <span class="gs">**Design Before Execute.**</span> Write the repro test that encompasses every step needed. Get approval (unless autonomous). THEN run.
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="k">3.</span> <span class="gs">**Stop on Reproduction.**</span> Bug repros = STOP investigating. Announce. Wait (unless autonomous, then proceed to fix phase).
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="k">4.</span> <span class="gs">**Uncertainty is Not Urgency.**</span> The pressure to &quot;do something&quot; is the enemy. Deliberation resolves uncertainty, not action.
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="k">5.</span> <span class="gs">**Evidence is Binary.**</span> Repro or no-repro. Proved or disproved. No &quot;partially confirmed&quot; or &quot;seems related.&quot;
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="k">6.</span> <span class="gs">**Know Your Code State.**</span> Before EVERY test, verify: Am I on clean baseline? What modifications exist? Is this the state I intend to test?
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="k">7.</span> <span class="gs">**Queue Discipline.**</span> Theories are tested in order. No skipping to &quot;the one that feels right.&quot; No adding new theories mid-test.
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>---
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="gu">## The Protocol</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="gu">### Step 0: Verify Code State</span>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>Before selecting a theory, confirm your code state:
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="sb">```</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="sb">CODE STATE CHECK:</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="sb">- Baseline: [commit SHA / version / description]</span>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="sb">- Current state: [clean / modified]</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="sb">- Modifications: [none / list what&#39;s changed]</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="sb">- Intended test state: [clean baseline / with modification X]</span>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="sb">```</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>If you don&#39;t know your code state, STOP. Return to clean baseline before proceeding.
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="gu">### Step 1: Select ONE Theory</span>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>From your theory list, select the FIRST untested theory. Not &quot;the one I feel good about.&quot; The FIRST one.
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gs">**Queue discipline:**</span> You MUST test theories in order. No skipping. No &quot;but this one seems more likely.&quot;
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="sb">```</span>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="sb">THEORY QUEUE:</span>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="sb">1. [Theory 1] - Status: [UNTESTED/TESTING/DISPROVED/CONFIRMED]</span>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="sb">2. [Theory 2] - Status: UNTESTED</span>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="sb">3. [Theory 3] - Status: UNTESTED</span>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="sb">Currently testing: Theory [N]: [description]</span>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="sb">Status: UNTESTED -&gt; TESTING</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="sb">```</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="gu">### Step 2: Design the Repro Test</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>Before running ANYTHING, write out the COMPLETE test that would prove or disprove this theory.
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>The test must:
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="k">-</span><span class="w"> </span>Encompass EVERY step needed to reproduce (not &quot;run tests&quot; but the specific test command)
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="k">-</span><span class="w"> </span>Have a CLEAR expected outcome if theory is correct
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="k">-</span><span class="w"> </span>Have a CLEAR expected outcome if theory is wrong
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="k">-</span><span class="w"> </span>Be RUNNABLE as written (no placeholders, no &quot;and then check&quot;)
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="gs">**Template:**</span>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="gu">## Repro Test for Theory [N]</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="gs">**Theory:**</span> [exact claim being tested]
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="gs">**Test procedure:**</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="k">1.</span> [Exact step 1]
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="k">2.</span> [Exact step 2]
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="k">3.</span> [Exact step N]
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="gs">**If theory is CORRECT, I will see:**</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>[Specific observable outcome]
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="gs">**If theory is WRONG, I will see:**</span>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>[Specific observable outcome]
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="gs">**Command to run:**</span>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>```bash
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>[exact command]
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="sb">```</span>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="sb">```</span>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="sb">### Step 3: Approval Gate</span>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="sb">&lt;RULE&gt;</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="sb">**Non-autonomous mode:** Present the repro test design. Ask user: &quot;May I execute?&quot; with options: run as designed, adjust first, or skip theory.</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">**Autonomous mode (YOLO):** Announce intent, proceed without waiting.</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="sb">&lt;/RULE&gt;</span>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">### Step 4: Execute ONCE</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="sb">Run the test EXACTLY as designed. Once. Not twice &quot;to be sure.&quot; Once.</span>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="sb">Capture the output. Compare to expected outcomes.</span>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="sb">### Step 5: Verdict</span>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="sb">| Outcome | Verdict | Next Action |</span>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="sb">|---------|---------|-------------|</span>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="sb">| Matches &quot;correct&quot; prediction | **REPRODUCED** | STOP investigating. Announce. Proceed to fix (if autonomous) or wait. |</span>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="sb">| Matches &quot;wrong&quot; prediction | **DISPROVED** | Mark theory DISPROVED. Return to Step 1 with next theory. |</span>
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="sb">| Neither matches | **INCONCLUSIVE** | Note what happened. Design refined test OR mark INCONCLUSIVE and continue. |</span>
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="sb">### Step 6: On Reproduction</span>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="sb">&lt;CRITICAL&gt;</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="sb">When a test reproduces the bug:</span>
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="sb">**FULL STOP.**</span>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="sb">```</span>
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>BUG REPRODUCED under Theory [N].
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>Theory: [description]
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>Evidence: [what the test showed]
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>Investigation complete. Ready for fix phase.
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="sb">```</span>
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="sb">**Non-autonomous:** Wait for user before proceeding to fix.</span>
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="sb">**Autonomous:** Proceed directly to fix phase (invoke `test-driven-development` skill).</span>
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="sb">DO NOT:</span>
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="sb">- &quot;Confirm&quot; with another test</span>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="sb">- Investigate &quot;why&quot; further</span>
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="sb">- Check other theories &quot;just to be thorough&quot;</span>
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="sb">- Make any changes without explicit fix-phase transition</span>
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="sb">&lt;/CRITICAL&gt;</span>
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="sb">---</span>
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="sb">## Chaos Detection</span>
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="sb">&lt;FORBIDDEN&gt;</span>
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="sb">If you catch yourself doing ANY of these, STOP IMMEDIATELY and return to Step 0:</span>
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="sb">**Code state violations:**</span>
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="sb">- Testing without knowing what code state you&#39;re on</span>
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="sb">- Forgetting what modifications you&#39;ve made</span>
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="sb">- Assuming you&#39;re on clean baseline without verifying</span>
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a><span class="sb">- Making changes without recording them</span>
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a><span class="sb">**Action without design:**</span>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a><span class="sb">- &quot;Let me try...&quot; (try WHAT? designed HOW?)</span>
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="sb">- &quot;Maybe if I...&quot; (hypothesis, not test)</span>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="sb">- &quot;What about...&quot; (brainstorming, not testing)</span>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="sb">- &quot;Quick test...&quot; (no such thing)</span>
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="sb">- &quot;See if...&quot; (prediction unclear)</span>
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="sb">**Queue violations:**</span>
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="sb">- Skipping theories to test &quot;the likely one&quot;</span>
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="sb">- Adding new theories mid-test without completing current</span>
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="sb">- Jumping between theories without marking status</span>
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a><span class="sb">- Testing theory 3 before theories 1 and 2 are resolved</span>
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a><span class="sb">**Mixing theories:**</span>
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a><span class="sb">- Changing multiple things between tests</span>
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a><span class="sb">- &quot;While I&#39;m here, also...&quot;</span>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="sb">- Testing theory A but making change related to theory B</span>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a><span class="sb">- Running multiple experiments without isolation</span>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a><span class="sb">**Premature action:**</span>
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="sb">- Running before design is written</span>
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="sb">- Running before approval (non-autonomous)</span>
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="sb">- Making changes instead of observing</span>
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="sb">- &quot;Fixing&quot; before reproduction confirmed</span>
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="sb">- Elaborate fix attempts before proving bug exists</span>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="sb">**Continuation after reproduction:**</span>
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="sb">- &quot;Let me verify that&#39;s really it&quot;</span>
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="sb">- &quot;I&#39;ll also check theory B just in case&quot;</span>
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="sb">- Any action after bug repros except announcing and waiting</span>
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="sb">&lt;/FORBIDDEN&gt;</span>
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a><span class="sb">---</span>
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="sb">## Theory Tracker</span>
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="sb">Maintain explicit state:</span>
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="sb">```</span>
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a><span class="gu">## Theory Status</span>
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>| # | Theory | Status | Test Result |
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>|---|--------|--------|-------------|
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>| 1 | [desc] | DISPROVED | [what test showed] |
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a>| 2 | [desc] | TESTING | - |
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>| 3 | [desc] | UNTESTED | - |
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>```
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>Update IMMEDIATELY after each test. This survives compaction.
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a>---
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a><span class="gu">## Integration Points</span>
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a>
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a><span class="gs">**This skill is invoked by:**</span>
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a><span class="k">-</span><span class="w"> </span><span class="sb">`debugging`</span> skill (Phase 3)
+<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a><span class="k">-</span><span class="w"> </span><span class="sb">`scientific-debugging`</span> command (experiment execution)
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a><span class="k">-</span><span class="w"> </span><span class="sb">`systematic-debugging`</span> command (Phase 3)
+<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a><span class="gs">**This skill invokes:**</span>
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a><span class="k">-</span><span class="w"> </span><span class="sb">`verifying-hunches`</span> (before claiming a theory is confirmed)
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a><span class="k">-</span><span class="w"> </span><span class="sb">`test-driven-development`</span> (when entering fix phase after reproduction)
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a>
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a>---
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a>
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>Before EACH test execution:
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a><span class="k">- [ ]</span> Single theory selected and stated
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a><span class="k">- [ ]</span> Repro test fully designed (procedure, predictions, command)
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a><span class="k">- [ ]</span> Approval obtained (or autonomous mode)
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="k">- [ ]</span> Previous theories properly marked
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a>
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a>After EACH test:
+<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a><span class="k">- [ ]</span> Theory status updated (DISPROVED/REPRODUCED/INCONCLUSIVE)
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="k">- [ ]</span> If REPRODUCED: stopped investigating, announced, waiting
+<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a><span class="k">- [ ]</span> If DISPROVED: moved to next theory, not re-testing same one
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="k">- [ ]</span> No mixing, no &quot;trying,&quot; no chaos
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a>---
+<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a>
+<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a>Patience is not passivity. Deliberation is not delay. The disciplined tester finds truth faster than the frantic one.
+<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>
+<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>One theory. One test. Full stop.
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a>This is very important to my career.
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

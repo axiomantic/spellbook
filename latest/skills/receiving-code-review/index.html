@@ -1166,10 +1166,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -1881,6 +1881,34 @@
     
   
     security-auditing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
   
 
     
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6742,218 +6770,361 @@
 <p class="admonition-title">Origin</p>
 <p>This skill originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
 </div>
-<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Receiving Code Review (Deprecated)</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Routing agent. Immediately routes to the replacement skill.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>This skill is deprecated. Routing to <span class="sb">`code-review --feedback`</span>.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;analysis&gt;
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>Deprecated skill. Routes to code-review --feedback for all functionality.
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">1.</span> <span class="gs">**Route to Replacement**</span> - Always route to <span class="sb">`code-review --feedback`</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">2.</span> <span class="gs">**Pass Context Through**</span> - Forward all provided context to replacement skill
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">3.</span> <span class="gs">**No Independent Execution**</span> - This skill does not execute feedback processing logic itself
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>&lt;reflection&gt;
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>When this skill loads, immediately invoke the replacement. Do not attempt to execute legacy behavior.
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="gu">## Automatic Routing</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>When this skill is loaded, immediately invoke:
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="sb">```</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="sb">/code-review --feedback</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="sb">```</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>With any provided context passed through.
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>---
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-receiving-code-review">Diagram: receiving-code-review<a class="headerlink" href="#diagram-receiving-code-review" title="Permanent link">&para;</a></h1>
+<p>Deprecated routing skill that redirects all feedback processing to <code>code-review --feedback</code>, with fallback verification chains and trust-level-based processing.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    START([Start]) --&gt; DEPRECATED[Deprecated Skill Loaded]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    DEPRECATED --&gt; ROUTE[&quot;/code-review --feedback&quot;]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ROUTE --&gt; MANIFEST{review-manifest.json exists?}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    MANIFEST --&gt;|Yes| LOAD_INTERNAL[Load Internal Findings]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    MANIFEST --&gt;|No| DIRECT[Process Feedback Directly]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    LOAD_INTERNAL --&gt; RECONCILE[Reconcile Findings]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    DIRECT --&gt; TRUST[Assess Source Trust Level]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    RECONCILE --&gt; TRUST
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    TRUST --&gt; HIGH{High trust?}
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    HIGH --&gt;|Yes| SPOT[Spot-Check 1-2 Findings]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    TRUST --&gt; SKEPTICAL{Skeptical trust?}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    SKEPTICAL --&gt;|Yes| FULL_VERIFY[Verify Every Finding]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    TRUST --&gt; LOW{Low trust?}
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    LOW --&gt;|Yes| FULL_VERIFY_ESC[Full Verify + Escalate]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    TRUST --&gt; OBJECTIVE{Objective/CI?}
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    OBJECTIVE --&gt;|Yes| SYSTEMATIC[Address Systematically]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    SPOT --&gt; VERIFY_TOOL[Verify via MCP Tools]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    FULL_VERIFY --&gt; VERIFY_TOOL
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    FULL_VERIFY_ESC --&gt; VERIFY_TOOL
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    SYSTEMATIC --&gt; VERIFY_TOOL
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    VERIFY_TOOL --&gt; TOOL_FAIL{Tool failed?}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    TOOL_FAIL --&gt;|No| RESPOND[Generate Thread Replies]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    TOOL_FAIL --&gt;|Yes| FALLBACK1[Fallback: Read Tool]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    FALLBACK1 --&gt; FB1_FAIL{Failed?}
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    FB1_FAIL --&gt;|No| RESPOND
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    FB1_FAIL --&gt;|Yes| FALLBACK2[Fallback: Git Commands]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    FALLBACK2 --&gt; FB2_FAIL{Failed?}
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    FB2_FAIL --&gt;|No| RESPOND
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    FB2_FAIL --&gt;|Yes| FALLBACK3[Fallback: Ask User]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    FALLBACK3 --&gt; FB3_FAIL{All failed?}
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    FB3_FAIL --&gt;|Yes| UNVERIFIED[Mark UNVERIFIED - Do Not Implement]
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    FB3_FAIL --&gt;|No| RESPOND
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    UNVERIFIED --&gt; RESPOND
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    RESPOND --&gt; DONE([Feedback Processed])
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="gu">## Handoff from Requesting Skill</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>When processing external feedback after internal review:
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gu">### Context Loading</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">1.</span> Check for existing <span class="sb">`review-manifest.json`</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">2.</span> Load internal findings for comparison
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">3.</span> Cross-reference external findings against internal
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="gu">### Finding Reconciliation</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| Scenario | Action |
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>|----------|--------|
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>| External finding matches internal | Mark as confirmed, higher confidence |
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| External finding not in internal | Verify carefully (we may have missed it) |
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| Internal finding not raised externally | Still valid, consider addressing |
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| External finding contradicts internal | Investigate thoroughly, escalate if unclear |
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gu">### Shared Context</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>Access via review-manifest.json:
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span><span class="sb">`reviewed_sha`</span> - What commit was reviewed
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">-</span><span class="w"> </span><span class="sb">`files`</span> - What files were in scope
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="k">-</span><span class="w"> </span><span class="sb">`complexity`</span> - Size estimate
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>---
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>External feedback = suggestions to evaluate, not orders to follow.
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">```</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">/code-review --feedback</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">```</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>With any provided context passed through.
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">## Migration Guide</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>| Old Usage | New Equivalent |
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>|-----------|----------------|
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>| <span class="sb">`receiving-code-review`</span> | <span class="sb">`code-review --feedback`</span> |
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| &quot;Address review comments&quot; | Same (auto-routes) |
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>| &quot;Fix PR feedback&quot; | <span class="sb">`code-review --feedback --pr &lt;num&gt;`</span> |
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gu">## Thread Reply Protocol</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gu">### Reply Location</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">-</span><span class="w"> </span>ALWAYS reply in the existing thread, never as top-level comment
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`gh pr comment --reply-to &lt;comment-id&gt;`</span> or MCP reply tools
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span>If thread ID unavailable, quote the original comment
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="gu">### Response Formats</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gs">**FIXED**</span> - Issue addressed with code change:
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="sb">```</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">Fixed in [commit SHA].</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="sb">[Optional: brief explanation of fix approach]</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="sb">```</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gs">**ACKNOWLEDGED**</span> - Will address, not yet fixed:
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="sb">```</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="sb">Acknowledged. Will address in [scope: this PR / follow-up / future iteration].</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="sb">[Optional: brief plan or reason for deferral]</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="sb">```</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gs">**QUESTION**</span> - Need clarification:
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="sb">```</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="sb">Question: [specific question]</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">Context: [what you understand so far]</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="sb">[Optional: what you tried or considered]</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">```</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="gs">**DISAGREE**</span> - Technical disagreement with evidence:
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="sb">```</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="sb">I see a different tradeoff here.</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="sb">**Current approach:** [what code does]</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="sb">**Suggested change:** [what was requested]</span>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="sb">**My concern:** [specific technical issue with evidence]</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="sb">[Optional: alternative proposal]</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">Happy to discuss further or defer to your judgment on [specific aspect].</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="sb">```</span>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="gu">### Forbidden Responses</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">-</span><span class="w"> </span>&quot;Done&quot; (no context, no SHA)
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">-</span><span class="w"> </span>&quot;Fixed&quot; (no SHA, can&#39;t verify)
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">-</span><span class="w"> </span>&quot;Will do&quot; (no commitment scope)
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span>&quot;Thanks!&quot; (performative, adds no information)
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span>&quot;You&#39;re right&quot; (without explaining what you learned)
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="gu">## Feedback Source Trust Levels</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>| Source Type | Trust Level | Verification Required |
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>|-------------|-------------|----------------------|
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>| Internal code-reviewer agent | High | Spot-check (verify 1-2 findings) |
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>| Partner/collaborator (human) | High | Spot-check + consider context |
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>| External reviewer (human) | Skeptical | Full verification of each finding |
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>| External AI tool | Low | Full verification + partner escalation for ambiguous cases |
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>| CI/Linter (automated) | Objective | Trust if tool is validated; check config if unexpected |
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="gu">### Trust Level Actions</span>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="gs">**High Trust:**</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="k">-</span><span class="w"> </span>Verify 1-2 representative findings
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">-</span><span class="w"> </span>Proceed with implementation if spot-check passes
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="k">-</span><span class="w"> </span>Escalate only if spot-check fails
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="gs">**Skeptical:**</span>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="k">-</span><span class="w"> </span>Verify EVERY finding against codebase
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="k">-</span><span class="w"> </span>Cross-reference with internal review if exists
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="k">-</span><span class="w"> </span>Question assumptions, request evidence for vague feedback
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="gs">**Low Trust:**</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="k">-</span><span class="w"> </span>Treat as suggestions, not requirements
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="k">-</span><span class="w"> </span>Full verification mandatory
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">-</span><span class="w"> </span>Escalate to partner before implementing substantial changes
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="gs">**Objective:**</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="k">-</span><span class="w"> </span>Tool output is factual (lint errors, type errors)
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="k">-</span><span class="w"> </span>Verify tool configuration is correct
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="k">-</span><span class="w"> </span>Address systematically, don&#39;t argue with tools
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="gu">## MCP Tool Failures</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>When MCP tools fail during feedback verification, follow this fallback chain:
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="gu">### Failure Logging</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>Log every failure with:
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="k">-</span><span class="w"> </span>Tool name and operation attempted
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="k">-</span><span class="w"> </span>Error message or timeout
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="k">-</span><span class="w"> </span>Context (what verification was being performed)
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="gu">### Fallback Chain</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">1.</span> <span class="gs">**Primary:**</span> MCP tools (pr_fetch, pr_diff, etc.)
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="k">2.</span> <span class="gs">**Fallback 1:**</span> Direct file reading with Read tool
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="k">3.</span> <span class="gs">**Fallback 2:**</span> Git commands via Bash (git show, git diff)
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="k">4.</span> <span class="gs">**Fallback 3:**</span> Request manual paste from user
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="gu">### Hard Stop Rule</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>If ALL fallbacks fail for a verification:
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="k">-</span><span class="w"> </span>Report: &quot;Cannot verify: [finding summary]&quot;
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">-</span><span class="w"> </span>Do NOT implement unverifiable suggestions
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">-</span><span class="w"> </span>Mark finding as UNVERIFIED in response
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="k">-</span><span class="w"> </span>Escalate to user for manual verification decision
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="gu">### Never Implement Unverified</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>A suggestion that cannot be verified against the codebase MUST NOT be implemented.
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>&quot;Sounds reasonable&quot; is not verification.
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>&quot;Similar to existing code&quot; is not verification.
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>Only traced execution through actual files counts as verification.
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="gu">## Why Deprecated?</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>The <span class="sb">`code-review`</span> skill consolidates all review functionality:
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--self`</span>: Pre-PR self-review
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--feedback`</span>: Process received feedback (this functionality)
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--give`</span>: Review someone else&#39;s code
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--audit`</span>: Comprehensive multi-pass review
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>See <span class="sb">`code-review/SKILL.md`</span> for full documentation.
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="k">-</span><span class="w"> </span>Execute any feedback processing logic directly
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="k">-</span><span class="w"> </span>Ignore the replacement routing
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="k">-</span><span class="w"> </span>Maintain legacy behavior
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style START fill:#4CAF50,color:#fff
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style DONE fill:#4CAF50,color:#fff
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style ROUTE fill:#4CAF50,color:#fff
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style DEPRECATED fill:#2196F3,color:#fff
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style RECONCILE fill:#2196F3,color:#fff
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style SPOT fill:#2196F3,color:#fff
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style FULL_VERIFY fill:#2196F3,color:#fff
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    style FULL_VERIFY_ESC fill:#2196F3,color:#fff
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style SYSTEMATIC fill:#2196F3,color:#fff
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style VERIFY_TOOL fill:#2196F3,color:#fff
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style RESPOND fill:#2196F3,color:#fff
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style MANIFEST fill:#FF9800,color:#fff
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style HIGH fill:#FF9800,color:#fff
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style SKEPTICAL fill:#FF9800,color:#fff
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style LOW fill:#FF9800,color:#fff
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style OBJECTIVE fill:#FF9800,color:#fff
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style TOOL_FAIL fill:#FF9800,color:#fff
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style FB1_FAIL fill:#FF9800,color:#fff
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style FB2_FAIL fill:#FF9800,color:#fff
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style FB3_FAIL fill:#FF9800,color:#fff
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style UNVERIFIED fill:#f44336,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deprecated Skill Loaded</td>
+<td>Frontmatter: deprecated: true, replacement: code-review --feedback</td>
+</tr>
+<tr>
+<td>/code-review --feedback</td>
+<td>Automatic Routing: immediately invoke replacement</td>
+</tr>
+<tr>
+<td>review-manifest.json exists?</td>
+<td>Handoff from Requesting Skill: check for existing manifest</td>
+</tr>
+<tr>
+<td>Reconcile Findings</td>
+<td>Finding Reconciliation table: match, new, missing, contradictory</td>
+</tr>
+<tr>
+<td>Assess Source Trust Level</td>
+<td>Feedback Source Trust Levels table: High, Skeptical, Low, Objective</td>
+</tr>
+<tr>
+<td>Spot-Check 1-2 Findings</td>
+<td>Trust Level Actions: High Trust verification</td>
+</tr>
+<tr>
+<td>Verify Every Finding</td>
+<td>Trust Level Actions: Skeptical / Low Trust verification</td>
+</tr>
+<tr>
+<td>Verify via MCP Tools</td>
+<td>MCP Tool Failures: primary tool chain</td>
+</tr>
+<tr>
+<td>Fallback chain</td>
+<td>MCP Tool Failures: Read Tool, Git Commands, Ask User</td>
+</tr>
+<tr>
+<td>Mark UNVERIFIED</td>
+<td>Hard Stop Rule: cannot verify, do not implement</td>
+</tr>
+<tr>
+<td>Generate Thread Replies</td>
+<td>Thread Reply Protocol: FIXED, ACKNOWLEDGED, QUESTION, DISAGREE formats</td>
+</tr>
+</tbody>
+</table>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Receiving Code Review (Deprecated)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Routing agent. Immediately routes to the replacement skill.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>This skill is deprecated. Routing to <span class="sb">`code-review --feedback`</span>.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>&lt;analysis&gt;
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>Deprecated skill. Routes to code-review --feedback for all functionality.
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">1.</span> <span class="gs">**Route to Replacement**</span> - Always route to <span class="sb">`code-review --feedback`</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">2.</span> <span class="gs">**Pass Context Through**</span> - Forward all provided context to replacement skill
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">3.</span> <span class="gs">**No Independent Execution**</span> - This skill does not execute feedback processing logic itself
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>&lt;reflection&gt;
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>When this skill loads, immediately invoke the replacement. Do not attempt to execute legacy behavior.
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="gu">## Automatic Routing</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>When this skill is loaded, immediately invoke:
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="sb">```</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="sb">/code-review --feedback</span>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="sb">```</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>With any provided context passed through.
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>---
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="gu">## Handoff from Requesting Skill</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>When processing external feedback after internal review:
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="gu">### Context Loading</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="k">1.</span> Check for existing <span class="sb">`review-manifest.json`</span>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="k">2.</span> Load internal findings for comparison
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">3.</span> Cross-reference external findings against internal
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="gu">### Finding Reconciliation</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>| Scenario | Action |
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>|----------|--------|
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>| External finding matches internal | Mark as confirmed, higher confidence |
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>| External finding not in internal | Verify carefully (we may have missed it) |
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>| Internal finding not raised externally | Still valid, consider addressing |
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>| External finding contradicts internal | Investigate thoroughly, escalate if unclear |
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gu">### Shared Context</span>
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>Access via review-manifest.json:
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="k">-</span><span class="w"> </span><span class="sb">`reviewed_sha`</span> - What commit was reviewed
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="k">-</span><span class="w"> </span><span class="sb">`files`</span> - What files were in scope
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="k">-</span><span class="w"> </span><span class="sb">`complexity`</span> - Size estimate
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>---
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>External feedback = suggestions to evaluate, not orders to follow.
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="sb">```</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="sb">/code-review --feedback</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="sb">```</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>With any provided context passed through.
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="gu">## Migration Guide</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>| Old Usage | New Equivalent |
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>|-----------|----------------|
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>| <span class="sb">`receiving-code-review`</span> | <span class="sb">`code-review --feedback`</span> |
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>| &quot;Address review comments&quot; | Same (auto-routes) |
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>| &quot;Fix PR feedback&quot; | <span class="sb">`code-review --feedback --pr &lt;num&gt;`</span> |
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="gu">## Thread Reply Protocol</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="gu">### Reply Location</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="k">-</span><span class="w"> </span>ALWAYS reply in the existing thread, never as top-level comment
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`gh pr comment --reply-to &lt;comment-id&gt;`</span> or MCP reply tools
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="k">-</span><span class="w"> </span>If thread ID unavailable, quote the original comment
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="gu">### Response Formats</span>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="gs">**FIXED**</span> - Issue addressed with code change:
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="sb">```</span>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="sb">Fixed in [commit SHA].</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="sb">[Optional: brief explanation of fix approach]</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="sb">```</span>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="gs">**ACKNOWLEDGED**</span> - Will address, not yet fixed:
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="sb">```</span>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="sb">Acknowledged. Will address in [scope: this PR / follow-up / future iteration].</span>
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="sb">[Optional: brief plan or reason for deferral]</span>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="sb">```</span>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="gs">**QUESTION**</span> - Need clarification:
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="sb">```</span>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="sb">Question: [specific question]</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="sb">Context: [what you understand so far]</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">[Optional: what you tried or considered]</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="sb">```</span>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="gs">**DISAGREE**</span> - Technical disagreement with evidence:
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="sb">```</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="sb">I see a different tradeoff here.</span>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="sb">**Current approach:** [what code does]</span>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="sb">**Suggested change:** [what was requested]</span>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="sb">**My concern:** [specific technical issue with evidence]</span>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="sb">[Optional: alternative proposal]</span>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="sb">Happy to discuss further or defer to your judgment on [specific aspect].</span>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="sb">```</span>
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="gu">### Forbidden Responses</span>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">-</span><span class="w"> </span>&quot;Done&quot; (no context, no SHA)
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">-</span><span class="w"> </span>&quot;Fixed&quot; (no SHA, can&#39;t verify)
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="k">-</span><span class="w"> </span>&quot;Will do&quot; (no commitment scope)
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="k">-</span><span class="w"> </span>&quot;Thanks!&quot; (performative, adds no information)
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="k">-</span><span class="w"> </span>&quot;You&#39;re right&quot; (without explaining what you learned)
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="gu">## Feedback Source Trust Levels</span>
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>| Source Type | Trust Level | Verification Required |
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>|-------------|-------------|----------------------|
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>| Internal code-reviewer agent | High | Spot-check (verify 1-2 findings) |
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>| Partner/collaborator (human) | High | Spot-check + consider context |
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>| External reviewer (human) | Skeptical | Full verification of each finding |
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>| External AI tool | Low | Full verification + partner escalation for ambiguous cases |
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>| CI/Linter (automated) | Objective | Trust if tool is validated; check config if unexpected |
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="gu">### Trust Level Actions</span>
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="gs">**High Trust:**</span>
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="k">-</span><span class="w"> </span>Verify 1-2 representative findings
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="k">-</span><span class="w"> </span>Proceed with implementation if spot-check passes
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">-</span><span class="w"> </span>Escalate only if spot-check fails
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="gs">**Skeptical:**</span>
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="k">-</span><span class="w"> </span>Verify EVERY finding against codebase
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="k">-</span><span class="w"> </span>Cross-reference with internal review if exists
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="k">-</span><span class="w"> </span>Question assumptions, request evidence for vague feedback
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="gs">**Low Trust:**</span>
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="k">-</span><span class="w"> </span>Treat as suggestions, not requirements
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="k">-</span><span class="w"> </span>Full verification mandatory
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="k">-</span><span class="w"> </span>Escalate to partner before implementing substantial changes
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="gs">**Objective:**</span>
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="k">-</span><span class="w"> </span>Tool output is factual (lint errors, type errors)
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="k">-</span><span class="w"> </span>Verify tool configuration is correct
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="k">-</span><span class="w"> </span>Address systematically, don&#39;t argue with tools
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a><span class="gu">## MCP Tool Failures</span>
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>When MCP tools fail during feedback verification, follow this fallback chain:
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="gu">### Failure Logging</span>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>Log every failure with:
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="k">-</span><span class="w"> </span>Tool name and operation attempted
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="k">-</span><span class="w"> </span>Error message or timeout
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="k">-</span><span class="w"> </span>Context (what verification was being performed)
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="gu">### Fallback Chain</span>
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a><span class="k">1.</span> <span class="gs">**Primary:**</span> MCP tools (pr_fetch, pr_diff, etc.)
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a><span class="k">2.</span> <span class="gs">**Fallback 1:**</span> Direct file reading with Read tool
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a><span class="k">3.</span> <span class="gs">**Fallback 2:**</span> Git commands via Bash (git show, git diff)
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a><span class="k">4.</span> <span class="gs">**Fallback 3:**</span> Request manual paste from user
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="gu">### Hard Stop Rule</span>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>If ALL fallbacks fail for a verification:
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a><span class="k">-</span><span class="w"> </span>Report: &quot;Cannot verify: [finding summary]&quot;
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="k">-</span><span class="w"> </span>Do NOT implement unverifiable suggestions
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="k">-</span><span class="w"> </span>Mark finding as UNVERIFIED in response
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="k">-</span><span class="w"> </span>Escalate to user for manual verification decision
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="gu">### Never Implement Unverified</span>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>A suggestion that cannot be verified against the codebase MUST NOT be implemented.
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>&quot;Sounds reasonable&quot; is not verification.
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>&quot;Similar to existing code&quot; is not verification.
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>Only traced execution through actual files counts as verification.
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a><span class="gu">## Why Deprecated?</span>
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>The <span class="sb">`code-review`</span> skill consolidates all review functionality:
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--self`</span>: Pre-PR self-review
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--feedback`</span>: Process received feedback (this functionality)
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--give`</span>: Review someone else&#39;s code
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--audit`</span>: Comprehensive multi-pass review
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>See <span class="sb">`code-review/SKILL.md`</span> for full documentation.
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="k">-</span><span class="w"> </span>Execute any feedback processing logic directly
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="k">-</span><span class="w"> </span>Ignore the replacement routing
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="k">-</span><span class="w"> </span>Maintain legacy behavior
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 

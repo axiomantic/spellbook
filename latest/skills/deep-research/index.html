@@ -1704,10 +1704,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -1881,6 +1881,34 @@
     
   
     security-auditing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
   
 
     
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6738,131 +6766,269 @@
 
 <h1 id="deep-research">deep-research<a class="headerlink" href="#deep-research" title="Permanent link">&para;</a></h1>
 <p>Use when researching complex topics, evaluating technologies, investigating domains, or answering multi-faceted questions requiring web research. Triggers: "research X", "investigate Y", "evaluate options for Z", "what are the best approaches to", "help me understand", "deep dive into", "compare alternatives".</p>
-<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Deep Research</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gs">**Announce:**</span> &quot;Using deep-research skill for multi-threaded investigation with verification.&quot;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Lead Research Analyst with intelligence community rigor. Exhaustive sourcing, honest uncertainty, zero fabrication. Every claim tagged. Every conflict surfaced. Every gap acknowledged.
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>You are the ORCHESTRATOR. Dispatch commands and subagents. Do NOT perform research directly.
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Invariant Principles</span>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-deep-research">Diagram: deep-research<a class="headerlink" href="#diagram-deep-research" title="Permanent link">&para;</a></h1>
+<p>Multi-threaded research workflow with parallel investigation, fact-checking, and verified synthesis. Phases: Interview, Plan, Investigate (parallel), Verify, Synthesize.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start]) --&gt; P0
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    subgraph Phase0 [Phase 0: Interview]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        P0[&quot;/deep-research-interview&quot;]:::command --&gt; P0_Gate{&quot;Subjects registered?\nCriteria defined?&quot;}:::decision
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    end
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    P0_Gate --&gt;|No| P0_Fail([STOP: No scope]):::gate
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    P0_Gate --&gt;|Yes| P1
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    subgraph Phase1 [Phase 1: Plan]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        P1[&quot;/deep-research-plan&quot;]:::command --&gt; P1_Gate{&quot;Threads independent?\nAll subjects assigned?&quot;}:::decision
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    end
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">1.</span> <span class="gs">**Tag Every Claim**</span>: No finding enters the report without a confidence level and source URL
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">2.</span> <span class="gs">**Surface Every Conflict**</span>: When sources disagree, document both positions
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">3.</span> <span class="gs">**Respect the User&#39;s Frame**</span>: When research contradicts user-provided facts, STOP and present conflict via AskUserQuestion. Never silently override.
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">4.</span> <span class="gs">**Verify Before Synthesizing**</span>: All findings pass through fact-checking and dehallucination
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gu">## Inputs/Outputs</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| Input | Required | Description |
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>|-------|----------|-------------|
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| <span class="sb">`user_request`</span> | Yes | Research question, topic, or comparison request |
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`depth`</span> | No | quick (1-2 rounds), standard (3-5), exhaustive (6+) |
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    P1_Gate --&gt;|No| P1_Fix[&quot;Fix thread definitions&quot;]:::command --&gt; P1
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    P1_Gate --&gt;|Yes| P2
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    subgraph Phase2 [Phase 2: Investigate]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        P2[&quot;Dispatch parallel subagents&quot;]:::command --&gt; P2_Thread1[&quot;/deep-research-investigate\n(Thread 1)&quot;]:::command
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        P2 --&gt; P2_Thread2[&quot;/deep-research-investigate\n(Thread 2)&quot;]:::command
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        P2 --&gt; P2_ThreadN[&quot;/deep-research-investigate\n(Thread N)&quot;]:::command
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        P2_Thread1 --&gt; P2_Plateau{&quot;URL overlap &gt;= 60%?\nStale rounds?&quot;}:::decision
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        P2_Thread2 --&gt; P2_Plateau
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        P2_ThreadN --&gt; P2_Plateau
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    end
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="gs">**Artifacts**</span> at <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic-slug&gt;/`</span>:
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="sb">`research-brief.md`</span>, <span class="sb">`research-plan.md`</span>, <span class="sb">`micro-reports/`</span>, <span class="sb">`verified-claims.md`</span>, <span class="sb">`research-report.md`</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gu">## Registries</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    P2_Plateau --&gt;|&quot;L1: Reformulate&quot;| P2
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    P2_Plateau --&gt;|&quot;L2: Change sources&quot;| P2
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    P2_Plateau --&gt;|&quot;L3: 3 stale&quot;| P2_StopPartial[&quot;Report partial findings&quot;]:::gate
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    P2_Plateau --&gt;|No plateau| P2_Gate{&quot;All threads complete?\nAll subjects covered?&quot;}:::decision
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="gs">**Subject Registry**</span>: Track all named entities from request. Each must get &gt;= 1 investigation round. If any subject has 0 rounds after 50% of budget, FORCE a dedicated round.
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gs">**Conflict Register**</span>: Log when sources disagree <span class="sb">`{claim, source_a, source_b, status: OPEN|RESOLVED|FLAGGED}`</span>. All must be RESOLVED or FLAGGED before Phase 4. Choosing one side without citation is FORBIDDEN.
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="gs">**Confidence Tags**</span>: VERIFIED (primary source URL) | CORROBORATED (2+ independent) | PLAUSIBLE (consistent, unconfirmed) | INFERRED (derived logically) | UNVERIFIED (no source) | CONTESTED (sources disagree)
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gs">**Plateau Breaker**</span>: URL overlap &gt;= 60% or 0 new facts for 2 rounds triggers: L1 query reformulation, L2 source type change, L3 STOP and report gaps. Hard limit: 3 stale rounds = mandatory L3.
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    P2_Gate --&gt;|No| P2
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    P2_Gate --&gt;|Yes| P3
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    subgraph Phase3 [Phase 3: Verify]
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        P3[&quot;fact-checking skill&quot;]:::skill --&gt; P3_Dehalluc[&quot;dehallucination skill&quot;]:::skill
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        P3_Dehalluc --&gt; P3_Gate{&quot;Claims verified?\nNo REFUTED as fact?&quot;}:::decision
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    end
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="gu">## Phases</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| # | Name | Executor | Gate |
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>|---|------|----------|------|
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| 0 | Interview | <span class="sb">`/deep-research-interview`</span> | Subjects registered, success criteria defined |
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| 1 | Plan | <span class="sb">`/deep-research-plan`</span> | Threads independent, all subjects assigned |
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| 2 | Investigate | Parallel subagents x <span class="sb">`/deep-research-investigate`</span> | All threads complete, coverage met |
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| 3 | Verify | <span class="sb">`fact-checking`</span> + <span class="sb">`dehallucination`</span> skills | No REFUTED claims, CONTESTED flagged |
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| 4 | Synthesize | Orchestrator | Report passes completeness check |
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gu">### Phase 0: Interview</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>&lt;analysis&gt;What is the user actually asking? What named entities appear? What do they already know?&lt;/analysis&gt;
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gs">**Execute:**</span> <span class="sb">`/deep-research-interview`</span> with user&#39;s request and constraints.
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gs">**Output:**</span> <span class="sb">`research-brief.md`</span> with refined question, subject registry, success criteria, depth.
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gs">**Gate:**</span> All subjects registered, research type classified, brief written.
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="gu">### Phase 1: Plan</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gs">**Execute:**</span> <span class="sb">`/deep-research-plan`</span> with research brief.
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gs">**Output:**</span> <span class="sb">`research-plan.md`</span> with thread definitions, source strategies, round budgets.
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gs">**Gate:**</span> Threads independent, all subjects assigned, convergence criteria set.
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gu">### Phase 2: Investigate (Parallel)</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>&lt;analysis&gt;Threads independent? Each subagent has complete context? CURRENT_AGENT_TYPE set?&lt;/analysis&gt;
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>Dispatch one subagent per thread:
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">```</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">Task(description=&quot;Investigate: &lt;thread&gt;&quot;, subagent_type=CURRENT_AGENT_TYPE,</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">  prompt=&quot;Execute /deep-research-investigate. Thread: &lt;def&gt;. Budget: &lt;N&gt;.</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">  Brief: &lt;summary&gt;. Write micro-reports to &lt;path&gt;. Apply confidence tags,</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">  conflict register, plateau breaker.&quot;)</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">```</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gs">**Gate:**</span> All threads returned, every subject has &gt;= 1 round, conflicts consolidated.
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">### Phase 3: Verify</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>Dispatch fact-checking subagent on <span class="sb">`micro-reports/*.md`</span> with research-adapted extraction (SourceCredibility, CrossReference, DateValidity agents). Then dispatch dehallucination on <span class="sb">`verified-claims.md`</span> focusing on precision fabrication and source conflation.
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gs">**Gate:**</span> All claims have verdicts, no REFUTED presented as fact, dehallucination passed.
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">### Phase 4: Synthesize</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| Research Type | Structure |
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>|---------------|-----------|
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>| Comparison | Side-by-side matrix, winner per criterion, trade-offs |
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>| Procedural | Step-by-step guide, prerequisites, decision points |
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>| Exploratory | Landscape overview, taxonomy, key players, trends |
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>| Evaluative | Criteria, scoring, recommendation with caveats |
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Assembly: reorder to reader-logical order, apply confidence tags inline, build bibliography, insert FLAGGED conflicts with both positions.
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>Completeness check against <span class="sb">`research-brief.success_criteria`</span>. If gaps: dispatch targeted Phase 2 (max 1 loop) or acknowledge gaps.
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="gs">**Gate:**</span> Success criteria addressed, all subjects in report, bibliography complete.
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gu">## Circuit Breakers</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>| Trigger | Action |
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>|---------|--------|
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>| Phase 0 fails | STOP. Cannot proceed without scope. |
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>| All threads plateau L3 | Report partial findings as incomplete. |
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>| &gt;50% claims REFUTED | Restart Phase 1 with revised plan. |
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>| &gt;30% gaps at Phase 4 | Loop to Phase 2 (max 1 loop). |
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">-</span><span class="w"> </span>Web searches in orchestrator context
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>Presenting one side of a CONTESTED claim as settled
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">-</span><span class="w"> </span>Silently overriding user-provided facts
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">-</span><span class="w"> </span>Skipping fact-checking or dehallucination
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">-</span><span class="w"> </span>UNVERIFIED claims without the tag
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span>Inventing statistics, versions, dates, benchmarks
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">-</span><span class="w"> </span>Declaring complete with uncovered subjects
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>&lt;reflection&gt;
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>Before advancing phases: Are all subjects covered? Any conflicts unresolved? Did fact-checking and dehallucination pass? Are confidence tags honest? Would a skeptical reader trust this report?
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>Research is only as valuable as its honesty. Tag uncertainty. Surface conflicts. Acknowledge gaps. Fabrication is unrecoverable. Honest incompleteness is always preferable.
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    P3_Gate --&gt;|&quot;&gt;50% REFUTED&quot;| P1
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    P3_Gate --&gt;|Issues| P3_Fix[&quot;Fix claim verdicts&quot;]:::command --&gt; P3_Dehalluc
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    P3_Gate --&gt;|Pass| P4
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    subgraph Phase4 [Phase 4: Synthesize]
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        P4[&quot;Assemble report&quot;]:::command --&gt; P4_Complete{&quot;Completeness check\nvs success criteria&quot;}:::decision
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    end
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    P4_Complete --&gt;|&quot;&gt;30% gaps&quot;| P2
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    P4_Complete --&gt;|Pass| P4_Bib[&quot;Build bibliography&quot;]:::command --&gt; P4_Gate{&quot;All subjects in report?\nBibliography complete?&quot;}:::gate
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    P4_Gate --&gt; Done([Done: Research report])
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    classDef skill fill:#4CAF50,color:#fff
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    classDef command fill:#2196F3,color:#fff
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    classDef decision fill:#FF9800,color:#fff
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    classDef gate fill:#f44336,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/deep-research-interview</td>
+<td>Phase 0 (line 63)</td>
+</tr>
+<tr>
+<td>/deep-research-plan</td>
+<td>Phase 1 (line 69)</td>
+</tr>
+<tr>
+<td>/deep-research-investigate</td>
+<td>Phase 2 parallel subagents (lines 77-83)</td>
+</tr>
+<tr>
+<td>Plateau breaker (L1/L2/L3)</td>
+<td>Plateau Breaker registry (line 47)</td>
+</tr>
+<tr>
+<td>fact-checking skill</td>
+<td>Phase 3 verification (line 89)</td>
+</tr>
+<tr>
+<td>dehallucination skill</td>
+<td>Phase 3 verification (line 89)</td>
+</tr>
+<tr>
+<td>Completeness check</td>
+<td>Phase 4 completeness check (line 104)</td>
+</tr>
+<tr>
+<td>&gt;50% REFUTED circuit breaker</td>
+<td>Circuit Breakers table (line 113)</td>
+</tr>
+<tr>
+<td>&gt;30% gaps loop</td>
+<td>Circuit Breakers table (line 115)</td>
+</tr>
+<tr>
+<td>Subject registry enforcement</td>
+<td>Registries section (line 41)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Deep Research</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gs">**Announce:**</span> &quot;Using deep-research skill for multi-threaded investigation with verification.&quot;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Lead Research Analyst with intelligence community rigor. Exhaustive sourcing, honest uncertainty, zero fabrication. Every claim tagged. Every conflict surfaced. Every gap acknowledged.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>You are the ORCHESTRATOR. Dispatch commands and subagents. Do NOT perform research directly.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">1.</span> <span class="gs">**Tag Every Claim**</span>: No finding enters the report without a confidence level and source URL
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">2.</span> <span class="gs">**Surface Every Conflict**</span>: When sources disagree, document both positions
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">3.</span> <span class="gs">**Respect the User&#39;s Frame**</span>: When research contradicts user-provided facts, STOP and present conflict via AskUserQuestion. Never silently override.
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">4.</span> <span class="gs">**Verify Before Synthesizing**</span>: All findings pass through fact-checking and dehallucination
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="gu">## Inputs/Outputs</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>| Input | Required | Description |
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>|-------|----------|-------------|
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| <span class="sb">`user_request`</span> | Yes | Research question, topic, or comparison request |
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>| <span class="sb">`depth`</span> | No | quick (1-2 rounds), standard (3-5), exhaustive (6+) |
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="gs">**Artifacts**</span> at <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic-slug&gt;/`</span>:
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="sb">`research-brief.md`</span>, <span class="sb">`research-plan.md`</span>, <span class="sb">`micro-reports/`</span>, <span class="sb">`verified-claims.md`</span>, <span class="sb">`research-report.md`</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="gu">## Registries</span>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="gs">**Subject Registry**</span>: Track all named entities from request. Each must get &gt;= 1 investigation round. If any subject has 0 rounds after 50% of budget, FORCE a dedicated round.
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="gs">**Conflict Register**</span>: Log when sources disagree <span class="sb">`{claim, source_a, source_b, status: OPEN|RESOLVED|FLAGGED}`</span>. All must be RESOLVED or FLAGGED before Phase 4. Choosing one side without citation is FORBIDDEN.
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="gs">**Confidence Tags**</span>: VERIFIED (primary source URL) | CORROBORATED (2+ independent) | PLAUSIBLE (consistent, unconfirmed) | INFERRED (derived logically) | UNVERIFIED (no source) | CONTESTED (sources disagree)
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gs">**Plateau Breaker**</span>: URL overlap &gt;= 60% or 0 new facts for 2 rounds triggers: L1 query reformulation, L2 source type change, L3 STOP and report gaps. Hard limit: 3 stale rounds = mandatory L3.
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="gu">## Phases</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>| # | Name | Executor | Gate |
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>|---|------|----------|------|
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>| 0 | Interview | <span class="sb">`/deep-research-interview`</span> | Subjects registered, success criteria defined |
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>| 1 | Plan | <span class="sb">`/deep-research-plan`</span> | Threads independent, all subjects assigned |
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>| 2 | Investigate | Parallel subagents x <span class="sb">`/deep-research-investigate`</span> | All threads complete, coverage met |
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>| 3 | Verify | <span class="sb">`fact-checking`</span> + <span class="sb">`dehallucination`</span> skills | No REFUTED claims, CONTESTED flagged |
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>| 4 | Synthesize | Orchestrator | Report passes completeness check |
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gu">### Phase 0: Interview</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>&lt;analysis&gt;What is the user actually asking? What named entities appear? What do they already know?&lt;/analysis&gt;
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="gs">**Execute:**</span> <span class="sb">`/deep-research-interview`</span> with user&#39;s request and constraints.
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gs">**Output:**</span> <span class="sb">`research-brief.md`</span> with refined question, subject registry, success criteria, depth.
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="gs">**Gate:**</span> All subjects registered, research type classified, brief written.
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="gu">### Phase 1: Plan</span>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="gs">**Execute:**</span> <span class="sb">`/deep-research-plan`</span> with research brief.
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="gs">**Output:**</span> <span class="sb">`research-plan.md`</span> with thread definitions, source strategies, round budgets.
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="gs">**Gate:**</span> Threads independent, all subjects assigned, convergence criteria set.
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="gu">### Phase 2: Investigate (Parallel)</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>&lt;analysis&gt;Threads independent? Each subagent has complete context? CURRENT_AGENT_TYPE set?&lt;/analysis&gt;
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>Dispatch one subagent per thread:
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="sb">```</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="sb">Task(description=&quot;Investigate: &lt;thread&gt;&quot;, subagent_type=CURRENT_AGENT_TYPE,</span>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="sb">  prompt=&quot;Execute /deep-research-investigate. Thread: &lt;def&gt;. Budget: &lt;N&gt;.</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="sb">  Brief: &lt;summary&gt;. Write micro-reports to &lt;path&gt;. Apply confidence tags,</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="sb">  conflict register, plateau breaker.&quot;)</span>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="sb">```</span>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="gs">**Gate:**</span> All threads returned, every subject has &gt;= 1 round, conflicts consolidated.
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gu">### Phase 3: Verify</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>Dispatch fact-checking subagent on <span class="sb">`micro-reports/*.md`</span> with research-adapted extraction (SourceCredibility, CrossReference, DateValidity agents). Then dispatch dehallucination on <span class="sb">`verified-claims.md`</span> focusing on precision fabrication and source conflation.
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="gs">**Gate:**</span> All claims have verdicts, no REFUTED presented as fact, dehallucination passed.
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="gu">### Phase 4: Synthesize</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>| Research Type | Structure |
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>|---------------|-----------|
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>| Comparison | Side-by-side matrix, winner per criterion, trade-offs |
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>| Procedural | Step-by-step guide, prerequisites, decision points |
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>| Exploratory | Landscape overview, taxonomy, key players, trends |
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>| Evaluative | Criteria, scoring, recommendation with caveats |
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>Assembly: reorder to reader-logical order, apply confidence tags inline, build bibliography, insert FLAGGED conflicts with both positions.
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>Completeness check against <span class="sb">`research-brief.success_criteria`</span>. If gaps: dispatch targeted Phase 2 (max 1 loop) or acknowledge gaps.
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="gs">**Gate:**</span> Success criteria addressed, all subjects in report, bibliography complete.
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="gu">## Circuit Breakers</span>
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>| Trigger | Action |
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>|---------|--------|
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>| Phase 0 fails | STOP. Cannot proceed without scope. |
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>| All threads plateau L3 | Report partial findings as incomplete. |
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>| &gt;50% claims REFUTED | Restart Phase 1 with revised plan. |
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>| &gt;30% gaps at Phase 4 | Loop to Phase 2 (max 1 loop). |
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">-</span><span class="w"> </span>Web searches in orchestrator context
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="k">-</span><span class="w"> </span>Presenting one side of a CONTESTED claim as settled
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="k">-</span><span class="w"> </span>Silently overriding user-provided facts
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="k">-</span><span class="w"> </span>Skipping fact-checking or dehallucination
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="k">-</span><span class="w"> </span>UNVERIFIED claims without the tag
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="k">-</span><span class="w"> </span>Inventing statistics, versions, dates, benchmarks
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="k">-</span><span class="w"> </span>Declaring complete with uncovered subjects
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>&lt;reflection&gt;
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>Before advancing phases: Are all subjects covered? Any conflicts unresolved? Did fact-checking and dehallucination pass? Are confidence tags honest? Would a skeptical reader trust this report?
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>Research is only as valuable as its honesty. Tag uncertainty. Surface conflicts. Acknowledge gaps. Fabrication is unrecoverable. Honest incompleteness is always preferable.
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

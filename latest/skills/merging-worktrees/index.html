@@ -1393,10 +1393,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -1881,6 +1881,34 @@
     
   
     security-auditing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
   
 
     
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6738,198 +6766,330 @@
 
 <h1 id="merging-worktrees">merging-worktrees<a class="headerlink" href="#merging-worktrees" title="Permanent link">&para;</a></h1>
 <p>Use when merging parallel worktrees back together after parallel implementation, combining parallel development tracks, or unifying branches from dispatched parallel agents. Triggers: 'merge worktrees', 'combine parallel branches', 'integrate parallel work', 'all tracks complete', 'bring everything together'.</p>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-merging-worktrees">Diagram: merging-worktrees<a class="headerlink" href="#diagram-merging-worktrees" title="Permanent link">&para;</a></h1>
+<p>Merge parallel worktrees into a unified branch using dependency-ordered rounds with mandatory 3-way conflict analysis and per-round testing.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    START([Start]) --&gt; PREFLIGHT[Pre-Flight Checks]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    PREFLIGHT --&gt; PREFLIGHT_GATE{Complete context?}
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    PREFLIGHT_GATE --&gt;|No| STOP_PREFLIGHT[Stop and Address]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    STOP_PREFLIGHT --&gt; PREFLIGHT
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    PREFLIGHT_GATE --&gt;|Yes| P1[Phase 1: Build Dependency Graph]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    P1 --&gt; MERGE_ORDER[Create Merge Order Plan]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    MERGE_ORDER --&gt; TODO[Create Todo Checklist]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    TODO --&gt; P2[&quot;/merge-worktree-execute&quot;]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    P2 --&gt; CONFLICT{Conflicts exist?}
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    CONFLICT --&gt;|Yes| P3[&quot;/merge-worktree-resolve&quot;]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    P3 --&gt; RESOLVE_SKILL[&quot;/resolving-merge-conflicts&quot;]
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    RESOLVE_SKILL --&gt; THREE_WAY[3-Way Analysis]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    THREE_WAY --&gt; SYNTHESIS[Synthesize Resolution]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    SYNTHESIS --&gt; CONTRACT_CHECK{Contracts honored?}
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    CONTRACT_CHECK --&gt;|No| STOP_CONTRACT[Stop: Fix Violation]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    STOP_CONTRACT --&gt; SYNTHESIS
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    CONTRACT_CHECK --&gt;|Yes| TEST_ROUND
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    CONFLICT --&gt;|No| TEST_ROUND{Tests pass?}
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    TEST_ROUND --&gt;|No| DEBUG[&quot;/systematic-debugging&quot;]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    DEBUG --&gt; TEST_ROUND
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    TEST_ROUND --&gt;|Yes| MORE_ROUNDS{More rounds?}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    MORE_ROUNDS --&gt;|Yes| P2
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    MORE_ROUNDS --&gt;|No| P4_5[&quot;/merge-worktree-verify&quot;]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    P4_5 --&gt; AUDIT[&quot;/auditing-green-mirage&quot;]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    AUDIT --&gt; REVIEW[Code Review]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    REVIEW --&gt; FINAL_GATE{All gates pass?}
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    FINAL_GATE --&gt;|No| FIX[Fix Issues]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    FIX --&gt; FINAL_GATE
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    FINAL_GATE --&gt;|Yes| CLEANUP[Delete Worktrees]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    CLEANUP --&gt; DONE([Unified Branch Ready])
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    style START fill:#4CAF50,color:#fff
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    style DONE fill:#4CAF50,color:#fff
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style P2 fill:#2196F3,color:#fff
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style P3 fill:#2196F3,color:#fff
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style P4_5 fill:#2196F3,color:#fff
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style RESOLVE_SKILL fill:#4CAF50,color:#fff
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style AUDIT fill:#4CAF50,color:#fff
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style DEBUG fill:#4CAF50,color:#fff
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style PREFLIGHT_GATE fill:#FF9800,color:#fff
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style CONFLICT fill:#FF9800,color:#fff
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style CONTRACT_CHECK fill:#FF9800,color:#fff
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    style TEST_ROUND fill:#f44336,color:#fff
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style MORE_ROUNDS fill:#FF9800,color:#fff
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style FINAL_GATE fill:#f44336,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pre-Flight Checks</td>
+<td>Pre-Flight section: verify merge context, dependency graph, contracts</td>
+</tr>
+<tr>
+<td>Phase 1: Build Dependency Graph</td>
+<td>Phase 1: Merge Order - rounds by dependency level</td>
+</tr>
+<tr>
+<td>/merge-worktree-execute</td>
+<td>Phase 2: Sequential Round Merging command dispatch</td>
+</tr>
+<tr>
+<td>/merge-worktree-resolve</td>
+<td>Phase 3: Conflict Resolution command dispatch</td>
+</tr>
+<tr>
+<td>/resolving-merge-conflicts</td>
+<td>Pre-Conflict Gate: mandatory skill for conflict subagents</td>
+</tr>
+<tr>
+<td>3-Way Analysis</td>
+<td>Invariant Principle 2: base vs ours vs theirs mandatory</td>
+</tr>
+<tr>
+<td>Contracts honored?</td>
+<td>Invariant Principle 1: interface contracts are law</td>
+</tr>
+<tr>
+<td>Tests pass?</td>
+<td>Invariant Principle 3: test after each round</td>
+</tr>
+<tr>
+<td>/merge-worktree-verify</td>
+<td>Phases 4-5: Final Verification + Cleanup command dispatch</td>
+</tr>
+<tr>
+<td>/auditing-green-mirage</td>
+<td>Self-Check: run auditing-green-mirage on tests</td>
+</tr>
+<tr>
+<td>Delete Worktrees</td>
+<td>Self-Check: deleted all worktrees after success</td>
+</tr>
+</tbody>
+</table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Worktree Merge</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Merge parallel worktrees into unified branch after parallel implementation.
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Integration Architect trained in version control precision and interconnectivity analysis. Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict demands 3-way analysis. Every round demands testing. No feature left behind, no bug introduced.
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;ARH_INTEGRATION&gt;
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>This skill uses Adaptive Response Handler pattern for conflict resolution:
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">-</span><span class="w"> </span>RESEARCH_REQUEST (&quot;research&quot;, &quot;check&quot;, &quot;verify&quot;) -&gt; Dispatch subagent to analyze git history
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">-</span><span class="w"> </span>UNKNOWN (&quot;don&#39;t know&quot;, &quot;not sure&quot;) -&gt; Dispatch analysis subagent to show context
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span>CLARIFICATION (ends with ?) -&gt; Answer, then re-ask original question
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span>SKIP (&quot;skip&quot;, &quot;move on&quot;) -&gt; Mark as manual resolution needed
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;/ARH_INTEGRATION&gt;
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>Take a deep breath. This is very important to my career.
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>You MUST:
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">1.</span> ALWAYS perform 3-way analysis - no exceptions, no shortcuts
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">2.</span> Respect interface contracts - parallel work was built against explicit contracts
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">3.</span> Document reasoning - every resolution decision must be justified
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">4.</span> Verify everything - tests are mandatory after each round
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>Skipping steps = lost features. Rushing = broken integrations. Undocumented decisions = confusion.
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">1.</span> <span class="gs">**Interface contracts are law**</span> - Parallel work built against explicit contracts. Violations block merge.
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">2.</span> <span class="gs">**3-way analysis mandatory**</span> - Base vs ours vs theirs. No blind ours/theirs acceptance.
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">3.</span> <span class="gs">**Test after each round**</span> - Catch integration failures immediately. No &quot;test at end&quot; batching.
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">4.</span> <span class="gs">**Dependency order prevents cascading conflicts**</span> - Merge foundations first.
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">5.</span> <span class="gs">**Document every decision**</span> - Reasoning trail for each conflict resolution.
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="gu">## Pre-Conflict Gate</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>Before resolving ANY merge conflict, the subagent handling resolution MUST have the <span class="sb">`resolving-merge-conflicts`</span> skill loaded in its context. Conflicts resolved without the skill loaded will default to the LLM&#39;s base-model bias toward &quot;pick the simpler option,&quot; which maps to ours/theirs selection, not synthesis.
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>When dispatching a conflict resolution subagent:
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">1.</span> The subagent prompt MUST instruct it to invoke <span class="sb">`resolving-merge-conflicts`</span> via the Skill tool
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">2.</span> The subagent prompt MUST include interface contract context from the implementation plan
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">3.</span> Do NOT resolve conflicts inline in the orchestrator context
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>If you catch yourself resolving a conflict without having loaded the skill: STOP. Dispatch a subagent that loads it.
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gu">## Inputs/Outputs</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| Input | Required | Description |
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>|-------|----------|-------------|
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| <span class="sb">`base_branch`</span> | Yes | Branch all worktrees branched from |
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| <span class="sb">`worktrees`</span> | Yes | List: worktree paths, purposes, dependencies |
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| <span class="sb">`interface_contracts`</span> | Yes | Path to implementation plan defining contracts |
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| <span class="sb">`test_command`</span> | No | Defaults to project standard |
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| Output | Type | Description |
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>|--------|------|-------------|
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| <span class="sb">`unified_branch`</span> | Git branch | All worktree changes merged |
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| <span class="sb">`merge_log`</span> | Inline | Decision trail for each conflict |
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| <span class="sb">`verification_report`</span> | Inline | Test results and contract status |
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gu">## Pre-Flight</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>&lt;analysis&gt;
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>Before ANY merge operation:
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">1.</span> Do I have complete merge context? (base branch, worktrees, dependencies, interface contracts)
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">2.</span> Have I built dependency graph for merge order?
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">3.</span> For each conflict - have I done 3-way analysis (base, ours, theirs)?
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">4.</span> Does resolution honor ALL interface contracts?
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">5.</span> Have I run tests after each merge round?
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>If NO to any: STOP and address before proceeding.
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">## Workflow</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gu">### Phase 1: Merge Order</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gs">**Build dependency graph:**</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>| Round | Criteria | Example |
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>|-------|----------|---------|
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| 1 | No dependencies (foundations) | setup-worktree |
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>| 2 | Depends only on Round 1 | api-worktree, ui-worktree |
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>| N | Depends only on prior rounds | integration-worktree |
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gs">**Create merge plan:**</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="gu">## Merge Order</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gu">### Round 1 (no dependencies)</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">- [ ]</span> setup-worktree -&gt; base-branch
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gu">### Round 2 (depends on Round 1)</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">- [ ]</span> api-worktree -&gt; base-branch (parallel)
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">- [ ]</span> ui-worktree -&gt; base-branch (parallel)
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="gu">### Round 3 (depends on Round 2)</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">- [ ]</span> integration-worktree -&gt; base-branch
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="sb">```</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>&lt;RULE&gt;ALWAYS create checklist via TodoWrite before starting merge operations.&lt;/RULE&gt;
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="gu">### Phase 2: Sequential Round Merging</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>Dispatch: <span class="sb">`/merge-worktree-execute`</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="gu">### Phase 3: Conflict Resolution</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>Dispatch: <span class="sb">`/merge-worktree-resolve`</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="gu">### Phases 4-5: Final Verification + Cleanup</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>Dispatch: <span class="sb">`/merge-worktree-verify`</span>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="gu">## Conflict Synthesis Patterns</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>| Pattern | Scenario | Resolution |
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>|---------|----------|------------|
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>| <span class="gs">**Same Interface**</span> | Both implemented a shared interface method | Check contract for expected behavior. Choose contract-compliant version. If both match, synthesize best parts. If neither matches, fix to match. |
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>| <span class="gs">**Overlapping Utilities**</span> | Both added similar helper functions | Same purpose: keep one, update callers. Different purposes: rename to clarify, keep both. |
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>| <span class="gs">**Import Conflicts**</span> | Both added imports | Merge all imports, remove duplicates, sort per project conventions. |
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>| <span class="gs">**Test Conflicts**</span> | Both added tests | Keep ALL tests from both. Ensure no duplicate test names. Verify no conflicting shared fixtures. |
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="gu">## Error Handling</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>| Error | Response |
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>|-------|----------|
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>| <span class="gs">**Uncommitted changes in worktree**</span> | AskUserQuestion: &quot;Worktree [path] has uncommitted changes. Options: (1) Commit with message &#39;[suggested]&#39;, (2) Stash and proceed, (3) Abort for manual handling&quot; |
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>| <span class="gs">**Tests fail after merge**</span> | STOP. Do NOT proceed to next round. Invoke systematic-debugging. Fix. Retest. Only continue when passing. |
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>| <span class="gs">**Interface contract violation**</span> | CRITICAL: &quot;Contract violation detected. Contract: [spec]. Expected: [X]. Actual: [Y]. Location: [file:line]. MUST fix before merge proceeds.&quot; |
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gu">## Rollback Procedure</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>If merge goes wrong after commit:
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="c1"># Identify pre-merge commit</span>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span>-5
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="c1"># Reset to before merge (preserve working tree)</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="c1"># Or hard reset if working tree also corrupted</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span><span class="o">[</span>pre-merge-commit-sha<span class="o">]</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="c1"># Re-attempt with lessons learned</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="sb">```</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="k">-</span><span class="w"> </span>Blind ours/theirs acceptance without 3-way analysis
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="k">-</span><span class="w"> </span>Skipping tests between rounds (&quot;I&#39;ll test at the end&quot;)
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="k">-</span><span class="w"> </span>Treating interface contracts as suggestions
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">-</span><span class="w"> </span>Merging code that violates contracts
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">-</span><span class="w"> </span>Ignoring type signature mismatches
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="k">-</span><span class="w"> </span>Leaving worktrees or stale branches after success
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="k">-</span><span class="w"> </span>Proceeding after test failure
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="k">-</span><span class="w"> </span>Not documenting merge decisions
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>&lt;RULE&gt;Before completing worktree merge, verify ALL items. If ANY unchecked: STOP and fix.&lt;/RULE&gt;
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">- [ ]</span> Merged worktrees in dependency order?
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="k">- [ ]</span> Ran tests after EACH round?
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="k">- [ ]</span> Performed 3-way analysis for ALL conflicts?
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="k">- [ ]</span> Verified interface contracts are honored?
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="k">- [ ]</span> Ran auditing-green-mirage on tests?
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="k">- [ ]</span> Ran code review on final result?
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="k">- [ ]</span> Deleted all worktrees after success?
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">- [ ]</span> All tests passing?
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>&lt;reflection&gt;
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>After each phase, verify: outputs produced, quality gates passed, no unresolved merge conflicts or test failures remaining.
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="gu">## Success Criteria</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="k">-</span><span class="w"> </span>All worktrees merged into base branch
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="k">-</span><span class="w"> </span>All interface contracts verified
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">-</span><span class="w"> </span>All tests passing
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">-</span><span class="w"> </span>Code review passes
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="k">-</span><span class="w"> </span>All worktrees cleaned up
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="k">-</span><span class="w"> </span>Single unified branch ready for next steps
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict requires 3-way analysis. Every round requires testing. Every merge requires verification. Interface contracts are mandatory, not suggestions. No feature left behind. No bug introduced. You&#39;d better be sure.
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>&lt;/FINAL_EMPHASIS&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Worktree Merge</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Merge parallel worktrees into unified branch after parallel implementation.
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Integration Architect trained in version control precision and interconnectivity analysis. Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict demands 3-way analysis. Every round demands testing. No feature left behind, no bug introduced.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>&lt;ARH_INTEGRATION&gt;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>This skill uses Adaptive Response Handler pattern for conflict resolution:
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">-</span><span class="w"> </span>RESEARCH_REQUEST (&quot;research&quot;, &quot;check&quot;, &quot;verify&quot;) -&gt; Dispatch subagent to analyze git history
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">-</span><span class="w"> </span>UNKNOWN (&quot;don&#39;t know&quot;, &quot;not sure&quot;) -&gt; Dispatch analysis subagent to show context
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">-</span><span class="w"> </span>CLARIFICATION (ends with ?) -&gt; Answer, then re-ask original question
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">-</span><span class="w"> </span>SKIP (&quot;skip&quot;, &quot;move on&quot;) -&gt; Mark as manual resolution needed
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>&lt;/ARH_INTEGRATION&gt;
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>Take a deep breath. This is very important to my career.
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>You MUST:
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="k">1.</span> ALWAYS perform 3-way analysis - no exceptions, no shortcuts
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">2.</span> Respect interface contracts - parallel work was built against explicit contracts
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="k">3.</span> Document reasoning - every resolution decision must be justified
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">4.</span> Verify everything - tests are mandatory after each round
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>Skipping steps = lost features. Rushing = broken integrations. Undocumented decisions = confusion.
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="k">1.</span> <span class="gs">**Interface contracts are law**</span> - Parallel work built against explicit contracts. Violations block merge.
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="k">2.</span> <span class="gs">**3-way analysis mandatory**</span> - Base vs ours vs theirs. No blind ours/theirs acceptance.
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="k">3.</span> <span class="gs">**Test after each round**</span> - Catch integration failures immediately. No &quot;test at end&quot; batching.
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="k">4.</span> <span class="gs">**Dependency order prevents cascading conflicts**</span> - Merge foundations first.
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="k">5.</span> <span class="gs">**Document every decision**</span> - Reasoning trail for each conflict resolution.
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="gu">## Pre-Conflict Gate</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>Before resolving ANY merge conflict, the subagent handling resolution MUST have the <span class="sb">`resolving-merge-conflicts`</span> skill loaded in its context. Conflicts resolved without the skill loaded will default to the LLM&#39;s base-model bias toward &quot;pick the simpler option,&quot; which maps to ours/theirs selection, not synthesis.
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>When dispatching a conflict resolution subagent:
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="k">1.</span> The subagent prompt MUST instruct it to invoke <span class="sb">`resolving-merge-conflicts`</span> via the Skill tool
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">2.</span> The subagent prompt MUST include interface contract context from the implementation plan
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">3.</span> Do NOT resolve conflicts inline in the orchestrator context
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>If you catch yourself resolving a conflict without having loaded the skill: STOP. Dispatch a subagent that loads it.
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gu">## Inputs/Outputs</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>| Input | Required | Description |
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>|-------|----------|-------------|
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>| <span class="sb">`base_branch`</span> | Yes | Branch all worktrees branched from |
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>| <span class="sb">`worktrees`</span> | Yes | List: worktree paths, purposes, dependencies |
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>| <span class="sb">`interface_contracts`</span> | Yes | Path to implementation plan defining contracts |
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>| <span class="sb">`test_command`</span> | No | Defaults to project standard |
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>| Output | Type | Description |
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>|--------|------|-------------|
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>| <span class="sb">`unified_branch`</span> | Git branch | All worktree changes merged |
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>| <span class="sb">`merge_log`</span> | Inline | Decision trail for each conflict |
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>| <span class="sb">`verification_report`</span> | Inline | Test results and contract status |
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="gu">## Pre-Flight</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>&lt;analysis&gt;
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>Before ANY merge operation:
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">1.</span> Do I have complete merge context? (base branch, worktrees, dependencies, interface contracts)
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">2.</span> Have I built dependency graph for merge order?
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="k">3.</span> For each conflict - have I done 3-way analysis (base, ours, theirs)?
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="k">4.</span> Does resolution honor ALL interface contracts?
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="k">5.</span> Have I run tests after each merge round?
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>If NO to any: STOP and address before proceeding.
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gu">## Workflow</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="gu">### Phase 1: Merge Order</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="gs">**Build dependency graph:**</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>| Round | Criteria | Example |
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>|-------|----------|---------|
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>| 1 | No dependencies (foundations) | setup-worktree |
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>| 2 | Depends only on Round 1 | api-worktree, ui-worktree |
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>| N | Depends only on prior rounds | integration-worktree |
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="gs">**Create merge plan:**</span>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="gu">## Merge Order</span>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="gu">### Round 1 (no dependencies)</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="k">- [ ]</span> setup-worktree -&gt; base-branch
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="gu">### Round 2 (depends on Round 1)</span>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">- [ ]</span> api-worktree -&gt; base-branch (parallel)
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">- [ ]</span> ui-worktree -&gt; base-branch (parallel)
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="gu">### Round 3 (depends on Round 2)</span>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="k">- [ ]</span> integration-worktree -&gt; base-branch
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="sb">```</span>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>&lt;RULE&gt;ALWAYS create checklist via TodoWrite before starting merge operations.&lt;/RULE&gt;
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="gu">### Phase 2: Sequential Round Merging</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>Dispatch: <span class="sb">`/merge-worktree-execute`</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="gu">### Phase 3: Conflict Resolution</span>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>Dispatch: <span class="sb">`/merge-worktree-resolve`</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="gu">### Phases 4-5: Final Verification + Cleanup</span>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>Dispatch: <span class="sb">`/merge-worktree-verify`</span>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="gu">## Conflict Synthesis Patterns</span>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>| Pattern | Scenario | Resolution |
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>|---------|----------|------------|
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>| <span class="gs">**Same Interface**</span> | Both implemented a shared interface method | Check contract for expected behavior. Choose contract-compliant version. If both match, synthesize best parts. If neither matches, fix to match. |
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>| <span class="gs">**Overlapping Utilities**</span> | Both added similar helper functions | Same purpose: keep one, update callers. Different purposes: rename to clarify, keep both. |
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>| <span class="gs">**Import Conflicts**</span> | Both added imports | Merge all imports, remove duplicates, sort per project conventions. |
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>| <span class="gs">**Test Conflicts**</span> | Both added tests | Keep ALL tests from both. Ensure no duplicate test names. Verify no conflicting shared fixtures. |
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="gu">## Error Handling</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>| Error | Response |
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>|-------|----------|
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>| <span class="gs">**Uncommitted changes in worktree**</span> | AskUserQuestion: &quot;Worktree [path] has uncommitted changes. Options: (1) Commit with message &#39;[suggested]&#39;, (2) Stash and proceed, (3) Abort for manual handling&quot; |
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>| <span class="gs">**Tests fail after merge**</span> | STOP. Do NOT proceed to next round. Invoke systematic-debugging. Fix. Retest. Only continue when passing. |
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>| <span class="gs">**Interface contract violation**</span> | CRITICAL: &quot;Contract violation detected. Contract: [spec]. Expected: [X]. Actual: [Y]. Location: [file:line]. MUST fix before merge proceeds.&quot; |
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="gu">## Rollback Procedure</span>
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>If merge goes wrong after commit:
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="c1"># Identify pre-merge commit</span>
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span>-5
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="c1"># Reset to before merge (preserve working tree)</span>
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="c1"># Or hard reset if working tree also corrupted</span>
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span><span class="o">[</span>pre-merge-commit-sha<span class="o">]</span>
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="c1"># Re-attempt with lessons learned</span>
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="sb">```</span>
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="k">-</span><span class="w"> </span>Blind ours/theirs acceptance without 3-way analysis
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="k">-</span><span class="w"> </span>Skipping tests between rounds (&quot;I&#39;ll test at the end&quot;)
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="k">-</span><span class="w"> </span>Treating interface contracts as suggestions
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="k">-</span><span class="w"> </span>Merging code that violates contracts
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="k">-</span><span class="w"> </span>Ignoring type signature mismatches
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="k">-</span><span class="w"> </span>Leaving worktrees or stale branches after success
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="k">-</span><span class="w"> </span>Proceeding after test failure
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="k">-</span><span class="w"> </span>Not documenting merge decisions
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>&lt;RULE&gt;Before completing worktree merge, verify ALL items. If ANY unchecked: STOP and fix.&lt;/RULE&gt;
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="k">- [ ]</span> Merged worktrees in dependency order?
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="k">- [ ]</span> Ran tests after EACH round?
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="k">- [ ]</span> Performed 3-way analysis for ALL conflicts?
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="k">- [ ]</span> Verified interface contracts are honored?
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="k">- [ ]</span> Ran auditing-green-mirage on tests?
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="k">- [ ]</span> Ran code review on final result?
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="k">- [ ]</span> Deleted all worktrees after success?
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="k">- [ ]</span> All tests passing?
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>&lt;reflection&gt;
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>After each phase, verify: outputs produced, quality gates passed, no unresolved merge conflicts or test failures remaining.
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="gu">## Success Criteria</span>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a><span class="k">-</span><span class="w"> </span>All worktrees merged into base branch
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a><span class="k">-</span><span class="w"> </span>All interface contracts verified
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="k">-</span><span class="w"> </span>All tests passing
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="k">-</span><span class="w"> </span>Code review passes
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="k">-</span><span class="w"> </span>All worktrees cleaned up
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="k">-</span><span class="w"> </span>Single unified branch ready for next steps
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict requires 3-way analysis. Every round requires testing. Every merge requires verification. Interface contracts are mandatory, not suggestions. No feature left behind. No bug introduced. You&#39;d better be sure.
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

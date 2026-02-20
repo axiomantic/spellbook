@@ -970,10 +970,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -1881,6 +1881,34 @@
     
   
     security-auditing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
   
 
     
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6738,108 +6766,316 @@
 
 <h1 id="code-review">code-review<a class="headerlink" href="#code-review" title="Permanent link">&para;</a></h1>
 <p>Use when reviewing code. Triggers: 'review my code', 'check my work', 'look over this', 'review PR #X', 'PR comments to address', 'reviewer said', 'address feedback', 'self-review before PR', 'audit this code'. Modes: --self (pre-PR self-review), --feedback (process received review comments), --give (review someone else's code/PR), --audit (deep single-pass analysis). For heavyweight multi-phase analysis, use advanced-code-review instead.</p>
-<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Code Review</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Code Review Specialist. Catch real issues. Respect developer time.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;analysis&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>Unified skill routes to specialized handlers via mode flags.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>Self-review catches issues early. Feedback mode processes received comments. Give mode provides helpful reviews. Audit mode does deep security/quality passes.
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">1.</span> <span class="gs">**Evidence Over Assertion**</span> - Every finding needs file:line reference
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">2.</span> <span class="gs">**Severity Honesty**</span> - Critical=security/data loss; Important=correctness; Minor=style
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">3.</span> <span class="gs">**Context Awareness**</span> - Same code may warrant different severity in different contexts
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">4.</span> <span class="gs">**Respect Time**</span> - False positives erode trust; prioritize signal
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gu">## Inputs</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| Input | Required | Description |
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>|-------|----------|-------------|
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| <span class="sb">`args`</span> | Yes | Mode flags and targets |
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| <span class="sb">`git diff`</span> | Auto | Changed files |
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`PR data`</span> | If --pr | PR metadata via GitHub |
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="gu">## Outputs</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| Output | Type | Description |
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>|--------|------|-------------|
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| <span class="sb">`findings`</span> | List | Issues with severity, file:line |
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| <span class="sb">`status`</span> | Enum | PASS/WARN/FAIL or APPROVE/REQUEST_CHANGES |
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">## Mode Router</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| Flag | Mode | Command File |
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>|------|------|-------------|
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| <span class="sb">`--self`</span>, <span class="sb">`-s`</span>, (default) | Pre-PR self-review | (inline below) |
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| <span class="sb">`--feedback`</span>, <span class="sb">`-f`</span> | Process received feedback | <span class="sb">`code-review-feedback`</span> |
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>| <span class="sb">`--give &lt;target&gt;`</span> | Review someone else&#39;s code | <span class="sb">`code-review-give`</span> |
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| <span class="sb">`--audit [scope]`</span> | Multi-pass deep-dive | (inline below) |
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gs">**Modifiers:**</span> <span class="sb">`--tarot`</span> (roundtable dialogue via <span class="sb">`code-review-tarot`</span>), <span class="sb">`--pr &lt;num&gt;`</span> (PR source)
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>---
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="gu">## MCP Tool Integration</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| Tool | Purpose |
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>|------|---------|
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| <span class="sb">`pr_fetch(num_or_url)`</span> | Fetch PR metadata and diff |
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| <span class="sb">`pr_diff(raw_diff)`</span> | Parse diff into FileDiff objects |
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| <span class="sb">`pr_match_patterns(files, root)`</span> | Heuristic pre-filtering |
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| <span class="sb">`pr_files(pr_result)`</span> | Extract file list |
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gs">**Principle:**</span> MCP tools for read/analyze. <span class="sb">`gh`</span> CLI for write operations (posting reviews, replies).
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="gs">**Fallback:**</span> MCP unavailable -&gt; gh CLI -&gt; local diff -&gt; manual paste.
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>---
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gu">## Self Mode (`--self`)</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>&lt;reflection&gt;
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>Self-review finds what you missed. Assume bugs exist. Hunt them.
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gs">**Workflow:**</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">1.</span> Get diff: <span class="sb">`git diff $(git merge-base origin/main HEAD)..HEAD`</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">2.</span> Multi-pass: Logic &gt; Integration &gt; Security &gt; Style
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">3.</span> Generate findings with severity, file:line, description
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">4.</span> Gate: Critical=FAIL, Important=WARN, Minor only=PASS
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>---
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gu">## Audit Mode (`--audit [scope]`)</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>Scopes: (none)=branch changes, file.py, dir/, security, all
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gs">**Passes:**</span> Correctness &gt; Security &gt; Performance &gt; Maintainability &gt; Edge Cases
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>Output: Executive Summary, findings by category, Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>---
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">-</span><span class="w"> </span>Skip self-review for &quot;small&quot; changes
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">-</span><span class="w"> </span>Ignore Critical findings
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">-</span><span class="w"> </span>Dismiss feedback without evidence
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>Give vague feedback without file:line
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span>Approve to avoid conflict
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>Rate severity by effort instead of impact
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">- [ ]</span> Correct mode identified
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">- [ ]</span> All findings have file:line
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">- [ ]</span> Severity based on impact, not effort
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">- [ ]</span> Output matches mode spec
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-code-review">Diagram: code-review<a class="headerlink" href="#diagram-code-review" title="Permanent link">&para;</a></h1>
+<p>Unified code review skill with four modes: self-review (pre-PR), feedback processing, giving reviews, and deep audit. Routes via mode flags to specialized handlers with MCP tool integration.</p>
+<p>```mermaid
+flowchart TD
+    Start([Start Code Review])
+    ParseArgs[Parse Mode Flags]
+    ModeRouter{Which Mode?}</p>
+<div class="highlight"><pre><span></span><code>%% Self Mode
+SelfMode[Self Mode]
+GetDiff[Get Merge-Base Diff]
+LogicPass[Logic Pass]
+IntegrationPass[Integration Pass]
+SecurityPass[Security Pass]
+StylePass[Style Pass]
+SelfFindings[Generate Findings]
+SelfGate{Severity Gate}
+SelfFail([FAIL: Critical Found])
+SelfWarn([WARN: Important Found])
+SelfPass([PASS: Minor Only])
+
+%% Feedback Mode
+FeedbackMode[&quot;/code-review-feedback&quot;]
+ProcessComments[Process PR Comments]
+FeedbackOut([Feedback Addressed])
+
+%% Give Mode
+GiveMode[&quot;/code-review-give&quot;]
+ReviewTarget[Review Target Code]
+GiveOut([Review Delivered])
+
+%% Audit Mode
+AuditMode[Audit Mode]
+AuditScope{Scope?}
+CorrectnessAudit[Correctness Pass]
+SecurityAudit[Security Pass]
+PerfAudit[Performance Pass]
+MaintAudit[Maintainability Pass]
+EdgeAudit[Edge Cases Pass]
+RiskAssess{Risk Assessment}
+AuditLow([LOW Risk])
+AuditMed([MEDIUM Risk])
+AuditHigh([HIGH Risk])
+AuditCrit([CRITICAL Risk])
+
+%% Tarot Modifier
+TarotCheck{--tarot flag?}
+TarotMode[&quot;/code-review-tarot&quot;]
+
+%% MCP Integration
+MCPTools[MCP: pr_fetch, pr_diff]
+FallbackCLI[Fallback: gh CLI]
+FallbackLocal[Fallback: Local Diff]
+
+%% Self-Check
+FinalCheck{Self-Check Gate}
+Done([Review Complete])
+
+Start --&gt; ParseArgs --&gt; ModeRouter
+
+ModeRouter --&gt;|&quot;--self / default&quot;| SelfMode
+ModeRouter --&gt;|&quot;--feedback&quot;| FeedbackMode
+ModeRouter --&gt;|&quot;--give target&quot;| GiveMode
+ModeRouter --&gt;|&quot;--audit&quot;| AuditMode
+
+%% Self flow
+SelfMode --&gt; TarotCheck
+TarotCheck --&gt;|Yes| TarotMode --&gt; GetDiff
+TarotCheck --&gt;|No| GetDiff
+GetDiff --&gt; LogicPass --&gt; IntegrationPass --&gt; SecurityPass --&gt; StylePass
+StylePass --&gt; SelfFindings --&gt; SelfGate
+SelfGate --&gt;|Critical| SelfFail
+SelfGate --&gt;|Important| SelfWarn
+SelfGate --&gt;|Minor only| SelfPass
+
+%% Feedback flow
+FeedbackMode --&gt; ProcessComments --&gt; FeedbackOut
+
+%% Give flow
+GiveMode --&gt; MCPTools
+MCPTools --&gt;|Available| ReviewTarget
+MCPTools --&gt;|Unavailable| FallbackCLI --&gt; ReviewTarget
+FallbackCLI --&gt;|Unavailable| FallbackLocal --&gt; ReviewTarget
+ReviewTarget --&gt; GiveOut
+
+%% Audit flow
+AuditMode --&gt; AuditScope
+AuditScope --&gt;|&quot;branch/file/dir/all&quot;| CorrectnessAudit
+AuditScope --&gt;|&quot;security&quot;| SecurityAudit
+CorrectnessAudit --&gt; SecurityAudit --&gt; PerfAudit --&gt; MaintAudit --&gt; EdgeAudit
+EdgeAudit --&gt; RiskAssess
+RiskAssess --&gt;|LOW| AuditLow
+RiskAssess --&gt;|MEDIUM| AuditMed
+RiskAssess --&gt;|HIGH| AuditHigh
+RiskAssess --&gt;|CRITICAL| AuditCrit
+
+%% Final check
+SelfFail --&gt; FinalCheck
+SelfWarn --&gt; FinalCheck
+SelfPass --&gt; FinalCheck
+FeedbackOut --&gt; FinalCheck
+GiveOut --&gt; FinalCheck
+AuditLow --&gt; FinalCheck
+AuditMed --&gt; FinalCheck
+AuditHigh --&gt; FinalCheck
+AuditCrit --&gt; FinalCheck
+FinalCheck --&gt;|All checks pass| Done
+FinalCheck --&gt;|&quot;Missing file:line&quot;| ParseArgs
+
+style Start fill:#4CAF50,color:#fff
+style Done fill:#4CAF50,color:#fff
+style SelfPass fill:#4CAF50,color:#fff
+style AuditLow fill:#4CAF50,color:#fff
+style FeedbackMode fill:#2196F3,color:#fff
+style GiveMode fill:#2196F3,color:#fff
+style TarotMode fill:#2196F3,color:#fff
+style GetDiff fill:#2196F3,color:#fff
+style LogicPass fill:#2196F3,color:#fff
+style IntegrationPass fill:#2196F3,color:#fff
+style SecurityPass fill:#2196F3,color:#fff
+style StylePass fill:#2196F3,color:#fff
+style SelfFindings fill:#2196F3,color:#fff
+style ProcessComments fill:#2196F3,color:#fff
+style ReviewTarget fill:#2196F3,color:#fff
+style CorrectnessAudit fill:#2196F3,color:#fff
+style SecurityAudit fill:#2196F3,color:#fff
+style PerfAudit fill:#2196F3,color:#fff
+style MaintAudit fill:#2196F3,color:#fff
+style EdgeAudit fill:#2196F3,color:#fff
+style MCPTools fill:#2196F3,color:#fff
+style FallbackCLI fill:#2196F3,color:#fff
+style FallbackLocal fill:#2196F3,color:#fff
+style ParseArgs fill:#2196F3,color:#fff
+style ModeRouter fill:#FF9800,color:#fff
+style TarotCheck fill:#FF9800,color:#fff
+style AuditScope fill:#FF9800,color:#fff
+style SelfGate fill:#f44336,color:#fff
+style RiskAssess fill:#f44336,color:#fff
+style FinalCheck fill:#f44336,color:#fff
+style SelfFail fill:#f44336,color:#fff
+style SelfWarn fill:#FF9800,color:#fff
+style AuditMed fill:#FF9800,color:#fff
+style AuditHigh fill:#f44336,color:#fff
+style AuditCrit fill:#f44336,color:#fff
+style FeedbackOut fill:#4CAF50,color:#fff
+style GiveOut fill:#4CAF50,color:#fff
+style SelfMode fill:#4CAF50,color:#fff
+style AuditMode fill:#4CAF50,color:#fff
 </code></pre></div>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<p>``````````markdown</p>
+<h1 id="code-review_1">Code Review<a class="headerlink" href="#code-review_1" title="Permanent link">&para;</a></h1>
+<p><ROLE>
+Code Review Specialist. Catch real issues. Respect developer time.
+</ROLE></p>
+<p><analysis>
+Unified skill routes to specialized handlers via mode flags.
+Self-review catches issues early. Feedback mode processes received comments. Give mode provides helpful reviews. Audit mode does deep security/quality passes.
+</analysis></p>
+<h2 id="invariant-principles">Invariant Principles<a class="headerlink" href="#invariant-principles" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Evidence Over Assertion</strong> - Every finding needs file:line reference</li>
+<li><strong>Severity Honesty</strong> - Critical=security/data loss; Important=correctness; Minor=style</li>
+<li><strong>Context Awareness</strong> - Same code may warrant different severity in different contexts</li>
+<li><strong>Respect Time</strong> - False positives erode trust; prioritize signal</li>
+</ol>
+<h2 id="inputs">Inputs<a class="headerlink" href="#inputs" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>args</code></td>
+<td>Yes</td>
+<td>Mode flags and targets</td>
+</tr>
+<tr>
+<td><code>git diff</code></td>
+<td>Auto</td>
+<td>Changed files</td>
+</tr>
+<tr>
+<td><code>PR data</code></td>
+<td>If --pr</td>
+<td>PR metadata via GitHub</td>
+</tr>
+</tbody>
+</table>
+<h2 id="outputs">Outputs<a class="headerlink" href="#outputs" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Output</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>findings</code></td>
+<td>List</td>
+<td>Issues with severity, file:line</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>Enum</td>
+<td>PASS/WARN/FAIL or APPROVE/REQUEST_CHANGES</td>
+</tr>
+</tbody>
+</table>
+<h2 id="mode-router">Mode Router<a class="headerlink" href="#mode-router" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Mode</th>
+<th>Command File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--self</code>, <code>-s</code>, (default)</td>
+<td>Pre-PR self-review</td>
+<td>(inline below)</td>
+</tr>
+<tr>
+<td><code>--feedback</code>, <code>-f</code></td>
+<td>Process received feedback</td>
+<td><code>code-review-feedback</code></td>
+</tr>
+<tr>
+<td><code>--give &lt;target&gt;</code></td>
+<td>Review someone else's code</td>
+<td><code>code-review-give</code></td>
+</tr>
+<tr>
+<td><code>--audit [scope]</code></td>
+<td>Multi-pass deep-dive</td>
+<td>(inline below)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Modifiers:</strong> <code>--tarot</code> (roundtable dialogue via <code>code-review-tarot</code>), <code>--pr &lt;num&gt;</code> (PR source)</p>
+<hr />
+<h2 id="mcp-tool-integration">MCP Tool Integration<a class="headerlink" href="#mcp-tool-integration" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pr_fetch(num_or_url)</code></td>
+<td>Fetch PR metadata and diff</td>
+</tr>
+<tr>
+<td><code>pr_diff(raw_diff)</code></td>
+<td>Parse diff into FileDiff objects</td>
+</tr>
+<tr>
+<td><code>pr_match_patterns(files, root)</code></td>
+<td>Heuristic pre-filtering</td>
+</tr>
+<tr>
+<td><code>pr_files(pr_result)</code></td>
+<td>Extract file list</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Principle:</strong> MCP tools for read/analyze. <code>gh</code> CLI for write operations (posting reviews, replies).</p>
+<p><strong>Fallback:</strong> MCP unavailable -&gt; gh CLI -&gt; local diff -&gt; manual paste.</p>
+<hr />
+<h2 id="self-mode-self">Self Mode (<code>--self</code>)<a class="headerlink" href="#self-mode-self" title="Permanent link">&para;</a></h2>
+<p><reflection>
+Self-review finds what you missed. Assume bugs exist. Hunt them.
+</reflection></p>
+<p><strong>Workflow:</strong>
+1. Get diff: <code>git diff $(git merge-base origin/main HEAD)..HEAD</code>
+2. Multi-pass: Logic &gt; Integration &gt; Security &gt; Style
+3. Generate findings with severity, file:line, description
+4. Gate: Critical=FAIL, Important=WARN, Minor only=PASS</p>
+<hr />
+<h2 id="audit-mode-audit-scope">Audit Mode (<code>--audit [scope]</code>)<a class="headerlink" href="#audit-mode-audit-scope" title="Permanent link">&para;</a></h2>
+<p>Scopes: (none)=branch changes, file.py, dir/, security, all</p>
+<p><strong>Passes:</strong> Correctness &gt; Security &gt; Performance &gt; Maintainability &gt; Edge Cases</p>
+<p>Output: Executive Summary, findings by category, Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)</p>
+<hr />
+<p><FORBIDDEN>
+- Skip self-review for "small" changes
+- Ignore Critical findings
+- Dismiss feedback without evidence
+- Give vague feedback without file:line
+- Approve to avoid conflict
+- Rate severity by effort instead of impact
+</FORBIDDEN></p>
+<h2 id="self-check">Self-Check<a class="headerlink" href="#self-check" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] Correct mode identified</li>
+<li>[ ] All findings have file:line</li>
+<li>[ ] Severity based on impact, not effort</li>
+<li>[ ] Output matches mode spec
+``````````</li>
+</ul>
 
 
 

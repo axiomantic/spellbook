@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -5897,10 +5925,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6737,350 +6765,440 @@
 
 
 <h1 id="test-bar">/test-bar<a class="headerlink" href="#test-bar" title="Permanent link">&para;</a></h1>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-test-bar">Diagram: test-bar<a class="headerlink" href="#diagram-test-bar" title="Permanent link">&para;</a></h1>
+<p>Generate a floating QA test overlay for the current branch's UI changes. Analyzes branch diffs, builds a scenario matrix, creates a self-contained React overlay component with one-click scenario buttons, writes a manifest, and verifies compilation.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  Start([Start]) --&gt; P1[Phase 1: Branch Analysis]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  P1 --&gt; MB[Detect merge base]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  MB --&gt; CF[List changed files]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  CF --&gt; HasFiles{Changed files?}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  HasFiles -- No --&gt; Exit1([No changes, exit])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  HasFiles -- Yes --&gt; ReadFiles[Read full files]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  ReadFiles --&gt; Analyze[Identify conditionals\nand data triggers]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  Analyze --&gt; DetectFW[Detect framework]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  DetectFW --&gt; P2[Phase 2: Scenario Matrix]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  P2 --&gt; BuildMatrix[Build scenario matrix]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  BuildMatrix --&gt; UserApproval{User approves\nscenarios?}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  UserApproval -- Adjust --&gt; BuildMatrix
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  UserApproval -- Yes --&gt; P3[Phase 3: Implementation]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  P3 --&gt; CreateOverlay[Create overlay component]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  CreateOverlay --&gt; CreateData[Create scenario data]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  CreateData --&gt; InjectOverlay[Inject into root]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  InjectOverlay --&gt; P4[Write manifest]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  P4 --&gt; WriteManifest[Write manifest JSON]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>  WriteManifest --&gt; P5[Phase 5: Verification]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  P5 --&gt; CompileCheck{Compile check\npasses?}
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  CompileCheck -- No --&gt; FixIssues[Fix issues]
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  FixIssues --&gt; CompileCheck
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  CompileCheck -- Yes --&gt; ImportCheck{Imports resolve?}
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>  ImportCheck -- No --&gt; FixImports[Fix imports]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  FixImports --&gt; ImportCheck
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>  ImportCheck -- Yes --&gt; DevGuard{Dev guards\npresent?}
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  DevGuard -- No --&gt; AddGuards[Add dev guards]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  AddGuards --&gt; DevGuard
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  DevGuard -- Yes --&gt; Output[Display summary]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  Output --&gt; Done([Done])
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>  style Done fill:#4CAF50,color:#fff
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>  style Exit1 fill:#f44336,color:#fff
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  style HasFiles fill:#FF9800,color:#fff
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  style UserApproval fill:#FF9800,color:#fff
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>  style CompileCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  style ImportCheck fill:#f44336,color:#fff
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>  style DevGuard fill:#f44336,color:#fff
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  style P1 fill:#2196F3,color:#fff
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>  style P2 fill:#2196F3,color:#fff
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>  style P3 fill:#2196F3,color:#fff
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>  style P4 fill:#2196F3,color:#fff
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>  style P5 fill:#2196F3,color:#fff
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>  style MB fill:#2196F3,color:#fff
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>  style CF fill:#2196F3,color:#fff
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>  style ReadFiles fill:#2196F3,color:#fff
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>  style Analyze fill:#2196F3,color:#fff
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>  style DetectFW fill:#2196F3,color:#fff
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>  style BuildMatrix fill:#2196F3,color:#fff
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>  style CreateOverlay fill:#2196F3,color:#fff
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>  style CreateData fill:#2196F3,color:#fff
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>  style InjectOverlay fill:#2196F3,color:#fff
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>  style WriteManifest fill:#2196F3,color:#fff
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>  style FixIssues fill:#2196F3,color:#fff
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>  style FixImports fill:#2196F3,color:#fff
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>  style AddGuards fill:#2196F3,color:#fff
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>  style Output fill:#2196F3,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># MISSION</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Analyze the current branch&#39;s code changes against its merge base, identify every conditional rendering path and its data triggers, then generate a self-contained floating React overlay component with one-click scenario buttons. Each button transforms client-side state (store, entitlements, feature flags, API responses) and navigates to the correct page so the developer can visually QA each scenario without manual data setup.
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>QA Test Apparatus Engineer. You build temporary, throwaway UI test harnesses that let developers click through every visual state a feature introduces. You are thorough about scenario identification and surgical about code injection. Your test bars catch visual regressions that automated tests miss.
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Throwaway code**</span> - Everything you create will be reverted via <span class="sb">`/test-bar-remove`</span>. Optimize for &quot;works correctly&quot; over &quot;production quality.&quot; But it MUST work.
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> <span class="gs">**No test file changes**</span> - Only modify source/component files. Never touch <span class="sb">`__tests__/`</span>, <span class="sb">`*.test.*`</span>, or <span class="sb">`*.spec.*`</span> files.
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> <span class="gs">**Track all changes**</span> - Write a manifest so <span class="sb">`/test-bar-remove`</span> can cleanly revert. No untracked modifications.
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">4.</span> <span class="gs">**Dev-only guard**</span> - Wrap ALL injected code in <span class="sb">`__DEV__`</span> or <span class="sb">`process.env.NODE_ENV !== &#39;production&#39;`</span> checks.
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">5.</span> <span class="gs">**Minimal footprint**</span> - Inject at the highest possible level. One overlay component, one injection point. Scattered changes are forbidden.
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">6.</span> <span class="gs">**Reversible state**</span> - Every scenario button must be reversible. Capture original state before overriding. &quot;Reset&quot; restores it.
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>---
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gu">## Phase 1: Branch Analysis</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gu">### Step 1: Determine merge base and changed files</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="c1"># Detect target branch (PR base or default)</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="nv">TARGET</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--abbrev-ref<span class="w"> </span>HEAD@<span class="o">{</span>upstream<span class="o">}</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|origin/||&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;master&quot;</span><span class="k">)</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="nv">MERGE_BASE</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>merge-base<span class="w"> </span>HEAD<span class="w"> </span><span class="s2">&quot;origin/</span><span class="nv">$TARGET</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>git<span class="w"> </span>merge-base<span class="w"> </span>HEAD<span class="w"> </span>origin/master<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>git<span class="w"> </span>merge-base<span class="w"> </span>HEAD<span class="w"> </span>origin/main<span class="k">)</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="c1"># Detect source directory (src/ is most common, but verify)</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;src&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">  </span><span class="nv">SRC_DIR</span><span class="o">=</span><span class="s2">&quot;src&quot;</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;app&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">  </span><span class="nv">SRC_DIR</span><span class="o">=</span><span class="s2">&quot;app&quot;</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;lib&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="w">  </span><span class="nv">SRC_DIR</span><span class="o">=</span><span class="s2">&quot;lib&quot;</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">else</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: No src/, app/, or lib/ directory found. Identify the source directory manually.&quot;</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">fi</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="c1"># Changed source files only (exclude tests, configs, assets)</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>git<span class="w"> </span>diff<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$MERGE_BASE</span><span class="s2">&quot;</span>...HEAD<span class="w"> </span>--name-only<span class="w"> </span>--diff-filter<span class="o">=</span>ACMR<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;\.(tsx?|jsx?)$&#39;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;(__tests__|\.test\.|\.spec\.|\.stories\.|\.mock\.)&#39;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sort
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">```</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>If no changed source files are found, report &quot;No source file changes detected on this branch&quot; and exit.
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gu">### Step 2: Read and analyze each changed file</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>For each changed file, read the FULL file (not just the diff) and identify:
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| Category | What to Look For | Examples |
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>|----------|-----------------|---------|
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| <span class="gs">**Conditional rendering**</span> | <span class="sb">`if/else`</span>, ternaries, <span class="sb">`&amp;&amp;`</span> guards, <span class="sb">`switch`</span> that produce different UI | <span class="sb">`{isPro &amp;&amp; &lt;ProBadge/&gt;}`</span>, <span class="sb">`isLoading ? &lt;Spinner/&gt; : &lt;Content/&gt;`</span> |
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| <span class="gs">**Data triggers**</span> | Store selectors, props, hooks, API response fields that control rendering | <span class="sb">`useSelector(state =&gt; state.user.plan)`</span>, <span class="sb">`data?.subscription?.status`</span> |
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| <span class="gs">**Feature flags**</span> | Any gating mechanism | <span class="sb">`useFeatureFlag(&#39;new_checkout&#39;)`</span>, <span class="sb">`isEnabled(&#39;beta_ui&#39;)`</span> |
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| <span class="gs">**Entitlements / plans**</span> | User tier, plan type, permission checks | <span class="sb">`provider.plan === &#39;pro&#39;`</span>, <span class="sb">`hasEntitlement(&#39;custom_website&#39;)`</span> |
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| <span class="gs">**Navigation targets**</span> | Routes where affected components render | <span class="sb">`&lt;Route path=&quot;/settings&quot; /&gt;`</span>, <span class="sb">`navigation.navigate(&#39;Profile&#39;)`</span> |
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| <span class="gs">**Error/empty states**</span> | Fallback UI for missing data, errors, empty lists | <span class="sb">`{items.length === 0 &amp;&amp; &lt;EmptyState/&gt;}`</span>, <span class="sb">`{error &amp;&amp; &lt;ErrorBanner/&gt;}`</span> |
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| <span class="gs">**Loading states**</span> | Skeleton screens, spinners, placeholders | <span class="sb">`{isLoading &amp;&amp; &lt;Skeleton/&gt;}`</span> |
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gu">### Step 3: Detect project framework</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>Identify the state management and routing used by the project:
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="c1"># Use SRC_DIR detected in Phase 1 (defaults to src/)</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="c1"># State management</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;configureStore\|createStore\|@rematch\|createModel&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;zustand\|create(&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;useContext\|createContext&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="c1"># Routing</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;react-router\|BrowserRouter\|useNavigate\|useHistory&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;next/router\|next/navigation\|useRouter&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;@react-navigation&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="c1"># Store location (for dispatch/state override)</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>find<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;store.ts&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;store.tsx&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;store.js&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;store/index.*&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-5
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="sb">```</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>Record the detected framework for use in Phase 3.
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>---
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gu">## Phase 2: Scenario Matrix</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>Build a scenario matrix from the analysis. Each scenario must be specific and testable.
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gs">**Required columns:**</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| Scenario Name | Data Overrides | Navigation Target | Expected Visual Result |
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>|---------------|---------------|-------------------|----------------------|
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| Short, descriptive label (e.g., &quot;Pro plan active&quot;) | Exact state/prop changes (e.g., <span class="sb">`store.user.plan = &#39;pro&#39;`</span>) | Route path or screen name | What the developer should see |
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gs">**Scenario categories to cover (check all that apply):**</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">- [ ]</span> Happy path (primary feature working correctly)
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">- [ ]</span> Each conditional branch (every if/else, every ternary arm)
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">- [ ]</span> Empty state (no data, zero items)
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">- [ ]</span> Error state (API failure, invalid data)
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">- [ ]</span> Loading state (in-progress fetch)
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">- [ ]</span> Permission/entitlement variants (free vs pro vs enterprise)
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">- [ ]</span> Feature flag on vs off
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">- [ ]</span> Edge cases (long text, missing optional fields, boundary values)
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>Present the scenario matrix to the user for confirmation before proceeding to Phase 3.
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>Include: &quot;Should I add, remove, or modify any scenarios?&quot;
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>---
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="gu">## Phase 3: Implementation</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="gu">### Step 1: Create the overlay component</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>Create a single self-contained file: <span class="sb">`src/components/TestScenarioBar.tsx`</span> (or <span class="sb">`.jsx`</span> if project uses JS).
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>The component MUST include:
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gs">**Visual design:**</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">-</span><span class="w"> </span>Fixed position, bottom-right corner
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">-</span><span class="w"> </span><span class="sb">`z-index: 99999`</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span>Bright orange/yellow border (2px solid <span class="ni">#ff6b00</span>) to be visually obvious as test apparatus
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span>Semi-transparent dark background (<span class="sb">`rgba(0, 0, 0, 0.85)`</span>)
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">-</span><span class="w"> </span>Small monospace font (11px)
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">-</span><span class="w"> </span>Max height 50vh with scroll for many scenarios
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">-</span><span class="w"> </span>Draggable via a drag handle at the top (use mouse events, no external deps)
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">-</span><span class="w"> </span>Collapsed/expanded toggle (starts expanded)
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">-</span><span class="w"> </span>Width: 280px
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="gs">**Required UI elements:**</span>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="k">-</span><span class="w"> </span>Header: &quot;Test Scenarios&quot; with drag handle and collapse toggle
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="k">-</span><span class="w"> </span>Active scenario indicator (green highlight on active button)
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="k">-</span><span class="w"> </span>One button per scenario, with short label
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="k">-</span><span class="w"> </span>&quot;Reset&quot; button that restores original state (always visible)
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">-</span><span class="w"> </span>&quot;Close&quot; button that unmounts the bar entirely
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="gs">**State management integration (adapt to detected framework):**</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>For Redux/Rematch:
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="sb">```tsx</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="c1">// Capture original state on mount</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="kd">const</span><span class="w"> </span><span class="nx">originalState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useRef</span><span class="p">(</span><span class="nx">store</span><span class="p">.</span><span class="nx">getState</span><span class="p">());</span>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="c1">// Override for a scenario</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="kd">const</span><span class="w"> </span><span class="nx">applyScenario</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">overrides</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="p">&lt;</span><span class="nt">string</span><span class="err">,</span><span class="w"> </span><span class="na">any</span><span class="p">&gt;)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="w">  </span><span class="nb">Object</span><span class="p">.</span><span class="nx">entries</span><span class="p">(</span><span class="nx">overrides</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(([</span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="w">    </span><span class="c1">// Use store.dispatch for Rematch models or Redux actions</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="w">    </span><span class="c1">// path format: &quot;modelName/setState&quot; or action type</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="w">    </span><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="nx">payload</span><span class="o">:</span><span class="w"> </span><span class="kt">value</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="w">  </span><span class="p">});</span>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="p">};</span>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="c1">// Reset</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="kd">const</span><span class="w"> </span><span class="nx">resetState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="w">  </span><span class="c1">// Dispatch original values back</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="p">};</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">```</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>For Zustand:
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="sb">```tsx</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="kd">const</span><span class="w"> </span><span class="nx">applyScenario</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">overrides</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="p">&lt;</span><span class="nt">string</span><span class="err">,</span><span class="w"> </span><span class="na">any</span><span class="p">&gt;)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="w">  </span><span class="nx">useStore</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">overrides</span><span class="p">);</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="p">};</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">```</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>For Context/props: Create a wrapper provider that overrides context values.
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="gs">**Navigation integration (adapt to detected framework):**</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>For React Router: <span class="sb">`useNavigate()`</span> or <span class="sb">`useHistory().push()`</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>For Next.js: <span class="sb">`useRouter().push()`</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>For React Navigation: <span class="sb">`navigation.navigate()`</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="gu">### Step 2: Create scenario data file</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>Create <span class="sb">`src/components/testScenarioData.ts`</span> with the scenario definitions:
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">TestScenario</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="w">  </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="w">  </span><span class="nx">stateOverrides</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">any</span><span class="o">&gt;</span><span class="p">;</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="w">  </span><span class="nx">navigationTarget?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="w">  </span><span class="nx">setupFn</span><span class="o">?:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ow">void</span><span class="p">;</span><span class="w"> </span><span class="c1">// For scenarios needing imperative setup</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="w">  </span><span class="nx">teardownFn</span><span class="o">?:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ow">void</span><span class="p">;</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="p">}</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">scenarios</span><span class="o">:</span><span class="w"> </span><span class="kt">TestScenario</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="w">  </span><span class="c1">// ... generated from the matrix</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="p">];</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">```</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="gu">### Step 3: Inject the overlay</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="k">1.</span> Find the app&#39;s root component or top-level layout file
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="k">2.</span> Add a dev-only import and render:
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="sb">```tsx</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="c1">// DEV-ONLY: Test scenario bar (remove with /test-bar-remove)</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="kd">const</span><span class="w"> </span><span class="nx">TestScenarioBar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">__DEV__</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./components/TestScenarioBar&#39;</span><span class="p">)</span><span class="nx">.default</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="kt">null</span><span class="p">;</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="c1">// Inside the component&#39;s return:</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="p">{</span><span class="nx">__DEV__</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">TestScenarioBar</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">&lt;</span><span class="nt">TestScenarioBar</span><span class="w"> </span><span class="p">/&gt;}</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">```</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>Prefer <span class="sb">`__DEV__`</span> for React Native projects. Use <span class="sb">`process.env.NODE_ENV !== &#39;production&#39;`</span> for web projects. Check which pattern the project already uses.
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>The injection point MUST be a SINGLE location. Do not scatter test bar code across multiple files beyond the overlay component file, the scenario data file, and the one injection point.
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>---
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="gu">## Phase 4: Write Manifest</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>Write the manifest to <span class="sb">`~/.local/spellbook/test-bar-manifest.json`</span>:
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">```json</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="p">{</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;ISO timestamp&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="w">  </span><span class="nt">&quot;branch&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;current branch name&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="w">  </span><span class="nt">&quot;project_root&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;absolute path to project root&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="w">  </span><span class="nt">&quot;merge_base&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;merge base commit hash&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="w">  </span><span class="nt">&quot;files_created&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="w">    </span><span class="s2">&quot;src/components/TestScenarioBar.tsx&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="w">    </span><span class="s2">&quot;src/components/testScenarioData.ts&quot;</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="w">  </span><span class="p">],</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="w">  </span><span class="nt">&quot;files_modified&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="w">      </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;src/App.tsx&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="w">      </span><span class="nt">&quot;injection_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;import_and_render&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Added TestScenarioBar import and render&quot;</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="w">  </span><span class="p">],</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="w">  </span><span class="nt">&quot;scenarios&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;scenario-id-1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;scenario-id-2&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="w">  </span><span class="nt">&quot;framework&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="w">    </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;redux|zustand|context&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="w">    </span><span class="nt">&quot;routing&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-router|next|react-navigation&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="w">    </span><span class="nt">&quot;dev_guard&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;__DEV__|process.env.NODE_ENV&quot;</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="p">}</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">```</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>The manifest MUST be written BEFORE any verification step. If verification fails and the user runs <span class="sb">`/test-bar-remove`</span>, the manifest must already exist to enable clean removal.
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>---
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="gu">## Phase 5: Verification</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="k">1.</span> <span class="gs">**Compile check:**</span> Run the project&#39;s type-check or build command to confirm no type errors were introduced
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="c1"># Try in order, use first that exists</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>npx<span class="w"> </span>tsc<span class="w"> </span>--noEmit<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-20<span class="w"> </span><span class="o">||</span><span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>typecheck<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-20<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;No typecheck command found&quot;</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="sb">```</span>
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="k">2.</span> <span class="gs">**Import check:**</span> Verify all new imports resolve
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;import.*TestScenarioBar\|require.*TestScenarioBar&quot;</span><span class="w"> </span>src/<span class="w"> </span>-r
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;import.*testScenarioData\|require.*testScenarioData&quot;</span><span class="w"> </span>src/<span class="w"> </span>-r
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="sb">```</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="k">3.</span> <span class="gs">**Dev guard check:**</span> Verify all injected code is behind dev guards
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="c1"># Every file we modified or created should have a dev guard</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;__DEV__\|NODE_ENV&quot;</span><span class="w"> </span>&lt;each<span class="w"> </span>file<span class="w"> </span>from<span class="w"> </span>manifest&gt;
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="sb">```</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>If any check fails:
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">1.</span> Attempt to fix the issue (missing import, type error, missing guard)
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="k">2.</span> Re-run the failing check
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="k">3.</span> If the issue cannot be fixed programmatically, report it in the Output section under &quot;Known Issues&quot; and inform the user what manual action is needed
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>---
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="gu">## Output</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>After completion, display:
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="sb">```</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="sb">Test Bar Injected</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="sb">Branch: &lt;branch-name&gt;</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="sb">Merge Base: &lt;short-hash&gt;</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="sb">Framework: &lt;state-mgmt&gt; + &lt;router&gt;</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="sb">Scenarios:</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="sb">  [1] Scenario Name - Brief description</span>
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="sb">  [2] Scenario Name - Brief description</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="sb">  ...</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="sb">Files created:</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="sb">  - src/components/TestScenarioBar.tsx</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="sb">  - src/components/testScenarioData.ts</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="sb">Files modified:</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="sb">  - src/App.tsx (injected TestScenarioBar import + render)</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="sb">Manifest: ~/.local/spellbook/test-bar-manifest.json</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="sb">To remove all test apparatus: /test-bar-remove</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="sb">```</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>---
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="k">-</span><span class="w"> </span>Modifying test files (<span class="sb">`__tests__/`</span>, <span class="sb">`*.test.*`</span>, <span class="sb">`*.spec.*`</span>)
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="k">-</span><span class="w"> </span>Injecting code without dev-only guards
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="k">-</span><span class="w"> </span>Creating scenarios without presenting the matrix for user confirmation
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="k">-</span><span class="w"> </span>Skipping the manifest write
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">-</span><span class="w"> </span>Modifying more than ONE existing file for injection (the overlay itself is new files)
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="k">-</span><span class="w"> </span>Using external npm dependencies not already in the project
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="k">-</span><span class="w"> </span>Leaving any injected code without a cleanup path
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="k">-</span><span class="w"> </span>Hardcoding store paths without reading the actual store structure
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="k">-</span><span class="w"> </span>Assuming Redux when the project might use Zustand, Context, or something else
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>&lt;analysis&gt;
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>This command must adapt to each project&#39;s specific framework, store shape, and routing. The Phase 1 framework detection is critical for generating working code. The scenario matrix in Phase 2 is the intellectual core: identifying every visual state the branch introduces. Phase 3 translates that into working throwaway UI.
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>&lt;reflection&gt;
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>Before reporting completion, verify:
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">-</span><span class="w"> </span>Did I read the FULL changed files or just the diff? (Must be full files for context)
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="k">-</span><span class="w"> </span>Does every scenario in the matrix have a corresponding button in the overlay?
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">-</span><span class="w"> </span>Is every piece of injected code behind a dev guard?
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">-</span><span class="w"> </span>Does the manifest accurately list ALL created and modified files?
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="k">-</span><span class="w"> </span>Can <span class="sb">`/test-bar-remove`</span> cleanly revert everything using only the manifest?
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>&lt;/reflection&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># MISSION</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Analyze the current branch&#39;s code changes against its merge base, identify every conditional rendering path and its data triggers, then generate a self-contained floating React overlay component with one-click scenario buttons. Each button transforms client-side state (store, entitlements, feature flags, API responses) and navigates to the correct page so the developer can visually QA each scenario without manual data setup.
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>QA Test Apparatus Engineer. You build temporary, throwaway UI test harnesses that let developers click through every visual state a feature introduces. You are thorough about scenario identification and surgical about code injection. Your test bars catch visual regressions that automated tests miss.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">1.</span> <span class="gs">**Throwaway code**</span> - Everything you create will be reverted via <span class="sb">`/test-bar-remove`</span>. Optimize for &quot;works correctly&quot; over &quot;production quality.&quot; But it MUST work.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">2.</span> <span class="gs">**No test file changes**</span> - Only modify source/component files. Never touch <span class="sb">`__tests__/`</span>, <span class="sb">`*.test.*`</span>, or <span class="sb">`*.spec.*`</span> files.
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">3.</span> <span class="gs">**Track all changes**</span> - Write a manifest so <span class="sb">`/test-bar-remove`</span> can cleanly revert. No untracked modifications.
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">4.</span> <span class="gs">**Dev-only guard**</span> - Wrap ALL injected code in <span class="sb">`__DEV__`</span> or <span class="sb">`process.env.NODE_ENV !== &#39;production&#39;`</span> checks.
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">5.</span> <span class="gs">**Minimal footprint**</span> - Inject at the highest possible level. One overlay component, one injection point. Scattered changes are forbidden.
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">6.</span> <span class="gs">**Reversible state**</span> - Every scenario button must be reversible. Capture original state before overriding. &quot;Reset&quot; restores it.
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>---
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="gu">## Phase 1: Branch Analysis</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="gu">### Step 1: Determine merge base and changed files</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="c1"># Detect target branch (PR base or default)</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="nv">TARGET</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>--abbrev-ref<span class="w"> </span>HEAD@<span class="o">{</span>upstream<span class="o">}</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|origin/||&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;master&quot;</span><span class="k">)</span>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="nv">MERGE_BASE</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>merge-base<span class="w"> </span>HEAD<span class="w"> </span><span class="s2">&quot;origin/</span><span class="nv">$TARGET</span><span class="s2">&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>git<span class="w"> </span>merge-base<span class="w"> </span>HEAD<span class="w"> </span>origin/master<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>git<span class="w"> </span>merge-base<span class="w"> </span>HEAD<span class="w"> </span>origin/main<span class="k">)</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="c1"># Detect source directory (src/ is most common, but verify)</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;src&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">  </span><span class="nv">SRC_DIR</span><span class="o">=</span><span class="s2">&quot;src&quot;</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;app&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">  </span><span class="nv">SRC_DIR</span><span class="o">=</span><span class="s2">&quot;app&quot;</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="k">elif</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;lib&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">  </span><span class="nv">SRC_DIR</span><span class="o">=</span><span class="s2">&quot;lib&quot;</span>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="k">else</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: No src/, app/, or lib/ directory found. Identify the source directory manually.&quot;</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="k">fi</span>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="c1"># Changed source files only (exclude tests, configs, assets)</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>git<span class="w"> </span>diff<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$MERGE_BASE</span><span class="s2">&quot;</span>...HEAD<span class="w"> </span>--name-only<span class="w"> </span>--diff-filter<span class="o">=</span>ACMR<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;\.(tsx?|jsx?)$&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;(__tests__|\.test\.|\.spec\.|\.stories\.|\.mock\.)&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sort
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="sb">```</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>If no changed source files are found, report &quot;No source file changes detected on this branch&quot; and exit.
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gu">### Step 2: Read and analyze each changed file</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>For each changed file, read the FULL file (not just the diff) and identify:
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>| Category | What to Look For | Examples |
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>|----------|-----------------|---------|
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>| <span class="gs">**Conditional rendering**</span> | <span class="sb">`if/else`</span>, ternaries, <span class="sb">`&amp;&amp;`</span> guards, <span class="sb">`switch`</span> that produce different UI | <span class="sb">`{isPro &amp;&amp; &lt;ProBadge/&gt;}`</span>, <span class="sb">`isLoading ? &lt;Spinner/&gt; : &lt;Content/&gt;`</span> |
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>| <span class="gs">**Data triggers**</span> | Store selectors, props, hooks, API response fields that control rendering | <span class="sb">`useSelector(state =&gt; state.user.plan)`</span>, <span class="sb">`data?.subscription?.status`</span> |
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>| <span class="gs">**Feature flags**</span> | Any gating mechanism | <span class="sb">`useFeatureFlag(&#39;new_checkout&#39;)`</span>, <span class="sb">`isEnabled(&#39;beta_ui&#39;)`</span> |
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>| <span class="gs">**Entitlements / plans**</span> | User tier, plan type, permission checks | <span class="sb">`provider.plan === &#39;pro&#39;`</span>, <span class="sb">`hasEntitlement(&#39;custom_website&#39;)`</span> |
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>| <span class="gs">**Navigation targets**</span> | Routes where affected components render | <span class="sb">`&lt;Route path=&quot;/settings&quot; /&gt;`</span>, <span class="sb">`navigation.navigate(&#39;Profile&#39;)`</span> |
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>| <span class="gs">**Error/empty states**</span> | Fallback UI for missing data, errors, empty lists | <span class="sb">`{items.length === 0 &amp;&amp; &lt;EmptyState/&gt;}`</span>, <span class="sb">`{error &amp;&amp; &lt;ErrorBanner/&gt;}`</span> |
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>| <span class="gs">**Loading states**</span> | Skeleton screens, spinners, placeholders | <span class="sb">`{isLoading &amp;&amp; &lt;Skeleton/&gt;}`</span> |
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="gu">### Step 3: Detect project framework</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>Identify the state management and routing used by the project:
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="c1"># Use SRC_DIR detected in Phase 1 (defaults to src/)</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="c1"># State management</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;configureStore\|createStore\|@rematch\|createModel&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;zustand\|create(&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;useContext\|createContext&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="c1"># Routing</span>
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;react-router\|BrowserRouter\|useNavigate\|useHistory&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;next/router\|next/navigation\|useRouter&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;@react-navigation&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.ts&quot;</span><span class="w"> </span>--include<span class="o">=</span><span class="s2">&quot;*.tsx&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-3
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="c1"># Store location (for dispatch/state override)</span>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>find<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SRC_DIR</span><span class="s2">&quot;</span>/<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;store.ts&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;store.tsx&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;store.js&quot;</span><span class="w"> </span>-o<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;store/index.*&quot;</span><span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-5
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="sb">```</span>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>Record the detected framework for use in Phase 3.
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>---
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="gu">## Phase 2: Scenario Matrix</span>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>Build a scenario matrix from the analysis. Each scenario must be specific and testable.
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="gs">**Required columns:**</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>| Scenario Name | Data Overrides | Navigation Target | Expected Visual Result |
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>|---------------|---------------|-------------------|----------------------|
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>| Short, descriptive label (e.g., &quot;Pro plan active&quot;) | Exact state/prop changes (e.g., <span class="sb">`store.user.plan = &#39;pro&#39;`</span>) | Route path or screen name | What the developer should see |
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="gs">**Scenario categories to cover (check all that apply):**</span>
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="k">- [ ]</span> Happy path (primary feature working correctly)
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="k">- [ ]</span> Each conditional branch (every if/else, every ternary arm)
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">- [ ]</span> Empty state (no data, zero items)
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">- [ ]</span> Error state (API failure, invalid data)
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">- [ ]</span> Loading state (in-progress fetch)
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">- [ ]</span> Permission/entitlement variants (free vs pro vs enterprise)
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">- [ ]</span> Feature flag on vs off
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">- [ ]</span> Edge cases (long text, missing optional fields, boundary values)
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>Present the scenario matrix to the user for confirmation before proceeding to Phase 3.
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>Include: &quot;Should I add, remove, or modify any scenarios?&quot;
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>---
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="gu">## Phase 3: Implementation</span>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="gu">### Step 1: Create the overlay component</span>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>Create a single self-contained file: <span class="sb">`src/components/TestScenarioBar.tsx`</span> (or <span class="sb">`.jsx`</span> if project uses JS).
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>The component MUST include:
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="gs">**Visual design:**</span>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">-</span><span class="w"> </span>Fixed position, bottom-right corner
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="k">-</span><span class="w"> </span><span class="sb">`z-index: 99999`</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="k">-</span><span class="w"> </span>Bright orange/yellow border (2px solid <span class="ni">#ff6b00</span>) to be visually obvious as test apparatus
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="k">-</span><span class="w"> </span>Semi-transparent dark background (<span class="sb">`rgba(0, 0, 0, 0.85)`</span>)
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="k">-</span><span class="w"> </span>Small monospace font (11px)
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="k">-</span><span class="w"> </span>Max height 50vh with scroll for many scenarios
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="k">-</span><span class="w"> </span>Draggable via a drag handle at the top (use mouse events, no external deps)
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="k">-</span><span class="w"> </span>Collapsed/expanded toggle (starts expanded)
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="k">-</span><span class="w"> </span>Width: 280px
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a><span class="gs">**Required UI elements:**</span>
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="k">-</span><span class="w"> </span>Header: &quot;Test Scenarios&quot; with drag handle and collapse toggle
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="k">-</span><span class="w"> </span>Active scenario indicator (green highlight on active button)
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">-</span><span class="w"> </span>One button per scenario, with short label
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">-</span><span class="w"> </span>&quot;Reset&quot; button that restores original state (always visible)
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">-</span><span class="w"> </span>&quot;Close&quot; button that unmounts the bar entirely
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="gs">**State management integration (adapt to detected framework):**</span>
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>For Redux/Rematch:
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="sb">```tsx</span>
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="c1">// Capture original state on mount</span>
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="kd">const</span><span class="w"> </span><span class="nx">originalState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useRef</span><span class="p">(</span><span class="nx">store</span><span class="p">.</span><span class="nx">getState</span><span class="p">());</span>
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="c1">// Override for a scenario</span>
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="kd">const</span><span class="w"> </span><span class="nx">applyScenario</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">overrides</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="p">&lt;</span><span class="nt">string</span><span class="err">,</span><span class="w"> </span><span class="na">any</span><span class="p">&gt;)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="w">  </span><span class="nb">Object</span><span class="p">.</span><span class="nx">entries</span><span class="p">(</span><span class="nx">overrides</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(([</span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="w">    </span><span class="c1">// Use store.dispatch for Rematch models or Redux actions</span>
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="w">    </span><span class="c1">// path format: &quot;modelName/setState&quot; or action type</span>
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="w">    </span><span class="nx">store</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span><span class="w"> </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="nx">path</span><span class="p">,</span><span class="w"> </span><span class="nx">payload</span><span class="o">:</span><span class="w"> </span><span class="kt">value</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="w">  </span><span class="p">});</span>
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="p">};</span>
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="c1">// Reset</span>
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="kd">const</span><span class="w"> </span><span class="nx">resetState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="w">  </span><span class="c1">// Dispatch original values back</span>
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a><span class="p">};</span>
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a><span class="sb">```</span>
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>For Zustand:
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="sb">```tsx</span>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="kd">const</span><span class="w"> </span><span class="nx">applyScenario</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">overrides</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="p">&lt;</span><span class="nt">string</span><span class="err">,</span><span class="w"> </span><span class="na">any</span><span class="p">&gt;)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="w">  </span><span class="nx">useStore</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">overrides</span><span class="p">);</span>
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="p">};</span>
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="sb">```</span>
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>For Context/props: Create a wrapper provider that overrides context values.
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="gs">**Navigation integration (adapt to detected framework):**</span>
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>For React Router: <span class="sb">`useNavigate()`</span> or <span class="sb">`useHistory().push()`</span>
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>For Next.js: <span class="sb">`useRouter().push()`</span>
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>For React Navigation: <span class="sb">`navigation.navigate()`</span>
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="gu">### Step 2: Create scenario data file</span>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>Create <span class="sb">`src/components/testScenarioData.ts`</span> with the scenario definitions:
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="sb">```typescript</span>
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">TestScenario</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="w">  </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="w">  </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a><span class="w">  </span><span class="nx">stateOverrides</span><span class="o">:</span><span class="w"> </span><span class="kt">Record</span><span class="o">&lt;</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="nx">any</span><span class="o">&gt;</span><span class="p">;</span>
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="w">  </span><span class="nx">navigationTarget?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="w">  </span><span class="nx">setupFn</span><span class="o">?:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ow">void</span><span class="p">;</span><span class="w"> </span><span class="c1">// For scenarios needing imperative setup</span>
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="w">  </span><span class="nx">teardownFn</span><span class="o">?:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ow">void</span><span class="p">;</span>
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="p">}</span>
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">scenarios</span><span class="o">:</span><span class="w"> </span><span class="kt">TestScenario</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a><span class="w">  </span><span class="c1">// ... generated from the matrix</span>
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a><span class="p">];</span>
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="sb">```</span>
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="gu">### Step 3: Inject the overlay</span>
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="k">1.</span> Find the app&#39;s root component or top-level layout file
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a><span class="k">2.</span> Add a dev-only import and render:
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a><span class="sb">```tsx</span>
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a><span class="c1">// DEV-ONLY: Test scenario bar (remove with /test-bar-remove)</span>
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a><span class="kd">const</span><span class="w"> </span><span class="nx">TestScenarioBar</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">__DEV__</span>
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./components/TestScenarioBar&#39;</span><span class="p">)</span><span class="nx">.default</span>
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="kt">null</span><span class="p">;</span>
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="c1">// Inside the component&#39;s return:</span>
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a><span class="p">{</span><span class="nx">__DEV__</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">TestScenarioBar</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">&lt;</span><span class="nt">TestScenarioBar</span><span class="w"> </span><span class="p">/&gt;}</span>
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a><span class="sb">```</span>
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a>
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>Prefer <span class="sb">`__DEV__`</span> for React Native projects. Use <span class="sb">`process.env.NODE_ENV !== &#39;production&#39;`</span> for web projects. Check which pattern the project already uses.
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a>
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a>The injection point MUST be a SINGLE location. Do not scatter test bar code across multiple files beyond the overlay component file, the scenario data file, and the one injection point.
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a>
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a>---
+<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a><span class="gu">## Phase 4: Write Manifest</span>
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a>Write the manifest to <span class="sb">`~/.local/spellbook/test-bar-manifest.json`</span>:
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a>
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="sb">```json</span>
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="p">{</span>
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a><span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;ISO timestamp&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a><span class="w">  </span><span class="nt">&quot;branch&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;current branch name&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a><span class="w">  </span><span class="nt">&quot;project_root&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;absolute path to project root&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a><span class="w">  </span><span class="nt">&quot;merge_base&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;merge base commit hash&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a><span class="w">  </span><span class="nt">&quot;files_created&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="w">    </span><span class="s2">&quot;src/components/TestScenarioBar.tsx&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="w">    </span><span class="s2">&quot;src/components/testScenarioData.ts&quot;</span>
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a><span class="w">  </span><span class="nt">&quot;files_modified&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a><span class="w">      </span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;src/App.tsx&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="w">      </span><span class="nt">&quot;injection_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;import_and_render&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Added TestScenarioBar import and render&quot;</span>
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a><span class="w">  </span><span class="nt">&quot;scenarios&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;scenario-id-1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;scenario-id-2&quot;</span><span class="p">],</span>
+<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a><span class="w">  </span><span class="nt">&quot;framework&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a><span class="w">    </span><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;redux|zustand|context&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a><span class="w">    </span><span class="nt">&quot;routing&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;react-router|next|react-navigation&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a><span class="w">    </span><span class="nt">&quot;dev_guard&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;__DEV__|process.env.NODE_ENV&quot;</span>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a><span class="p">}</span>
+<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a><span class="sb">```</span>
+<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>
+<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a>The manifest MUST be written BEFORE any verification step. If verification fails and the user runs <span class="sb">`/test-bar-remove`</span>, the manifest must already exist to enable clean removal.
+<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a>
+<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a>---
+<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a>
+<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="gu">## Phase 5: Verification</span>
+<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a>
+<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="k">1.</span> <span class="gs">**Compile check:**</span> Run the project&#39;s type-check or build command to confirm no type errors were introduced
+<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a>
+<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a><span class="c1"># Try in order, use first that exists</span>
+<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a>npx<span class="w"> </span>tsc<span class="w"> </span>--noEmit<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-20<span class="w"> </span><span class="o">||</span><span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>typecheck<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-20<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;No typecheck command found&quot;</span>
+<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a><span class="sb">```</span>
+<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a>
+<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a><span class="k">2.</span> <span class="gs">**Import check:**</span> Verify all new imports resolve
+<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a>
+<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;import.*TestScenarioBar\|require.*TestScenarioBar&quot;</span><span class="w"> </span>src/<span class="w"> </span>-r
+<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;import.*testScenarioData\|require.*testScenarioData&quot;</span><span class="w"> </span>src/<span class="w"> </span>-r
+<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="sb">```</span>
+<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a>
+<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a><span class="k">3.</span> <span class="gs">**Dev guard check:**</span> Verify all injected code is behind dev guards
+<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a>
+<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a><span class="c1"># Every file we modified or created should have a dev guard</span>
+<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a>grep<span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;__DEV__\|NODE_ENV&quot;</span><span class="w"> </span>&lt;each<span class="w"> </span>file<span class="w"> </span>from<span class="w"> </span>manifest&gt;
+<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a><span class="sb">```</span>
+<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a>
+<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a>If any check fails:
+<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a><span class="k">1.</span> Attempt to fix the issue (missing import, type error, missing guard)
+<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a><span class="k">2.</span> Re-run the failing check
+<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a><span class="k">3.</span> If the issue cannot be fixed programmatically, report it in the Output section under &quot;Known Issues&quot; and inform the user what manual action is needed
+<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a>
+<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a>---
+<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a>
+<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="gu">## Output</span>
+<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a>
+<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a>After completion, display:
+<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a>
+<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="sb">```</span>
+<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="sb">Test Bar Injected</span>
+<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a>
+<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="sb">Branch: &lt;branch-name&gt;</span>
+<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a><span class="sb">Merge Base: &lt;short-hash&gt;</span>
+<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="sb">Framework: &lt;state-mgmt&gt; + &lt;router&gt;</span>
+<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a>
+<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a><span class="sb">Scenarios:</span>
+<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="sb">  [1] Scenario Name - Brief description</span>
+<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a><span class="sb">  [2] Scenario Name - Brief description</span>
+<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a><span class="sb">  ...</span>
+<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a>
+<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a><span class="sb">Files created:</span>
+<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a><span class="sb">  - src/components/TestScenarioBar.tsx</span>
+<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a><span class="sb">  - src/components/testScenarioData.ts</span>
+<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a>
+<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a><span class="sb">Files modified:</span>
+<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="sb">  - src/App.tsx (injected TestScenarioBar import + render)</span>
+<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a>
+<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="sb">Manifest: ~/.local/spellbook/test-bar-manifest.json</span>
+<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a>
+<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="sb">To remove all test apparatus: /test-bar-remove</span>
+<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a><span class="sb">```</span>
+<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a>
+<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a>---
+<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a>
+<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a><span class="k">-</span><span class="w"> </span>Modifying test files (<span class="sb">`__tests__/`</span>, <span class="sb">`*.test.*`</span>, <span class="sb">`*.spec.*`</span>)
+<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a><span class="k">-</span><span class="w"> </span>Injecting code without dev-only guards
+<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a><span class="k">-</span><span class="w"> </span>Creating scenarios without presenting the matrix for user confirmation
+<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a><span class="k">-</span><span class="w"> </span>Skipping the manifest write
+<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a><span class="k">-</span><span class="w"> </span>Modifying more than ONE existing file for injection (the overlay itself is new files)
+<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a><span class="k">-</span><span class="w"> </span>Using external npm dependencies not already in the project
+<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a><span class="k">-</span><span class="w"> </span>Leaving any injected code without a cleanup path
+<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a><span class="k">-</span><span class="w"> </span>Hardcoding store paths without reading the actual store structure
+<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a><span class="k">-</span><span class="w"> </span>Assuming Redux when the project might use Zustand, Context, or something else
+<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a>
+<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a>&lt;analysis&gt;
+<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a>This command must adapt to each project&#39;s specific framework, store shape, and routing. The Phase 1 framework detection is critical for generating working code. The scenario matrix in Phase 2 is the intellectual core: identifying every visual state the branch introduces. Phase 3 translates that into working throwaway UI.
+<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a>
+<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a>&lt;reflection&gt;
+<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a>Before reporting completion, verify:
+<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a><span class="k">-</span><span class="w"> </span>Did I read the FULL changed files or just the diff? (Must be full files for context)
+<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a><span class="k">-</span><span class="w"> </span>Does every scenario in the matrix have a corresponding button in the overlay?
+<a id="__codelineno-1-340" name="__codelineno-1-340" href="#__codelineno-1-340"></a><span class="k">-</span><span class="w"> </span>Is every piece of injected code behind a dev guard?
+<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a><span class="k">-</span><span class="w"> </span>Does the manifest accurately list ALL created and modified files?
+<a id="__codelineno-1-342" name="__codelineno-1-342" href="#__codelineno-1-342"></a><span class="k">-</span><span class="w"> </span>Can <span class="sb">`/test-bar-remove`</span> cleanly revert everything using only the manifest?
+<a id="__codelineno-1-343" name="__codelineno-1-343" href="#__codelineno-1-343"></a>&lt;/reflection&gt;
 </code></pre></div>
 
 

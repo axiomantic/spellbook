@@ -1836,6 +1836,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3979,10 +4007,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#command-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6737,495 +6765,620 @@
 
 
 <h1 id="merge-work-packets">/merge-work-packets<a class="headerlink" href="#merge-work-packets" title="Permanent link">&para;</a></h1>
-<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Merge Work Packets</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Integrate all completed work packets using merging-worktrees and verify through comprehensive QA gates.
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Invariant Principles</span>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-merge-work-packets">Diagram: merge-work-packets<a class="headerlink" href="#diagram-merge-work-packets" title="Permanent link">&para;</a></h1>
+<p>Integrates completed work packets by verifying all tracks, invoking the merging-worktrees skill, handling conflicts, running QA gates, and reporting final integration status.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start Merge]) --&gt; ContinueCheck{--continue-merge?}
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ContinueCheck --&gt;|No| LoadManifest[Step 1: Load Manifest]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ContinueCheck --&gt;|Yes| VerifyIntegrity
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">1.</span> <span class="gs">**Completeness before integration**</span>: ALL tracks must have valid completion markers before ANY merge begins. Partial integration destroys reproducibility.
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">2.</span> <span class="gs">**Fail fast, fail loud**</span>: Stop at first failure. No cascading errors. Clear diagnosis beats silent corruption.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">3.</span> <span class="gs">**Evidence over trust**</span>: Every claim (track complete, merge clean, tests pass) requires verifiable proof (file exists, commit in history, exit code 0).
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">4.</span> <span class="gs">**Reversibility**</span>: Pre-merge state must be restorable. Integration branch isolates changes until explicit approval.
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">5.</span> <span class="gs">**Gates are gates**</span>: QA gates are mandatory checkpoints, not suggestions. No gate skipping.
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    LoadManifest --&gt; VerifyTracks[Step 2: Verify All Tracks]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    VerifyTracks --&gt; TracksGate{All Tracks Complete?}
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    TracksGate --&gt;|No| ReportIncomplete[Report Incomplete Tracks]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    ReportIncomplete --&gt; Abort([Abort Merge])
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>Integration Lead responsible for final merge quality. Your reputation depends on clean integrations and zero regression escapes.
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;/ROLE&gt;
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    TracksGate --&gt;|Yes| PrepareBranches[Step 3: Prepare Branch List]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    PrepareBranches --&gt; DisplayPlan[Display Merge Plan]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    DisplayPlan --&gt; InvokeSmartMerge[Step 4: merging-worktrees Skill]
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gu">## Parameters</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    InvokeSmartMerge --&gt; MergeResult{Merge Result?}
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span><span class="sb">`packet_dir`</span> (required): Directory containing manifest.json and completed work packets
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--continue-merge`</span> (optional): Continue after manual conflict resolution
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    MergeResult --&gt;|Success| VerifyIntegrity[Step 6: Verify Integrity]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    MergeResult --&gt;|Conflicts| HandleConflicts[Step 5: Handle Conflicts]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    MergeResult --&gt;|Error| ReportError[Report Error]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    ReportError --&gt; Abort
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>&lt;analysis&gt;
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>Before each step: What am I verifying? What evidence proves it?
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>&lt;/analysis&gt;
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>&lt;reflection&gt;
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>After each step: Did I get the evidence? What does failure here mean?
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="gu">## Execution Protocol</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">### Step 1: Load Manifest</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="nv">packet_dir</span><span class="o">=</span><span class="s2">&quot;&lt;packet_dir&gt;&quot;</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="nv">manifest_file</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$packet_dir</span><span class="s2">/manifest.json&quot;</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    HandleConflicts --&gt; UserChoice{Manual or Abort?}
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    UserChoice --&gt;|Manual| PauseForUser[Pause for Resolution]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    PauseForUser --&gt; WaitContinue([Wait for --continue-merge])
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    UserChoice --&gt;|Abort| CleanupBranch[Clean Up Merge Branch]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    CleanupBranch --&gt; Abort
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    VerifyIntegrity --&gt; BranchCheck{On Correct Branch?}
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    BranchCheck --&gt;|No| BranchError[Report Branch Error]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    BranchError --&gt; Abort
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    BranchCheck --&gt;|Yes| CommitAncestry[Verify Track Commits]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    CommitAncestry --&gt; AncestryGate{All Commits in History?}
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    AncestryGate --&gt;|No| AncestryError[Report Missing Commits]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    AncestryError --&gt; Abort
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    AncestryGate --&gt;|Yes| RunQA[Step 7: Run QA Gates]
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="c1"># Load manifest using read_json_safe</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="c1"># Extract:</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="c1"># - feature name</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="c1"># - tracks list</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="c1"># - merge_strategy</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="c1"># - post_merge_qa gates</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="c1"># - project_root</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">```</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gs">**Expected manifest fields:**</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">-</span><span class="w"> </span><span class="sb">`format_version`</span>: &quot;1.0.0&quot;
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span><span class="sb">`feature`</span>: Feature being integrated
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tracks`</span>: Array of track metadata
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">-</span><span class="w"> </span><span class="sb">`merge_strategy`</span>: &quot;merging-worktrees&quot; or &quot;manual&quot;
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">-</span><span class="w"> </span><span class="sb">`post_merge_qa`</span>: Array of QA gate commands
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">-</span><span class="w"> </span><span class="sb">`project_root`</span>: Path to main repository
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="gu">### Step 2: Verify All Tracks Complete</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**Critical gate:**</span> Do NOT proceed unless ALL tracks have completion markers.
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="c1"># For each track in manifest</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="k">for</span><span class="w"> </span>track<span class="w"> </span><span class="k">in</span><span class="w"> </span>manifest.tracks:
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="w">  </span><span class="nv">completion_file</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$packet_dir</span><span class="s2">/track-{track.id}.completion.json&quot;</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="w">  </span><span class="c1"># Check existence</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$completion_file</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Track {track.id} ({track.name}) incomplete&quot;</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Missing: </span><span class="nv">$completion_file</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">  </span><span class="k">fi</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="w">  </span><span class="c1"># Validate completion marker using read_json_safe</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="w">  </span><span class="c1"># Verify fields:</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="w">  </span><span class="c1"># - format_version: &quot;1.0.0&quot;</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="w">  </span><span class="c1"># - status: &quot;complete&quot;</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="w">  </span><span class="c1"># - commit: valid git SHA</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="w">  </span><span class="c1"># - timestamp: ISO8601 string</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="w">  </span><span class="c1"># Check status</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="w">  </span><span class="nv">status</span><span class="o">=</span><span class="k">$(</span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.status&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$completion_file</span><span class="s2">&quot;</span><span class="k">)</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$status</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;complete&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Track {track.id} status is &#39;</span><span class="nv">$status</span><span class="s2">&#39;, expected &#39;complete&#39;&quot;</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="w">  </span><span class="k">fi</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">done</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ All {track_count} tracks verified complete&quot;</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">```</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gs">**If any track incomplete:**</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="sb">```</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="sb">ERROR: Cannot merge - incomplete tracks detected</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="sb">Incomplete tracks:</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="sb">  ✗ Track 2: Frontend (no completion marker)</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="sb">  ✗ Track 4: Documentation (status: in_progress)</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="sb">Required actions:</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="sb">1. Complete missing tracks using: /execute-work-packet &lt;packet_path&gt;</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="sb">2. Verify completion markers exist</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="sb">3. Re-run merge</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="sb">Aborting merge.</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="sb">```</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="gu">### Step 3: Prepare Branch List for Smart Merge</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>Extract branch information from manifest:
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="c1"># Build list of branches to merge</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="nv">branches</span><span class="o">=[]</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">for</span><span class="w"> </span>track<span class="w"> </span><span class="k">in</span><span class="w"> </span>manifest.tracks:
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="w">  </span>branches.append<span class="o">({</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="w">    </span><span class="s2">&quot;id&quot;</span>:<span class="w"> </span>track.id,
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="w">    </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span>track.name,
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="w">    </span><span class="s2">&quot;branch&quot;</span>:<span class="w"> </span>track.branch,
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="w">    </span><span class="s2">&quot;worktree&quot;</span>:<span class="w"> </span>track.worktree,
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="w">    </span><span class="s2">&quot;commit&quot;</span>:<span class="w"> </span>&lt;commit_from_completion_marker&gt;
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="w">  </span><span class="o">})</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">done</span>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">```</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="gs">**Display merge plan:**</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="sb">```</span>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="sb">=== Merge Plan ===</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="sb">Feature: {manifest.feature}</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="sb">Strategy: {manifest.merge_strategy}</span>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="sb">Target: {manifest.project_root}</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="sb">Branches to merge:</span>
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="sb">  1. Track 1: Core API</span>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="sb">     Branch: feature/track-1</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="sb">     Commit: abc123</span>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="sb">     Worktree: /path/to/wt-track-1</span>
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">  2. Track 2: Frontend</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="sb">     Branch: feature/track-2</span>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="sb">     Commit: def456</span>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="sb">     Worktree: /path/to/wt-track-2</span>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="sb">  3. Track 3: Tests</span>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="sb">     Branch: feature/track-3</span>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="sb">     Commit: ghi789</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="sb">     Worktree: /path/to/wt-track-3</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">Total tracks: 3</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="sb">```</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="gu">### Step 4: Invoke Smart Merge Skill</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="gs">**If --continue-merge flag NOT set:**</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="sb">```</span>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="sb">Invoke the merging-worktrees skill using the Skill tool with:</span>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="sb">Context:</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">- Feature: {manifest.feature}</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">- Packet directory: {packet_dir}</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">- Branches: {branches_list}</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">- Target repository: {manifest.project_root}</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">- Merge strategy: {manifest.merge_strategy}</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="sb">Instructions:</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">1. Analyze all branch diffs since shared setup commit</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">2. Perform 3-way merge analysis for conflicts</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">3. Use intelligent conflict resolution strategies</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">4. Create integration branch with merged code</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">5. Report conflicts requiring manual resolution</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">The merging-worktrees skill will:</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">- Create merge branch in project_root</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">- Integrate all track branches</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">- Detect and resolve conflicts</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">- Report any manual intervention needed</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">```</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="gs">**Smart merge output types:**</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>| Result | Action |
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>|--------|--------|
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>| Success | All branches merged cleanly, proceed to verification |
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>| Partial | Some conflicts auto-resolved, some manual |
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>| Failed | Conflicts require manual resolution |
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>| Error | Report, suggest manual merge, exit |
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="gu">### Step 5: Handle Merge Conflicts</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="gs">**If merging-worktrees reports conflicts:**</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sb">```</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">⚠ Merge conflicts detected</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">Conflicts requiring manual resolution:</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sb">  File: src/api/auth.py</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">    Track 1 changed: authentication logic</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">    Track 2 changed: API endpoints</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sb">    Conflict: Both modified same function signature</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="sb">  File: frontend/components/Login.tsx</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="sb">    Track 2 changed: UI component</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="sb">    Track 3 changed: test fixtures</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="sb">    Conflict: Import paths differ</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">Manual resolution required:</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="sb">1. Navigate to: {manifest.project_root}</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="sb">2. Review conflicts in merge branch</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="sb">3. Resolve conflicts manually</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">4. Commit resolution</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">5. Re-run: /merge-work-packets {packet_dir} --continue-merge</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">Options:</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">  [Manual] - Pause for manual conflict resolution</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">  [Abort] - Cancel merge, restore pre-merge state</span>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">Choose: Manual or Abort?</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="sb">```</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="gs">**If user chooses Manual:**</span>
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="k">1.</span> Pause execution
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="k">2.</span> Display detailed conflict resolution instructions
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="k">3.</span> Wait for user to resolve and re-run with --continue-merge
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="gs">**If user chooses Abort:**</span>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="k">1.</span> Restore pre-merge state
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="k">2.</span> Clean up merge branch
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="k">3.</span> Exit with error status
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gu">### Step 6: Verify Merge Integrity</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>After merge completes (auto or manual):
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="c1"># Navigate to merged branch</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>manifest.project_root<span class="o">}</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="c1"># Verify we&#39;re on integration branch</span>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="nv">current_branch</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>branch<span class="w"> </span>--show-current<span class="k">)</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="nv">expected_branch</span><span class="o">=</span><span class="s2">&quot;feature/{manifest.feature}-integrated&quot;</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$current_branch</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$expected_branch</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Expected branch </span><span class="nv">$expected_branch</span><span class="s2">, on </span><span class="nv">$current_branch</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="k">fi</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="c1"># Check for uncommitted changes</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>git<span class="w"> </span>status<span class="w"> </span>--porcelain<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;WARNING: Uncommitted changes detected after merge&quot;</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="w">  </span>git<span class="w"> </span>status
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="k">fi</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="c1"># Verify all track commits are in history</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">for</span><span class="w"> </span>track<span class="w"> </span><span class="k">in</span><span class="w"> </span>manifest.tracks:
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="w">  </span><span class="nv">commit</span><span class="o">=</span><span class="k">$(</span>get_completion_commit<span class="o">(</span>track<span class="k">)</span><span class="o">)</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span>!<span class="w"> </span>git<span class="w"> </span>merge-base<span class="w"> </span>--is-ancestor<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$commit</span><span class="s2">&quot;</span><span class="w"> </span>HEAD<span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Track {track.id} commit </span><span class="nv">$commit</span><span class="s2"> not in merge history&quot;</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="w">  </span><span class="k">fi</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="k">done</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ Merge integrity verified&quot;</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="sb">```</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="gu">### Step 7: Run QA Gates</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>Execute all gates from <span class="sb">`manifest.post_merge_qa`</span>:
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="sb">```</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="sb">=== Running QA Gates ===</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="sb">Gates defined: {manifest.post_merge_qa}</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="sb">```</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="gs">**For each QA gate:**</span>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="gs">**Gate: pytest**</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="c1"># Navigate to project root</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>manifest.project_root<span class="o">}</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="c1"># Run pytest with coverage</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>pytest<span class="w"> </span>--verbose<span class="w"> </span>--cov<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="c1"># Check exit code</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ pytest: PASSED&quot;</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="k">else</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✗ pytest: FAILED&quot;</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">fi</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="sb">```</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="gs">**Gate: audit-green-mirage**</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="sb">```</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="sb">Invoke the audit-green-mirage skill using the Skill tool</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="sb">This will:</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="sb">- Analyze all tests for actual behavior validation</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="sb">- Detect &quot;green mirage&quot; tests (pass but don&#39;t verify)</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="sb">- Report test quality issues</span>
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="sb">- Generate audit report</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="sb">If audit fails:</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="sb">- Review report in {SPELLBOOK_CONFIG_DIR}/docs/&lt;project&gt;/audits/</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="sb">- Fix test quality issues</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="sb">- Re-run merge</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="sb">```</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="gs">**Gate: fact-checking**</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="sb">```</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="sb">Invoke the fact-checking skill using the Skill tool with:</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="sb">- Verify feature requirements met</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="sb">- Check acceptance criteria from implementation plan</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="sb">- Validate integration completeness</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="sb">- Confirm no regressions</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">If factcheck fails:</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">- Review discrepancies</span>
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="sb">- Fix issues in merge branch</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="sb">- Re-run QA gates</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="sb">```</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="gs">**Gate: custom command**</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="c1"># For any other command in post_merge_qa</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="nv">command</span><span class="o">=</span><span class="s2">&quot;&lt;qa_gate_command&gt;&quot;</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>manifest.project_root<span class="o">}</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="nb">eval</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$command</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ </span><span class="nv">$command</span><span class="s2">: PASSED&quot;</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="k">else</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✗ </span><span class="nv">$command</span><span class="s2">: FAILED&quot;</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">fi</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="sb">```</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="gs">**QA gate summary:**</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="sb">```</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="sb">=== QA Gate Results ===</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="sb">✓ pytest: All tests passed (124/124)</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">✓ audit-green-mirage: High quality tests, no issues</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="sb">✓ fact-checking: All acceptance criteria met</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="sb">✓ npm run lint: No linting errors</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="sb">All gates PASSED</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="sb">```</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="gs">**Gate failure = STOP**</span>: Display output, suggest fixes by gate type, require re-run after fixes.
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="gu">### Step 8: Report Final Status</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="gs">**On success:**</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="sb">```</span>
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="sb">✓ Merge completed successfully!</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="sb">Feature: {manifest.feature}</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="sb">Integration branch: feature/{feature}-integrated</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="sb">Tracks merged: {track_count}</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="sb">QA gates passed: {qa_gate_count}</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="sb">Summary:</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="sb">  ✓ All track completion markers verified</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="sb">  ✓ Smart merge completed without conflicts</span>
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="sb">  ✓ All QA gates passed</span>
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="sb">  ✓ Integration branch ready for review</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="sb">Next steps:</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="sb">1. Review integration branch:</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="sb">   cd {manifest.project_root}</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="sb">   git checkout feature/{feature}-integrated</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="sb">   git log --graph --all</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="sb">2. Create pull request:</span>
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="sb">   gh pr create --title &quot;{feature}&quot; --body &quot;...&quot;</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="sb">3. After PR approval, merge to main:</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="sb">   git checkout main</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="sb">   git merge feature/{feature}-integrated</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="sb">   git push origin main</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="sb">4. Clean up worktrees:</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="sb">   git worktree remove {worktree_paths...}</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="sb">```</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="gs">**On failure:**</span>
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="sb">```</span>
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a><span class="sb">✗ Merge failed</span>
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="sb">Feature: {manifest.feature}</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="sb">Failed at: {failure_stage}</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="sb">Error: {error_message}</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="sb">Status:</span>
-<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a><span class="sb">  {completed_steps}</span>
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="sb">  ✗ {failed_step}: {failure_reason}</span>
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="sb">  ⏳ {pending_steps}</span>
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="sb">Resolution:</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a><span class="sb">{specific_instructions_for_failure}</span>
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="sb">After resolving:</span>
-<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a><span class="sb">- Re-run: /merge-work-packets {packet_dir} [--continue-merge]</span>
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="sb">```</span>
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="gu">## Error Handling</span>
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="gs">**Incomplete tracks:**</span>
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a><span class="k">-</span><span class="w"> </span>Detected in Step 2
-<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="k">-</span><span class="w"> </span>List missing completion markers
-<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="k">-</span><span class="w"> </span>Suggest running execute-work-packet for incomplete tracks
-<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a><span class="k">-</span><span class="w"> </span>Abort merge
-<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="gs">**Merge conflicts:**</span>
-<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="k">-</span><span class="w"> </span>Detected by merging-worktrees skill
-<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="k">-</span><span class="w"> </span>Display conflict details with file paths and track origins
-<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a><span class="k">-</span><span class="w"> </span>Offer Manual resolution or Abort
-<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a><span class="k">-</span><span class="w"> </span>If Manual: pause and provide resolution instructions
-<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a><span class="k">-</span><span class="w"> </span>If Abort: clean up and exit
-<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a>
-<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="gs">**QA gate failures:**</span>
-<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a><span class="k">-</span><span class="w"> </span>Stop at first failing gate
-<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a><span class="k">-</span><span class="w"> </span>Display gate output and error details
-<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a><span class="k">-</span><span class="w"> </span>Do NOT proceed to subsequent gates
-<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a><span class="k">-</span><span class="w"> </span>Suggest fixes based on gate type:
-<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>pytest: fix test failures
-<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>audit-green-mirage: improve test quality
-<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>fact-checking: address acceptance criteria gaps
-<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>custom: check command output
-<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a>
-<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="gs">**Smart merge skill errors:**</span>
-<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a><span class="k">-</span><span class="w"> </span>If merging-worktrees skill fails to invoke
-<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="k">-</span><span class="w"> </span>If merge strategy unknown
-<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a><span class="k">-</span><span class="w"> </span>If worktree paths invalid
-<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a><span class="k">-</span><span class="w"> </span>Report error and suggest manual merge
-<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a>
-<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a><span class="gu">## Error Recovery Matrix</span>
-<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a>
-<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a>| Failure Point | Detection | Recovery |
-<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a>|---------------|-----------|----------|
-<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a>| Incomplete tracks | Missing/invalid completion markers | Complete tracks via <span class="sb">`/execute-work-packet`</span>, re-run |
-<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a>| Merge conflicts | merging-worktrees reports | Manual resolve, <span class="sb">`--continue-merge`</span> |
-<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>| QA gate failure | Non-zero exit code | Fix issue, re-run from Phase 4 |
-<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a>| Skill invocation error | Tool failure | Manual merge fallback |
-<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>
-<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a><span class="gu">## Recovery Procedures</span>
-<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a>
-<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a><span class="gs">**Continue after manual conflict resolution:**</span>
-<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>
-<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a><span class="c1"># User resolves conflicts manually</span>
-<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>manifest.project_root<span class="o">}</span>
-<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a><span class="c1"># ... resolve conflicts ...</span>
-<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a>git<span class="w"> </span>add<span class="w"> </span>.
-<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Resolve merge conflicts&quot;</span>
-<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a>
-<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="c1"># Continue merge workflow</span>
-<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>/merge-work-packets<span class="w"> </span><span class="o">{</span>packet_dir<span class="o">}</span><span class="w"> </span>--continue-merge
-<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a><span class="sb">```</span>
-<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>
-<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a>With --continue-merge:
-<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a><span class="k">-</span><span class="w"> </span>Skip Steps 1-4 (already merged)
-<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a><span class="k">-</span><span class="w"> </span>Resume at Step 6: Verify merge integrity
-<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a><span class="k">-</span><span class="w"> </span>Run QA gates
-<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a><span class="k">-</span><span class="w"> </span>Report final status
-<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>
-<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a><span class="gu">## Notes</span>
-<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a>
-<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a><span class="k">-</span><span class="w"> </span>All tracks MUST have completion markers before merge
-<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a><span class="k">-</span><span class="w"> </span>Smart-merge skill handles complex 3-way merges
-<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a><span class="k">-</span><span class="w"> </span>QA gates are mandatory unless manifest overrides
-<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a><span class="k">-</span><span class="w"> </span>Integration branch created: feature/{feature}-integrated
-<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a><span class="k">-</span><span class="w"> </span>Worktrees remain after merge for inspection
-<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a><span class="k">-</span><span class="w"> </span>User manually creates PR after successful merge
-<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a><span class="k">-</span><span class="w"> </span>Cleanup of worktrees deferred to user control
-<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a><span class="k">-</span><span class="w"> </span>Merge can be re-run with --continue-merge after manual fixes
-<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a>
-<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a><span class="k">-</span><span class="w"> </span>Merging with incomplete tracks (all completion markers required)
-<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="k">-</span><span class="w"> </span>Skipping QA gates or accepting partial gate results
-<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="k">-</span><span class="w"> </span>Deleting worktrees before user confirmation
-<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a><span class="k">-</span><span class="w"> </span>Continuing past merge conflicts without explicit resolution
-<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a><span class="k">-</span><span class="w"> </span>Modifying track branches during integration
-<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    RunQA --&gt; Pytest[Gate: pytest]
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    Pytest --&gt; PytestGate{pytest Passes?}
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    PytestGate --&gt;|No| QAFail[Report Gate Failure]
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    QAFail --&gt; Abort
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    PytestGate --&gt;|Yes| AuditGM[Gate: audit-green-mirage]
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    AuditGM --&gt; AuditGate{Audit Passes?}
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    AuditGate --&gt;|No| QAFail
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    AuditGate --&gt;|Yes| FactCheck[Gate: fact-checking]
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    FactCheck --&gt; FactGate{Fact Check Passes?}
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    FactGate --&gt;|No| QAFail
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    FactGate --&gt;|Yes| CustomGates[Gate: Custom Commands]
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    CustomGates --&gt; CustomGate{All Custom Pass?}
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    CustomGate --&gt;|No| QAFail
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    CustomGate --&gt;|Yes| ReportSuccess[Step 8: Success Report]
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    ReportSuccess --&gt; Done([Merge Complete])
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style Start fill:#2196F3,color:#fff
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style Done fill:#2196F3,color:#fff
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style Abort fill:#2196F3,color:#fff
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style WaitContinue fill:#2196F3,color:#fff
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style ContinueCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style TracksGate fill:#f44336,color:#fff
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style MergeResult fill:#FF9800,color:#fff
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style UserChoice fill:#FF9800,color:#fff
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style BranchCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style AncestryGate fill:#f44336,color:#fff
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style PytestGate fill:#f44336,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style AuditGate fill:#f44336,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style FactGate fill:#f44336,color:#fff
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style CustomGate fill:#f44336,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style InvokeSmartMerge fill:#4CAF50,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style AuditGM fill:#4CAF50,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style FactCheck fill:#4CAF50,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style LoadManifest fill:#2196F3,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style VerifyTracks fill:#2196F3,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style ReportIncomplete fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style PrepareBranches fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style DisplayPlan fill:#2196F3,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style HandleConflicts fill:#2196F3,color:#fff
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style PauseForUser fill:#2196F3,color:#fff
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style CleanupBranch fill:#2196F3,color:#fff
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style VerifyIntegrity fill:#2196F3,color:#fff
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style CommitAncestry fill:#2196F3,color:#fff
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style AncestryError fill:#2196F3,color:#fff
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style BranchError fill:#2196F3,color:#fff
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    style RunQA fill:#2196F3,color:#fff
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    style Pytest fill:#2196F3,color:#fff
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    style QAFail fill:#2196F3,color:#fff
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>    style CustomGates fill:#2196F3,color:#fff
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    style ReportSuccess fill:#2196F3,color:#fff
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>    style ReportError fill:#2196F3,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Merge Work Packets</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Integrate all completed work packets using merging-worktrees and verify through comprehensive QA gates.
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">1.</span> <span class="gs">**Completeness before integration**</span>: ALL tracks must have valid completion markers before ANY merge begins. Partial integration destroys reproducibility.
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">2.</span> <span class="gs">**Fail fast, fail loud**</span>: Stop at first failure. No cascading errors. Clear diagnosis beats silent corruption.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">3.</span> <span class="gs">**Evidence over trust**</span>: Every claim (track complete, merge clean, tests pass) requires verifiable proof (file exists, commit in history, exit code 0).
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">4.</span> <span class="gs">**Reversibility**</span>: Pre-merge state must be restorable. Integration branch isolates changes until explicit approval.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">5.</span> <span class="gs">**Gates are gates**</span>: QA gates are mandatory checkpoints, not suggestions. No gate skipping.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>Integration Lead responsible for final merge quality. Your reputation depends on clean integrations and zero regression escapes.
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="gu">## Parameters</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">-</span><span class="w"> </span><span class="sb">`packet_dir`</span> (required): Directory containing manifest.json and completed work packets
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--continue-merge`</span> (optional): Continue after manual conflict resolution
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>&lt;analysis&gt;
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>Before each step: What am I verifying? What evidence proves it?
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>&lt;reflection&gt;
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>After each step: Did I get the evidence? What does failure here mean?
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="gu">## Execution Protocol</span>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="gu">### Step 1: Load Manifest</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="nv">packet_dir</span><span class="o">=</span><span class="s2">&quot;&lt;packet_dir&gt;&quot;</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="nv">manifest_file</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$packet_dir</span><span class="s2">/manifest.json&quot;</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="c1"># Load manifest using read_json_safe</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="c1"># Extract:</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="c1"># - feature name</span>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="c1"># - tracks list</span>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="c1"># - merge_strategy</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="c1"># - post_merge_qa gates</span>
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="c1"># - project_root</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">```</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="gs">**Expected manifest fields:**</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="k">-</span><span class="w"> </span><span class="sb">`format_version`</span>: &quot;1.0.0&quot;
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="k">-</span><span class="w"> </span><span class="sb">`feature`</span>: Feature being integrated
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tracks`</span>: Array of track metadata
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="k">-</span><span class="w"> </span><span class="sb">`merge_strategy`</span>: &quot;merging-worktrees&quot; or &quot;manual&quot;
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="k">-</span><span class="w"> </span><span class="sb">`post_merge_qa`</span>: Array of QA gate commands
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="k">-</span><span class="w"> </span><span class="sb">`project_root`</span>: Path to main repository
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="gu">### Step 2: Verify All Tracks Complete</span>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="gs">**Critical gate:**</span> Do NOT proceed unless ALL tracks have completion markers.
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="c1"># For each track in manifest</span>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="k">for</span><span class="w"> </span>track<span class="w"> </span><span class="k">in</span><span class="w"> </span>manifest.tracks:
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="w">  </span><span class="nv">completion_file</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$packet_dir</span><span class="s2">/track-{track.id}.completion.json&quot;</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="w">  </span><span class="c1"># Check existence</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$completion_file</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Track {track.id} ({track.name}) incomplete&quot;</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Missing: </span><span class="nv">$completion_file</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="w">  </span><span class="k">fi</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="w">  </span><span class="c1"># Validate completion marker using read_json_safe</span>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="w">  </span><span class="c1"># Verify fields:</span>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="w">  </span><span class="c1"># - format_version: &quot;1.0.0&quot;</span>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="w">  </span><span class="c1"># - status: &quot;complete&quot;</span>
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a><span class="w">  </span><span class="c1"># - commit: valid git SHA</span>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="w">  </span><span class="c1"># - timestamp: ISO8601 string</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="w">  </span><span class="c1"># Check status</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="w">  </span><span class="nv">status</span><span class="o">=</span><span class="k">$(</span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.status&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$completion_file</span><span class="s2">&quot;</span><span class="k">)</span>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$status</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;complete&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Track {track.id} status is &#39;</span><span class="nv">$status</span><span class="s2">&#39;, expected &#39;complete&#39;&quot;</span>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="w">  </span><span class="k">fi</span>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="k">done</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ All {track_count} tracks verified complete&quot;</span>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="sb">```</span>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="gs">**If any track incomplete:**</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="sb">```</span>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="sb">ERROR: Cannot merge - incomplete tracks detected</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="sb">Incomplete tracks:</span>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="sb">  ✗ Track 2: Frontend (no completion marker)</span>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="sb">  ✗ Track 4: Documentation (status: in_progress)</span>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="sb">Required actions:</span>
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="sb">1. Complete missing tracks using: /execute-work-packet &lt;packet_path&gt;</span>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="sb">2. Verify completion markers exist</span>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="sb">3. Re-run merge</span>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="sb">Aborting merge.</span>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="sb">```</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="gu">### Step 3: Prepare Branch List for Smart Merge</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>Extract branch information from manifest:
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="c1"># Build list of branches to merge</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="nv">branches</span><span class="o">=[]</span>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="k">for</span><span class="w"> </span>track<span class="w"> </span><span class="k">in</span><span class="w"> </span>manifest.tracks:
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="w">  </span>branches.append<span class="o">({</span>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="w">    </span><span class="s2">&quot;id&quot;</span>:<span class="w"> </span>track.id,
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="w">    </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span>track.name,
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="w">    </span><span class="s2">&quot;branch&quot;</span>:<span class="w"> </span>track.branch,
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="w">    </span><span class="s2">&quot;worktree&quot;</span>:<span class="w"> </span>track.worktree,
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="w">    </span><span class="s2">&quot;commit&quot;</span>:<span class="w"> </span>&lt;commit_from_completion_marker&gt;
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="w">  </span><span class="o">})</span>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">done</span>
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="sb">```</span>
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="gs">**Display merge plan:**</span>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="sb">```</span>
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="sb">=== Merge Plan ===</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="sb">Feature: {manifest.feature}</span>
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="sb">Strategy: {manifest.merge_strategy}</span>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="sb">Target: {manifest.project_root}</span>
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="sb">Branches to merge:</span>
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="sb">  1. Track 1: Core API</span>
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="sb">     Branch: feature/track-1</span>
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a><span class="sb">     Commit: abc123</span>
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="sb">     Worktree: /path/to/wt-track-1</span>
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="sb">  2. Track 2: Frontend</span>
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="sb">     Branch: feature/track-2</span>
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="sb">     Commit: def456</span>
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="sb">     Worktree: /path/to/wt-track-2</span>
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="sb">  3. Track 3: Tests</span>
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="sb">     Branch: feature/track-3</span>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="sb">     Commit: ghi789</span>
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="sb">     Worktree: /path/to/wt-track-3</span>
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="sb">Total tracks: 3</span>
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="sb">```</span>
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="gu">### Step 4: Invoke Smart Merge Skill</span>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="gs">**If --continue-merge flag NOT set:**</span>
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="sb">```</span>
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="sb">Invoke the merging-worktrees skill using the Skill tool with:</span>
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="sb">Context:</span>
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="sb">- Feature: {manifest.feature}</span>
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="sb">- Packet directory: {packet_dir}</span>
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a><span class="sb">- Branches: {branches_list}</span>
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a><span class="sb">- Target repository: {manifest.project_root}</span>
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a><span class="sb">- Merge strategy: {manifest.merge_strategy}</span>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="sb">Instructions:</span>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="sb">1. Analyze all branch diffs since shared setup commit</span>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="sb">2. Perform 3-way merge analysis for conflicts</span>
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="sb">3. Use intelligent conflict resolution strategies</span>
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="sb">4. Create integration branch with merged code</span>
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="sb">5. Report conflicts requiring manual resolution</span>
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="sb">The merging-worktrees skill will:</span>
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="sb">- Create merge branch in project_root</span>
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a><span class="sb">- Integrate all track branches</span>
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a><span class="sb">- Detect and resolve conflicts</span>
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a><span class="sb">- Report any manual intervention needed</span>
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a><span class="sb">```</span>
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="gs">**Smart merge output types:**</span>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>| Result | Action |
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>|--------|--------|
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>| Success | All branches merged cleanly, proceed to verification |
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a>| Partial | Some conflicts auto-resolved, some manual |
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>| Failed | Conflicts require manual resolution |
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>| Error | Report, suggest manual merge, exit |
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a><span class="gu">### Step 5: Handle Merge Conflicts</span>
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="gs">**If merging-worktrees reports conflicts:**</span>
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="sb">```</span>
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="sb">⚠ Merge conflicts detected</span>
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a><span class="sb">Conflicts requiring manual resolution:</span>
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a><span class="sb">  File: src/api/auth.py</span>
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="sb">    Track 1 changed: authentication logic</span>
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a><span class="sb">    Track 2 changed: API endpoints</span>
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="sb">    Conflict: Both modified same function signature</span>
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="sb">  File: frontend/components/Login.tsx</span>
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a><span class="sb">    Track 2 changed: UI component</span>
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="sb">    Track 3 changed: test fixtures</span>
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a><span class="sb">    Conflict: Import paths differ</span>
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a><span class="sb">Manual resolution required:</span>
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="sb">1. Navigate to: {manifest.project_root}</span>
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="sb">2. Review conflicts in merge branch</span>
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="sb">3. Resolve conflicts manually</span>
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="sb">4. Commit resolution</span>
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a><span class="sb">5. Re-run: /merge-work-packets {packet_dir} --continue-merge</span>
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a><span class="sb">Options:</span>
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a><span class="sb">  [Manual] - Pause for manual conflict resolution</span>
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a><span class="sb">  [Abort] - Cancel merge, restore pre-merge state</span>
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a>
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a><span class="sb">Choose: Manual or Abort?</span>
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a><span class="sb">```</span>
+<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a>
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a><span class="gs">**If user chooses Manual:**</span>
+<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a><span class="k">1.</span> Pause execution
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a><span class="k">2.</span> Display detailed conflict resolution instructions
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a><span class="k">3.</span> Wait for user to resolve and re-run with --continue-merge
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a>
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a><span class="gs">**If user chooses Abort:**</span>
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="k">1.</span> Restore pre-merge state
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="k">2.</span> Clean up merge branch
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="k">3.</span> Exit with error status
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a><span class="gu">### Step 6: Verify Merge Integrity</span>
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>After merge completes (auto or manual):
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="c1"># Navigate to merged branch</span>
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>manifest.project_root<span class="o">}</span>
+<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a>
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="c1"># Verify we&#39;re on integration branch</span>
+<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a><span class="nv">current_branch</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>branch<span class="w"> </span>--show-current<span class="k">)</span>
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="nv">expected_branch</span><span class="o">=</span><span class="s2">&quot;feature/{manifest.feature}-integrated&quot;</span>
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$current_branch</span><span class="s2">&quot;</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$expected_branch</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Expected branch </span><span class="nv">$expected_branch</span><span class="s2">, on </span><span class="nv">$current_branch</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a><span class="k">fi</span>
+<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>
+<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a><span class="c1"># Check for uncommitted changes</span>
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>git<span class="w"> </span>status<span class="w"> </span>--porcelain<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;WARNING: Uncommitted changes detected after merge&quot;</span>
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a><span class="w">  </span>git<span class="w"> </span>status
+<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a><span class="k">fi</span>
+<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>
+<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a><span class="c1"># Verify all track commits are in history</span>
+<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a><span class="k">for</span><span class="w"> </span>track<span class="w"> </span><span class="k">in</span><span class="w"> </span>manifest.tracks:
+<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a><span class="w">  </span><span class="nv">commit</span><span class="o">=</span><span class="k">$(</span>get_completion_commit<span class="o">(</span>track<span class="k">)</span><span class="o">)</span>
+<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span>!<span class="w"> </span>git<span class="w"> </span>merge-base<span class="w"> </span>--is-ancestor<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$commit</span><span class="s2">&quot;</span><span class="w"> </span>HEAD<span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;ERROR: Track {track.id} commit </span><span class="nv">$commit</span><span class="s2"> not in merge history&quot;</span>
+<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="w">  </span><span class="k">fi</span>
+<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a><span class="k">done</span>
+<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a>
+<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ Merge integrity verified&quot;</span>
+<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="sb">```</span>
+<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a>
+<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a><span class="gu">### Step 7: Run QA Gates</span>
+<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a>
+<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a>Execute all gates from <span class="sb">`manifest.post_merge_qa`</span>:
+<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a>
+<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a><span class="sb">```</span>
+<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a><span class="sb">=== Running QA Gates ===</span>
+<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a>
+<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a><span class="sb">Gates defined: {manifest.post_merge_qa}</span>
+<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="sb">```</span>
+<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a>
+<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a><span class="gs">**For each QA gate:**</span>
+<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a>
+<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="gs">**Gate: pytest**</span>
+<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="c1"># Navigate to project root</span>
+<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>manifest.project_root<span class="o">}</span>
+<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a>
+<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a><span class="c1"># Run pytest with coverage</span>
+<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a>pytest<span class="w"> </span>--verbose<span class="w"> </span>--cov<span class="w"> </span>--cov-report<span class="o">=</span>term-missing
+<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a>
+<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a><span class="c1"># Check exit code</span>
+<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ pytest: PASSED&quot;</span>
+<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a><span class="k">else</span>
+<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✗ pytest: FAILED&quot;</span>
+<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a><span class="k">fi</span>
+<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="sb">```</span>
+<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a>
+<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="gs">**Gate: audit-green-mirage**</span>
+<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a><span class="sb">```</span>
+<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="sb">Invoke the audit-green-mirage skill using the Skill tool</span>
+<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a>
+<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="sb">This will:</span>
+<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a><span class="sb">- Analyze all tests for actual behavior validation</span>
+<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a><span class="sb">- Detect &quot;green mirage&quot; tests (pass but don&#39;t verify)</span>
+<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="sb">- Report test quality issues</span>
+<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a><span class="sb">- Generate audit report</span>
+<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a>
+<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a><span class="sb">If audit fails:</span>
+<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a><span class="sb">- Review report in {SPELLBOOK_CONFIG_DIR}/docs/&lt;project&gt;/audits/</span>
+<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a><span class="sb">- Fix test quality issues</span>
+<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a><span class="sb">- Re-run merge</span>
+<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a><span class="sb">```</span>
+<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a>
+<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="gs">**Gate: fact-checking**</span>
+<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a><span class="sb">```</span>
+<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="sb">Invoke the fact-checking skill using the Skill tool with:</span>
+<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a><span class="sb">- Verify feature requirements met</span>
+<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="sb">- Check acceptance criteria from implementation plan</span>
+<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a><span class="sb">- Validate integration completeness</span>
+<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a><span class="sb">- Confirm no regressions</span>
+<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a>
+<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a><span class="sb">If factcheck fails:</span>
+<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a><span class="sb">- Review discrepancies</span>
+<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a><span class="sb">- Fix issues in merge branch</span>
+<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a><span class="sb">- Re-run QA gates</span>
+<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a><span class="sb">```</span>
+<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a>
+<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a><span class="gs">**Gate: custom command**</span>
+<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a><span class="c1"># For any other command in post_merge_qa</span>
+<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a><span class="nv">command</span><span class="o">=</span><span class="s2">&quot;&lt;qa_gate_command&gt;&quot;</span>
+<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a>
+<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>manifest.project_root<span class="o">}</span>
+<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a><span class="nb">eval</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$command</span><span class="s2">&quot;</span>
+<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a>
+<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="nv">$?</span><span class="w"> </span>-eq<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✓ </span><span class="nv">$command</span><span class="s2">: PASSED&quot;</span>
+<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a><span class="k">else</span>
+<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;✗ </span><span class="nv">$command</span><span class="s2">: FAILED&quot;</span>
+<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a><span class="w">  </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
+<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a><span class="k">fi</span>
+<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a><span class="sb">```</span>
+<a id="__codelineno-1-340" name="__codelineno-1-340" href="#__codelineno-1-340"></a>
+<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a><span class="gs">**QA gate summary:**</span>
+<a id="__codelineno-1-342" name="__codelineno-1-342" href="#__codelineno-1-342"></a><span class="sb">```</span>
+<a id="__codelineno-1-343" name="__codelineno-1-343" href="#__codelineno-1-343"></a><span class="sb">=== QA Gate Results ===</span>
+<a id="__codelineno-1-344" name="__codelineno-1-344" href="#__codelineno-1-344"></a>
+<a id="__codelineno-1-345" name="__codelineno-1-345" href="#__codelineno-1-345"></a><span class="sb">✓ pytest: All tests passed (124/124)</span>
+<a id="__codelineno-1-346" name="__codelineno-1-346" href="#__codelineno-1-346"></a><span class="sb">✓ audit-green-mirage: High quality tests, no issues</span>
+<a id="__codelineno-1-347" name="__codelineno-1-347" href="#__codelineno-1-347"></a><span class="sb">✓ fact-checking: All acceptance criteria met</span>
+<a id="__codelineno-1-348" name="__codelineno-1-348" href="#__codelineno-1-348"></a><span class="sb">✓ npm run lint: No linting errors</span>
+<a id="__codelineno-1-349" name="__codelineno-1-349" href="#__codelineno-1-349"></a>
+<a id="__codelineno-1-350" name="__codelineno-1-350" href="#__codelineno-1-350"></a><span class="sb">All gates PASSED</span>
+<a id="__codelineno-1-351" name="__codelineno-1-351" href="#__codelineno-1-351"></a><span class="sb">```</span>
+<a id="__codelineno-1-352" name="__codelineno-1-352" href="#__codelineno-1-352"></a>
+<a id="__codelineno-1-353" name="__codelineno-1-353" href="#__codelineno-1-353"></a><span class="gs">**Gate failure = STOP**</span>: Display output, suggest fixes by gate type, require re-run after fixes.
+<a id="__codelineno-1-354" name="__codelineno-1-354" href="#__codelineno-1-354"></a>
+<a id="__codelineno-1-355" name="__codelineno-1-355" href="#__codelineno-1-355"></a><span class="gu">### Step 8: Report Final Status</span>
+<a id="__codelineno-1-356" name="__codelineno-1-356" href="#__codelineno-1-356"></a>
+<a id="__codelineno-1-357" name="__codelineno-1-357" href="#__codelineno-1-357"></a><span class="gs">**On success:**</span>
+<a id="__codelineno-1-358" name="__codelineno-1-358" href="#__codelineno-1-358"></a><span class="sb">```</span>
+<a id="__codelineno-1-359" name="__codelineno-1-359" href="#__codelineno-1-359"></a><span class="sb">✓ Merge completed successfully!</span>
+<a id="__codelineno-1-360" name="__codelineno-1-360" href="#__codelineno-1-360"></a>
+<a id="__codelineno-1-361" name="__codelineno-1-361" href="#__codelineno-1-361"></a><span class="sb">Feature: {manifest.feature}</span>
+<a id="__codelineno-1-362" name="__codelineno-1-362" href="#__codelineno-1-362"></a><span class="sb">Integration branch: feature/{feature}-integrated</span>
+<a id="__codelineno-1-363" name="__codelineno-1-363" href="#__codelineno-1-363"></a><span class="sb">Tracks merged: {track_count}</span>
+<a id="__codelineno-1-364" name="__codelineno-1-364" href="#__codelineno-1-364"></a><span class="sb">QA gates passed: {qa_gate_count}</span>
+<a id="__codelineno-1-365" name="__codelineno-1-365" href="#__codelineno-1-365"></a>
+<a id="__codelineno-1-366" name="__codelineno-1-366" href="#__codelineno-1-366"></a><span class="sb">Summary:</span>
+<a id="__codelineno-1-367" name="__codelineno-1-367" href="#__codelineno-1-367"></a><span class="sb">  ✓ All track completion markers verified</span>
+<a id="__codelineno-1-368" name="__codelineno-1-368" href="#__codelineno-1-368"></a><span class="sb">  ✓ Smart merge completed without conflicts</span>
+<a id="__codelineno-1-369" name="__codelineno-1-369" href="#__codelineno-1-369"></a><span class="sb">  ✓ All QA gates passed</span>
+<a id="__codelineno-1-370" name="__codelineno-1-370" href="#__codelineno-1-370"></a><span class="sb">  ✓ Integration branch ready for review</span>
+<a id="__codelineno-1-371" name="__codelineno-1-371" href="#__codelineno-1-371"></a>
+<a id="__codelineno-1-372" name="__codelineno-1-372" href="#__codelineno-1-372"></a><span class="sb">Next steps:</span>
+<a id="__codelineno-1-373" name="__codelineno-1-373" href="#__codelineno-1-373"></a><span class="sb">1. Review integration branch:</span>
+<a id="__codelineno-1-374" name="__codelineno-1-374" href="#__codelineno-1-374"></a><span class="sb">   cd {manifest.project_root}</span>
+<a id="__codelineno-1-375" name="__codelineno-1-375" href="#__codelineno-1-375"></a><span class="sb">   git checkout feature/{feature}-integrated</span>
+<a id="__codelineno-1-376" name="__codelineno-1-376" href="#__codelineno-1-376"></a><span class="sb">   git log --graph --all</span>
+<a id="__codelineno-1-377" name="__codelineno-1-377" href="#__codelineno-1-377"></a>
+<a id="__codelineno-1-378" name="__codelineno-1-378" href="#__codelineno-1-378"></a><span class="sb">2. Create pull request:</span>
+<a id="__codelineno-1-379" name="__codelineno-1-379" href="#__codelineno-1-379"></a><span class="sb">   gh pr create --title &quot;{feature}&quot; --body &quot;...&quot;</span>
+<a id="__codelineno-1-380" name="__codelineno-1-380" href="#__codelineno-1-380"></a>
+<a id="__codelineno-1-381" name="__codelineno-1-381" href="#__codelineno-1-381"></a><span class="sb">3. After PR approval, merge to main:</span>
+<a id="__codelineno-1-382" name="__codelineno-1-382" href="#__codelineno-1-382"></a><span class="sb">   git checkout main</span>
+<a id="__codelineno-1-383" name="__codelineno-1-383" href="#__codelineno-1-383"></a><span class="sb">   git merge feature/{feature}-integrated</span>
+<a id="__codelineno-1-384" name="__codelineno-1-384" href="#__codelineno-1-384"></a><span class="sb">   git push origin main</span>
+<a id="__codelineno-1-385" name="__codelineno-1-385" href="#__codelineno-1-385"></a>
+<a id="__codelineno-1-386" name="__codelineno-1-386" href="#__codelineno-1-386"></a><span class="sb">4. Clean up worktrees:</span>
+<a id="__codelineno-1-387" name="__codelineno-1-387" href="#__codelineno-1-387"></a><span class="sb">   git worktree remove {worktree_paths...}</span>
+<a id="__codelineno-1-388" name="__codelineno-1-388" href="#__codelineno-1-388"></a><span class="sb">```</span>
+<a id="__codelineno-1-389" name="__codelineno-1-389" href="#__codelineno-1-389"></a>
+<a id="__codelineno-1-390" name="__codelineno-1-390" href="#__codelineno-1-390"></a><span class="gs">**On failure:**</span>
+<a id="__codelineno-1-391" name="__codelineno-1-391" href="#__codelineno-1-391"></a><span class="sb">```</span>
+<a id="__codelineno-1-392" name="__codelineno-1-392" href="#__codelineno-1-392"></a><span class="sb">✗ Merge failed</span>
+<a id="__codelineno-1-393" name="__codelineno-1-393" href="#__codelineno-1-393"></a>
+<a id="__codelineno-1-394" name="__codelineno-1-394" href="#__codelineno-1-394"></a><span class="sb">Feature: {manifest.feature}</span>
+<a id="__codelineno-1-395" name="__codelineno-1-395" href="#__codelineno-1-395"></a><span class="sb">Failed at: {failure_stage}</span>
+<a id="__codelineno-1-396" name="__codelineno-1-396" href="#__codelineno-1-396"></a><span class="sb">Error: {error_message}</span>
+<a id="__codelineno-1-397" name="__codelineno-1-397" href="#__codelineno-1-397"></a>
+<a id="__codelineno-1-398" name="__codelineno-1-398" href="#__codelineno-1-398"></a><span class="sb">Status:</span>
+<a id="__codelineno-1-399" name="__codelineno-1-399" href="#__codelineno-1-399"></a><span class="sb">  {completed_steps}</span>
+<a id="__codelineno-1-400" name="__codelineno-1-400" href="#__codelineno-1-400"></a><span class="sb">  ✗ {failed_step}: {failure_reason}</span>
+<a id="__codelineno-1-401" name="__codelineno-1-401" href="#__codelineno-1-401"></a><span class="sb">  ⏳ {pending_steps}</span>
+<a id="__codelineno-1-402" name="__codelineno-1-402" href="#__codelineno-1-402"></a>
+<a id="__codelineno-1-403" name="__codelineno-1-403" href="#__codelineno-1-403"></a><span class="sb">Resolution:</span>
+<a id="__codelineno-1-404" name="__codelineno-1-404" href="#__codelineno-1-404"></a><span class="sb">{specific_instructions_for_failure}</span>
+<a id="__codelineno-1-405" name="__codelineno-1-405" href="#__codelineno-1-405"></a>
+<a id="__codelineno-1-406" name="__codelineno-1-406" href="#__codelineno-1-406"></a><span class="sb">After resolving:</span>
+<a id="__codelineno-1-407" name="__codelineno-1-407" href="#__codelineno-1-407"></a><span class="sb">- Re-run: /merge-work-packets {packet_dir} [--continue-merge]</span>
+<a id="__codelineno-1-408" name="__codelineno-1-408" href="#__codelineno-1-408"></a><span class="sb">```</span>
+<a id="__codelineno-1-409" name="__codelineno-1-409" href="#__codelineno-1-409"></a>
+<a id="__codelineno-1-410" name="__codelineno-1-410" href="#__codelineno-1-410"></a><span class="gu">## Error Handling</span>
+<a id="__codelineno-1-411" name="__codelineno-1-411" href="#__codelineno-1-411"></a>
+<a id="__codelineno-1-412" name="__codelineno-1-412" href="#__codelineno-1-412"></a><span class="gs">**Incomplete tracks:**</span>
+<a id="__codelineno-1-413" name="__codelineno-1-413" href="#__codelineno-1-413"></a><span class="k">-</span><span class="w"> </span>Detected in Step 2
+<a id="__codelineno-1-414" name="__codelineno-1-414" href="#__codelineno-1-414"></a><span class="k">-</span><span class="w"> </span>List missing completion markers
+<a id="__codelineno-1-415" name="__codelineno-1-415" href="#__codelineno-1-415"></a><span class="k">-</span><span class="w"> </span>Suggest running execute-work-packet for incomplete tracks
+<a id="__codelineno-1-416" name="__codelineno-1-416" href="#__codelineno-1-416"></a><span class="k">-</span><span class="w"> </span>Abort merge
+<a id="__codelineno-1-417" name="__codelineno-1-417" href="#__codelineno-1-417"></a>
+<a id="__codelineno-1-418" name="__codelineno-1-418" href="#__codelineno-1-418"></a><span class="gs">**Merge conflicts:**</span>
+<a id="__codelineno-1-419" name="__codelineno-1-419" href="#__codelineno-1-419"></a><span class="k">-</span><span class="w"> </span>Detected by merging-worktrees skill
+<a id="__codelineno-1-420" name="__codelineno-1-420" href="#__codelineno-1-420"></a><span class="k">-</span><span class="w"> </span>Display conflict details with file paths and track origins
+<a id="__codelineno-1-421" name="__codelineno-1-421" href="#__codelineno-1-421"></a><span class="k">-</span><span class="w"> </span>Offer Manual resolution or Abort
+<a id="__codelineno-1-422" name="__codelineno-1-422" href="#__codelineno-1-422"></a><span class="k">-</span><span class="w"> </span>If Manual: pause and provide resolution instructions
+<a id="__codelineno-1-423" name="__codelineno-1-423" href="#__codelineno-1-423"></a><span class="k">-</span><span class="w"> </span>If Abort: clean up and exit
+<a id="__codelineno-1-424" name="__codelineno-1-424" href="#__codelineno-1-424"></a>
+<a id="__codelineno-1-425" name="__codelineno-1-425" href="#__codelineno-1-425"></a><span class="gs">**QA gate failures:**</span>
+<a id="__codelineno-1-426" name="__codelineno-1-426" href="#__codelineno-1-426"></a><span class="k">-</span><span class="w"> </span>Stop at first failing gate
+<a id="__codelineno-1-427" name="__codelineno-1-427" href="#__codelineno-1-427"></a><span class="k">-</span><span class="w"> </span>Display gate output and error details
+<a id="__codelineno-1-428" name="__codelineno-1-428" href="#__codelineno-1-428"></a><span class="k">-</span><span class="w"> </span>Do NOT proceed to subsequent gates
+<a id="__codelineno-1-429" name="__codelineno-1-429" href="#__codelineno-1-429"></a><span class="k">-</span><span class="w"> </span>Suggest fixes based on gate type:
+<a id="__codelineno-1-430" name="__codelineno-1-430" href="#__codelineno-1-430"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>pytest: fix test failures
+<a id="__codelineno-1-431" name="__codelineno-1-431" href="#__codelineno-1-431"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>audit-green-mirage: improve test quality
+<a id="__codelineno-1-432" name="__codelineno-1-432" href="#__codelineno-1-432"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>fact-checking: address acceptance criteria gaps
+<a id="__codelineno-1-433" name="__codelineno-1-433" href="#__codelineno-1-433"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>custom: check command output
+<a id="__codelineno-1-434" name="__codelineno-1-434" href="#__codelineno-1-434"></a>
+<a id="__codelineno-1-435" name="__codelineno-1-435" href="#__codelineno-1-435"></a><span class="gs">**Smart merge skill errors:**</span>
+<a id="__codelineno-1-436" name="__codelineno-1-436" href="#__codelineno-1-436"></a><span class="k">-</span><span class="w"> </span>If merging-worktrees skill fails to invoke
+<a id="__codelineno-1-437" name="__codelineno-1-437" href="#__codelineno-1-437"></a><span class="k">-</span><span class="w"> </span>If merge strategy unknown
+<a id="__codelineno-1-438" name="__codelineno-1-438" href="#__codelineno-1-438"></a><span class="k">-</span><span class="w"> </span>If worktree paths invalid
+<a id="__codelineno-1-439" name="__codelineno-1-439" href="#__codelineno-1-439"></a><span class="k">-</span><span class="w"> </span>Report error and suggest manual merge
+<a id="__codelineno-1-440" name="__codelineno-1-440" href="#__codelineno-1-440"></a>
+<a id="__codelineno-1-441" name="__codelineno-1-441" href="#__codelineno-1-441"></a><span class="gu">## Error Recovery Matrix</span>
+<a id="__codelineno-1-442" name="__codelineno-1-442" href="#__codelineno-1-442"></a>
+<a id="__codelineno-1-443" name="__codelineno-1-443" href="#__codelineno-1-443"></a>| Failure Point | Detection | Recovery |
+<a id="__codelineno-1-444" name="__codelineno-1-444" href="#__codelineno-1-444"></a>|---------------|-----------|----------|
+<a id="__codelineno-1-445" name="__codelineno-1-445" href="#__codelineno-1-445"></a>| Incomplete tracks | Missing/invalid completion markers | Complete tracks via <span class="sb">`/execute-work-packet`</span>, re-run |
+<a id="__codelineno-1-446" name="__codelineno-1-446" href="#__codelineno-1-446"></a>| Merge conflicts | merging-worktrees reports | Manual resolve, <span class="sb">`--continue-merge`</span> |
+<a id="__codelineno-1-447" name="__codelineno-1-447" href="#__codelineno-1-447"></a>| QA gate failure | Non-zero exit code | Fix issue, re-run from Phase 4 |
+<a id="__codelineno-1-448" name="__codelineno-1-448" href="#__codelineno-1-448"></a>| Skill invocation error | Tool failure | Manual merge fallback |
+<a id="__codelineno-1-449" name="__codelineno-1-449" href="#__codelineno-1-449"></a>
+<a id="__codelineno-1-450" name="__codelineno-1-450" href="#__codelineno-1-450"></a><span class="gu">## Recovery Procedures</span>
+<a id="__codelineno-1-451" name="__codelineno-1-451" href="#__codelineno-1-451"></a>
+<a id="__codelineno-1-452" name="__codelineno-1-452" href="#__codelineno-1-452"></a><span class="gs">**Continue after manual conflict resolution:**</span>
+<a id="__codelineno-1-453" name="__codelineno-1-453" href="#__codelineno-1-453"></a>
+<a id="__codelineno-1-454" name="__codelineno-1-454" href="#__codelineno-1-454"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-455" name="__codelineno-1-455" href="#__codelineno-1-455"></a><span class="c1"># User resolves conflicts manually</span>
+<a id="__codelineno-1-456" name="__codelineno-1-456" href="#__codelineno-1-456"></a><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>manifest.project_root<span class="o">}</span>
+<a id="__codelineno-1-457" name="__codelineno-1-457" href="#__codelineno-1-457"></a><span class="c1"># ... resolve conflicts ...</span>
+<a id="__codelineno-1-458" name="__codelineno-1-458" href="#__codelineno-1-458"></a>git<span class="w"> </span>add<span class="w"> </span>.
+<a id="__codelineno-1-459" name="__codelineno-1-459" href="#__codelineno-1-459"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Resolve merge conflicts&quot;</span>
+<a id="__codelineno-1-460" name="__codelineno-1-460" href="#__codelineno-1-460"></a>
+<a id="__codelineno-1-461" name="__codelineno-1-461" href="#__codelineno-1-461"></a><span class="c1"># Continue merge workflow</span>
+<a id="__codelineno-1-462" name="__codelineno-1-462" href="#__codelineno-1-462"></a>/merge-work-packets<span class="w"> </span><span class="o">{</span>packet_dir<span class="o">}</span><span class="w"> </span>--continue-merge
+<a id="__codelineno-1-463" name="__codelineno-1-463" href="#__codelineno-1-463"></a><span class="sb">```</span>
+<a id="__codelineno-1-464" name="__codelineno-1-464" href="#__codelineno-1-464"></a>
+<a id="__codelineno-1-465" name="__codelineno-1-465" href="#__codelineno-1-465"></a>With --continue-merge:
+<a id="__codelineno-1-466" name="__codelineno-1-466" href="#__codelineno-1-466"></a><span class="k">-</span><span class="w"> </span>Skip Steps 1-4 (already merged)
+<a id="__codelineno-1-467" name="__codelineno-1-467" href="#__codelineno-1-467"></a><span class="k">-</span><span class="w"> </span>Resume at Step 6: Verify merge integrity
+<a id="__codelineno-1-468" name="__codelineno-1-468" href="#__codelineno-1-468"></a><span class="k">-</span><span class="w"> </span>Run QA gates
+<a id="__codelineno-1-469" name="__codelineno-1-469" href="#__codelineno-1-469"></a><span class="k">-</span><span class="w"> </span>Report final status
+<a id="__codelineno-1-470" name="__codelineno-1-470" href="#__codelineno-1-470"></a>
+<a id="__codelineno-1-471" name="__codelineno-1-471" href="#__codelineno-1-471"></a><span class="gu">## Notes</span>
+<a id="__codelineno-1-472" name="__codelineno-1-472" href="#__codelineno-1-472"></a>
+<a id="__codelineno-1-473" name="__codelineno-1-473" href="#__codelineno-1-473"></a><span class="k">-</span><span class="w"> </span>All tracks MUST have completion markers before merge
+<a id="__codelineno-1-474" name="__codelineno-1-474" href="#__codelineno-1-474"></a><span class="k">-</span><span class="w"> </span>Smart-merge skill handles complex 3-way merges
+<a id="__codelineno-1-475" name="__codelineno-1-475" href="#__codelineno-1-475"></a><span class="k">-</span><span class="w"> </span>QA gates are mandatory unless manifest overrides
+<a id="__codelineno-1-476" name="__codelineno-1-476" href="#__codelineno-1-476"></a><span class="k">-</span><span class="w"> </span>Integration branch created: feature/{feature}-integrated
+<a id="__codelineno-1-477" name="__codelineno-1-477" href="#__codelineno-1-477"></a><span class="k">-</span><span class="w"> </span>Worktrees remain after merge for inspection
+<a id="__codelineno-1-478" name="__codelineno-1-478" href="#__codelineno-1-478"></a><span class="k">-</span><span class="w"> </span>User manually creates PR after successful merge
+<a id="__codelineno-1-479" name="__codelineno-1-479" href="#__codelineno-1-479"></a><span class="k">-</span><span class="w"> </span>Cleanup of worktrees deferred to user control
+<a id="__codelineno-1-480" name="__codelineno-1-480" href="#__codelineno-1-480"></a><span class="k">-</span><span class="w"> </span>Merge can be re-run with --continue-merge after manual fixes
+<a id="__codelineno-1-481" name="__codelineno-1-481" href="#__codelineno-1-481"></a>
+<a id="__codelineno-1-482" name="__codelineno-1-482" href="#__codelineno-1-482"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-483" name="__codelineno-1-483" href="#__codelineno-1-483"></a><span class="k">-</span><span class="w"> </span>Merging with incomplete tracks (all completion markers required)
+<a id="__codelineno-1-484" name="__codelineno-1-484" href="#__codelineno-1-484"></a><span class="k">-</span><span class="w"> </span>Skipping QA gates or accepting partial gate results
+<a id="__codelineno-1-485" name="__codelineno-1-485" href="#__codelineno-1-485"></a><span class="k">-</span><span class="w"> </span>Deleting worktrees before user confirmation
+<a id="__codelineno-1-486" name="__codelineno-1-486" href="#__codelineno-1-486"></a><span class="k">-</span><span class="w"> </span>Continuing past merge conflicts without explicit resolution
+<a id="__codelineno-1-487" name="__codelineno-1-487" href="#__codelineno-1-487"></a><span class="k">-</span><span class="w"> </span>Modifying track branches during integration
+<a id="__codelineno-1-488" name="__codelineno-1-488" href="#__codelineno-1-488"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 

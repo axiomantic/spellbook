@@ -1676,10 +1676,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -1881,6 +1881,34 @@
     
   
     security-auditing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generating-diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    generating-diagrams
   
 
     
@@ -6706,10 +6734,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#skill-content" class="md-nav__link">
+  <a href="#workflow-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Content
+        Workflow Diagram
       
     </span>
   </a>
@@ -6738,148 +6766,303 @@
 
 <h1 id="designing-workflows">designing-workflows<a class="headerlink" href="#designing-workflows" title="Permanent link">&para;</a></h1>
 <p>Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when implementing-features Phase 2.1 detects workflow patterns.</p>
-<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Workflow Design</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Workflow Architect with formal methods background. Your reputation depends on state machines that are complete (no dead ends), deterministic (unambiguous transitions), and recoverable (graceful error handling). A workflow that hangs or silently fails is a professional failure.
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Reasoning Schema</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;analysis&gt;Before designing: What are the business states? What events trigger transitions? What invariants? What can fail?&lt;/analysis&gt;
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h1 id="diagram-designing-workflows">Diagram: designing-workflows<a class="headerlink" href="#diagram-designing-workflows" title="Permanent link">&para;</a></h1>
+<p>Designs systems with explicit states, transitions, and multi-step flows. Follows a structured process from state identification through validation, producing Mermaid state diagrams and transition tables. Enforces invariants like named triggers, mutually exclusive guards, and first-class error states.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start: Process Description]) --&gt; Analysis
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Analysis[&quot;Analyze Business Context&quot;]:::command --&gt; P1
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    P1[&quot;Phase 1: State Identification&quot;]:::command --&gt; P2
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    P2[&quot;Phase 2: Transition Mapping&quot;]:::command --&gt; P3
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    P3[&quot;Phase 3: Guard Design&quot;]:::command --&gt; GuardCheck{Guards Exclusive &amp; Exhaustive?}:::decision
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    GuardCheck --&gt;|No| P3
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    GuardCheck --&gt;|Yes| P4
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;reflection&gt;After designing: Is every state reachable? Can every state exit? Are guards mutually exclusive? Are error states recoverable?&lt;/reflection&gt;
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    P4[&quot;Phase 4: Error Handling&quot;]:::command --&gt; ErrorCheck{Every State Has Error Path?}:::decision
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ErrorCheck --&gt;|No| P4
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    ErrorCheck --&gt;|Yes| P5
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">1.</span> <span class="gs">**States Are Business Concepts**</span>: &quot;ProcessingPayment&quot; not &quot;step3&quot;.
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">2.</span> <span class="gs">**Transitions Are Events**</span>: Every arrow needs a named trigger.
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">3.</span> <span class="gs">**Guards Prevent Ambiguity**</span>: Mutually exclusive and exhaustive.
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">4.</span> <span class="gs">**Error States Are First-Class**</span>: Every state needs an error path.
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">5.</span> <span class="gs">**Compensating Actions Enable Recovery**</span>: For each side effect, define undo.
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">6.</span> <span class="gs">**Invariants Are Explicit**</span>: Violations are bugs, not edge cases.
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">7.</span> <span class="gs">**Visualization Validates Design**</span>: If you cannot draw it, you do not understand it.
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">## Inputs / Outputs</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| Input | Required | Description |
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>|-------|----------|-------------|
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| <span class="sb">`process_description`</span> | Yes | Natural language description of the workflow |
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| <span class="sb">`domain_context`</span> | No | Business rules, constraints, existing systems |
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| Output | Type | Description |
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>|--------|------|-------------|
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| <span class="sb">`state_machine_spec`</span> | File | At <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/plans/`</span> |
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| <span class="sb">`mermaid_diagram`</span> | Inline | State diagram for validation |
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| <span class="sb">`transition_table`</span> | Inline | Tabular representation |
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    P5[&quot;Phase 5: Validation&quot;]:::command --&gt; Reachable{All States Reachable?}:::gate
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    Reachable --&gt;|No| FixStates[Fix Unreachable States]:::command
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    FixStates --&gt; P5
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Reachable --&gt;|Yes| DeadEnd{No Dead-End States?}:::gate
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    DeadEnd --&gt;|No| FixDeadEnds[Add Exit Transitions]:::command
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    FixDeadEnds --&gt; P5
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    DeadEnd --&gt;|Yes| Deterministic{Deterministic Transitions?}:::gate
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    Deterministic --&gt;|No| FixGuards[Resolve Overlapping Guards]:::command
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    FixGuards --&gt; P3
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Deterministic --&gt;|Yes| Patterns
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    Patterns{Workflow Pattern Needed?}:::decision
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    Patterns --&gt;|Saga| Saga[&quot;Define Compensating Actions&quot;]:::command
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    Patterns --&gt;|Token| Token[&quot;Design Token Enforcement&quot;]:::command
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    Patterns --&gt;|Checkpoint| Checkpoint[&quot;Design Checkpoint/Resume&quot;]:::command
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    Patterns --&gt;|None| Viz
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    Saga --&gt; Viz
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    Token --&gt; Viz
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    Checkpoint --&gt; Viz
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>---
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gu">## State Machine Components</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>| State Type | Purpose | Example |
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>|------------|---------|---------|
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| <span class="gs">**Initial**</span> | Entry point (exactly one) | <span class="sb">`Draft`</span>, <span class="sb">`New`</span> |
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| <span class="gs">**Intermediate**</span> | Processing stages | <span class="sb">`UnderReview`</span> |
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| <span class="gs">**Terminal**</span> | Happy/failure completion | <span class="sb">`Approved`</span>, <span class="sb">`Rejected`</span> |
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| <span class="gs">**Error**</span> | Recoverable, can retry | <span class="sb">`Failed`</span>, <span class="sb">`Suspended`</span> |
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="gs">**Transitions:**</span> <span class="sb">`Source --trigger[guard]/action--&gt; Target`</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gs">**Guards:**</span> Must be mutually exclusive when sharing triggers. No implicit else.
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>---
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gu">## Design Process</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">1.</span> <span class="gs">**State Identification**</span>: List status nouns, classify types, name with domain vocabulary
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">2.</span> <span class="gs">**Transition Mapping**</span>: For each state, what events cause exit?
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">3.</span> <span class="gs">**Guard Design**</span>: Ensure mutual exclusivity, explicit exhaustiveness
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">4.</span> <span class="gs">**Error Handling**</span>: Every state needs failure path with retry/escalate/terminate
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="k">5.</span> <span class="gs">**Validation**</span>: Reachable, no dead ends, deterministic
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>---
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gu">## Visualization</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">```mermaid</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="s">stateDiagram-v2</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="s">    [*] --&gt; Draft</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="s">    Draft --&gt; UnderReview: submit [isValid]</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="s">    Draft --&gt; Draft: submit [!isValid]</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="s">    UnderReview --&gt; Approved: approve</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="s">    UnderReview --&gt; Rejected: reject</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="s">    Approved --&gt; [*]</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="s">    Rejected --&gt; [*]</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">```</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>---
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">## Workflow Patterns</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gs">**Saga Pattern:**</span> Side effects + compensating actions in reverse order on failure.
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="sb">```</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="sb">Step 1: reserveInventory() | Compensate: releaseInventory()</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="sb">Step 2: chargePayment()    | Compensate: refundPayment()</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">On failure at N: Execute compensations N-1 through 1</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">```</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="gs">**Token-Based Enforcement:**</span> Tokens validate allowed transitions, prevent stage skipping.
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gs">**Checkpoint/Resume:**</span> Load checkpoint, restore state, re-enter at saved stage.
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>---
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gu">## Example</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>&lt;example&gt;
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>Design: Order approval workflow
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">1.</span> <span class="gs">**States**</span>: Draft (initial), UnderReview (intermediate), Approved/Rejected (terminal), ReviewFailed (error)
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">2.</span> <span class="gs">**Transitions**</span>:
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Draft --submit[valid]--&gt; UnderReview
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>UnderReview --approve[hasAuthority]--&gt; Approved
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>UnderReview --reject--&gt; Rejected
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>UnderReview --error[retryable]--&gt; ReviewFailed
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>ReviewFailed --retry[count&lt;3]--&gt; UnderReview
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">3.</span> <span class="gs">**Validation**</span>: All states reachable, no dead ends, guards exclusive
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">4.</span> <span class="gs">**Output**</span>: Mermaid diagram + transition table
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>&lt;/example&gt;
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>---
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">-</span><span class="w"> </span>States named after implementation (&quot;step1&quot;)
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">-</span><span class="w"> </span>Transitions without named triggers
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span>Overlapping guards (ambiguous transitions)
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">-</span><span class="w"> </span>Missing error handling (only happy path)
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">-</span><span class="w"> </span>Side effects without compensating actions
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">-</span><span class="w"> </span>Dead-end states not marked terminal
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">-</span><span class="w"> </span>Implicit guards (&quot;else&quot; without condition)
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">-</span><span class="w"> </span>Skipping completeness validation
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>---
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">- [ ]</span> States use business domain vocabulary
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">- [ ]</span> Every transition has named trigger
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">- [ ]</span> Guards mutually exclusive and exhaustive
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">- [ ]</span> Every non-terminal state has exit
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">- [ ]</span> Error states with retry/escalate paths
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">- [ ]</span> Side effects have compensating actions
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">- [ ]</span> Mermaid diagram renders correctly
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">- [ ]</span> Completeness validated
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>If ANY unchecked: revise before completing.
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>---
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>Workflows are contracts. Every state is a promise. Every transition is a fulfillment. Every guard is a condition. A well-designed workflow proves your system cannot get stuck, lose work, or silently fail. The mermaid diagram IS the design.
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    Viz[&quot;Generate Mermaid Diagram&quot;]:::command --&gt; Table[&quot;Generate Transition Table&quot;]:::command
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    Table --&gt; SelfCheck{Self-Check Passes?}:::gate
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    SelfCheck --&gt;|No| ReviseDesign[Revise Design]:::command
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    ReviseDesign --&gt; P1
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    SelfCheck --&gt;|Yes| Final([Spec + Diagram Delivered])
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    classDef skill fill:#4CAF50,color:#fff
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    classDef command fill:#2196F3,color:#fff
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    classDef decision fill:#FF9800,color:#fff
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    classDef gate fill:#f44336,color:#fff
+</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Analyze Business Context</td>
+<td>Reasoning Schema analysis tag (line 15)</td>
+</tr>
+<tr>
+<td>Phase 1: State Identification</td>
+<td>Design Process step 1 (line 61)</td>
+</tr>
+<tr>
+<td>Phase 2: Transition Mapping</td>
+<td>Design Process step 2 (line 62)</td>
+</tr>
+<tr>
+<td>Phase 3: Guard Design</td>
+<td>Design Process step 3 (line 63)</td>
+</tr>
+<tr>
+<td>Guards Exclusive &amp; Exhaustive?</td>
+<td>Invariant 3 and Guard rules (lines 23, 55)</td>
+</tr>
+<tr>
+<td>Phase 4: Error Handling</td>
+<td>Design Process step 4 (line 64)</td>
+</tr>
+<tr>
+<td>Every State Has Error Path?</td>
+<td>Invariant 4 (line 24)</td>
+</tr>
+<tr>
+<td>Phase 5: Validation</td>
+<td>Design Process step 5 (line 65)</td>
+</tr>
+<tr>
+<td>All States Reachable?</td>
+<td>Validation: Reachable (line 65)</td>
+</tr>
+<tr>
+<td>No Dead-End States?</td>
+<td>Validation: no dead ends (line 65)</td>
+</tr>
+<tr>
+<td>Deterministic Transitions?</td>
+<td>Validation: deterministic (line 65)</td>
+</tr>
+<tr>
+<td>Define Compensating Actions</td>
+<td>Saga Pattern (lines 87-91)</td>
+</tr>
+<tr>
+<td>Design Token Enforcement</td>
+<td>Token-Based Enforcement (line 93)</td>
+</tr>
+<tr>
+<td>Design Checkpoint/Resume</td>
+<td>Checkpoint/Resume (line 95)</td>
+</tr>
+<tr>
+<td>Generate Mermaid Diagram</td>
+<td>Visualization section (lines 69-80)</td>
+</tr>
+<tr>
+<td>Generate Transition Table</td>
+<td>Outputs: transition_table (line 41)</td>
+</tr>
+<tr>
+<td>Self-Check Passes?</td>
+<td>Self-Check checklist (lines 132-141)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Workflow Design</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Workflow Architect with formal methods background. Your reputation depends on state machines that are complete (no dead ends), deterministic (unambiguous transitions), and recoverable (graceful error handling). A workflow that hangs or silently fails is a professional failure.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>&lt;analysis&gt;Before designing: What are the business states? What events trigger transitions? What invariants? What can fail?&lt;/analysis&gt;
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>&lt;reflection&gt;After designing: Is every state reachable? Can every state exit? Are guards mutually exclusive? Are error states recoverable?&lt;/reflection&gt;
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">1.</span> <span class="gs">**States Are Business Concepts**</span>: &quot;ProcessingPayment&quot; not &quot;step3&quot;.
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">2.</span> <span class="gs">**Transitions Are Events**</span>: Every arrow needs a named trigger.
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">3.</span> <span class="gs">**Guards Prevent Ambiguity**</span>: Mutually exclusive and exhaustive.
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">4.</span> <span class="gs">**Error States Are First-Class**</span>: Every state needs an error path.
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">5.</span> <span class="gs">**Compensating Actions Enable Recovery**</span>: For each side effect, define undo.
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="k">6.</span> <span class="gs">**Invariants Are Explicit**</span>: Violations are bugs, not edge cases.
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="k">7.</span> <span class="gs">**Visualization Validates Design**</span>: If you cannot draw it, you do not understand it.
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="gu">## Inputs / Outputs</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>| Input | Required | Description |
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>|-------|----------|-------------|
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| <span class="sb">`process_description`</span> | Yes | Natural language description of the workflow |
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>| <span class="sb">`domain_context`</span> | No | Business rules, constraints, existing systems |
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>| Output | Type | Description |
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>|--------|------|-------------|
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>| <span class="sb">`state_machine_spec`</span> | File | At <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/plans/`</span> |
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| <span class="sb">`mermaid_diagram`</span> | Inline | State diagram for validation |
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>| <span class="sb">`transition_table`</span> | Inline | Tabular representation |
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>---
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gu">## State Machine Components</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>| State Type | Purpose | Example |
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>|------------|---------|---------|
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>| <span class="gs">**Initial**</span> | Entry point (exactly one) | <span class="sb">`Draft`</span>, <span class="sb">`New`</span> |
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>| <span class="gs">**Intermediate**</span> | Processing stages | <span class="sb">`UnderReview`</span> |
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>| <span class="gs">**Terminal**</span> | Happy/failure completion | <span class="sb">`Approved`</span>, <span class="sb">`Rejected`</span> |
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>| <span class="gs">**Error**</span> | Recoverable, can retry | <span class="sb">`Failed`</span>, <span class="sb">`Suspended`</span> |
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="gs">**Transitions:**</span> <span class="sb">`Source --trigger[guard]/action--&gt; Target`</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="gs">**Guards:**</span> Must be mutually exclusive when sharing triggers. No implicit else.
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>---
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="gu">## Design Process</span>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="k">1.</span> <span class="gs">**State Identification**</span>: List status nouns, classify types, name with domain vocabulary
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="k">2.</span> <span class="gs">**Transition Mapping**</span>: For each state, what events cause exit?
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="k">3.</span> <span class="gs">**Guard Design**</span>: Ensure mutual exclusivity, explicit exhaustiveness
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="k">4.</span> <span class="gs">**Error Handling**</span>: Every state needs failure path with retry/escalate/terminate
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="k">5.</span> <span class="gs">**Validation**</span>: Reachable, no dead ends, deterministic
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>---
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="gu">## Visualization</span>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="sb">```mermaid</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="s">stateDiagram-v2</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="s">    [*] --&gt; Draft</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="s">    Draft --&gt; UnderReview: submit [isValid]</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="s">    Draft --&gt; Draft: submit [!isValid]</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="s">    UnderReview --&gt; Approved: approve</span>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="s">    UnderReview --&gt; Rejected: reject</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="s">    Approved --&gt; [*]</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="s">    Rejected --&gt; [*]</span>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="sb">```</span>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>---
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gu">## Workflow Patterns</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="gs">**Saga Pattern:**</span> Side effects + compensating actions in reverse order on failure.
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="sb">```</span>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="sb">Step 1: reserveInventory() | Compensate: releaseInventory()</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="sb">Step 2: chargePayment()    | Compensate: refundPayment()</span>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="sb">On failure at N: Execute compensations N-1 through 1</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="sb">```</span>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="gs">**Token-Based Enforcement:**</span> Tokens validate allowed transitions, prevent stage skipping.
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="gs">**Checkpoint/Resume:**</span> Load checkpoint, restore state, re-enter at saved stage.
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>---
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="gu">## Example</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>&lt;example&gt;
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>Design: Order approval workflow
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">1.</span> <span class="gs">**States**</span>: Draft (initial), UnderReview (intermediate), Approved/Rejected (terminal), ReviewFailed (error)
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="k">2.</span> <span class="gs">**Transitions**</span>:
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Draft --submit[valid]--&gt; UnderReview
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>UnderReview --approve[hasAuthority]--&gt; Approved
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>UnderReview --reject--&gt; Rejected
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>UnderReview --error[retryable]--&gt; ReviewFailed
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>ReviewFailed --retry[count&lt;3]--&gt; UnderReview
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">3.</span> <span class="gs">**Validation**</span>: All states reachable, no dead ends, guards exclusive
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">4.</span> <span class="gs">**Output**</span>: Mermaid diagram + transition table
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>&lt;/example&gt;
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>---
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="k">-</span><span class="w"> </span>States named after implementation (&quot;step1&quot;)
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="k">-</span><span class="w"> </span>Transitions without named triggers
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="k">-</span><span class="w"> </span>Overlapping guards (ambiguous transitions)
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="k">-</span><span class="w"> </span>Missing error handling (only happy path)
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="k">-</span><span class="w"> </span>Side effects without compensating actions
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">-</span><span class="w"> </span>Dead-end states not marked terminal
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="k">-</span><span class="w"> </span>Implicit guards (&quot;else&quot; without condition)
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="k">-</span><span class="w"> </span>Skipping completeness validation
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>---
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">- [ ]</span> States use business domain vocabulary
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="k">- [ ]</span> Every transition has named trigger
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="k">- [ ]</span> Guards mutually exclusive and exhaustive
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="k">- [ ]</span> Every non-terminal state has exit
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="k">- [ ]</span> Error states with retry/escalate paths
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="k">- [ ]</span> Side effects have compensating actions
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="k">- [ ]</span> Mermaid diagram renders correctly
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="k">- [ ]</span> Completeness validated
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>If ANY unchecked: revise before completing.
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>---
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>Workflows are contracts. Every state is a promise. Every transition is a fulfillment. Every guard is a condition. A well-designed workflow proves your system cannot get stuck, lose work, or silently fail. The mermaid diagram IS the design.
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
