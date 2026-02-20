@@ -371,6 +371,9 @@ class CrossPlatformLock:
         lock_path: Path to the lock file.
         stale_seconds: Seconds after which a lock is considered stale.
         shared: If True, acquire a shared (read) lock. Only effective on Unix.
+        blocking: If True, context manager retries until lock is acquired or
+            timeout is reached. If False, raises LockHeldError immediately.
+        timeout: Maximum seconds to wait when blocking (default 10.0).
     """
 
     def __init__(
@@ -378,14 +381,21 @@ class CrossPlatformLock:
         lock_path: Path,
         stale_seconds: int = 3600,
         shared: bool = False,
+        blocking: bool = False,
+        timeout: float = 10.0,
     ):
         self.lock_path = lock_path
         self.stale_seconds = stale_seconds
         self.shared = shared
+        self.blocking = blocking
+        self.timeout = timeout
         self._fd: Optional[int] = None
 
     def acquire(self) -> bool:
         """Acquire the lock.
+
+        In blocking mode, waits until the lock becomes available (up to
+        self.timeout seconds). In non-blocking mode, returns immediately.
 
         Returns:
             True on success, False if lock is held by another live process.
@@ -399,20 +409,24 @@ class CrossPlatformLock:
 
                 # Note: msvcrt does not support shared locks.
                 # On Windows, shared=True degrades to exclusive lock.
-                # This is acceptable because config reads are fast (<10ms)
-                # and lock contention is minimal in practice.
                 if self.shared:
                     logger.debug(
                         "Windows: shared lock degrades to exclusive (msvcrt limitation)"
                     )
-                msvcrt.locking(self._fd, msvcrt.LK_NBLCK, 1)
+                if self.blocking:
+                    # msvcrt.LK_LOCK blocks until available
+                    msvcrt.locking(self._fd, msvcrt.LK_LOCK, 1)
+                else:
+                    msvcrt.locking(self._fd, msvcrt.LK_NBLCK, 1)
             else:
                 import fcntl
 
                 flag = fcntl.LOCK_SH if self.shared else fcntl.LOCK_EX
-                fcntl.flock(self._fd, flag | fcntl.LOCK_NB)
+                if not self.blocking:
+                    flag |= fcntl.LOCK_NB
+                fcntl.flock(self._fd, flag)
         except (BlockingIOError, OSError):
-            # Lock held - check if stale
+            # Lock held - check if stale (only in non-blocking mode)
             try:
                 os.lseek(self._fd, 0, os.SEEK_SET)
                 content = os.read(self._fd, 1024).decode()
@@ -459,7 +473,12 @@ class CrossPlatformLock:
         return True
 
     def release(self) -> None:
-        """Release the lock and clean up."""
+        """Release the lock and clean up.
+
+        In non-blocking mode, removes the lock file after release.
+        In blocking mode, keeps the lock file to avoid race conditions
+        with other threads/processes waiting on the same inode.
+        """
         if self._fd is not None:
             try:
                 if sys.platform == "win32":
@@ -478,10 +497,11 @@ class CrossPlatformLock:
                 except OSError:
                     pass
             self._fd = None
-            try:
-                self.lock_path.unlink()
-            except OSError:
-                pass
+            if not self.blocking:
+                try:
+                    self.lock_path.unlink()
+                except OSError:
+                    pass
 
     def __enter__(self) -> "CrossPlatformLock":
         if not self.acquire():

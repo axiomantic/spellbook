@@ -436,9 +436,17 @@ def _add_connection_diagnostics(result: HealthCheckResult, verbose: bool) -> Non
 
 def _check_running_processes(result: HealthCheckResult) -> None:
     """Check if there are any spellbook MCP server processes running."""
-    returncode, stdout, stderr = run_command(
-        ["pgrep", "-f", "spellbook_mcp/server.py"]
-    )
+    if sys.platform == "win32":
+        returncode, stdout, stderr = run_command([
+            "powershell", "-NoProfile", "-Command",
+            "Get-CimInstance Win32_Process | "
+            "Where-Object {$_.CommandLine -like '*spellbook_mcp*server*'} | "
+            "Select-Object -ExpandProperty ProcessId",
+        ])
+    else:
+        returncode, stdout, stderr = run_command(
+            ["pgrep", "-f", "spellbook_mcp/server.py"]
+        )
 
     if returncode == 0 and stdout.strip():
         pids = stdout.strip().split("\n")
@@ -477,7 +485,7 @@ def _check_server_startup(result: HealthCheckResult) -> None:
 
     # Try to import the server module and check for errors
     returncode, stdout, stderr = run_command(
-        ["python3", "-c", f"import sys; sys.path.insert(0, '{spellbook_dir}'); from spellbook_mcp import server; print('Import OK')"],
+        [sys.executable, "-c", f"import sys; sys.path.insert(0, '{spellbook_dir}'); from spellbook_mcp import server; print('Import OK')"],
         timeout=10.0,
     )
 

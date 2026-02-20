@@ -3,6 +3,7 @@ Codex platform installer.
 """
 
 import re
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
@@ -29,7 +30,7 @@ def _generate_mcp_toml_section(server_path: Path) -> str:
     """Generate the TOML section for spellbook MCP server."""
     return f"""{TOML_START_MARKER}
 [mcp_servers.spellbook]
-command = "python3"
+command = "{sys.executable}"
 args = ["{server_path}"]
 {TOML_END_MARKER}
 """

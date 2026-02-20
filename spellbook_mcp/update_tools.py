@@ -5,7 +5,7 @@ This module provides:
 - On-demand update checking via git fetch
 - Update application via subprocess (git pull + install.py)
 - Rollback to previous version via stored SHA
-- Install lock file management via fcntl.flock()
+- Install lock file management via CrossPlatformLock
 - Update status aggregation from config
 
 Architecture: Detection is read-only (git fetch + git show). Application
@@ -13,7 +13,6 @@ runs as a subprocess to avoid self-modifying code. spellbook_mcp/ never
 imports from installer/; the only interaction is shelling out to install.py.
 """
 
-import fcntl
 import json
 import logging
 import os
@@ -23,6 +22,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
+
+from installer.compat import CrossPlatformLock, get_config_dir
 
 from spellbook_mcp.config_tools import config_get, config_set
 
@@ -71,94 +72,6 @@ def classify_version_bump(installed: str, available: str) -> Optional[str]:
 
 # Lock file constants
 LOCK_STALE_SECONDS = 3600  # 1 hour
-
-
-def _pid_exists(pid: int) -> bool:
-    """Check if a process with given PID exists.
-
-    Args:
-        pid: Process ID to check
-
-    Returns:
-        True if the process exists, False otherwise
-    """
-    try:
-        os.kill(pid, 0)
-        return True
-    except OSError:
-        return False
-
-
-def acquire_install_lock(lock_path: Path) -> Optional[int]:
-    """Acquire exclusive install lock. Returns fd on success, None if held.
-
-    Uses fcntl.flock() for cross-process synchronization. If the lock is
-    already held by another live process, returns None immediately (non-blocking).
-    If the lock file has a dead PID or is older than LOCK_STALE_SECONDS, the
-    lock is considered stale and will be broken.
-
-    Args:
-        lock_path: Path to the lock file
-
-    Returns:
-        File descriptor on success, None if lock is held by active process
-    """
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
-        # Lock is held. Check if stale.
-        try:
-            os.lseek(fd, 0, os.SEEK_SET)
-            content = os.read(fd, 1024).decode()
-            lock_info = json.loads(content)
-            pid = lock_info.get("pid")
-            timestamp = lock_info.get("timestamp", 0)
-
-            if pid and not _pid_exists(pid):
-                # Stale lock (dead PID), break it
-                try:
-                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                except BlockingIOError:
-                    os.close(fd)
-                    return None
-            elif time.time() - timestamp > LOCK_STALE_SECONDS:
-                # Stale lock (too old), break it
-                try:
-                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                except BlockingIOError:
-                    os.close(fd)
-                    return None
-            else:
-                # Lock is held by a live process
-                os.close(fd)
-                return None
-        except (json.JSONDecodeError, OSError):
-            os.close(fd)
-            return None
-
-    # Write our lock info
-    os.ftruncate(fd, 0)
-    os.lseek(fd, 0, os.SEEK_SET)
-    lock_data = json.dumps({"pid": os.getpid(), "timestamp": time.time()})
-    os.write(fd, lock_data.encode())
-    return fd
-
-
-def release_install_lock(fd: int, lock_path: Path) -> None:
-    """Release install lock and clean up lock file.
-
-    Args:
-        fd: File descriptor from acquire_install_lock()
-        lock_path: Path to the lock file
-    """
-    fcntl.flock(fd, fcntl.LOCK_UN)
-    os.close(fd)
-    try:
-        lock_path.unlink()
-    except OSError:
-        pass
 
 
 def get_changelog_between(
@@ -256,7 +169,7 @@ def check_for_updates(spellbook_dir: Path) -> dict:
     # Read local version
     version_path = spellbook_dir / ".version"
     try:
-        local_version = version_path.read_text().strip()
+        local_version = version_path.read_text(encoding="utf-8").strip()
         result["current_version"] = local_version
     except (FileNotFoundError, OSError) as e:
         result["error"] = f"Could not read local .version file: {e}"
@@ -337,8 +250,8 @@ def check_for_updates(spellbook_dir: Path) -> dict:
 
 # Default lock file path. This is the canonical lock location for all
 # install/update operations. apply_update() and rollback_update() default
-# to this path. ~/.config/spellbook/install.lock is the production lock path.
-DEFAULT_LOCK_PATH = Path.home() / ".config" / "spellbook" / "install.lock"
+# to this path.
+DEFAULT_LOCK_PATH = get_config_dir() / "install.lock"
 
 
 def apply_update(
@@ -374,7 +287,7 @@ def apply_update(
 
     # Read current version
     try:
-        result["previous_version"] = (spellbook_dir / ".version").read_text().strip()
+        result["previous_version"] = (spellbook_dir / ".version").read_text(encoding="utf-8").strip()
     except (FileNotFoundError, OSError) as e:
         result["error"] = f"Could not read .version: {e}"
         return result
@@ -415,8 +328,8 @@ def apply_update(
         pass  # Non-fatal; rollback just won't be available
 
     # Acquire lock
-    fd = acquire_install_lock(lock_path)
-    if fd is None:
+    lock = CrossPlatformLock(lock_path, stale_seconds=LOCK_STALE_SECONDS)
+    if not lock.acquire():
         result["error"] = "Update already in progress (lock held by another process)"
         return result
 
@@ -496,7 +409,7 @@ def apply_update(
 
         # Post-flight: read new version
         try:
-            result["new_version"] = (spellbook_dir / ".version").read_text().strip()
+            result["new_version"] = (spellbook_dir / ".version").read_text(encoding="utf-8").strip()
         except (FileNotFoundError, OSError):
             result["new_version"] = result["previous_version"]
 
@@ -514,7 +427,7 @@ def apply_update(
         return result
 
     finally:
-        release_install_lock(fd, lock_path)
+        lock.release()
 
 
 def rollback_update(
@@ -579,8 +492,8 @@ def rollback_update(
         return result
 
     # Acquire lock
-    fd = acquire_install_lock(lock_path)
-    if fd is None:
+    lock = CrossPlatformLock(lock_path, stale_seconds=LOCK_STALE_SECONDS)
+    if not lock.acquire():
         result["error"] = "Lock held by another process"
         return result
 
@@ -621,7 +534,7 @@ def rollback_update(
         try:
             result["version_after_rollback"] = (
                 spellbook_dir / ".version"
-            ).read_text().strip()
+            ).read_text(encoding="utf-8").strip()
         except (FileNotFoundError, OSError):
             pass
 
@@ -639,7 +552,7 @@ def rollback_update(
         return result
 
     finally:
-        release_install_lock(fd, lock_path)
+        lock.release()
 
 
 def get_update_status(spellbook_dir: Path) -> dict:
@@ -658,7 +571,7 @@ def get_update_status(spellbook_dir: Path) -> dict:
     """
     # Read current version
     try:
-        current_version = (spellbook_dir / ".version").read_text().strip()
+        current_version = (spellbook_dir / ".version").read_text(encoding="utf-8").strip()
     except (FileNotFoundError, OSError):
         current_version = "unknown"
 

@@ -1,5 +1,6 @@
 """Tests for spawn_claude_session MCP tool and terminal detection utilities."""
 
+import shutil
 import unittest
 from unittest.mock import patch, MagicMock
 import sys
@@ -110,13 +111,27 @@ class TestDetectLinuxTerminal(unittest.TestCase):
 
 
 class TestDetectWindowsTerminal(unittest.TestCase):
-    """Test Windows terminal detection (not supported in MVP)."""
+    """Test Windows terminal detection."""
 
-    @patch('sys.platform', 'win32')
-    def test_windows_raises_not_implemented(self):
-        """Test that Windows detection raises NotImplementedError."""
-        with self.assertRaises(NotImplementedError):
-            detect_windows_terminal()
+    @patch('shutil.which')
+    def test_windows_terminal_detected(self, mock_which):
+        """Test that Windows Terminal is detected when wt is available."""
+        mock_which.side_effect = lambda cmd: "/usr/bin/wt" if cmd == "wt" else None
+        result = detect_windows_terminal()
+        self.assertEqual(result, "windows-terminal")
+
+    @patch('shutil.which')
+    def test_pwsh_fallback(self, mock_which):
+        """Test that PowerShell Core is detected as fallback."""
+        mock_which.side_effect = lambda cmd: "/usr/bin/pwsh" if cmd == "pwsh" else None
+        result = detect_windows_terminal()
+        self.assertEqual(result, "pwsh")
+
+    @patch('shutil.which', return_value=None)
+    def test_cmd_fallback(self, mock_which):
+        """Test that cmd is the final fallback."""
+        result = detect_windows_terminal()
+        self.assertEqual(result, "cmd")
 
 
 class TestDetectTerminal(unittest.TestCase):
@@ -144,11 +159,16 @@ class TestDetectTerminal(unittest.TestCase):
         self.assertEqual(result, 'gnome-terminal')
         mock_linux.assert_called_once()
 
+    @patch('spellbook_mcp.terminal_utils.detect_windows_terminal')
     @patch('sys.platform', 'win32')
-    def test_windows_not_supported(self):
-        """Test that Windows raises NotImplementedError."""
-        with self.assertRaises(NotImplementedError):
-            detect_terminal()
+    def test_delegates_to_windows(self, mock_windows):
+        """Test delegation to Windows detection."""
+        mock_windows.return_value = 'windows-terminal'
+
+        result = detect_terminal()
+
+        self.assertEqual(result, 'windows-terminal')
+        mock_windows.assert_called_once()
 
 
 class TestSpawnMacOSTerminal(unittest.TestCase):
@@ -258,11 +278,20 @@ class TestSpawnTerminalWindow(unittest.TestCase):
         self.assertEqual(result['status'], 'spawned')
         mock_linux_spawn.assert_called_once_with('gnome-terminal', 'test', '/var', 'claude')
 
+    @patch('spellbook_mcp.terminal_utils.spawn_windows_terminal')
     @patch('sys.platform', 'win32')
-    def test_windows_not_supported(self):
-        """Test that Windows raises NotImplementedError."""
-        with self.assertRaises(NotImplementedError):
-            spawn_terminal_window('cmd', 'test', 'C:\\')
+    def test_delegates_to_windows(self, mock_windows_spawn):
+        """Test delegation to Windows spawning."""
+        mock_windows_spawn.return_value = {
+            'status': 'spawned',
+            'terminal': 'cmd',
+            'pid': 12345
+        }
+
+        result = spawn_terminal_window('cmd', 'test', 'C:\\')
+
+        self.assertEqual(result['status'], 'spawned')
+        mock_windows_spawn.assert_called_once_with('cmd', 'test', 'C:\\', 'claude')
 
 
 class TestSpawnClaudeSessionMCPTool(unittest.TestCase):

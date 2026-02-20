@@ -49,7 +49,7 @@ LAUNCHD_LABEL = "com.spellbook.mcp"
 
 
 def get_platform() -> str:
-    """Get the current platform: 'darwin' or 'linux'."""
+    """Get the current platform: 'darwin', 'linux', or 'windows'."""
     return platform.system().lower()
 
 
@@ -217,7 +217,7 @@ def get_daemon_path() -> str:
     # System paths
     paths.extend(["/usr/bin", "/bin", "/usr/sbin", "/sbin"])
 
-    return ":".join(paths)
+    return os.pathsep.join(paths)
 
 
 def generate_launchd_plist() -> str:
@@ -374,7 +374,7 @@ def get_linux_daemon_path() -> str:
     # System paths
     paths.extend(["/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"])
 
-    return ":".join(paths)
+    return os.pathsep.join(paths)
 
 
 def generate_systemd_service() -> str:
@@ -511,13 +511,17 @@ def is_systemd_running() -> bool:
 
 def read_pid() -> int | None:
     """Read PID from pid file, return None if not exists or invalid."""
+    from installer.compat import _pid_exists
+
     pid_file = get_pid_file()
     if not pid_file.exists():
         return None
     try:
         pid = int(pid_file.read_text().strip())
-        os.kill(pid, 0)
-        return pid
+        if _pid_exists(pid):
+            return pid
+        pid_file.unlink(missing_ok=True)
+        return None
     except (ValueError, OSError):
         pid_file.unlink(missing_ok=True)
         return None
@@ -549,6 +553,12 @@ def is_service_installed() -> bool:
         return get_launchd_plist_path().exists()
     elif plat == "linux":
         return get_systemd_service_path().exists()
+    elif plat == "windows":
+        result = subprocess.run(
+            ["schtasks", "/Query", "/TN", "SpellbookMCP"],
+            capture_output=True,
+        )
+        return result.returncode == 0
     return False
 
 
@@ -559,6 +569,8 @@ def is_service_running() -> bool:
         return is_launchd_running()
     elif plat == "linux":
         return is_systemd_running()
+    elif plat == "windows":
+        return check_server_health(timeout=2.0)
     return False
 
 
@@ -589,6 +601,10 @@ def cmd_install() -> int:
         success, msg = install_launchd()
     elif plat == "linux":
         success, msg = install_systemd()
+    elif plat == "windows":
+        from installer.compat import ServiceManager
+        mgr = ServiceManager(get_spellbook_dir(), get_port(), get_host())
+        success, msg = mgr.install()
     else:
         print(f"Error: Unsupported platform: {plat}", file=sys.stderr)
         return 1
@@ -626,6 +642,10 @@ def cmd_uninstall() -> int:
         success, msg = uninstall_launchd()
     elif plat == "linux":
         success, msg = uninstall_systemd()
+    elif plat == "windows":
+        from installer.compat import ServiceManager
+        mgr = ServiceManager(get_spellbook_dir(), get_port(), get_host())
+        success, msg = mgr.uninstall()
     else:
         print(f"Error: Unsupported platform: {plat}", file=sys.stderr)
         return 1
@@ -691,7 +711,8 @@ def cmd_start(foreground: bool = False) -> int:
                 env=env,
                 stdout=log,
                 stderr=log,
-                start_new_session=True,
+                start_new_session=(sys.platform != "win32"),
+                creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) if sys.platform == "win32" else 0,
             )
 
         write_pid(proc.pid)
@@ -734,6 +755,13 @@ def cmd_stop() -> int:
             )
             print("Service stopped (will restart on next boot)")
             print("To permanently stop, run: spellbook-server uninstall")
+        elif plat == "windows":
+            subprocess.run(
+                ["schtasks", "/End", "/TN", "SpellbookMCP"],
+                capture_output=True
+            )
+            print("Service stopped (will restart on next logon)")
+            print("To permanently stop, run: spellbook-server uninstall")
         return 0
 
     # Manual stop via PID
@@ -743,19 +771,26 @@ def cmd_stop() -> int:
         return 0
 
     print(f"Stopping server (PID {pid})")
-    try:
-        os.kill(pid, signal.SIGTERM)
-        for _ in range(10):
-            time.sleep(0.5)
-            try:
-                os.kill(pid, 0)
-            except OSError:
-                break
-        else:
+    from installer.compat import _pid_exists
+
+    if sys.platform == "win32":
+        subprocess.run(["taskkill", "/PID", str(pid)], capture_output=True)
+        time.sleep(1)
+        if _pid_exists(pid):
             print("Force killing...")
-            os.kill(pid, signal.SIGKILL)
-    except OSError:
-        pass
+            subprocess.run(["taskkill", "/F", "/PID", str(pid)], capture_output=True)
+    else:
+        try:
+            os.kill(pid, signal.SIGTERM)
+            for _ in range(10):
+                time.sleep(0.5)
+                if not _pid_exists(pid):
+                    break
+            else:
+                print("Force killing...")
+                os.kill(pid, signal.SIGKILL)
+        except OSError:
+            pass
 
     get_pid_file().unlink(missing_ok=True)
     print("Server stopped")
@@ -777,6 +812,10 @@ def cmd_restart() -> int:
                 ["systemctl", "--user", "restart", SERVICE_NAME],
                 capture_output=True
             )
+        elif plat == "windows":
+            subprocess.run(["schtasks", "/End", "/TN", "SpellbookMCP"], capture_output=True)
+            time.sleep(1)
+            subprocess.run(["schtasks", "/Run", "/TN", "SpellbookMCP"], capture_output=True)
         print("Service restarted")
         return 0
 
@@ -816,6 +855,8 @@ def cmd_url() -> int:
 
 def cmd_logs(follow: bool = False, lines: int = 50) -> int:
     """Show server logs."""
+    import collections
+
     log_file = get_log_file()
 
     if not log_file.exists():
@@ -823,9 +864,27 @@ def cmd_logs(follow: bool = False, lines: int = 50) -> int:
         return 1
 
     if follow:
-        subprocess.run(["tail", "-f", str(log_file)])
+        if sys.platform == "win32":
+            # Windows: seek-to-end + polling loop
+            with open(log_file) as f:
+                f.seek(0, 2)  # Seek to end
+                try:
+                    while True:
+                        line = f.readline()
+                        if line:
+                            print(line, end="")
+                        else:
+                            time.sleep(0.5)
+                except KeyboardInterrupt:
+                    pass
+        else:
+            subprocess.run(["tail", "-f", str(log_file)])
     else:
-        subprocess.run(["tail", f"-{lines}", str(log_file)])
+        # Cross-platform: read last N lines using deque
+        with open(log_file) as f:
+            last_lines = collections.deque(f, maxlen=lines)
+        for line in last_lines:
+            print(line, end="")
 
     return 0
 

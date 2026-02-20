@@ -3,12 +3,13 @@ MCP server registration, daemon management, and verification.
 """
 
 import os
-import platform
 import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
+
+from installer.compat import Platform, get_platform, get_python_executable
 
 # Daemon configuration
 DEFAULT_PORT = 8765
@@ -195,7 +196,7 @@ def verify_mcp_connectivity(server_path: Path, timeout: int = 10) -> Tuple[bool,
     try:
         # Try to import and check the server can at least be loaded
         result = subprocess.run(
-            ["python3", "-c", f"import sys; sys.path.insert(0, '{server_path.parent}'); import server"],
+            [get_python_executable(), "-c", f"import sys; sys.path.insert(0, '{server_path.parent}'); import server"],
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -234,12 +235,22 @@ def restart_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
     try:
         # Find processes matching the MCP server
         # Look for processes running the spellbook_mcp server
-        result = subprocess.run(
-            ["pgrep", "-f", f"{name}.*server\\.py|spellbook_mcp.*server"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
+        plat = get_platform()
+        if plat == Platform.WINDOWS:
+            result = subprocess.run(
+                ["powershell", "-NoProfile", "-Command",
+                 "Get-CimInstance Win32_Process | "
+                 "Where-Object {$_.CommandLine -like '*spellbook_mcp*server*'} | "
+                 "Select-Object -ExpandProperty ProcessId"],
+                capture_output=True, text=True, timeout=5,
+            )
+        else:
+            result = subprocess.run(
+                ["pgrep", "-f", f"{name}.*server\\.py|spellbook_mcp.*server"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
 
         if result.returncode != 0 or not result.stdout.strip():
             return (True, "no running process found (will start on next use)")
@@ -252,8 +263,15 @@ def restart_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
         killed = 0
         for pid in pids:
             try:
-                os.kill(pid, signal.SIGTERM)
-                killed += 1
+                if plat == Platform.WINDOWS:
+                    subprocess.run(
+                        ["taskkill", "/PID", str(pid)],
+                        capture_output=True,
+                    )
+                    killed += 1
+                else:
+                    os.kill(pid, signal.SIGTERM)
+                    killed += 1
             except (ProcessLookupError, PermissionError):
                 # Process already gone or we can't kill it
                 pass
@@ -301,11 +319,17 @@ def get_systemd_service_path() -> Path:
 
 def is_daemon_installed() -> bool:
     """Check if the spellbook daemon is installed as a system service."""
-    plat = platform.system().lower()
-    if plat == "darwin":
+    plat = get_platform()
+    if plat == Platform.MACOS:
         return get_launchd_plist_path().exists()
-    elif plat == "linux":
+    elif plat == Platform.LINUX:
         return get_systemd_service_path().exists()
+    elif plat == Platform.WINDOWS:
+        result = subprocess.run(
+            ["schtasks", "/Query", "/TN", "SpellbookMCP"],
+            capture_output=True,
+        )
+        return result.returncode == 0
     return False
 
 
@@ -334,16 +358,16 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
             return (True, "Would stop daemon")
         return (True, "Daemon not running")
 
-    plat = platform.system().lower()
+    plat = get_platform()
 
-    if plat == "darwin":
+    if plat == Platform.MACOS:
         plist_path = get_launchd_plist_path()
         if plist_path.exists():
             subprocess.run(
                 ["launchctl", "unload", str(plist_path)],
                 capture_output=True
             )
-    elif plat == "linux":
+    elif plat == Platform.LINUX:
         subprocess.run(
             ["systemctl", "--user", "stop", SERVICE_NAME],
             capture_output=True
@@ -354,19 +378,36 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
 
     if is_daemon_running():
         # Graceful stop failed, force kill
-        subprocess.run(
-            ["pkill", "-f", "spellbook_mcp/server.py"],
-            capture_output=True
-        )
+        if plat == Platform.WINDOWS:
+            # Find and kill spellbook_mcp processes on Windows
+            result = subprocess.run(
+                ["powershell", "-NoProfile", "-Command",
+                 "Get-CimInstance Win32_Process | "
+                 "Where-Object {$_.CommandLine -like '*spellbook_mcp*server*'} | "
+                 "Select-Object -ExpandProperty ProcessId"],
+                capture_output=True, text=True, timeout=10,
+            )
+            for pid_str in result.stdout.strip().split("\n"):
+                if pid_str.strip():
+                    subprocess.run(
+                        ["taskkill", "/F", "/PID", pid_str.strip()],
+                        capture_output=True,
+                    )
+        else:
+            subprocess.run(
+                ["pkill", "-f", "spellbook_mcp/server.py"],
+                capture_output=True
+            )
         time.sleep(1)
 
         if is_daemon_running():
-            # Last resort: SIGKILL
-            subprocess.run(
-                ["pkill", "-9", "-f", "spellbook_mcp/server.py"],
-                capture_output=True
-            )
-            time.sleep(1)
+            if plat != Platform.WINDOWS:
+                # Last resort: SIGKILL (Unix only)
+                subprocess.run(
+                    ["pkill", "-9", "-f", "spellbook_mcp/server.py"],
+                    capture_output=True
+                )
+                time.sleep(1)
 
             if is_daemon_running():
                 return (False, "Daemon still running after force kill attempt")
@@ -390,12 +431,12 @@ def uninstall_daemon(dry_run: bool = False) -> Tuple[bool, str]:
             return (True, "Would uninstall daemon service")
         return (True, "Daemon service not installed")
 
-    plat = platform.system().lower()
+    plat = get_platform()
 
     # Stop first
     stop_daemon(dry_run=False)
 
-    if plat == "darwin":
+    if plat == Platform.MACOS:
         plist_path = get_launchd_plist_path()
         if plist_path.exists():
             subprocess.run(
@@ -406,7 +447,7 @@ def uninstall_daemon(dry_run: bool = False) -> Tuple[bool, str]:
             return (True, "Daemon service uninstalled")
         return (True, "Daemon service was not installed")
 
-    elif plat == "linux":
+    elif plat == Platform.LINUX:
         service_path = get_systemd_service_path()
         if service_path.exists():
             subprocess.run(
@@ -425,7 +466,16 @@ def uninstall_daemon(dry_run: bool = False) -> Tuple[bool, str]:
             return (True, "Daemon service uninstalled")
         return (True, "Daemon service was not installed")
 
-    return (False, f"Unsupported platform: {plat}")
+    elif plat == Platform.WINDOWS:
+        result = subprocess.run(
+            ["schtasks", "/Delete", "/TN", "SpellbookMCP", "/F"],
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0 or "does not exist" in result.stderr.lower():
+            return (True, "Daemon service uninstalled")
+        return (False, f"Failed to uninstall: {result.stderr}")
+
+    return (False, f"Unsupported platform: {plat.value}")
 
 
 def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, str]:
@@ -452,7 +502,7 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
 
     try:
         result = subprocess.run(
-            ["python3", str(server_script), "install"],
+            [get_python_executable(), str(server_script), "install"],
             capture_output=True,
             text=True,
             timeout=60,

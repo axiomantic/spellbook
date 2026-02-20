@@ -12,6 +12,7 @@ See: https://github.com/charmbracelet/crush
 """
 
 import json
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
@@ -95,7 +96,7 @@ def _update_crush_config(
         # Add new spellbook MCP server
         config["mcp"]["spellbook"] = {
             "type": "stdio",
-            "command": "python3",
+            "command": sys.executable,
             "args": [str(server_path)],
         }
         actions.append("registered MCP server")

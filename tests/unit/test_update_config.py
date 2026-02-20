@@ -1,12 +1,16 @@
 """Tests for thread-safe config access and update notification integration."""
 
-import fcntl
 import json
 import os
 import threading
 import pytest
 from pathlib import Path
 from unittest.mock import patch
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None  # Windows
 
 
 class TestConfigFileLocking:

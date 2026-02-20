@@ -47,14 +47,14 @@ class TestClassifyVersionBump:
 
 
 class TestInstallLock:
-    """Tests for install lock file management."""
+    """Tests for CrossPlatformLock used for install lock management."""
 
     def test_acquire_and_release(self, tmp_path):
-        from spellbook_mcp.update_tools import acquire_install_lock, release_install_lock
+        from installer.compat import CrossPlatformLock
 
         lock_path = tmp_path / "install.lock"
-        fd = acquire_install_lock(lock_path)
-        assert fd is not None
+        lock = CrossPlatformLock(lock_path)
+        assert lock.acquire() is True
 
         # Lock file should contain our PID
         content = lock_path.read_text()
@@ -62,25 +62,25 @@ class TestInstallLock:
         assert lock_info["pid"] == os.getpid()
         assert "timestamp" in lock_info
 
-        release_install_lock(fd, lock_path)
+        lock.release()
 
     def test_acquire_fails_when_held(self, tmp_path):
-        """Second acquire returns None when lock is held by live process."""
-        from spellbook_mcp.update_tools import acquire_install_lock, release_install_lock
+        """Second acquire returns False when lock is held by live process."""
+        from installer.compat import CrossPlatformLock
 
         lock_path = tmp_path / "install.lock"
-        fd1 = acquire_install_lock(lock_path)
-        assert fd1 is not None
+        lock1 = CrossPlatformLock(lock_path)
+        assert lock1.acquire() is True
 
         # Second acquire should fail (non-blocking)
-        fd2 = acquire_install_lock(lock_path)
-        assert fd2 is None
+        lock2 = CrossPlatformLock(lock_path)
+        assert lock2.acquire() is False
 
-        release_install_lock(fd1, lock_path)
+        lock1.release()
 
     def test_stale_lock_broken_by_dead_pid(self, tmp_path):
         """Lock with dead PID is treated as stale and broken."""
-        from spellbook_mcp.update_tools import acquire_install_lock, release_install_lock
+        from installer.compat import CrossPlatformLock
 
         lock_path = tmp_path / "install.lock"
 
@@ -91,19 +91,17 @@ class TestInstallLock:
             "timestamp": time.time(),
         }))
 
-        # Create the flock so the file is actually locked... but we can't
-        # easily simulate a dead process holding a flock. Instead, test that
-        # when the flock is NOT held but the file has a dead PID, we succeed.
-        fd = acquire_install_lock(lock_path)
-        assert fd is not None
-        release_install_lock(fd, lock_path)
+        # When the flock is NOT held but the file has a dead PID, we succeed.
+        lock = CrossPlatformLock(lock_path)
+        assert lock.acquire() is True
+        lock.release()
 
     def test_pid_exists_for_current_process(self):
-        from spellbook_mcp.update_tools import _pid_exists
+        from installer.compat import _pid_exists
         assert _pid_exists(os.getpid()) is True
 
     def test_pid_exists_for_dead_process(self):
-        from spellbook_mcp.update_tools import _pid_exists
+        from installer.compat import _pid_exists
         assert _pid_exists(999999999) is False
 
 

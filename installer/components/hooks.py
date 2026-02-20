@@ -70,6 +70,32 @@ _HOOK_PHASES = list(HOOK_DEFINITIONS.keys())
 _SPELLBOOK_HOOK_PREFIX = "$SPELLBOOK_DIR/hooks/"
 
 
+def _get_hook_path_for_platform(hook_path: str) -> str:
+    """Convert a .sh hook path to .py on Windows.
+
+    On Unix, returns the path unchanged. On Windows, replaces .sh with .py
+    so that the Python wrapper is used instead of the shell script.
+    """
+    import sys
+    if sys.platform == "win32":
+        return hook_path.replace(".sh", ".py")
+    return hook_path
+
+
+def _transform_hook_for_platform(hook: Union[str, Dict[str, Any]]) -> Union[str, Dict[str, Any]]:
+    """Transform a hook entry's path for the current platform.
+
+    Handles both plain string hooks and object-format hooks.
+    """
+    if isinstance(hook, str):
+        return _get_hook_path_for_platform(hook)
+    # Dict-format hook: transform the 'command' key
+    transformed = dict(hook)
+    if "command" in transformed:
+        transformed["command"] = _get_hook_path_for_platform(transformed["command"])
+    return transformed
+
+
 @dataclass
 class HookResult:
     """Result of a hook install/uninstall operation."""
@@ -95,8 +121,10 @@ def _is_spellbook_hook(hook: Union[str, Dict[str, Any]]) -> bool:
 
     Works with both string hooks ("$SPELLBOOK_DIR/hooks/foo.sh") and
     object hooks ({"type": "command", "command": "$SPELLBOOK_DIR/hooks/foo.sh"}).
+    Also detects .py wrapper hooks on Windows.
     """
-    return _get_hook_path(hook).startswith(_SPELLBOOK_HOOK_PREFIX)
+    path = _get_hook_path(hook)
+    return path.startswith(_SPELLBOOK_HOOK_PREFIX)
 
 
 def _load_settings(settings_path: Path) -> Optional[Dict]:
@@ -123,7 +151,8 @@ def _merge_hooks_for_phase(
     """
     for hook_def in hook_defs:
         matcher = hook_def["matcher"]
-        spellbook_hooks = hook_def["hooks"]
+        # Transform hook paths for the current platform (.sh -> .py on Windows)
+        spellbook_hooks = [_transform_hook_for_platform(h) for h in hook_def["hooks"]]
 
         # Find existing entry with this matcher
         existing_entry = None

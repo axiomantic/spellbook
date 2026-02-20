@@ -277,7 +277,7 @@ class TestRunCommand:
     def test_run_command_failure(self):
         """Failed command raises CalledProcessError."""
         with pytest.raises(subprocess.CalledProcessError):
-            run_command("exit 1")
+            run_command("false")
 
     def test_run_command_timeout(self):
         """run_command propagates TimeoutExpired from subprocess."""
