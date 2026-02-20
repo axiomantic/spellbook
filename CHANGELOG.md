@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.11] - 2026-02-19
+
+### Added
+- **generating-diagrams skill** - New skill for creating Mermaid and Graphviz DOT workflow diagrams with source-traced nodes
+- **Diagram freshness system** - SHA256 hash-based validation for keeping diagrams in sync with source files
+  - `check_diagram_freshness.py`: pre-commit hook validates diagram hashes against source content
+  - `generate_diagrams.py`: manual generation script using Claude headless invocation
+  - Tiered coverage: mandatory for multi-phase skills/commands, optional for simple ones
+  - 139 Mermaid workflow diagrams generated (52 skills, 80 commands, 7 agents)
+  - Diagrams embedded in doc pages via `generate_docs.py` updates
+- **Auto-update system** - Two-phase update architecture for spellbook installations
+  - Detection phase: read-only git fetch inside MCP server
+  - Application phase: subprocess running installer with git-based rollback
+  - Transport-aware scheduling: stdio checks on startup only, HTTP daemons check on startup + configurable interval
+  - Major version consent gate, lock file concurrency protection, session greeting notifications
+  - New MCP tools: `spellbook_update_check`, `spellbook_update_apply`, `spellbook_update_config`
+
+### Removed
+- **Skill registry from CLAUDE.spellbook.md** - Platforms discover skills directly via native mechanisms, making the embedded registry redundant. Simplified `generate_context.py` and `update_context_files.py`.
+
 ## [0.9.10] - 2026-02-19
 
 ### Changed
