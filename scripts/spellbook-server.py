@@ -300,7 +300,7 @@ def install_launchd() -> tuple[bool, str]:
 
     # Write plist
     plist_content = generate_launchd_plist()
-    plist_path.write_text(plist_content)
+    plist_path.write_text(plist_content, encoding="utf-8")
 
     # Load service
     result = subprocess.run(
@@ -427,7 +427,7 @@ def install_systemd() -> tuple[bool, str]:
 
     # Write service file
     service_content = generate_systemd_service()
-    service_path.write_text(service_content)
+    service_path.write_text(service_content, encoding="utf-8")
 
     # Reload systemd
     result = subprocess.run(
@@ -517,7 +517,7 @@ def read_pid() -> int | None:
     if not pid_file.exists():
         return None
     try:
-        pid = int(pid_file.read_text().strip())
+        pid = int(pid_file.read_text(encoding="utf-8").strip())
         if _pid_exists(pid):
             return pid
         pid_file.unlink(missing_ok=True)
@@ -529,7 +529,7 @@ def read_pid() -> int | None:
 
 def write_pid(pid: int) -> None:
     """Write PID to pid file."""
-    get_pid_file().write_text(str(pid))
+    get_pid_file().write_text(str(pid), encoding="utf-8")
 
 
 def check_server_health(timeout: float = 5.0) -> bool:

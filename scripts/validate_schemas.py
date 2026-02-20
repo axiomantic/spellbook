@@ -147,7 +147,7 @@ def check_truncation_limits(content: str, errors: list[str]) -> None:
 
 def validate_skill(path: Path) -> ValidationResult:
     """Validate a skill against the skill schema."""
-    content = path.read_text()
+    content = path.read_text(encoding="utf-8")
     errors = []
     warnings = []
 
@@ -224,7 +224,7 @@ def validate_skill(path: Path) -> ValidationResult:
 
 def validate_command(path: Path) -> ValidationResult:
     """Validate a command against the command schema."""
-    content = path.read_text()
+    content = path.read_text(encoding="utf-8")
     errors = []
     warnings = []
 
@@ -292,7 +292,7 @@ def validate_command(path: Path) -> ValidationResult:
 
 def validate_agent(path: Path) -> ValidationResult:
     """Validate an agent against the agent schema."""
-    content = path.read_text()
+    content = path.read_text(encoding="utf-8")
     errors = []
     warnings = []
 

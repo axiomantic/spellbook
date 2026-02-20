@@ -604,7 +604,7 @@ class ServiceManager:
         pid_file = config_dir / f"{self.SERVICE_NAME}.pid"
         if pid_file.exists():
             try:
-                pid = int(pid_file.read_text().strip())
+                pid = int(pid_file.read_text(encoding="utf-8").strip())
                 if _pid_exists(pid):
                     self._kill_process(pid)
                     pid_file.unlink(missing_ok=True)

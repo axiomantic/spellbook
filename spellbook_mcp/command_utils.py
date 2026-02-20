@@ -95,7 +95,7 @@ def parse_packet_file(packet_file: Path) -> dict:
     import yaml
     import re
 
-    content = packet_file.read_text()
+    content = packet_file.read_text(encoding="utf-8")
 
     if content.startswith("---"):
         parts = content.split("---", 2)
