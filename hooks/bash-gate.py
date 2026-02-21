@@ -36,10 +36,12 @@ def main() -> None:
 
     if not check_module.exists():
         block("Security check failed: check module not found")
+        return
 
     stdin_data = sys.stdin.read()
     if not stdin_data:
         block("Security check failed: no input received")
+        return
 
     try:
         result = subprocess.run(
@@ -65,6 +67,7 @@ def main() -> None:
         sys.exit(2)
     else:
         block("Security check failed: internal error")
+        return
 
 
 if __name__ == "__main__":

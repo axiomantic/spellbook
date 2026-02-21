@@ -25,8 +25,6 @@ if ([int]$major -lt 3 -or ([int]$major -eq 3 -and [int]$minor -lt 10)) {
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Write-Host "> Installing uv (Python package manager)..." -ForegroundColor Blue
     irm https://astral.sh/uv/install.ps1 | iex
-    # Refresh PATH
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "User") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "Machine")
 }
 
 # Check for git

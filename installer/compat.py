@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import platform
+import re
 import shutil
 import signal
 import subprocess
@@ -21,6 +22,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Optional
+from xml.sax.saxutils import escape as xml_escape
 
 logger = logging.getLogger(__name__)
 
@@ -598,7 +600,7 @@ class ServiceManager:
         config_dir = Path(
             os.environ.get(
                 "SPELLBOOK_CONFIG_DIR",
-                str(Path.home() / ".local" / "spellbook"),
+                str(get_config_dir()),
             )
         )
         pid_file = config_dir / f"{self.SERVICE_NAME}.pid"
@@ -780,8 +782,9 @@ class ServiceManager:
         return False, f"Failed: {result.stderr}"
 
     def _generate_task_xml(self) -> str:
-        watchdog_path = str(self.spellbook_dir / "scripts" / "spellbook-watchdog.py")
-        working_dir = str(self.spellbook_dir)
+        watchdog_path = xml_escape(str(self.spellbook_dir / "scripts" / "spellbook-watchdog.py"))
+        working_dir = xml_escape(str(self.spellbook_dir))
+        python_exe = xml_escape(sys.executable)
         return f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Triggers>
@@ -789,7 +792,7 @@ class ServiceManager:
   </Triggers>
   <Actions>
     <Exec>
-      <Command>{sys.executable}</Command>
+      <Command>{python_exe}</Command>
       <Arguments>{watchdog_path}</Arguments>
       <WorkingDirectory>{working_dir}</WorkingDirectory>
     </Exec>
@@ -828,6 +831,8 @@ class ServiceManager:
 
     def _find_process_windows(self, pattern: str) -> list[int]:
         """Find PIDs matching a pattern on Windows using PowerShell."""
+        if not re.match(r'^[\w.\-]+$', pattern):
+            raise ValueError(f"Invalid process pattern: {pattern}")
         if sys.platform != "win32":
             return []
         try:
