@@ -74,7 +74,8 @@ class TestArtifactBasePath:
         path = artifact_base_path("/project", "feature")
         # Should not start with ~ after expansion
         assert not path.startswith("~")
-        assert path.startswith("/")
+        # On Unix paths start with /, on Windows with a drive letter (e.g. C:\)
+        assert os.path.isabs(path)
 
 
 class TestArtifactPath:
