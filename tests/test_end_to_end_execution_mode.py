@@ -137,7 +137,15 @@ class TestWorkPacketE2E:
                         "timestamp": "2026-01-05T12:00:00Z",
                         "next_task": None
                     }
-                    atomic_write_json(str(checkpoint_path), data, timeout=10)
+                    # Retry on transient errors from file-based lock contention
+                    for attempt in range(3):
+                        try:
+                            atomic_write_json(str(checkpoint_path), data, timeout=10)
+                            break
+                        except (FileNotFoundError, PermissionError, OSError):
+                            if attempt == 2:
+                                raise
+                            time.sleep(0.05)
                     time.sleep(0.01)
                 results.append(thread_id)
             except Exception as e:
