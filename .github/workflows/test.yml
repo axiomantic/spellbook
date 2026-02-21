@@ -62,11 +62,11 @@ jobs:
 
     - name: Run Python tests
       if: runner.os != 'Windows'
-      run: uv run pytest tests/ -v --tb=short -x
+      run: uv run pytest tests/ -v --tb=short
 
     - name: Run Python tests (Windows)
       if: runner.os == 'Windows'
-      run: uv run pytest tests/ -v --tb=short -x --ignore=tests/docker -m "not integration"
+      run: uv run pytest tests/ -v --tb=short --ignore=tests/docker -m "not integration"
 
     - name: Verify installer
       run: uv run python install.py --dry-run
