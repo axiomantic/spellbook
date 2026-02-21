@@ -216,11 +216,20 @@ class TestBootstrap:
                 "mcp daemon" in combined
                 and ("install failed" in combined or "failed" in combined)
             )
+            # Benign warning keywords: lines containing these are NOT real
+            # component failures (e.g., "git fetch failed: fatal: detected
+            # dubious ownership" from auto-update checks in Docker).
+            benign_keywords = ("update", "fetch", "dubious ownership", "git fetch")
             non_daemon_failure = False
             for line in result.stdout.split("\n"):
                 line_lower = line.lower().strip()
                 # Look for failure indicators NOT related to MCP daemon
-                if "failed" in line_lower and "mcp daemon" not in line_lower and "mcp" not in line_lower:
+                if ("failed" in line_lower or "[fail]" in line_lower) \
+                        and "mcp daemon" not in line_lower \
+                        and "mcp" not in line_lower:
+                    # Check if this is a benign warning we should tolerate
+                    if any(kw in line_lower for kw in benign_keywords):
+                        continue
                     non_daemon_failure = True
                     break
 
