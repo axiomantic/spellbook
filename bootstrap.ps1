@@ -41,6 +41,10 @@ $installDir = "$env:LOCALAPPDATA\spellbook"
 if (-not (Test-Path $installDir)) {
     Write-Host "> Cloning spellbook repository..." -ForegroundColor Blue
     git clone https://github.com/axiomantic/spellbook.git $installDir
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[error] Failed to clone spellbook repository." -ForegroundColor Red
+        exit 1
+    }
 } elseif (-not (Test-Path "$installDir\.git")) {
     Write-Host "[error] $installDir exists but is not a git repository." -ForegroundColor Red
     Write-Host "Remove it manually and re-run:" -ForegroundColor Yellow
