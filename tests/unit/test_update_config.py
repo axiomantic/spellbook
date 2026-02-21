@@ -17,7 +17,7 @@ class TestConfigFileLocking:
     """Tests for file-level locking in config_get/config_set."""
 
     def test_config_set_creates_lock_file(self, tmp_path, monkeypatch):
-        """config_set should create a config.lock file during writes."""
+        """config_set should use CrossPlatformLock during writes."""
         from spellbook_mcp.config_tools import config_set, get_config_path
 
         config_path = tmp_path / "spellbook.json"
@@ -25,7 +25,21 @@ class TestConfigFileLocking:
         monkeypatch.setattr("spellbook_mcp.config_tools.get_config_path", lambda: config_path)
         monkeypatch.setattr("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", lock_path)
 
-        config_set("test_key", "test_value")
+        # Patch CrossPlatformLock to verify it's used as a context manager
+        from installer.compat import CrossPlatformLock
+
+        original_enter = CrossPlatformLock.__enter__
+        lock_entered = {"value": False}
+
+        def tracking_enter(self):
+            lock_entered["value"] = True
+            return original_enter(self)
+
+        with patch.object(CrossPlatformLock, "__enter__", tracking_enter):
+            config_set("test_key", "test_value")
+
+        # Verify lock was actually entered as a context manager
+        assert lock_entered["value"], "CrossPlatformLock was not used as context manager"
 
         # Config file should exist with the value
         config = json.loads(config_path.read_text())

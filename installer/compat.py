@@ -94,8 +94,9 @@ def _create_junction(source: Path, target: Path) -> bool:
         target: WHERE the junction is created (the link location).
 
     Note: Parameter order matches create_link() convention.
-        _winapi.CreateJunction(junction_path, target_path) creates a
-        junction AT junction_path POINTING TO target_path.
+        _winapi.CreateJunction(src_path, dst_path) where src_path is the
+        target directory the junction points to, and dst_path is where the
+        junction is created.
 
     Tries _winapi.CreateJunction first, falls back to mklink /J.
     Always returns False on non-Windows platforms.
@@ -105,7 +106,7 @@ def _create_junction(source: Path, target: Path) -> bool:
     try:
         import _winapi
 
-        _winapi.CreateJunction(str(target), str(source))
+        _winapi.CreateJunction(str(source), str(target))
         return True
     except (OSError, AttributeError):
         try:
@@ -285,7 +286,7 @@ def create_link(
         except OSError as e:
             if get_platform() != Platform.WINDOWS:
                 raise  # On Unix, symlink failure is fatal
-            if e.errno not in (errno.EPERM, errno.EACCES, 1314):
+            if e.errno not in (errno.EPERM, errno.EACCES) and getattr(e, 'winerror', None) != 1314:
                 raise
 
         # Windows fallback: junction (directories only)
@@ -392,8 +393,9 @@ class CrossPlatformLock:
     def acquire(self) -> bool:
         """Acquire the lock.
 
-        In blocking mode, waits until the lock becomes available (up to
-        self.timeout seconds). In non-blocking mode, returns immediately.
+        In blocking mode, waits until the lock becomes available (indefinitely
+        on Unix via fcntl.flock, up to ~10 seconds on Windows via msvcrt.LK_LOCK).
+        In non-blocking mode, returns immediately.
 
         Returns:
             True on success, False if lock is held by another live process.
@@ -412,7 +414,7 @@ class CrossPlatformLock:
                         "Windows: shared lock degrades to exclusive (msvcrt limitation)"
                     )
                 if self.blocking:
-                    # msvcrt.LK_LOCK blocks until available
+                    # msvcrt.LK_LOCK retries up to 10 times (~10s), then raises OSError
                     msvcrt.locking(self._fd, msvcrt.LK_LOCK, 1)
                 else:
                     msvcrt.locking(self._fd, msvcrt.LK_NBLCK, 1)

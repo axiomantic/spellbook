@@ -617,24 +617,30 @@ class TestInstallerUpdateOnlyFlag:
         args = parser.parse_args(["--update-only"])
         assert args.update_only is True
 
-    def test_update_only_skips_bootstrap(self):
-        """Verify that argparse correctly sets update_only=True when --update-only flag is provided."""
+    def test_update_only_calls_find_spellbook_dir_not_bootstrap(self):
+        """--update-only should call find_spellbook_dir instead of bootstrap."""
         import sys
         sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
         import importlib
         import install
         importlib.reload(install)
 
-        # Construct an argparse namespace that simulates --update-only
-        import argparse
-        args = argparse.Namespace(
-            update_only=True, yes=True, no_interactive=True,
-            force=False, dry_run=True,
-        )
-        # Verify that with update_only=True, bootstrap is not called
-        # by checking the code path (update_only triggers find_spellbook_dir instead)
-        assert hasattr(args, "update_only")
-        assert args.update_only is True
+        fake_dir = Path("/tmp/fake-spellbook")
+
+        with patch.object(install, "find_spellbook_dir", return_value=fake_dir) as mock_find, \
+             patch.object(install, "bootstrap") as mock_bootstrap, \
+             patch.object(install, "run_installation", return_value=0) as mock_run, \
+             patch.object(install, "print_header"), \
+             patch.object(install, "print_success"), \
+             patch.object(install, "is_interactive", return_value=False), \
+             patch("sys.argv", ["install.py", "--update-only", "--yes"]):
+            result = install.main()
+
+        mock_find.assert_called_once()
+        mock_bootstrap.assert_not_called()
+        mock_run.assert_called_once()
+        # Verify run_installation was called with the found dir
+        assert mock_run.call_args[0][0] == fake_dir
 
     def test_update_only_with_force(self):
         """--update-only --force means skip bootstrap but force all install steps."""

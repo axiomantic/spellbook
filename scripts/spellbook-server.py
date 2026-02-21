@@ -29,6 +29,7 @@ Configuration:
 
 macOS: Uses launchd (~/Library/LaunchAgents/com.spellbook.mcp.plist)
 Linux: Uses systemd user service (~/.config/systemd/user/spellbook-mcp.service)
+Windows: Uses Task Scheduler (via schtasks + watchdog process)
 """
 
 import argparse

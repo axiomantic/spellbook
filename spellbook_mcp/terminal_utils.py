@@ -11,10 +11,7 @@ def detect_terminal() -> str:
     Detect the current terminal application.
 
     Returns:
-        Terminal name (e.g., 'iTerm2', 'gnome-terminal', 'xterm')
-
-    Raises:
-        NotImplementedError: On Windows (not supported in MVP)
+        Terminal name (e.g., 'iTerm2', 'gnome-terminal', 'windows-terminal')
     """
     if sys.platform == 'darwin':
         return detect_macos_terminal()
@@ -148,9 +145,6 @@ def spawn_terminal_window(
 
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
-
-    Raises:
-        NotImplementedError: On Windows (not supported in MVP)
     """
     if working_directory is None:
         working_directory = os.getcwd()

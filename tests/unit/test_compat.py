@@ -489,7 +489,7 @@ class TestCrossPlatformLock:
         assert lock._fd is None
 
     def test_context_manager_raises_on_held_lock(self, tmp_path):
-        """Context manager raises LockHeldError when lock is held."""
+        """Context manager raises LockHeldError when lock cannot be acquired."""
         from installer.compat import CrossPlatformLock, LockHeldError
 
         lock_path = tmp_path / "test.lock"
@@ -497,12 +497,12 @@ class TestCrossPlatformLock:
         assert lock1.acquire()
 
         try:
-            # Second lock in same process - on Unix with flock, same process
-            # can re-acquire, so we test the mechanism differently
+            # Mock acquire to return False, simulating a held lock
             lock2 = CrossPlatformLock(lock_path)
-            # At minimum, verify the API contract exists
-            assert hasattr(lock2, "acquire")
-            assert hasattr(lock2, "release")
+            with patch.object(lock2, "acquire", return_value=False):
+                with pytest.raises(LockHeldError):
+                    with lock2:
+                        pass  # Should not reach here
         finally:
             lock1.release()
 
@@ -557,11 +557,57 @@ class TestCrossPlatformLock:
         """On Windows, shared=True should log a debug message about degradation."""
         from installer.compat import CrossPlatformLock
 
-        # This test validates the parameter is stored; actual Windows behavior
-        # would be tested on Windows CI
-        lock = CrossPlatformLock(tmp_path / "test.lock", shared=True)
-        assert lock.shared is True
-        lock.acquire()
+        mock_msvcrt = MagicMock()
+        mock_msvcrt.LK_NBLCK = 2
+        mock_msvcrt.LK_LOCK = 1
+        mock_msvcrt.LK_UNLCK = 0
+
+        with patch("installer.compat.sys") as mock_sys, \
+             patch.dict("sys.modules", {"msvcrt": mock_msvcrt}):
+            mock_sys.platform = "win32"
+            mock_sys.executable = sys.executable
+
+            lock = CrossPlatformLock(tmp_path / "test.lock", shared=True)
+            assert lock.shared is True
+
+            with caplog.at_level(logging.DEBUG, logger="installer.compat"):
+                lock.acquire()
+
+            lock.release()
+
+        assert any("shared lock degrades" in r.message.lower() for r in caplog.records)
+
+    def test_blocking_true_acquires_available_lock(self, tmp_path):
+        """blocking=True should acquire an available lock successfully."""
+        from installer.compat import CrossPlatformLock
+
+        lock_path = tmp_path / "test.lock"
+        lock = CrossPlatformLock(lock_path, blocking=True)
+        assert lock.acquire() is True
+        assert lock._fd is not None
+        lock.release()
+
+    def test_blocking_true_uses_blocking_os_call(self, tmp_path):
+        """blocking=True should use the blocking variant of the OS lock call."""
+        import fcntl as real_fcntl
+        from installer.compat import CrossPlatformLock
+
+        lock_path = tmp_path / "test.lock"
+        lock = CrossPlatformLock(lock_path, blocking=True)
+
+        flock_calls = []
+        original_flock = real_fcntl.flock
+
+        def tracking_flock(fd, flag):
+            flock_calls.append(flag)
+            return original_flock(fd, flag)
+
+        with patch.object(real_fcntl, "flock", side_effect=tracking_flock):
+            lock.acquire()
+
+        # Verify flock was called WITHOUT LOCK_NB (blocking mode)
+        assert len(flock_calls) >= 1
+        assert flock_calls[0] == real_fcntl.LOCK_EX  # No LOCK_NB bit
         lock.release()
 
 
@@ -779,9 +825,10 @@ class TestCreateJunction:
     def test_returns_false_on_non_windows(self, tmp_path):
         from installer.compat import _create_junction
 
-        result = _create_junction(tmp_path / "src", tmp_path / "tgt")
-        if sys.platform != "win32":
-            assert result is False
+        with patch("installer.compat.sys") as mock_sys:
+            mock_sys.platform = "linux"
+            result = _create_junction(tmp_path / "src", tmp_path / "tgt")
+        assert result is False
 
 
 # ---------------------------------------------------------------------------
