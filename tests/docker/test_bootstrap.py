@@ -10,7 +10,9 @@ Validates that bootstrap.sh:
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
+import sys
 import urllib.request
 from pathlib import Path
 from typing import Callable
@@ -18,6 +20,8 @@ from typing import Callable
 import pytest
 
 from tests.docker.conftest import InstallerResult
+
+_HAS_BASH = shutil.which("bash") is not None
 
 # Root of the real spellbook project (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -99,6 +103,8 @@ class TestBootstrap:
         )
 
         # Validate bash syntax via bash -n (parse without executing)
+        if not _HAS_BASH:
+            pytest.skip("bash not available on this platform")
         syntax_result = subprocess.run(
             ["bash", "-n"],
             input=content,
@@ -111,6 +117,7 @@ class TestBootstrap:
             f"stderr: {syntax_result.stderr}"
         )
 
+    @pytest.mark.skipif(not _HAS_BASH, reason="bash not available on this platform")
     def test_bootstrap_offline_failure(self, tmp_path: Path) -> None:
         """Verify bootstrap.sh produces a curl error when the download URL is unreachable.
 

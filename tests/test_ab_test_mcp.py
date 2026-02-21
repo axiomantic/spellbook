@@ -1,16 +1,19 @@
 """Tests for A/B test MCP tools."""
 
-import asyncio
-
 import pytest
 
 
 def _get_tool_names():
-    """Get tool names from the FastMCP server using the public async API."""
+    """Get tool names from the FastMCP server's internal tool registry."""
     from spellbook_mcp.server import mcp
 
-    tools = asyncio.run(mcp.get_tools())
-    return list(tools.keys())
+    # FastMCP stores registered tools in _tool_manager._tools dict.
+    # This mirrors the approach used in server.py's own _get_tool_names().
+    try:
+        return list(mcp._tool_manager._tools.keys())
+    except AttributeError:
+        # Fallback: empty list if internal structure changes
+        return []
 
 
 class TestABTestMCPTools:
