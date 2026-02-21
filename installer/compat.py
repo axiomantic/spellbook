@@ -426,7 +426,7 @@ class CrossPlatformLock:
                     flag |= fcntl.LOCK_NB
                 fcntl.flock(self._fd, flag)
         except (BlockingIOError, OSError):
-            # Lock held - check if stale (only in non-blocking mode)
+            # Lock held - check if stale
             try:
                 os.lseek(self._fd, 0, os.SEEK_SET)
                 content = os.read(self._fd, 1024).decode()
@@ -780,6 +780,8 @@ class ServiceManager:
         return False, f"Failed: {result.stderr}"
 
     def _generate_task_xml(self) -> str:
+        watchdog_path = str(self.spellbook_dir / "scripts" / "spellbook-watchdog.py")
+        working_dir = str(self.spellbook_dir)
         return f"""<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Triggers>
@@ -788,8 +790,8 @@ class ServiceManager:
   <Actions>
     <Exec>
       <Command>{sys.executable}</Command>
-      <Arguments>{self.spellbook_dir}/scripts/spellbook-watchdog.py</Arguments>
-      <WorkingDirectory>{self.spellbook_dir}</WorkingDirectory>
+      <Arguments>{watchdog_path}</Arguments>
+      <WorkingDirectory>{working_dir}</WorkingDirectory>
     </Exec>
   </Actions>
   <Settings>
@@ -884,10 +886,3 @@ def get_config_dir(app_name: str = "spellbook") -> Path:
     return Path.home() / ".config" / app_name
 
 
-def get_path_separator() -> str:
-    """Get the PATH environment variable separator.
-
-    Unix: ':'
-    Windows: ';'
-    """
-    return ";" if get_platform() == Platform.WINDOWS else ":"

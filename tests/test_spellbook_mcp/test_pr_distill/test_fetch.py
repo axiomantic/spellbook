@@ -1,6 +1,7 @@
 """Tests for pr_distill GitHub PR fetching."""
 
 import subprocess
+import sys
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -277,7 +278,7 @@ class TestRunCommand:
     def test_run_command_failure(self):
         """Failed command raises CalledProcessError."""
         with pytest.raises(subprocess.CalledProcessError):
-            run_command("false")
+            run_command(f"{sys.executable} -c \"import sys; sys.exit(1)\"")
 
     def test_run_command_timeout(self):
         """run_command propagates TimeoutExpired from subprocess."""

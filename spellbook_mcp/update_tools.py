@@ -9,8 +9,9 @@ This module provides:
 - Update status aggregation from config
 
 Architecture: Detection is read-only (git fetch + git show). Application
-runs as a subprocess to avoid self-modifying code. spellbook_mcp/ never
-imports from installer/; the only interaction is shelling out to install.py.
+runs as a subprocess to avoid self-modifying code. spellbook_mcp/ imports
+only the OS abstraction layer (installer.compat) from installer/; higher-level
+installer logic is accessed by shelling out to install.py.
 """
 
 import json

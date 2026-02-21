@@ -5,7 +5,7 @@ Symlink management for spellbook installation.
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from installer.compat import (
     create_link,
@@ -25,14 +25,6 @@ class SymlinkResult:
     success: bool
     action: str  # "created", "updated", "removed", "skipped", "failed"
     message: str
-
-
-def is_dir_empty(path: Path) -> bool:
-    """Check if a directory is empty."""
-    try:
-        return not any(path.iterdir())
-    except (OSError, PermissionError):
-        return False
 
 
 def create_symlink(
@@ -185,40 +177,6 @@ def _update_link_manifest(source: Path, target: Path, link_mode: str) -> None:
 
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-
-
-def _refresh_copy_mode_links() -> List[SymlinkResult]:
-    """Re-copy targets that were installed via copy mode.
-
-    Reads the link manifest and re-creates any links that used copy mode,
-    ensuring the target has up-to-date content from the source.
-
-    Returns:
-        List of SymlinkResult for each refreshed copy.
-    """
-    manifest_path = _get_link_manifest_path()
-    if not manifest_path.exists():
-        return []
-
-    try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return []
-
-    results = []
-    for entry in manifest.get("links", []):
-        source = Path(entry["source"])
-        target = Path(entry["target"])
-        if source.exists():
-            link_result = create_link(source, target)
-            results.append(SymlinkResult(
-                source=link_result.source,
-                target=link_result.target,
-                success=link_result.success,
-                action=link_result.action,
-                message=link_result.message,
-            ))
-    return results
 
 
 def create_skill_symlinks(

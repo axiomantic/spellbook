@@ -759,34 +759,6 @@ class TestGetConfigDir:
         assert "appdata" in str(result).lower()
 
 
-class TestGetPathSeparator:
-    """get_path_separator() returns OS-appropriate PATH separator."""
-
-    def test_returns_string(self):
-        from installer.compat import get_path_separator
-
-        assert isinstance(get_path_separator(), str)
-
-    def test_is_colon_or_semicolon(self):
-        from installer.compat import get_path_separator
-
-        assert get_path_separator() in (":", ";")
-
-    @patch("installer.compat.get_platform")
-    def test_unix_returns_colon(self, mock_plat):
-        from installer.compat import Platform, get_path_separator
-
-        mock_plat.return_value = Platform.LINUX
-        assert get_path_separator() == ":"
-
-    @patch("installer.compat.get_platform")
-    def test_windows_returns_semicolon(self, mock_plat):
-        from installer.compat import Platform, get_path_separator
-
-        mock_plat.return_value = Platform.WINDOWS
-        assert get_path_separator() == ";"
-
-
 # ---------------------------------------------------------------------------
 # Task 0.7 supplement: _pid_exists()
 # ---------------------------------------------------------------------------

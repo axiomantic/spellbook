@@ -17,9 +17,6 @@ from pathlib import Path
 
 def get_server_cmd() -> list[str]:
     """Build the command to start the MCP server."""
-    spellbook_dir = os.environ.get(
-        "SPELLBOOK_DIR", str(Path(__file__).parent.parent)
-    )
     uv = shutil.which("uv")
     if uv:
         return [uv, "run", "python", "-m", "spellbook_mcp.server"]
