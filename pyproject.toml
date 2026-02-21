@@ -5,7 +5,7 @@ description = "Skills, commands, and MCP tools for AI coding assistants"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastmcp>=2.0.0",
+    "fastmcp>=2.0.0,<3",
     "fastapi>=0.100.0",
 ]
 
