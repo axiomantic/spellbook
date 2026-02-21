@@ -36,11 +36,21 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Clone repo if not already present
+# Clone repo if not already present, or validate existing clone
 $installDir = "$env:LOCALAPPDATA\spellbook"
 if (-not (Test-Path $installDir)) {
     Write-Host "> Cloning spellbook repository..." -ForegroundColor Blue
     git clone https://github.com/axiomantic/spellbook.git $installDir
+} elseif (-not (Test-Path "$installDir\.git")) {
+    Write-Host "[error] $installDir exists but is not a git repository." -ForegroundColor Red
+    Write-Host "Remove it manually and re-run:" -ForegroundColor Yellow
+    Write-Host "  Remove-Item -Recurse -Force '$installDir'" -ForegroundColor Yellow
+    exit 1
+} else {
+    Write-Host "> Updating existing installation..." -ForegroundColor Blue
+    Push-Location $installDir
+    git pull --ff-only 2>$null
+    Pop-Location
 }
 
 # Run installer

@@ -8,6 +8,7 @@ errors on subsequent runs.
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 from typing import Callable
 
@@ -93,6 +94,10 @@ def collect_file_set(
     return result
 
 
+@pytest.mark.skipif(
+    bool(os.environ.get("CLAUDECODE")),
+    reason="MCP daemon is not available inside a nested Claude Code session",
+)
 @pytest.mark.usefixtures("isolated_home")
 class TestIdempotency:
     """Tests verifying that repeated installer runs produce stable results."""

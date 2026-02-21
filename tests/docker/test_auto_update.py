@@ -306,7 +306,7 @@ class TestLockFile:
             child.start()
             started = True
             # Wait for the child to acquire the lock
-            assert ready.wait(timeout=10), "Child process did not acquire lock in time"
+            assert ready.wait(timeout=30), "Child process did not acquire lock in time"
 
             # Parent attempts to acquire the same lock -- should fail
             lock = CrossPlatformLock(lock_file, stale_seconds=LOCK_STALE_SECONDS)

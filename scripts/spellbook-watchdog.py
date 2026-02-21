@@ -36,12 +36,19 @@ def main() -> None:
 
     while failures < max_failures:
         print(f"[watchdog] Starting server (attempt {failures + 1})")
+        start_time = time.monotonic()
         proc = subprocess.Popen(cmd, cwd=spellbook_dir)
         proc.wait()
 
         if proc.returncode == 0:
             print("[watchdog] Server exited cleanly")
             break
+
+        # Reset backoff if server ran for a sustained period (>60s)
+        elapsed = time.monotonic() - start_time
+        if elapsed > 60:
+            failures = 0
+            backoff = 1
 
         failures += 1
         wait = min(backoff, 300)  # Cap at 5 minutes

@@ -9,6 +9,7 @@ Ported from lib/pr-distill/fetch.js.
 import json
 import re
 import subprocess
+import sys
 from typing import TypedDict
 
 from spellbook_mcp.pr_distill.errors import ErrorCode, PRDistillError
@@ -56,7 +57,7 @@ def run_command(cmd: str) -> str:
         subprocess.CalledProcessError: If command fails
     """
     import shlex
-    args = shlex.split(cmd)
+    args = shlex.split(cmd, posix=(sys.platform != "win32"))
     result = subprocess.run(
         args,
         capture_output=True,

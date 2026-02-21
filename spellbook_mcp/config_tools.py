@@ -223,7 +223,7 @@ def config_set(key: str, value: Any) -> dict:
             return {"status": "ok", "config": config}
     except LockHeldError:
         logger.warning("Could not acquire config write lock. Falling back to unlocked write.")
-        # Fall through to unlocked write
+        # Fall through to unlocked atomic write
         config = {}
         if config_path.exists():
             try:
@@ -232,9 +232,23 @@ def config_set(key: str, value: Any) -> dict:
                 config = {}
         config[key] = value
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(
-            json.dumps(config, indent=2) + "\n", encoding="utf-8"
+        fd_tmp, tmp_path = tempfile.mkstemp(
+            dir=str(config_path.parent), suffix=".tmp"
         )
+        fd_tmp_closed = False
+        try:
+            os.write(fd_tmp, (json.dumps(config, indent=2) + "\n").encode("utf-8"))
+            os.close(fd_tmp)
+            fd_tmp_closed = True
+            os.replace(tmp_path, str(config_path))
+        except BaseException:
+            if not fd_tmp_closed:
+                os.close(fd_tmp)
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
         return {"status": "ok", "config": config}
 
 

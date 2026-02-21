@@ -12,6 +12,8 @@ from typing import List, Optional, Tuple
 from installer.compat import Platform, get_platform, get_python_executable
 
 # Daemon configuration
+# TODO: Consolidate service management with installer.compat.ServiceManager
+# to eliminate duplicated launchd/systemd/schtasks logic.
 DEFAULT_PORT = 8765
 DEFAULT_HOST = "127.0.0.1"
 SERVICE_NAME = "spellbook-mcp"

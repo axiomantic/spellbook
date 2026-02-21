@@ -138,7 +138,11 @@ def prompt_yn(prompt: str, default: bool = True, auto_yes: bool = False) -> bool
 # =============================================================================
 
 def detect_os() -> str:
-    """Detect operating system."""
+    """Detect operating system.
+
+    Note: Intentionally duplicates installer.compat.get_platform() because
+    install.py must work before dependencies are available (pre-bootstrap).
+    """
     system = platform.system().lower()
     if system == "darwin":
         return "macos"
@@ -205,9 +209,14 @@ def _install_uv_windows() -> bool:
         if result.returncode != 0:
             print_error(f"Failed to install uv: {result.stderr}")
             return False
-        uv_path = Path.home() / ".local" / "bin"
-        if not uv_path.exists():
-            uv_path = Path.home() / ".cargo" / "bin"
+        uv_found = shutil.which("uv")
+        if uv_found:
+            uv_path = Path(uv_found).parent
+        else:
+            # Guess common install locations if shutil.which fails
+            uv_path = Path.home() / ".local" / "bin"
+            if not uv_path.exists():
+                uv_path = Path.home() / ".cargo" / "bin"
         os.environ["PATH"] = f"{uv_path}{os.pathsep}{os.environ.get('PATH', '')}"
         print_success("uv installed successfully")
         return True
