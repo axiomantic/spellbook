@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tiered coverage: mandatory for multi-phase skills/commands, optional for simple ones
   - 139 Mermaid workflow diagrams generated (52 skills, 80 commands, 7 agents)
   - Diagrams embedded in doc pages via `generate_docs.py` updates
+- **Windows support (beta)** - Cross-platform installation and runtime for Windows
+  - `bootstrap.ps1`: PowerShell bootstrap script for Windows installation
+  - `installer/compat.py`: Cross-platform abstraction layer for path handling, symlinks, and service management
+  - Symlink fallback chain: symlink (Developer Mode) -> junction -> copy
+  - `CrossPlatformLock` with `msvcrt` file locking support on Windows
+  - Service management via Windows Task Scheduler
+  - Windows CI runner for automated testing
 - **Auto-update system** - Two-phase update architecture for spellbook installations
   - Detection phase: read-only git fetch inside MCP server
   - Application phase: subprocess running installer with git-based rollback

@@ -61,7 +61,12 @@ jobs:
       run: uv sync --all-extras
 
     - name: Run Python tests
+      if: runner.os != 'Windows'
       run: uv run pytest tests/ -v --tb=short -x
 
+    - name: Run Python tests (Windows)
+      if: runner.os == 'Windows'
+      run: uv run pytest tests/ -v --tb=short -x --ignore=tests/docker -m "not integration"
+
     - name: Verify installer
-      run: uv run install.py --dry-run
+      run: uv run python install.py --dry-run
