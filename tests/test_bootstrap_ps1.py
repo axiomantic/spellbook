@@ -17,8 +17,8 @@ import pytest
 
 _HAS_PWSH = shutil.which("pwsh") is not None
 
-# Root of the real spellbook project (two levels up from this file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# Root of the real spellbook project (one level up from tests/)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 class TestBootstrapPs1:
