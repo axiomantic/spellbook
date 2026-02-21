@@ -564,34 +564,37 @@ class ServiceManager:
     def start(self) -> tuple[bool, str]:
         """Start the service."""
         plat = get_platform()
-        if plat == Platform.MACOS:
-            plist_path = self._launchd_plist_path()
-            result = subprocess.run(
-                ["launchctl", "load", str(plist_path)],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode == 0:
-                return True, "launchd service loaded"
-            return False, f"Failed to load: {result.stderr}"
-        elif plat == Platform.LINUX:
-            result = subprocess.run(
-                ["systemctl", "--user", "start", self.SERVICE_NAME],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode == 0:
-                return True, "systemd service started"
-            return False, f"Failed to start: {result.stderr}"
-        elif plat == Platform.WINDOWS:
-            result = subprocess.run(
-                ["schtasks", "/Run", "/TN", "SpellbookMCP"],
-                capture_output=True,
-                text=True,
-            )
-            if result.returncode == 0:
-                return True, "Task Scheduler task started"
-            return False, f"Failed to start: {result.stderr}"
+        try:
+            if plat == Platform.MACOS:
+                plist_path = self._launchd_plist_path()
+                result = subprocess.run(
+                    ["launchctl", "load", str(plist_path)],
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode == 0:
+                    return True, "launchd service loaded"
+                return False, f"Failed to load: {result.stderr}"
+            elif plat == Platform.LINUX:
+                result = subprocess.run(
+                    ["systemctl", "--user", "start", self.SERVICE_NAME],
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode == 0:
+                    return True, "systemd service started"
+                return False, f"Failed to start: {result.stderr}"
+            elif plat == Platform.WINDOWS:
+                result = subprocess.run(
+                    ["schtasks", "/Run", "/TN", "SpellbookMCP"],
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode == 0:
+                    return True, "Task Scheduler task started"
+                return False, f"Failed to start: {result.stderr}"
+        except FileNotFoundError as e:
+            return False, f"Service manager not available: {e}"
         return False, f"Unsupported platform: {plat.value}"
 
     def stop(self) -> tuple[bool, str]:
@@ -616,21 +619,24 @@ class ServiceManager:
 
         # Fallback: platform-specific
         plat = get_platform()
-        if plat == Platform.MACOS:
-            plist_path = self._launchd_plist_path()
-            if plist_path.exists():
+        try:
+            if plat == Platform.MACOS:
+                plist_path = self._launchd_plist_path()
+                if plist_path.exists():
+                    subprocess.run(
+                        ["launchctl", "unload", str(plist_path)],
+                        capture_output=True,
+                    )
+                return True, "launchd service unloaded"
+            elif plat == Platform.LINUX:
                 subprocess.run(
-                    ["launchctl", "unload", str(plist_path)],
+                    ["systemctl", "--user", "stop", self.SERVICE_NAME],
                     capture_output=True,
                 )
-            return True, "launchd service unloaded"
-        elif plat == Platform.LINUX:
-            subprocess.run(
-                ["systemctl", "--user", "stop", self.SERVICE_NAME],
-                capture_output=True,
-            )
-            return True, "systemd service stopped"
-        elif plat == Platform.WINDOWS:
+                return True, "systemd service stopped"
+        except FileNotFoundError:
+            return True, "Service manager not available, service assumed stopped"
+        if plat == Platform.WINDOWS:
             pids = self._find_process_windows("spellbook_mcp")
             for pid in pids:
                 self._kill_process(pid)
@@ -645,11 +651,14 @@ class ServiceManager:
         elif plat == Platform.LINUX:
             return self._systemd_service_path().exists()
         elif plat == Platform.WINDOWS:
-            result = subprocess.run(
-                ["schtasks", "/Query", "/TN", "SpellbookMCP"],
-                capture_output=True,
-            )
-            return result.returncode == 0
+            try:
+                result = subprocess.run(
+                    ["schtasks", "/Query", "/TN", "SpellbookMCP"],
+                    capture_output=True,
+                )
+                return result.returncode == 0
+            except FileNotFoundError:
+                return False
         return False
 
     def is_running(self) -> bool:
@@ -744,10 +753,13 @@ class ServiceManager:
     def _uninstall_macos(self) -> tuple[bool, str]:
         plist_path = self._launchd_plist_path()
         if plist_path.exists():
-            subprocess.run(
-                ["launchctl", "unload", str(plist_path)],
-                capture_output=True,
-            )
+            try:
+                subprocess.run(
+                    ["launchctl", "unload", str(plist_path)],
+                    capture_output=True,
+                )
+            except FileNotFoundError:
+                pass
             plist_path.unlink(missing_ok=True)
             return True, "Uninstalled launchd service"
         return True, "Service was not installed"
@@ -755,31 +767,40 @@ class ServiceManager:
     def _uninstall_linux(self) -> tuple[bool, str]:
         service_path = self._systemd_service_path()
         if service_path.exists():
-            subprocess.run(
-                ["systemctl", "--user", "stop", self.SERVICE_NAME],
-                capture_output=True,
-            )
-            subprocess.run(
-                ["systemctl", "--user", "disable", self.SERVICE_NAME],
-                capture_output=True,
-            )
+            try:
+                subprocess.run(
+                    ["systemctl", "--user", "stop", self.SERVICE_NAME],
+                    capture_output=True,
+                )
+                subprocess.run(
+                    ["systemctl", "--user", "disable", self.SERVICE_NAME],
+                    capture_output=True,
+                )
+            except FileNotFoundError:
+                pass
             service_path.unlink(missing_ok=True)
-            subprocess.run(
-                ["systemctl", "--user", "daemon-reload"],
-                capture_output=True,
-            )
+            try:
+                subprocess.run(
+                    ["systemctl", "--user", "daemon-reload"],
+                    capture_output=True,
+                )
+            except FileNotFoundError:
+                pass
             return True, "Uninstalled systemd service"
         return True, "Service was not installed"
 
     def _uninstall_windows(self) -> tuple[bool, str]:
-        result = subprocess.run(
-            ["schtasks", "/Delete", "/TN", "SpellbookMCP", "/F"],
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode == 0 or "does not exist" in result.stderr.lower():
-            return True, "Task Scheduler task removed"
-        return False, f"Failed: {result.stderr}"
+        try:
+            result = subprocess.run(
+                ["schtasks", "/Delete", "/TN", "SpellbookMCP", "/F"],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0 or "does not exist" in result.stderr.lower():
+                return True, "Task Scheduler task removed"
+            return False, f"Failed: {result.stderr}"
+        except FileNotFoundError:
+            return True, "Task Scheduler not available"
 
     def _generate_task_xml(self) -> str:
         watchdog_path = xml_escape(str(self.spellbook_dir / "scripts" / "spellbook-watchdog.py"))

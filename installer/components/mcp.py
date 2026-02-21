@@ -327,11 +327,14 @@ def is_daemon_installed() -> bool:
     elif plat == Platform.LINUX:
         return get_systemd_service_path().exists()
     elif plat == Platform.WINDOWS:
-        result = subprocess.run(
-            ["schtasks", "/Query", "/TN", "SpellbookMCP"],
-            capture_output=True,
-        )
-        return result.returncode == 0
+        try:
+            result = subprocess.run(
+                ["schtasks", "/Query", "/TN", "SpellbookMCP"],
+                capture_output=True,
+            )
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
     return False
 
 
@@ -362,53 +365,64 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
 
     plat = get_platform()
 
-    if plat == Platform.MACOS:
-        plist_path = get_launchd_plist_path()
-        if plist_path.exists():
+    try:
+        if plat == Platform.MACOS:
+            plist_path = get_launchd_plist_path()
+            if plist_path.exists():
+                subprocess.run(
+                    ["launchctl", "unload", str(plist_path)],
+                    capture_output=True
+                )
+        elif plat == Platform.LINUX:
             subprocess.run(
-                ["launchctl", "unload", str(plist_path)],
+                ["systemctl", "--user", "stop", SERVICE_NAME],
                 capture_output=True
             )
-    elif plat == Platform.LINUX:
-        subprocess.run(
-            ["systemctl", "--user", "stop", SERVICE_NAME],
-            capture_output=True
-        )
+    except FileNotFoundError:
+        # systemctl/launchctl not available (e.g., in Docker without systemd)
+        pass
 
     # Give it a moment to stop
     time.sleep(1)
 
     if is_daemon_running():
         # Graceful stop failed, force kill
-        if plat == Platform.WINDOWS:
-            # Find and kill spellbook_mcp processes on Windows
-            result = subprocess.run(
-                ["powershell", "-NoProfile", "-Command",
-                 "Get-CimInstance Win32_Process | "
-                 "Where-Object {$_.CommandLine -like '*spellbook_mcp*server*'} | "
-                 "Select-Object -ExpandProperty ProcessId"],
-                capture_output=True, text=True, timeout=10,
-            )
-            for pid_str in result.stdout.strip().split("\n"):
-                if pid_str.strip():
-                    subprocess.run(
-                        ["taskkill", "/F", "/PID", pid_str.strip()],
-                        capture_output=True,
-                    )
-        else:
-            subprocess.run(
-                ["pkill", "-f", "spellbook_mcp/server.py"],
-                capture_output=True
-            )
+        try:
+            if plat == Platform.WINDOWS:
+                # Find and kill spellbook_mcp processes on Windows
+                result = subprocess.run(
+                    ["powershell", "-NoProfile", "-Command",
+                     "Get-CimInstance Win32_Process | "
+                     "Where-Object {$_.CommandLine -like '*spellbook_mcp*server*'} | "
+                     "Select-Object -ExpandProperty ProcessId"],
+                    capture_output=True, text=True, timeout=10,
+                )
+                for pid_str in result.stdout.strip().split("\n"):
+                    if pid_str.strip():
+                        subprocess.run(
+                            ["taskkill", "/F", "/PID", pid_str.strip()],
+                            capture_output=True,
+                        )
+            else:
+                subprocess.run(
+                    ["pkill", "-f", "spellbook_mcp/server.py"],
+                    capture_output=True
+                )
+        except FileNotFoundError:
+            # pkill/powershell/taskkill not available
+            pass
         time.sleep(1)
 
         if is_daemon_running():
             if plat != Platform.WINDOWS:
                 # Last resort: SIGKILL (Unix only)
-                subprocess.run(
-                    ["pkill", "-9", "-f", "spellbook_mcp/server.py"],
-                    capture_output=True
-                )
+                try:
+                    subprocess.run(
+                        ["pkill", "-9", "-f", "spellbook_mcp/server.py"],
+                        capture_output=True
+                    )
+                except FileNotFoundError:
+                    pass
                 time.sleep(1)
 
             if is_daemon_running():
@@ -441,10 +455,13 @@ def uninstall_daemon(dry_run: bool = False) -> Tuple[bool, str]:
     if plat == Platform.MACOS:
         plist_path = get_launchd_plist_path()
         if plist_path.exists():
-            subprocess.run(
-                ["launchctl", "unload", str(plist_path)],
-                capture_output=True
-            )
+            try:
+                subprocess.run(
+                    ["launchctl", "unload", str(plist_path)],
+                    capture_output=True
+                )
+            except FileNotFoundError:
+                pass
             plist_path.unlink(missing_ok=True)
             return (True, "Daemon service uninstalled")
         return (True, "Daemon service was not installed")
@@ -452,30 +469,39 @@ def uninstall_daemon(dry_run: bool = False) -> Tuple[bool, str]:
     elif plat == Platform.LINUX:
         service_path = get_systemd_service_path()
         if service_path.exists():
-            subprocess.run(
-                ["systemctl", "--user", "stop", SERVICE_NAME],
-                capture_output=True
-            )
-            subprocess.run(
-                ["systemctl", "--user", "disable", SERVICE_NAME],
-                capture_output=True
-            )
+            try:
+                subprocess.run(
+                    ["systemctl", "--user", "stop", SERVICE_NAME],
+                    capture_output=True
+                )
+                subprocess.run(
+                    ["systemctl", "--user", "disable", SERVICE_NAME],
+                    capture_output=True
+                )
+            except FileNotFoundError:
+                pass
             service_path.unlink(missing_ok=True)
-            subprocess.run(
-                ["systemctl", "--user", "daemon-reload"],
-                capture_output=True
-            )
+            try:
+                subprocess.run(
+                    ["systemctl", "--user", "daemon-reload"],
+                    capture_output=True
+                )
+            except FileNotFoundError:
+                pass
             return (True, "Daemon service uninstalled")
         return (True, "Daemon service was not installed")
 
     elif plat == Platform.WINDOWS:
-        result = subprocess.run(
-            ["schtasks", "/Delete", "/TN", "SpellbookMCP", "/F"],
-            capture_output=True, text=True,
-        )
-        if result.returncode == 0 or "does not exist" in result.stderr.lower():
-            return (True, "Daemon service uninstalled")
-        return (False, f"Failed to uninstall: {result.stderr}")
+        try:
+            result = subprocess.run(
+                ["schtasks", "/Delete", "/TN", "SpellbookMCP", "/F"],
+                capture_output=True, text=True,
+            )
+            if result.returncode == 0 or "does not exist" in result.stderr.lower():
+                return (True, "Daemon service uninstalled")
+            return (False, f"Failed to uninstall: {result.stderr}")
+        except FileNotFoundError:
+            return (True, "Daemon service was not installed")
 
     return (False, f"Unsupported platform: {plat.value}")
 

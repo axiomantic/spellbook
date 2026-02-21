@@ -415,16 +415,24 @@ def generate_systemd_service() -> str:
 
 def install_systemd() -> tuple[bool, str]:
     """Install systemd user service on Linux."""
+    import shutil
+
+    if not shutil.which("systemctl"):
+        return False, "systemctl not found (systemd not available in this environment)"
+
     service_path = get_systemd_service_path()
 
     # Create systemd user directory if needed
     service_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Stop existing service if running
-    subprocess.run(
-        ["systemctl", "--user", "stop", SERVICE_NAME],
-        capture_output=True
-    )
+    try:
+        subprocess.run(
+            ["systemctl", "--user", "stop", SERVICE_NAME],
+            capture_output=True
+        )
+    except FileNotFoundError:
+        return False, "systemctl not found"
 
     # Write service file
     service_content = generate_systemd_service()
@@ -458,10 +466,13 @@ def install_systemd() -> tuple[bool, str]:
         return False, f"Failed to start service: {result.stderr}"
 
     # Enable lingering so user services run without login
-    subprocess.run(
-        ["loginctl", "enable-linger", os.environ.get("USER", "")],
-        capture_output=True
-    )
+    try:
+        subprocess.run(
+            ["loginctl", "enable-linger", os.environ.get("USER", "")],
+            capture_output=True
+        )
+    except FileNotFoundError:
+        pass  # loginctl may not be available
 
     return True, f"Installed systemd service: {service_path}"
 
@@ -474,36 +485,45 @@ def uninstall_systemd() -> tuple[bool, str]:
         return True, "Service not installed"
 
     # Stop service
-    subprocess.run(
-        ["systemctl", "--user", "stop", SERVICE_NAME],
-        capture_output=True
-    )
+    try:
+        subprocess.run(
+            ["systemctl", "--user", "stop", SERVICE_NAME],
+            capture_output=True
+        )
 
-    # Disable service
-    subprocess.run(
-        ["systemctl", "--user", "disable", SERVICE_NAME],
-        capture_output=True
-    )
+        # Disable service
+        subprocess.run(
+            ["systemctl", "--user", "disable", SERVICE_NAME],
+            capture_output=True
+        )
+    except FileNotFoundError:
+        pass  # systemctl not available
 
     # Remove service file
     service_path.unlink(missing_ok=True)
 
     # Reload systemd
-    subprocess.run(
-        ["systemctl", "--user", "daemon-reload"],
-        capture_output=True
-    )
+    try:
+        subprocess.run(
+            ["systemctl", "--user", "daemon-reload"],
+            capture_output=True
+        )
+    except FileNotFoundError:
+        pass  # systemctl not available
 
     return True, "Uninstalled systemd service"
 
 
 def is_systemd_running() -> bool:
     """Check if systemd service is running."""
-    result = subprocess.run(
-        ["systemctl", "--user", "is-active", SERVICE_NAME],
-        capture_output=True
-    )
-    return result.returncode == 0
+    try:
+        result = subprocess.run(
+            ["systemctl", "--user", "is-active", SERVICE_NAME],
+            capture_output=True
+        )
+        return result.returncode == 0
+    except FileNotFoundError:
+        return False
 
 
 # =============================================================================
@@ -555,11 +575,14 @@ def is_service_installed() -> bool:
     elif plat == "linux":
         return get_systemd_service_path().exists()
     elif plat == "windows":
-        result = subprocess.run(
-            ["schtasks", "/Query", "/TN", "SpellbookMCP"],
-            capture_output=True,
-        )
-        return result.returncode == 0
+        try:
+            result = subprocess.run(
+                ["schtasks", "/Query", "/TN", "SpellbookMCP"],
+                capture_output=True,
+            )
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
     return False
 
 
@@ -737,32 +760,36 @@ def cmd_stop() -> int:
     # If running via system service, stop it that way
     if is_service_installed():
         print("Stopping system service...")
-        if plat == "darwin":
-            result = subprocess.run(
-                ["launchctl", "unload", str(get_launchd_plist_path())],
-                capture_output=True
-            )
-            # Reload to restart
-            subprocess.run(
-                ["launchctl", "load", str(get_launchd_plist_path())],
-                capture_output=True
-            )
-            print("Service stopped (will restart due to KeepAlive)")
-            print("To permanently stop, run: spellbook-server uninstall")
-        elif plat == "linux":
-            subprocess.run(
-                ["systemctl", "--user", "stop", SERVICE_NAME],
-                capture_output=True
-            )
-            print("Service stopped (will restart on next boot)")
-            print("To permanently stop, run: spellbook-server uninstall")
-        elif plat == "windows":
-            subprocess.run(
-                ["schtasks", "/End", "/TN", "SpellbookMCP"],
-                capture_output=True
-            )
-            print("Service stopped (will restart on next logon)")
-            print("To permanently stop, run: spellbook-server uninstall")
+        try:
+            if plat == "darwin":
+                subprocess.run(
+                    ["launchctl", "unload", str(get_launchd_plist_path())],
+                    capture_output=True
+                )
+                # Reload to restart
+                subprocess.run(
+                    ["launchctl", "load", str(get_launchd_plist_path())],
+                    capture_output=True
+                )
+                print("Service stopped (will restart due to KeepAlive)")
+                print("To permanently stop, run: spellbook-server uninstall")
+            elif plat == "linux":
+                subprocess.run(
+                    ["systemctl", "--user", "stop", SERVICE_NAME],
+                    capture_output=True
+                )
+                print("Service stopped (will restart on next boot)")
+                print("To permanently stop, run: spellbook-server uninstall")
+            elif plat == "windows":
+                subprocess.run(
+                    ["schtasks", "/End", "/TN", "SpellbookMCP"],
+                    capture_output=True
+                )
+                print("Service stopped (will restart on next logon)")
+                print("To permanently stop, run: spellbook-server uninstall")
+        except FileNotFoundError:
+            print("Service manager command not found", file=sys.stderr)
+            return 1
         return 0
 
     # Manual stop via PID
@@ -804,19 +831,23 @@ def cmd_restart() -> int:
 
     if is_service_installed():
         print("Restarting system service...")
-        if plat == "darwin":
-            plist_path = get_launchd_plist_path()
-            subprocess.run(["launchctl", "unload", str(plist_path)], capture_output=True)
-            subprocess.run(["launchctl", "load", str(plist_path)], capture_output=True)
-        elif plat == "linux":
-            subprocess.run(
-                ["systemctl", "--user", "restart", SERVICE_NAME],
-                capture_output=True
-            )
-        elif plat == "windows":
-            subprocess.run(["schtasks", "/End", "/TN", "SpellbookMCP"], capture_output=True)
-            time.sleep(1)
-            subprocess.run(["schtasks", "/Run", "/TN", "SpellbookMCP"], capture_output=True)
+        try:
+            if plat == "darwin":
+                plist_path = get_launchd_plist_path()
+                subprocess.run(["launchctl", "unload", str(plist_path)], capture_output=True)
+                subprocess.run(["launchctl", "load", str(plist_path)], capture_output=True)
+            elif plat == "linux":
+                subprocess.run(
+                    ["systemctl", "--user", "restart", SERVICE_NAME],
+                    capture_output=True
+                )
+            elif plat == "windows":
+                subprocess.run(["schtasks", "/End", "/TN", "SpellbookMCP"], capture_output=True)
+                time.sleep(1)
+                subprocess.run(["schtasks", "/Run", "/TN", "SpellbookMCP"], capture_output=True)
+        except FileNotFoundError:
+            print("Service manager command not found", file=sys.stderr)
+            return 1
         print("Service restarted")
         return 0
 
