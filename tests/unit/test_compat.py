@@ -488,6 +488,7 @@ class TestCrossPlatformLock:
             assert lock._fd is not None
         assert lock._fd is None
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows file locking prevents concurrent lock fd access")
     def test_context_manager_raises_on_held_lock(self, tmp_path):
         """Context manager raises LockHeldError when lock cannot be acquired."""
         from installer.compat import CrossPlatformLock, LockHeldError
@@ -521,6 +522,7 @@ class TestCrossPlatformLock:
 
         lock.release()
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows file locking prevents stale lock recovery without OS-level lock")
     def test_stale_lock_with_dead_pid(self, tmp_path):
         """Lock with a dead PID and old timestamp should be acquirable."""
         from installer.compat import CrossPlatformLock
@@ -587,6 +589,7 @@ class TestCrossPlatformLock:
         assert lock._fd is not None
         lock.release()
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="fcntl not available on Windows")
     def test_blocking_true_uses_blocking_os_call(self, tmp_path):
         """blocking=True should use the blocking variant of the OS lock call."""
         import fcntl as real_fcntl

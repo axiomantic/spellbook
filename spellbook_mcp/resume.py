@@ -171,7 +171,7 @@ def _find_planning_docs(recent_files: list[str]) -> list[str]:
         r".*-impl\.md$",
         r".*-design\.md$",
         r".*-plan\.md$",
-        r".*/plans/.*\.md$",
+        r".*[/\\]plans[/\\].*\.md$",
     ]
 
     docs = []

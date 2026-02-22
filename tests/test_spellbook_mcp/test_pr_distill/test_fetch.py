@@ -270,15 +270,29 @@ class TestFetchPR:
 class TestRunCommand:
     """Test shell command execution."""
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="echo is a shell built-in on Windows, not an external command")
     def test_run_command_success(self):
         """Successful command returns output."""
         result = run_command("echo hello")
         assert result.strip() == "hello"
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Windows shlex.split(posix=False) preserves quotes, changing -c argument semantics")
     def test_run_command_failure(self):
         """Failed command raises CalledProcessError."""
         with pytest.raises(subprocess.CalledProcessError):
             run_command(f"{sys.executable} -c \"import sys; sys.exit(1)\"")
+
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific run_command tests")
+    def test_run_command_success_windows(self):
+        """Successful command returns output on Windows."""
+        result = run_command(f"{sys.executable} -c print(42)")
+        assert result.strip() == "42"
+
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific run_command tests")
+    def test_run_command_failure_windows(self):
+        """Failed command raises CalledProcessError on Windows."""
+        with pytest.raises(subprocess.CalledProcessError):
+            run_command(f"{sys.executable} -c exit(1)")
 
     def test_run_command_timeout(self):
         """run_command propagates TimeoutExpired from subprocess."""

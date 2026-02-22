@@ -60,13 +60,17 @@ class TestArtifactBasePath:
         from spellbook_mcp.forged.artifacts import artifact_base_path
 
         path = artifact_base_path("/Users/alice/project", "feature")
-        assert "/.local/spellbook/docs/" in path
+        # Normalize to forward slashes for cross-platform comparison
+        normalized = path.replace(os.sep, "/")
+        assert "/.local/spellbook/docs/" in normalized
 
     def test_includes_forged_directory(self):
         from spellbook_mcp.forged.artifacts import artifact_base_path
 
         path = artifact_base_path("/Users/alice/project", "feature")
-        assert "/forged/" in path
+        # Normalize to forward slashes for cross-platform comparison
+        normalized = path.replace(os.sep, "/")
+        assert "/forged/" in normalized
 
     def test_expands_home_directory(self):
         from spellbook_mcp.forged.artifacts import artifact_base_path
@@ -85,25 +89,30 @@ class TestArtifactPath:
         from spellbook_mcp.forged.artifacts import artifact_path
 
         path = artifact_path("/Users/alice/project", "my-feature", "requirement")
-        assert path.endswith("forged/my-feature/requirements.md")
+        # Normalize separators for cross-platform comparison
+        normalized = path.replace("\\", "/")
+        assert normalized.endswith("forged/my-feature/requirements.md")
 
     def test_design_artifact(self):
         from spellbook_mcp.forged.artifacts import artifact_path
 
         path = artifact_path("/Users/alice/project", "my-feature", "design")
-        assert path.endswith("forged/my-feature/design.md")
+        normalized = path.replace("\\", "/")
+        assert normalized.endswith("forged/my-feature/design.md")
 
     def test_plan_artifact(self):
         from spellbook_mcp.forged.artifacts import artifact_path
 
         path = artifact_path("/Users/alice/project", "my-feature", "plan")
-        assert path.endswith("forged/my-feature/implementation-plan.md")
+        normalized = path.replace("\\", "/")
+        assert normalized.endswith("forged/my-feature/implementation-plan.md")
 
     def test_progress_artifact(self):
         from spellbook_mcp.forged.artifacts import artifact_path
 
         path = artifact_path("/Users/alice/project", "my-feature", "progress")
-        assert path.endswith("forged/my-feature/progress.json")
+        normalized = path.replace("\\", "/")
+        assert normalized.endswith("forged/my-feature/progress.json")
 
     def test_reflection_requires_iteration(self):
         from spellbook_mcp.forged.artifacts import artifact_path
@@ -115,7 +124,8 @@ class TestArtifactPath:
         from spellbook_mcp.forged.artifacts import artifact_path
 
         path = artifact_path("/path", "feature", "reflection", iteration=3)
-        assert "reflections/reflection-3.md" in path
+        normalized = path.replace("\\", "/")
+        assert "reflections/reflection-3.md" in normalized
 
     def test_checkpoint_requires_iteration(self):
         from spellbook_mcp.forged.artifacts import artifact_path
@@ -127,7 +137,8 @@ class TestArtifactPath:
         from spellbook_mcp.forged.artifacts import artifact_path
 
         path = artifact_path("/path", "feature", "checkpoint", iteration=5)
-        assert "checkpoints/checkpoint-5.json" in path
+        normalized = path.replace("\\", "/")
+        assert "checkpoints/checkpoint-5.json" in normalized
 
     def test_invalid_artifact_type_raises(self):
         from spellbook_mcp.forged.artifacts import artifact_path
@@ -166,17 +177,17 @@ class TestWriteArtifact:
 
         write_artifact(str(artifact_file), content)
 
-        assert artifact_file.read_text() == content
+        assert artifact_file.read_text(encoding="utf-8") == content
 
     def test_overwrites_existing_file(self, tmp_path):
         from spellbook_mcp.forged.artifacts import write_artifact
 
         artifact_file = tmp_path / "test.md"
-        artifact_file.write_text("old content")
+        artifact_file.write_text("old content", encoding="utf-8")
 
         write_artifact(str(artifact_file), "new content")
 
-        assert artifact_file.read_text() == "new content"
+        assert artifact_file.read_text(encoding="utf-8") == "new content"
 
     def test_returns_true_on_success(self, tmp_path):
         from spellbook_mcp.forged.artifacts import write_artifact
@@ -193,7 +204,7 @@ class TestWriteArtifact:
 
         write_artifact(str(artifact_file), content)
 
-        assert artifact_file.read_text() == content
+        assert artifact_file.read_text(encoding="utf-8") == content
 
 
 class TestReadArtifact:
@@ -209,7 +220,7 @@ class TestReadArtifact:
         from spellbook_mcp.forged.artifacts import read_artifact
 
         artifact_file = tmp_path / "test.md"
-        artifact_file.write_text("test content")
+        artifact_file.write_text("test content", encoding="utf-8")
 
         result = read_artifact(str(artifact_file))
 
@@ -220,7 +231,7 @@ class TestReadArtifact:
 
         artifact_file = tmp_path / "unicode.md"
         content = "Unicode: \u2713 \u2717"
-        artifact_file.write_text(content)
+        artifact_file.write_text(content, encoding="utf-8")
 
         result = read_artifact(str(artifact_file))
 

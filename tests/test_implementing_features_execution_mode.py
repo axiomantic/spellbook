@@ -457,7 +457,9 @@ class TestWorkPacketManifest:
         assert track["id"] == 1
         assert track["name"] == "backend-api"
         assert track["packet"] == "track-1-backend-api.md"
-        assert track["worktree"] == "/Users/dev/myapp-auth-track-1"
+        # Use os.path.join for cross-platform path comparison
+        expected_worktree = os.path.join(os.path.dirname("/Users/dev/myapp"), "myapp-auth-track-1")
+        assert track["worktree"] == expected_worktree
         assert track["branch"] == "feature/auth/track-1"
         assert track["status"] == "pending"
         assert track["depends_on"] == []
