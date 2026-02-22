@@ -57,13 +57,18 @@ class TestInstallLock:
         lock = CrossPlatformLock(lock_path)
         assert lock.acquire() is True
 
-        # Lock file should contain our PID
-        content = lock_path.read_text()
+        if sys.platform == "win32":
+            # On Windows, msvcrt.locking() prevents reading locked files.
+            # Release first, then verify the PID was written.
+            lock.release()
+            content = lock_path.read_text()
+        else:
+            content = lock_path.read_text()
+            lock.release()
+
         lock_info = json.loads(content)
         assert lock_info["pid"] == os.getpid()
         assert "timestamp" in lock_info
-
-        lock.release()
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows file locking prevents concurrent lock fd access on same file")
     def test_acquire_fails_when_held(self, tmp_path):

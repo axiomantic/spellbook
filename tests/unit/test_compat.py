@@ -430,7 +430,10 @@ class TestNormalizePathForComparison:
         from installer.compat import normalize_path_for_comparison
 
         result = normalize_path_for_comparison(tmp_path)
-        assert result == str(tmp_path.resolve())
+        expected = str(tmp_path.resolve())
+        if sys.platform == "win32":
+            expected = expected.casefold().replace("\\", "/")
+        assert result == expected
 
     def test_returns_string_type(self, tmp_path):
         from installer.compat import normalize_path_for_comparison
@@ -514,13 +517,20 @@ class TestCrossPlatformLock:
         lock = CrossPlatformLock(lock_path)
         lock.acquire()
 
-        # Read the lock file to verify PID is written
-        with open(lock_path) as f:
-            data = json.loads(f.read())
+        if sys.platform == "win32":
+            # On Windows, the lock file is held open with msvcrt.locking(),
+            # so we can't read it from another fd. Release first, then verify.
+            lock.release()
+            with open(lock_path) as f:
+                data = json.loads(f.read())
+        else:
+            # On Unix, flock() allows concurrent reads from other fds.
+            with open(lock_path) as f:
+                data = json.loads(f.read())
+            lock.release()
+
         assert data["pid"] == os.getpid()
         assert "timestamp" in data
-
-        lock.release()
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Windows file locking prevents stale lock recovery without OS-level lock")
     def test_stale_lock_with_dead_pid(self, tmp_path):
