@@ -48,10 +48,10 @@ def write_if_changed(path: Path, content: str) -> bool:
     Returns True if file was written, False if unchanged.
     """
     if path.exists():
-        existing = path.read_text()
+        existing = path.read_text(encoding="utf-8")
         if existing == content:
             return False
-    path.write_text(content)
+    path.write_text(content, encoding="utf-8")
     return True
 
 
@@ -86,7 +86,7 @@ def get_diagram_section(item_type: str, item_name: str) -> str:
     if not diagram_file.exists():
         return ""
 
-    content = diagram_file.read_text()
+    content = diagram_file.read_text(encoding="utf-8")
 
     # Strip the metadata comment line (first line starting with <!-- diagram-meta:)
     lines = content.split("\n", 1)
@@ -109,7 +109,7 @@ def generate_skill_doc(skill_dir: Path) -> str | None:
     if not skill_file.exists():
         return None
 
-    content = skill_file.read_text()
+    content = skill_file.read_text(encoding="utf-8")
     frontmatter, body = extract_frontmatter(content)
 
     name = frontmatter.get("name", skill_name)
@@ -149,7 +149,7 @@ def generate_skill_doc(skill_dir: Path) -> str | None:
 def generate_command_doc(command_file: Path) -> str:
     """Generate documentation page for a command."""
     command_name = command_file.stem
-    content = command_file.read_text()
+    content = command_file.read_text(encoding="utf-8")
     frontmatter, body = extract_frontmatter(content)
 
     # Check if from superpowers
@@ -182,7 +182,7 @@ def generate_command_doc(command_file: Path) -> str:
 def generate_agent_doc(agent_file: Path) -> str:
     """Generate documentation page for an agent."""
     agent_name = agent_file.stem
-    content = agent_file.read_text()
+    content = agent_file.read_text(encoding="utf-8")
     frontmatter, body = extract_frontmatter(content)
 
     # Check if from superpowers
@@ -288,7 +288,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
                 all_cmd_files.append((cmd_dir.name, main_cmd))
 
     for name, cmd_file in sorted(all_cmd_files, key=lambda x: x[0]):
-        content = cmd_file.read_text()
+        content = cmd_file.read_text(encoding="utf-8")
         frontmatter, body = extract_frontmatter(content)
         desc = frontmatter.get("description", "")
         if isinstance(desc, str):

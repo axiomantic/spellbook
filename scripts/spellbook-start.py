@@ -31,7 +31,7 @@ def read_config() -> dict:
     if not config_path.exists():
         return {}
     try:
-        return json.loads(config_path.read_text())
+        return json.loads(config_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return {}
 
@@ -39,7 +39,7 @@ def read_config() -> dict:
 def random_line(file_path: Path) -> str:
     """Select a random line from a file."""
     try:
-        lines = [line.strip() for line in file_path.read_text().splitlines() if line.strip()]
+        lines = [line.strip() for line in file_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         return random.choice(lines) if lines else ""
     except OSError:
         return ""

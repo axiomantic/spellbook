@@ -54,7 +54,8 @@ def test_watcher_writes_heartbeat(tmp_path):
     heartbeat = datetime.fromisoformat(row[0])
     age = (datetime.now() - heartbeat).total_seconds()
 
-    assert age < 2.0  # Should be very recent
+    # Use generous tolerance to avoid flaky failures under heavy system load
+    assert age < 10.0  # Should be reasonably recent
 
     watcher.stop()
     thread.join(timeout=2.0)

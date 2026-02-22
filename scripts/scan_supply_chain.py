@@ -177,7 +177,7 @@ def load_allowlist(project_root: Path) -> list[str]:
     config_path = project_root / ".spellbook-security.json"
     if config_path.exists():
         try:
-            config = json.loads(config_path.read_text())
+            config = json.loads(config_path.read_text(encoding="utf-8"))
             supply_chain = config.get("supply_chain", {})
             allowlist = supply_chain.get("url_allowlist")
             if allowlist is not None:
@@ -212,7 +212,7 @@ def is_url_allowed(url: str, allowlist: list[str]) -> bool:
 def scan_file(file_path: Path, allowlist: list[str]) -> list[Finding]:
     """Scan a single file for supply chain references."""
     findings: list[Finding] = []
-    content = file_path.read_text(errors="replace")
+    content = file_path.read_text(encoding="utf-8", errors="replace")
     lines = content.splitlines()
 
     for line_num, line in enumerate(lines, start=1):

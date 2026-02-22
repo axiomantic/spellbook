@@ -11,10 +11,7 @@ def detect_terminal() -> str:
     Detect the current terminal application.
 
     Returns:
-        Terminal name (e.g., 'iTerm2', 'gnome-terminal', 'xterm')
-
-    Raises:
-        NotImplementedError: On Windows (not supported in MVP)
+        Terminal name (e.g., 'iTerm2', 'gnome-terminal', 'windows-terminal')
     """
     if sys.platform == 'darwin':
         return detect_macos_terminal()
@@ -114,10 +111,21 @@ def detect_windows_terminal() -> str:
     """
     Detect terminal application on Windows.
 
-    Raises:
-        NotImplementedError: Windows not supported in MVP
+    Detection order:
+    1. Windows Terminal (wt.exe)
+    2. PowerShell Core (pwsh)
+    3. cmd.exe (always available)
+
+    Returns:
+        Terminal name ('windows-terminal', 'pwsh', or 'cmd')
     """
-    raise NotImplementedError("Windows terminal detection not implemented in MVP")
+    import shutil
+
+    if shutil.which("wt"):
+        return "windows-terminal"
+    if shutil.which("pwsh"):
+        return "pwsh"
+    return "cmd"
 
 
 def spawn_terminal_window(
@@ -137,9 +145,6 @@ def spawn_terminal_window(
 
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
-
-    Raises:
-        NotImplementedError: On Windows (not supported in MVP)
     """
     if working_directory is None:
         working_directory = os.getcwd()
@@ -152,7 +157,7 @@ def spawn_terminal_window(
     elif sys.platform.startswith('linux'):
         return spawn_linux_terminal(terminal, prompt, working_directory, cli_command)
     elif sys.platform == 'win32':
-        raise NotImplementedError("Windows terminal spawning not implemented in MVP")
+        return spawn_windows_terminal(terminal, prompt, working_directory, cli_command)
     else:
         raise NotImplementedError(f"Platform {sys.platform} not supported")
 
@@ -276,4 +281,52 @@ def spawn_linux_terminal(
         'status': 'spawned',
         'terminal': terminal,
         'pid': process.pid
+    }
+
+
+def spawn_windows_terminal(
+    terminal: str,
+    prompt: str,
+    working_directory: str,
+    cli_command: str = 'claude'
+) -> dict:
+    """
+    Spawn a Windows terminal window.
+
+    Args:
+        terminal: Terminal name ('windows-terminal', 'pwsh', 'cmd')
+        prompt: Initial prompt for the AI assistant
+        working_directory: Directory to start in
+        cli_command: CLI command to invoke
+
+    Returns:
+        {"status": "spawned", "terminal": str, "pid": int | None}
+    """
+    escaped_prompt = prompt.replace('"', '\\"')
+
+    if terminal == "windows-terminal":
+        cmd = ["wt", "-d", working_directory, "cmd", "/c",
+               f'{cli_command} "{escaped_prompt}"']
+    elif terminal == "pwsh":
+        cmd = ["pwsh", "-NoExit", "-Command",
+               f'Set-Location "{working_directory}"; {cli_command} "{escaped_prompt}"']
+    else:  # cmd
+        cmd = ["cmd", "/c", "start", "cmd", "/k",
+               f'cd /d "{working_directory}" && {cli_command} "{escaped_prompt}"']
+
+    creationflags = 0
+    if sys.platform == "win32":
+        creationflags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        creationflags=creationflags,
+    )
+
+    return {
+        'status': 'spawned',
+        'terminal': terminal,
+        'pid': process.pid,
     }

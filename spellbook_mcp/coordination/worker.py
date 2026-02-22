@@ -103,7 +103,7 @@ class SwarmWorker:
         self.checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Write checkpoint
-        self.checkpoint_path.write_text(json.dumps(checkpoint, indent=2))
+        self.checkpoint_path.write_text(json.dumps(checkpoint, indent=2), encoding="utf-8")
 
     async def register(self) -> dict:
         """Register with the swarm. Call this on startup.

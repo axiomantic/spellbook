@@ -647,14 +647,14 @@ def _get_version() -> str:
         # Try relative to this file (spellbook_mcp/)
         version_path = Path(__file__).parent.parent / ".version"
         if version_path.exists():
-            return version_path.read_text().strip()
+            return version_path.read_text(encoding="utf-8").strip()
 
         # Fallback: try SPELLBOOK_DIR if set
         spellbook_dir = os.environ.get("SPELLBOOK_DIR")
         if spellbook_dir:
             version_path = Path(spellbook_dir) / ".version"
             if version_path.exists():
-                return version_path.read_text().strip()
+                return version_path.read_text(encoding="utf-8").strip()
 
         return "unknown"
     except OSError:
@@ -1508,7 +1508,7 @@ def skill_instructions_get(
 
     # Read skill content
     try:
-        content = skill_path.read_text()
+        content = skill_path.read_text(encoding="utf-8")
     except OSError as e:
         return {
             "success": False,

@@ -7,6 +7,12 @@ from pathlib import Path
 
 import pytest
 
+# All tests in this module invoke spellbook-start.py with Unix-specific
+# environment patterns (HOME, minimal env) that fail on Windows.
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Bash scripts not available on Windows",
+)
 
 SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "spellbook-start.py"
 

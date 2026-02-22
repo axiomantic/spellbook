@@ -218,7 +218,14 @@ def get_all_skill_files() -> list[Path]:
 
 # Skip if Claude CLI not available
 def claude_cli_available() -> bool:
-    """Check if Claude CLI is available and configured."""
+    """Check if Claude CLI is available and configured.
+
+    Returns False if running inside a Claude Code session (nested sessions
+    are not supported and will fail), or if the CLI is not installed.
+    """
+    # Claude Code sets CLAUDECODE env var; nested sessions are not supported
+    if os.environ.get("CLAUDECODE"):
+        return False
     try:
         result = subprocess.run(
             ["claude", "--version"],

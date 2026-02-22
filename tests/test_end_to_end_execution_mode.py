@@ -11,6 +11,8 @@ Tests the actual Python code:
 
 import json
 import os
+import platform
+import sys
 import tempfile
 import threading
 import time
@@ -135,7 +137,15 @@ class TestWorkPacketE2E:
                         "timestamp": "2026-01-05T12:00:00Z",
                         "next_task": None
                     }
-                    atomic_write_json(str(checkpoint_path), data, timeout=10)
+                    # Retry on transient errors from file-based lock contention
+                    for attempt in range(3):
+                        try:
+                            atomic_write_json(str(checkpoint_path), data, timeout=10)
+                            break
+                        except (FileNotFoundError, PermissionError, OSError):
+                            if attempt == 2:
+                                raise
+                            time.sleep(0.05)
                     time.sleep(0.01)
                 results.append(thread_id)
             except Exception as e:
@@ -213,7 +223,7 @@ class TestTerminalUtilsE2E:
     Mark as integration tests so they can be skipped in CI with: pytest -m "not integration"
     """
 
-    @pytest.mark.skipif(os.uname().sysname != "Darwin", reason="macOS only")
+    @pytest.mark.skipif(sys.platform != "darwin", reason="macOS only")
     def test_macos_terminal_detection_real(self):
         """Test actual terminal detection on macOS (no mocking)."""
         from spellbook_mcp.terminal_utils import detect_macos_terminal
@@ -222,7 +232,7 @@ class TestTerminalUtilsE2E:
         result = detect_macos_terminal()
         assert result in ["iTerm2", "Warp", "Terminal", "terminal"]
 
-    @pytest.mark.skipif(os.uname().sysname != "Linux", reason="Linux only")
+    @pytest.mark.skipif(sys.platform != "linux", reason="Linux only")
     def test_linux_terminal_detection_real(self):
         """Test actual terminal detection on Linux (no mocking)."""
         from spellbook_mcp.terminal_utils import detect_linux_terminal

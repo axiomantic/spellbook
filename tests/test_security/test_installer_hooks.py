@@ -14,6 +14,7 @@ Tier 2 (PreToolUse + PostToolUse):
 """
 
 import json
+import sys
 import pytest
 from pathlib import Path
 from unittest.mock import patch
@@ -23,6 +24,11 @@ from installer.components.hooks import (
     install_hooks,
     uninstall_hooks,
 )
+
+
+def _hook_ext():
+    """Return the expected hook file extension for the current platform."""
+    return ".py" if sys.platform == "win32" else ".sh"
 
 
 # --- Helpers ---
@@ -218,7 +224,7 @@ class TestInstallHooks:
             (e for e in pre_tool_use if e["matcher"] == "Bash"), None
         )
         assert bash_entry is not None
-        assert bash_entry["hooks"] == ["$SPELLBOOK_DIR/hooks/bash-gate.sh"]
+        assert bash_entry["hooks"] == [f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}"]
 
     def test_spawn_hook_entry_correct(self, tmp_path):
         """The spawn_claude_session hook entry should have correct matcher and hook path."""
@@ -235,7 +241,7 @@ class TestInstallHooks:
             None,
         )
         assert spawn_entry is not None
-        assert spawn_entry["hooks"] == ["$SPELLBOOK_DIR/hooks/spawn-guard.sh"]
+        assert spawn_entry["hooks"] == [f"$SPELLBOOK_DIR/hooks/spawn-guard{_hook_ext()}"]
 
     def test_state_sanitize_hook_entry_correct(self, tmp_path):
         """The state-sanitize hook should be in PreToolUse with timeout."""
@@ -256,7 +262,7 @@ class TestInstallHooks:
         assert len(state_entry["hooks"]) == 1
         hook = state_entry["hooks"][0]
         assert hook["type"] == "command"
-        assert hook["command"] == "$SPELLBOOK_DIR/hooks/state-sanitize.sh"
+        assert hook["command"] == f"$SPELLBOOK_DIR/hooks/state-sanitize{_hook_ext()}"
         assert hook["timeout"] == 15
 
     def test_audit_log_hook_entry_correct(self, tmp_path):
@@ -270,9 +276,10 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entry = post_tool_use[0]
+        ext = _hook_ext()
         audit_hook = next(
             (h for h in post_entry["hooks"]
-             if isinstance(h, dict) and h.get("command", "").endswith("audit-log.sh")),
+             if isinstance(h, dict) and h.get("command", "").endswith(f"audit-log{ext}")),
             None,
         )
         assert audit_hook is not None
@@ -291,9 +298,10 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entry = post_tool_use[0]
+        ext = _hook_ext()
         canary_hook = next(
             (h for h in post_entry["hooks"]
-             if isinstance(h, dict) and h.get("command", "").endswith("canary-check.sh")),
+             if isinstance(h, dict) and h.get("command", "").endswith(f"canary-check{ext}")),
             None,
         )
         assert canary_hook is not None
@@ -410,8 +418,9 @@ class TestInstallHooks:
         commands = [
             h["command"] for h in hooks_list if isinstance(h, dict) and "command" in h
         ]
-        assert "$SPELLBOOK_DIR/hooks/audit-log.sh" in commands
-        assert "$SPELLBOOK_DIR/hooks/canary-check.sh" in commands
+        ext = _hook_ext()
+        assert f"$SPELLBOOK_DIR/hooks/audit-log{ext}" in commands
+        assert f"$SPELLBOOK_DIR/hooks/canary-check{ext}" in commands
 
     def test_idempotent_no_duplicates(self, tmp_path):
         """Running install_hooks twice should not create duplicate entries."""
@@ -470,8 +479,8 @@ class TestInstallHooks:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
         assert len(bash_entries) == 1
-        # The hook list should contain the spellbook path
-        assert "$SPELLBOOK_DIR/hooks/bash-gate.sh" in bash_entries[0]["hooks"]
+        # The hook list should contain the spellbook path (platform-appropriate extension)
+        assert f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}" in bash_entries[0]["hooks"]
 
     def test_merges_hooks_into_existing_matcher(self, tmp_path):
         """If a user has their own Bash hook, spellbook adds its hook to the same entry's hooks list."""
@@ -500,7 +509,7 @@ class TestInstallHooks:
         # Both hooks should be in the list
         hooks_list = bash_entries[0]["hooks"]
         assert "/usr/local/bin/my-bash-hook.sh" in hooks_list
-        assert "$SPELLBOOK_DIR/hooks/bash-gate.sh" in hooks_list
+        assert f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}" in hooks_list
 
     def test_dry_run_does_not_write(self, tmp_path):
         """In dry_run mode, no file should be created or modified."""

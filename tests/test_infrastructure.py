@@ -1,3 +1,5 @@
+import os
+import sys
 import pytest
 import json
 import time
@@ -176,6 +178,10 @@ def test_preferences_read_write(tmp_path, monkeypatch):
 
     # Use tmp_path as home directory
     monkeypatch.setenv("HOME", str(tmp_path))
+    # On Windows, Path.home() uses USERPROFILE, and get_config_dir uses APPDATA
+    if sys.platform == "win32":
+        monkeypatch.setenv("USERPROFILE", str(tmp_path))
+        monkeypatch.setenv("APPDATA", str(tmp_path / "AppData" / "Roaming"))
 
     save_preference("terminal.program", "iterm2")
     save_preference("terminal.detected", False)
@@ -190,6 +196,10 @@ def test_preferences_defaults(tmp_path, monkeypatch):
     from spellbook_mcp.preferences import load_preferences
 
     monkeypatch.setenv("HOME", str(tmp_path))
+    # On Windows, Path.home() uses USERPROFILE, and get_config_dir uses APPDATA
+    if sys.platform == "win32":
+        monkeypatch.setenv("USERPROFILE", str(tmp_path))
+        monkeypatch.setenv("APPDATA", str(tmp_path / "AppData" / "Roaming"))
 
     prefs = load_preferences()
 
@@ -205,6 +215,9 @@ def test_metrics_logging(tmp_path, monkeypatch):
 
     # Use tmp_path as home and clear env vars for portable default
     monkeypatch.setenv("HOME", str(tmp_path))
+    # On Windows, Path.home() uses USERPROFILE
+    if sys.platform == "win32":
+        monkeypatch.setenv("USERPROFILE", str(tmp_path))
     monkeypatch.delenv("SPELLBOOK_CONFIG_DIR", raising=False)
     monkeypatch.delenv("CLAUDE_CONFIG_DIR", raising=False)
 

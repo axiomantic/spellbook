@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
+from ..compat import get_python_executable
 from ..components.context_files import generate_codex_context
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
@@ -88,14 +89,14 @@ def _update_crush_config(
     if "spellbook" in config["mcp"]:
         # Update existing config
         config["mcp"]["spellbook"]["type"] = "stdio"
-        config["mcp"]["spellbook"]["command"] = "python3"
+        config["mcp"]["spellbook"]["command"] = get_python_executable()
         config["mcp"]["spellbook"]["args"] = [str(server_path)]
         actions.append("updated MCP server")
     else:
         # Add new spellbook MCP server
         config["mcp"]["spellbook"] = {
             "type": "stdio",
-            "command": "python3",
+            "command": get_python_executable(),
             "args": [str(server_path)],
         }
         actions.append("registered MCP server")

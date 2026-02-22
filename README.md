@@ -34,6 +34,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Quick Install](#quick-install)
+  - [Windows Quickstart](#windows-quickstart)
 - [What's Included](#whats-included)
   - [Skills (52 total)](#skills-52-total)
   - [Commands (80 total)](#commands-80-total)
@@ -78,6 +79,18 @@ The installer requires Python 3.10+ and git, then automatically installs uv and 
 **Uninstall:** `python3 ~/.local/share/spellbook/uninstall.py`
 
 See [Installation Guide](https://axiomantic.github.io/spellbook/getting-started/installation/) for advanced options.
+
+### Windows Quickstart
+
+```powershell
+irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | iex
+```
+
+**Requirements:** Python 3.10+, git, and PowerShell 5.1+.
+
+- Symlinks require **Developer Mode** enabled in Windows Settings (falls back to junctions or copies otherwise)
+- Service management uses **Windows Task Scheduler**
+- Install location: `%LOCALAPPDATA%\spellbook`
 
 ## What's Included
 
@@ -376,9 +389,9 @@ See [full citations](https://axiomantic.github.io/spellbook/reference/citations/
 |----|--------|-----------------|
 | **macOS** | Full | launchd (starts on login) |
 | **Linux** | Full | systemd user service |
-| **Windows** | Community | Not yet supported |
+| **Windows** | Beta | Windows Task Scheduler |
 
-> **Windows users:** Spellbook likely works with minimal changes. The MCP server and skills should work as-is; only the daemon service management needs a Windows implementation (Task Scheduler or similar). PRs welcome! See [Contributing](#contributing).
+> **Windows users:** Windows support is experimental. The installer, MCP server, and skills all work on Windows. Symlinks require Developer Mode enabled (falls back to junctions or copies otherwise). See [Windows quickstart](#windows-quickstart) below.
 
 ### Coding Assistants
 

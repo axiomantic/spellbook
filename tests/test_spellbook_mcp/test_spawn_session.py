@@ -1,5 +1,6 @@
 """Tests for spawn_claude_session MCP tool and terminal detection utilities."""
 
+import shutil
 import unittest
 from unittest.mock import patch, MagicMock
 import sys
@@ -110,13 +111,27 @@ class TestDetectLinuxTerminal(unittest.TestCase):
 
 
 class TestDetectWindowsTerminal(unittest.TestCase):
-    """Test Windows terminal detection (not supported in MVP)."""
+    """Test Windows terminal detection."""
 
-    @patch('sys.platform', 'win32')
-    def test_windows_raises_not_implemented(self):
-        """Test that Windows detection raises NotImplementedError."""
-        with self.assertRaises(NotImplementedError):
-            detect_windows_terminal()
+    @patch('shutil.which')
+    def test_windows_terminal_detected(self, mock_which):
+        """Test that Windows Terminal is detected when wt is available."""
+        mock_which.side_effect = lambda cmd: "/usr/bin/wt" if cmd == "wt" else None
+        result = detect_windows_terminal()
+        self.assertEqual(result, "windows-terminal")
+
+    @patch('shutil.which')
+    def test_pwsh_fallback(self, mock_which):
+        """Test that PowerShell Core is detected as fallback."""
+        mock_which.side_effect = lambda cmd: "/usr/bin/pwsh" if cmd == "pwsh" else None
+        result = detect_windows_terminal()
+        self.assertEqual(result, "pwsh")
+
+    @patch('shutil.which', return_value=None)
+    def test_cmd_fallback(self, mock_which):
+        """Test that cmd is the final fallback."""
+        result = detect_windows_terminal()
+        self.assertEqual(result, "cmd")
 
 
 class TestDetectTerminal(unittest.TestCase):
@@ -144,11 +159,16 @@ class TestDetectTerminal(unittest.TestCase):
         self.assertEqual(result, 'gnome-terminal')
         mock_linux.assert_called_once()
 
+    @patch('spellbook_mcp.terminal_utils.detect_windows_terminal')
     @patch('sys.platform', 'win32')
-    def test_windows_not_supported(self):
-        """Test that Windows raises NotImplementedError."""
-        with self.assertRaises(NotImplementedError):
-            detect_terminal()
+    def test_delegates_to_windows(self, mock_windows):
+        """Test delegation to Windows detection."""
+        mock_windows.return_value = 'windows-terminal'
+
+        result = detect_terminal()
+
+        self.assertEqual(result, 'windows-terminal')
+        mock_windows.assert_called_once()
 
 
 class TestSpawnMacOSTerminal(unittest.TestCase):
@@ -258,11 +278,96 @@ class TestSpawnTerminalWindow(unittest.TestCase):
         self.assertEqual(result['status'], 'spawned')
         mock_linux_spawn.assert_called_once_with('gnome-terminal', 'test', '/var', 'claude')
 
+    @patch('spellbook_mcp.terminal_utils.spawn_windows_terminal')
     @patch('sys.platform', 'win32')
-    def test_windows_not_supported(self):
-        """Test that Windows raises NotImplementedError."""
-        with self.assertRaises(NotImplementedError):
-            spawn_terminal_window('cmd', 'test', 'C:\\')
+    def test_delegates_to_windows(self, mock_windows_spawn):
+        """Test delegation to Windows spawning."""
+        mock_windows_spawn.return_value = {
+            'status': 'spawned',
+            'terminal': 'cmd',
+            'pid': 12345
+        }
+
+        result = spawn_terminal_window('cmd', 'test', 'C:\\')
+
+        self.assertEqual(result['status'], 'spawned')
+        mock_windows_spawn.assert_called_once_with('cmd', 'test', 'C:\\', 'claude')
+
+
+class TestSpawnWindowsTerminal(unittest.TestCase):
+    """Test Windows terminal spawning."""
+
+    @patch('subprocess.Popen')
+    def test_spawn_windows_terminal_wt(self, mock_popen):
+        """Test spawning Windows Terminal (wt)."""
+        from spellbook_mcp.terminal_utils import spawn_windows_terminal
+
+        mock_process = MagicMock()
+        mock_process.pid = 44444
+        mock_popen.return_value = mock_process
+
+        result = spawn_windows_terminal('windows-terminal', 'test prompt', 'C:\\Users\\test')
+
+        self.assertEqual(result['status'], 'spawned')
+        self.assertEqual(result['terminal'], 'windows-terminal')
+        self.assertEqual(result['pid'], 44444)
+
+        args = mock_popen.call_args[0][0]
+        self.assertEqual(args[0], 'wt')
+        self.assertIn('C:\\Users\\test', args)
+
+    @patch('subprocess.Popen')
+    def test_spawn_windows_terminal_pwsh(self, mock_popen):
+        """Test spawning PowerShell Core."""
+        from spellbook_mcp.terminal_utils import spawn_windows_terminal
+
+        mock_process = MagicMock()
+        mock_process.pid = 55555
+        mock_popen.return_value = mock_process
+
+        result = spawn_windows_terminal('pwsh', 'test prompt', 'C:\\Users\\test')
+
+        self.assertEqual(result['status'], 'spawned')
+        self.assertEqual(result['terminal'], 'pwsh')
+        self.assertEqual(result['pid'], 55555)
+
+        args = mock_popen.call_args[0][0]
+        self.assertEqual(args[0], 'pwsh')
+
+    @patch('subprocess.Popen')
+    def test_spawn_windows_terminal_cmd(self, mock_popen):
+        """Test spawning cmd.exe (default fallback)."""
+        from spellbook_mcp.terminal_utils import spawn_windows_terminal
+
+        mock_process = MagicMock()
+        mock_process.pid = 66666
+        mock_popen.return_value = mock_process
+
+        result = spawn_windows_terminal('cmd', 'test prompt', 'C:\\Users\\test')
+
+        self.assertEqual(result['status'], 'spawned')
+        self.assertEqual(result['terminal'], 'cmd')
+        self.assertEqual(result['pid'], 66666)
+
+        args = mock_popen.call_args[0][0]
+        self.assertIn('cmd', args)
+
+    @patch('subprocess.Popen')
+    def test_spawn_windows_terminal_custom_cli_command(self, mock_popen):
+        """Test spawning with a custom CLI command (e.g., 'codex')."""
+        from spellbook_mcp.terminal_utils import spawn_windows_terminal
+
+        mock_process = MagicMock()
+        mock_process.pid = 77777
+        mock_popen.return_value = mock_process
+
+        result = spawn_windows_terminal('cmd', 'test prompt', 'C:\\', cli_command='codex')
+
+        self.assertEqual(result['status'], 'spawned')
+        # Verify the custom CLI command appears in the arguments
+        args = mock_popen.call_args[0][0]
+        cmd_str = ' '.join(str(a) for a in args)
+        self.assertIn('codex', cmd_str)
 
 
 class TestSpawnClaudeSessionMCPTool(unittest.TestCase):

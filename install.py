@@ -138,7 +138,11 @@ def prompt_yn(prompt: str, default: bool = True, auto_yes: bool = False) -> bool
 # =============================================================================
 
 def detect_os() -> str:
-    """Detect operating system."""
+    """Detect operating system.
+
+    Note: Intentionally duplicates installer.compat.get_platform() because
+    install.py must work before dependencies are available (pre-bootstrap).
+    """
     system = platform.system().lower()
     if system == "darwin":
         return "macos"
@@ -187,10 +191,38 @@ def check_uv() -> bool:
     ]:
         if path.is_file() and os.access(path, os.X_OK):
             # Add to PATH for this session
-            os.environ["PATH"] = f"{path.parent}:{os.environ.get('PATH', '')}"
+            os.environ["PATH"] = f"{path.parent}{os.pathsep}{os.environ.get('PATH', '')}"
             return True
 
     return False
+
+
+def _install_uv_windows() -> bool:
+    """Install uv on Windows via PowerShell."""
+    try:
+        result = subprocess.run(
+            ["powershell", "-ExecutionPolicy", "Bypass", "-Command",
+             "irm https://astral.sh/uv/install.ps1 | iex"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            print_error(f"Failed to install uv: {result.stderr}")
+            return False
+        uv_found = shutil.which("uv")
+        if uv_found:
+            uv_path = Path(uv_found).parent
+        else:
+            # Guess common install locations if shutil.which fails
+            uv_path = Path.home() / ".local" / "bin"
+            if not uv_path.exists():
+                uv_path = Path.home() / ".cargo" / "bin"
+        os.environ["PATH"] = f"{uv_path}{os.pathsep}{os.environ.get('PATH', '')}"
+        print_success("uv installed successfully")
+        return True
+    except Exception as e:
+        print_error(f"Failed to install uv: {e}")
+        return False
 
 
 def install_uv(auto_yes: bool = False) -> bool:
@@ -205,6 +237,10 @@ def install_uv(auto_yes: bool = False) -> bool:
         print_info("curl -LsSf https://astral.sh/uv/install.sh | sh")
         return False
 
+    os_type = detect_os()
+    if os_type == "windows":
+        return _install_uv_windows()
+
     print_step("Installing uv...")
     try:
         result = subprocess.run(
@@ -217,7 +253,7 @@ def install_uv(auto_yes: bool = False) -> bool:
             return False
 
         # Add to PATH
-        os.environ["PATH"] = f"{Path.home()}/.local/bin:{os.environ.get('PATH', '')}"
+        os.environ["PATH"] = f"{Path.home() / '.local' / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}"
         print_success("uv installed successfully")
         return True
 
@@ -251,6 +287,10 @@ def install_git_instructions() -> None:
             print_info("  sudo pacman -S git")
         else:
             print_info("  Use your distribution's package manager to install git")
+    elif os_type == "windows":
+        print_info("Install Git for Windows:")
+        print_info("  winget install Git.Git")
+        print_info("  or download from https://git-scm.com/download/win")
     else:
         print_info("Please install git and try again.")
 
@@ -534,7 +574,10 @@ def reexec_under_uv(script_path: Path | None, args: list[str]) -> NoReturn:
         # Don't re-exec, just return (caller should continue)
         return  # type: ignore
 
-    os.execvp("uv", cmd)
+    if sys.platform == "win32":
+        sys.exit(subprocess.call(cmd))
+    else:
+        os.execvp("uv", cmd)
 
 
 def get_script_path() -> Path | None:
@@ -619,7 +662,10 @@ def bootstrap(args: argparse.Namespace) -> Path:
                             print_step("Running updated installer...")
                             filtered_args = [a for a in sys.argv[1:] if a != "--bootstrapped"]
                             cmd = ["uv", "run", str(new_script)] + filtered_args + ["--bootstrapped"]
-                            os.execvp("uv", cmd)
+                            if sys.platform == "win32":
+                                sys.exit(subprocess.call(cmd))
+                            else:
+                                os.execvp("uv", cmd)
                     except subprocess.CalledProcessError:
                         print_warning("Could not fast-forward. Using existing version.")
             else:
@@ -663,7 +709,10 @@ def bootstrap(args: argparse.Namespace) -> Path:
                 filtered_args.append(arg)
 
             cmd = ["uv", "run", str(new_script)] + filtered_args
-            os.execvp("uv", cmd)
+            if sys.platform == "win32":
+                sys.exit(subprocess.call(cmd))
+            else:
+                os.execvp("uv", cmd)
 
     return spellbook_dir
 
