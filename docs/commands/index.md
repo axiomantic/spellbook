@@ -20,6 +20,8 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/code-review-feedback](code-review-feedback.md) | Feedback mode for code-review: Process received review feedback with categorizat... | spellbook |
 | [/code-review-give](code-review-give.md) | Give mode for code-review: Review someone else's code with multi-pass analysis a... | spellbook |
 | [/code-review-tarot](code-review-tarot.md) | Tarot integration for code-review: Roundtable dialogue with archetype personas f... | spellbook |
+| [/create-issue](create-issue.md) | Create a GitHub issue with proper template discovery and population | spellbook |
+| [/create-pr](create-pr.md) | Create a pull request with proper template discovery and population | spellbook |
 | [/crystallize](crystallize.md) | Transform verbose SOPs into high-performance agentic prompts via principled comp... | spellbook |
 | [/dead-code-analyze](dead-code-analyze.md) | Extract, triage, and verify code items for dead code. Part of dead-code-* family... | spellbook |
 | [/dead-code-implement](dead-code-implement.md) | Implement dead code deletions with user approval. Part of dead-code-* family. | spellbook |

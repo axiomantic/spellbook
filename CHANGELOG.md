@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **SPELLBOOK_CONFIG_DIR no longer inherits CLAUDE_CONFIG_DIR** - Setting `CLAUDE_CONFIG_DIR` previously caused `SPELLBOOK_CONFIG_DIR` to use the same value as a fallback. These are independent concerns: `CLAUDE_CONFIG_DIR` controls where Claude Code installs its artifacts (skills, commands), while `SPELLBOOK_CONFIG_DIR` controls where spellbook stores its work files. The fallback has been removed from `installer/config.py`, `installer/components/context_files.py`, and `installer/ui.py`.
+
 ## [0.9.12] - 2026-02-23
 
 ### Added

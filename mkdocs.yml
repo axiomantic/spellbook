@@ -95,6 +95,7 @@ nav:
       - skills/devils-advocate.md
       - skills/merging-worktrees.md
       - skills/resolving-merge-conflicts.md
+      - skills/creating-issues-and-pull-requests.md
     - Autonomous Development:
       - skills/autonomous-roundtable.md
       - skills/gathering-requirements.md
@@ -135,6 +136,8 @@ nav:
     - Workflow Commands:
       - commands/handoff.md
       - commands/distill-session.md
+      - commands/create-issue.md
+      - commands/create-pr.md
       - commands/crystallize.md
       - commands/design-assessment.md
       - commands/simplify.md
