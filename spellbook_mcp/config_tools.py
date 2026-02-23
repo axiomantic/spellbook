@@ -1,6 +1,5 @@
 """Configuration management and session initialization for spellbook."""
 
-import fcntl
 import json
 import logging
 import os
@@ -10,6 +9,8 @@ import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
+
+from installer.compat import CrossPlatformLock, LockHeldError, get_config_dir
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ SESSION_TTL_DAYS = 3
 DEFAULT_SESSION_ID = "__default__"
 
 # File-level lock for thread-safe config access
-CONFIG_LOCK_PATH = Path.home() / ".config" / "spellbook" / "config.lock"
+CONFIG_LOCK_PATH = get_config_dir() / "config.lock"
 
 
 def _cleanup_stale_sessions() -> None:
@@ -71,7 +72,7 @@ def _get_default_session_state() -> dict:
 
 def get_config_path() -> Path:
     """Get path to spellbook config file."""
-    return Path.home() / ".config" / "spellbook" / "spellbook.json"
+    return get_config_dir() / "spellbook.json"
 
 
 def _is_spellbook_root(path: Path) -> bool:
@@ -140,7 +141,7 @@ def get_spellbook_dir() -> Path:
 def config_get(key: str) -> Optional[Any]:
     """Read a config value from spellbook.json with file-level locking.
 
-    Uses fcntl.flock(LOCK_SH) for thread-safe and cross-process-safe reads.
+    Uses CrossPlatformLock for thread-safe and cross-process-safe reads.
     Falls back to unlocked read if lock acquisition fails (preserves existing
     error contract: returns None on failure).
 
@@ -154,33 +155,26 @@ def config_get(key: str) -> Optional[Any]:
     if not config_path.exists():
         return None
 
-    fd = None
     try:
-        CONFIG_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(str(CONFIG_LOCK_PATH), os.O_CREAT | os.O_RDWR)
-        fcntl.flock(fd, fcntl.LOCK_SH)
-    except OSError as e:
-        logger.warning(f"Could not acquire config read lock: {e}. Falling back to unlocked read.")
-        # Fall through to unlocked read below
-
-    try:
-        config = json.loads(config_path.read_text())
-        return config.get(key)
+        with CrossPlatformLock(CONFIG_LOCK_PATH, shared=True, blocking=True):
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            return config.get(key)
+    except LockHeldError:
+        # Fall back to unlocked read
+        logger.warning("Could not acquire config read lock. Falling back to unlocked read.")
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            return config.get(key)
+        except (json.JSONDecodeError, OSError):
+            return None
     except (json.JSONDecodeError, OSError):
         return None
-    finally:
-        if fd is not None:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-                os.close(fd)
-            except OSError:
-                pass
 
 
 def config_set(key: str, value: Any) -> dict:
     """Write a config value to spellbook.json with file-level locking.
 
-    Uses fcntl.flock(LOCK_EX) for thread-safe and cross-process-safe writes.
+    Uses CrossPlatformLock for thread-safe and cross-process-safe writes.
     Creates the config file and parent directories if they don't exist.
     Preserves other config values (read-modify-write). Falls back to unlocked
     write if lock acquisition fails (preserves existing error contract:
@@ -195,40 +189,58 @@ def config_set(key: str, value: Any) -> dict:
     """
     config_path = get_config_path()
 
-    fd = None
     try:
-        CONFIG_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(str(CONFIG_LOCK_PATH), os.O_CREAT | os.O_RDWR)
-        fcntl.flock(fd, fcntl.LOCK_EX)
-    except OSError as e:
-        logger.warning(f"Could not acquire config write lock: {e}. Falling back to unlocked write.")
-        # Fall through to unlocked write below
+        with CrossPlatformLock(CONFIG_LOCK_PATH, blocking=True):
+            config = {}
+            if config_path.exists():
+                try:
+                    config = json.loads(config_path.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError):
+                    config = {}
 
-    try:
-        # Read existing config or start fresh
+            config[key] = value
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Write atomically: write to temp file in same directory, then replace
+            fd_tmp, tmp_path = tempfile.mkstemp(
+                dir=str(config_path.parent), suffix=".tmp"
+            )
+            fd_tmp_closed = False
+            try:
+                os.write(fd_tmp, (json.dumps(config, indent=2) + "\n").encode("utf-8"))
+                os.close(fd_tmp)
+                fd_tmp_closed = True
+                os.replace(tmp_path, str(config_path))
+            except BaseException:
+                if not fd_tmp_closed:
+                    os.close(fd_tmp)
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+                raise
+
+            return {"status": "ok", "config": config}
+    except LockHeldError:
+        logger.warning("Could not acquire config write lock. Falling back to unlocked write.")
+        # Fall through to unlocked atomic write
         config = {}
         if config_path.exists():
             try:
-                config = json.loads(config_path.read_text())
+                config = json.loads(config_path.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, OSError):
                 config = {}
-
-        # Update the value
         config[key] = value
-
-        # Ensure parent directory exists
         config_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Write atomically: write to temp file in same directory, then rename
         fd_tmp, tmp_path = tempfile.mkstemp(
             dir=str(config_path.parent), suffix=".tmp"
         )
         fd_tmp_closed = False
         try:
-            os.write(fd_tmp, (json.dumps(config, indent=2) + "\n").encode())
+            os.write(fd_tmp, (json.dumps(config, indent=2) + "\n").encode("utf-8"))
             os.close(fd_tmp)
             fd_tmp_closed = True
-            os.rename(tmp_path, str(config_path))
+            os.replace(tmp_path, str(config_path))
         except BaseException:
             if not fd_tmp_closed:
                 os.close(fd_tmp)
@@ -237,15 +249,7 @@ def config_set(key: str, value: Any) -> dict:
             except OSError:
                 pass
             raise
-
         return {"status": "ok", "config": config}
-    finally:
-        if fd is not None:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-                os.close(fd)
-            except OSError:
-                pass
 
 
 def session_mode_set(
@@ -319,7 +323,7 @@ def random_line(file_path: Path) -> str:
         A random line from the file, or empty string if file missing/empty
     """
     try:
-        lines = [line.strip() for line in file_path.read_text().splitlines() if line.strip()]
+        lines = [line.strip() for line in file_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         return random.choice(lines) if lines else ""
     except OSError:
         return ""

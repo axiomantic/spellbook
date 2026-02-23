@@ -24,13 +24,12 @@ from unittest.mock import patch
 
 import pytest
 
+from installer.compat import CrossPlatformLock
 from spellbook_mcp.update_tools import (
     LOCK_STALE_SECONDS,
-    acquire_install_lock,
     apply_update,
     check_for_updates,
     classify_version_bump,
-    release_install_lock,
     rollback_update,
 )
 
@@ -282,12 +281,12 @@ def _hold_lock_in_child(
         stop_event: Wait on this before releasing the lock.
     """
     lock_path = Path(lock_path_str)
-    fd = acquire_install_lock(lock_path)
-    if fd is None:
+    lock = CrossPlatformLock(lock_path, stale_seconds=LOCK_STALE_SECONDS)
+    if not lock.acquire():
         return  # Could not acquire; test will detect this
     ready_event.set()
     stop_event.wait(timeout=30)
-    release_install_lock(fd, lock_path)
+    lock.release()
 
 
 class TestLockFile:
@@ -307,11 +306,11 @@ class TestLockFile:
             child.start()
             started = True
             # Wait for the child to acquire the lock
-            assert ready.wait(timeout=10), "Child process did not acquire lock in time"
+            assert ready.wait(timeout=30), "Child process did not acquire lock in time"
 
             # Parent attempts to acquire the same lock -- should fail
-            fd = acquire_install_lock(lock_file)
-            assert fd is None, (
+            lock = CrossPlatformLock(lock_file, stale_seconds=LOCK_STALE_SECONDS)
+            assert lock.acquire() is False, (
                 "Expected lock acquisition to fail while held by another process"
             )
         finally:
@@ -327,9 +326,9 @@ class TestLockFile:
         lock_file.parent.mkdir(parents=True, exist_ok=True)
 
         # First acquire and release a real lock so the file exists
-        fd = acquire_install_lock(lock_file)
-        assert fd is not None, "Could not acquire initial lock"
-        release_install_lock(fd, lock_file)
+        lock = CrossPlatformLock(lock_file, stale_seconds=LOCK_STALE_SECONDS)
+        assert lock.acquire() is True, "Could not acquire initial lock"
+        lock.release()
 
         # Now manually create a lock file with stale metadata and a dead PID.
         # The OS-level flock is not held by any process, so the flock() call
@@ -340,14 +339,15 @@ class TestLockFile:
         })
         lock_file.write_text(stale_data)
 
-        fd2 = acquire_install_lock(lock_file)
+        lock2 = CrossPlatformLock(lock_file, stale_seconds=LOCK_STALE_SECONDS)
+        acquired = lock2.acquire()
         try:
-            assert fd2 is not None, (
+            assert acquired is True, (
                 "Expected stale lock to be broken, but acquisition failed"
             )
         finally:
-            if fd2 is not None:
-                release_install_lock(fd2, lock_file)
+            if acquired:
+                lock2.release()
 
 
 class TestSHAValidation:

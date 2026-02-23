@@ -31,8 +31,8 @@ def main():
     docs_agents_dir = repo_root / "docs" / "agents"
 
     # Read files
-    readme_content = readme_path.read_text()
-    mkdocs_content = mkdocs_path.read_text() if mkdocs_path.exists() else ""
+    readme_content = readme_path.read_text(encoding="utf-8")
+    mkdocs_content = mkdocs_path.read_text(encoding="utf-8") if mkdocs_path.exists() else ""
 
     # Find all commands (exclude files starting with underscore)
     commands = []

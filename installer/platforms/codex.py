@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
+from ..compat import get_python_executable
 from ..components.context_files import generate_codex_context
 from ..components.symlinks import (
     create_symlink,
@@ -29,7 +30,7 @@ def _generate_mcp_toml_section(server_path: Path) -> str:
     """Generate the TOML section for spellbook MCP server."""
     return f"""{TOML_START_MARKER}
 [mcp_servers.spellbook]
-command = "python3"
+command = "{get_python_executable()}"
 args = ["{server_path}"]
 {TOML_END_MARKER}
 """

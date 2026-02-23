@@ -76,9 +76,10 @@ class TestSessionSpawner:
             env_vars["SPELLBOOK_COORDINATION_BACKEND"]
             == mock_env_vars["SPELLBOOK_COORDINATION_BACKEND"]
         )
+        # config_path is converted via str(Path(...)) which may normalize separators
         assert (
             env_vars["SPELLBOOK_CONFIG_PATH"]
-            == mock_env_vars["SPELLBOOK_CONFIG_PATH"]
+            == str(Path(mock_env_vars["SPELLBOOK_CONFIG_PATH"]))
         )
 
     def test_build_env_vars_inherits_current_env(self, spawner):

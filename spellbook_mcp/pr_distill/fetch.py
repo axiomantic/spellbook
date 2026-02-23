@@ -9,6 +9,7 @@ Ported from lib/pr-distill/fetch.js.
 import json
 import re
 import subprocess
+import sys
 from typing import TypedDict
 
 from spellbook_mcp.pr_distill.errors import ErrorCode, PRDistillError
@@ -41,10 +42,13 @@ class PRFetchResult(TypedDict):
 
 
 def run_command(cmd: str) -> str:
-    """Run a shell command and return output.
+    """Run a command and return output.
+
+    Uses list-form subprocess on all platforms to avoid shell=True issues
+    on Windows and prevent shell injection.
 
     Args:
-        cmd: Shell command to run
+        cmd: Command string (will be split using shlex)
 
     Returns:
         Command stdout as string
@@ -52,9 +56,10 @@ def run_command(cmd: str) -> str:
     Raises:
         subprocess.CalledProcessError: If command fails
     """
+    import shlex
+    args = shlex.split(cmd, posix=(sys.platform != "win32"))
     result = subprocess.run(
-        cmd,
-        shell=True,
+        args,
         capture_output=True,
         text=True,
         timeout=GH_TIMEOUT,

@@ -2,9 +2,18 @@
 Symlink management for spellbook installation.
 """
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional
+
+from installer.compat import (
+    create_link,
+    is_junction,
+    normalize_path_for_comparison,
+    remove_link,
+    get_config_dir,
+)
 
 
 @dataclass
@@ -18,19 +27,14 @@ class SymlinkResult:
     message: str
 
 
-def is_dir_empty(path: Path) -> bool:
-    """Check if a directory is empty."""
-    try:
-        return not any(path.iterdir())
-    except (OSError, PermissionError):
-        return False
-
-
 def create_symlink(
     source: Path, target: Path, dry_run: bool = False, remove_empty_dirs: bool = True
 ) -> SymlinkResult:
     """
     Create a symlink from target to source.
+
+    Delegates to create_link() from compat module, which handles
+    cross-platform link creation (symlink -> junction -> copy fallback on Windows).
 
     Args:
         source: The actual file/directory to link to
@@ -40,78 +44,14 @@ def create_symlink(
 
     Returns SymlinkResult with status.
     """
-    if not source.exists():
-        return SymlinkResult(
-            source=source,
-            target=target,
-            success=False,
-            action="failed",
-            message=f"Source does not exist: {source}",
-        )
-
-    if dry_run:
-        if target.exists() or target.is_symlink():
-            return SymlinkResult(
-                source=source,
-                target=target,
-                success=True,
-                action="updated",
-                message=f"Would update symlink: {target.name}",
-            )
-        return SymlinkResult(
-            source=source,
-            target=target,
-            success=True,
-            action="created",
-            message=f"Would create symlink: {target.name}",
-        )
-
-    try:
-        # Ensure parent directory exists
-        target.parent.mkdir(parents=True, exist_ok=True)
-
-        # Remove existing (file, dir, or symlink)
-        if target.is_symlink() or target.exists():
-            if target.is_dir() and not target.is_symlink():
-                # Handle existing directory
-                if remove_empty_dirs and is_dir_empty(target):
-                    # Empty directory - safe to remove
-                    target.rmdir()
-                    action = "updated"
-                else:
-                    # Non-empty directory - don't remove
-                    return SymlinkResult(
-                        source=source,
-                        target=target,
-                        success=False,
-                        action="failed",
-                        message=f"Target is a non-empty directory: {target}. Remove it manually to proceed.",
-                    )
-            else:
-                target.unlink()
-                action = "updated"
-        else:
-            action = "created"
-
-        # Create symlink
-        target.symlink_to(source)
-
-        return SymlinkResult(
-            source=source,
-            target=target,
-            success=True,
-            action=action,
-            message=f"{action.capitalize()} symlink: {target.name}",
-        )
-
-    except OSError as e:
-        return SymlinkResult(
-            source=source,
-            target=target,
-            success=False,
-            action="failed",
-            message=f"Failed to create symlink: {e}",
-        )
+    result = create_link(source, target, dry_run=dry_run, remove_empty_dirs=remove_empty_dirs)
+    return SymlinkResult(
+        source=result.source,
+        target=result.target,
+        success=result.success,
+        action=result.action,
+        message=result.message,
+    )
 
 
 def remove_symlink(
@@ -127,7 +67,7 @@ def remove_symlink(
 
     Returns SymlinkResult with status.
     """
-    if not target.exists() and not target.is_symlink():
+    if not target.exists() and not target.is_symlink() and not is_junction(target):
         return SymlinkResult(
             source=verify_source or Path("."),
             target=target,
@@ -136,7 +76,7 @@ def remove_symlink(
             message=f"Symlink does not exist: {target.name}",
         )
 
-    if not target.is_symlink():
+    if not target.is_symlink() and not is_junction(target):
         return SymlinkResult(
             source=verify_source or Path("."),
             target=target,
@@ -150,7 +90,9 @@ def remove_symlink(
     if verify_source:
         # Check if symlink points to expected location
         expected = verify_source.resolve()
-        if not str(actual_source).startswith(str(expected)):
+        actual_norm = normalize_path_for_comparison(actual_source)
+        expected_norm = normalize_path_for_comparison(expected)
+        if not actual_norm.startswith(expected_norm):
             return SymlinkResult(
                 source=actual_source,
                 target=target,
@@ -169,13 +111,21 @@ def remove_symlink(
         )
 
     try:
-        target.unlink()
+        removed = remove_link(target)
+        if removed:
+            return SymlinkResult(
+                source=actual_source,
+                target=target,
+                success=True,
+                action="removed",
+                message=f"Removed symlink: {target.name}",
+            )
         return SymlinkResult(
             source=actual_source,
             target=target,
-            success=True,
-            action="removed",
-            message=f"Removed symlink: {target.name}",
+            success=False,
+            action="failed",
+            message=f"Failed to remove symlink: {target.name}",
         )
     except OSError as e:
         return SymlinkResult(
@@ -187,6 +137,48 @@ def remove_symlink(
         )
 
 
+def _get_link_manifest_path() -> Path:
+    """Get the path to the link manifest file."""
+    return get_config_dir("spellbook") / "link_manifest.json"
+
+
+def _update_link_manifest(source: Path, target: Path, link_mode: str) -> None:
+    """Track copy-mode links for re-copy during updates.
+
+    Records entries where link_mode == "copy" so that --update-only runs
+    can re-copy stale entries. Entries using symlink or junction mode are
+    removed from the manifest since they don't need re-copying.
+
+    Args:
+        source: The actual file/directory that was linked to.
+        target: Where the link was created.
+        link_mode: The link mode used ("symlink", "junction", or "copy").
+    """
+    manifest_path = _get_link_manifest_path()
+    manifest: dict = {"links": []}
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            manifest = {"links": []}
+
+    # Deduplicate: remove existing entry for this target
+    manifest["links"] = [
+        e for e in manifest["links"] if e.get("target") != str(target)
+    ]
+
+    # Only record copy-mode links (symlinks/junctions auto-update)
+    if link_mode == "copy":
+        manifest["links"].append({
+            "source": str(source),
+            "target": str(target),
+            "link_mode": link_mode,
+        })
+
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
+
 def create_skill_symlinks(
     skills_source: Path,
     skills_target: Path,
@@ -195,6 +187,10 @@ def create_skill_symlinks(
 ) -> List[SymlinkResult]:
     """
     Create symlinks for all skills.
+
+    On Windows where symlinks may fall back to copy mode, entries are
+    tracked in a link manifest so that --update-only runs can re-copy
+    stale content.
 
     Args:
         skills_source: Source skills directory (e.g., spellbook/skills)
@@ -216,18 +212,30 @@ def create_skill_symlinks(
         skill_name = skill_dir.name
 
         if as_directories:
+            source = skill_dir
             target = skills_target / skill_name
-            result = create_symlink(skill_dir, target, dry_run)
         else:
             # Flat .md file format (for OpenCode)
             skill_file = skill_dir / "SKILL.md"
             if skill_file.exists():
+                source = skill_file
                 target = skills_target / f"{skill_name}.md"
-                result = create_symlink(skill_file, target, dry_run)
             else:
                 continue
 
+        link_result = create_link(source, target, dry_run=dry_run)
+        result = SymlinkResult(
+            source=link_result.source,
+            target=link_result.target,
+            success=link_result.success,
+            action=link_result.action,
+            message=link_result.message,
+        )
         results.append(result)
+
+        # Track copy-mode links in manifest for re-copy during updates
+        if not dry_run and link_result.success:
+            _update_link_manifest(source, target, link_result.link_mode)
 
     return results
 
@@ -241,6 +249,10 @@ def create_command_symlinks(
     Handles both:
     - Simple commands: .md files in commands root (e.g., commands/verify.md)
     - Complex commands: subdirectories with supporting files (e.g., commands/systematic-debugging/)
+
+    On Windows where symlinks may fall back to copy mode, entries are
+    tracked in a link manifest so that --update-only runs can re-copy
+    stale content.
 
     Args:
         commands_source: Source commands directory
@@ -257,15 +269,33 @@ def create_command_symlinks(
     # Install simple command files (.md files in commands root)
     for cmd_file in commands_source.glob("*.md"):
         target = commands_target / cmd_file.name
-        result = create_symlink(cmd_file, target, dry_run)
+        link_result = create_link(cmd_file, target, dry_run=dry_run)
+        result = SymlinkResult(
+            source=link_result.source,
+            target=link_result.target,
+            success=link_result.success,
+            action=link_result.action,
+            message=link_result.message,
+        )
         results.append(result)
+        if not dry_run and link_result.success:
+            _update_link_manifest(cmd_file, target, link_result.link_mode)
 
     # Install command directories (subdirectories in commands/)
     for cmd_dir in commands_source.iterdir():
         if cmd_dir.is_dir():
             target = commands_target / cmd_dir.name
-            result = create_symlink(cmd_dir, target, dry_run)
+            link_result = create_link(cmd_dir, target, dry_run=dry_run)
+            result = SymlinkResult(
+                source=link_result.source,
+                target=link_result.target,
+                success=link_result.success,
+                action=link_result.action,
+                message=link_result.message,
+            )
             results.append(result)
+            if not dry_run and link_result.success:
+                _update_link_manifest(cmd_dir, target, link_result.link_mode)
 
     return results
 
@@ -289,7 +319,7 @@ def remove_spellbook_symlinks(
         return results
 
     for item in target_dir.iterdir():
-        if item.is_symlink():
+        if item.is_symlink() or is_junction(item):
             result = remove_symlink(item, verify_source=spellbook_dir, dry_run=dry_run)
             if result.action != "skipped":
                 results.append(result)
@@ -322,7 +352,7 @@ def cleanup_spellbook_symlinks(
         return results
 
     for item in target_dir.iterdir():
-        if not item.is_symlink():
+        if not item.is_symlink() and not is_junction(item):
             continue
 
         # Check if symlink target exists
@@ -367,8 +397,8 @@ def cleanup_spellbook_symlinks(
                 message=f"Would remove {reason} symlink: {item.name}",
             ))
         else:
-            try:
-                item.unlink()
+            removed = remove_link(item)
+            if removed:
                 results.append(SymlinkResult(
                     source=raw_target,
                     target=item,
@@ -376,13 +406,13 @@ def cleanup_spellbook_symlinks(
                     action="removed",
                     message=f"Removed {reason} symlink: {item.name}",
                 ))
-            except OSError as e:
+            else:
                 results.append(SymlinkResult(
                     source=raw_target,
                     target=item,
                     success=False,
                     action="failed",
-                    message=f"Failed to remove symlink: {e}",
+                    message=f"Failed to remove symlink: {item.name}",
                 ))
 
     return results
