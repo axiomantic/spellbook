@@ -57,14 +57,12 @@ class TestInstallLock:
         lock = CrossPlatformLock(lock_path)
         assert lock.acquire() is True
 
-        if sys.platform == "win32":
-            # On Windows, msvcrt.locking() prevents reading locked files.
-            # Release first, then verify the PID was written.
-            lock.release()
-            content = lock_path.read_text()
-        else:
-            content = lock_path.read_text()
-            lock.release()
+        # Read lock data via the held fd (works on all platforms).
+        # Can't open a second fd on Windows, and release() deletes the file.
+        os.lseek(lock._fd, 0, os.SEEK_SET)
+        content = os.read(lock._fd, 4096).decode()
+
+        lock.release()
 
         lock_info = json.loads(content)
         assert lock_info["pid"] == os.getpid()

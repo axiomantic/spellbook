@@ -517,17 +517,13 @@ class TestCrossPlatformLock:
         lock = CrossPlatformLock(lock_path)
         lock.acquire()
 
-        if sys.platform == "win32":
-            # On Windows, the lock file is held open with msvcrt.locking(),
-            # so we can't read it from another fd. Release first, then verify.
-            lock.release()
-            with open(lock_path) as f:
-                data = json.loads(f.read())
-        else:
-            # On Unix, flock() allows concurrent reads from other fds.
-            with open(lock_path) as f:
-                data = json.loads(f.read())
-            lock.release()
+        # Read lock data via the held fd (works on all platforms).
+        # We can't open a second fd on Windows (msvcrt.locking),
+        # and release() deletes the file, so read through _fd directly.
+        os.lseek(lock._fd, 0, os.SEEK_SET)
+        data = json.loads(os.read(lock._fd, 4096).decode())
+
+        lock.release()
 
         assert data["pid"] == os.getpid()
         assert "timestamp" in data
