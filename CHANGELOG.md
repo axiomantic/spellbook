@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.12] - 2026-02-23
+
+### Added
+- **Windows support (beta)** - Cross-platform installation and runtime for Windows
+  - `bootstrap.ps1`: PowerShell bootstrap script for Windows installation
+  - `installer/compat.py`: Cross-platform abstraction layer (10 functions + 2 classes) for path handling, symlinks, and service management
+  - Symlink fallback chain: symlink (Developer Mode) → junction → copy
+  - `CrossPlatformLock` with `msvcrt` file locking on Windows, `fcntl` on Unix
+  - Service management via Windows Task Scheduler (`schtasks`)
+  - Python hook equivalents (`.py`) for all 5 security hooks (bash-gate, spawn-guard, state-sanitize, audit-log, canary-check)
+  - `spellbook-watchdog.py`: Windows process watchdog for MCP server lifecycle
+  - Windows CI runner in GitHub Actions test matrix (ubuntu, macos, windows)
+  - 115 Windows hook tests (83 cross-platform + 32 Windows-only behavioral tests)
+  - 71 unit tests for `installer/compat.py`
+  - PowerShell bootstrap tests with syntax validation
+
+### Fixed
+- **Cross-platform test suite** - Made ~120 tests portable across all 3 OS platforms
+  - Path separator assertions use `os.path` instead of hardcoded forward slashes
+  - UTF-8 encoding specified for file operations handling Unicode content
+  - Platform-aware hook extension assertions (`.sh` vs `.py`)
+  - Lock file tests read via held fd instead of reopening (Windows `msvcrt` compat)
+  - Resume path regex matches both `/` and `\` separators
+- **FastMCP version pinned** to `>=2.0.0,<3` to prevent breaking API changes
+- **bootstrap.ps1** checks `$LASTEXITCODE` after `git clone` (PowerShell `$ErrorActionPreference` doesn't catch external command failures)
+- **Docker test stability** - Tolerates benign git warnings ("dubious ownership") in `_assert_install_ok()`
+- **Concurrent checkpoint test** - Retry logic for file lock contention under thread pressure
+
 ## [0.9.11] - 2026-02-19
 
 ### Added
@@ -15,13 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tiered coverage: mandatory for multi-phase skills/commands, optional for simple ones
   - 139 Mermaid workflow diagrams generated (52 skills, 80 commands, 7 agents)
   - Diagrams embedded in doc pages via `generate_docs.py` updates
-- **Windows support (beta)** - Cross-platform installation and runtime for Windows
-  - `bootstrap.ps1`: PowerShell bootstrap script for Windows installation
-  - `installer/compat.py`: Cross-platform abstraction layer for path handling, symlinks, and service management
-  - Symlink fallback chain: symlink (Developer Mode) -> junction -> copy
-  - `CrossPlatformLock` with `msvcrt` file locking support on Windows
-  - Service management via Windows Task Scheduler
-  - Windows CI runner for automated testing
 - **Auto-update system** - Two-phase update architecture for spellbook installations
   - Detection phase: read-only git fetch inside MCP server
   - Application phase: subprocess running installer with git-based rollback
