@@ -4,8 +4,8 @@
   "description": "AI assistant skills and workflows for Gemini CLI",
   "mcpServers": {
     "spellbook": {
-      "command": "python3",
-      "args": ["${extensionPath}/../../spellbook_mcp/server.py"]
+      "httpUrl": "http://127.0.0.1:8765/mcp",
+      "timeout": 10000
     }
   }
 }

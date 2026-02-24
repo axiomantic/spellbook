@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-02-24
+
+### Added
+- **creating-issues-and-pull-requests skill** - New library skill for template-aware PR and issue creation
+  - 4-tier template discovery: local filesystem, GraphQL API, org-level `.github` repo fallback, sensible default
+  - Fork-aware: detects cross-repo PRs, uses base repo's templates, confirms target repository
+  - YAML issue form support with interactive field walkthrough and `--web` escape hatch
+  - Safe `gh` CLI patterns: always `--body-file`, never `--fill`/`--template`/`gh pr edit`
+  - Jira-aware PR naming: extracts ticket from branch name, never fabricates
+  - Split into orchestrator skill + `/create-pr` and `/create-issue` commands
+
+### Changed
+- **All platforms now use HTTP daemon transport** - Removed stdio transport entirely. Gemini CLI, Codex, and Crush now connect to the shared HTTP daemon at `127.0.0.1:8765` (same as Claude Code and OpenCode). Eliminates cold-start latency and fixes Gemini CLI "MCP error -32000: Connection closed" during discovery.
+  - `extensions/gemini/gemini-extension.json`: switched from `command`/`args` to `httpUrl`
+  - `installer/platforms/gemini.py`: added `install_daemon()` step
+  - `installer/platforms/codex.py`: switched TOML config from stdio to HTTP
+  - `installer/platforms/crush.py`: switched JSON config from `type: stdio` to `type: http`
+  - `spellbook_mcp/server.py`: removed stdio-specific UpdateWatcher deferral
+  - `spellbook_mcp/update_watcher.py`: removed transport parameter (HTTP-only)
+- **Docker tests skip by default** - Added `docker` pytest marker; docker tests only run in CI with `--run-docker` flag. Reduces local test suite from ~48min to ~2min.
+
 ### Fixed
 - **SPELLBOOK_CONFIG_DIR no longer inherits CLAUDE_CONFIG_DIR** - Setting `CLAUDE_CONFIG_DIR` previously caused `SPELLBOOK_CONFIG_DIR` to use the same value as a fallback. These are independent concerns: `CLAUDE_CONFIG_DIR` controls where Claude Code installs its artifacts (skills, commands), while `SPELLBOOK_CONFIG_DIR` controls where spellbook stores its work files. The fallback has been removed from `installer/config.py`, `installer/components/context_files.py`, and `installer/ui.py`.
 

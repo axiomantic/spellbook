@@ -205,7 +205,23 @@ def check_claude_config_only(verbose: bool = False) -> HealthCheckResult:
             message=f"Configuration scope: {scope}",
         ))
 
-    # Extract and verify command
+    # Detect transport type
+    type_match = re.search(r"Type:\s*(.+)", stdout)
+    transport_type = type_match.group(1).strip() if type_match else "unknown"
+    is_http_transport = transport_type in ("streamable-http", "sse")
+
+    # For HTTP transports (streamable-http, sse), verify URL instead of command/args
+    url_match = re.search(r"URL:\s*(.+)", stdout)
+    if is_http_transport and url_match:
+        url = url_match.group(1).strip()
+        result.diagnostics.append(DiagnosticResult(
+            check="mcp_url",
+            passed=True,
+            message=f"MCP URL configured: {url}",
+            details={"url": url, "transport": transport_type},
+        ))
+
+    # Extract and verify command (stdio transport)
     command_match = re.search(r"Command:\s*(.+)", stdout)
     if command_match:
         command = command_match.group(1).strip()
@@ -223,7 +239,7 @@ def check_claude_config_only(verbose: bool = False) -> HealthCheckResult:
                 message=f"Command not found: {command}",
             ))
 
-    # Extract and verify args (server script path)
+    # Extract and verify args (server script path, stdio transport)
     args_match = re.search(r"Args:\s*(.+)", stdout)
     if args_match:
         args = args_match.group(1).strip()
@@ -255,22 +271,28 @@ def check_claude_config_only(verbose: bool = False) -> HealthCheckResult:
         details={"config": stdout.strip()},
     ))
 
-    # For config-only check, mark as healthy if:
-    # 1. MCP is configured
-    # 2. Server script exists
-    # 3. Python command is available
+    # For config-only check, mark as healthy based on transport type:
+    # - stdio: MCP is configured + server script exists + command is available
+    # - streamable-http/sse: MCP is configured + URL is present
     # Connection status is informational but not required
-    script_exists = any(
-        d.check == "server_script_exists" and d.passed
-        for d in result.diagnostics
-    )
-    command_available = any(
-        d.check == "command_available" and d.passed
-        for d in result.diagnostics
-    )
-
-    if result.configured and script_exists and command_available:
-        result.healthy = True
+    if is_http_transport:
+        url_configured = any(
+            d.check == "mcp_url" and d.passed
+            for d in result.diagnostics
+        )
+        if result.configured and url_configured:
+            result.healthy = True
+    else:
+        script_exists = any(
+            d.check == "server_script_exists" and d.passed
+            for d in result.diagnostics
+        )
+        command_available = any(
+            d.check == "command_available" and d.passed
+            for d in result.diagnostics
+        )
+        if result.configured and script_exists and command_available:
+            result.healthy = True
 
     return result
 

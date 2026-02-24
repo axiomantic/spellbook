@@ -116,7 +116,8 @@ class TestCrushInstaller:
         # Check MCP server configured
         assert "mcp" in config
         assert "spellbook" in config["mcp"]
-        assert config["mcp"]["spellbook"]["type"] == "stdio"
+        assert config["mcp"]["spellbook"]["type"] == "http"
+        assert "url" in config["mcp"]["spellbook"]
 
     def test_install_configures_skills_path(self, spellbook_dir, crush_config_dir, monkeypatch, tmp_path):
         """Test that install adds Claude skills path to options.skills_paths."""
@@ -297,17 +298,17 @@ class TestCrushConfig:
         from installer.platforms.crush import _update_crush_config
 
         config_path = tmp_path / "crush.json"
-        server_path = tmp_path / "server.py"
         context_path = tmp_path / "AGENTS.md"
         skills_path = tmp_path / ".claude" / "skills"
 
-        success, msg = _update_crush_config(config_path, server_path, context_path, skills_path)
+        success, msg = _update_crush_config(config_path, context_path, skills_path)
 
         assert success is True
         assert config_path.exists()
 
         config = json.loads(config_path.read_text())
-        assert config["mcp"]["spellbook"]["type"] == "stdio"
+        assert config["mcp"]["spellbook"]["type"] == "http"
+        assert "url" in config["mcp"]["spellbook"]
 
     def test_update_crush_config_updates_existing(self, tmp_path):
         """Test _update_crush_config updates existing config."""
@@ -316,11 +317,10 @@ class TestCrushConfig:
         config_path = tmp_path / "crush.json"
         config_path.write_text(json.dumps({"existing": True}))
 
-        server_path = tmp_path / "server.py"
         context_path = tmp_path / "AGENTS.md"
         skills_path = tmp_path / ".claude" / "skills"
 
-        _update_crush_config(config_path, server_path, context_path, skills_path)
+        _update_crush_config(config_path, context_path, skills_path)
 
         config = json.loads(config_path.read_text())
         assert config["existing"] is True  # Preserved
@@ -331,12 +331,11 @@ class TestCrushConfig:
         from installer.platforms.crush import _update_crush_config, _remove_crush_config
 
         config_path = tmp_path / "crush.json"
-        server_path = tmp_path / "server.py"
         context_path = tmp_path / "AGENTS.md"
         skills_path = tmp_path / ".claude" / "skills"
 
         # First add
-        _update_crush_config(config_path, server_path, context_path, skills_path)
+        _update_crush_config(config_path, context_path, skills_path)
 
         # Then remove
         success, msg = _remove_crush_config(config_path, context_path, skills_path)

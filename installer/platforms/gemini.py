@@ -12,6 +12,7 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
+from ..components.mcp import install_daemon
 from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
@@ -314,6 +315,32 @@ class GeminiInstaller(PlatformInstaller):
                 )
             )
             return results
+
+        # Install and start the MCP daemon (HTTP transport)
+        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
+        if server_path.exists():
+            daemon_success, daemon_msg = install_daemon(
+                self.spellbook_dir, dry_run=self.dry_run
+            )
+            results.append(
+                InstallResult(
+                    component="mcp_daemon",
+                    platform=self.platform_id,
+                    success=daemon_success,
+                    action="installed" if daemon_success else "failed",
+                    message=f"MCP daemon: {daemon_msg}",
+                )
+            )
+        else:
+            results.append(
+                InstallResult(
+                    component="mcp_daemon",
+                    platform=self.platform_id,
+                    success=False,
+                    action="failed",
+                    message=f"MCP daemon: server.py not found at {server_path}",
+                )
+            )
 
         # Ensure skills symlinks exist in extension
         created, errors = self._ensure_extension_skills_symlinks()

@@ -22,6 +22,9 @@ from typing import Callable, Generator, Iterator
 
 import pytest
 
+# Mark all tests in this directory as docker tests (skipped locally, run in CI)
+pytestmark = pytest.mark.docker
+
 # Root of the real spellbook project (two levels up from this file)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 

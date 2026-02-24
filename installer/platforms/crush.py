@@ -15,8 +15,8 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
-from ..compat import get_python_executable
 from ..components.context_files import generate_codex_context
+from ..components.mcp import get_spellbook_server_url, install_daemon
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 
 def _update_crush_config(
     config_path: Path,
-    server_path: Path,
     context_file_path: Path,
     claude_skills_path: Path,
     dry_run: bool = False,
@@ -35,7 +34,7 @@ def _update_crush_config(
     Add spellbook configuration to Crush config.
 
     This configures:
-    - MCP server (spellbook) under the 'mcp' key
+    - MCP server (spellbook) under the 'mcp' key (HTTP daemon transport)
     - Skills path (~/.claude/skills) under 'options.skills_paths'
     - Context file path under 'options.context_paths'
     """
@@ -85,21 +84,19 @@ def _update_crush_config(
     if "mcp" not in config:
         config["mcp"] = {}
 
-    # Configure spellbook MCP server
+    # Configure spellbook MCP server (HTTP daemon transport)
+    daemon_url = get_spellbook_server_url()
+
     if "spellbook" in config["mcp"]:
-        # Update existing config
-        config["mcp"]["spellbook"]["type"] = "stdio"
-        config["mcp"]["spellbook"]["command"] = get_python_executable()
-        config["mcp"]["spellbook"]["args"] = [str(server_path)]
-        actions.append("updated MCP server")
+        action_msg = "updated MCP server"
     else:
-        # Add new spellbook MCP server
-        config["mcp"]["spellbook"] = {
-            "type": "stdio",
-            "command": get_python_executable(),
-            "args": [str(server_path)],
-        }
-        actions.append("registered MCP server")
+        action_msg = "registered MCP server"
+
+    config["mcp"]["spellbook"] = {
+        "type": "http",
+        "url": daemon_url,
+    }
+    actions.append(action_msg)
 
     # Write config
     config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
@@ -270,25 +267,48 @@ class CrushInstaller(PlatformInstaller):
                     )
                 )
 
-        # Register spellbook in crush.json (MCP server + skills path + context path)
+        # Install and start the MCP daemon (HTTP transport)
         server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
         if server_path.exists():
-            success, msg = _update_crush_config(
-                self.crush_config_file,
-                server_path,
-                context_file,
-                self.claude_skills_path,
-                self.dry_run,
+            daemon_success, daemon_msg = install_daemon(
+                self.spellbook_dir, dry_run=self.dry_run
             )
             results.append(
                 InstallResult(
-                    component="crush_config",
+                    component="mcp_daemon",
                     platform=self.platform_id,
-                    success=success,
-                    action="installed" if success else "failed",
-                    message=f"crush.json: {msg}",
+                    success=daemon_success,
+                    action="installed" if daemon_success else "failed",
+                    message=f"MCP daemon: {daemon_msg}",
                 )
             )
+        else:
+            results.append(
+                InstallResult(
+                    component="mcp_daemon",
+                    platform=self.platform_id,
+                    success=False,
+                    action="failed",
+                    message=f"MCP daemon: server.py not found at {server_path}",
+                )
+            )
+
+        # Register spellbook in crush.json (MCP server + skills path + context path)
+        success, msg = _update_crush_config(
+            self.crush_config_file,
+            context_file,
+            self.claude_skills_path,
+            self.dry_run,
+        )
+        results.append(
+            InstallResult(
+                component="crush_config",
+                platform=self.platform_id,
+                success=success,
+                action="installed" if success else "failed",
+                message=f"crush.json: {msg}",
+            )
+        )
 
         return results
 

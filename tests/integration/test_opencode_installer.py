@@ -173,7 +173,7 @@ class TestOpenCodeInstaller:
         """Test that install updates existing spellbook MCP config to HTTP."""
         from installer.platforms.opencode import OpenCodeInstaller
 
-        # Create existing config with old stdio-style spellbook config
+        # Create existing config with old local/command-style spellbook config
         opencode_json = opencode_config_dir / "opencode.json"
         existing_config = {
             "mcp": {

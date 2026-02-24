@@ -3,9 +3,7 @@
 Follows the SessionWatcher pattern from spellbook_mcp/watcher.py:
 daemon thread, Event.wait() for responsive shutdown, circuit breaker.
 
-Two transport modes:
-- stdio: Check once at startup (session-scoped process)
-- streamable-http: Check at startup + configurable interval (long-lived daemon)
+Checks at startup + configurable interval (long-lived HTTP daemon).
 """
 
 import logging
@@ -32,7 +30,6 @@ class UpdateWatcher(threading.Thread):
     def __init__(
         self,
         spellbook_dir: str,
-        transport: str = "stdio",
         check_interval: float = 86400.0,  # 24 hours
         remote: Optional[str] = None,
         branch: Optional[str] = None,
@@ -41,14 +38,12 @@ class UpdateWatcher(threading.Thread):
 
         Args:
             spellbook_dir: Path to the spellbook git repository
-            transport: MCP transport mode ("stdio" or "streamable-http")
-            check_interval: Seconds between checks for HTTP transport
+            check_interval: Seconds between periodic update checks
             remote: Git remote name (from config or default "origin")
             branch: Git branch name (from config or auto-detected)
         """
         super().__init__(daemon=True)
         self.spellbook_dir = Path(spellbook_dir)
-        self.transport = transport
         self.check_interval = check_interval
         self.remote = remote or config_get("auto_update_remote") or "origin"
         # Lazy evaluation: store branch from config/arg, defer network detection to run()
@@ -82,8 +77,7 @@ class UpdateWatcher(threading.Thread):
     def run(self):
         """Main watcher loop.
 
-        stdio: check once at startup, then idle.
-        HTTP: check at startup, then sleep for check_interval between checks.
+        Checks at startup, then sleeps for check_interval between checks.
         Circuit breaker with exponential backoff on consecutive failures.
         """
         # Lazy branch detection: deferred from __init__ to avoid network I/O at startup
@@ -99,11 +93,7 @@ class UpdateWatcher(threading.Thread):
             config_set("update_check_failures", self._consecutive_failures)
             logger.warning(f"Update check failed ({self._consecutive_failures}): {e}")
 
-        # stdio: check once and done
-        if self.transport == "stdio":
-            return
-
-        # HTTP: periodic checks
+        # Periodic checks
         while not self._shutdown.is_set():
             interval = self._calculate_backoff()
             self._shutdown.wait(interval)

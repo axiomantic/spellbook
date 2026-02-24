@@ -909,8 +909,6 @@ Then open http://127.0.0.1:8000
 
 ### Run MCP Server Directly
 
-**As a system service (recommended):**
-
 ```bash
 # Install as a daemon that starts on boot
 python3 ~/.local/share/spellbook/scripts/spellbook-server.py install
@@ -919,13 +917,7 @@ python3 ~/.local/share/spellbook/scripts/spellbook-server.py install
 claude mcp add --transport http spellbook http://127.0.0.1:8765/mcp
 ```
 
-This runs a single MCP server instance that all sessions connect to via HTTP, eliminating the 10+ second cold start when using stdio transport.
-
-**Manual stdio mode (for debugging):**
-
-```bash
-uv run ~/.local/share/spellbook/spellbook_mcp/server.py
-```
+This runs a single MCP server instance that all sessions connect to via HTTP.
 
 ## Documentation
 

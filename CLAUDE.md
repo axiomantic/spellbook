@@ -8,9 +8,9 @@ Development instructions for spellbook codebase. User-facing template: `CLAUDE.s
 |----------|--------|-----------------|---------------|
 | Claude Code | [anthropics/claude-code](https://github.com/anthropics/claude-code) | `~/.claude/` | HTTP daemon |
 | OpenCode | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
-| Codex | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | stdio |
-| Gemini CLI | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | extension |
-| Crush | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | stdio |
+| Codex | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | HTTP daemon |
+| Gemini CLI | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |
+| Crush | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | HTTP daemon |
 
 **Note:** There are multiple projects named "opencode". We support **anomalyco/opencode** (92K+ stars),
 not the archived opencode-ai/opencode (which became charmbracelet/crush).

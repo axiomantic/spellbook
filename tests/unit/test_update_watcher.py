@@ -15,9 +15,8 @@ class TestUpdateWatcherInit:
 
         with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
             mock_cg.return_value = None
-            watcher = UpdateWatcher(str(tmp_path), transport="stdio")
+            watcher = UpdateWatcher(str(tmp_path))
 
-        assert watcher.transport == "stdio"
         assert watcher.check_interval == 86400.0
         assert watcher.remote == "origin"
         # branch is None after init (lazy detection deferred to run())
@@ -31,13 +30,14 @@ class TestUpdateWatcherInit:
 
         with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
             mock_cg.return_value = None
-            watcher = UpdateWatcher(str(tmp_path), transport="stdio")
+            watcher = UpdateWatcher(str(tmp_path))
 
         assert watcher.branch is None  # Not yet resolved
 
         with patch.object(watcher, "_detect_default_branch", return_value="main"), \
              patch.object(watcher, "_check_for_update"):
             watcher._running = True
+            watcher._shutdown.set()  # Prevent periodic loop from blocking
             watcher.run()
 
         assert watcher.branch == "main"  # Now resolved
@@ -53,38 +53,12 @@ class TestUpdateWatcherInit:
 
             watcher = UpdateWatcher(
                 str(tmp_path),
-                transport="streamable-http",
                 check_interval=3600.0,
             )
 
-        assert watcher.transport == "streamable-http"
         assert watcher.check_interval == 3600.0
         assert watcher.remote == "upstream"
         assert watcher.branch == "develop"
-
-
-class TestUpdateWatcherStdio:
-    """Tests for stdio transport behavior."""
-
-    def test_stdio_checks_once(self, tmp_path):
-        """stdio transport runs one check then exits the loop."""
-        from spellbook_mcp.update_watcher import UpdateWatcher
-
-        with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
-            mock_cg.return_value = None
-            with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
-                watcher = UpdateWatcher(str(tmp_path), transport="stdio")
-
-        check_count = {"n": 0}
-
-        def mock_check():
-            check_count["n"] += 1
-
-        with patch.object(watcher, "_check_for_update", side_effect=mock_check):
-            watcher._running = True
-            watcher.run()
-
-        assert check_count["n"] == 1
 
 
 class TestUpdateWatcherShutdown:
@@ -99,7 +73,6 @@ class TestUpdateWatcherShutdown:
             with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
                 watcher = UpdateWatcher(
                     str(tmp_path),
-                    transport="streamable-http",
                     check_interval=3600.0,  # 1 hour
                 )
 
@@ -151,14 +124,14 @@ class TestUpdateWatcherBackoff:
         watcher._consecutive_failures = 100
         assert watcher._calculate_backoff() == 86400.0
 
-    def test_stdio_increments_failure_counter(self, tmp_path):
-        """Stdio transport increments _consecutive_failures on check failure."""
+    def test_failure_increments_failure_counter(self, tmp_path):
+        """First check failure increments _consecutive_failures."""
         from spellbook_mcp.update_watcher import UpdateWatcher
 
         with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
-                watcher = UpdateWatcher(str(tmp_path), transport="stdio")
+                watcher = UpdateWatcher(str(tmp_path))
 
         fail_count = {"n": 0}
 
@@ -166,11 +139,16 @@ class TestUpdateWatcherBackoff:
             fail_count["n"] += 1
             raise RuntimeError("simulated failure")
 
-        with patch.object(watcher, "_check_for_update", side_effect=mock_check):
+        # Stop the watcher after the first check to prevent the HTTP loop
+        def mock_check_and_stop():
+            watcher._shutdown.set()
+            mock_check()
+
+        with patch.object(watcher, "_check_for_update", side_effect=mock_check_and_stop):
             watcher._running = True
             watcher.run()
 
-        # stdio: checks once, fails, increments counter
+        # First check fails, increments counter
         assert watcher._consecutive_failures == 1
 
     def test_circuit_breaker_http_backoff_values(self, tmp_path):
@@ -180,7 +158,7 @@ class TestUpdateWatcherBackoff:
         with patch("spellbook_mcp.update_watcher.config_get") as mock_cg:
             mock_cg.return_value = None
             with patch.object(UpdateWatcher, "_detect_default_branch", return_value="main"):
-                watcher = UpdateWatcher(str(tmp_path), transport="streamable-http")
+                watcher = UpdateWatcher(str(tmp_path))
 
         # Simulate consecutive failures and check backoff at each level
         expected_backoffs = [
