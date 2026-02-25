@@ -27,9 +27,9 @@ The core Python installer and MCP server are already cross-platform in structure
 |----------|----------------|---------------|----------------|
 | Claude Code | `~/.claude/` | HTTP daemon | `installer/platforms/claude_code.py` |
 | OpenCode | `~/.config/opencode/` | HTTP daemon | `installer/platforms/opencode.py` |
-| Codex | `~/.codex/` | stdio | `installer/platforms/codex.py` |
-| Gemini CLI | `~/.gemini/` | extension | `installer/platforms/gemini.py` |
-| Crush | `~/.local/share/crush/` | stdio | `installer/platforms/crush.py` |
+| Codex | `~/.codex/` | HTTP daemon | `installer/platforms/codex.py` |
+| Gemini CLI | `~/.gemini/` | HTTP daemon | `installer/platforms/gemini.py` |
+| Crush | `~/.local/share/crush/` | HTTP daemon | `installer/platforms/crush.py` |
 
 ### How Installation Works Today
 

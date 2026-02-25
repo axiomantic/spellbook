@@ -16,13 +16,15 @@ if str(_spellbook_dir) not in sys.path:
 
 
 def get_spellbook_config_dir() -> Path:
-    """Get the spellbook config directory (for outputs)."""
+    """Get the spellbook config directory (for outputs).
+
+    Note: CLAUDE_CONFIG_DIR is intentionally NOT consulted here.
+    That variable controls where Claude Code installs its own artifacts,
+    not where spellbook stores work files.
+    """
     config_dir = os.environ.get('SPELLBOOK_CONFIG_DIR')
     if config_dir:
         return Path(config_dir)
-    claude_config = os.environ.get('CLAUDE_CONFIG_DIR')
-    if claude_config:
-        return Path(claude_config)
     return Path.home() / '.local' / 'spellbook'
 
 

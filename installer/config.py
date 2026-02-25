@@ -18,16 +18,15 @@ def get_spellbook_config_dir() -> Path:
 
     Resolution order:
     1. SPELLBOOK_CONFIG_DIR environment variable
-    2. CLAUDE_CONFIG_DIR environment variable (backward compatibility)
-    3. ~/.local/spellbook (portable default)
+    2. ~/.local/spellbook (portable default)
+
+    Note: CLAUDE_CONFIG_DIR is intentionally NOT used here. That variable
+    controls where Claude Code's own config lives (skills, commands, etc.),
+    which is a separate concern from where spellbook stores its work files.
     """
     config_dir = os.environ.get('SPELLBOOK_CONFIG_DIR')
     if config_dir:
         return Path(config_dir)
-
-    claude_config = os.environ.get('CLAUDE_CONFIG_DIR')
-    if claude_config:
-        return Path(claude_config)
 
     return SPELLBOOK_DEFAULT_CONFIG_DIR
 

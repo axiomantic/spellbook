@@ -2580,16 +2580,15 @@ if __name__ == "__main__":
     _watcher = SessionWatcher(db_path)
     _watcher.start()
 
-    # Support both stdio (default) and HTTP transport modes
-    # Set SPELLBOOK_MCP_TRANSPORT=streamable-http to run as HTTP server
-    transport = os.environ.get("SPELLBOOK_MCP_TRANSPORT", "stdio")
+    # HTTP daemon is the default (and only supported) transport mode.
+    # Set SPELLBOOK_MCP_TRANSPORT to override if needed.
+    transport = os.environ.get("SPELLBOOK_MCP_TRANSPORT", "streamable-http")
 
-    # Start update watcher only if auto-update is not explicitly disabled
+    # Start update watcher if auto-update is not explicitly disabled.
     _auto_update_enabled = config_get("auto_update")
-    if _auto_update_enabled is not False:  # Default to enabled (None or True)
+    if _auto_update_enabled is not False:
         _update_watcher = UpdateWatcher(
             str(get_spellbook_dir()),
-            transport=transport,
             check_interval=float(
                 os.environ.get("SPELLBOOK_UPDATE_INTERVAL", "86400")
             ),

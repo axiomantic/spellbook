@@ -25,7 +25,7 @@ _session_activity: dict[str, datetime] = {}
 # Session TTL for garbage collection
 SESSION_TTL_DAYS = 3
 
-# Default session ID for backward compatibility (stdio single-session mode)
+# Default session ID for backward compatibility (when session_id is not provided)
 DEFAULT_SESSION_ID = "__default__"
 
 # File-level lock for thread-safe config access
@@ -49,7 +49,7 @@ def _get_session_state(session_id: Optional[str] = None) -> dict:
 
     Args:
         session_id: Session identifier. If None, uses DEFAULT_SESSION_ID
-                    for backward compatibility with stdio transport.
+                    for backward compatibility.
 
     Returns:
         Session state dict with "mode" key.
@@ -355,10 +355,9 @@ def _add_update_notification(result: dict) -> None:
 
     **Intentional write side-effect:** When a recent auto-update notification
     is shown, this function clears ``last_auto_update`` via ``config_set()``
-    to implement show-once behavior. This is acceptable for stdio mode where
-    one session equals one server process. For HTTP daemon mode (multiple
-    concurrent sessions), this is a known limitation: the first session to
-    call ``session_init`` will consume the notification.
+    to implement show-once behavior. For HTTP daemon mode (multiple
+    concurrent sessions), the first session to call ``session_init``
+    will consume the notification.
 
     Args:
         result: The session_init result dict to modify in-place

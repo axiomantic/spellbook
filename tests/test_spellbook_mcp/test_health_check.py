@@ -749,9 +749,8 @@ class TestCheckClaudeConfigOnly:
                 return 0, """spellbook:
   Scope: Local config
   Status: ✓ Connected
-  Type: stdio
-  Command: python3
-  Args: /path/to/server.py""", ""
+  Type: streamable-http
+  URL: http://127.0.0.1:8765/mcp""", ""
             if "pgrep" in cmd:
                 return 0, "12345", ""
             return 0, "", ""

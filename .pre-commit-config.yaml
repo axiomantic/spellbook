@@ -55,3 +55,10 @@ repos:
         language: system
         stages: [manual]
         files: ^skills/.*SKILL\.md$
+
+      - id: check-dependabot-coverage
+        name: Check Dependabot covers all package manifests
+        entry: uv run python scripts/check_dependabot_coverage.py
+        language: system
+        pass_filenames: false
+        files: (package\.json|go\.mod|Dockerfile|pyproject\.toml|Cargo\.toml|dependabot\.yml)$

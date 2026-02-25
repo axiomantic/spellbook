@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="./docs/assets/logo-book.svg" alt="Spellbook" width="300">
+  <img src="./docs/assets/book.svg" alt="Spellbook" width="300">
 </p>
 
 <h1 align="center">Spellbook</h1>
@@ -36,8 +36,8 @@
 - [Quick Install](#quick-install)
   - [Windows Quickstart](#windows-quickstart)
 - [What's Included](#whats-included)
-  - [Skills (52 total)](#skills-52-total)
-  - [Commands (80 total)](#commands-80-total)
+  - [Skills (53 total)](#skills-53-total)
+  - [Commands (82 total)](#commands-82-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -94,7 +94,7 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 
 ## What's Included
 
-### Skills (52 total)
+### Skills (53 total)
 
 Reusable workflows for structured development:
 
@@ -102,7 +102,7 @@ Reusable workflows for structured development:
 |----------|--------|
 | **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
-| **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts] |
+| **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [security-auditing], [generating-diagrams] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage], [documenting-tools] |
@@ -154,6 +154,7 @@ Reusable workflows for structured development:
 [tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
+[creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
 [autonomous-roundtable]: https://axiomantic.github.io/spellbook/latest/skills/autonomous-roundtable/
 [gathering-requirements]: https://axiomantic.github.io/spellbook/latest/skills/gathering-requirements/
 [dehallucination]: https://axiomantic.github.io/spellbook/latest/skills/dehallucination/
@@ -163,10 +164,12 @@ Reusable workflows for structured development:
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 [deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
 
-### Commands (80 total)
+### Commands (82 total)
 
 | Command | Description |
 |---------|-------------|
+| [/create-issue] | Create a GitHub issue with proper template discovery and population |
+| [/create-pr] | Create a pull request with proper template discovery and population |
 | [/crystallize] | Transform SOPs into agentic CoT prompts |
 | [/dead-code-setup] | Initialize dead code analysis with git safety and scope selection |
 | [/dead-code-analyze] | Extract and triage code items for dead code verification |
@@ -250,6 +253,8 @@ Reusable workflows for structured development:
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
+[/create-issue]: https://axiomantic.github.io/spellbook/latest/commands/create-issue/
+[/create-pr]: https://axiomantic.github.io/spellbook/latest/commands/create-pr/
 [/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
 [/dead-code-setup]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-setup/
 [/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
@@ -904,8 +909,6 @@ Then open http://127.0.0.1:8000
 
 ### Run MCP Server Directly
 
-**As a system service (recommended):**
-
 ```bash
 # Install as a daemon that starts on boot
 python3 ~/.local/share/spellbook/scripts/spellbook-server.py install
@@ -914,13 +917,7 @@ python3 ~/.local/share/spellbook/scripts/spellbook-server.py install
 claude mcp add --transport http spellbook http://127.0.0.1:8765/mcp
 ```
 
-This runs a single MCP server instance that all sessions connect to via HTTP, eliminating the 10+ second cold start when using stdio transport.
-
-**Manual stdio mode (for debugging):**
-
-```bash
-uv run ~/.local/share/spellbook/spellbook_mcp/server.py
-```
+This runs a single MCP server instance that all sessions connect to via HTTP.
 
 ## Documentation
 

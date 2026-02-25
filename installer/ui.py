@@ -148,15 +148,11 @@ def print_directory_config(spellbook_dir: Path, platforms: List[str]) -> None:
 
     # Spellbook output directory
     spellbook_config = get_spellbook_config_dir()
-    is_custom_output = (
-        os.environ.get('SPELLBOOK_CONFIG_DIR') or
-        os.environ.get('CLAUDE_CONFIG_DIR')
-    )
+    is_custom_output = os.environ.get('SPELLBOOK_CONFIG_DIR')
     print(f"  {color('Output Directory:', Colors.BOLD)}")
     print(f"    SPELLBOOK_CONFIG_DIR = {spellbook_config}")
     if is_custom_output:
-        env_var = 'SPELLBOOK_CONFIG_DIR' if os.environ.get('SPELLBOOK_CONFIG_DIR') else 'CLAUDE_CONFIG_DIR'
-        print(f"    {color(f'(from ${env_var})', Colors.YELLOW)}")
+        print(f"    {color('(from $SPELLBOOK_CONFIG_DIR)', Colors.YELLOW)}")
     else:
         print(f"    {color('(default)', Colors.CYAN)}")
     print()

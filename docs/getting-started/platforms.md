@@ -143,9 +143,8 @@ Crush stores its configuration in `~/.local/share/crush/crush.json`. The install
   },
   "mcp": {
     "spellbook": {
-      "type": "stdio",
-      "command": "python3",
-      "args": ["/path/to/spellbook_mcp/server.py"]
+      "type": "http",
+      "url": "http://127.0.0.1:8765/mcp"
     }
   }
 }
