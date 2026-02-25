@@ -659,8 +659,10 @@ class TestServiceManager:
 
         mock_plat.return_value = Platform.MACOS
         mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
-        # Plist doesn't exist, so should be False
-        assert mgr.is_installed() is False
+        # Use a tmp_path-based plist path so we don't depend on system state
+        fake_plist = tmp_path / "com.spellbook.mcp.plist"
+        with patch.object(mgr, "_launchd_plist_path", return_value=fake_plist):
+            assert mgr.is_installed() is False
 
     @patch("installer.compat.get_platform")
     def test_is_installed_linux_checks_service_file(self, mock_plat, tmp_path):
@@ -668,7 +670,10 @@ class TestServiceManager:
 
         mock_plat.return_value = Platform.LINUX
         mgr = ServiceManager(tmp_path, 8765, "127.0.0.1")
-        assert mgr.is_installed() is False
+        # Use a tmp_path-based service path so we don't depend on system state
+        fake_service = tmp_path / "spellbook-mcp.service"
+        with patch.object(mgr, "_systemd_service_path", return_value=fake_service):
+            assert mgr.is_installed() is False
 
     def test_is_running_checks_port(self, tmp_path):
         """is_running() should try to connect to host:port."""
