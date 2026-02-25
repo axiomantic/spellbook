@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-02-25
+
+### Added
+- **Dependabot configuration** - Automated dependency update PRs for all package ecosystems: pip, GitHub Actions, Go modules, Docker, and npm (tests + OpenCode extensions)
+- **Dependabot coverage pre-commit hook** - `check_dependabot_coverage.py` flags any new package manifest (package.json, go.mod, Dockerfile, etc.) not covered by `.github/dependabot.yml`
+- **Book-only SVG** - `docs/assets/book.svg` variant of the logo without the star
+
+### Fixed
+- **CI test failures on macOS and Linux** - `TestGeminiInstallerIntegration` was calling `install_daemon()` with the real project root, installing an actual launchd/systemd service on CI runners. Mocked `install_daemon` in the test and hardened `test_is_installed_*` tests to use tmp_path-based paths.
+
 ## [0.10.0] - 2026-02-24
 
 ### Added
