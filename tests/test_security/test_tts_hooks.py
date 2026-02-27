@@ -24,6 +24,7 @@ import time
 from pathlib import Path
 
 import pytest
+from unittest.mock import patch
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32",
@@ -157,3 +158,114 @@ class TestTtsNotifyBehavior:
             timeout=10,
         )
         assert result.returncode == 0
+
+
+class TestHookRegistration:
+    """TTS hooks are properly registered in HOOK_DEFINITIONS."""
+
+    def test_pretooluse_includes_tts_timer_start(self):
+        from installer.components.hooks import HOOK_DEFINITIONS
+        pre_hooks = HOOK_DEFINITIONS["PreToolUse"]
+        tts_entries = [
+            e for e in pre_hooks
+            if any("tts-timer-start" in str(h) for h in (
+                [e] if isinstance(e, str) else
+                [h.get("command", h) if isinstance(h, dict) else h for h in e.get("hooks", [])]
+            ))
+        ]
+        assert len(tts_entries) == 1
+        entry = tts_entries[0]
+        assert entry["matcher"] == ".*"
+
+    def test_posttooluse_includes_tts_notify(self):
+        from installer.components.hooks import HOOK_DEFINITIONS
+        post_hooks = HOOK_DEFINITIONS["PostToolUse"]
+        tts_entries = [
+            e for e in post_hooks
+            if any("tts-notify" in str(h) for h in (
+                [e] if isinstance(e, str) else
+                [h.get("command", h) if isinstance(h, dict) else h for h in e.get("hooks", [])]
+            ))
+        ]
+        assert len(tts_entries) == 1
+        entry = tts_entries[0]
+        assert entry["matcher"] == ".*"
+
+    def test_tts_hooks_are_async(self):
+        from installer.components.hooks import HOOK_DEFINITIONS
+        # PreToolUse tts hook
+        found_timer = False
+        for entry in HOOK_DEFINITIONS["PreToolUse"]:
+            for hook in entry.get("hooks", []):
+                if isinstance(hook, dict) and "tts-timer-start" in hook.get("command", ""):
+                    assert hook.get("async") is True
+                    assert hook.get("timeout") == 5
+                    found_timer = True
+        assert found_timer, "tts-timer-start hook not found in PreToolUse"
+        # PostToolUse tts hook
+        found_notify = False
+        for entry in HOOK_DEFINITIONS["PostToolUse"]:
+            for hook in entry.get("hooks", []):
+                if isinstance(hook, dict) and "tts-notify" in hook.get("command", ""):
+                    assert hook.get("async") is True
+                    assert hook.get("timeout") == 15
+                    found_notify = True
+        assert found_notify, "tts-notify hook not found in PostToolUse"
+
+    def test_install_writes_both_tts_hooks(self, tmp_path):
+        from installer.components.hooks import install_hooks
+        settings_path = tmp_path / "settings.local.json"
+        result = install_hooks(settings_path)
+        assert result.success
+
+        import json
+        settings = json.loads(settings_path.read_text())
+        hooks = settings["hooks"]
+
+        # Check PreToolUse has tts-timer-start
+        pre_hooks_flat = json.dumps(hooks.get("PreToolUse", []))
+        assert "tts-timer-start" in pre_hooks_flat
+
+        # Check PostToolUse has tts-notify
+        post_hooks_flat = json.dumps(hooks.get("PostToolUse", []))
+        assert "tts-notify" in post_hooks_flat
+
+    def test_uninstall_removes_tts_hooks(self, tmp_path):
+        from installer.components.hooks import install_hooks, uninstall_hooks
+        import json
+        settings_path = tmp_path / "settings.local.json"
+
+        # Install first
+        install_hooks(settings_path)
+        # Then uninstall
+        result = uninstall_hooks(settings_path)
+        assert result.success
+
+        settings = json.loads(settings_path.read_text())
+        hooks_flat = json.dumps(settings.get("hooks", {}))
+        assert "tts-timer-start" not in hooks_flat
+        assert "tts-notify" not in hooks_flat
+
+    def test_reinstall_idempotent(self, tmp_path):
+        from installer.components.hooks import install_hooks
+        import json
+        settings_path = tmp_path / "settings.local.json"
+
+        install_hooks(settings_path)
+        first = json.loads(settings_path.read_text())
+        install_hooks(settings_path)
+        second = json.loads(settings_path.read_text())
+
+        assert first == second  # No duplication
+
+    def test_platform_transform_windows(self):
+        from installer.components.hooks import _get_hook_path_for_platform
+        with patch("sys.platform", "win32"):
+            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/tts-timer-start.sh")
+        assert result == "$SPELLBOOK_DIR/hooks/tts-timer-start.py"
+
+    def test_platform_transform_unix(self):
+        from installer.components.hooks import _get_hook_path_for_platform
+        with patch("sys.platform", "linux"):
+            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/tts-timer-start.sh")
+        assert result == "$SPELLBOOK_DIR/hooks/tts-timer-start.sh"

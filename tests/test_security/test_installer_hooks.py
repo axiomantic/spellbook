@@ -1,7 +1,8 @@
-"""Tests for Claude Code security hook registration in the installer.
+"""Tests for Claude Code security and TTS hook registration in the installer.
 
 The installer should register PreToolUse and PostToolUse hooks in
-~/.claude/settings.local.json that point to spellbook security scripts.
+~/.claude/settings.local.json that point to spellbook security scripts
+and TTS notification hooks.
 
 Tier 1 (PreToolUse):
   - Bash -> bash-gate.sh
@@ -11,6 +12,10 @@ Tier 2 (PreToolUse + PostToolUse):
   - mcp__spellbook__workflow_state_save -> state-sanitize.sh (PreToolUse, timeout: 15)
   - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (PostToolUse, async: true, timeout: 10)
   - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (PostToolUse, timeout: 10)
+
+TTS (PreToolUse + PostToolUse):
+  - .* -> tts-timer-start.sh (PreToolUse, async: true, timeout: 5)
+  - .* -> tts-notify.sh (PostToolUse, async: true, timeout: 15)
 """
 
 import json
@@ -122,7 +127,7 @@ class TestHookDefinitions:
 
     def test_post_tool_use_has_audit_and_canary_hooks(self):
         post_hooks = HOOK_DEFINITIONS["PostToolUse"]
-        assert len(post_hooks) == 1  # single matcher entry
+        assert len(post_hooks) == 2  # audit/canary matcher + tts-notify matcher
         entry = post_hooks[0]
         assert entry["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
         assert len(entry["hooks"]) == 2
@@ -182,8 +187,8 @@ class TestInstallHooks:
         assert "PreToolUse" in settings["hooks"]
         assert "PostToolUse" in settings["hooks"]
 
-    def test_pre_tool_use_has_three_entries(self, tmp_path):
-        """PreToolUse should have 3 matcher entries (Bash, spawn, state-sanitize)."""
+    def test_pre_tool_use_has_four_entries(self, tmp_path):
+        """PreToolUse should have 4 matcher entries (Bash, spawn, state-sanitize, tts-timer-start)."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -193,10 +198,10 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
         assert isinstance(pre_tool_use, list)
-        assert len(pre_tool_use) == 3
+        assert len(pre_tool_use) == 4
 
-    def test_post_tool_use_has_one_entry_with_two_hooks(self, tmp_path):
-        """PostToolUse should have 1 matcher entry with 2 hooks (audit-log, canary-check)."""
+    def test_post_tool_use_has_two_entries(self, tmp_path):
+        """PostToolUse should have 2 matcher entries (audit/canary + tts-notify)."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -206,9 +211,11 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         assert isinstance(post_tool_use, list)
-        assert len(post_tool_use) == 1
+        assert len(post_tool_use) == 2
         assert post_tool_use[0]["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
         assert len(post_tool_use[0]["hooks"]) == 2
+        assert post_tool_use[1]["matcher"] == ".*"
+        assert len(post_tool_use[1]["hooks"]) == 1
 
     def test_bash_hook_entry_correct(self, tmp_path):
         """The Bash hook entry should have correct matcher and hook path."""
@@ -584,8 +591,8 @@ class TestInstallHooks:
         assert result.action == "installed"
         assert result.component == "hooks"
 
-    def test_total_hook_count_is_five(self, tmp_path):
-        """All 5 hooks should be installed: 3 PreToolUse + 2 PostToolUse."""
+    def test_total_hook_count_is_seven(self, tmp_path):
+        """All 7 hooks should be installed: 4 PreToolUse + 3 PostToolUse."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -598,7 +605,7 @@ class TestInstallHooks:
         for phase in ["PreToolUse", "PostToolUse"]:
             for entry in settings["hooks"].get(phase, []):
                 total_hooks += len(entry["hooks"])
-        assert total_hooks == 5
+        assert total_hooks == 7
 
     def test_upgrades_old_string_format_spellbook_hooks(self, tmp_path):
         """Old string-format spellbook hooks should be replaced cleanly on reinstall."""
@@ -619,11 +626,11 @@ class TestInstallHooks:
         install_hooks(settings_path, dry_run=False)
 
         settings = _read_settings(settings_path)
-        # Should now have all 5 hooks across both phases
+        # Should now have all 7 hooks across both phases
         pre = settings["hooks"]["PreToolUse"]
         post = settings["hooks"]["PostToolUse"]
-        assert len(pre) == 3  # Bash, spawn, state-sanitize
-        assert len(post) == 1  # single matcher with 2 hooks
+        assert len(pre) == 4  # Bash, spawn, state-sanitize, tts-timer-start
+        assert len(post) == 2  # audit/canary matcher + tts-notify matcher
         assert len(post[0]["hooks"]) == 2
 
 
@@ -837,8 +844,8 @@ class TestClaudeCodeInstallerHookIntegration:
         assert len(hook_results) == 1
         assert hook_results[0].success
 
-    def test_install_registers_all_five_hooks(self, tmp_path):
-        """Full installer should register all 5 hooks (3 PreToolUse + 2 PostToolUse)."""
+    def test_install_registers_all_seven_hooks(self, tmp_path):
+        """Full installer should register all 7 hooks (4 PreToolUse + 3 PostToolUse)."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = self._make_installer_spellbook_dir(tmp_path)
@@ -859,7 +866,7 @@ class TestClaudeCodeInstallerHookIntegration:
         for phase in ["PreToolUse", "PostToolUse"]:
             for entry in settings["hooks"].get(phase, []):
                 total_hooks += len(entry["hooks"])
-        assert total_hooks == 5
+        assert total_hooks == 7
 
     def test_uninstall_removes_hooks(self, tmp_path):
         """Full uninstaller should remove security hooks from settings.local.json."""

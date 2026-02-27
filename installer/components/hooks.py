@@ -1,8 +1,8 @@
 """
-Claude Code hook registration for security hooks.
+Claude Code hook registration for security and TTS hooks.
 
 Manages PreToolUse and PostToolUse hook entries in .claude/settings.local.json
-that point to spellbook security scripts.
+that point to spellbook security scripts and TTS notification hooks.
 
 Tier 1 (PreToolUse):
   - Bash -> bash-gate.sh
@@ -12,6 +12,10 @@ Tier 2 (PreToolUse + PostToolUse):
   - mcp__spellbook__workflow_state_save -> state-sanitize.sh (timeout: 15)
   - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (async, timeout: 10)
   - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (timeout: 10)
+
+TTS (PreToolUse + PostToolUse):
+  - .* -> tts-timer-start.sh (async, timeout: 5) - records tool start time
+  - .* -> tts-notify.sh (async, timeout: 15) - speaks elapsed time on completion
 """
 
 import json
@@ -42,6 +46,17 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
                 },
             ],
         },
+        {
+            "matcher": ".*",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/tts-timer-start.sh",
+                    "async": True,
+                    "timeout": 5,
+                },
+            ],
+        },
     ],
     "PostToolUse": [
         {
@@ -57,6 +72,17 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
                     "type": "command",
                     "command": "$SPELLBOOK_DIR/hooks/canary-check.sh",
                     "timeout": 10,
+                },
+            ],
+        },
+        {
+            "matcher": ".*",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
+                    "async": True,
+                    "timeout": 15,
                 },
             ],
         },
