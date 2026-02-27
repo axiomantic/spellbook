@@ -1,7 +1,8 @@
-"""Tests for Claude Code security hook registration in the installer.
+"""Tests for Claude Code security and TTS hook registration in the installer.
 
 The installer should register PreToolUse and PostToolUse hooks in
-~/.claude/settings.local.json that point to spellbook security scripts.
+~/.claude/settings.local.json that point to spellbook security scripts
+and TTS notification hooks.
 
 Tier 1 (PreToolUse):
   - Bash -> bash-gate.sh
@@ -11,6 +12,10 @@ Tier 2 (PreToolUse + PostToolUse):
   - mcp__spellbook__workflow_state_save -> state-sanitize.sh (PreToolUse, timeout: 15)
   - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (PostToolUse, async: true, timeout: 10)
   - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (PostToolUse, timeout: 10)
+
+TTS (PreToolUse + PostToolUse):
+  - .* -> tts-timer-start.sh (PreToolUse, async: true, timeout: 5)
+  - .* -> tts-notify.sh (PostToolUse, async: true, timeout: 15)
 """
 
 import json
@@ -21,6 +26,8 @@ from unittest.mock import patch
 
 from installer.components.hooks import (
     HOOK_DEFINITIONS,
+    _expand_spellbook_dir,
+    _is_spellbook_hook,
     install_hooks,
     uninstall_hooks,
 )
@@ -122,7 +129,7 @@ class TestHookDefinitions:
 
     def test_post_tool_use_has_audit_and_canary_hooks(self):
         post_hooks = HOOK_DEFINITIONS["PostToolUse"]
-        assert len(post_hooks) == 1  # single matcher entry
+        assert len(post_hooks) == 2  # audit/canary matcher + tts-notify matcher
         entry = post_hooks[0]
         assert entry["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
         assert len(entry["hooks"]) == 2
@@ -182,8 +189,8 @@ class TestInstallHooks:
         assert "PreToolUse" in settings["hooks"]
         assert "PostToolUse" in settings["hooks"]
 
-    def test_pre_tool_use_has_three_entries(self, tmp_path):
-        """PreToolUse should have 3 matcher entries (Bash, spawn, state-sanitize)."""
+    def test_pre_tool_use_has_four_entries(self, tmp_path):
+        """PreToolUse should have 4 matcher entries (Bash, spawn, state-sanitize, tts-timer-start)."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -193,10 +200,10 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
         assert isinstance(pre_tool_use, list)
-        assert len(pre_tool_use) == 3
+        assert len(pre_tool_use) == 4
 
-    def test_post_tool_use_has_one_entry_with_two_hooks(self, tmp_path):
-        """PostToolUse should have 1 matcher entry with 2 hooks (audit-log, canary-check)."""
+    def test_post_tool_use_has_two_entries(self, tmp_path):
+        """PostToolUse should have 2 matcher entries (audit/canary + tts-notify)."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -206,9 +213,11 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         assert isinstance(post_tool_use, list)
-        assert len(post_tool_use) == 1
+        assert len(post_tool_use) == 2
         assert post_tool_use[0]["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
         assert len(post_tool_use[0]["hooks"]) == 2
+        assert post_tool_use[1]["matcher"] == ".*"
+        assert len(post_tool_use[1]["hooks"]) == 1
 
     def test_bash_hook_entry_correct(self, tmp_path):
         """The Bash hook entry should have correct matcher and hook path."""
@@ -584,8 +593,8 @@ class TestInstallHooks:
         assert result.action == "installed"
         assert result.component == "hooks"
 
-    def test_total_hook_count_is_five(self, tmp_path):
-        """All 5 hooks should be installed: 3 PreToolUse + 2 PostToolUse."""
+    def test_total_hook_count_is_seven(self, tmp_path):
+        """All 7 hooks should be installed: 4 PreToolUse + 3 PostToolUse."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -598,7 +607,7 @@ class TestInstallHooks:
         for phase in ["PreToolUse", "PostToolUse"]:
             for entry in settings["hooks"].get(phase, []):
                 total_hooks += len(entry["hooks"])
-        assert total_hooks == 5
+        assert total_hooks == 7
 
     def test_upgrades_old_string_format_spellbook_hooks(self, tmp_path):
         """Old string-format spellbook hooks should be replaced cleanly on reinstall."""
@@ -619,11 +628,11 @@ class TestInstallHooks:
         install_hooks(settings_path, dry_run=False)
 
         settings = _read_settings(settings_path)
-        # Should now have all 5 hooks across both phases
+        # Should now have all 7 hooks across both phases
         pre = settings["hooks"]["PreToolUse"]
         post = settings["hooks"]["PostToolUse"]
-        assert len(pre) == 3  # Bash, spawn, state-sanitize
-        assert len(post) == 1  # single matcher with 2 hooks
+        assert len(pre) == 4  # Bash, spawn, state-sanitize, tts-timer-start
+        assert len(post) == 2  # audit/canary matcher + tts-notify matcher
         assert len(post[0]["hooks"]) == 2
 
 
@@ -787,6 +796,7 @@ class TestUninstallHooks:
 # --- Integration with ClaudeCodeInstaller ---
 
 
+@pytest.mark.timeout(120)
 class TestClaudeCodeInstallerHookIntegration:
     """ClaudeCodeInstaller.install() should register security hooks."""
 
@@ -837,8 +847,8 @@ class TestClaudeCodeInstallerHookIntegration:
         assert len(hook_results) == 1
         assert hook_results[0].success
 
-    def test_install_registers_all_five_hooks(self, tmp_path):
-        """Full installer should register all 5 hooks (3 PreToolUse + 2 PostToolUse)."""
+    def test_install_registers_all_seven_hooks(self, tmp_path):
+        """Full installer should register all 7 hooks (4 PreToolUse + 3 PostToolUse)."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = self._make_installer_spellbook_dir(tmp_path)
@@ -859,7 +869,7 @@ class TestClaudeCodeInstallerHookIntegration:
         for phase in ["PreToolUse", "PostToolUse"]:
             for entry in settings["hooks"].get(phase, []):
                 total_hooks += len(entry["hooks"])
-        assert total_hooks == 5
+        assert total_hooks == 7
 
     def test_uninstall_removes_hooks(self, tmp_path):
         """Full uninstaller should remove security hooks from settings.local.json."""
@@ -882,3 +892,350 @@ class TestClaudeCodeInstallerHookIntegration:
         if settings_path.exists():
             content = settings_path.read_text(encoding="utf-8")
             assert "$SPELLBOOK_DIR" not in content
+            # Also verify no expanded spellbook paths remain
+            assert str(spellbook_dir) + "/hooks/" not in content
+
+    def test_install_writes_expanded_paths(self, tmp_path):
+        """Full installer should write expanded absolute paths, not literal $SPELLBOOK_DIR."""
+        from installer.platforms.claude_code import ClaudeCodeInstaller
+
+        spellbook_dir = self._make_installer_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+
+        with patch.object(Path, "home", return_value=tmp_path), \
+             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
+             patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
+            installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
+            installer.install()
+
+        settings_path = config_dir / "settings.local.json"
+        content = settings_path.read_text(encoding="utf-8")
+        # Literal $SPELLBOOK_DIR should NOT appear in the written file
+        assert "$SPELLBOOK_DIR" not in content
+        # The expanded spellbook_dir path should appear instead
+        # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
+        assert json.dumps(str(spellbook_dir))[1:-1] in content
+
+        settings = _read_settings(settings_path)
+        # Verify specific hook paths are expanded
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        bash_entry = next(e for e in pre_tool_use if e["matcher"] == "Bash")
+        ext = _hook_ext()
+        expected_path = f"{spellbook_dir}/hooks/bash-gate{ext}"
+        assert bash_entry["hooks"] == [expected_path]
+
+
+# --- _expand_spellbook_dir() tests ---
+
+
+class TestExpandSpellbookDir:
+    """_expand_spellbook_dir() should replace $SPELLBOOK_DIR with actual path."""
+
+    def test_expands_string_hook(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        result = _expand_spellbook_dir("$SPELLBOOK_DIR/hooks/bash-gate.sh", spellbook_dir)
+        assert result == f"{spellbook_dir}/hooks/bash-gate.sh"
+
+    def test_expands_dict_hook_command(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        hook = {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/audit-log.sh",
+            "async": True,
+            "timeout": 10,
+        }
+        result = _expand_spellbook_dir(hook, spellbook_dir)
+        assert result["command"] == f"{spellbook_dir}/hooks/audit-log.sh"
+        assert result["async"] is True
+        assert result["timeout"] == 10
+
+    def test_preserves_dict_without_command(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        hook = {"type": "custom", "timeout": 5}
+        result = _expand_spellbook_dir(hook, spellbook_dir)
+        assert result == hook
+
+    def test_does_not_mutate_original_dict(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/foo.sh"}
+        result = _expand_spellbook_dir(hook, spellbook_dir)
+        assert result is not hook
+        assert hook["command"] == "$SPELLBOOK_DIR/hooks/foo.sh"
+
+    def test_no_expansion_without_variable(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        result = _expand_spellbook_dir("/usr/local/bin/my-hook.sh", spellbook_dir)
+        assert result == "/usr/local/bin/my-hook.sh"
+
+
+# --- _is_spellbook_hook() with spellbook_dir tests ---
+
+
+class TestIsSpellbookHookWithSpellbookDir:
+    """_is_spellbook_hook() should recognize both literal and expanded paths."""
+
+    def test_recognizes_literal_prefix(self):
+        assert _is_spellbook_hook("$SPELLBOOK_DIR/hooks/bash-gate.sh") is True
+
+    def test_recognizes_literal_dict_hook(self):
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/audit-log.sh"}
+        assert _is_spellbook_hook(hook) is True
+
+    def test_rejects_non_spellbook_path(self):
+        assert _is_spellbook_hook("/usr/local/bin/my-hook.sh") is False
+
+    def test_recognizes_expanded_path_with_spellbook_dir(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        path = f"{spellbook_dir}/hooks/bash-gate.sh"
+        assert _is_spellbook_hook(path, spellbook_dir) is True
+
+    def test_recognizes_expanded_dict_hook_with_spellbook_dir(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        hook = {"type": "command", "command": f"{spellbook_dir}/hooks/audit-log.sh"}
+        assert _is_spellbook_hook(hook, spellbook_dir) is True
+
+    def test_rejects_non_spellbook_path_with_spellbook_dir(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        assert _is_spellbook_hook("/usr/local/bin/my-hook.sh", spellbook_dir) is False
+
+    def test_expanded_path_not_recognized_without_spellbook_dir(self, tmp_path):
+        """Without spellbook_dir, expanded absolute paths are NOT recognized."""
+        spellbook_dir = tmp_path / "spellbook"
+        path = f"{spellbook_dir}/hooks/bash-gate.sh"
+        assert _is_spellbook_hook(path) is False
+
+
+# --- install_hooks() with spellbook_dir tests ---
+
+
+class TestInstallHooksWithSpellbookDir:
+    """install_hooks() with spellbook_dir should write expanded paths."""
+
+    def test_writes_expanded_paths(self, tmp_path):
+        """Hook paths should use absolute paths, not $SPELLBOOK_DIR."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        content = settings_path.read_text(encoding="utf-8")
+        assert "$SPELLBOOK_DIR" not in content
+        # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
+        assert json.dumps(str(spellbook_dir))[1:-1] in content
+
+    def test_expanded_bash_hook_correct(self, tmp_path):
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        bash_entry = next(e for e in pre_tool_use if e["matcher"] == "Bash")
+        ext = _hook_ext()
+        assert bash_entry["hooks"] == [f"{spellbook_dir}/hooks/bash-gate{ext}"]
+
+    def test_expanded_dict_hook_correct(self, tmp_path):
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        post_tool_use = settings["hooks"]["PostToolUse"]
+        post_entry = post_tool_use[0]
+        ext = _hook_ext()
+        audit_hook = next(
+            h for h in post_entry["hooks"]
+            if isinstance(h, dict) and h.get("command", "").endswith(f"audit-log{ext}")
+        )
+        assert audit_hook["command"] == f"{spellbook_dir}/hooks/audit-log{ext}"
+        assert audit_hook["async"] is True
+        assert audit_hook["timeout"] == 10
+
+    def test_idempotent_with_expanded_paths(self, tmp_path):
+        """Running install_hooks with spellbook_dir twice should not create duplicates."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
+        assert len(bash_entries) == 1
+        assert len(bash_entries[0]["hooks"]) == 1
+
+    def test_replaces_old_literal_paths_with_expanded(self, tmp_path):
+        """If settings has old literal $SPELLBOOK_DIR paths, they should be replaced."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        # Simulate old installation with literal paths
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PreToolUse": [
+                    {"matcher": "Bash", "hooks": ["$SPELLBOOK_DIR/hooks/bash-gate.sh"]},
+                    {"matcher": "spawn_claude_session", "hooks": ["$SPELLBOOK_DIR/hooks/spawn-guard.sh"]},
+                ],
+            },
+        })
+
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        content = settings_path.read_text(encoding="utf-8")
+        assert "$SPELLBOOK_DIR" not in content
+
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        bash_entry = next(e for e in pre_tool_use if e["matcher"] == "Bash")
+        ext = _hook_ext()
+        assert bash_entry["hooks"] == [f"{spellbook_dir}/hooks/bash-gate{ext}"]
+
+    def test_preserves_user_hooks_with_expanded_paths(self, tmp_path):
+        """User hooks should be preserved when installing with expanded paths."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PreToolUse": [
+                    {"matcher": "Bash", "hooks": ["/usr/local/bin/my-bash-hook.sh"]},
+                ],
+            },
+        })
+
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        bash_entry = next(e for e in pre_tool_use if e["matcher"] == "Bash")
+        assert "/usr/local/bin/my-bash-hook.sh" in bash_entry["hooks"]
+        ext = _hook_ext()
+        expanded_path = f"{spellbook_dir}/hooks/bash-gate{ext}"
+        assert expanded_path in bash_entry["hooks"]
+
+
+# --- uninstall_hooks() with spellbook_dir tests ---
+
+
+class TestUninstallHooksWithSpellbookDir:
+    """uninstall_hooks() with spellbook_dir should remove both literal and expanded paths."""
+
+    def test_removes_expanded_paths(self, tmp_path):
+        """Expanded paths installed with spellbook_dir should be removed."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+        result = uninstall_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        assert result.success
+        assert result.action == "removed"
+        settings = _read_settings(settings_path)
+        post_tool_use = settings.get("hooks", {}).get("PostToolUse", [])
+        assert len(post_tool_use) == 0
+
+    def test_removes_legacy_literal_paths(self, tmp_path):
+        """Old literal $SPELLBOOK_DIR paths should be cleaned up by uninstall with spellbook_dir."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        # Simulate old installation with literal paths
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PreToolUse": [
+                    {"matcher": "Bash", "hooks": ["$SPELLBOOK_DIR/hooks/bash-gate.sh"]},
+                ],
+            },
+        })
+
+        result = uninstall_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        assert result.success
+        assert result.action == "removed"
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings.get("hooks", {}).get("PreToolUse", [])
+        assert len(pre_tool_use) == 0
+
+    def test_removes_mixed_literal_and_expanded(self, tmp_path):
+        """Settings with both literal and expanded paths should be fully cleaned."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        # Mix of old literal and new expanded paths
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PreToolUse": [
+                    {"matcher": "Bash", "hooks": [
+                        "$SPELLBOOK_DIR/hooks/bash-gate.sh",
+                        f"{spellbook_dir}/hooks/bash-gate.sh",
+                    ]},
+                ],
+            },
+        })
+
+        result = uninstall_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        assert result.success
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings.get("hooks", {}).get("PreToolUse", [])
+        # Both paths should be removed, leaving no entries
+        assert len(pre_tool_use) == 0
+
+    def test_preserves_user_hooks_when_removing_expanded(self, tmp_path):
+        """User hooks should be preserved when removing expanded spellbook hooks."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PreToolUse": [
+                    {"matcher": "Bash", "hooks": ["/usr/local/bin/my-hook.sh"]},
+                ],
+            },
+        })
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+        uninstall_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
+        assert len(bash_entries) == 1
+        assert bash_entries[0]["hooks"] == ["/usr/local/bin/my-hook.sh"]
+
+    def test_uninstall_leaves_no_traces(self, tmp_path):
+        """After uninstall with spellbook_dir, no spellbook paths should remain."""
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+        uninstall_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
+
+        content = settings_path.read_text(encoding="utf-8")
+        assert "$SPELLBOOK_DIR" not in content
+        assert str(spellbook_dir) + "/hooks/" not in content

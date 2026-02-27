@@ -333,7 +333,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
 
         # Install security hooks in settings.local.json
         settings_path = self.config_dir / "settings.local.json"
-        hook_result = install_hooks(settings_path, dry_run=self.dry_run)
+        hook_result = install_hooks(settings_path, spellbook_dir=self.spellbook_dir, dry_run=self.dry_run)
         results.append(
             InstallResult(
                 component=hook_result.component,
@@ -509,7 +509,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
 
         # Uninstall security hooks from settings.local.json
         settings_path = self.config_dir / "settings.local.json"
-        hook_result = uninstall_hooks(settings_path, dry_run=self.dry_run)
+        hook_result = uninstall_hooks(settings_path, spellbook_dir=self.spellbook_dir, dry_run=self.dry_run)
         results.append(
             InstallResult(
                 component=hook_result.component,

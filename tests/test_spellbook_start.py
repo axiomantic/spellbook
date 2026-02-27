@@ -9,10 +9,13 @@ import pytest
 
 # All tests in this module invoke spellbook-start.py with Unix-specific
 # environment patterns (HOME, minimal env) that fail on Windows.
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Bash scripts not available on Windows",
-)
+pytestmark = [
+    pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Bash scripts not available on Windows",
+    ),
+    pytest.mark.integration,
+]
 
 SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "spellbook-start.py"
 
@@ -35,6 +38,7 @@ class TestFunModeDisabled:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={**dict(monkeypatch._ENV_ITEMS if hasattr(monkeypatch, '_ENV_ITEMS') else []), "HOME": str(tmp_path)},
         )
 
@@ -69,6 +73,7 @@ class TestFunModeEnabled:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(spellbook_dir)},
         )
 
@@ -100,6 +105,7 @@ class TestFunModeEnabled:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(spellbook_dir)},
         )
 
@@ -120,6 +126,7 @@ class TestConfigMissing:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path)},
         )
 
@@ -145,6 +152,7 @@ class TestConfigMalformed:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path)},
         )
 
@@ -164,6 +172,7 @@ class TestConfigMalformed:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path)},
         )
 
@@ -182,6 +191,7 @@ class TestConfigMalformed:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path)},
         )
 
@@ -211,6 +221,7 @@ class TestPersonaFilesMissing:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(spellbook_dir)},
         )
 
@@ -240,6 +251,7 @@ class TestPersonaFilesMissing:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(spellbook_dir)},
         )
 
@@ -273,6 +285,7 @@ class TestEmptyPersonaFiles:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(spellbook_dir)},
         )
 
@@ -302,6 +315,7 @@ class TestEmptyPersonaFiles:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(spellbook_dir)},
         )
 
@@ -336,6 +350,7 @@ class TestSpellbookDirResolution:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(custom_spellbook)},
         )
 
@@ -366,6 +381,7 @@ class TestOutputFormat:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(spellbook_dir)},
         )
 
@@ -389,6 +405,7 @@ class TestOutputFormat:
             [sys.executable, str(SCRIPT_PATH)],
             capture_output=True,
             text=True,
+            timeout=30,
             env={"HOME": str(tmp_path)},
         )
 

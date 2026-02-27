@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 # Use the project root as cwd for subprocess calls (the worktree directory
 # may not exist on all branches).
 _PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
@@ -386,6 +388,7 @@ class TestCLIEntryPoint:
             input=json.dumps(input_json),
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=_PROJECT_ROOT,
         )
         return proc.returncode, proc.stdout, proc.stderr
@@ -430,6 +433,7 @@ class TestCLIEntryPoint:
             cmd,
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=_PROJECT_ROOT,
         )
         assert proc.returncode == 0
@@ -492,6 +496,7 @@ class TestCLIEntryPoint:
             input="not valid json",
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=_PROJECT_ROOT,
         )
         assert proc.returncode != 0
@@ -527,6 +532,7 @@ class TestCheckAuditMode:
             input=json.dumps(data),
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=_PROJECT_ROOT,
             env=env,
         )
@@ -625,6 +631,7 @@ class TestCheckAuditMode:
             input="not valid json",
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=_PROJECT_ROOT,
         )
         # Audit mode is fail-open: exit 0 even on errors
@@ -664,6 +671,7 @@ class TestCheckCanaryMode:
             input=json.dumps(data),
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=_PROJECT_ROOT,
             env=env,
         )
@@ -742,6 +750,7 @@ class TestCheckCanaryMode:
             input="not valid json",
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=_PROJECT_ROOT,
         )
         # Canary mode is fail-open: exit 0 even on errors

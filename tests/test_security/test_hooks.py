@@ -26,10 +26,13 @@ import pytest
 
 # All tests in this module invoke bash shell scripts via subprocess.
 # They cannot run on Windows where bash is not available.
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Bash scripts not available on Windows",
-)
+pytestmark = [
+    pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Bash scripts not available on Windows",
+    ),
+    pytest.mark.integration,
+]
 
 # Project root is three levels up from this file:
 # tests/test_security/test_hooks.py -> tests/test_security -> tests -> project_root

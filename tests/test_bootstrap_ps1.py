@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 _HAS_PWSH = shutil.which("pwsh") is not None
 
 # Root of the real spellbook project (one level up from tests/)

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-02-27
+
+### Added
+- **pytest-timeout** - Global 30s timeout prevents any single test from hanging the entire suite
+- **pytest-xdist** - Enables parallel test execution with `pytest -n auto`
+- **Test marks for targeted running** - `@pytest.mark.integration` (13 files), `@pytest.mark.slow` (2 files), `@pytest.mark.external` (1 file)
+- **Subprocess timeouts** - All `subprocess.run()` calls in tests now have explicit `timeout=30`
+
+### Changed
+- **Consolidated pytest config** - Deleted `pytest.ini`, moved all config to `pyproject.toml`
+
+## [0.11.0] - 2026-02-27
+
+### Added
+- **Kokoro TTS MCP integration** - Text-to-speech via 4 MCP tools (`tts_speak`, `tts_settings`, `tts_set_voice`, `tts_list_voices`), lazy-loaded model, per-session overrides
+- **FastMCP v3 compatibility** - Version detection and compat shim for both FastMCP v2 and v3
+- **`$SPELLBOOK_DIR` expansion in hooks** - Hook paths now use absolute paths instead of unexpanded variables
+
+### Changed
+- **Dependabot rollup** - Bumped 15 dependencies across pip, npm, and GitHub Actions
+
 ## [0.10.1] - 2026-02-25
 
 ### Added

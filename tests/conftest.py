@@ -11,6 +11,15 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 
+def get_tool_fn(tool):
+    """Get the callable function from a FastMCP tool, compatible with both v2 and v3.
+
+    In FastMCP v2, @mcp.tool() returns a FunctionTool object with a .fn attribute.
+    In FastMCP v3, @mcp.tool() returns the original function directly.
+    """
+    return getattr(tool, "fn", tool)
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--run-docker",
