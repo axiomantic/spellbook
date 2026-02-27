@@ -157,6 +157,9 @@ from spellbook_mcp.update_tools import (
 )
 from spellbook_mcp.update_watcher import UpdateWatcher
 
+# TTS imports
+from spellbook_mcp import tts as tts_module
+
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
 
@@ -2564,6 +2567,53 @@ def spellbook_get_update_status() -> dict:
     """
     spellbook_dir = get_spellbook_dir()
     return do_get_update_status(spellbook_dir)
+
+
+# --- TTS Tools ---
+
+
+@mcp.tool()
+@inject_recovery_context
+async def kokoro_speak(
+    text: str,
+    voice: str = None,
+    volume: float = None,
+) -> dict:
+    """
+    Generate speech from text using Kokoro TTS and play it.
+
+    Lazy-loads the Kokoro model on first call (~20-30s). Subsequent calls
+    are fast (~2s). Audio plays through the default system output device.
+
+    Args:
+        text: Text to speak (required)
+        voice: Kokoro voice ID (default: config or "af_heart")
+        volume: Playback volume 0.0-1.0 (default: config or 0.3)
+
+    Returns:
+        {"ok": true, "elapsed": float, "wav_path": str} on success
+        {"error": str} on failure
+    """
+    return await tts_module.speak(text, voice=voice, volume=volume)
+
+
+@mcp.tool()
+@inject_recovery_context
+def kokoro_status() -> dict:
+    """
+    Check TTS availability and current settings.
+
+    Returns:
+        {
+            "available": bool,       # kokoro importable
+            "enabled": bool,         # tts_enabled config
+            "model_loaded": bool,    # KPipeline cached
+            "voice": str,            # effective voice
+            "volume": float,         # effective volume
+            "error": str | None      # if not available, why
+        }
+    """
+    return tts_module.get_status()
 
 
 if __name__ == "__main__":
