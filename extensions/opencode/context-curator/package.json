@@ -25,12 +25,12 @@
   },
   "dependencies": {
     "@anthropic-ai/tokenizer": "^0.0.4",
-    "@opencode-ai/sdk": "^1.1.43",
+    "@opencode-ai/sdk": "^1.2.14",
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "^1.1.43",
-    "@types/node": "^20.0.0",
+    "@opencode-ai/plugin": "^1.2.14",
+    "@types/node": "^25.3.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
