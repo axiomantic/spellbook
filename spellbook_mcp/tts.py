@@ -211,3 +211,89 @@ def get_status(session_id: str = None) -> dict:
         "volume": _resolve_setting("volume", session_id=session_id),
         "error": _import_error if not available else None,
     }
+
+
+async def ensure_loaded() -> tuple[bool, str | None]:
+    """Async wrapper for model loading.
+
+    Returns:
+        (True, None) on success, (False, error_message) on failure.
+    """
+    await asyncio.to_thread(_load_model)
+    if _kokoro_pipeline is not None:
+        return True, None
+    return False, _import_error
+
+
+async def speak(
+    text: str,
+    voice: str = None,
+    volume: float = None,
+    session_id: str = None,
+) -> dict:
+    """Generate and play speech from text.
+
+    Main async entry point for TTS. Lazy-loads model on first call.
+
+    Args:
+        text: Text to speak.
+        voice: Voice ID override.
+        volume: Volume override (0.0-1.0).
+        session_id: Session ID for settings resolution.
+
+    Returns:
+        {"ok": True, "elapsed": float, "wav_path": str} on success.
+        {"error": str} on failure.
+    """
+    # Check availability
+    if not _check_availability():
+        return {"error": f"TTS not available. {_import_error}"}
+
+    # Resolve settings
+    effective_enabled = _resolve_setting("enabled", session_id=session_id)
+    if not effective_enabled:
+        return {
+            "error": "TTS disabled. Enable with tts_config_set(enabled=true) "
+            "or tts_session_set(enabled=true)"
+        }
+
+    effective_voice = _resolve_setting("voice", explicit_value=voice, session_id=session_id)
+    effective_volume = _resolve_setting("volume", explicit_value=volume, session_id=session_id)
+
+    # Clamp volume
+    warning = None
+    if effective_volume is not None:
+        if effective_volume < 0.0:
+            warning = f"Volume clamped from {effective_volume} to 0.0"
+            effective_volume = 0.0
+        elif effective_volume > 1.0:
+            warning = f"Volume clamped from {effective_volume} to 1.0"
+            effective_volume = 1.0
+
+    start_time = time.monotonic()
+
+    # Ensure model is loaded
+    success, error = await ensure_loaded()
+    if not success:
+        return {"error": f"TTS model failed to load: {error}"}
+
+    # Generate audio
+    try:
+        wav_path = await asyncio.to_thread(_generate_audio, text, effective_voice)
+    except Exception as e:
+        return {"error": f"Audio generation failed: {e}"}
+
+    # Play audio
+    elapsed = time.monotonic() - start_time
+    result = {"ok": True, "elapsed": round(elapsed, 2), "wav_path": wav_path}
+    if warning:
+        result["warning"] = warning
+
+    try:
+        await asyncio.to_thread(_play_audio, wav_path, effective_volume)
+    except Exception as e:
+        # Playback failed but WAV was generated - return path for manual use
+        result["warning"] = f"Audio playback failed: {e}. WAV file saved to {wav_path}"
+        logger.warning(result["warning"])
+
+    return result

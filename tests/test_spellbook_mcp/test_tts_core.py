@@ -315,3 +315,106 @@ class TestGetStatus:
             status = tts_mod.get_status()
         assert status["model_loaded"] is False
         assert tts_mod._kokoro_pipeline is None  # Still not loaded
+
+
+class TestEnsureLoaded:
+    """ensure_loaded() is the async wrapper around _load_model()."""
+
+    @pytest.mark.asyncio
+    async def test_returns_true_on_success(self):
+        import spellbook_mcp.tts as tts_mod
+        mock_pipeline = MagicMock()
+        mock_kokoro = MagicMock()
+        mock_kokoro.KPipeline.return_value = mock_pipeline
+        with patch.dict("sys.modules", {"kokoro": mock_kokoro}):
+            success, error = await tts_mod.ensure_loaded()
+        assert success is True
+        assert error is None
+
+    @pytest.mark.asyncio
+    async def test_returns_false_on_failure(self):
+        import spellbook_mcp.tts as tts_mod
+        mock_kokoro = MagicMock()
+        mock_kokoro.KPipeline.side_effect = RuntimeError("OOM")
+        with patch.dict("sys.modules", {"kokoro": mock_kokoro}):
+            success, error = await tts_mod.ensure_loaded()
+        assert success is False
+        assert "OOM" in error
+
+
+class TestSpeak:
+    """speak() is the main async entry point for TTS."""
+
+    @pytest.mark.asyncio
+    async def test_speak_success(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_available = True
+
+        with patch.object(tts_mod, "ensure_loaded", return_value=(True, None)):
+            with patch.object(tts_mod, "_generate_audio", return_value="/tmp/test.wav"):
+                with patch.object(tts_mod, "_play_audio"):
+                    with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+                        mock_ct._get_session_state.return_value = {"tts": {}}
+                        mock_ct.config_get.return_value = None
+                        result = await tts_mod.speak("hello", voice="af_heart", volume=0.3)
+
+        assert result["ok"] is True
+        assert "elapsed" in result
+        assert result["wav_path"] == "/tmp/test.wav"
+
+    @pytest.mark.asyncio
+    async def test_speak_when_disabled(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_available = True
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {"enabled": False}}
+            mock_ct.config_get.return_value = None
+            result = await tts_mod.speak("hello")
+        assert "error" in result
+        assert "disabled" in result["error"].lower()
+
+    @pytest.mark.asyncio
+    async def test_speak_when_not_available(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_available = False
+        tts_mod._import_error = "Missing dependency: kokoro"
+        result = await tts_mod.speak("hello")
+        assert "error" in result
+        assert "not available" in result["error"].lower()
+
+    @pytest.mark.asyncio
+    async def test_speak_clamps_volume(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_available = True
+
+        with patch.object(tts_mod, "ensure_loaded", return_value=(True, None)):
+            with patch.object(tts_mod, "_generate_audio", return_value="/tmp/test.wav"):
+                with patch.object(tts_mod, "_play_audio") as mock_play:
+                    with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+                        mock_ct._get_session_state.return_value = {"tts": {}}
+                        mock_ct.config_get.return_value = None
+                        result = await tts_mod.speak("hello", volume=1.5)
+
+        assert result["ok"] is True
+        assert "warning" in result
+        # Volume should have been clamped to 1.0
+        mock_play.assert_called_once()
+        actual_volume = mock_play.call_args[0][1]
+        assert actual_volume == 1.0
+
+    @pytest.mark.asyncio
+    async def test_speak_playback_failure_returns_wav_path(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_available = True
+
+        with patch.object(tts_mod, "ensure_loaded", return_value=(True, None)):
+            with patch.object(tts_mod, "_generate_audio", return_value="/tmp/test.wav"):
+                with patch.object(tts_mod, "_play_audio", side_effect=ImportError("No sounddevice")):
+                    with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+                        mock_ct._get_session_state.return_value = {"tts": {}}
+                        mock_ct.config_get.return_value = None
+                        result = await tts_mod.speak("hello")
+
+        assert result["ok"] is True
+        assert result["wav_path"] == "/tmp/test.wav"
+        assert "Audio playback failed" in result.get("warning", "")
