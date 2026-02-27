@@ -1,12 +1,15 @@
 """Tests for session watcher thread."""
 
 import json
-import pytest
-import time
 import sqlite3
-from pathlib import Path
+import time
 from datetime import datetime, timedelta
+from pathlib import Path
 from unittest.mock import patch, MagicMock
+
+import pytest
+
+pytestmark = pytest.mark.slow
 
 
 def test_watcher_starts_and_stops(tmp_path):

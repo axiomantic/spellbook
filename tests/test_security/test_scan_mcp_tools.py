@@ -17,6 +17,8 @@ import textwrap
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 # ---------------------------------------------------------------------------
 # MCP_RULES existence and structure tests
@@ -625,6 +627,7 @@ class TestCLIModeMCP:
             ],
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 0
 
@@ -643,6 +646,7 @@ class TestCLIModeMCP:
             ],
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 1
         assert "MCP-009" in result.stderr
@@ -659,6 +663,7 @@ class TestCLIModeMCP:
             ],
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 0
 
@@ -680,6 +685,7 @@ class TestCLIModeMCP:
             ],
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 1
         assert "MCP-001" in result.stderr
@@ -690,6 +696,7 @@ class TestCLIModeMCP:
             [sys.executable, "-m", "spellbook_mcp.security.scanner"],
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 2
         assert "--mode" in result.stderr

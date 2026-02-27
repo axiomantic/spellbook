@@ -24,10 +24,13 @@ from pathlib import Path
 import pytest
 from unittest.mock import patch
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="Bash scripts not available on Windows",
-)
+pytestmark = [
+    pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Bash scripts not available on Windows",
+    ),
+    pytest.mark.integration,
+]
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 TIMER_START_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "tts-timer-start.sh")

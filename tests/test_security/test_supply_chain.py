@@ -19,6 +19,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -35,6 +37,7 @@ def run_scanner(args: list[str], cwd: str | None = None) -> subprocess.Completed
         [sys.executable, SCANNER_SCRIPT] + args,
         capture_output=True,
         text=True,
+        timeout=30,
         cwd=cwd or ".",
     )
 
