@@ -718,6 +718,55 @@ def bootstrap(args: argparse.Namespace) -> Path:
 
 
 # =============================================================================
+# Optional TTS Setup
+# =============================================================================
+
+
+def check_tts_available() -> bool:
+    """Check if the kokoro TTS package is importable."""
+    try:
+        import kokoro  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def _set_tts_config(enabled: bool) -> None:
+    """Persist the tts_enabled config value via spellbook config_tools."""
+    try:
+        from spellbook_mcp.config_tools import config_set as _cfg_set
+        _cfg_set("tts_enabled", enabled)
+    except ImportError:
+        pass
+
+
+def setup_tts(dry_run: bool = False, auto_yes: bool = False) -> None:
+    """Detect kokoro TTS and optionally enable it.
+
+    Skipped during dry-run or when kokoro is not installed.
+    In interactive mode, prompts the user. With --yes, auto-enables.
+    """
+    if dry_run:
+        return
+
+    if not check_tts_available():
+        return
+
+    print()
+    enabled = prompt_yn(
+        "Kokoro TTS detected. Enable text-to-speech notifications?",
+        default=True,
+        auto_yes=auto_yes,
+    )
+    _set_tts_config(enabled)
+    if enabled:
+        print_success("TTS enabled (voice: af_heart, volume: 0.3)")
+        print_info("Change settings with tts_session_set or tts_config_set MCP tools")
+    else:
+        print_info("TTS disabled. Enable later with tts_config_set MCP tool")
+
+
+# =============================================================================
 # Main Installation Logic
 # =============================================================================
 
@@ -797,6 +846,9 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             installer_print_warning(f"MCP server: {msg}")
 
     print_report(session)
+
+    # TTS setup (optional)
+    setup_tts(dry_run=args.dry_run, auto_yes=getattr(args, "yes", False))
 
     # Show post-install instructions if interactive and not dry-run
     if not args.dry_run and is_interactive():

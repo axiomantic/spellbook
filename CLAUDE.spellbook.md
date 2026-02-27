@@ -128,6 +128,28 @@ User intent is detected from the first message:
 | "start fresh", "new session", "clean slate" | fresh_start | Skip resume, return `resume_available: false` |
 | "ok", "next", neutral message               | neutral     | Execute boot prompt (if session exists)       |
 
+## TTS Configuration
+
+Spellbook can announce when long-running tools finish using Kokoro text-to-speech. Requires optional `[tts]` dependencies (`uv pip install spellbook[tts]`).
+
+**Available MCP tools:**
+- `kokoro_speak(text, voice?, volume?)` - Speak text aloud
+- `kokoro_status()` - Check TTS availability and settings
+- `tts_session_set(enabled?, voice?, volume?)` - Override settings for this session
+- `tts_config_set(enabled?, voice?, volume?)` - Change persistent settings
+
+**Quick commands:**
+- Mute this session: call `tts_session_set(enabled=false)`
+- Unmute this session: call `tts_session_set(enabled=true)`
+- Change voice: call `tts_config_set(voice="bf_emma")`
+- Adjust volume: call `tts_config_set(volume=0.5)`
+
+**Auto-notifications:** A PreToolUse hook records tool start times, and a
+PostToolUse hook announces tool completions that took longer than 30 seconds.
+Set threshold via `SPELLBOOK_TTS_THRESHOLD` env var. Interactive and
+management tools (AskUserQuestion, TodoRead, TodoWrite, TaskCreate,
+TaskUpdate, TaskGet, TaskList) are excluded.
+
 ## Encyclopedia
 
 **Contents:** Glossary, architecture skeleton (mermaid), decision log (why X not Y), entry points, testing commands. Overview-only design resists staleness.

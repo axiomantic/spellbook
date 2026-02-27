@@ -1,17 +1,19 @@
 """
-Claude Code hook registration for security hooks.
+Claude Code hook registration for security and TTS hooks.
 
 Manages PreToolUse and PostToolUse hook entries in .claude/settings.local.json
-that point to spellbook security scripts.
+that point to spellbook security scripts and TTS notification hooks.
 
-Tier 1 (PreToolUse):
+PreToolUse hooks:
   - Bash -> bash-gate.sh
   - spawn_claude_session -> spawn-guard.sh
-
-Tier 2 (PreToolUse + PostToolUse):
   - mcp__spellbook__workflow_state_save -> state-sanitize.sh (timeout: 15)
+  - .* -> tts-timer-start.sh (async, timeout: 5) - records tool start time
+
+PostToolUse hooks:
   - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (async, timeout: 10)
   - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (timeout: 10)
+  - .* -> tts-notify.sh (async, timeout: 15) - announces tool completion
 """
 
 import json
@@ -42,6 +44,17 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
                 },
             ],
         },
+        {
+            "matcher": ".*",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/tts-timer-start.sh",
+                    "async": True,
+                    "timeout": 5,
+                },
+            ],
+        },
     ],
     "PostToolUse": [
         {
@@ -57,6 +70,17 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
                     "type": "command",
                     "command": "$SPELLBOOK_DIR/hooks/canary-check.sh",
                     "timeout": 10,
+                },
+            ],
+        },
+        {
+            "matcher": ".*",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
+                    "async": True,
+                    "timeout": 15,
                 },
             ],
         },
@@ -116,15 +140,35 @@ def _get_hook_path(hook: Union[str, Dict[str, Any]]) -> str:
     return hook.get("command", "")
 
 
-def _is_spellbook_hook(hook: Union[str, Dict[str, Any]]) -> bool:
+def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional[Path] = None) -> bool:
     """Check if a hook is managed by spellbook.
 
     Works with both string hooks ("$SPELLBOOK_DIR/hooks/foo.sh") and
     object hooks ({"type": "command", "command": "$SPELLBOOK_DIR/hooks/foo.sh"}).
     Also detects .py wrapper hooks on Windows.
+
+    Recognizes both legacy literal $SPELLBOOK_DIR paths and expanded absolute
+    paths when spellbook_dir is provided.
     """
     path = _get_hook_path(hook)
-    return path.startswith(_SPELLBOOK_HOOK_PREFIX)
+    if path.startswith(_SPELLBOOK_HOOK_PREFIX):
+        return True
+    if spellbook_dir is not None:
+        expanded_prefix = str(spellbook_dir) + "/hooks/"
+        if path.startswith(expanded_prefix):
+            return True
+    return False
+
+
+def _expand_spellbook_dir(hook: Union[str, Dict[str, Any]], spellbook_dir: Path) -> Union[str, Dict[str, Any]]:
+    """Replace $SPELLBOOK_DIR with the actual spellbook directory path."""
+    spellbook_str = str(spellbook_dir)
+    if isinstance(hook, str):
+        return hook.replace("$SPELLBOOK_DIR", spellbook_str)
+    expanded = dict(hook)
+    if "command" in expanded:
+        expanded["command"] = expanded["command"].replace("$SPELLBOOK_DIR", spellbook_str)
+    return expanded
 
 
 def _load_settings(settings_path: Path) -> Optional[Dict]:
@@ -142,17 +186,25 @@ def _load_settings(settings_path: Path) -> Optional[Dict]:
 def _merge_hooks_for_phase(
     phase_entries: List[Dict],
     hook_defs: List[Dict],
+    spellbook_dir: Optional[Path] = None,
 ) -> None:
     """Merge spellbook hook definitions into an existing phase array.
 
     For each hook definition, finds or creates a matcher entry, removes
     any old spellbook hooks, and appends the new ones. User hooks are
     never removed or replaced.
+
+    If spellbook_dir is provided, $SPELLBOOK_DIR in hook paths is expanded
+    to the actual absolute path, and both literal and expanded paths are
+    recognized for cleanup of old hooks.
     """
     for hook_def in hook_defs:
         matcher = hook_def["matcher"]
         # Transform hook paths for the current platform (.sh -> .py on Windows)
         spellbook_hooks = [_transform_hook_for_platform(h) for h in hook_def["hooks"]]
+        # Expand $SPELLBOOK_DIR to actual path if provided
+        if spellbook_dir is not None:
+            spellbook_hooks = [_expand_spellbook_dir(h, spellbook_dir) for h in spellbook_hooks]
 
         # Find existing entry with this matcher
         existing_entry = None
@@ -162,9 +214,9 @@ def _merge_hooks_for_phase(
                 break
 
         if existing_entry is not None:
-            # Remove any old spellbook hooks from this entry
+            # Remove any old spellbook hooks from this entry (both literal and expanded)
             existing_hooks = existing_entry.get("hooks", [])
-            cleaned_hooks = [h for h in existing_hooks if not _is_spellbook_hook(h)]
+            cleaned_hooks = [h for h in existing_hooks if not _is_spellbook_hook(h, spellbook_dir)]
             # Add the new spellbook hooks
             cleaned_hooks.extend(spellbook_hooks)
             existing_entry["hooks"] = cleaned_hooks
@@ -176,16 +228,19 @@ def _merge_hooks_for_phase(
             })
 
 
-def _clean_hooks_for_phase(phase_entries: List[Dict]) -> List[Dict]:
+def _clean_hooks_for_phase(phase_entries: List[Dict], spellbook_dir: Optional[Path] = None) -> List[Dict]:
     """Remove spellbook hooks from a phase array, preserving user hooks.
 
     Returns a new list with spellbook hooks removed. Matcher entries that
     have no remaining hooks after cleanup are dropped entirely.
+
+    If spellbook_dir is provided, both literal $SPELLBOOK_DIR paths and
+    expanded absolute paths are recognized for removal.
     """
     cleaned = []
     for entry in phase_entries:
         hooks_list = entry.get("hooks", [])
-        remaining = [h for h in hooks_list if not _is_spellbook_hook(h)]
+        remaining = [h for h in hooks_list if not _is_spellbook_hook(h, spellbook_dir)]
         if remaining:
             cleaned.append({
                 "matcher": entry["matcher"],
@@ -194,7 +249,7 @@ def _clean_hooks_for_phase(phase_entries: List[Dict]) -> List[Dict]:
     return cleaned
 
 
-def install_hooks(settings_path: Path, dry_run: bool = False) -> HookResult:
+def install_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry_run: bool = False) -> HookResult:
     """Install spellbook security hooks into settings.local.json.
 
     Merges hook entries into PreToolUse and PostToolUse arrays. If a matcher
@@ -202,8 +257,14 @@ def install_hooks(settings_path: Path, dry_run: bool = False) -> HookResult:
     hook is appended to that entry's hooks list. Existing user hooks are
     never removed or replaced.
 
+    If spellbook_dir is provided, $SPELLBOOK_DIR in hook paths is expanded
+    to the actual absolute path so hooks work without environment variable
+    expansion at runtime.
+
     Args:
         settings_path: Path to .claude/settings.local.json
+        spellbook_dir: Path to the spellbook installation directory. When provided,
+            $SPELLBOOK_DIR is expanded to this path in all hook commands.
         dry_run: If True, do not write any changes
 
     Returns:
@@ -239,7 +300,7 @@ def install_hooks(settings_path: Path, dry_run: bool = False) -> HookResult:
     for phase, hook_defs in HOOK_DEFINITIONS.items():
         if phase not in settings["hooks"]:
             settings["hooks"][phase] = []
-        _merge_hooks_for_phase(settings["hooks"][phase], hook_defs)
+        _merge_hooks_for_phase(settings["hooks"][phase], hook_defs, spellbook_dir)
 
     # Write back
     settings_path.parent.mkdir(parents=True, exist_ok=True)
@@ -256,16 +317,20 @@ def install_hooks(settings_path: Path, dry_run: bool = False) -> HookResult:
     )
 
 
-def uninstall_hooks(settings_path: Path, dry_run: bool = False) -> HookResult:
+def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry_run: bool = False) -> HookResult:
     """Remove spellbook security hooks from settings.local.json.
 
-    Removes only spellbook-managed hook paths (those starting with
-    $SPELLBOOK_DIR/hooks/) from all phases. User-defined hooks are
-    preserved. If removing the spellbook hook leaves a matcher entry
-    with no hooks, the entire entry is removed.
+    Removes only spellbook-managed hook paths from all phases. User-defined
+    hooks are preserved. If removing the spellbook hook leaves a matcher
+    entry with no hooks, the entire entry is removed.
+
+    Recognizes both legacy literal $SPELLBOOK_DIR paths and expanded absolute
+    paths when spellbook_dir is provided, ensuring backward compatibility.
 
     Args:
         settings_path: Path to .claude/settings.local.json
+        spellbook_dir: Path to the spellbook installation directory. When provided,
+            hooks with expanded absolute paths are also recognized for removal.
         dry_run: If True, do not write any changes
 
     Returns:
@@ -308,7 +373,7 @@ def uninstall_hooks(settings_path: Path, dry_run: bool = False) -> HookResult:
         phase_entries = hooks_section.get(phase, [])
         for entry in phase_entries:
             for hook in entry.get("hooks", []):
-                if _is_spellbook_hook(hook):
+                if _is_spellbook_hook(hook, spellbook_dir):
                     has_spellbook_hooks = True
                     break
             if has_spellbook_hooks:
@@ -327,7 +392,7 @@ def uninstall_hooks(settings_path: Path, dry_run: bool = False) -> HookResult:
     # Clean spellbook hooks from each phase
     for phase in _HOOK_PHASES:
         if phase in hooks_section:
-            hooks_section[phase] = _clean_hooks_for_phase(hooks_section[phase])
+            hooks_section[phase] = _clean_hooks_for_phase(hooks_section[phase], spellbook_dir)
 
     settings["hooks"] = hooks_section
 

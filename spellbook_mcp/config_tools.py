@@ -52,14 +52,18 @@ def _get_session_state(session_id: Optional[str] = None) -> dict:
                     for backward compatibility.
 
     Returns:
-        Session state dict with "mode" key.
+        Session state dict with "mode" and "tts" keys.
     """
     _cleanup_stale_sessions()  # Run cleanup on each access
     sid = session_id or DEFAULT_SESSION_ID
     _session_activity[sid] = datetime.now()
     if sid not in _session_states:
-        _session_states[sid] = {"mode": None}
-    return _session_states[sid]
+        _session_states[sid] = {"mode": None, "tts": {}}
+    # Ensure tts key exists for sessions created before TTS feature
+    state = _session_states[sid]
+    if "tts" not in state:
+        state["tts"] = {}
+    return state
 
 
 def _get_default_session_state() -> dict:
@@ -311,6 +315,109 @@ def session_mode_get(session_id: Optional[str] = None) -> dict:
         return {"mode": "fun" if legacy_mode else "none", "source": "config_legacy", "permanent": True}
     else:
         return {"mode": None, "source": "unset", "permanent": False}
+
+
+# TTS defaults (used when neither session nor config has a value)
+TTS_DEFAULT_ENABLED = True
+TTS_DEFAULT_VOICE = "af_heart"
+TTS_DEFAULT_VOLUME = 0.3
+
+
+def tts_session_set(
+    enabled: bool = None,
+    voice: str = None,
+    volume: float = None,
+    session_id: Optional[str] = None,
+) -> dict:
+    """Set TTS overrides for this session (not persisted to config).
+
+    Pass only the settings you want to change. Omitted settings keep
+    their current value.
+
+    Args:
+        enabled: Enable/disable TTS for this session
+        voice: Override voice for this session
+        volume: Override volume for this session (0.0-1.0)
+        session_id: Session identifier for multi-session isolation.
+                    If None, uses default session for backward compatibility.
+
+    Returns:
+        Dict with status and current session TTS overrides
+    """
+    session_state = _get_session_state(session_id)
+    tts_state = session_state["tts"]
+
+    if enabled is not None:
+        tts_state["enabled"] = enabled
+    if voice is not None:
+        tts_state["voice"] = voice
+    if volume is not None:
+        tts_state["volume"] = volume
+
+    return {"status": "ok", "session_tts": dict(tts_state)}
+
+
+def tts_session_get(session_id: Optional[str] = None) -> dict:
+    """Get effective TTS settings with resolution: session > config > defaults.
+
+    Each setting is resolved independently. For example, voice may come
+    from session while volume comes from config and enabled from defaults.
+
+    Does NOT check kokoro availability. This is the settings layer only.
+
+    Args:
+        session_id: Session identifier for multi-session isolation.
+                    If None, uses default session for backward compatibility.
+
+    Returns:
+        Dict with effective enabled, voice, volume and their sources
+    """
+    session_state = _get_session_state(session_id)
+    tts_state = session_state["tts"]
+
+    # Resolve each setting: session > config > default
+    result = {}
+
+    # enabled
+    if "enabled" in tts_state:
+        result["enabled"] = tts_state["enabled"]
+        result["source_enabled"] = "session"
+    else:
+        config_val = config_get("tts_enabled")
+        if config_val is not None:
+            result["enabled"] = config_val
+            result["source_enabled"] = "config"
+        else:
+            result["enabled"] = TTS_DEFAULT_ENABLED
+            result["source_enabled"] = "default"
+
+    # voice
+    if "voice" in tts_state:
+        result["voice"] = tts_state["voice"]
+        result["source_voice"] = "session"
+    else:
+        config_val = config_get("tts_voice")
+        if config_val is not None:
+            result["voice"] = config_val
+            result["source_voice"] = "config"
+        else:
+            result["voice"] = TTS_DEFAULT_VOICE
+            result["source_voice"] = "default"
+
+    # volume
+    if "volume" in tts_state:
+        result["volume"] = tts_state["volume"]
+        result["source_volume"] = "session"
+    else:
+        config_val = config_get("tts_volume")
+        if config_val is not None:
+            result["volume"] = config_val
+            result["source_volume"] = "config"
+        else:
+            result["volume"] = TTS_DEFAULT_VOLUME
+            result["source_volume"] = "default"
+
+    return result
 
 
 def random_line(file_path: Path) -> str:

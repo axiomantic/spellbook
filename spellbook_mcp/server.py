@@ -68,6 +68,7 @@ from spellbook_mcp.config_tools import (
     session_init,
     session_mode_set,
     session_mode_get,
+    tts_session_set as do_tts_session_set,
     telemetry_enable as do_telemetry_enable,
     telemetry_disable as do_telemetry_disable,
     telemetry_status as do_telemetry_status,
@@ -156,6 +157,11 @@ from spellbook_mcp.update_tools import (
     get_update_status as do_get_update_status,
 )
 from spellbook_mcp.update_watcher import UpdateWatcher
+
+# TTS imports
+from spellbook_mcp import tts as tts_module
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
@@ -2564,6 +2570,165 @@ def spellbook_get_update_status() -> dict:
     """
     spellbook_dir = get_spellbook_dir()
     return do_get_update_status(spellbook_dir)
+
+
+# --- TTS Tools ---
+
+
+@mcp.tool()
+@inject_recovery_context
+async def kokoro_speak(
+    text: str,
+    voice: str = None,
+    volume: float = None,
+    session_id: str = None,
+) -> dict:
+    """
+    Generate speech from text using Kokoro TTS and play it.
+
+    Lazy-loads the Kokoro model on first call (~20-30s). Subsequent calls
+    are fast (~2s). Audio plays through the default system output device.
+
+    Args:
+        text: Text to speak (required)
+        voice: Kokoro voice ID (default: config or "af_heart")
+        volume: Playback volume 0.0-1.0 (default: config or 0.3)
+        session_id: Session identifier for settings resolution (auto-detected if omitted)
+
+    Returns:
+        {"ok": true, "elapsed": float, "wav_path": str} on success
+        {"error": str} on failure
+    """
+    if len(text) > 5000:
+        return {"error": "text exceeds 5000 character limit"}
+    return await tts_module.speak(text, voice=voice, volume=volume, session_id=session_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def kokoro_status(session_id: str = None) -> dict:
+    """
+    Check TTS availability and current settings.
+
+    Args:
+        session_id: Session identifier for settings resolution (auto-detected if omitted)
+
+    Returns:
+        {
+            "available": bool,       # kokoro importable
+            "enabled": bool,         # resolved via session > config > default
+            "model_loaded": bool,    # KPipeline cached
+            "voice": str,            # effective voice
+            "volume": float,         # effective volume
+            "error": str | None      # if not available, why
+        }
+    """
+    return tts_module.get_status(session_id=session_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def tts_session_set(
+    enabled: bool = None,
+    voice: str = None,
+    volume: float = None,
+    session_id: str = None,
+) -> dict:
+    """
+    Override TTS settings for this session only (not persisted).
+
+    Pass only the settings you want to change. Omitted settings keep current value.
+
+    Args:
+        enabled: Enable/disable TTS for this session
+        voice: Override voice for this session
+        volume: Override volume for this session (0.0-1.0)
+        session_id: Session identifier (auto-detected if omitted)
+
+    Returns:
+        {"status": "ok", "session_tts": dict_of_current_overrides}
+    """
+    return do_tts_session_set(
+        enabled=enabled, voice=voice, volume=volume, session_id=session_id
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def tts_config_set(
+    enabled: bool = None,
+    voice: str = None,
+    volume: float = None,
+) -> dict:
+    """
+    Persistently change TTS configuration.
+
+    Pass only the settings you want to change. Omitted settings keep current value.
+
+    Args:
+        enabled: Enable/disable TTS globally
+        voice: Default voice ID (e.g., "af_heart", "bf_emma")
+        volume: Default volume 0.0-1.0
+
+    Returns:
+        {"status": "ok", "config": {tts_enabled, tts_voice, tts_volume}} with
+        updated keys from this call plus current values for unchanged keys.
+    """
+    # Three separate config_set calls are non-atomic, but acceptable for
+    # local user config where partial writes are harmless.
+    result_config = {}
+    if enabled is not None:
+        r = config_set("tts_enabled", enabled)
+        result_config.update(r.get("config", {}))
+    if voice is not None:
+        r = config_set("tts_voice", voice)
+        result_config.update(r.get("config", {}))
+    if volume is not None:
+        r = config_set("tts_volume", volume)
+        result_config.update(r.get("config", {}))
+
+    # If nothing was set, read current config
+    if not result_config:
+        result_config = {
+            "tts_enabled": config_get("tts_enabled"),
+            "tts_voice": config_get("tts_voice"),
+            "tts_volume": config_get("tts_volume"),
+        }
+
+    return {"status": "ok", "config": result_config}
+
+
+# --- TTS REST Endpoint ---
+
+
+@mcp.custom_route("/api/speak", methods=["POST"])
+async def api_speak(request: Request) -> JSONResponse:
+    """REST endpoint for hook scripts to trigger TTS.
+
+    Accepts JSON body: {"text": "...", "voice": "...", "volume": 0.3}
+    Returns JSON: {"ok": true, "elapsed": 1.23, "wav_path": "..."} on success,
+    optionally with "warning" if volume was clamped or playback failed.
+    Returns {"error": "..."} on failure.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    text = body.get("text", "")
+    if not text:
+        return JSONResponse({"error": "no text provided"}, status_code=400)
+
+    if len(text) > 5000:
+        return JSONResponse({"error": "text exceeds 5000 character limit"}, status_code=400)
+
+    voice = body.get("voice")
+    volume = body.get("volume")
+    session_id = body.get("session_id")
+
+    result = await tts_module.speak(text, voice=voice, volume=volume, session_id=session_id)
+    status_code = 200 if result.get("ok") else 500
+    return JSONResponse(result, status_code=status_code)
 
 
 if __name__ == "__main__":
