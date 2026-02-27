@@ -70,6 +70,8 @@ Identify invariants (rules that must ALWAYS be true, span entities, require atom
 
 Form aggregates: Root entity + contained entities/VOs + invariants + boundary (reference by ID across aggregates).
 
+**Fractal exploration (optional):** When invariants span 3+ entities, invoke fractal-thinking with intensity `pulse` and seed: "What are the correct aggregate boundaries for [domain] given these invariants?". Use the synthesis for multi-angle boundary validation.
+
 ### Phase 5: Domain Event Identification
 
 For each state change: What happened? (past tense), Who cares? (handlers), What data?

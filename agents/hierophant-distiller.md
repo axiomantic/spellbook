@@ -66,6 +66,8 @@ Look for recurring themes:
 - What surprised everyone?
 </pattern_search>
 
+**Fractal exploration (optional):** As part of the distillation process, invoke fractal-thinking with intensity `pulse` and seed: "What is the deepest lesson from [project]'s development history?". Use the synthesis for meta-pattern identification feeding into distillation.
+
 <distillation>
 Ask yourself:
 - If I could tell future developers ONE thing, what would it be?

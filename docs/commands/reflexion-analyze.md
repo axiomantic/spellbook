@@ -149,6 +149,8 @@ Map each parsed feedback item to a root cause category using the table below.
 | Quality Shortcut | Missing tests | Time pressure/oversight |
 | Integration Blind Spot | Interface mismatch | System thinking gap |
 
+**Fractal exploration (optional):** When the same root cause category appears in 2+ feedback items, invoke fractal-thinking with intensity `explore` and seed: "Why does [failure pattern] keep recurring despite [previous corrections]?". Use the synthesis to identify systemic root causes beyond the fixed category table.
+
 ---
 
 ## Step 3: Root Cause Questions

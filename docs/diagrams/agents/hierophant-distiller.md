@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "agents/hierophant-distiller.md", "source_hash": "sha256:0926664a8def3028b00d74558489ec97b42df668df847e6e8e9e0841b6e824b0", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "agents/hierophant-distiller.md", "source_hash": "sha256:f31a2e19b91cc1e3a1d02066e40f234c32b6d89db8f403cc6fb652ea856e7a52", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: hierophant-distiller
 
 Wisdom extraction agent that distills enduring lessons from completed projects. Finds the single most profound insight and transforms ephemeral history into permanent doctrine.

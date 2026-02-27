@@ -423,10 +423,11 @@ Signs of architectural problem:
 - Pattern feels fundamentally unsound
 
 Actions:
-1. Question architecture (not just implementation)
-2. Discuss with human before more fixes
-3. Consider refactoring vs. tactical fixes
-4. Document the pattern issue
+1. **Fractal exploration (optional):** When the 3-Fix Rule triggers (3 failed fix attempts), invoke fractal-thinking with intensity `explore` and seed: "Why does [symptom] persist after [N] fix attempts targeting [root causes]?". Use the synthesis to produce new hypothesis families to investigate.
+2. Question architecture (not just implementation)
+3. Discuss with human before more fixes
+4. Consider refactoring vs. tactical fixes
+5. Document the pattern issue
 ```
 
 ## Anti-Patterns

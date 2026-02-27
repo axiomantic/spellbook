@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-02-27
+
+### Added
+- **Fractal-thinking integration** - Added optional fractal exploration hooks to 14 existing skills, commands, and agents
+  - 5 high-value: brainstorming, debugging (3-Fix Rule), devil's advocate, feature-discover, deep-research-investigate
+  - 2 medium-high: analyzing-domains, review-design-verify
+  - 7 medium: fact-check-verify, write-skill-test, reflexion-analyze, security-auditing, gathering-requirements, crystallize, hierophant-distiller
+  - Consistent pattern: trigger condition, intensity level (pulse/explore), seed template, synthesis usage
+  - All integrations are optional and non-breaking (markdown instruction changes only)
+
 ## [0.12.0] - 2026-02-27
 
 ### Added
