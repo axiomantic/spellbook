@@ -65,26 +65,37 @@ class TestAddNode:
 
         assert result["depth"] == 1
 
-    def test_add_node_depth_cascades(self, graph_with_root):
+    def test_add_node_depth_cascades(self, fractal_db):
         """add_node at depth 1 parent must produce depth 2 child."""
+        from spellbook_mcp.fractal.graph_ops import create_graph
         from spellbook_mcp.fractal.node_ops import add_node
+
+        # Use explore intensity (max_depth=4) to allow deeper nesting
+        result = create_graph(
+            seed="Deep test",
+            intensity="explore",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = result["graph_id"]
+        root_id = result["root_node_id"]
 
         # Create depth-1 node
         depth1 = add_node(
-            graph_id=graph_with_root["graph_id"],
-            parent_id=graph_with_root["root_node_id"],
+            graph_id=graph_id,
+            parent_id=root_id,
             node_type="question",
             text="Depth 1 question",
-            db_path=graph_with_root["db_path"],
+            db_path=fractal_db,
         )
 
         # Create depth-2 node
         depth2 = add_node(
-            graph_id=graph_with_root["graph_id"],
+            graph_id=graph_id,
             parent_id=depth1["node_id"],
             node_type="question",
             text="Depth 2 question",
-            db_path=graph_with_root["db_path"],
+            db_path=fractal_db,
         )
 
         assert depth2["depth"] == 2
@@ -333,6 +344,98 @@ class TestAddNode:
         assert row[3] == "Persisted question"
         assert row[4] == 1
         assert row[5] == "open"
+
+    def test_add_node_exceeds_depth_budget(self, graph_with_root):
+        """add_node should reject nodes that would exceed the intensity's max_depth."""
+        from spellbook_mcp.fractal.node_ops import add_node
+
+        # graph_with_root creates a pulse-intensity graph (max_depth=2)
+        # Root is depth 0. Add child at depth 1 (allowed).
+        child = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Child question",
+            db_path=graph_with_root["db_path"],
+        )
+
+        # Add grandchild at depth 2 (should be rejected for pulse, max_depth=2)
+        with pytest.raises(ValueError, match="exceed max_depth"):
+            add_node(
+                graph_id=graph_with_root["graph_id"],
+                parent_id=child["node_id"],
+                node_type="question",
+                text="Too deep",
+                db_path=graph_with_root["db_path"],
+            )
+
+    def test_add_node_at_max_allowed_depth(self, graph_with_root):
+        """Nodes at depth max_depth-1 should be allowed."""
+        from spellbook_mcp.fractal.node_ops import add_node
+
+        # pulse max_depth=2, so depth 1 should work
+        result = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Depth 1 ok",
+            db_path=graph_with_root["db_path"],
+        )
+
+        assert result["depth"] == 1
+        assert "node_id" in result
+
+    def test_add_node_to_non_active_graph(self, fractal_db):
+        """add_node should reject adding nodes to non-active graphs."""
+        from spellbook_mcp.fractal.graph_ops import create_graph, update_graph_status
+        from spellbook_mcp.fractal.node_ops import add_node
+
+        result = create_graph(
+            seed="Test",
+            intensity="pulse",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = result["graph_id"]
+        root_id = result["root_node_id"]
+
+        # Complete the graph
+        update_graph_status(graph_id, "completed", db_path=fractal_db)
+
+        # Try to add a node
+        with pytest.raises(ValueError, match="must be 'active'"):
+            add_node(
+                graph_id=graph_id,
+                parent_id=root_id,
+                node_type="answer",
+                text="Should fail",
+                db_path=fractal_db,
+            )
+
+    def test_add_node_to_paused_graph(self, fractal_db):
+        """add_node should reject adding nodes to paused graphs."""
+        from spellbook_mcp.fractal.graph_ops import create_graph, update_graph_status
+        from spellbook_mcp.fractal.node_ops import add_node
+
+        result = create_graph(
+            seed="Test",
+            intensity="pulse",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = result["graph_id"]
+        root_id = result["root_node_id"]
+
+        update_graph_status(graph_id, "paused", db_path=fractal_db)
+
+        with pytest.raises(ValueError, match="must be 'active'"):
+            add_node(
+                graph_id=graph_id,
+                parent_id=root_id,
+                node_type="answer",
+                text="Should fail",
+                db_path=fractal_db,
+            )
 
 
 class TestUpdateNode:
@@ -699,37 +802,29 @@ class TestMarkSaturated:
         from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
         from spellbook_mcp.fractal.schema import get_fractal_connection
 
-        # Create a question node and transition it to answered by adding an answer
-        question = add_node(
-            graph_id=graph_with_root["graph_id"],
-            parent_id=graph_with_root["root_node_id"],
-            node_type="question",
-            text="Question to be answered then saturated",
-            db_path=graph_with_root["db_path"],
-        )
-
-        # Add answer to transition parent to "answered"
+        # Add answer to root to transition root to "answered"
+        # Root is at depth 0, answer will be at depth 1 (within pulse max_depth=2)
         add_node(
             graph_id=graph_with_root["graph_id"],
-            parent_id=question["node_id"],
+            parent_id=graph_with_root["root_node_id"],
             node_type="answer",
-            text="An answer",
+            text="An answer to root",
             db_path=graph_with_root["db_path"],
         )
 
-        # Verify it's answered
+        # Verify root is answered
         conn = get_fractal_connection(graph_with_root["db_path"])
         cursor = conn.cursor()
         cursor.execute(
             "SELECT status FROM nodes WHERE id = ?",
-            (question["node_id"],),
+            (graph_with_root["root_node_id"],),
         )
         assert cursor.fetchone()[0] == "answered"
 
-        # Now saturate
+        # Now saturate the root
         result = mark_saturated(
             graph_id=graph_with_root["graph_id"],
-            node_id=question["node_id"],
+            node_id=graph_with_root["root_node_id"],
             reason="derivable",
             db_path=graph_with_root["db_path"],
         )

@@ -134,8 +134,9 @@ class TestCreateGraph:
         assert row[6] is None  # parent_id (root has no parent)
 
     def test_create_graph_invalid_intensity(self, fractal_db):
-        """create_graph must return error dict for invalid intensity."""
+        """create_graph must return error dict for invalid intensity and create no graph."""
         from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Test",
@@ -146,9 +147,16 @@ class TestCreateGraph:
 
         assert "error" in result
 
+        # Verify no graph was created in the database
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM graphs")
+        assert cursor.fetchone()[0] == 0
+
     def test_create_graph_invalid_checkpoint_mode(self, fractal_db):
-        """create_graph must return error dict for invalid checkpoint mode."""
+        """create_graph must return error dict for invalid checkpoint mode and create no graph."""
         from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         result = create_graph(
             seed="Test",
@@ -158,6 +166,12 @@ class TestCreateGraph:
         )
 
         assert "error" in result
+
+        # Verify no graph was created in the database
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM graphs")
+        assert cursor.fetchone()[0] == 0
 
     def test_create_graph_with_metadata(self, fractal_db):
         """create_graph must store metadata_json in graphs table."""
@@ -219,6 +233,9 @@ class TestCreateGraph:
         )
 
         assert "error" not in result
+        assert "graph_id" in result
+        assert "root_node_id" in result
+        assert result["status"] == "active"
         assert result["checkpoint_mode"] == "depth:3"
 
     def test_create_graph_explore_budget(self, fractal_db):
@@ -304,8 +321,9 @@ class TestResumeGraph:
         assert result["status"] == "active"
 
     def test_resume_completed_graph_rejected(self, fractal_db):
-        """resume_graph must reject a completed graph."""
+        """resume_graph must reject a completed graph and leave status unchanged."""
         from spellbook_mcp.fractal.graph_ops import resume_graph
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="completed")
 
@@ -313,9 +331,16 @@ class TestResumeGraph:
 
         assert "error" in result
 
+        # Verify status was NOT changed in the database
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "completed"
+
     def test_resume_error_graph_rejected(self, fractal_db):
-        """resume_graph must reject a graph in error status."""
+        """resume_graph must reject a graph in error status and leave status unchanged."""
         from spellbook_mcp.fractal.graph_ops import resume_graph
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="error")
 
@@ -323,15 +348,28 @@ class TestResumeGraph:
 
         assert "error" in result
 
+        # Verify status was NOT changed in the database
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "error"
+
     def test_resume_budget_exhausted_graph_rejected(self, fractal_db):
-        """resume_graph must reject a budget_exhausted graph."""
+        """resume_graph must reject a budget_exhausted graph and leave status unchanged."""
         from spellbook_mcp.fractal.graph_ops import resume_graph
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="budget_exhausted")
 
         result = resume_graph(graph_id, db_path=fractal_db)
 
         assert "error" in result
+
+        # Verify status was NOT changed in the database
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "budget_exhausted"
 
     def test_resume_nonexistent_graph(self, fractal_db):
         """resume_graph must return error for non-existent graph_id."""
@@ -367,8 +405,8 @@ class TestResumeGraph:
 
         result = resume_graph(graph_id, db_path=fractal_db)
 
-        # At minimum, the root node created during create_graph
-        assert len(result["nodes"]) >= 1
+        # Exactly the root node created during create_graph
+        assert len(result["nodes"]) == 1
 
 
 class TestDeleteGraph:
@@ -520,8 +558,9 @@ class TestUpdateGraphStatus:
         assert result["previous_status"] == "paused"
 
     def test_completed_to_active_rejected(self, fractal_db):
-        """update_graph_status must reject completed -> active transition."""
+        """update_graph_status must reject completed -> active transition and leave status unchanged."""
         from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="completed")
 
@@ -529,9 +568,16 @@ class TestUpdateGraphStatus:
 
         assert "error" in result
 
+        # Verify status unchanged in DB
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "completed"
+
     def test_error_to_active_rejected(self, fractal_db):
-        """update_graph_status must reject error -> active transition."""
+        """update_graph_status must reject error -> active transition and leave status unchanged."""
         from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="error")
 
@@ -539,9 +585,16 @@ class TestUpdateGraphStatus:
 
         assert "error" in result
 
+        # Verify status unchanged in DB
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "error"
+
     def test_budget_exhausted_to_active_rejected(self, fractal_db):
-        """update_graph_status must reject budget_exhausted -> active transition."""
+        """update_graph_status must reject budget_exhausted -> active transition and leave status unchanged."""
         from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="budget_exhausted")
 
@@ -549,15 +602,28 @@ class TestUpdateGraphStatus:
 
         assert "error" in result
 
+        # Verify status unchanged in DB
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "budget_exhausted"
+
     def test_paused_to_completed_rejected(self, fractal_db):
-        """update_graph_status must reject paused -> completed (not a valid transition)."""
+        """update_graph_status must reject paused -> completed and leave status unchanged."""
         from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="paused")
 
         result = update_graph_status(graph_id, "completed", db_path=fractal_db)
 
         assert "error" in result
+
+        # Verify status unchanged in DB
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "paused"
 
     def test_nonexistent_graph(self, fractal_db):
         """update_graph_status must return error for non-existent graph_id."""
@@ -599,25 +665,36 @@ class TestUpdateGraphStatus:
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
-        # Get original updated_at
+        # Set updated_at to a known past sentinel value
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
-        cursor.execute("SELECT updated_at FROM graphs WHERE id = ?", (graph_id,))
-        original_updated_at = cursor.fetchone()[0]
+        cursor.execute(
+            "UPDATE graphs SET updated_at = '2000-01-01 00:00:00' WHERE id = ?",
+            (graph_id,),
+        )
+        conn.commit()
 
         update_graph_status(graph_id, "completed", db_path=fractal_db)
 
         cursor.execute("SELECT updated_at FROM graphs WHERE id = ?", (graph_id,))
         new_updated_at = cursor.fetchone()[0]
 
-        assert new_updated_at >= original_updated_at
+        # updated_at must have changed from the sentinel value
+        assert new_updated_at != "2000-01-01 00:00:00"
 
     def test_active_to_active_rejected(self, fractal_db):
-        """update_graph_status must reject active -> active (same status, not a valid transition)."""
+        """update_graph_status must reject active -> active and leave status unchanged."""
         from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
 
         graph_id = self._create_test_graph(fractal_db, status="active")
 
         result = update_graph_status(graph_id, "active", db_path=fractal_db)
 
         assert "error" in result
+
+        # Verify status unchanged in DB
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "active"

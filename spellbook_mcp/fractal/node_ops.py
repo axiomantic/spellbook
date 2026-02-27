@@ -8,6 +8,7 @@ import json
 import uuid
 
 from spellbook_mcp.fractal.models import (
+    INTENSITY_BUDGETS,
     VALID_NODE_TYPES,
     VALID_SATURATION_REASONS,
 )
@@ -44,12 +45,22 @@ def add_node(graph_id, parent_id, node_type, text, owner=None, metadata_json=Non
 
     # Validate graph exists and is active
     cursor.execute(
-        "SELECT status FROM graphs WHERE id = ?",
+        "SELECT status, intensity FROM graphs WHERE id = ?",
         (graph_id,),
     )
     row = cursor.fetchone()
     if row is None:
         raise ValueError(f"Graph '{graph_id}' not found.")
+
+    graph_status = row[0]
+    if graph_status != "active":
+        raise ValueError(
+            f"Cannot add node to graph with status '{graph_status}'. "
+            f"Graph must be 'active'."
+        )
+
+    intensity = row[1]
+    max_depth = INTENSITY_BUDGETS[intensity]["max_depth"]
 
     # Calculate depth and validate parent
     depth = 0
@@ -62,6 +73,12 @@ def add_node(graph_id, parent_id, node_type, text, owner=None, metadata_json=Non
         if parent_row is None:
             raise ValueError(f"Parent node '{parent_id}' not found in graph '{graph_id}'.")
         depth = parent_row[0] + 1
+
+    if depth >= max_depth:
+        raise ValueError(
+            f"Depth {depth} would exceed max_depth {max_depth} "
+            f"for intensity '{intensity}'"
+        )
 
     node_id = str(uuid.uuid4())
 

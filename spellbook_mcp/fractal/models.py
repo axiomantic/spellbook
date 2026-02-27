@@ -1,8 +1,7 @@
 """Data models for the fractal thinking system.
 
 These dataclasses represent the core domain objects used for tracking
-recursive question decomposition graphs, including nodes, edges,
-budgets, and results.
+recursive question decomposition graphs, including budgets and results.
 """
 
 from dataclasses import dataclass
@@ -53,69 +52,6 @@ INTENSITY_BUDGETS = {
 
 
 @dataclass
-class GraphMetadata:
-    """Metadata tracking for a fractal graph.
-
-    Attributes:
-        total_nodes: Number of nodes in the graph
-        total_edges: Number of edges in the graph
-        max_depth_reached: Maximum depth reached during exploration
-        agents_spawned: Number of agents spawned during exploration
-    """
-
-    total_nodes: int = 0
-    total_edges: int = 0
-    max_depth_reached: int = 0
-    agents_spawned: int = 0
-
-
-@dataclass
-class NodeData:
-    """Data for a single node in a fractal graph.
-
-    Attributes:
-        id: Unique identifier for the node
-        graph_id: ID of the graph this node belongs to
-        node_type: Type of node - "question" or "answer"
-        text: The question or answer text
-        parent_id: ID of the parent node, if any
-        owner: Agent that owns this node
-        depth: Depth in the graph tree
-        status: Current status of the node
-        metadata_json: JSON string of additional metadata
-    """
-
-    id: str
-    graph_id: str
-    node_type: str
-    text: str
-    parent_id: Optional[str] = None
-    owner: Optional[str] = None
-    depth: int = 0
-    status: str = "open"
-    metadata_json: str = "{}"
-
-
-@dataclass
-class EdgeData:
-    """Data for a single edge in a fractal graph.
-
-    Attributes:
-        graph_id: ID of the graph this edge belongs to
-        from_node: ID of the source node
-        to_node: ID of the target node
-        edge_type: Type of edge - "parent_child", "convergence", or "contradiction"
-        metadata_json: JSON string of additional metadata
-    """
-
-    graph_id: str
-    from_node: str
-    to_node: str
-    edge_type: str
-    metadata_json: str = "{}"
-
-
-@dataclass
 class Budget:
     """Resource budget for a fractal thinking session.
 
@@ -126,27 +62,6 @@ class Budget:
 
     max_agents: int
     max_depth: int
-
-    @classmethod
-    def from_intensity(cls, intensity: str) -> "Budget":
-        """Create a Budget from an intensity level.
-
-        Args:
-            intensity: One of "pulse", "explore", "deep"
-
-        Returns:
-            Budget configured for the given intensity
-
-        Raises:
-            ValueError: If intensity is not valid
-        """
-        if intensity not in INTENSITY_BUDGETS:
-            raise ValueError(
-                f"Invalid intensity '{intensity}'. "
-                f"Must be one of: {VALID_INTENSITIES}"
-            )
-        config = INTENSITY_BUDGETS[intensity]
-        return cls(max_agents=config["max_agents"], max_depth=config["max_depth"])
 
 
 @dataclass

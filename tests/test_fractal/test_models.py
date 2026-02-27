@@ -1,7 +1,5 @@
 """Tests for fractal thinking data models."""
 
-import pytest
-
 
 class TestConstants:
     """Tests for module-level constants."""
@@ -102,119 +100,6 @@ class TestConstants:
         assert set(INTENSITY_BUDGETS.keys()) == set(VALID_INTENSITIES)
 
 
-class TestGraphMetadata:
-    """Tests for GraphMetadata dataclass."""
-
-    def test_graph_metadata_creation_defaults(self):
-        """GraphMetadata must be creatable with default fields."""
-        from spellbook_mcp.fractal.models import GraphMetadata
-
-        meta = GraphMetadata()
-
-        assert meta.total_nodes == 0
-        assert meta.total_edges == 0
-        assert meta.max_depth_reached == 0
-        assert meta.agents_spawned == 0
-
-    def test_graph_metadata_creation_with_values(self):
-        """GraphMetadata must accept custom values."""
-        from spellbook_mcp.fractal.models import GraphMetadata
-
-        meta = GraphMetadata(
-            total_nodes=10,
-            total_edges=15,
-            max_depth_reached=3,
-            agents_spawned=5,
-        )
-
-        assert meta.total_nodes == 10
-        assert meta.total_edges == 15
-        assert meta.max_depth_reached == 3
-        assert meta.agents_spawned == 5
-
-
-class TestNodeData:
-    """Tests for NodeData dataclass."""
-
-    def test_node_data_creation(self):
-        """NodeData must be creatable with required fields."""
-        from spellbook_mcp.fractal.models import NodeData
-
-        node = NodeData(
-            id="node-1",
-            graph_id="graph-1",
-            node_type="question",
-            text="What is the meaning of life?",
-        )
-
-        assert node.id == "node-1"
-        assert node.graph_id == "graph-1"
-        assert node.node_type == "question"
-        assert node.text == "What is the meaning of life?"
-        assert node.parent_id is None
-        assert node.owner is None
-        assert node.depth == 0
-        assert node.status == "open"
-        assert node.metadata_json == "{}"
-
-    def test_node_data_with_all_fields(self):
-        """NodeData must accept all optional fields."""
-        from spellbook_mcp.fractal.models import NodeData
-
-        node = NodeData(
-            id="node-2",
-            graph_id="graph-1",
-            node_type="answer",
-            text="42",
-            parent_id="node-1",
-            owner="agent-1",
-            depth=2,
-            status="answered",
-            metadata_json='{"confidence": 0.95}',
-        )
-
-        assert node.parent_id == "node-1"
-        assert node.owner == "agent-1"
-        assert node.depth == 2
-        assert node.status == "answered"
-        assert node.metadata_json == '{"confidence": 0.95}'
-
-
-class TestEdgeData:
-    """Tests for EdgeData dataclass."""
-
-    def test_edge_data_creation(self):
-        """EdgeData must be creatable with required fields."""
-        from spellbook_mcp.fractal.models import EdgeData
-
-        edge = EdgeData(
-            graph_id="graph-1",
-            from_node="node-1",
-            to_node="node-2",
-            edge_type="parent_child",
-        )
-
-        assert edge.graph_id == "graph-1"
-        assert edge.from_node == "node-1"
-        assert edge.to_node == "node-2"
-        assert edge.edge_type == "parent_child"
-        assert edge.metadata_json == "{}"
-
-    def test_edge_data_with_metadata(self):
-        """EdgeData must accept metadata_json."""
-        from spellbook_mcp.fractal.models import EdgeData
-
-        edge = EdgeData(
-            graph_id="graph-1",
-            from_node="node-1",
-            to_node="node-3",
-            edge_type="convergence",
-            metadata_json='{"strength": 0.8}',
-        )
-
-        assert edge.metadata_json == '{"strength": 0.8}'
-
-
 class TestBudget:
     """Tests for Budget dataclass."""
 
@@ -226,48 +111,6 @@ class TestBudget:
 
         assert budget.max_agents == 5
         assert budget.max_depth == 3
-
-    def test_budget_from_intensity_pulse(self):
-        """Budget.from_intensity('pulse') must return pulse budget."""
-        from spellbook_mcp.fractal.models import Budget
-
-        budget = Budget.from_intensity("pulse")
-
-        assert budget.max_agents == 3
-        assert budget.max_depth == 2
-
-    def test_budget_from_intensity_explore(self):
-        """Budget.from_intensity('explore') must return explore budget."""
-        from spellbook_mcp.fractal.models import Budget
-
-        budget = Budget.from_intensity("explore")
-
-        assert budget.max_agents == 8
-        assert budget.max_depth == 4
-
-    def test_budget_from_intensity_deep(self):
-        """Budget.from_intensity('deep') must return deep budget."""
-        from spellbook_mcp.fractal.models import Budget
-
-        budget = Budget.from_intensity("deep")
-
-        assert budget.max_agents == 15
-        assert budget.max_depth == 6
-
-    def test_budget_from_intensity_invalid(self):
-        """Budget.from_intensity with invalid intensity must raise ValueError."""
-        from spellbook_mcp.fractal.models import Budget
-
-        with pytest.raises(ValueError, match="Invalid intensity"):
-            Budget.from_intensity("invalid")
-
-    def test_budget_from_intensity_returns_budget_instance(self):
-        """Budget.from_intensity must return a Budget instance."""
-        from spellbook_mcp.fractal.models import Budget
-
-        budget = Budget.from_intensity("pulse")
-
-        assert isinstance(budget, Budget)
 
 
 class TestFractalResult:
@@ -368,6 +211,24 @@ class TestValidateCheckpointMode:
 
         assert validate_checkpoint_mode("depth:abc") is False
 
+    def test_valid_depth_mode_minimum(self):
+        """validate_checkpoint_mode('depth:1') must return True (minimum valid depth)."""
+        from spellbook_mcp.fractal.models import validate_checkpoint_mode
+
+        assert validate_checkpoint_mode("depth:1") is True
+
+    def test_invalid_depth_zero(self):
+        """validate_checkpoint_mode('depth:0') must return False."""
+        from spellbook_mcp.fractal.models import validate_checkpoint_mode
+
+        assert validate_checkpoint_mode("depth:0") is False
+
+    def test_invalid_depth_negative(self):
+        """validate_checkpoint_mode('depth:-1') must return False."""
+        from spellbook_mcp.fractal.models import validate_checkpoint_mode
+
+        assert validate_checkpoint_mode("depth:-1") is False
+
 
 class TestParseCheckpointDepth:
     """Tests for parse_checkpoint_depth helper."""
@@ -413,3 +274,21 @@ class TestParseCheckpointDepth:
         from spellbook_mcp.fractal.models import parse_checkpoint_depth
 
         assert parse_checkpoint_depth("depth:") is None
+
+    def test_depth_one_returns_one(self):
+        """parse_checkpoint_depth('depth:1') must return 1 (minimum valid depth)."""
+        from spellbook_mcp.fractal.models import parse_checkpoint_depth
+
+        assert parse_checkpoint_depth("depth:1") == 1
+
+    def test_depth_zero_returns_none(self):
+        """parse_checkpoint_depth('depth:0') must return None (zero is invalid)."""
+        from spellbook_mcp.fractal.models import parse_checkpoint_depth
+
+        assert parse_checkpoint_depth("depth:0") is None
+
+    def test_depth_negative_returns_none(self):
+        """parse_checkpoint_depth('depth:-1') must return None (negative is invalid)."""
+        from spellbook_mcp.fractal.models import parse_checkpoint_depth
+
+        assert parse_checkpoint_depth("depth:-1") is None

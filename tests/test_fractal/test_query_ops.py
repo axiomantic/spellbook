@@ -117,7 +117,7 @@ class TestGetSnapshot:
         )
 
         assert "nodes" in result
-        assert len(result["nodes"]) >= 1
+        assert len(result["nodes"]) == 1
 
         # Root node must be present
         root_nodes = [n for n in result["nodes"] if n["node_id"] == graph_with_root["root_node_id"]]
@@ -165,8 +165,10 @@ class TestGetSnapshot:
         )
 
         assert "edges" in result
-        # The branching graph has parent_child edges
-        assert len(result["edges"]) >= 1
+        # The branching graph has 6 parent_child edges:
+        # root->branch_a, branch_a->sub_a1, branch_a->sub_a2,
+        # root->branch_b, branch_b->sub_b1, root->branch_c
+        assert len(result["edges"]) == 6
 
     def test_snapshot_edge_shape(self, branching_graph):
         """Each edge in snapshot must have required fields."""
