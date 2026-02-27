@@ -6,11 +6,12 @@ dry-run skips, and declining sets tts_enabled=False.
 """
 
 import builtins
+import json
 import sys
 from unittest.mock import patch, MagicMock
 
 # install.py is the top-level script; we import from it directly
-from install import check_tts_available, setup_tts
+from install import check_tts_available, setup_tts, _set_tts_config
 
 
 # ---------------------------------------------------------------------------
@@ -140,3 +141,32 @@ class TestSetupTtsSkipCases:
             setup_tts(dry_run=False, auto_yes=False)
             mock_input.assert_not_called()
             mock_config.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# _set_tts_config() direct test
+# ---------------------------------------------------------------------------
+
+
+class TestSetTtsConfig:
+    """_set_tts_config() persists the tts_enabled config value."""
+
+    def test_writes_tts_enabled_to_config(self, tmp_path):
+        """Calling _set_tts_config writes tts_enabled to the config file."""
+        config_file = tmp_path / "spellbook.json"
+        config_file.write_text("{}")
+        with patch("spellbook_mcp.config_tools.get_config_path", return_value=config_file), \
+             patch("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
+            _set_tts_config(True)
+        data = json.loads(config_file.read_text())
+        assert data["tts_enabled"] is True
+
+    def test_writes_tts_disabled_to_config(self, tmp_path):
+        """Calling _set_tts_config(False) writes tts_enabled=False."""
+        config_file = tmp_path / "spellbook.json"
+        config_file.write_text("{}")
+        with patch("spellbook_mcp.config_tools.get_config_path", return_value=config_file), \
+             patch("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
+            _set_tts_config(False)
+        data = json.loads(config_file.read_text())
+        assert data["tts_enabled"] is False

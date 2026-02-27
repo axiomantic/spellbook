@@ -56,8 +56,14 @@ class TestCheckAvailability:
     def test_caches_result_on_second_call(self):
         import spellbook_mcp.tts as tts_mod
         tts_mod._kokoro_available = True  # Pre-set cached value
-        # Should return cached value without attempting imports
-        result = tts_mod._check_availability()
+        # Patch __import__ to raise, proving cache bypasses imports entirely
+        original_import = __import__
+        def fail_import(name, *args, **kwargs):
+            if name in ("kokoro", "soundfile"):
+                raise ImportError(f"Should not be importing {name} when cached")
+            return original_import(name, *args, **kwargs)
+        with patch("builtins.__import__", side_effect=fail_import):
+            result = tts_mod._check_availability()
         assert result is True
 
 
@@ -153,7 +159,29 @@ class TestGenerateAudio:
         assert wav_path.startswith(str(tmp_path))
         assert wav_path.endswith(".wav")
         assert tts_mod._WAV_PREFIX in wav_path
-        mock_sf.write.assert_called_once()
+        mock_sf.write.assert_called_once_with(
+            wav_path, mock_np.concatenate.return_value, 24000
+        )
+
+    def test_raises_when_pipeline_not_loaded(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_pipeline = None
+        with pytest.raises(RuntimeError, match="Kokoro pipeline not loaded"):
+            tts_mod._generate_audio("hello", "af_heart")
+
+    def test_raises_on_empty_audio_chunks(self):
+        import spellbook_mcp.tts as tts_mod
+
+        mock_pipeline = MagicMock()
+        mock_generator = MagicMock()
+        mock_generator.__iter__ = MagicMock(return_value=iter([]))
+        mock_pipeline.return_value = mock_generator
+        tts_mod._kokoro_pipeline = mock_pipeline
+
+        mock_sf = MagicMock()
+        with patch.dict("sys.modules", {"soundfile": mock_sf}):
+            with pytest.raises(ValueError, match="No audio generated"):
+                tts_mod._generate_audio("hello", "af_heart")
 
     def test_raises_on_pipeline_error(self):
         import spellbook_mcp.tts as tts_mod
@@ -185,7 +213,7 @@ class TestPlayAudio:
         with patch.dict("sys.modules", {"soundfile": mock_sf, "sounddevice": mock_sd}):
             tts_mod._play_audio(str(wav_file), 0.5)
 
-        mock_sd.play.assert_called_once()
+        mock_sd.play.assert_called_once_with(mock_data * 0.5, 24000)
         mock_sd.wait.assert_called_once()
         assert not wav_file.exists()  # File deleted after playback
 
@@ -351,8 +379,8 @@ class TestSpeak:
         tts_mod._kokoro_available = True
 
         with patch.object(tts_mod, "ensure_loaded", return_value=(True, None)):
-            with patch.object(tts_mod, "_generate_audio", return_value="/tmp/test.wav"):
-                with patch.object(tts_mod, "_play_audio"):
+            with patch.object(tts_mod, "_generate_audio", return_value="/tmp/test.wav") as mock_gen:
+                with patch.object(tts_mod, "_play_audio") as mock_play:
                     with patch("spellbook_mcp.tts.config_tools") as mock_ct:
                         mock_ct._get_session_state.return_value = {"tts": {}}
                         mock_ct.config_get.return_value = None
@@ -361,6 +389,8 @@ class TestSpeak:
         assert result["ok"] is True
         assert "elapsed" in result
         assert result["wav_path"] == "/tmp/test.wav"
+        mock_gen.assert_called_once_with("hello", "af_heart")
+        mock_play.assert_called_once_with("/tmp/test.wav", 0.3)
 
     @pytest.mark.asyncio
     async def test_speak_when_disabled(self):

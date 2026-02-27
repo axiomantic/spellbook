@@ -121,6 +121,10 @@ class TestTtsNotifyBehavior:
         }
         result = _run_hook(TTS_NOTIFY_SCRIPT, payload)
         assert result.returncode == 0
+        # Verify the hook did NOT attempt to reach /api/speak
+        combined = result.stdout + result.stderr
+        assert "/api/speak" not in combined
+        assert "curl" not in combined
 
     def test_skips_when_no_start_file(self):
         payload = {
@@ -130,6 +134,10 @@ class TestTtsNotifyBehavior:
         }
         result = _run_hook(TTS_NOTIFY_SCRIPT, payload)
         assert result.returncode == 0
+        # Verify the hook did NOT attempt to reach /api/speak
+        combined = result.stdout + result.stderr
+        assert "/api/speak" not in combined
+        assert "curl" not in combined
 
     def test_skips_when_under_threshold(self):
         tool_use_id = f"test-under-{int(time.time())}"
@@ -147,6 +155,32 @@ class TestTtsNotifyBehavior:
         result = _run_hook(TTS_NOTIFY_SCRIPT, payload, {"SPELLBOOK_TTS_THRESHOLD": "9999"})
         assert result.returncode == 0
         # Start file should have been cleaned up
+        assert not start_file.exists()
+        # Verify the hook did NOT attempt to reach /api/speak
+        combined = result.stdout + result.stderr
+        assert "/api/speak" not in combined
+        assert "curl" not in combined
+
+    def test_attempts_speak_when_above_threshold(self):
+        tool_use_id = f"test-above-{int(time.time())}"
+        # Write a start file with timestamp 60 seconds ago
+        start_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
+        start_file.write_text(str(int(time.time()) - 60))
+
+        payload = {
+            "tool_name": "Bash",
+            "tool_use_id": tool_use_id,
+            "tool_input": {"command": "ls"},
+            "cwd": "/tmp/myproject",
+        }
+        # Use a low threshold (5s) so 60s ago triggers the notify path.
+        # Point to a port that nothing is listening on so curl fails silently.
+        result = _run_hook(TTS_NOTIFY_SCRIPT, payload, {
+            "SPELLBOOK_TTS_THRESHOLD": "5",
+            "SPELLBOOK_MCP_PORT": "19999",
+        })
+        assert result.returncode == 0
+        # Start file should have been consumed (deleted by the hook)
         assert not start_file.exists()
 
     def test_exits_0_on_empty_stdin(self):
