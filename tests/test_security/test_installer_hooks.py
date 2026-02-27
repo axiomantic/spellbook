@@ -913,7 +913,8 @@ class TestClaudeCodeInstallerHookIntegration:
         # Literal $SPELLBOOK_DIR should NOT appear in the written file
         assert "$SPELLBOOK_DIR" not in content
         # The expanded spellbook_dir path should appear instead
-        assert str(spellbook_dir) in content
+        # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
+        assert json.dumps(str(spellbook_dir))[1:-1] in content
 
         settings = _read_settings(settings_path)
         # Verify specific hook paths are expanded
@@ -1021,7 +1022,8 @@ class TestInstallHooksWithSpellbookDir:
 
         content = settings_path.read_text(encoding="utf-8")
         assert "$SPELLBOOK_DIR" not in content
-        assert str(spellbook_dir) in content
+        # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
+        assert json.dumps(str(spellbook_dir))[1:-1] in content
 
     def test_expanded_bash_hook_correct(self, tmp_path):
         spellbook_dir = _make_spellbook_dir(tmp_path)
