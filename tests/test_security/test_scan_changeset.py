@@ -19,6 +19,8 @@ from unittest.mock import patch
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 from spellbook_mcp.security.scanner import main as scanner_main
 
 
@@ -352,6 +354,7 @@ class TestBackwardCompatibility:
             input=CLEAN_DIFF,
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 0
 
@@ -361,5 +364,6 @@ class TestBackwardCompatibility:
             input=MALICIOUS_DIFF,
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 1

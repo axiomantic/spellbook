@@ -1,6 +1,6 @@
 [project]
 name = "spellbook"
-version = "0.11.0"
+version = "0.11.1"
 description = "Skills, commands, and MCP tools for AI coding assistants"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -15,6 +15,8 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.10.0",
+    "pytest-timeout>=2.2.0",
+    "pytest-xdist>=3.5.0",
 ]
 tts = [
     "kokoro>=0.9.0",
@@ -32,6 +34,11 @@ packages = ["spellbook_mcp"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+timeout = 30
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "docker: marks tests that require Docker or heavy platform fixtures (run in CI only)",
+    "slow: marks tests with deliberate sleeps > 0.5s",
+    "external: marks tests requiring external tools like Claude CLI",
 ]

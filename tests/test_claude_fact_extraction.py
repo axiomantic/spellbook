@@ -23,6 +23,8 @@ from typing import Optional
 
 import pytest
 
+pytestmark = pytest.mark.external
+
 
 # Path to skills directory
 REPO_ROOT = Path(__file__).parent.parent

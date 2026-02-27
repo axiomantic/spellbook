@@ -1,9 +1,12 @@
 """End-to-end integration test for recovery system."""
 
-import pytest
 import json
 import time
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.slow
 
 
 def test_recovery_e2e_flow(tmp_path):

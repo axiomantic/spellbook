@@ -3,11 +3,14 @@ End-to-end integration tests for /distill-session command.
 These tests verify the complete workflow from session discovery to output.
 """
 
-import pytest
 import json
 import os
 import subprocess
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
@@ -72,6 +75,7 @@ def test_small_session_no_chunking(mock_claude_config):
         ['python3', str(script_path), 'list-sessions', str(project_dir)],
         capture_output=True,
         text=True,
+        timeout=30,
         env={**os.environ, 'CLAUDE_CONFIG_DIR': str(mock_claude_config)}
     )
 
@@ -117,7 +121,8 @@ def test_session_with_existing_compact(mock_claude_config):
     result = subprocess.run(
         ['python3', str(script_path), 'get-last-compact', str(session_file)],
         capture_output=True,
-        text=True
+        text=True,
+        timeout=30,
     )
 
     assert result.returncode == 0
@@ -156,7 +161,8 @@ def test_large_session_chunking(mock_claude_config):
         ['python3', str(script_path), 'split-by-char-limit', str(session_file),
          '--start-line', '0', '--char-limit', '300000'],
         capture_output=True,
-        text=True
+        text=True,
+        timeout=30,
     )
 
     assert result.returncode == 0
@@ -189,7 +195,8 @@ def test_extract_chunk_range(mock_claude_config):
         ['python3', str(script_path), 'extract-chunk', str(session_file),
          '--start-line', '3', '--end-line', '7'],
         capture_output=True,
-        text=True
+        text=True,
+        timeout=30,
     )
 
     assert result.returncode == 0

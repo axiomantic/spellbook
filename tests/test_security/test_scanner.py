@@ -22,6 +22,8 @@ import textwrap
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 # ---------------------------------------------------------------------------
 # scan_skill tests
@@ -707,6 +709,7 @@ class TestCLIChangeset:
             input="clean diff with no security issues\n",
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 0
 
@@ -716,6 +719,7 @@ class TestCLIChangeset:
             input="",
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 0
 
@@ -735,6 +739,7 @@ class TestCLIChangeset:
             input=diff,
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 1
         assert "INJ-001" in result.stderr
@@ -754,6 +759,7 @@ class TestCLISkills:
             [sys.executable, "-m", "spellbook_mcp.security.scanner", "--skills"],
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=str(tmp_path),
         )
         assert result.returncode == 0
@@ -767,6 +773,7 @@ class TestCLISkills:
             [sys.executable, "-m", "spellbook_mcp.security.scanner", "--skills"],
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=str(tmp_path),
         )
         assert result.returncode == 1
@@ -778,6 +785,7 @@ class TestCLISkills:
             [sys.executable, "-m", "spellbook_mcp.security.scanner", "--skills"],
             capture_output=True,
             text=True,
+            timeout=30,
             cwd=str(tmp_path),
         )
         # scan_directory returns [] for nonexistent dir, so no FAIL verdicts
@@ -792,6 +800,7 @@ class TestCLIUsage:
             [sys.executable, "-m", "spellbook_mcp.security.scanner"],
             capture_output=True,
             text=True,
+            timeout=30,
         )
         assert result.returncode == 2
         assert "Usage:" in result.stderr

@@ -3,9 +3,12 @@
 import json
 import os
 import subprocess
-import pytest
 from pathlib import Path
 from unittest.mock import patch
+
+import pytest
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
@@ -26,20 +29,22 @@ def mock_git_repo(tmp_path):
         ["git", "-c", "init.defaultBranch=main", "init", "--bare", str(remote)],
         check=True,
         env=env,
+        timeout=30,
     )
 
     # Clone to create local repo
-    subprocess.run(["git", "clone", str(remote), str(repo)], check=True, env=env)
+    subprocess.run(["git", "clone", str(remote), str(repo)], check=True, env=env, timeout=30)
 
     # Add .version file
     (repo / ".version").write_text("0.9.9\n")
-    subprocess.run(["git", "-C", str(repo), "add", ".version"], check=True, env=env)
+    subprocess.run(["git", "-C", str(repo), "add", ".version"], check=True, env=env, timeout=30)
     subprocess.run(
         ["git", "-C", str(repo), "commit", "-m", "initial"],
         check=True,
         env=env,
+        timeout=30,
     )
-    subprocess.run(["git", "-C", str(repo), "push"], check=True, env=env)
+    subprocess.run(["git", "-C", str(repo), "push"], check=True, env=env, timeout=30)
 
     return {"repo": repo, "remote": remote, "env": env}
 
@@ -57,15 +62,16 @@ class TestFullUpdateDetection:
 
         # Push a new version to the remote
         clone2 = tmp_path / "clone2"
-        subprocess.run(["git", "clone", str(remote), str(clone2)], check=True, env=env)
+        subprocess.run(["git", "clone", str(remote), str(clone2)], check=True, env=env, timeout=30)
         (clone2 / ".version").write_text("0.9.10\n")
-        subprocess.run(["git", "-C", str(clone2), "add", ".version"], check=True, env=env)
+        subprocess.run(["git", "-C", str(clone2), "add", ".version"], check=True, env=env, timeout=30)
         subprocess.run(
             ["git", "-C", str(clone2), "commit", "-m", "bump version"],
             check=True,
             env=env,
+            timeout=30,
         )
-        subprocess.run(["git", "-C", str(clone2), "push"], check=True, env=env)
+        subprocess.run(["git", "-C", str(clone2), "push"], check=True, env=env, timeout=30)
 
         # Now check from the original repo
         with patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
@@ -109,15 +115,16 @@ class TestFullUpdateDetection:
 
         # Push a major version bump
         clone2 = tmp_path / "clone2"
-        subprocess.run(["git", "clone", str(remote), str(clone2)], check=True, env=env)
+        subprocess.run(["git", "clone", str(remote), str(clone2)], check=True, env=env, timeout=30)
         (clone2 / ".version").write_text("1.0.0\n")
-        subprocess.run(["git", "-C", str(clone2), "add", ".version"], check=True, env=env)
+        subprocess.run(["git", "-C", str(clone2), "add", ".version"], check=True, env=env, timeout=30)
         subprocess.run(
             ["git", "-C", str(clone2), "commit", "-m", "major bump"],
             check=True,
             env=env,
+            timeout=30,
         )
-        subprocess.run(["git", "-C", str(clone2), "push"], check=True, env=env)
+        subprocess.run(["git", "-C", str(clone2), "push"], check=True, env=env, timeout=30)
 
         with patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
             mock_config_get.side_effect = lambda key: {
