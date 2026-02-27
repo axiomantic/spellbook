@@ -561,8 +561,8 @@ class TestGetSpellbookDir:
         result = get_spellbook_dir()
         assert isinstance(result, Path)
         # Should find the actual spellbook dir (running from repo or worktree) or default
-        # Worktrees have names like "zero-intervention-recovery" in .worktrees/
-        assert result.name == "spellbook" or ".worktrees" in str(result)
+        # Worktrees live under .claude/worktrees/ or .worktrees/
+        assert result.name == "spellbook" or "/worktrees/" in str(result)
 
 
 class TestSessionIsolation:

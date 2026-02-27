@@ -105,6 +105,7 @@ nav:
       - skills/assembling-context.md
       - skills/designing-workflows.md
       - skills/deep-research.md
+      - skills/fractal-thinking.md
     - Specialized Skills:
       - skills/async-await-patterns.md
       - skills/using-lsp-tools.md
@@ -167,6 +168,10 @@ nav:
       - commands/feature-research.md
       - commands/feature-design.md
       - commands/feature-implement.md
+    - Fractal Thinking Commands:
+      - commands/fractal-think-init.md
+      - commands/fractal-think-explore.md
+      - commands/fractal-think-synthesize.md
     - Code Review Commands:
       - commands/advanced-code-review-plan.md
       - commands/advanced-code-review-context.md
