@@ -122,3 +122,102 @@ class TestLoadModel:
         tts_mod._kokoro_pipeline = existing
         tts_mod._load_model()
         assert tts_mod._kokoro_pipeline is existing  # Unchanged
+
+
+class TestGenerateAudio:
+    """_generate_audio() runs KPipeline and writes WAV to temp file."""
+
+    def test_generates_wav_file(self, tmp_path):
+        import spellbook_mcp.tts as tts_mod
+
+        # Set up mock pipeline
+        mock_pipeline = MagicMock()
+        mock_generator = MagicMock()
+        # KPipeline returns a generator of (graphemes, phonemes, audio_tensor) tuples
+        mock_audio = MagicMock()
+        mock_audio.numpy.return_value = [0.1, 0.2, 0.3]
+        mock_generator.__iter__ = MagicMock(return_value=iter([
+            ("hello", "h@loU", mock_audio),
+        ]))
+        mock_pipeline.return_value = mock_generator
+        tts_mod._kokoro_pipeline = mock_pipeline
+
+        mock_sf = MagicMock()
+        mock_np = MagicMock()
+        mock_np.concatenate.return_value = [0.1, 0.2, 0.3]
+        with patch.dict("sys.modules", {"soundfile": mock_sf, "numpy": mock_np}):
+            with patch("spellbook_mcp.tts.tempfile") as mock_tempfile:
+                mock_tempfile.gettempdir.return_value = str(tmp_path)
+                wav_path = tts_mod._generate_audio("hello", "af_heart")
+
+        assert wav_path.startswith(str(tmp_path))
+        assert wav_path.endswith(".wav")
+        assert tts_mod._WAV_PREFIX in wav_path
+        mock_sf.write.assert_called_once()
+
+    def test_raises_on_pipeline_error(self):
+        import spellbook_mcp.tts as tts_mod
+
+        mock_pipeline = MagicMock()
+        mock_pipeline.side_effect = ValueError("Invalid voice 'xyz'")
+        tts_mod._kokoro_pipeline = mock_pipeline
+
+        mock_sf = MagicMock()
+        with patch.dict("sys.modules", {"soundfile": mock_sf}):
+            with pytest.raises(ValueError, match="Invalid voice"):
+                tts_mod._generate_audio("hello", "xyz")
+
+
+class TestPlayAudio:
+    """_play_audio() uses sounddevice to play WAV and cleans up the file."""
+
+    def test_plays_and_deletes_wav(self, tmp_path):
+        import spellbook_mcp.tts as tts_mod
+
+        wav_file = tmp_path / "test.wav"
+        wav_file.write_bytes(b"fake wav data")
+
+        mock_data = MagicMock()  # MagicMock supports * operator
+        mock_sf = MagicMock()
+        mock_sf.read.return_value = (mock_data, 24000)
+        mock_sd = MagicMock()
+
+        with patch.dict("sys.modules", {"soundfile": mock_sf, "sounddevice": mock_sd}):
+            tts_mod._play_audio(str(wav_file), 0.5)
+
+        mock_sd.play.assert_called_once()
+        mock_sd.wait.assert_called_once()
+        assert not wav_file.exists()  # File deleted after playback
+
+    def test_preserves_file_on_playback_error(self, tmp_path):
+        import spellbook_mcp.tts as tts_mod
+
+        wav_file = tmp_path / "test.wav"
+        wav_file.write_bytes(b"fake wav data")
+
+        mock_data = MagicMock()
+        mock_sf = MagicMock()
+        mock_sf.read.return_value = (mock_data, 24000)
+        mock_sd = MagicMock()
+        mock_sd.play.side_effect = RuntimeError("No output device")
+
+        with patch.dict("sys.modules", {"soundfile": mock_sf, "sounddevice": mock_sd}):
+            with pytest.raises(RuntimeError, match="No output device"):
+                tts_mod._play_audio(str(wav_file), 0.5)
+
+        assert wav_file.exists()  # File preserved for manual playback
+
+    def test_sounddevice_import_failure_raises(self):
+        import spellbook_mcp.tts as tts_mod
+
+        original_import = __import__
+        def mock_import(name, *args, **kwargs):
+            if name == "sounddevice":
+                raise ImportError("No module named 'sounddevice'")
+            return original_import(name, *args, **kwargs)
+
+        mock_sf = MagicMock()
+        with patch.dict("sys.modules", {"soundfile": mock_sf}):
+            with patch("builtins.__import__", side_effect=mock_import):
+                with pytest.raises(ImportError, match="sounddevice"):
+                    tts_mod._play_audio("/fake/path.wav", 0.5)

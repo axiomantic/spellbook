@@ -88,3 +88,66 @@ def _load_model() -> None:
             _import_error = f"Model load failed: {e}"
             logger.error(_import_error)
             # _kokoro_pipeline stays None so next call retries
+
+
+def _generate_audio(text: str, voice: str) -> str:
+    """Generate WAV audio from text using the loaded Kokoro pipeline.
+
+    Args:
+        text: Text to synthesize.
+        voice: Kokoro voice ID.
+
+    Returns:
+        Path to the generated WAV file.
+
+    Raises:
+        ValueError: If voice is invalid or pipeline fails.
+        RuntimeError: If _kokoro_pipeline is None.
+    """
+    if _kokoro_pipeline is None:
+        raise RuntimeError("Kokoro pipeline not loaded")
+
+    import soundfile as sf
+
+    # Generate audio
+    audio_chunks = []
+    for _graphemes, _phonemes, audio_tensor in _kokoro_pipeline(text, voice=voice):
+        audio_chunks.append(audio_tensor.numpy())
+
+    if not audio_chunks:
+        raise ValueError(f"No audio generated for text: {text!r}")
+
+    import numpy as np
+    audio_data = np.concatenate(audio_chunks)
+
+    # Write to temp file
+    wav_filename = f"{_WAV_PREFIX}{uuid.uuid4()}.wav"
+    wav_path = os.path.join(tempfile.gettempdir(), wav_filename)
+    sf.write(wav_path, audio_data, 24000)
+
+    return wav_path
+
+
+def _play_audio(wav_path: str, volume: float) -> None:
+    """Play a WAV file through the default audio device, then delete it.
+
+    Args:
+        wav_path: Path to WAV file.
+        volume: Volume multiplier 0.0-1.0.
+
+    Raises:
+        ImportError: If sounddevice is not available.
+        RuntimeError: If playback fails (file is preserved).
+    """
+    import soundfile as sf
+    import sounddevice as sd
+
+    data, samplerate = sf.read(wav_path)
+    sd.play(data * volume, samplerate)
+    sd.wait()  # Block until playback finishes
+
+    # Clean up WAV file after successful playback
+    try:
+        os.unlink(wav_path)
+    except OSError:
+        pass  # Best-effort cleanup
