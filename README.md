@@ -36,8 +36,8 @@
 - [Quick Install](#quick-install)
   - [Windows Quickstart](#windows-quickstart)
 - [What's Included](#whats-included)
-  - [Skills (53 total)](#skills-53-total)
-  - [Commands (82 total)](#commands-82-total)
+  - [Skills (54 total)](#skills-54-total)
+  - [Commands (85 total)](#commands-85-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -94,7 +94,7 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 
 ## What's Included
 
-### Skills (53 total)
+### Skills (54 total)
 
 Reusable workflows for structured development:
 
@@ -103,7 +103,7 @@ Reusable workflows for structured development:
 | **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
-| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research] |
+| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [security-auditing], [generating-diagrams] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage], [documenting-tools] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
@@ -163,8 +163,9 @@ Reusable workflows for structured development:
 [assembling-context]: https://axiomantic.github.io/spellbook/latest/skills/assembling-context/
 [designing-workflows]: https://axiomantic.github.io/spellbook/latest/skills/designing-workflows/
 [deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
+[fractal-thinking]: https://axiomantic.github.io/spellbook/latest/skills/fractal-thinking/
 
-### Commands (82 total)
+### Commands (85 total)
 
 | Command | Description |
 |---------|-------------|
@@ -186,6 +187,9 @@ Reusable workflows for structured development:
 | [/feature-research] | Phase 1 codebase research and ambiguity detection |
 | [/feature-design] | Phase 2 design document creation and review |
 | [/feature-implement] | Phase 4 implementation with TDD and code review |
+| [/fractal-think-init] | Phase 1: Create graph and generate seed questions |
+| [/fractal-think-explore] | Phase 2: Recursive question decomposition |
+| [/fractal-think-synthesize] | Phase 3: Generate summary from exploration graph |
 | [/simplify] | Code complexity reduction |
 | [/simplify-analyze] | Analyze code for simplification opportunities |
 | [/simplify-transform] | Apply simplification transformations |
@@ -271,6 +275,9 @@ Reusable workflows for structured development:
 [/feature-research]: https://axiomantic.github.io/spellbook/latest/commands/feature-research/
 [/feature-design]: https://axiomantic.github.io/spellbook/latest/commands/feature-design/
 [/feature-implement]: https://axiomantic.github.io/spellbook/latest/commands/feature-implement/
+[/fractal-think-init]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-init/
+[/fractal-think-explore]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-explore/
+[/fractal-think-synthesize]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-synthesize/
 [/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/
 [/simplify-analyze]: https://axiomantic.github.io/spellbook/latest/commands/simplify-analyze/
 [/simplify-transform]: https://axiomantic.github.io/spellbook/latest/commands/simplify-transform/

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-02-27
+
+### Added
+- **Fractal thinking skill** - Persistent recursive thought engine for deep exploration via 13 MCP tools, SQLite-backed graph storage, and 3 phase commands (`/fractal-think-init`, `/fractal-think-explore`, `/fractal-think-synthesize`)
+  - Three intensity levels (pulse/explore/deep) with configurable depth and agent budgets
+  - Four checkpoint modes (autonomous, convergence, interactive, depth:N)
+  - Convergence and contradiction detection across graph branches
+  - Branch saturation tracking with automatic status propagation
+  - Separate `fractal.db` with WAL mode and schema versioning
+  - Server-side depth budget enforcement and graph status validation
+  - 246 tests across 8 test files including end-to-end integration
+
 ## [0.11.1] - 2026-02-27
 
 ### Added

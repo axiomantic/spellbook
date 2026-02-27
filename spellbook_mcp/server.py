@@ -168,6 +168,28 @@ from spellbook_mcp import tts as tts_module
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+# Fractal thinking imports
+from spellbook_mcp.fractal.schema import init_fractal_schema
+from spellbook_mcp.fractal.graph_ops import (
+    create_graph as do_fractal_create_graph,
+    resume_graph as do_fractal_resume_graph,
+    delete_graph as do_fractal_delete_graph,
+    update_graph_status as do_fractal_update_graph_status,
+)
+from spellbook_mcp.fractal.node_ops import (
+    add_node as do_fractal_add_node,
+    update_node as do_fractal_update_node,
+    mark_saturated as do_fractal_mark_saturated,
+)
+from spellbook_mcp.fractal.query_ops import (
+    get_snapshot as do_fractal_get_snapshot,
+    get_branch as do_fractal_get_branch,
+    get_open_questions as do_fractal_get_open_questions,
+    query_convergence as do_fractal_query_convergence,
+    query_contradictions as do_fractal_query_contradictions,
+    get_saturation_status as do_fractal_get_saturation_status,
+)
+
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
 
@@ -2785,6 +2807,111 @@ async def api_speak(request: Request) -> JSONResponse:
     return JSONResponse(result, status_code=status_code)
 
 
+# ============================================================================
+# Fractal Thinking Tools
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_create_graph(seed: str, intensity: str, checkpoint_mode: str, metadata: str = None):
+    """Create a new fractal thinking graph with a seed question."""
+    return do_fractal_create_graph(seed=seed, intensity=intensity, checkpoint_mode=checkpoint_mode, metadata_json=metadata)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_resume_graph(graph_id: str):
+    """Resume a paused fractal graph or retrieve snapshot of an active one."""
+    return do_fractal_resume_graph(graph_id=graph_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_delete_graph(graph_id: str):
+    """Delete a fractal thinking graph and all its nodes/edges."""
+    return do_fractal_delete_graph(graph_id=graph_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_update_graph_status(graph_id: str, status: str, reason: str = None):
+    """Update the status of a fractal thinking graph."""
+    return do_fractal_update_graph_status(graph_id=graph_id, status=status, reason=reason)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_add_node(graph_id: str, parent_id: str, node_type: str, text: str, owner: str = None, metadata: str = None):
+    """Add a new node to a fractal thinking graph."""
+    try:
+        return do_fractal_add_node(graph_id=graph_id, parent_id=parent_id, node_type=node_type, text=text, owner=owner, metadata_json=metadata)
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_update_node(graph_id: str, node_id: str, metadata: str):
+    """Update a node's metadata in a fractal thinking graph."""
+    try:
+        return do_fractal_update_node(graph_id=graph_id, node_id=node_id, metadata_json=metadata)
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_mark_saturated(graph_id: str, node_id: str, reason: str):
+    """Mark a node as saturated in a fractal thinking graph."""
+    try:
+        return do_fractal_mark_saturated(graph_id=graph_id, node_id=node_id, reason=reason)
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_get_snapshot(graph_id: str):
+    """Get a full snapshot of a fractal thinking graph."""
+    return do_fractal_get_snapshot(graph_id=graph_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_get_branch(graph_id: str, node_id: str):
+    """Get a subtree rooted at a specific node in a fractal thinking graph."""
+    return do_fractal_get_branch(graph_id=graph_id, node_id=node_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_get_open_questions(graph_id: str):
+    """Get all open questions in a fractal thinking graph."""
+    return do_fractal_get_open_questions(graph_id=graph_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_query_convergence(graph_id: str):
+    """Find convergence points in a fractal thinking graph."""
+    return do_fractal_query_convergence(graph_id=graph_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_query_contradictions(graph_id: str):
+    """Find contradictions in a fractal thinking graph."""
+    return do_fractal_query_contradictions(graph_id=graph_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_get_saturation_status(graph_id: str):
+    """Get saturation status of branches in a fractal thinking graph."""
+    return do_fractal_get_saturation_status(graph_id=graph_id)
+
+
 if __name__ == "__main__":
     # Initialize database and start watcher thread
     db_path = str(get_db_path())
@@ -2792,6 +2919,9 @@ if __name__ == "__main__":
 
     # Initialize Forged schema (idempotent)
     init_forged_schema()
+
+    # Initialize Fractal Thinking schema (idempotent)
+    init_fractal_schema()
 
     # Initialize Curator tables (idempotent)
     init_curator_tables()
