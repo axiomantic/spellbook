@@ -2580,6 +2580,7 @@ async def kokoro_speak(
     text: str,
     voice: str = None,
     volume: float = None,
+    session_id: str = None,
 ) -> dict:
     """
     Generate speech from text using Kokoro TTS and play it.
@@ -2591,31 +2592,35 @@ async def kokoro_speak(
         text: Text to speak (required)
         voice: Kokoro voice ID (default: config or "af_heart")
         volume: Playback volume 0.0-1.0 (default: config or 0.3)
+        session_id: Session identifier for settings resolution (auto-detected if omitted)
 
     Returns:
         {"ok": true, "elapsed": float, "wav_path": str} on success
         {"error": str} on failure
     """
-    return await tts_module.speak(text, voice=voice, volume=volume)
+    return await tts_module.speak(text, voice=voice, volume=volume, session_id=session_id)
 
 
 @mcp.tool()
 @inject_recovery_context
-def kokoro_status() -> dict:
+def kokoro_status(session_id: str = None) -> dict:
     """
     Check TTS availability and current settings.
+
+    Args:
+        session_id: Session identifier for settings resolution (auto-detected if omitted)
 
     Returns:
         {
             "available": bool,       # kokoro importable
-            "enabled": bool,         # tts_enabled config
+            "enabled": bool,         # resolved via session > config > default
             "model_loaded": bool,    # KPipeline cached
             "voice": str,            # effective voice
             "volume": float,         # effective volume
             "error": str | None      # if not available, why
         }
     """
-    return tts_module.get_status()
+    return tts_module.get_status(session_id=session_id)
 
 
 @mcp.tool()
@@ -2665,7 +2670,8 @@ def tts_config_set(
         volume: Default volume 0.0-1.0
 
     Returns:
-        {"status": "ok", "config": dict_of_all_tts_settings}
+        {"status": "ok", "config": {tts_enabled, tts_voice, tts_volume}} with
+        updated keys from this call plus current values for unchanged keys.
     """
     result_config = {}
     if enabled is not None:
@@ -2697,7 +2703,9 @@ async def api_speak(request: Request) -> JSONResponse:
     """REST endpoint for hook scripts to trigger TTS.
 
     Accepts JSON body: {"text": "...", "voice": "...", "volume": 0.3}
-    Returns JSON: {"ok": true, "elapsed": 1.23} or {"error": "..."}
+    Returns JSON: {"ok": true, "elapsed": 1.23, "wav_path": "..."} on success,
+    optionally with "warning" if volume was clamped or playback failed.
+    Returns {"error": "..."} on failure.
     """
     try:
         body = await request.json()

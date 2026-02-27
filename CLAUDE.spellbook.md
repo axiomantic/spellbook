@@ -146,8 +146,9 @@ Spellbook can announce when long-running tools finish using Kokoro text-to-speec
 
 **Auto-notifications:** A PreToolUse hook records tool start times, and a
 PostToolUse hook announces tool completions that took longer than 30 seconds.
-Set threshold via `SPELLBOOK_TTS_THRESHOLD` env var. Interactive tools
-(AskUserQuestion, Task management) are excluded.
+Set threshold via `SPELLBOOK_TTS_THRESHOLD` env var. Interactive and
+management tools (AskUserQuestion, TodoRead, TodoWrite, TaskCreate,
+TaskUpdate, TaskGet, TaskList) are excluded.
 
 ## Encyclopedia
 

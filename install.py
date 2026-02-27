@@ -763,7 +763,7 @@ def setup_tts(dry_run: bool = False, auto_yes: bool = False) -> None:
                 _set_tts_config(True)
                 print_success("TTS enabled (voice: af_heart, volume: 0.3)")
                 print_info(
-                    "Change settings with kokoro_speak or tts_config_set MCP tools"
+                    "Change settings with tts_session_set or tts_config_set MCP tools"
                 )
                 break
             elif answer in ("n", "no"):

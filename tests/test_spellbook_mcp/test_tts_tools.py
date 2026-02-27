@@ -36,7 +36,14 @@ class TestKokoroSpeak:
         with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock) as mock_speak:
             mock_speak.return_value = {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}
             await server.kokoro_speak.fn(text="hi", voice="bf_emma", volume=0.5)
-            mock_speak.assert_called_once_with("hi", voice="bf_emma", volume=0.5)
+            mock_speak.assert_called_once_with("hi", voice="bf_emma", volume=0.5, session_id=None)
+
+    @pytest.mark.asyncio
+    async def test_passes_session_id(self):
+        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock) as mock_speak:
+            mock_speak.return_value = {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/x.wav"}
+            await server.kokoro_speak.fn(text="hi", session_id="sess-123")
+            mock_speak.assert_called_once_with("hi", voice=None, volume=None, session_id="sess-123")
 
 
 class TestKokoroStatus:
@@ -54,6 +61,19 @@ class TestKokoroStatus:
         with patch("spellbook_mcp.tts.get_status", return_value=mock_status):
             result = server.kokoro_status.fn()
         assert result == mock_status
+
+    def test_passes_session_id(self):
+        mock_status = {
+            "available": True,
+            "enabled": True,
+            "model_loaded": False,
+            "voice": "af_heart",
+            "volume": 0.3,
+            "error": None,
+        }
+        with patch("spellbook_mcp.tts.get_status", return_value=mock_status) as mock_get:
+            server.kokoro_status.fn(session_id="sess-456")
+            mock_get.assert_called_once_with(session_id="sess-456")
 
 
 class TestTtsSessionSet:

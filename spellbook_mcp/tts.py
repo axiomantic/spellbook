@@ -103,7 +103,7 @@ def _generate_audio(text: str, voice: str) -> str:
         Path to the generated WAV file.
 
     Raises:
-        ValueError: If voice is invalid or pipeline fails.
+        ValueError: If no audio generated for the given text.
         RuntimeError: If _kokoro_pipeline is None.
     """
     if _kokoro_pipeline is None:
@@ -139,7 +139,8 @@ def _play_audio(wav_path: str, volume: float) -> None:
 
     Raises:
         ImportError: If sounddevice is not available.
-        RuntimeError: If playback fails (file is preserved).
+        Exception: If playback fails (sounddevice.PortAudioError or similar).
+            File is preserved on failure for manual playback.
     """
     import soundfile as sf
     import sounddevice as sd
@@ -196,6 +197,10 @@ def get_status(session_id: str = None) -> dict:
 
     Does NOT trigger model loading. Safe to call at any time.
 
+    Note: The ``available`` field is only accurate after the first
+    ``speak()`` call or an explicit ``_check_availability()`` call.
+    Before that, it defaults to False.
+
     Args:
         session_id: Session ID for settings resolution.
 
@@ -243,6 +248,8 @@ async def speak(
 
     Returns:
         {"ok": True, "elapsed": float, "wav_path": str} on success.
+        wav_path is deleted after successful playback; only preserved on
+        playback failure (with a warning).
         {"error": str} on failure.
     """
     # Check availability

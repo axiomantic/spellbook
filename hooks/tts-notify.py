@@ -66,9 +66,28 @@ def main() -> None:
         sys.exit(0)
 
     # Build message
+    import shlex
     cwd = data.get("cwd", "")
     project = os.path.basename(cwd) if cwd else "unknown"
-    parts = [project, tool_name, "finished"]
+
+    # Detail extraction (matches tts-notify.sh logic)
+    inp = data.get("tool_input") or {}
+    detail = ""
+    if tool_name == "Bash":
+        cmd = inp.get("command", "")
+        if cmd:
+            try:
+                detail = shlex.split(cmd)[0].split("/")[-1]
+            except ValueError:
+                parts_cmd = cmd.split()
+                detail = parts_cmd[0].split("/")[-1] if parts_cmd else ""
+    elif tool_name == "Task":
+        detail = inp.get("description", "")[:40]
+
+    parts = [project, tool_name]
+    if detail:
+        parts.append(detail)
+    parts.append("finished")
     message = " ".join(parts)
 
     # Send to MCP server
