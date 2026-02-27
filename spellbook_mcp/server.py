@@ -2616,6 +2616,77 @@ def kokoro_status() -> dict:
     return tts_module.get_status()
 
 
+@mcp.tool()
+@inject_recovery_context
+def tts_session_set(
+    enabled: bool = None,
+    voice: str = None,
+    volume: float = None,
+    session_id: str = None,
+) -> dict:
+    """
+    Override TTS settings for this session only (not persisted).
+
+    Pass only the settings you want to change. Omitted settings keep current value.
+
+    Args:
+        enabled: Enable/disable TTS for this session
+        voice: Override voice for this session
+        volume: Override volume for this session (0.0-1.0)
+        session_id: Session identifier (auto-detected if omitted)
+
+    Returns:
+        {"status": "ok", "session_tts": dict_of_current_overrides}
+    """
+    from spellbook_mcp.config_tools import tts_session_set as do_tts_session_set
+
+    return do_tts_session_set(
+        enabled=enabled, voice=voice, volume=volume, session_id=session_id
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def tts_config_set(
+    enabled: bool = None,
+    voice: str = None,
+    volume: float = None,
+) -> dict:
+    """
+    Persistently change TTS configuration.
+
+    Pass only the settings you want to change. Omitted settings keep current value.
+
+    Args:
+        enabled: Enable/disable TTS globally
+        voice: Default voice ID (e.g., "af_heart", "bf_emma")
+        volume: Default volume 0.0-1.0
+
+    Returns:
+        {"status": "ok", "config": dict_of_all_tts_settings}
+    """
+    result_config = {}
+    if enabled is not None:
+        r = config_set("tts_enabled", enabled)
+        result_config.update(r.get("config", {}))
+    if voice is not None:
+        r = config_set("tts_voice", voice)
+        result_config.update(r.get("config", {}))
+    if volume is not None:
+        r = config_set("tts_volume", volume)
+        result_config.update(r.get("config", {}))
+
+    # If nothing was set, read current config
+    if not result_config:
+        result_config = {
+            "tts_enabled": config_get("tts_enabled"),
+            "tts_voice": config_get("tts_voice"),
+            "tts_volume": config_get("tts_volume"),
+        }
+
+    return {"status": "ok", "config": result_config}
+
+
 if __name__ == "__main__":
     # Initialize database and start watcher thread
     db_path = str(get_db_path())

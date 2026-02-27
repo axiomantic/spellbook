@@ -54,3 +54,68 @@ class TestKokoroStatus:
         with patch("spellbook_mcp.tts.get_status", return_value=mock_status):
             result = server.kokoro_status.fn()
         assert result == mock_status
+
+
+class TestTtsSessionSet:
+    """tts_session_set() MCP tool."""
+
+    def test_updates_session_state(self):
+        from spellbook_mcp.config_tools import _session_states, _session_activity
+
+        _session_states.clear()
+        _session_activity.clear()
+
+        result = server.tts_session_set.fn(enabled=False, voice="bf_emma", volume=0.5)
+
+        assert result["status"] == "ok"
+        assert result["session_tts"]["enabled"] is False
+        assert result["session_tts"]["voice"] == "bf_emma"
+        assert result["session_tts"]["volume"] == 0.5
+
+        _session_states.clear()
+        _session_activity.clear()
+
+    def test_partial_update_preserves_other_keys(self):
+        from spellbook_mcp.config_tools import _session_states, _session_activity, _get_session_state
+
+        _session_states.clear()
+        _session_activity.clear()
+
+        # Set initial values
+        state = _get_session_state()
+        state["tts"] = {"enabled": True, "voice": "af_heart", "volume": 0.3}
+
+        result = server.tts_session_set.fn(voice="bf_emma")  # Only change voice
+
+        assert result["session_tts"]["voice"] == "bf_emma"
+        assert result["session_tts"]["enabled"] is True  # Unchanged
+        assert result["session_tts"]["volume"] == 0.3  # Unchanged
+
+        _session_states.clear()
+        _session_activity.clear()
+
+
+class TestTtsConfigSet:
+    """tts_config_set() MCP tool."""
+
+    def test_sets_all_config_keys(self, tmp_path):
+        config_file = tmp_path / "spellbook.json"
+        config_file.write_text("{}")
+        with patch("spellbook_mcp.config_tools.get_config_path", return_value=config_file):
+            with patch("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
+                result = server.tts_config_set.fn(enabled=True, voice="bf_emma", volume=0.5)
+
+        assert result["status"] == "ok"
+        assert result["config"]["tts_enabled"] is True
+        assert result["config"]["tts_voice"] == "bf_emma"
+        assert result["config"]["tts_volume"] == 0.5
+
+    def test_partial_update_only_sets_provided(self, tmp_path):
+        config_file = tmp_path / "spellbook.json"
+        config_file.write_text('{"tts_enabled": true}')
+        with patch("spellbook_mcp.config_tools.get_config_path", return_value=config_file):
+            with patch("spellbook_mcp.config_tools.CONFIG_LOCK_PATH", tmp_path / "config.lock"):
+                result = server.tts_config_set.fn(voice="am_adam")
+
+        assert result["config"]["tts_voice"] == "am_adam"
+        assert result["config"]["tts_enabled"] is True  # Preserved
