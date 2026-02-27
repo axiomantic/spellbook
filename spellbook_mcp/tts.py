@@ -187,13 +187,10 @@ def _resolve_setting(
 
 
 def get_status(session_id: str = None) -> dict:
-    """Get TTS availability and current settings without side effects.
+    """Get TTS availability and current settings.
 
-    Does NOT trigger model loading. Safe to call at any time.
-
-    Note: The ``available`` field is only accurate after the first
-    ``speak()`` call or an explicit ``_check_availability()`` call.
-    Before that, it defaults to False.
+    Triggers an availability check (import test) on first call but does
+    NOT trigger model loading. Safe to call at any time.
 
     Args:
         session_id: Session ID for settings resolution.
@@ -201,7 +198,7 @@ def get_status(session_id: str = None) -> dict:
     Returns:
         Dict with available, enabled, model_loaded, voice, volume, error keys.
     """
-    available = _kokoro_available if _kokoro_available is not None else False
+    available = _check_availability()
     return {
         "available": available,
         "enabled": _resolve_setting("enabled", session_id=session_id),

@@ -3,15 +3,26 @@
 Task 16: The installer should detect whether kokoro is importable and,
 if available, prompt the user to enable TTS. The --yes flag auto-enables,
 dry-run skips, and declining sets tts_enabled=False.
+
+When kokoro is NOT installed, the installer should offer to install it
+rather than silently skipping.
 """
 
 import builtins
 import json
 import sys
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 # install.py is the top-level script; we import from it directly
 from install import check_tts_available, setup_tts, _set_tts_config
+
+
+# All setup_tts tests need to mock config_get to avoid reading actual config.
+# This context manager provides the common mock setup.
+def _mock_no_prior_config():
+    """Mock config_get to return None (no prior TTS preference)."""
+    return patch("spellbook_mcp.config_tools.config_get", return_value=None)
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +54,7 @@ class TestCheckTtsAvailable:
 
 
 # ---------------------------------------------------------------------------
-# setup_tts() - Interactive mode
+# setup_tts() - Interactive mode (kokoro available)
 # ---------------------------------------------------------------------------
 
 
@@ -52,7 +63,8 @@ class TestSetupTtsInteractive:
 
     def test_prompts_user_when_kokoro_available_and_interactive(self):
         """When kokoro is available and running interactively, prompt user."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.is_interactive", return_value=True), \
              patch("builtins.input", return_value="y") as mock_input, \
              patch("install._set_tts_config") as mock_config, \
@@ -64,7 +76,8 @@ class TestSetupTtsInteractive:
 
     def test_enables_tts_when_user_accepts(self):
         """When user answers 'y', tts_enabled should be set to True."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.is_interactive", return_value=True), \
              patch("builtins.input", return_value="y"), \
              patch("install._set_tts_config") as mock_config, \
@@ -75,7 +88,8 @@ class TestSetupTtsInteractive:
 
     def test_enables_tts_when_user_presses_enter(self):
         """Default (empty string) should accept (enable TTS)."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.is_interactive", return_value=True), \
              patch("builtins.input", return_value=""), \
              patch("install._set_tts_config") as mock_config, \
@@ -86,7 +100,8 @@ class TestSetupTtsInteractive:
 
     def test_disables_tts_when_user_declines(self):
         """When user answers 'n', tts_enabled should be set to False."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.is_interactive", return_value=True), \
              patch("builtins.input", return_value="n"), \
              patch("install._set_tts_config") as mock_config, \
@@ -106,7 +121,8 @@ class TestSetupTtsAutoYes:
 
     def test_auto_yes_enables_tts_without_prompt(self):
         """--yes flag should auto-enable TTS without user input."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.is_interactive", return_value=False), \
              patch("builtins.input") as mock_input, \
              patch("install._set_tts_config") as mock_config, \
@@ -118,7 +134,8 @@ class TestSetupTtsAutoYes:
 
     def test_interactive_auto_yes_enables_without_prompt(self):
         """When is_interactive()=True but auto_yes=True, no prompt shown, TTS enabled."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.is_interactive", return_value=True), \
              patch("builtins.input") as mock_input, \
              patch("install._set_tts_config") as mock_config, \
@@ -139,7 +156,8 @@ class TestSetupTtsEdgeCases:
 
     def test_eof_error_does_not_crash(self):
         """EOFError during input should not crash setup_tts."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.is_interactive", return_value=True), \
              patch("builtins.input", side_effect=EOFError), \
              patch("install._set_tts_config") as mock_config, \
@@ -152,7 +170,8 @@ class TestSetupTtsEdgeCases:
 
     def test_calls_prompt_yn_with_correct_arguments(self):
         """setup_tts should call prompt_yn with default=True and auto_yes forwarded."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.prompt_yn", return_value=True) as mock_prompt, \
              patch("install._set_tts_config"), \
              patch("install.print_success"), \
@@ -165,7 +184,8 @@ class TestSetupTtsEdgeCases:
 
     def test_calls_prompt_yn_with_auto_yes_forwarded(self):
         """setup_tts should forward auto_yes=True to prompt_yn."""
-        with patch("install.check_tts_available", return_value=True), \
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=True), \
              patch("install.prompt_yn", return_value=True) as mock_prompt, \
              patch("install._set_tts_config"), \
              patch("install.print_success"), \
@@ -177,7 +197,7 @@ class TestSetupTtsEdgeCases:
 
 
 # ---------------------------------------------------------------------------
-# setup_tts() - Dry-run and kokoro-unavailable
+# setup_tts() - Dry-run and skip cases
 # ---------------------------------------------------------------------------
 
 
@@ -192,13 +212,101 @@ class TestSetupTtsSkipCases:
             mock_check.assert_not_called()
             mock_config.assert_not_called()
 
-    def test_kokoro_unavailable_skips_tts(self):
-        """When kokoro is not available, TTS setup should be skipped."""
-        with patch("install.check_tts_available", return_value=False), \
+    def test_existing_config_skips_prompt(self):
+        """When tts_enabled is already set in config, skip prompting."""
+        with patch("spellbook_mcp.config_tools.config_get", return_value=True), \
+             patch("install.check_tts_available", return_value=True), \
+             patch("builtins.input") as mock_input, \
+             patch("install._set_tts_config") as mock_config, \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=False)
+            mock_input.assert_not_called()
+            mock_config.assert_not_called()
+
+    def test_existing_disabled_config_skips_prompt(self):
+        """When tts_enabled=False in config, skip prompting."""
+        with patch("spellbook_mcp.config_tools.config_get", return_value=False), \
+             patch("install.check_tts_available") as mock_check, \
              patch("builtins.input") as mock_input, \
              patch("install._set_tts_config") as mock_config:
             setup_tts(dry_run=False, auto_yes=False)
             mock_input.assert_not_called()
+            mock_config.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# setup_tts() - Kokoro not installed (offer to install)
+# ---------------------------------------------------------------------------
+
+
+class TestSetupTtsInstallOffer:
+    """When kokoro is not installed, setup_tts should offer to install it."""
+
+    def test_kokoro_unavailable_offers_install_interactive(self):
+        """When kokoro not available interactively, prompt to install."""
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=False), \
+             patch("install.is_interactive", return_value=True), \
+             patch("builtins.input", return_value="n") as mock_input, \
+             patch("install._set_tts_config") as mock_config, \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=False)
+            # Should have prompted user
+            mock_input.assert_called_once()
+            # User declined, so config set to False
+            mock_config.assert_called_once_with(False)
+
+    def test_kokoro_unavailable_non_interactive_sets_disabled(self):
+        """In non-interactive mode, kokoro unavailable sets tts_enabled=False."""
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=False), \
+             patch("install.is_interactive", return_value=False), \
+             patch("install._set_tts_config") as mock_config, \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=False)
+            # Default for install prompt is False, so non-interactive declines
+            mock_config.assert_called_once_with(False)
+
+    def test_kokoro_unavailable_auto_yes_does_not_auto_install(self):
+        """--yes should NOT auto-install heavy TTS deps."""
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=False), \
+             patch("install.is_interactive", return_value=False), \
+             patch("install._install_tts_deps") as mock_install, \
+             patch("install._set_tts_config") as mock_config, \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=True)
+            # auto_yes=True is passed but _install_tts_deps uses auto_yes=False
+            # so in non-interactive mode, the default (False) is used
+            mock_install.assert_not_called()
+            mock_config.assert_called_once_with(False)
+
+    def test_kokoro_install_success_enables_tts(self):
+        """When user accepts install and it succeeds, enable TTS."""
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", side_effect=[False, True]), \
+             patch("install.is_interactive", return_value=True), \
+             patch("builtins.input", return_value="y"), \
+             patch("install._install_tts_deps", return_value=True) as mock_install, \
+             patch("install._set_tts_config") as mock_config, \
+             patch("install.print_success"), \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=False, spellbook_dir=Path("/fake"))
+            mock_install.assert_called_once_with(Path("/fake"))
+            mock_config.assert_called_once_with(True)
+
+    def test_kokoro_install_failure_shows_error(self):
+        """When install fails, show error message."""
+        with _mock_no_prior_config(), \
+             patch("install.check_tts_available", return_value=False), \
+             patch("install.is_interactive", return_value=True), \
+             patch("builtins.input", return_value="y"), \
+             patch("install._install_tts_deps", return_value=False), \
+             patch("install._set_tts_config") as mock_config, \
+             patch("install.print_error") as mock_error, \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=False, spellbook_dir=Path("/fake"))
+            mock_error.assert_called_once()
             mock_config.assert_not_called()
 
 

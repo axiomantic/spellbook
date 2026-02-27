@@ -511,6 +511,50 @@ def _add_update_notification(result: dict) -> None:
         )
 
 
+def _get_repairs() -> list[dict]:
+    """Check for known fixable issues and return repair suggestions.
+
+    Each repair is a dict with:
+        id: Unique repair identifier
+        severity: "warning" or "error"
+        message: Human-readable description
+        fix_command: Command the user can run to fix the issue
+    """
+    repairs = []
+
+    # Check TTS: enabled but dependencies missing
+    tts_enabled = config_get("tts_enabled")
+    if tts_enabled is True:
+        try:
+            from spellbook_mcp.tts import _check_availability
+
+            if not _check_availability():
+                repairs.append({
+                    "id": "tts-deps-missing",
+                    "severity": "warning",
+                    "message": "TTS is enabled but kokoro is not installed",
+                    "fix_command": "uv pip install 'spellbook[tts]'",
+                })
+        except ImportError:
+            pass
+
+    # Check TTS: kokoro installed but pip missing (spaCy#13747 workaround)
+    if tts_enabled is True and not repairs:
+        try:
+            import importlib.util
+            if importlib.util.find_spec("kokoro") and not importlib.util.find_spec("pip"):
+                repairs.append({
+                    "id": "tts-pip-missing",
+                    "severity": "warning",
+                    "message": "TTS requires pip in the venv (spaCy workaround). TTS will hang without it",
+                    "fix_command": "uv pip install pip",
+                })
+        except Exception:
+            pass
+
+    return repairs
+
+
 def session_init(
     session_id: Optional[str] = None,
     continuation_message: Optional[str] = None,
@@ -623,6 +667,11 @@ def session_init(
 
     # Add resume fields
     result.update(_get_resume_context(continuation_message, project_path))
+
+    # Add repair suggestions
+    repairs = _get_repairs()
+    if repairs:
+        result["repairs"] = repairs
 
     return result
 

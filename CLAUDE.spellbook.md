@@ -128,6 +128,21 @@ User intent is detected from the first message:
 | "start fresh", "new session", "clean slate" | fresh_start | Skip resume, return `resume_available: false` |
 | "ok", "next", neutral message               | neutral     | Execute boot prompt (if session exists)       |
 
+## Session Repairs
+
+When `session_init` returns a `repairs` array, display each repair to the user:
+
+| Severity | Action |
+|----------|--------|
+| `error` | Display prominently. These may affect functionality. |
+| `warning` | Display as informational. Suggest the fix command. |
+
+Example greeting with repairs:
+> Welcome to spellbook-enhanced Claude.
+>
+> Repairs needed:
+> - TTS is enabled but kokoro is not installed. Fix: `uv pip install 'spellbook[tts]'`
+
 ## TTS Configuration
 
 Spellbook can announce when long-running tools finish using Kokoro text-to-speech. Requires optional `[tts]` dependencies (`uv pip install spellbook[tts]`).

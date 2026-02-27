@@ -740,30 +740,100 @@ def _set_tts_config(enabled: bool) -> None:
         pass
 
 
-def setup_tts(dry_run: bool = False, auto_yes: bool = False) -> None:
-    """Detect kokoro TTS and optionally enable it.
+def _install_tts_deps(spellbook_dir: Path) -> bool:
+    """Install TTS optional dependencies via uv.
 
-    Skipped during dry-run or when kokoro is not installed.
-    In interactive mode, prompts the user. With --yes, auto-enables.
+    Also installs pip into the venv as a workaround for spaCy#13747
+    (spaCy hangs when pip is missing in uv-managed environments).
+
+    Returns True if installation succeeded and kokoro is now importable.
+    """
+    print_step("Installing TTS dependencies (kokoro, soundfile, sounddevice)...")
+    try:
+        result = subprocess.run(
+            ["uv", "pip", "install", f"{spellbook_dir}[tts]"],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        if result.returncode != 0:
+            print_error(f"TTS dependency installation failed: {result.stderr.strip()}")
+            return False
+        # spaCy requires pip in the venv (spaCy#13747); uv doesn't install it
+        subprocess.run(
+            ["uv", "pip", "install", "pip"],
+            capture_output=True,
+            timeout=60,
+        )
+        # Verify kokoro is now importable
+        return check_tts_available()
+    except subprocess.TimeoutExpired:
+        print_error("TTS dependency installation timed out")
+        return False
+    except Exception as e:
+        print_error(f"TTS dependency installation failed: {e}")
+        return False
+
+
+def setup_tts(
+    dry_run: bool = False,
+    auto_yes: bool = False,
+    spellbook_dir: Path | None = None,
+) -> None:
+    """Offer to install and enable TTS.
+
+    Skipped during dry-run or if user already configured TTS previously.
+    If kokoro is installed, asks to enable. If not, offers to install it.
     """
     if dry_run:
         return
 
-    if not check_tts_available():
-        return
+    # Check if user already made a TTS decision (don't re-prompt on reinstall)
+    try:
+        from spellbook_mcp.config_tools import config_get as _cfg_get
+        existing = _cfg_get("tts_enabled")
+        if existing is not None:
+            if check_tts_available():
+                print_info(f"TTS already configured (enabled={existing})")
+            return
+    except ImportError:
+        pass
 
     print()
-    enabled = prompt_yn(
-        "Kokoro TTS detected. Enable text-to-speech notifications?",
-        default=True,
-        auto_yes=auto_yes,
-    )
-    _set_tts_config(enabled)
-    if enabled:
-        print_success("TTS enabled (voice: af_heart, volume: 0.3)")
-        print_info("Change settings with tts_session_set or tts_config_set MCP tools")
+    if check_tts_available():
+        # Kokoro already installed, just ask to enable
+        enabled = prompt_yn(
+            "Kokoro TTS detected. Enable text-to-speech notifications?",
+            default=True,
+            auto_yes=auto_yes,
+        )
+        _set_tts_config(enabled)
+        if enabled:
+            print_success("TTS enabled (voice: af_heart, volume: 0.3)")
+            print_info("Change settings with tts_session_set or tts_config_set MCP tools")
+        else:
+            print_info("TTS disabled. Enable later with tts_config_set MCP tool")
     else:
-        print_info("TTS disabled. Enable later with tts_config_set MCP tool")
+        # Kokoro not installed, offer to install
+        install = prompt_yn(
+            "Install text-to-speech notifications? (Kokoro TTS, ~500MB download)",
+            default=False,
+            auto_yes=False,  # Never auto-install heavy deps, even with --yes
+        )
+        if install and spellbook_dir:
+            if _install_tts_deps(spellbook_dir):
+                _set_tts_config(True)
+                print_success("TTS installed and enabled (voice: af_heart, volume: 0.3)")
+                print_info("Change settings with tts_session_set or tts_config_set MCP tools")
+            else:
+                print_error("TTS installation failed. Install manually:")
+                print_info(f"uv pip install '{spellbook_dir}[tts]'")
+        elif install:
+            print_warning("Cannot auto-install: spellbook directory unknown")
+            print_info("Install manually: uv pip install 'spellbook[tts]'")
+        else:
+            _set_tts_config(False)
+            print_info("TTS skipped. Install later: uv pip install 'spellbook[tts]'")
 
 
 # =============================================================================
@@ -848,7 +918,11 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     print_report(session)
 
     # TTS setup (optional)
-    setup_tts(dry_run=args.dry_run, auto_yes=getattr(args, "yes", False))
+    setup_tts(
+        dry_run=args.dry_run,
+        auto_yes=getattr(args, "yes", False),
+        spellbook_dir=spellbook_dir,
+    )
 
     # Show post-install instructions if interactive and not dry-run
     if not args.dry_run and is_interactive():
