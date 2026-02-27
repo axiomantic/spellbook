@@ -138,31 +138,38 @@ class TestAddNode:
         parent_status = cursor.fetchone()[0]
         assert parent_status == "answered"
 
-    def test_add_answer_does_not_transition_non_question_parent(self, graph_with_root):
+    def test_add_answer_does_not_transition_non_question_parent(self, fractal_db):
         """Adding answer to answer parent must NOT transition parent status."""
+        from spellbook_mcp.fractal.graph_ops import create_graph
         from spellbook_mcp.fractal.node_ops import add_node
         from spellbook_mcp.fractal.schema import get_fractal_connection
 
-        # First add an answer to root
-        answer1 = add_node(
-            graph_id=graph_with_root["graph_id"],
-            parent_id=graph_with_root["root_node_id"],
-            node_type="answer",
-            text="First answer",
-            db_path=graph_with_root["db_path"],
+        # Use explore intensity (max_depth=4) since this test needs depth 2
+        graph = create_graph(
+            seed="Test", intensity="explore",
+            checkpoint_mode="autonomous", db_path=fractal_db,
         )
 
-        # Add another answer as child of the first answer
+        # First add an answer to root
+        answer1 = add_node(
+            graph_id=graph["graph_id"],
+            parent_id=graph["root_node_id"],
+            node_type="answer",
+            text="First answer",
+            db_path=fractal_db,
+        )
+
+        # Add another answer as child of the first answer (depth 2)
         add_node(
-            graph_id=graph_with_root["graph_id"],
+            graph_id=graph["graph_id"],
             parent_id=answer1["node_id"],
             node_type="answer",
             text="Child of answer",
-            db_path=graph_with_root["db_path"],
+            db_path=fractal_db,
         )
 
         # First answer should still be "open" (not "answered" since it's an answer node)
-        conn = get_fractal_connection(graph_with_root["db_path"])
+        conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
         cursor.execute(
             "SELECT status FROM nodes WHERE id = ?",
