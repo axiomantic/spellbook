@@ -28,7 +28,7 @@ MANIFEST_ECOSYSTEMS = {
 }
 
 # Directories to skip (node_modules, vendored code, etc.)
-SKIP_DIRS = {"node_modules", ".venv", "venv", "vendor", "__pycache__", ".git"}
+SKIP_DIRS = {"node_modules", ".venv", "venv", "vendor", "__pycache__", ".git", ".claude"}
 
 # Directories whose manifests are covered by a parent directory's entry
 # (e.g. spellbook_mcp/requirements.txt is covered by the root pip entry)
