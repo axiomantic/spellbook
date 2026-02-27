@@ -6756,6 +6756,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-detail-multi-pass-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 Detail: Multi-Pass Review
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6786,88 +6819,238 @@
   
 
 
-<!-- diagram-meta: {"source": "commands/code-review-give.md", "source_hash": "sha256:a388a4436efc0f6a865a259c374fc30cea084e296ab486eccf5344edfeefea2a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/code-review-give.md", "source_hash": "sha256:ca4a908fcf71c4d4b6cabec3b9e105cedeea1c2ef1dafe0f7317c0c87c1e92a4", "generated_at": "2026-02-27T05:10:32Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-code-review-give">Diagram: code-review-give<a class="headerlink" href="#diagram-code-review-give" title="Permanent link">&para;</a></h1>
-<p>Review someone else's code with multi-pass analysis and structured recommendations.</p>
+<p>Now I have the full source content. Let me generate the diagrams.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>High-level workflow from target input through the four steps, reflection quality gate, and final recommendation.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start: Target Provided]) --&gt; Parse{Target Format?}
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    Parse --&gt;|PR Number| FetchPR[Fetch via gh pr diff]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Parse --&gt;|URL| FetchURL[Fetch via gh pr diff]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    Parse --&gt;|Branch| FetchBranch[Fetch via git diff]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    FetchPR --&gt; Understand[Understand PR Goal]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    FetchURL --&gt; Understand
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    FetchBranch --&gt; Understand
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    START([&quot;Start: --give target&quot;]) --&gt; S0A
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    subgraph S0[&quot;Step 0: Load Project Conventions&quot;]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        S0A[&quot;Read CLAUDE.md + .claude/CLAUDE.md&quot;] --&gt; S0B[&quot;Read style configs&lt;br/&gt;pyproject.toml, eslintrc, biome.json&quot;]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        S0B --&gt; S0C[&quot;Check code-review-instructions.md&quot;]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        S0C --&gt; S0D[&quot;Sample 1-2 sibling files&quot;]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        S0D --&gt; S0E[&quot;Analyze project conventions&quot;]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Understand --&gt; Pass1[Pass 1: Security Review]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Pass1 --&gt; Pass2[Pass 2: Correctness Review]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Pass2 --&gt; Pass3[Pass 3: Style Review]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    Pass3 --&gt; Classify{Findings Severity?}
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    Classify --&gt;|Critical| Blocking[Add to Blocking Issues]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    Classify --&gt;|Important| Suggestions[Add to Suggestions]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Classify --&gt;|Minor| Minor[Add to Minor Items]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    Classify --&gt;|Question| Questions[Add to Questions]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    Blocking --&gt; Output[Generate Review Output]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    Suggestions --&gt; Output
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    Minor --&gt; Output
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Questions --&gt; Output
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    S0E --&gt; S1A
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    subgraph S1[&quot;Step 1: Fetch and Inventory&quot;]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        S1A[&quot;Fetch diff&lt;br/&gt;gh pr diff / git diff&quot;] --&gt; S1B[&quot;Understand PR goal&lt;br/&gt;from description&quot;]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        S1B --&gt; S1C[&quot;Build coverage manifest&lt;br/&gt;git diff --name-only&quot;]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        S1C --&gt; S1D{&quot;PR has existing&lt;br/&gt;review comments?&quot;}
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        S1D --&gt;|Yes| S1E[&quot;Fetch prior feedback&lt;br/&gt;gh api pulls/N/comments + reviews&quot;]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        S1D --&gt;|No| S1F[&quot;Record: no prior feedback&quot;]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        S1E --&gt; S1G[&quot;Record PRIOR_FEEDBACK items&quot;]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        S1G --&gt; S1H[&quot;Inventory complete&quot;]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        S1F --&gt; S1H
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    end
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    S1H --&gt; S2[&quot;Step 2: Multi-Pass Review&lt;br/&gt;(see detail diagram)&quot;]
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    Output --&gt; Verdict{Recommendation?}
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    Verdict --&gt;|No Blockers| Approve[APPROVE]
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    Verdict --&gt;|Has Blockers| RequestChanges[REQUEST_CHANGES]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    Verdict --&gt;|Needs Discussion| Comment[COMMENT]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    Approve --&gt; Done([Complete])
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    RequestChanges --&gt; Done
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    Comment --&gt; Done
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style Start fill:#2196F3,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style Parse fill:#FF9800,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style FetchPR fill:#2196F3,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style FetchURL fill:#2196F3,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style FetchBranch fill:#2196F3,color:#fff
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style Understand fill:#2196F3,color:#fff
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style Pass1 fill:#2196F3,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style Pass2 fill:#2196F3,color:#fff
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style Pass3 fill:#2196F3,color:#fff
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    style Classify fill:#FF9800,color:#fff
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style Blocking fill:#f44336,color:#fff
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style Suggestions fill:#2196F3,color:#fff
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style Minor fill:#2196F3,color:#fff
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style Questions fill:#2196F3,color:#fff
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style Output fill:#2196F3,color:#fff
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style Verdict fill:#FF9800,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style Approve fill:#4CAF50,color:#fff
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style RequestChanges fill:#f44336,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style Comment fill:#2196F3,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style Done fill:#2196F3,color:#fff
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    S2 --&gt; S3A
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    subgraph S3[&quot;Step 3: Format Output&quot;]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        S3A[&quot;Write summary&lt;br/&gt;1-2 sentence assessment&quot;] --&gt; S3B[&quot;Report coverage manifest&lt;br/&gt;Files reviewed: N/N&quot;]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        S3B --&gt; S3C{&quot;Prior feedback&lt;br/&gt;was recorded?&quot;}
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        S3C --&gt;|Yes| S3D[&quot;Reconcile each item&lt;br/&gt;ADDRESSED or STILL_OPEN&quot;]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        S3C --&gt;|No| S3E[&quot;Skip reconciliation&quot;]
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        S3D --&gt; S3F[&quot;Format findings by severity&lt;br/&gt;CRITICAL / IMPORTANT / MINOR / QUESTION&quot;]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        S3E --&gt; S3F
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    end
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    S3F --&gt; R1
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    subgraph REFLECT[&quot;Reflection Quality Gate&quot;]
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        R1{&quot;All manifest files&lt;br/&gt;evaluated?&quot;}:::gate
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        R1 --&gt;|Yes| R2{&quot;All 6 mandatory dims&lt;br/&gt;checked per file?&quot;}:::gate
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>        R2 --&gt;|Yes| R3{&quot;Security pass&lt;br/&gt;completed?&quot;}:::gate
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>        R3 --&gt;|Yes| R4{&quot;Async present:&lt;br/&gt;concurrency pass done?&quot;}:::gate
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>        R4 --&gt;|Yes| R5{&quot;Prior feedback&lt;br/&gt;reconciled?&quot;}:::gate
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        R5 --&gt;|Yes| R6{&quot;Severity ratings&lt;br/&gt;honest?&quot;}:::gate
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    end
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    R1 --&gt;|No| REDO[&quot;Address gaps in review&quot;]
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    R2 --&gt;|No| REDO
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    R3 --&gt;|No| REDO
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    R4 --&gt;|No| REDO
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    R5 --&gt;|No| REDO
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    R6 --&gt;|No| REDO
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    REDO --&gt; S2
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    R6 --&gt;|Yes| REC{Recommendation}
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    REC --&gt;|&quot;No issues or minor only&quot;| APPROVE([&quot;APPROVE&quot;]):::success
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    REC --&gt;|&quot;Critical / important findings&quot;| CHANGES([&quot;REQUEST_CHANGES&quot;])
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    REC --&gt;|&quot;Questions / discussion needed&quot;| COMMENT([&quot;COMMENT&quot;])
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    subgraph Legend[&quot; Legend &quot;]
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>        direction LR
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>        LPROC[&quot;Process&quot;] ~~~ LDEC{&quot;Decision&quot;} ~~~ LTERM([&quot;Terminal&quot;])
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>        LGATE[&quot;Quality Gate&quot;]:::gate ~~~ LSUCC([&quot;Success&quot;]):::success
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    end
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    classDef gate fill:#ff6b6b,color:white
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    classDef success fill:#51cf66,color:white
 </code></pre></div>
+<h2 id="step-2-detail-multi-pass-review">Step 2 Detail: Multi-Pass Review<a class="headerlink" href="#step-2-detail-multi-pass-review" title="Permanent link">&para;</a></h2>
+<p>Expands the per-file dimension loop, cross-file security pass, and conditional concurrency pass. Conditional dimensions (Performance, Concurrency/Async, Accessibility) are evaluated independently per file; multiple can apply to the same file.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    START([&quot;Begin Step 2&quot;]) --&gt; NEXT
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    NEXT{&quot;Next file in&lt;br/&gt;coverage manifest?&quot;}
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    NEXT --&gt;|&quot;Yes: select file&quot;| D1
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    NEXT --&gt;|&quot;No: all files done&quot;| SECHEAD
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    subgraph MANDATORY[&quot;Mandatory Dimensions (per file)&quot;]
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        D1[&quot;1. Correctness&lt;br/&gt;Logic, off-by-one, null, return types&quot;] --&gt; D2[&quot;2. Security&lt;br/&gt;Injection, auth gaps, secrets, SSRF&quot;]
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        D2 --&gt; D3[&quot;3. Error Handling&lt;br/&gt;Missing catches, swallowed errors, null safety&quot;]
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        D3 --&gt; D4[&quot;4. Data Integrity&lt;br/&gt;Race conditions, non-atomic writes, stale data&quot;]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        D4 --&gt; D5[&quot;5. API Contracts&lt;br/&gt;Breaking changes, validation, schema drift&quot;]
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        D5 --&gt; D6[&quot;6. Test Coverage&lt;br/&gt;Missing tests, edge cases, meaningful assertions&quot;]
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    end
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    D6 --&gt; CPERF
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    subgraph CONDITIONAL[&quot;Conditional Dimensions (per file, independent checks)&quot;]
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        CPERF{&quot;Performance&lt;br/&gt;relevant?&quot;}
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        CPERF --&gt;|Yes| PERF[&quot;Performance&lt;br/&gt;Hot paths, N+1, allocations, indexes&quot;]
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        CPERF --&gt;|No| CASYNC
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        PERF --&gt; CASYNC
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>        CASYNC{&quot;Async or threading&lt;br/&gt;present?&quot;}
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>        CASYNC --&gt;|Yes| ASYNCDIM[&quot;Concurrency/Async&lt;br/&gt;REQUIRED when present&quot;]:::gate
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>        CASYNC --&gt;|No| CA11Y
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>        ASYNCDIM --&gt; CA11Y
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        CA11Y{&quot;UI changes&lt;br/&gt;present?&quot;}
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>        CA11Y --&gt;|Yes| A11Y[&quot;Accessibility&lt;br/&gt;ARIA, keyboard nav, screen readers&quot;]
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>        CA11Y --&gt;|No| RECORD
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>        A11Y --&gt; RECORD
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    end
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    RECORD[&quot;Record findings for file&quot;] --&gt; NEXT
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    SECHEAD[&quot;Security Pass: cross-file&quot;]:::gate --&gt; SEC1
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>    subgraph SEC[&quot;Security Pass: 6 Checks&quot;]
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>        SEC1[&quot;Input validation&lt;br/&gt;Length limits, content-type&quot;] --&gt; SEC2[&quot;Path traversal&lt;br/&gt;User-supplied file paths&quot;]
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>        SEC2 --&gt; SEC3[&quot;Hardcoded secrets&lt;br/&gt;Tokens, keys, passwords, private keys&quot;]
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>        SEC3 --&gt; SEC4[&quot;Auth/authz&lt;br/&gt;Missing checks, broken logic&quot;]
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>        SEC4 --&gt; SEC5[&quot;Injection&lt;br/&gt;SQL, XSS, command injection&quot;]
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>        SEC5 --&gt; SEC6[&quot;SSRF&lt;br/&gt;User-controlled URL fetching&quot;]
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>    end
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>    SEC6 --&gt; HASASYNC
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>    HASASYNC{&quot;Diff contains async&lt;br/&gt;functions or threading?&quot;}
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>    HASASYNC --&gt;|No| DONE([&quot;Step 2 Complete&quot;])
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>    HASASYNC --&gt;|Yes| CONCHEAD[&quot;Concurrency/Async Pass&quot;]:::gate
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>    CONCHEAD --&gt; C1
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>    subgraph CONC[&quot;Concurrency/Async Pass: 5 Checks&quot;]
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>        C1[&quot;Event loop blocking&lt;br/&gt;Sync calls inside async functions&quot;] --&gt; C2[&quot;Thread safety&lt;br/&gt;Shared mutable state without locks&quot;]
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>        C2 --&gt; C3[&quot;Race conditions&lt;br/&gt;TOCTOU, check-then-act patterns&quot;]
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>        C3 --&gt; C4[&quot;Interrupt handling&lt;br/&gt;EOFError, KeyboardInterrupt, CancelledError&quot;]
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>        C4 --&gt; C5[&quot;Lock ordering&lt;br/&gt;Deadlock from inconsistent acquisition&quot;]
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>    end
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>    C5 --&gt; DONE
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>    subgraph Legend[&quot; Legend &quot;]
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>        direction LR
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>        LPROC[&quot;Process&quot;] ~~~ LDEC{&quot;Decision&quot;} ~~~ LTERM([&quot;Terminal&quot;])
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>        LGATE[&quot;Quality Gate&quot;]:::gate
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>    end
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>    classDef gate fill:#ff6b6b,color:white
+</code></pre></div>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Overview Node</th>
+<th>Detail Diagram Section</th>
+<th>Source Lines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Step 0: Load Project Conventions</td>
+<td>(fully expanded in overview)</td>
+<td>24-36</td>
+</tr>
+<tr>
+<td>Step 1: Fetch and Inventory</td>
+<td>(fully expanded in overview)</td>
+<td>38-67</td>
+</tr>
+<tr>
+<td>Step 2: Multi-Pass Review</td>
+<td>Full detail diagram</td>
+<td>69-113</td>
+</tr>
+<tr>
+<td>- 6 Mandatory Dimensions</td>
+<td>MANDATORY subgraph (D1-D6)</td>
+<td>73-81</td>
+</tr>
+<tr>
+<td>- Conditional Dimensions</td>
+<td>CONDITIONAL subgraph (CPERF/CASYNC/CA11Y)</td>
+<td>83-89</td>
+</tr>
+<tr>
+<td>- Security Pass</td>
+<td>SEC subgraph (SEC1-SEC6)</td>
+<td>91-101</td>
+</tr>
+<tr>
+<td>- Concurrency/Async Pass</td>
+<td>CONC subgraph (C1-C5)</td>
+<td>103-113</td>
+</tr>
+<tr>
+<td>Step 3: Format Output</td>
+<td>(fully expanded in overview)</td>
+<td>115-140</td>
+</tr>
+<tr>
+<td>Reflection Quality Gate</td>
+<td>REFLECT subgraph (R1-R6)</td>
+<td>145-153</td>
+</tr>
+</tbody>
+</table>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
+<th>Shape</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Rectangle <code>[text]</code></td>
+<td>Process step</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
+<td>Diamond <code>{text}</code></td>
 <td>Decision point</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Stadium <code>([text])</code></td>
+<td>Terminal (start/end)</td>
+</tr>
+<tr>
+<td>Red fill (#ff6b6b)</td>
+<td>Quality gate - mandatory check that blocks progress</td>
+</tr>
+<tr>
+<td>Green fill (#51cf66)</td>
+<td>Success terminal</td>
 </tr>
 </tbody>
 </table>

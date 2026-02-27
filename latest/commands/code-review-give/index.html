@@ -6851,117 +6851,389 @@
 <h1 id="code-review-give">/code-review-give<a class="headerlink" href="#code-review-give" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <h1 id="diagram-code-review-give">Diagram: code-review-give<a class="headerlink" href="#diagram-code-review-give" title="Permanent link">&para;</a></h1>
-<p>Review someone else's code with multi-pass analysis and structured recommendations.</p>
+<p>Now I have the full source content. Let me generate the diagrams.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>High-level workflow from target input through the four steps, reflection quality gate, and final recommendation.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start: Target Provided]) --&gt; Parse{Target Format?}
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    Parse --&gt;|PR Number| FetchPR[Fetch via gh pr diff]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Parse --&gt;|URL| FetchURL[Fetch via gh pr diff]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    Parse --&gt;|Branch| FetchBranch[Fetch via git diff]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    FetchPR --&gt; Understand[Understand PR Goal]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    FetchURL --&gt; Understand
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    FetchBranch --&gt; Understand
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    START([&quot;Start: --give target&quot;]) --&gt; S0A
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    subgraph S0[&quot;Step 0: Load Project Conventions&quot;]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        S0A[&quot;Read CLAUDE.md + .claude/CLAUDE.md&quot;] --&gt; S0B[&quot;Read style configs&lt;br/&gt;pyproject.toml, eslintrc, biome.json&quot;]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        S0B --&gt; S0C[&quot;Check code-review-instructions.md&quot;]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        S0C --&gt; S0D[&quot;Sample 1-2 sibling files&quot;]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        S0D --&gt; S0E[&quot;Analyze project conventions&quot;]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    Understand --&gt; Pass1[Pass 1: Security Review]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    Pass1 --&gt; Pass2[Pass 2: Correctness Review]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    Pass2 --&gt; Pass3[Pass 3: Style Review]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    Pass3 --&gt; Classify{Findings Severity?}
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    Classify --&gt;|Critical| Blocking[Add to Blocking Issues]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    Classify --&gt;|Important| Suggestions[Add to Suggestions]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Classify --&gt;|Minor| Minor[Add to Minor Items]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    Classify --&gt;|Question| Questions[Add to Questions]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    Blocking --&gt; Output[Generate Review Output]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    Suggestions --&gt; Output
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    Minor --&gt; Output
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Questions --&gt; Output
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    S0E --&gt; S1A
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    subgraph S1[&quot;Step 1: Fetch and Inventory&quot;]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        S1A[&quot;Fetch diff&lt;br/&gt;gh pr diff / git diff&quot;] --&gt; S1B[&quot;Understand PR goal&lt;br/&gt;from description&quot;]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        S1B --&gt; S1C[&quot;Build coverage manifest&lt;br/&gt;git diff --name-only&quot;]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        S1C --&gt; S1D{&quot;PR has existing&lt;br/&gt;review comments?&quot;}
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        S1D --&gt;|Yes| S1E[&quot;Fetch prior feedback&lt;br/&gt;gh api pulls/N/comments + reviews&quot;]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>        S1D --&gt;|No| S1F[&quot;Record: no prior feedback&quot;]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        S1E --&gt; S1G[&quot;Record PRIOR_FEEDBACK items&quot;]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        S1G --&gt; S1H[&quot;Inventory complete&quot;]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        S1F --&gt; S1H
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    end
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    S1H --&gt; S2[&quot;Step 2: Multi-Pass Review&lt;br/&gt;(see detail diagram)&quot;]
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    Output --&gt; Verdict{Recommendation?}
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    Verdict --&gt;|No Blockers| Approve[APPROVE]
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    Verdict --&gt;|Has Blockers| RequestChanges[REQUEST_CHANGES]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    Verdict --&gt;|Needs Discussion| Comment[COMMENT]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    Approve --&gt; Done([Complete])
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    RequestChanges --&gt; Done
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    Comment --&gt; Done
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    style Start fill:#2196F3,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    style Parse fill:#FF9800,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    style FetchPR fill:#2196F3,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    style FetchURL fill:#2196F3,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    style FetchBranch fill:#2196F3,color:#fff
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style Understand fill:#2196F3,color:#fff
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style Pass1 fill:#2196F3,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style Pass2 fill:#2196F3,color:#fff
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style Pass3 fill:#2196F3,color:#fff
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    style Classify fill:#FF9800,color:#fff
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style Blocking fill:#f44336,color:#fff
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style Suggestions fill:#2196F3,color:#fff
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style Minor fill:#2196F3,color:#fff
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style Questions fill:#2196F3,color:#fff
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style Output fill:#2196F3,color:#fff
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style Verdict fill:#FF9800,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style Approve fill:#4CAF50,color:#fff
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style RequestChanges fill:#f44336,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style Comment fill:#2196F3,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style Done fill:#2196F3,color:#fff
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    S2 --&gt; S3A
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    subgraph S3[&quot;Step 3: Format Output&quot;]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        S3A[&quot;Write summary&lt;br/&gt;1-2 sentence assessment&quot;] --&gt; S3B[&quot;Report coverage manifest&lt;br/&gt;Files reviewed: N/N&quot;]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>        S3B --&gt; S3C{&quot;Prior feedback&lt;br/&gt;was recorded?&quot;}
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>        S3C --&gt;|Yes| S3D[&quot;Reconcile each item&lt;br/&gt;ADDRESSED or STILL_OPEN&quot;]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>        S3C --&gt;|No| S3E[&quot;Skip reconciliation&quot;]
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>        S3D --&gt; S3F[&quot;Format findings by severity&lt;br/&gt;CRITICAL / IMPORTANT / MINOR / QUESTION&quot;]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        S3E --&gt; S3F
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    end
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    S3F --&gt; R1
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    subgraph REFLECT[&quot;Reflection Quality Gate&quot;]
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        R1{&quot;All manifest files&lt;br/&gt;evaluated?&quot;}:::gate
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>        R1 --&gt;|Yes| R2{&quot;All 6 mandatory dims&lt;br/&gt;checked per file?&quot;}:::gate
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>        R2 --&gt;|Yes| R3{&quot;Security pass&lt;br/&gt;completed?&quot;}:::gate
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>        R3 --&gt;|Yes| R4{&quot;Async present:&lt;br/&gt;concurrency pass done?&quot;}:::gate
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>        R4 --&gt;|Yes| R5{&quot;Prior feedback&lt;br/&gt;reconciled?&quot;}:::gate
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>        R5 --&gt;|Yes| R6{&quot;Severity ratings&lt;br/&gt;honest?&quot;}:::gate
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    end
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    R1 --&gt;|No| REDO[&quot;Address gaps in review&quot;]
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    R2 --&gt;|No| REDO
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    R3 --&gt;|No| REDO
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    R4 --&gt;|No| REDO
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    R5 --&gt;|No| REDO
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    R6 --&gt;|No| REDO
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    REDO --&gt; S2
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    R6 --&gt;|Yes| REC{Recommendation}
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    REC --&gt;|&quot;No issues or minor only&quot;| APPROVE([&quot;APPROVE&quot;]):::success
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    REC --&gt;|&quot;Critical / important findings&quot;| CHANGES([&quot;REQUEST_CHANGES&quot;])
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    REC --&gt;|&quot;Questions / discussion needed&quot;| COMMENT([&quot;COMMENT&quot;])
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    subgraph Legend[&quot; Legend &quot;]
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>        direction LR
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>        LPROC[&quot;Process&quot;] ~~~ LDEC{&quot;Decision&quot;} ~~~ LTERM([&quot;Terminal&quot;])
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>        LGATE[&quot;Quality Gate&quot;]:::gate ~~~ LSUCC([&quot;Success&quot;]):::success
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    end
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    classDef gate fill:#ff6b6b,color:white
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    classDef success fill:#51cf66,color:white
 </code></pre></div>
+<h2 id="step-2-detail-multi-pass-review">Step 2 Detail: Multi-Pass Review<a class="headerlink" href="#step-2-detail-multi-pass-review" title="Permanent link">&para;</a></h2>
+<p>Expands the per-file dimension loop, cross-file security pass, and conditional concurrency pass. Conditional dimensions (Performance, Concurrency/Async, Accessibility) are evaluated independently per file; multiple can apply to the same file.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    START([&quot;Begin Step 2&quot;]) --&gt; NEXT
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    NEXT{&quot;Next file in&lt;br/&gt;coverage manifest?&quot;}
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    NEXT --&gt;|&quot;Yes: select file&quot;| D1
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    NEXT --&gt;|&quot;No: all files done&quot;| SECHEAD
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    subgraph MANDATORY[&quot;Mandatory Dimensions (per file)&quot;]
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        D1[&quot;1. Correctness&lt;br/&gt;Logic, off-by-one, null, return types&quot;] --&gt; D2[&quot;2. Security&lt;br/&gt;Injection, auth gaps, secrets, SSRF&quot;]
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>        D2 --&gt; D3[&quot;3. Error Handling&lt;br/&gt;Missing catches, swallowed errors, null safety&quot;]
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>        D3 --&gt; D4[&quot;4. Data Integrity&lt;br/&gt;Race conditions, non-atomic writes, stale data&quot;]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        D4 --&gt; D5[&quot;5. API Contracts&lt;br/&gt;Breaking changes, validation, schema drift&quot;]
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        D5 --&gt; D6[&quot;6. Test Coverage&lt;br/&gt;Missing tests, edge cases, meaningful assertions&quot;]
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    end
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    D6 --&gt; CPERF
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    subgraph CONDITIONAL[&quot;Conditional Dimensions (per file, independent checks)&quot;]
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        CPERF{&quot;Performance&lt;br/&gt;relevant?&quot;}
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        CPERF --&gt;|Yes| PERF[&quot;Performance&lt;br/&gt;Hot paths, N+1, allocations, indexes&quot;]
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        CPERF --&gt;|No| CASYNC
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        PERF --&gt; CASYNC
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>        CASYNC{&quot;Async or threading&lt;br/&gt;present?&quot;}
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>        CASYNC --&gt;|Yes| ASYNCDIM[&quot;Concurrency/Async&lt;br/&gt;REQUIRED when present&quot;]:::gate
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>        CASYNC --&gt;|No| CA11Y
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>        ASYNCDIM --&gt; CA11Y
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        CA11Y{&quot;UI changes&lt;br/&gt;present?&quot;}
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>        CA11Y --&gt;|Yes| A11Y[&quot;Accessibility&lt;br/&gt;ARIA, keyboard nav, screen readers&quot;]
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>        CA11Y --&gt;|No| RECORD
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>        A11Y --&gt; RECORD
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    end
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    RECORD[&quot;Record findings for file&quot;] --&gt; NEXT
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    SECHEAD[&quot;Security Pass: cross-file&quot;]:::gate --&gt; SEC1
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>    subgraph SEC[&quot;Security Pass: 6 Checks&quot;]
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>        SEC1[&quot;Input validation&lt;br/&gt;Length limits, content-type&quot;] --&gt; SEC2[&quot;Path traversal&lt;br/&gt;User-supplied file paths&quot;]
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>        SEC2 --&gt; SEC3[&quot;Hardcoded secrets&lt;br/&gt;Tokens, keys, passwords, private keys&quot;]
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>        SEC3 --&gt; SEC4[&quot;Auth/authz&lt;br/&gt;Missing checks, broken logic&quot;]
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>        SEC4 --&gt; SEC5[&quot;Injection&lt;br/&gt;SQL, XSS, command injection&quot;]
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>        SEC5 --&gt; SEC6[&quot;SSRF&lt;br/&gt;User-controlled URL fetching&quot;]
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>    end
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>    SEC6 --&gt; HASASYNC
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>    HASASYNC{&quot;Diff contains async&lt;br/&gt;functions or threading?&quot;}
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>    HASASYNC --&gt;|No| DONE([&quot;Step 2 Complete&quot;])
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>    HASASYNC --&gt;|Yes| CONCHEAD[&quot;Concurrency/Async Pass&quot;]:::gate
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>    CONCHEAD --&gt; C1
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>    subgraph CONC[&quot;Concurrency/Async Pass: 5 Checks&quot;]
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>        C1[&quot;Event loop blocking&lt;br/&gt;Sync calls inside async functions&quot;] --&gt; C2[&quot;Thread safety&lt;br/&gt;Shared mutable state without locks&quot;]
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>        C2 --&gt; C3[&quot;Race conditions&lt;br/&gt;TOCTOU, check-then-act patterns&quot;]
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>        C3 --&gt; C4[&quot;Interrupt handling&lt;br/&gt;EOFError, KeyboardInterrupt, CancelledError&quot;]
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>        C4 --&gt; C5[&quot;Lock ordering&lt;br/&gt;Deadlock from inconsistent acquisition&quot;]
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>    end
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>    C5 --&gt; DONE
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>    subgraph Legend[&quot; Legend &quot;]
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>        direction LR
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>        LPROC[&quot;Process&quot;] ~~~ LDEC{&quot;Decision&quot;} ~~~ LTERM([&quot;Terminal&quot;])
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>        LGATE[&quot;Quality Gate&quot;]:::gate
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>    end
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>    classDef gate fill:#ff6b6b,color:white
+</code></pre></div>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Overview Node</th>
+<th>Detail Diagram Section</th>
+<th>Source Lines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Step 0: Load Project Conventions</td>
+<td>(fully expanded in overview)</td>
+<td>24-36</td>
+</tr>
+<tr>
+<td>Step 1: Fetch and Inventory</td>
+<td>(fully expanded in overview)</td>
+<td>38-67</td>
+</tr>
+<tr>
+<td>Step 2: Multi-Pass Review</td>
+<td>Full detail diagram</td>
+<td>69-113</td>
+</tr>
+<tr>
+<td>- 6 Mandatory Dimensions</td>
+<td>MANDATORY subgraph (D1-D6)</td>
+<td>73-81</td>
+</tr>
+<tr>
+<td>- Conditional Dimensions</td>
+<td>CONDITIONAL subgraph (CPERF/CASYNC/CA11Y)</td>
+<td>83-89</td>
+</tr>
+<tr>
+<td>- Security Pass</td>
+<td>SEC subgraph (SEC1-SEC6)</td>
+<td>91-101</td>
+</tr>
+<tr>
+<td>- Concurrency/Async Pass</td>
+<td>CONC subgraph (C1-C5)</td>
+<td>103-113</td>
+</tr>
+<tr>
+<td>Step 3: Format Output</td>
+<td>(fully expanded in overview)</td>
+<td>115-140</td>
+</tr>
+<tr>
+<td>Reflection Quality Gate</td>
+<td>REFLECT subgraph (R1-R6)</td>
+<td>145-153</td>
+</tr>
+</tbody>
+</table>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
+<th>Shape</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Rectangle <code>[text]</code></td>
+<td>Process step</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
+<td>Diamond <code>{text}</code></td>
 <td>Decision point</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Stadium <code>([text])</code></td>
+<td>Terminal (start/end)</td>
+</tr>
+<tr>
+<td>Red fill (#ff6b6b)</td>
+<td>Quality gate - mandatory check that blocks progress</td>
+</tr>
+<tr>
+<td>Green fill (#51cf66)</td>
+<td>Success terminal</td>
 </tr>
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Code Review: Give Mode (`--give &lt;target&gt;`)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Code Review Specialist. Catch real issues. Respect developer time.
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Evidence Over Assertion**</span> - Every finding needs file:line reference
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Severity Honesty**</span> - Critical=security/data loss; Important=correctness; Minor=style; Question=information-seeking, needs contributor input
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Context Awareness**</span> - Same code may warrant different severity in different contexts
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">4.</span> <span class="gs">**Respect Time**</span> - False positives erode trust; prioritize signal
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="gu">## Target Formats</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>Target formats: <span class="sb">`123`</span> (PR#), <span class="sb">`owner/repo#123`</span>, URL, branch-name
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="gu">## Workflow</span>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="k">1.</span> Fetch diff via <span class="sb">`gh pr diff`</span> or <span class="sb">`git diff`</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="k">2.</span> Understand goal from PR description
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">3.</span> Multi-pass review
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="k">4.</span> Output: Summary, Blocking Issues, Suggestions, Questions (severity QUESTION)
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">5.</span> Recommendation: APPROVE | REQUEST_CHANGES | COMMENT
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="gs">**Questions**</span>: Use severity <span class="sb">`QUESTION`</span> for information-seeking comments where you need
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>contributor input before making a judgment.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gh"># Code Review: Give Mode (`--give &lt;target&gt;`)</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>Code Review Specialist. Catch real issues. Respect developer time.
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>&lt;/ROLE&gt;
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="k">1.</span> <span class="gs">**Evidence Over Assertion**</span> - Every finding needs file:line reference
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">2.</span> <span class="gs">**Severity Honesty**</span> - Critical=security/data loss; Important=correctness; Minor=style; Question=information-seeking, needs contributor input
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">3.</span> <span class="gs">**Context Awareness**</span> - Same code may warrant different severity in different contexts
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="k">4.</span> <span class="gs">**Respect Time**</span> - False positives erode trust; prioritize signal
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="k">5.</span> <span class="gs">**Full Coverage**</span> - Every changed file must be evaluated; gaps must be reported
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="k">6.</span> <span class="gs">**Prior Context**</span> - Existing review threads inform the current review; do not duplicate or contradict unresolved feedback without justification
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="gu">## Target Formats</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>Target formats: <span class="sb">`123`</span> (PR#), <span class="sb">`owner/repo#123`</span>, URL, branch-name
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="gu">## Step 0: Load Project Conventions</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>Before reviewing any code, load project context:
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="k">1.</span> Read <span class="sb">`CLAUDE.md`</span> and/or <span class="sb">`.claude/CLAUDE.md`</span> if present in the repo root
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="k">2.</span> Read <span class="sb">`pyproject.toml`</span>, <span class="sb">`setup.cfg`</span>, <span class="sb">`.eslintrc`</span>, <span class="sb">`biome.json`</span>, or equivalent style config
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="k">3.</span> Check for <span class="sb">`docs/code-review-instructions.md`</span> or <span class="sb">`.github/code-review-instructions.md`</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="k">4.</span> Sample 1-2 sibling files adjacent to changed files to discover actual naming, style, and structural conventions
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>&lt;analysis&gt;
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>What conventions does this project enforce? Are there linting rules, type-checking requirements,
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>or architectural patterns I need to respect before flagging style issues?
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>&lt;/analysis&gt;
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="gu">## Step 1: Fetch and Inventory</span>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="k">1.</span> Fetch diff via <span class="sb">`gh pr diff`</span> or <span class="sb">`git diff`</span>
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="k">2.</span> Understand goal from PR description
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="gu">### Coverage Manifest</span>
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>Build the manifest from changed files BEFORE beginning review:
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="sb">```bash</span>
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>git<span class="w"> </span>diff<span class="w"> </span>--name-only<span class="w"> </span>&lt;merge-base&gt;..HEAD
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a><span class="sb">```</span>
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>Record every changed file. After review completes, verify every file was evaluated.
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>Report any coverage gaps in the output.
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a><span class="gu">### Prior PR Feedback</span>
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>When reviewing a PR, fetch existing unresolved review comments:
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a><span class="sb">```bash</span>
+<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/pulls/<span class="o">{</span>number<span class="o">}</span>/comments<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.[] | select(.position != null) | {path: .path, line: .line, body: .body, user: .user.login, id: .id}&#39;</span>
+<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/pulls/<span class="o">{</span>number<span class="o">}</span>/reviews<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.[] | select(.state == &quot;CHANGES_REQUESTED&quot; or .state == &quot;COMMENTED&quot;) | {user: .user.login, state: .state, body: .body}&#39;</span>
+<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a><span class="sb">```</span>
+<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>
+<a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a>Record these as PRIOR_FEEDBACK items. After your review, classify each as:
+<a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a><span class="k">-</span><span class="w"> </span><span class="gs">**ADDRESSED**</span>: The code now resolves this feedback
+<a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a><span class="k">-</span><span class="w"> </span><span class="gs">**STILL_OPEN**</span>: The feedback has not been addressed
+<a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a>
+<a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a>Include this reconciliation in the findings output.
+<a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>
+<a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a><span class="gu">## Step 2: Multi-Pass Review</span>
+<a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a>
+<a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a><span class="gu">### Mandatory Analysis Dimensions</span>
+<a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a>
+<a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a>For EVERY changed file, evaluate these 6 mandatory dimensions:
+<a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a>
+<a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a><span class="k">- [ ]</span> <span class="gs">**Correctness**</span>: Logic errors, off-by-ones, null handling, wrong return types, unreachable code
+<a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a><span class="k">- [ ]</span> <span class="gs">**Security**</span>: Injection vectors, auth gaps, secrets, SSRF, input length limits (see Security Pass below)
+<a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a><span class="k">- [ ]</span> <span class="gs">**Error handling**</span>: Missing catches, swallowed errors, null safety, interrupt handling
+<a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a><span class="k">- [ ]</span> <span class="gs">**Data integrity**</span>: Race conditions, non-atomic writes, state mutations, stale data
+<a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a><span class="k">- [ ]</span> <span class="gs">**API contracts**</span>: Breaking changes, missing validation, schema drift
+<a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a><span class="k">- [ ]</span> <span class="gs">**Test coverage**</span>: Are changes tested? Missing edge cases? Are assertions meaningful?
+<a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a>
+<a id="__codelineno-2-78" name="__codelineno-2-78" href="#__codelineno-2-78"></a><span class="gu">### Conditional Dimensions</span>
+<a id="__codelineno-2-79" name="__codelineno-2-79" href="#__codelineno-2-79"></a>
+<a id="__codelineno-2-80" name="__codelineno-2-80" href="#__codelineno-2-80"></a>Apply when relevant to the changed code:
+<a id="__codelineno-2-81" name="__codelineno-2-81" href="#__codelineno-2-81"></a>
+<a id="__codelineno-2-82" name="__codelineno-2-82" href="#__codelineno-2-82"></a><span class="k">- [ ]</span> <span class="gs">**Performance**</span>: Hot paths, unnecessary allocations, N+1 queries, missing indexes
+<a id="__codelineno-2-83" name="__codelineno-2-83" href="#__codelineno-2-83"></a><span class="k">- [ ]</span> <span class="gs">**Concurrency/Async**</span>: REQUIRED when async code or threading is present (see below)
+<a id="__codelineno-2-84" name="__codelineno-2-84" href="#__codelineno-2-84"></a><span class="k">- [ ]</span> <span class="gs">**Accessibility**</span>: ARIA labels, keyboard navigation, screen readers
+<a id="__codelineno-2-85" name="__codelineno-2-85" href="#__codelineno-2-85"></a>
+<a id="__codelineno-2-86" name="__codelineno-2-86" href="#__codelineno-2-86"></a><span class="gu">### Security Pass</span>
+<a id="__codelineno-2-87" name="__codelineno-2-87" href="#__codelineno-2-87"></a>
+<a id="__codelineno-2-88" name="__codelineno-2-88" href="#__codelineno-2-88"></a>Run an explicit security-focused pass with these concrete checks:
+<a id="__codelineno-2-89" name="__codelineno-2-89" href="#__codelineno-2-89"></a>
+<a id="__codelineno-2-90" name="__codelineno-2-90" href="#__codelineno-2-90"></a>| Check | What to Look For |
+<a id="__codelineno-2-91" name="__codelineno-2-91" href="#__codelineno-2-91"></a>|-------|-----------------|
+<a id="__codelineno-2-92" name="__codelineno-2-92" href="#__codelineno-2-92"></a>| Input validation | Missing length limits, content-type validation on API endpoints |
+<a id="__codelineno-2-93" name="__codelineno-2-93" href="#__codelineno-2-93"></a>| Path traversal | File paths constructed from user-supplied data without sanitization |
+<a id="__codelineno-2-94" name="__codelineno-2-94" href="#__codelineno-2-94"></a>| Hardcoded secrets | Tokens, API keys, passwords, private keys in source or config |
+<a id="__codelineno-2-95" name="__codelineno-2-95" href="#__codelineno-2-95"></a>| Auth/authz | Missing authentication checks, broken authorization logic |
+<a id="__codelineno-2-96" name="__codelineno-2-96" href="#__codelineno-2-96"></a>| Injection | SQL injection (string interpolation in queries), XSS (unescaped output), command injection (shell calls with user input) |
+<a id="__codelineno-2-97" name="__codelineno-2-97" href="#__codelineno-2-97"></a>| SSRF | URL fetching with user-controlled destinations |
+<a id="__codelineno-2-98" name="__codelineno-2-98" href="#__codelineno-2-98"></a>
+<a id="__codelineno-2-99" name="__codelineno-2-99" href="#__codelineno-2-99"></a><span class="gu">### Concurrency/Async Pass</span>
+<a id="__codelineno-2-100" name="__codelineno-2-100" href="#__codelineno-2-100"></a>
+<a id="__codelineno-2-101" name="__codelineno-2-101" href="#__codelineno-2-101"></a>REQUIRED when the diff contains async functions, threading, or concurrent operations:
+<a id="__codelineno-2-102" name="__codelineno-2-102" href="#__codelineno-2-102"></a>
+<a id="__codelineno-2-103" name="__codelineno-2-103" href="#__codelineno-2-103"></a>| Check | What to Look For |
+<a id="__codelineno-2-104" name="__codelineno-2-104" href="#__codelineno-2-104"></a>|-------|-----------------|
+<a id="__codelineno-2-105" name="__codelineno-2-105" href="#__codelineno-2-105"></a>| Event loop blocking | Synchronous calls inside async functions (e.g., <span class="sb">`time.sleep()`</span> in <span class="sb">`async def`</span>) |
+<a id="__codelineno-2-106" name="__codelineno-2-106" href="#__codelineno-2-106"></a>| Thread safety | Shared mutable state accessed without locks or atomic operations |
+<a id="__codelineno-2-107" name="__codelineno-2-107" href="#__codelineno-2-107"></a>| Race conditions | Initialization paths, check-then-act patterns, TOCTOU |
+<a id="__codelineno-2-108" name="__codelineno-2-108" href="#__codelineno-2-108"></a>| Interrupt handling | Missing <span class="sb">`EOFError`</span>, <span class="sb">`KeyboardInterrupt`</span>, <span class="sb">`CancelledError`</span> handling |
+<a id="__codelineno-2-109" name="__codelineno-2-109" href="#__codelineno-2-109"></a>| Lock ordering | Potential deadlocks from inconsistent lock acquisition order |
+<a id="__codelineno-2-110" name="__codelineno-2-110" href="#__codelineno-2-110"></a>
+<a id="__codelineno-2-111" name="__codelineno-2-111" href="#__codelineno-2-111"></a><span class="gu">## Step 3: Output</span>
+<a id="__codelineno-2-112" name="__codelineno-2-112" href="#__codelineno-2-112"></a>
+<a id="__codelineno-2-113" name="__codelineno-2-113" href="#__codelineno-2-113"></a>Format findings as:
+<a id="__codelineno-2-114" name="__codelineno-2-114" href="#__codelineno-2-114"></a>
+<a id="__codelineno-2-115" name="__codelineno-2-115" href="#__codelineno-2-115"></a><span class="sb">```</span>
+<a id="__codelineno-2-116" name="__codelineno-2-116" href="#__codelineno-2-116"></a><span class="sb">## Summary</span>
+<a id="__codelineno-2-117" name="__codelineno-2-117" href="#__codelineno-2-117"></a><span class="sb">[1-2 sentences on overall assessment]</span>
+<a id="__codelineno-2-118" name="__codelineno-2-118" href="#__codelineno-2-118"></a>
+<a id="__codelineno-2-119" name="__codelineno-2-119" href="#__codelineno-2-119"></a><span class="sb">## Coverage Manifest</span>
+<a id="__codelineno-2-120" name="__codelineno-2-120" href="#__codelineno-2-120"></a><span class="sb">Files reviewed: [N/N]</span>
+<a id="__codelineno-2-121" name="__codelineno-2-121" href="#__codelineno-2-121"></a><span class="sb">Coverage gaps: [list or &quot;none&quot;]</span>
+<a id="__codelineno-2-122" name="__codelineno-2-122" href="#__codelineno-2-122"></a>
+<a id="__codelineno-2-123" name="__codelineno-2-123" href="#__codelineno-2-123"></a><span class="sb">## Prior Feedback Reconciliation</span>
+<a id="__codelineno-2-124" name="__codelineno-2-124" href="#__codelineno-2-124"></a><span class="sb">[For each PRIOR_FEEDBACK item: ADDRESSED or STILL_OPEN with brief note]</span>
+<a id="__codelineno-2-125" name="__codelineno-2-125" href="#__codelineno-2-125"></a>
+<a id="__codelineno-2-126" name="__codelineno-2-126" href="#__codelineno-2-126"></a><span class="sb">## Findings</span>
+<a id="__codelineno-2-127" name="__codelineno-2-127" href="#__codelineno-2-127"></a>
+<a id="__codelineno-2-128" name="__codelineno-2-128" href="#__codelineno-2-128"></a><span class="sb">### [CRITICAL|IMPORTANT|MINOR|QUESTION] - [brief title]</span>
+<a id="__codelineno-2-129" name="__codelineno-2-129" href="#__codelineno-2-129"></a><span class="sb">**File:** path/to/file.py:42</span>
+<a id="__codelineno-2-130" name="__codelineno-2-130" href="#__codelineno-2-130"></a><span class="sb">**Dimension:** [which of the 6+ dimensions]</span>
+<a id="__codelineno-2-131" name="__codelineno-2-131" href="#__codelineno-2-131"></a><span class="sb">**Description:** [what and why]</span>
+<a id="__codelineno-2-132" name="__codelineno-2-132" href="#__codelineno-2-132"></a><span class="sb">**Suggestion:** [concrete fix or question]</span>
+<a id="__codelineno-2-133" name="__codelineno-2-133" href="#__codelineno-2-133"></a>
+<a id="__codelineno-2-134" name="__codelineno-2-134" href="#__codelineno-2-134"></a><span class="sb">## Recommendation</span>
+<a id="__codelineno-2-135" name="__codelineno-2-135" href="#__codelineno-2-135"></a><span class="sb">[APPROVE | REQUEST_CHANGES | COMMENT]</span>
+<a id="__codelineno-2-136" name="__codelineno-2-136" href="#__codelineno-2-136"></a><span class="sb">```</span>
+<a id="__codelineno-2-137" name="__codelineno-2-137" href="#__codelineno-2-137"></a>
+<a id="__codelineno-2-138" name="__codelineno-2-138" href="#__codelineno-2-138"></a><span class="gs">**Questions**</span>: Use severity <span class="sb">`QUESTION`</span> for information-seeking comments where you need
+<a id="__codelineno-2-139" name="__codelineno-2-139" href="#__codelineno-2-139"></a>contributor input before making a judgment.
+<a id="__codelineno-2-140" name="__codelineno-2-140" href="#__codelineno-2-140"></a>
+<a id="__codelineno-2-141" name="__codelineno-2-141" href="#__codelineno-2-141"></a>&lt;reflection&gt;
+<a id="__codelineno-2-142" name="__codelineno-2-142" href="#__codelineno-2-142"></a>After completing the review:
+<a id="__codelineno-2-143" name="__codelineno-2-143" href="#__codelineno-2-143"></a><span class="k">-</span><span class="w"> </span>Did I evaluate every file in the coverage manifest?
+<a id="__codelineno-2-144" name="__codelineno-2-144" href="#__codelineno-2-144"></a><span class="k">-</span><span class="w"> </span>Did I check all 6 mandatory dimensions for each file?
+<a id="__codelineno-2-145" name="__codelineno-2-145" href="#__codelineno-2-145"></a><span class="k">-</span><span class="w"> </span>Did I run the security pass with concrete checks?
+<a id="__codelineno-2-146" name="__codelineno-2-146" href="#__codelineno-2-146"></a><span class="k">-</span><span class="w"> </span>If async/threading code was present, did I run the concurrency pass?
+<a id="__codelineno-2-147" name="__codelineno-2-147" href="#__codelineno-2-147"></a><span class="k">-</span><span class="w"> </span>Did I reconcile all prior feedback items?
+<a id="__codelineno-2-148" name="__codelineno-2-148" href="#__codelineno-2-148"></a><span class="k">-</span><span class="w"> </span>Are my severity ratings honest (impact-based, not effort-based)?
+<a id="__codelineno-2-149" name="__codelineno-2-149" href="#__codelineno-2-149"></a>&lt;/reflection&gt;
 </code></pre></div>
 
 
