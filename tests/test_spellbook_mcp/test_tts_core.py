@@ -221,3 +221,97 @@ class TestPlayAudio:
             with patch("builtins.__import__", side_effect=mock_import):
                 with pytest.raises(ImportError, match="sounddevice"):
                     tts_mod._play_audio("/fake/path.wav", 0.5)
+
+
+class TestResolveSetting:
+    """_resolve_setting() follows explicit > session > config > default priority."""
+
+    def test_explicit_value_wins(self):
+        import spellbook_mcp.tts as tts_mod
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {"voice": "session_voice"}}
+            mock_ct.config_get.return_value = "config_voice"
+            result = tts_mod._resolve_setting("voice", explicit_value="explicit_voice")
+        assert result == "explicit_voice"
+
+    def test_session_override_wins_over_config(self):
+        import spellbook_mcp.tts as tts_mod
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {"voice": "session_voice"}}
+            mock_ct.config_get.return_value = "config_voice"
+            result = tts_mod._resolve_setting("voice")
+        assert result == "session_voice"
+
+    def test_config_wins_over_default(self):
+        import spellbook_mcp.tts as tts_mod
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {}}
+            mock_ct.config_get.return_value = "config_voice"
+            result = tts_mod._resolve_setting("voice")
+        assert result == "config_voice"
+
+    def test_falls_back_to_default(self):
+        import spellbook_mcp.tts as tts_mod
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {}}
+            mock_ct.config_get.return_value = None
+            result = tts_mod._resolve_setting("voice")
+        assert result == "af_heart"
+
+    def test_default_volume_is_0_3(self):
+        import spellbook_mcp.tts as tts_mod
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {}}
+            mock_ct.config_get.return_value = None
+            result = tts_mod._resolve_setting("volume")
+        assert result == 0.3
+
+    def test_default_enabled_is_true(self):
+        import spellbook_mcp.tts as tts_mod
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {}}
+            mock_ct.config_get.return_value = None
+            result = tts_mod._resolve_setting("enabled")
+        assert result is True
+
+
+class TestGetStatus:
+    """get_status() returns TTS availability and settings without side effects."""
+
+    def test_status_when_available_and_loaded(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_available = True
+        tts_mod._kokoro_pipeline = MagicMock()  # Model loaded
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {}}
+            mock_ct.config_get.return_value = None
+            status = tts_mod.get_status()
+        assert status["available"] is True
+        assert status["model_loaded"] is True
+        assert status["enabled"] is True
+        assert status["voice"] == "af_heart"
+        assert status["volume"] == 0.3
+        assert status["error"] is None
+
+    def test_status_when_not_available(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_available = False
+        tts_mod._import_error = "Missing dependency: kokoro"
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {}}
+            mock_ct.config_get.return_value = None
+            status = tts_mod.get_status()
+        assert status["available"] is False
+        assert status["model_loaded"] is False
+        assert "kokoro" in status["error"]
+
+    def test_status_does_not_trigger_model_load(self):
+        import spellbook_mcp.tts as tts_mod
+        tts_mod._kokoro_available = True
+        tts_mod._kokoro_pipeline = None  # Not loaded
+        with patch("spellbook_mcp.tts.config_tools") as mock_ct:
+            mock_ct._get_session_state.return_value = {"tts": {}}
+            mock_ct.config_get.return_value = None
+            status = tts_mod.get_status()
+        assert status["model_loaded"] is False
+        assert tts_mod._kokoro_pipeline is None  # Still not loaded

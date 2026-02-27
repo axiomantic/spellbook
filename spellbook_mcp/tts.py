@@ -15,6 +15,8 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
+from spellbook_mcp import config_tools
+
 logger = logging.getLogger(__name__)
 
 # Module-level state
@@ -151,3 +153,61 @@ def _play_audio(wav_path: str, volume: float) -> None:
         os.unlink(wav_path)
     except OSError:
         pass  # Best-effort cleanup
+
+
+def _resolve_setting(
+    key: str,
+    explicit_value=None,
+    session_id: str = None,
+):
+    """Resolve a TTS setting using the priority chain.
+
+    Priority: explicit parameter > session override > config > default.
+
+    Args:
+        key: Setting key ("enabled", "voice", "volume").
+        explicit_value: Value passed directly to a tool call.
+        session_id: Session ID for session override lookup.
+
+    Returns:
+        The resolved setting value.
+    """
+    if explicit_value is not None:
+        return explicit_value
+
+    # Check session override
+    session = config_tools._get_session_state(session_id)
+    session_value = session.get("tts", {}).get(key)
+    if session_value is not None:
+        return session_value
+
+    # Check config
+    config_value = config_tools.config_get(f"tts_{key}")
+    if config_value is not None:
+        return config_value
+
+    # Default
+    defaults = {"enabled": True, "voice": DEFAULT_VOICE, "volume": DEFAULT_VOLUME}
+    return defaults.get(key)
+
+
+def get_status(session_id: str = None) -> dict:
+    """Get TTS availability and current settings without side effects.
+
+    Does NOT trigger model loading. Safe to call at any time.
+
+    Args:
+        session_id: Session ID for settings resolution.
+
+    Returns:
+        Dict with available, enabled, model_loaded, voice, volume, error keys.
+    """
+    available = _kokoro_available if _kokoro_available is not None else False
+    return {
+        "available": available,
+        "enabled": _resolve_setting("enabled", session_id=session_id),
+        "model_loaded": _kokoro_pipeline is not None,
+        "voice": _resolve_setting("voice", session_id=session_id),
+        "volume": _resolve_setting("volume", session_id=session_id),
+        "error": _import_error if not available else None,
+    }
