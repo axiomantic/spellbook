@@ -116,6 +116,65 @@ class TestSetupTtsAutoYes:
             mock_input.assert_not_called()
             mock_config.assert_called_once_with(True)
 
+    def test_interactive_auto_yes_enables_without_prompt(self):
+        """When is_interactive()=True but auto_yes=True, no prompt shown, TTS enabled."""
+        with patch("install.check_tts_available", return_value=True), \
+             patch("install.is_interactive", return_value=True), \
+             patch("builtins.input") as mock_input, \
+             patch("install._set_tts_config") as mock_config, \
+             patch("install.print_success"), \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=True)
+            mock_input.assert_not_called()
+            mock_config.assert_called_once_with(True)
+
+
+# ---------------------------------------------------------------------------
+# setup_tts() - EOFError and edge cases
+# ---------------------------------------------------------------------------
+
+
+class TestSetupTtsEdgeCases:
+    """setup_tts() handles EOFError and prompt_yn integration."""
+
+    def test_eof_error_does_not_crash(self):
+        """EOFError during input should not crash setup_tts."""
+        with patch("install.check_tts_available", return_value=True), \
+             patch("install.is_interactive", return_value=True), \
+             patch("builtins.input", side_effect=EOFError), \
+             patch("install._set_tts_config") as mock_config, \
+             patch("install.print_success"), \
+             patch("install.print_info"):
+            # Should not raise - prompt_yn handles EOFError and returns False
+            setup_tts(dry_run=False, auto_yes=False)
+            # When EOFError occurs, prompt_yn returns False, so TTS is disabled
+            mock_config.assert_called_once_with(False)
+
+    def test_calls_prompt_yn_with_correct_arguments(self):
+        """setup_tts should call prompt_yn with default=True and auto_yes forwarded."""
+        with patch("install.check_tts_available", return_value=True), \
+             patch("install.prompt_yn", return_value=True) as mock_prompt, \
+             patch("install._set_tts_config"), \
+             patch("install.print_success"), \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=False)
+            mock_prompt.assert_called_once()
+            _, kwargs = mock_prompt.call_args
+            assert kwargs.get("default") is True
+            assert kwargs.get("auto_yes") is False
+
+    def test_calls_prompt_yn_with_auto_yes_forwarded(self):
+        """setup_tts should forward auto_yes=True to prompt_yn."""
+        with patch("install.check_tts_available", return_value=True), \
+             patch("install.prompt_yn", return_value=True) as mock_prompt, \
+             patch("install._set_tts_config"), \
+             patch("install.print_success"), \
+             patch("install.print_info"):
+            setup_tts(dry_run=False, auto_yes=True)
+            mock_prompt.assert_called_once()
+            _, kwargs = mock_prompt.call_args
+            assert kwargs.get("auto_yes") is True
+
 
 # ---------------------------------------------------------------------------
 # setup_tts() - Dry-run and kokoro-unavailable

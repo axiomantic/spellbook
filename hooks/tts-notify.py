@@ -12,7 +12,9 @@ FAILURE POLICY: FAIL-OPEN
 """
 import json
 import os
+import shlex
 import sys
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -53,7 +55,6 @@ def main() -> None:
     if not tool_use_id:
         sys.exit(0)
 
-    import tempfile
     start_file = Path(tempfile.gettempdir()) / f"claude-tool-start-{tool_use_id}"
     try:
         start_ts = int(start_file.read_text().strip())
@@ -66,7 +67,6 @@ def main() -> None:
         sys.exit(0)
 
     # Build message
-    import shlex
     cwd = data.get("cwd", "")
     project = os.path.basename(cwd) if cwd else "unknown"
 

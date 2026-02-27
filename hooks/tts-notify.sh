@@ -37,13 +37,17 @@ if [[ -z "${INPUT}" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Extract fields with lightweight JSON parsing
+# Extract fields with lightweight JSON parsing (single python3 invocation)
 # ---------------------------------------------------------------------------
-TOOL_NAME=$(echo "${INPUT}" | python3 -c "
+PARSED=$(echo "${INPUT}" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)
 print(d.get('tool_name', ''))
+print(d.get('tool_use_id', ''))
 " 2>/dev/null) || exit 0
+
+TOOL_NAME=$(echo "${PARSED}" | head -1)
+TOOL_USE_ID=$(echo "${PARSED}" | tail -1)
 
 # Check blacklist
 if echo "${TOOL_NAME}" | grep -qE "^(${BLACKLIST})$"; then
@@ -53,11 +57,13 @@ fi
 # ---------------------------------------------------------------------------
 # Timing check: skip if under threshold
 # ---------------------------------------------------------------------------
-TOOL_USE_ID=$(echo "${INPUT}" | python3 -c "
-import json, sys
-d = json.load(sys.stdin)
-print(d.get('tool_use_id', ''))
-" 2>/dev/null) || exit 0
+if [[ -z "${TOOL_USE_ID}" ]]; then
+    exit 0
+fi
+
+if [[ "${TOOL_USE_ID}" =~ [/[:space:]] ]] || [[ "${TOOL_USE_ID}" == *..* ]]; then
+    exit 0
+fi
 
 START_FILE="/tmp/claude-tool-start-${TOOL_USE_ID}"
 if [[ ! -f "${START_FILE}" ]]; then
@@ -90,7 +96,7 @@ if tool == 'Bash':
     cmd = inp.get('command', '')
     if cmd:
         try: detail = shlex.split(cmd)[0].split('/')[-1]
-        except: detail = cmd.split()[0].split('/')[-1] if cmd.split() else ''
+        except (ValueError, IndexError): detail = cmd.split()[0].split('/')[-1] if cmd.split() else ''
 elif tool == 'Task':
     detail = inp.get('description', '')[:40]
 

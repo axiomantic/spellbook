@@ -10,8 +10,8 @@ import json
 import os
 import py_compile
 import sys
-import tempfile
 import time
+import types
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -137,8 +137,10 @@ class TestTimerStartPyWindows:
         with patch.object(sys, "platform", "win32"), \
              patch.object(sys, "stdin", MagicMock(read=MagicMock(return_value=json.dumps(payload)))), \
              patch("tempfile.gettempdir", return_value=str(tmp_path)):
-            # Re-patch tempfile in the loaded module's namespace
-            mod.tempfile = type(sys)("fake_tempfile")
+            # tts-timer-start.py uses a top-level `import tempfile`, so the module
+            # holds a direct reference. We must replace mod.tempfile directly rather
+            # than patching "tempfile.gettempdir" (which only affects the global module).
+            mod.tempfile = types.ModuleType("fake_tempfile")
             mod.tempfile.gettempdir = lambda: str(tmp_path)
             with pytest.raises(SystemExit) as exc_info:
                 mod.main()
@@ -250,3 +252,42 @@ class TestTtsNotifyPyWindows:
 
         # Start file should be cleaned up
         assert not start_file.exists()
+
+    def test_sends_speak_request_when_above_threshold_windows(self, tmp_path):
+        tool_use_id = f"test-win-above-{int(time.time())}"
+        start_file = tmp_path / f"claude-tool-start-{tool_use_id}"
+        # Write a start file with timestamp 60 seconds ago
+        start_file.write_text(str(int(time.time()) - 60))
+
+        payload = {
+            "tool_name": "Bash",
+            "tool_use_id": tool_use_id,
+            "tool_input": {"command": "ls"},
+            "cwd": "/tmp/myproject",
+        }
+        mod = _load_hook_module("tts-notify")
+
+        mock_urlopen = MagicMock()
+        # tts-notify.py uses a function-level `import tempfile` (inside main()),
+        # so patching "tempfile.gettempdir" via string path works here, unlike
+        # tts-timer-start.py which uses a top-level import.
+        with patch.object(sys, "platform", "win32"), \
+             patch.object(sys, "stdin", MagicMock(read=MagicMock(return_value=json.dumps(payload)))), \
+             patch.dict(os.environ, {"SPELLBOOK_TTS_THRESHOLD": "5"}), \
+             patch("tempfile.gettempdir", return_value=str(tmp_path)), \
+             patch.object(mod.urllib.request, "urlopen", mock_urlopen):
+            with pytest.raises(SystemExit) as exc_info:
+                mod.main()
+            assert exc_info.value.code == 0
+
+        # Start file should have been consumed
+        assert not start_file.exists()
+
+        # Verify the correct JSON payload was sent to /api/speak
+        mock_urlopen.assert_called_once()
+        req = mock_urlopen.call_args[0][0]
+        sent_payload = json.loads(req.data.decode())
+        assert "text" in sent_payload
+        assert "myproject" in sent_payload["text"]
+        assert "Bash" in sent_payload["text"]
+        assert "finished" in sent_payload["text"]

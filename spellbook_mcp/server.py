@@ -68,6 +68,7 @@ from spellbook_mcp.config_tools import (
     session_init,
     session_mode_set,
     session_mode_get,
+    tts_session_set as do_tts_session_set,
     telemetry_enable as do_telemetry_enable,
     telemetry_disable as do_telemetry_disable,
     telemetry_status as do_telemetry_status,
@@ -2598,6 +2599,8 @@ async def kokoro_speak(
         {"ok": true, "elapsed": float, "wav_path": str} on success
         {"error": str} on failure
     """
+    if len(text) > 5000:
+        return {"error": "text exceeds 5000 character limit"}
     return await tts_module.speak(text, voice=voice, volume=volume, session_id=session_id)
 
 
@@ -2645,8 +2648,6 @@ def tts_session_set(
     Returns:
         {"status": "ok", "session_tts": dict_of_current_overrides}
     """
-    from spellbook_mcp.config_tools import tts_session_set as do_tts_session_set
-
     return do_tts_session_set(
         enabled=enabled, voice=voice, volume=volume, session_id=session_id
     )
@@ -2673,6 +2674,8 @@ def tts_config_set(
         {"status": "ok", "config": {tts_enabled, tts_voice, tts_volume}} with
         updated keys from this call plus current values for unchanged keys.
     """
+    # Three separate config_set calls are non-atomic, but acceptable for
+    # local user config where partial writes are harmless.
     result_config = {}
     if enabled is not None:
         r = config_set("tts_enabled", enabled)
@@ -2716,10 +2719,14 @@ async def api_speak(request: Request) -> JSONResponse:
     if not text:
         return JSONResponse({"error": "no text provided"}, status_code=400)
 
+    if len(text) > 5000:
+        return JSONResponse({"error": "text exceeds 5000 character limit"}, status_code=400)
+
     voice = body.get("voice")
     volume = body.get("volume")
+    session_id = body.get("session_id")
 
-    result = await tts_module.speak(text, voice=voice, volume=volume)
+    result = await tts_module.speak(text, voice=voice, volume=volume, session_id=session_id)
     status_code = 200 if result.get("ok") else 500
     return JSONResponse(result, status_code=status_code)
 

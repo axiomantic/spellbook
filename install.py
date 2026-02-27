@@ -752,31 +752,18 @@ def setup_tts(dry_run: bool = False, auto_yes: bool = False) -> None:
     if not check_tts_available():
         return
 
-    if is_interactive() and not auto_yes:
-        print()
-        while True:
-            answer = input(
-                f"{color('?', Colors.CYAN)} Kokoro TTS detected. "
-                "Enable text-to-speech notifications? [Y/n] "
-            ).strip().lower()
-            if answer in ("", "y", "yes"):
-                _set_tts_config(True)
-                print_success("TTS enabled (voice: af_heart, volume: 0.3)")
-                print_info(
-                    "Change settings with tts_session_set or tts_config_set MCP tools"
-                )
-                break
-            elif answer in ("n", "no"):
-                _set_tts_config(False)
-                print_info("TTS disabled. Enable later with tts_config_set MCP tool")
-                break
-    else:
-        # Non-interactive with --yes: enable by default
-        _set_tts_config(True)
+    print()
+    enabled = prompt_yn(
+        "Kokoro TTS detected. Enable text-to-speech notifications?",
+        default=True,
+        auto_yes=auto_yes,
+    )
+    _set_tts_config(enabled)
+    if enabled:
         print_success("TTS enabled (voice: af_heart, volume: 0.3)")
-        print_info(
-            "Change settings with kokoro_speak or tts_config_set MCP tools"
-        )
+        print_info("Change settings with tts_session_set or tts_config_set MCP tools")
+    else:
+        print_info("TTS disabled. Enable later with tts_config_set MCP tool")
 
 
 # =============================================================================

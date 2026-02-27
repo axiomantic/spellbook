@@ -4,6 +4,8 @@ Tests the lazy-loaded Kokoro TTS integration in isolation.
 All kokoro/soundfile/sounddevice imports are mocked.
 """
 
+import os
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -154,11 +156,12 @@ class TestGenerateAudio:
         with patch.dict("sys.modules", {"soundfile": mock_sf, "numpy": mock_np}):
             with patch("spellbook_mcp.tts.tempfile") as mock_tempfile:
                 mock_tempfile.gettempdir.return_value = str(tmp_path)
-                wav_path = tts_mod._generate_audio("hello", "af_heart")
+                with patch("spellbook_mcp.tts.uuid") as mock_uuid:
+                    mock_uuid.uuid4.return_value = "fixed-uuid"
+                    wav_path = tts_mod._generate_audio("hello", "af_heart")
 
-        assert wav_path.startswith(str(tmp_path))
-        assert wav_path.endswith(".wav")
-        assert tts_mod._WAV_PREFIX in wav_path
+        expected = os.path.join(str(tmp_path), f"{tts_mod._WAV_PREFIX}fixed-uuid.wav")
+        assert wav_path == expected
         mock_sf.write.assert_called_once_with(
             wav_path, mock_np.concatenate.return_value, 24000
         )

@@ -148,8 +148,7 @@ class TestApiSpeakEndpoint:
     This creates a full HTTP transport app that includes all custom routes.
     """
 
-    @pytest.mark.asyncio
-    async def test_success_returns_200(self):
+    def test_success_returns_200(self):
         from starlette.testclient import TestClient
 
         mock_result = {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/test.wav"}
@@ -160,8 +159,7 @@ class TestApiSpeakEndpoint:
         assert response.status_code == 200
         assert response.json()["ok"] is True
 
-    @pytest.mark.asyncio
-    async def test_no_text_returns_400(self):
+    def test_no_text_returns_400(self):
         from starlette.testclient import TestClient
 
         app = server.mcp.http_app(transport="http")
@@ -170,8 +168,7 @@ class TestApiSpeakEndpoint:
         assert response.status_code == 400
         assert "no text" in response.json()["error"]
 
-    @pytest.mark.asyncio
-    async def test_invalid_json_returns_400(self):
+    def test_invalid_json_returns_400(self):
         from starlette.testclient import TestClient
 
         app = server.mcp.http_app(transport="http")
@@ -184,8 +181,7 @@ class TestApiSpeakEndpoint:
         assert response.status_code == 400
         assert "invalid JSON" in response.json()["error"]
 
-    @pytest.mark.asyncio
-    async def test_passes_voice_and_volume_to_speak(self):
+    def test_passes_voice_and_volume_to_speak(self):
         from starlette.testclient import TestClient
 
         mock_result = {"ok": True, "elapsed": 0.5, "wav_path": "/tmp/x.wav"}
@@ -197,10 +193,9 @@ class TestApiSpeakEndpoint:
                 json={"text": "hi", "voice": "bf_emma", "volume": 0.7},
             )
         assert response.status_code == 200
-        mock_speak.assert_called_once_with("hi", voice="bf_emma", volume=0.7)
+        mock_speak.assert_called_once_with("hi", voice="bf_emma", volume=0.7, session_id=None)
 
-    @pytest.mark.asyncio
-    async def test_tts_error_returns_500(self):
+    def test_tts_error_returns_500(self):
         from starlette.testclient import TestClient
 
         mock_result = {"error": "TTS not available"}

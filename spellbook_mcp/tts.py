@@ -5,17 +5,16 @@ Synchronous Kokoro operations are wrapped in asyncio.to_thread().
 """
 
 import asyncio
-import glob
 import logging
-import os
 import tempfile
 import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from spellbook_mcp import config_tools
+from spellbook_mcp.config_tools import TTS_DEFAULT_ENABLED, TTS_DEFAULT_VOICE, TTS_DEFAULT_VOLUME
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +23,6 @@ _kokoro_available: Optional[bool] = None  # None = not checked yet
 _kokoro_pipeline = None  # KPipeline instance, cached after first load
 _load_lock = threading.Lock()  # Prevents concurrent model loads
 _import_error: Optional[str] = None  # Stored error message if import fails
-
-# Defaults
-DEFAULT_VOICE = "af_heart"
-DEFAULT_VOLUME = 0.3
 
 # WAV file prefix for targeted cleanup
 _WAV_PREFIX = "spellbook-tts-"
@@ -57,10 +52,9 @@ def _check_availability() -> bool:
 
 def _cleanup_stale_wav_files() -> None:
     """Remove stale spellbook TTS WAV files from temp directory."""
-    pattern = os.path.join(tempfile.gettempdir(), f"{_WAV_PREFIX}*.wav")
-    for path in glob.glob(pattern):
+    for path in Path(tempfile.gettempdir()).glob(f"{_WAV_PREFIX}*.wav"):
         try:
-            os.unlink(path)
+            path.unlink()
         except OSError:
             pass
 
@@ -124,7 +118,7 @@ def _generate_audio(text: str, voice: str) -> str:
 
     # Write to temp file
     wav_filename = f"{_WAV_PREFIX}{uuid.uuid4()}.wav"
-    wav_path = os.path.join(tempfile.gettempdir(), wav_filename)
+    wav_path = str(Path(tempfile.gettempdir()) / wav_filename)
     sf.write(wav_path, audio_data, 24000)
 
     return wav_path
@@ -151,15 +145,15 @@ def _play_audio(wav_path: str, volume: float) -> None:
 
     # Clean up WAV file after successful playback
     try:
-        os.unlink(wav_path)
+        Path(wav_path).unlink()
     except OSError:
         pass  # Best-effort cleanup
 
 
 def _resolve_setting(
     key: str,
-    explicit_value=None,
-    session_id: str = None,
+    explicit_value: Any = None,
+    session_id: Optional[str] = None,
 ):
     """Resolve a TTS setting using the priority chain.
 
@@ -188,7 +182,7 @@ def _resolve_setting(
         return config_value
 
     # Default
-    defaults = {"enabled": True, "voice": DEFAULT_VOICE, "volume": DEFAULT_VOLUME}
+    defaults = {"enabled": TTS_DEFAULT_ENABLED, "voice": TTS_DEFAULT_VOICE, "volume": TTS_DEFAULT_VOLUME}
     return defaults.get(key)
 
 
@@ -268,14 +262,16 @@ async def speak(
     effective_volume = _resolve_setting("volume", explicit_value=volume, session_id=session_id)
 
     # Clamp volume
-    warning = None
+    warnings = []
     if effective_volume is not None:
         if effective_volume < 0.0:
-            warning = f"Volume clamped from {effective_volume} to 0.0"
+            warnings.append(f"Volume clamped from {effective_volume} to 0.0")
             effective_volume = 0.0
         elif effective_volume > 1.0:
-            warning = f"Volume clamped from {effective_volume} to 1.0"
+            warnings.append(f"Volume clamped from {effective_volume} to 1.0")
             effective_volume = 1.0
+    if effective_volume == 0.0:
+        warnings.append("Volume is 0.0 (muted)")
 
     start_time = time.monotonic()
 
@@ -293,14 +289,15 @@ async def speak(
     # Play audio
     elapsed = time.monotonic() - start_time
     result = {"ok": True, "elapsed": round(elapsed, 2), "wav_path": wav_path}
-    if warning:
-        result["warning"] = warning
 
     try:
         await asyncio.to_thread(_play_audio, wav_path, effective_volume)
     except Exception as e:
         # Playback failed but WAV was generated - return path for manual use
-        result["warning"] = f"Audio playback failed: {e}. WAV file saved to {wav_path}"
-        logger.warning(result["warning"])
+        warnings.append(f"Audio playback failed: {e}. WAV file saved to {wav_path}")
+        logger.warning(warnings[-1])
+
+    if warnings:
+        result["warning"] = "; ".join(warnings)
 
     return result

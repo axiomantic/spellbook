@@ -16,10 +16,8 @@ PostToolUse hook (tts-notify.sh):
 
 import json
 import os
-import stat
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 
