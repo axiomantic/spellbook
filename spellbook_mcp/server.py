@@ -32,12 +32,17 @@ Health:
 - spellbook_health_check: Check server health, version, available tools, and uptime
 """
 
+import fastmcp as _fastmcp_module
 from fastmcp import FastMCP, Context
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import os
 import json
 import time
+import functools
+
+# FastMCP version detection for v2/v3 compatibility
+_FASTMCP_MAJOR = int(_fastmcp_module.__version__.split(".")[0])
 from dataclasses import asdict
 from datetime import datetime, timezone
 
@@ -178,6 +183,40 @@ _watcher = None
 _update_watcher = None
 
 mcp = FastMCP("spellbook")
+
+if _FASTMCP_MAJOR >= 3:
+    # In FastMCP v3, @mcp.tool() returns the original function instead of a
+    # FunctionTool object. Wrap the decorator so it adds .fn and .description
+    # attributes, preserving backward compatibility with code that accesses
+    # tool_func.fn or tool_func.description (the v2 FunctionTool pattern).
+    _original_tool = mcp.tool
+
+    def _add_compat_attrs(func):
+        """Add v2-compatible attributes to a v3-decorated function."""
+        if callable(func) and not hasattr(func, 'fn'):
+            func.fn = func
+        if callable(func) and not hasattr(func, 'description'):
+            func.description = func.__doc__
+        return func
+
+    @functools.wraps(_original_tool)
+    def _compat_tool(*args, **kwargs):
+        decorator = _original_tool(*args, **kwargs)
+        if callable(decorator) and not isinstance(decorator, type):
+            if hasattr(decorator, '__name__'):
+                # Direct registration: decorator IS the function
+                return _add_compat_attrs(decorator)
+            else:
+                # Deferred registration: decorator is a callable that takes fn
+                @functools.wraps(decorator)
+                def wrapper(fn):
+                    result = decorator(fn)
+                    return _add_compat_attrs(result)
+                return wrapper
+        return decorator
+
+    mcp.tool = _compat_tool
+
 
 @mcp.tool()
 @inject_recovery_context
@@ -668,12 +707,27 @@ def _get_version() -> str:
 
 
 def _get_tool_names() -> List[str]:
-    """Get list of registered MCP tool names."""
-    # FastMCP stores tools in _tool_manager._tools dict
+    """Get list of registered MCP tool names.
+
+    Supports both FastMCP v2 and v3:
+    - v2: tools stored in mcp._tool_manager._tools dict
+    - v3: tools stored in mcp._local_provider._components dict with 'tool:name@' keys
+    """
+    # FastMCP v2: tools in _tool_manager._tools dict
     try:
         return list(mcp._tool_manager._tools.keys())
     except AttributeError:
-        # Fallback if internal structure changes
+        pass
+
+    # FastMCP v3: tools in _local_provider._components dict
+    try:
+        components = mcp._local_provider._components
+        return [
+            key.split(":", 1)[1].rsplit("@", 1)[0]
+            for key in components
+            if key.startswith("tool:")
+        ]
+    except AttributeError:
         return []
 
 

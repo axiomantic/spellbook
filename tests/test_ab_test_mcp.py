@@ -5,15 +5,9 @@ import pytest
 
 def _get_tool_names():
     """Get tool names from the FastMCP server's internal tool registry."""
-    from spellbook_mcp.server import mcp
+    from spellbook_mcp.server import _get_tool_names as server_get_tool_names
 
-    # FastMCP 2.x stores registered tools in _tool_manager._tools dict.
-    # This mirrors the approach used in server.py's own _get_tool_names().
-    try:
-        return list(mcp._tool_manager._tools.keys())
-    except AttributeError:
-        # Fallback: empty list if internal structure changes
-        return []
+    return server_get_tool_names()
 
 
 class TestABTestMCPTools:
