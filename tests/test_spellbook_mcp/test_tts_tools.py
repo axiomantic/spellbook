@@ -119,3 +119,59 @@ class TestTtsConfigSet:
 
         assert result["config"]["tts_voice"] == "am_adam"
         assert result["config"]["tts_enabled"] is True  # Preserved
+
+
+class TestApiSpeakEndpoint:
+    """POST /api/speak custom route tests.
+
+    Uses mcp.http_app() to obtain the Starlette ASGI app for TestClient.
+    This creates a full HTTP transport app that includes all custom routes.
+    """
+
+    @pytest.mark.asyncio
+    async def test_success_returns_200(self):
+        from starlette.testclient import TestClient
+
+        mock_result = {"ok": True, "elapsed": 1.0, "wav_path": "/tmp/test.wav"}
+        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock, return_value=mock_result):
+            app = server.mcp.http_app(transport="http")
+            client = TestClient(app)
+            response = client.post("/api/speak", json={"text": "hello"})
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_no_text_returns_400(self):
+        from starlette.testclient import TestClient
+
+        app = server.mcp.http_app(transport="http")
+        client = TestClient(app)
+        response = client.post("/api/speak", json={})
+        assert response.status_code == 400
+        assert "no text" in response.json()["error"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_json_returns_400(self):
+        from starlette.testclient import TestClient
+
+        app = server.mcp.http_app(transport="http")
+        client = TestClient(app)
+        response = client.post(
+            "/api/speak",
+            content=b"not json",
+            headers={"Content-Type": "application/json"},
+        )
+        assert response.status_code == 400
+        assert "invalid JSON" in response.json()["error"]
+
+    @pytest.mark.asyncio
+    async def test_tts_error_returns_500(self):
+        from starlette.testclient import TestClient
+
+        mock_result = {"error": "TTS not available"}
+        with patch("spellbook_mcp.tts.speak", new_callable=AsyncMock, return_value=mock_result):
+            app = server.mcp.http_app(transport="http")
+            client = TestClient(app)
+            response = client.post("/api/speak", json={"text": "hello"})
+        assert response.status_code == 500
+        assert "error" in response.json()

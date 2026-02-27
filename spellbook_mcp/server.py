@@ -159,6 +159,8 @@ from spellbook_mcp.update_watcher import UpdateWatcher
 
 # TTS imports
 from spellbook_mcp import tts as tts_module
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 # Track server startup time for uptime calculation
 _server_start_time = time.time()
@@ -2685,6 +2687,33 @@ def tts_config_set(
         }
 
     return {"status": "ok", "config": result_config}
+
+
+# --- TTS REST Endpoint ---
+
+
+@mcp.custom_route("/api/speak", methods=["POST"])
+async def api_speak(request: Request) -> JSONResponse:
+    """REST endpoint for hook scripts to trigger TTS.
+
+    Accepts JSON body: {"text": "...", "voice": "...", "volume": 0.3}
+    Returns JSON: {"ok": true, "elapsed": 1.23} or {"error": "..."}
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    text = body.get("text", "")
+    if not text:
+        return JSONResponse({"error": "no text provided"}, status_code=400)
+
+    voice = body.get("voice")
+    volume = body.get("volume")
+
+    result = await tts_module.speak(text, voice=voice, volume=volume)
+    status_code = 200 if result.get("ok") else 500
+    return JSONResponse(result, status_code=status_code)
 
 
 if __name__ == "__main__":
