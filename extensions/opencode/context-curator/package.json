@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@anthropic-ai/tokenizer": "^0.0.4",
-    "@opencode-ai/sdk": "^1.2.14",
+    "@opencode-ai/sdk": "^1.2.15",
     "zod": "^4.1.13"
   },
   "devDependencies": {
