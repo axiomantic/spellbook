@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-02-28
+
 ### Changed
 - **Fractal-thinking redesign: recursive primitive architecture** - Replaced the 3-phase pipeline (Init/Explore/Synthesize) with a single self-similar recursive primitive and worker-based execution model
   - **New execution model**: Workers pull tasks from a SQL-based work queue with branch affinity and work stealing, instead of round-based cluster dispatch
