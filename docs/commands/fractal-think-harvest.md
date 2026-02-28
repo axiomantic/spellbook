@@ -274,7 +274,7 @@ unresolved contradictions.">
 3. **Name tensions explicitly.** "X says A but Y says B" not "some disagreement exists".
 4. **Acknowledge gaps honestly.** Never imply completeness if open questions remain.
 5. **Show the synthesis depth.** The supporting branch syntheses section demonstrates that the answer was composed bottom-up, not fabricated top-down.
-6. **Be concise.** The summary should be 200-500 words for pulse, 500-1000 for explore, 1000-2000 for deep. Scale with intensity.
+6. **Be concise.** Scale summary length with intensity: 200-500 words (pulse), 500-1000 words (explore), 1000-2000 words (deep).
 
 ## Step 5: Mark Graph Completed
 
