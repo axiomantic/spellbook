@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/fixing-tests/SKILL.md", "source_hash": "sha256:b8ce378bac02777bc0111a3b54f9460f8c6ae0ef6008926c23f330ed552957fd", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/fixing-tests/SKILL.md", "source_hash": "sha256:77f8b1e41c04e37cdd867659abf4c8b2d75b147ef72a35bf4b7a6c0c37c79f95", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: fixing-tests
 
 Three-mode test fixing workflow that processes audit reports, general instructions, or run-and-fix cycles. Includes production bug detection, priority-based batch processing, and a stuck-items circuit breaker.
