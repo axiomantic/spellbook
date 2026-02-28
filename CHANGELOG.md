@@ -17,6 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Consistent pattern: trigger condition, intensity level (pulse/explore), seed template, synthesis usage
   - All integrations are optional and non-breaking (markdown instruction changes only)
 
+### Fixed
+- **TTS debugging and installer improvements**
+  - Fix `kokoro_status` returning misleading `error: null` by calling `_check_availability()` in `get_status()` so actual import errors are reported
+  - Fix installer silently skipping TTS when kokoro not installed; now offers to install TTS dependencies interactively
+  - Add pip to TTS install flow as workaround for spaCy#13747 (spaCy hangs in uv-managed venvs without pip)
+  - Add repairs framework to `session_init` that detects broken TTS config and suggests fix commands
+- **MCP server resource cleanup** - Garbage collection and memory reclamation for the long-running MCP daemon
+  - SQLite context managers: wrapped all raw `sqlite3.connect()` calls in `try/finally` blocks across health.py, security/tools.py, security/check.py, and server.py to prevent connection leaks on exceptions
+  - Bounded compaction tracking: converted `_processed_compactions` from unbounded set to time-expiring dict (1-hour TTL) in SessionWatcher
+  - Database pruning: added periodic `_cleanup_stale_data()` to SessionWatcher that prunes old rows from high-volume tables (souls, security_events, skill_outcomes, subagents, decisions, corrections, forge_tokens, tool_analytics, reflections)
+  - Graceful shutdown: registered `atexit` hook in server.py to stop watcher threads and close all SQLite connection caches
+
 ## [0.12.0] - 2026-02-27
 
 ### Added

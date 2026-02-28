@@ -757,10 +757,12 @@ def do_check_output(
     if db_path is not None:
         try:
             conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            cursor.execute("SELECT token, token_type, context FROM canary_tokens")
-            rows = cursor.fetchall()
-            conn.close()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("SELECT token, token_type, context FROM canary_tokens")
+                rows = cursor.fetchall()
+            finally:
+                conn.close()
             for token, token_type, context in rows:
                 if token in text:
                     canary_leaks.append({
@@ -873,106 +875,108 @@ def do_dashboard(
 
     time_param = f"-{since_hours} hours"
 
-    # Total events in period
     try:
-        row = conn.execute(
-            "SELECT COUNT(*) FROM security_events "
-            "WHERE created_at >= datetime('now', ?)",
-            (time_param,),
-        ).fetchone()
-        result["total_events"] = row[0] if row else 0
-    except sqlite3.OperationalError:
-        pass
+        # Total events in period
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM security_events "
+                "WHERE created_at >= datetime('now', ?)",
+                (time_param,),
+            ).fetchone()
+            result["total_events"] = row[0] if row else 0
+        except sqlite3.OperationalError:
+            pass
 
-    # Injections detected: event_type contains "injection" or "blocked"
-    try:
-        row = conn.execute(
-            "SELECT COUNT(*) FROM security_events "
-            "WHERE created_at >= datetime('now', ?) "
-            "AND (event_type LIKE '%injection%' OR event_type LIKE '%blocked%')",
-            (time_param,),
-        ).fetchone()
-        result["injections_detected"] = row[0] if row else 0
-    except sqlite3.OperationalError:
-        pass
+        # Injections detected: event_type contains "injection" or "blocked"
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM security_events "
+                "WHERE created_at >= datetime('now', ?) "
+                "AND (event_type LIKE '%injection%' OR event_type LIKE '%blocked%')",
+                (time_param,),
+            ).fetchone()
+            result["injections_detected"] = row[0] if row else 0
+        except sqlite3.OperationalError:
+            pass
 
-    # Canary status
-    try:
-        row = conn.execute("SELECT COUNT(*) FROM canary_tokens").fetchone()
-        total_canaries = row[0] if row else 0
-        row = conn.execute(
-            "SELECT COUNT(*) FROM canary_tokens WHERE triggered_at IS NOT NULL"
-        ).fetchone()
-        triggered_canaries = row[0] if row else 0
-        result["canary_status"] = {
-            "total": total_canaries,
-            "triggered": triggered_canaries,
-        }
-    except sqlite3.OperationalError:
-        pass
+        # Canary status
+        try:
+            row = conn.execute("SELECT COUNT(*) FROM canary_tokens").fetchone()
+            total_canaries = row[0] if row else 0
+            row = conn.execute(
+                "SELECT COUNT(*) FROM canary_tokens WHERE triggered_at IS NOT NULL"
+            ).fetchone()
+            triggered_canaries = row[0] if row else 0
+            result["canary_status"] = {
+                "total": total_canaries,
+                "triggered": triggered_canaries,
+            }
+        except sqlite3.OperationalError:
+            pass
 
-    # Trust distribution
-    try:
-        rows = conn.execute(
-            "SELECT trust_level, COUNT(*) FROM trust_registry GROUP BY trust_level"
-        ).fetchall()
-        result["trust_distribution"] = {row[0]: row[1] for row in rows}
-    except sqlite3.OperationalError:
-        pass
+        # Trust distribution
+        try:
+            rows = conn.execute(
+                "SELECT trust_level, COUNT(*) FROM trust_registry GROUP BY trust_level"
+            ).fetchall()
+            result["trust_distribution"] = {row[0]: row[1] for row in rows}
+        except sqlite3.OperationalError:
+            pass
 
-    # Top blocked rules: action_taken as rule_id for blocked events
-    try:
-        rows = conn.execute(
-            "SELECT action_taken, COUNT(*) as cnt FROM security_events "
-            "WHERE created_at >= datetime('now', ?) "
-            "AND (event_type LIKE '%blocked%') "
-            "AND action_taken IS NOT NULL "
-            "GROUP BY action_taken "
-            "ORDER BY cnt DESC LIMIT 10",
-            (time_param,),
-        ).fetchall()
-        result["top_blocked_rules"] = [[row[0], row[1]] for row in rows]
-    except sqlite3.OperationalError:
-        pass
+        # Top blocked rules: action_taken as rule_id for blocked events
+        try:
+            rows = conn.execute(
+                "SELECT action_taken, COUNT(*) as cnt FROM security_events "
+                "WHERE created_at >= datetime('now', ?) "
+                "AND (event_type LIKE '%blocked%') "
+                "AND action_taken IS NOT NULL "
+                "GROUP BY action_taken "
+                "ORDER BY cnt DESC LIMIT 10",
+                (time_param,),
+            ).fetchall()
+            result["top_blocked_rules"] = [[row[0], row[1]] for row in rows]
+        except sqlite3.OperationalError:
+            pass
 
-    # Honeypot triggers
-    try:
-        row = conn.execute(
-            "SELECT COUNT(*) FROM security_events "
-            "WHERE created_at >= datetime('now', ?) "
-            "AND event_type = 'honeypot_triggered'",
-            (time_param,),
-        ).fetchone()
-        result["honeypot_triggers"] = row[0] if row else 0
-    except sqlite3.OperationalError:
-        pass
+        # Honeypot triggers
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM security_events "
+                "WHERE created_at >= datetime('now', ?) "
+                "AND event_type = 'honeypot_triggered'",
+                (time_param,),
+            ).fetchone()
+            result["honeypot_triggers"] = row[0] if row else 0
+        except sqlite3.OperationalError:
+            pass
 
-    # Recent alerts: CRITICAL/HIGH events, limit 5, newest first
-    try:
-        rows = conn.execute(
-            "SELECT event_type, severity, created_at, detail "
-            "FROM security_events "
-            "WHERE created_at >= datetime('now', ?) "
-            "AND severity IN ('CRITICAL', 'HIGH') "
-            "ORDER BY created_at DESC LIMIT 5",
-            (time_param,),
-        ).fetchall()
-        alerts = []
-        for row in rows:
-            detail = row[3] or ""
-            if len(detail) > _ALERT_DETAIL_MAX_LEN:
-                detail = detail[:_ALERT_DETAIL_MAX_LEN]
-            alerts.append({
-                "event_type": row[0],
-                "severity": row[1],
-                "timestamp": row[2],
-                "detail": detail,
-            })
-        result["recent_alerts"] = alerts
-    except sqlite3.OperationalError:
-        pass
+        # Recent alerts: CRITICAL/HIGH events, limit 5, newest first
+        try:
+            rows = conn.execute(
+                "SELECT event_type, severity, created_at, detail "
+                "FROM security_events "
+                "WHERE created_at >= datetime('now', ?) "
+                "AND severity IN ('CRITICAL', 'HIGH') "
+                "ORDER BY created_at DESC LIMIT 5",
+                (time_param,),
+            ).fetchall()
+            alerts = []
+            for row in rows:
+                detail = row[3] or ""
+                if len(detail) > _ALERT_DETAIL_MAX_LEN:
+                    detail = detail[:_ALERT_DETAIL_MAX_LEN]
+                alerts.append({
+                    "event_type": row[0],
+                    "severity": row[1],
+                    "timestamp": row[2],
+                    "detail": detail,
+                })
+            result["recent_alerts"] = alerts
+        except sqlite3.OperationalError:
+            pass
+    finally:
+        conn.close()
 
-    conn.close()
     return result
 
 

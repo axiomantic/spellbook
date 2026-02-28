@@ -36,6 +36,7 @@ import fastmcp as _fastmcp_module
 from fastmcp import FastMCP, Context
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+import atexit
 import os
 import json
 import time
@@ -203,6 +204,32 @@ _watcher = None
 
 # Global update watcher thread instance (initialized in __main__)
 _update_watcher = None
+
+
+def _shutdown_cleanup():
+    """Stop watcher threads and close database connections on exit."""
+    if _watcher is not None:
+        _watcher.stop()
+    if _update_watcher is not None:
+        _update_watcher.stop()
+    try:
+        from spellbook_mcp.db import close_all_connections
+        close_all_connections()
+    except Exception:
+        pass
+    try:
+        from spellbook_mcp.forged.schema import close_forged_connections
+        close_forged_connections()
+    except Exception:
+        pass
+    try:
+        from spellbook_mcp.fractal.schema import close_all_fractal_connections
+        close_all_fractal_connections()
+    except Exception:
+        pass
+
+
+atexit.register(_shutdown_cleanup)
 
 mcp = FastMCP("spellbook")
 
@@ -390,42 +417,42 @@ async def spawn_claude_session(
     # Rate limit: max 1 call per 5 minutes
     try:
         _conn = _sqlite3.connect(_db_path, timeout=5.0)
+        try:
+            _now = time.time()
+            _cutoff = _now - 300  # 5 minutes
+            _row = _conn.execute(
+                "SELECT COUNT(*) FROM spawn_rate_limit WHERE timestamp > ?",
+                (_cutoff,),
+            ).fetchone()
 
-        _now = time.time()
-        _cutoff = _now - 300  # 5 minutes
-        _row = _conn.execute(
-            "SELECT COUNT(*) FROM spawn_rate_limit WHERE timestamp > ?",
-            (_cutoff,),
-        ).fetchone()
+            if _row[0] > 0:
+                _do_log_event(
+                    event_type="spawn_rate_limited",
+                    severity="MEDIUM",
+                    source="spawn_guard",
+                    detail="Rate limit exceeded: max 1 spawn per 5 minutes",
+                    tool_name="spawn_claude_session",
+                    action_taken="blocked:rate_limit",
+                    db_path=_db_path,
+                )
+                return {
+                    "blocked": True,
+                    "reason": "Rate limit exceeded: max 1 spawn per 5 minutes",
+                    "rule_id": "RATE-LIMIT-001",
+                }
 
-        if _row[0] > 0:
-            _conn.close()
-            _do_log_event(
-                event_type="spawn_rate_limited",
-                severity="MEDIUM",
-                source="spawn_guard",
-                detail="Rate limit exceeded: max 1 spawn per 5 minutes",
-                tool_name="spawn_claude_session",
-                action_taken="blocked:rate_limit",
-                db_path=_db_path,
+            # Record this invocation for rate limiting
+            _conn.execute(
+                "INSERT INTO spawn_rate_limit (timestamp, session_id) VALUES (?, ?)",
+                (_now, _session_id),
             )
-            return {
-                "blocked": True,
-                "reason": "Rate limit exceeded: max 1 spawn per 5 minutes",
-                "rule_id": "RATE-LIMIT-001",
-            }
 
-        # Record this invocation for rate limiting
-        _conn.execute(
-            "INSERT INTO spawn_rate_limit (timestamp, session_id) VALUES (?, ?)",
-            (_now, _session_id),
-        )
+            # Clean up old rate limit records
+            _conn.execute("DELETE FROM spawn_rate_limit WHERE timestamp < ?", (_cutoff,))
 
-        # Clean up old rate limit records
-        _conn.execute("DELETE FROM spawn_rate_limit WHERE timestamp < ?", (_cutoff,))
-
-        _conn.commit()
-        _conn.close()
+            _conn.commit()
+        finally:
+            _conn.close()
     except _sqlite3.Error as e:
         # Fail closed: if rate limit DB is unavailable, block the spawn
         return {"status": "error", "error": f"Rate limit check failed: {e}. Blocking spawn for safety."}

@@ -224,7 +224,7 @@ def test_poll_sessions_skips_already_processed_compaction(tmp_path):
     watcher = SessionWatcher(str(db_path), project_path=str(project_path))
 
     # Pre-mark this compaction as processed
-    watcher._processed_compactions.add(("test-session", "leaf-123"))
+    watcher._processed_compactions[("test-session", "leaf-123")] = time.time()
 
     with patch(
         "spellbook_mcp.compaction_detector.check_for_compaction", return_value=mock_event
@@ -418,3 +418,248 @@ def test_session_skill_state_tracking(tmp_path):
 
     state.known_invocations.add(key)
     assert key in state.known_invocations
+
+
+# --- Tests for _prune_expired_compactions ---
+
+
+def test_prune_expired_compactions_removes_old_entries(tmp_path):
+    """Test that entries older than 3600s are pruned."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db
+
+    db_path = tmp_path / "test.db"
+    init_db(str(db_path))
+
+    watcher = SessionWatcher(str(db_path))
+
+    now = time.time()
+    # Add an entry that is 2 hours old (should be pruned)
+    watcher._processed_compactions[("session-old", "leaf-old")] = now - 7200
+    # Add an entry that is exactly at the boundary (should be pruned, > 3600)
+    watcher._processed_compactions[("session-boundary", "leaf-boundary")] = now - 3601
+
+    watcher._prune_expired_compactions()
+
+    assert ("session-old", "leaf-old") not in watcher._processed_compactions
+    assert ("session-boundary", "leaf-boundary") not in watcher._processed_compactions
+
+
+def test_prune_expired_compactions_preserves_recent_entries(tmp_path):
+    """Test that entries newer than 3600s are preserved."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db
+
+    db_path = tmp_path / "test.db"
+    init_db(str(db_path))
+
+    watcher = SessionWatcher(str(db_path))
+
+    now = time.time()
+    # Add a recent entry (10 minutes ago, should be kept)
+    watcher._processed_compactions[("session-recent", "leaf-recent")] = now - 600
+    # Add an entry just under the boundary (should be kept)
+    watcher._processed_compactions[("session-just-under", "leaf-just-under")] = now - 3599
+
+    watcher._prune_expired_compactions()
+
+    assert ("session-recent", "leaf-recent") in watcher._processed_compactions
+    assert ("session-just-under", "leaf-just-under") in watcher._processed_compactions
+
+
+def test_prune_expired_compactions_mixed_entries(tmp_path):
+    """Test pruning with a mix of old and recent entries."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db
+
+    db_path = tmp_path / "test.db"
+    init_db(str(db_path))
+
+    watcher = SessionWatcher(str(db_path))
+
+    now = time.time()
+    watcher._processed_compactions[("session-old", "leaf-old")] = now - 7200
+    watcher._processed_compactions[("session-recent", "leaf-recent")] = now - 60
+
+    watcher._prune_expired_compactions()
+
+    assert ("session-old", "leaf-old") not in watcher._processed_compactions
+    assert ("session-recent", "leaf-recent") in watcher._processed_compactions
+    assert len(watcher._processed_compactions) == 1
+
+
+def test_prune_expired_compactions_called_in_run_loop(tmp_path):
+    """Test that _prune_expired_compactions is called during the run loop."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db
+
+    db_path = tmp_path / "test.db"
+    init_db(str(db_path))
+
+    watcher = SessionWatcher(str(db_path), poll_interval=0.2)
+
+    prune_calls = []
+    original_prune = watcher._prune_expired_compactions
+
+    def tracking_prune():
+        prune_calls.append(time.time())
+        original_prune()
+
+    watcher._prune_expired_compactions = tracking_prune
+
+    # Suppress _poll_sessions and _cleanup_stale_data to avoid side effects
+    with patch.object(watcher, '_poll_sessions'):
+        with patch.object(watcher, '_cleanup_stale_data'):
+            thread = watcher.start()
+            time.sleep(0.8)
+            watcher.stop()
+            thread.join(timeout=2.0)
+
+    assert len(prune_calls) >= 1, "Prune should have been called at least once in the run loop"
+
+
+# --- Tests for _cleanup_stale_data ---
+
+
+def test_cleanup_stale_data_no_tables(tmp_path):
+    """Test _cleanup_stale_data runs without error when tables don't exist."""
+    from spellbook_mcp.watcher import SessionWatcher
+
+    # Create a bare database with no tables
+    db_path = tmp_path / "bare.db"
+    conn = sqlite3.connect(str(db_path))
+    conn.execute("CREATE TABLE IF NOT EXISTS heartbeat (id INTEGER PRIMARY KEY, timestamp TEXT)")
+    conn.commit()
+    conn.close()
+
+    watcher = SessionWatcher(str(db_path))
+
+    # Should not raise any exceptions
+    watcher._cleanup_stale_data()
+
+
+def test_cleanup_stale_data_deletes_old_rows(tmp_path):
+    """Test that old rows are deleted and recent rows preserved."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db, get_connection
+
+    db_path = tmp_path / "test.db"
+    init_db(str(db_path))
+
+    conn = get_connection(str(db_path))
+
+    now = datetime.now()
+    old_30d = (now - timedelta(days=35)).isoformat()
+    recent_30d = (now - timedelta(days=5)).isoformat()
+    old_90d = (now - timedelta(days=100)).isoformat()
+    recent_90d = (now - timedelta(days=10)).isoformat()
+
+    # Insert old and recent souls (30-day retention)
+    conn.execute(
+        """INSERT INTO souls (id, project_path, session_id, bound_at, persona)
+           VALUES (?, ?, ?, ?, ?)""",
+        ("old-soul", "/project", "session-old", old_30d, "Old Persona"),
+    )
+    conn.execute(
+        """INSERT INTO souls (id, project_path, session_id, bound_at, persona)
+           VALUES (?, ?, ?, ?, ?)""",
+        ("recent-soul", "/project", "session-recent", recent_30d, "Recent Persona"),
+    )
+
+    # Insert old and recent skill_outcomes (90-day retention)
+    conn.execute(
+        """INSERT INTO skill_outcomes (skill_name, session_id, project_encoded, start_time, outcome, created_at)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        ("debugging", "session-old", "test", old_90d, "completed", old_90d),
+    )
+    conn.execute(
+        """INSERT INTO skill_outcomes (skill_name, session_id, project_encoded, start_time, outcome, created_at)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        ("debugging", "session-recent", "test", recent_90d, "completed", recent_90d),
+    )
+
+    # Insert old and recent corrections (90-day retention)
+    conn.execute(
+        """INSERT INTO corrections (project_path, constraint_type, constraint_text, recorded_at)
+           VALUES (?, ?, ?, ?)""",
+        ("/project", "test", "old correction", old_90d),
+    )
+    conn.execute(
+        """INSERT INTO corrections (project_path, constraint_type, constraint_text, recorded_at)
+           VALUES (?, ?, ?, ?)""",
+        ("/project", "test", "recent correction", recent_90d),
+    )
+
+    conn.commit()
+
+    watcher = SessionWatcher(str(db_path))
+
+    # Mock swarm and forged cleanup to isolate the test
+    with patch("spellbook_mcp.watcher.SessionWatcher._cleanup_stale_data", wraps=watcher._cleanup_stale_data):
+        with patch("spellbook_mcp.coordination.state.StateManager.cleanup_old_swarms", side_effect=Exception("skip")):
+            with patch("spellbook_mcp.forged.schema.get_forged_connection", side_effect=Exception("skip")):
+                watcher._cleanup_stale_data()
+
+    # Verify old rows deleted, recent rows preserved
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM souls")
+    soul_ids = [row[0] for row in cursor.fetchall()]
+    assert "old-soul" not in soul_ids
+    assert "recent-soul" in soul_ids
+
+    cursor.execute("SELECT session_id FROM skill_outcomes")
+    outcome_sessions = [row[0] for row in cursor.fetchall()]
+    assert "session-old" not in outcome_sessions
+    assert "session-recent" in outcome_sessions
+
+    cursor.execute("SELECT constraint_text FROM corrections")
+    correction_texts = [row[0] for row in cursor.fetchall()]
+    assert "old correction" not in correction_texts
+    assert "recent correction" in correction_texts
+
+
+def test_cleanup_stale_data_respects_interval(tmp_path):
+    """Test that cleanup only runs every CLEANUP_INTERVAL seconds."""
+    from spellbook_mcp.watcher import SessionWatcher
+    from spellbook_mcp.db import init_db
+
+    db_path = tmp_path / "test.db"
+    init_db(str(db_path))
+
+    watcher = SessionWatcher(str(db_path))
+
+    cleanup_calls = []
+    original_cleanup = watcher._cleanup_stale_data
+
+    def tracking_cleanup():
+        cleanup_calls.append(time.time())
+        original_cleanup()
+
+    watcher._cleanup_stale_data = tracking_cleanup
+
+    # Simulate the run loop's interval check
+    # First time: _last_cleanup is 0.0, so now - 0.0 > CLEANUP_INTERVAL => should run
+    now = time.time()
+    if now - watcher._last_cleanup > watcher.CLEANUP_INTERVAL:
+        watcher._cleanup_stale_data()
+        watcher._last_cleanup = now
+
+    assert len(cleanup_calls) == 1
+
+    # Second time immediately after: should NOT run
+    now2 = time.time()
+    if now2 - watcher._last_cleanup > watcher.CLEANUP_INTERVAL:
+        watcher._cleanup_stale_data()
+        watcher._last_cleanup = now2
+
+    assert len(cleanup_calls) == 1, "Cleanup should not run again within CLEANUP_INTERVAL"
+
+    # Third time: simulate time advancing past CLEANUP_INTERVAL
+    watcher._last_cleanup = time.time() - watcher.CLEANUP_INTERVAL - 1
+    now3 = time.time()
+    if now3 - watcher._last_cleanup > watcher.CLEANUP_INTERVAL:
+        watcher._cleanup_stale_data()
+        watcher._last_cleanup = now3
+
+    assert len(cleanup_calls) == 2, "Cleanup should run again after CLEANUP_INTERVAL elapsed"

@@ -38,6 +38,8 @@ class SessionSkillState:
 class SessionWatcher(threading.Thread):
     """Background thread that monitors session files for compaction events."""
 
+    CLEANUP_INTERVAL = 3600  # 1 hour between database pruning runs
+
     def __init__(
         self, db_path: str, poll_interval: float = 2.0, project_path: str = None
     ):
@@ -54,11 +56,12 @@ class SessionWatcher(threading.Thread):
         self.project_path = project_path or os.getcwd()
         self._running = False
         self._shutdown = threading.Event()
+        self._last_cleanup = 0.0
 
         # Session tracking: session_id -> {path, last_mtime, last_size}
         self.sessions: Dict[str, dict] = {}
         # Track processed compaction events by (session_id, leaf_uuid)
-        self._processed_compactions: set = set()
+        self._processed_compactions: dict = {}  # (session_id, leaf_uuid) -> timestamp
         # Skill analysis state per session
         self._skill_states: Dict[str, SessionSkillState] = {}
 
@@ -94,6 +97,13 @@ class SessionWatcher(threading.Thread):
             try:
                 self._poll_sessions()
                 self._write_heartbeat()
+                self._prune_expired_compactions()
+
+                now = time.time()
+                if now - self._last_cleanup > self.CLEANUP_INTERVAL:
+                    self._cleanup_stale_data()
+                    self._last_cleanup = now
+
                 consecutive_errors = 0  # Reset on success
             except Exception as e:
                 consecutive_errors += 1
@@ -155,7 +165,7 @@ class SessionWatcher(threading.Thread):
                         try:
                             self._save_soul(event.session_id, soul)
                             # Mark as processed
-                            self._processed_compactions.add(compaction_key)
+                            self._processed_compactions[compaction_key] = time.time()
                             # Signal injection module to trigger recovery on next tool call
                             _set_pending_compaction(True)
                             logger.info(f"Soul saved and recovery triggered for session {event.session_id}")
@@ -171,6 +181,87 @@ class SessionWatcher(threading.Thread):
             self._analyze_skills()
         except Exception as e:
             logger.warning(f"Skill analysis failed: {e}")
+
+    def _prune_expired_compactions(self):
+        """Remove compaction records older than 1 hour."""
+        now = time.time()
+        expired = [k for k, ts in self._processed_compactions.items() if now - ts > 3600]
+        for k in expired:
+            del self._processed_compactions[k]
+
+    def _cleanup_stale_data(self):
+        """Prune old rows from high-volume database tables."""
+        from datetime import timedelta
+
+        now = datetime.now()
+        cutoff_30d = (now - timedelta(days=30)).isoformat()
+        cutoff_90d = (now - timedelta(days=90)).isoformat()
+
+        try:
+            conn = get_connection(self.db_path)
+
+            for table, column, cutoff in [
+                ("souls", "bound_at", cutoff_30d),
+                ("security_events", "created_at", cutoff_90d),
+                ("skill_outcomes", "created_at", cutoff_90d),
+                ("subagents", "spawned_at", cutoff_90d),
+                ("decisions", "decided_at", cutoff_90d),
+                ("corrections", "recorded_at", cutoff_90d),
+            ]:
+                try:
+                    conn.execute(
+                        f"DELETE FROM {table} WHERE {column} < ?",  # noqa: S608
+                        (cutoff,),
+                    )
+                except sqlite3.OperationalError:
+                    pass
+
+            conn.commit()
+        except Exception:
+            pass
+
+        # Clean up old swarm coordination data
+        try:
+            from spellbook_mcp.coordination.state import StateManager
+            sm = StateManager(self.db_path)
+            sm.cleanup_old_swarms(days=7)
+        except Exception:
+            pass
+
+        # Clean up old forged workflow data
+        try:
+            from spellbook_mcp.forged.schema import get_forged_connection
+
+            cutoff_90d_forged = (now - timedelta(days=90)).isoformat()
+            fconn = get_forged_connection()
+
+            try:
+                fconn.execute(
+                    "DELETE FROM forge_tokens WHERE invalidated_at IS NOT NULL AND invalidated_at < ?",
+                    (cutoff_90d_forged,),
+                )
+            except sqlite3.OperationalError:
+                pass
+
+            try:
+                fconn.execute(
+                    "DELETE FROM tool_analytics WHERE called_at < ?",
+                    (cutoff_90d_forged,),
+                )
+            except sqlite3.OperationalError:
+                pass
+
+            try:
+                fconn.execute(
+                    "DELETE FROM reflections WHERE created_at < ? AND status = 'RESOLVED'",
+                    (cutoff_90d_forged,),
+                )
+            except sqlite3.OperationalError:
+                pass
+
+            fconn.commit()
+        except Exception:
+            pass
 
     def _analyze_skills(self):
         """Analyze current session for skill invocations.
