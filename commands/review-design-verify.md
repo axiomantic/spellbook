@@ -52,3 +52,5 @@ Per component:
 **Must invent:** [what] - should specify: [why]
 **Must guess:** [shape] - should specify: [why]
 ```
+
+**Fractal exploration (optional):** When a component has 3+ "Must invent" items, invoke fractal-thinking with intensity `pulse` and seed: "What implementation decisions would be forced into guessing when coding [component]?". Use the synthesis to expand the list of specification gaps.

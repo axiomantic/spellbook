@@ -98,7 +98,7 @@ def main() -> None:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        urllib.request.urlopen(req, timeout=5)
+        urllib.request.urlopen(req, timeout=10)
     except Exception:
         pass  # Fail-open
 

@@ -8,9 +8,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Fractal-thinking redesign: recursive primitive architecture** - Replaced the 3-phase pipeline (Init/Explore/Synthesize) with a single self-similar recursive primitive and worker-based execution model
+  - **New execution model**: Workers pull tasks from a SQL-based work queue with branch affinity and work stealing, instead of round-based cluster dispatch
+  - **Bottom-up synthesis**: Each node synthesizes locally from children's results; synthesis cascades upward through the graph rather than being imposed top-down
+  - **New MCP tools**: `fractal_claim_work`, `fractal_synthesize_node`, `fractal_get_claimable_work`, `fractal_get_ready_to_synthesize` (17 total fractal tools)
+  - **New node statuses**: `claimed` (work in progress) and `synthesized` (local synthesis complete) with schema v1-to-v2 migration
+  - **Commands renamed**: `fractal-think-init` -> `fractal-think-seed`, `fractal-think-explore` -> `fractal-think-work`, `fractal-think-synthesize` -> `fractal-think-harvest`
+  - **Worker termination**: Workers exit only when no open AND no claimed nodes remain, preventing premature exit race conditions
+  - **Budget-exhausted recovery**: Graphs in `budget_exhausted` status can now transition to `active` (for synthesis repair) or `completed`
 - **CLAUDE.spellbook.md testing section** - Expanded from single rule to comprehensive test execution strategy: minimum viable test run principle, test tiers table (unit/integration/E2E), change-scoped test selection, batching guidance, writing-tests-for-speed checklist, test marks table, and cross-module regression debugging
 - **test-driven-development skill** - Added `Fast` quality row to Good Tests table and new `Test Speed & Scope` section covering resource isolation, input minimization, mark application, and change-scoped test runs
 - **fixing-tests skill** - Added `Slow/bloated tests` special case covering mark separation, I/O tier demotion, input shrinking, and fixture weight checks
+
+### Fixed
+- **TTS survives daemon venv rebuilds** - When the daemon venv is rebuilt (lockfile hash change), TTS dependencies are now preserved if the user previously opted in
+  - `install_daemon()` checks `tts_enabled` config and passes `include_tts=True` to `ensure_daemon_venv()` so TTS deps are included in rebuilds
+  - `setup_tts()` detects when TTS was enabled but deps are missing (venv rebuilt) and automatically reinstalls them
+  - Fixed misplaced `return` in `setup_tts()` that caused it to silently skip TTS reinstallation
+- **spacy model installed during TTS setup** - Kokoro's dependency chain (kokoro -> misaki -> spacy) requires the `en_core_web_sm` language model, which spacy tries to auto-download via `pip install` at runtime. This fails in uv-managed venvs (no pip). The installer now pre-installs the spacy model wheel directly from GitHub Releases via uv during TTS setup.
+- **Kokoro model cache detection** - Fixed glob pattern for HuggingFace cache detection (`models--hexgrad--Kokoro*` instead of `models--hexagon*kokoro*`)
+- **Kokoro deprecation warning** - Pass explicit `repo_id='hexgrad/Kokoro-82M'` to suppress defaulting warning
+- **TTS hook announcements never firing** - Catch-all hooks used `"matcher": ".*"` which Claude Code does not reliably fire. Fixed to omit the `matcher` key entirely (the documented approach for matching all tools). Installer now migrates legacy `".*"`, `"*"`, and `""` matchers on re-install.
+- **Daemon venv missing pip causing TTS hangs** - `uv venv` was called without `--seed`, so the daemon venv had no `pip` package. spaCy's runtime pip invocations (spaCy#13747) would hang. Added `--seed` flag to seed pip into the venv at creation time.
+
+### Added
+- **Post-compaction context recovery** - Automatically saves and restores orchestrator identity, skill constraints, and workflow state across Claude Code context compactions
+  - PreCompact hook (`pre-compact-save.sh`) saves workflow state to MCP daemon before compaction, with fail-open design and 2s timeout budget
+  - SessionStart hook (`post-compact-recover.sh`) injects recovery context after compaction via `additionalContext`, with fallback directive when daemon unreachable
+  - Enhanced boot prompt with Section 0.6 (orchestrator identity), 0.7 (skill FORBIDDEN/REQUIRED constraints), 0.8 (binding decisions) for post-compaction recovery
+  - `get_resume_fields()` now queries `workflow_state` table alongside `souls` for richer resume context
+  - `_get_skill_constraints()` extracts FORBIDDEN/REQUIRED sections from SKILL.md files as behavioral guardrails
+  - Workflow state validation in `workflow_state_save` (rejects invalid keys) and `workflow_state_load` (warns on invalid keys)
+  - Hook registration in installer for both PreCompact and SessionStart phases
+  - 59 new tests across hook scripts, resume flow, and boot prompt generation
+- **TTS model preloading at daemon startup** - Kokoro model now loads in a background thread when the daemon starts, eliminating the ~100s cold-start delay on first `kokoro_speak` call. Preload is skipped if TTS is disabled or dependencies are unavailable.
+- **Daemon install test suite** - 39 tests in `tests/test_daemon_install.py` covering centralized daemon install ordering, platform installer negative tests, `check_daemon_health()`, `get_daemon_python()` symlink preservation, `_get_repairs()` find_spec usage, `ensure_daemon_venv()` hash detection, TTS config inclusion in `install_daemon()`, and `setup_tts()` reinstall behavior
+
+## [0.12.1] - 2026-02-27
+
+### Added
+- **Fractal-thinking integration** - Added optional fractal exploration hooks to 14 existing skills, commands, and agents
+  - 5 high-value: brainstorming, debugging (3-Fix Rule), devil's advocate, feature-discover, deep-research-investigate
+  - 2 medium-high: analyzing-domains, review-design-verify
+  - 7 medium: fact-check-verify, write-skill-test, reflexion-analyze, security-auditing, gathering-requirements, crystallize, hierophant-distiller
+  - Consistent pattern: trigger condition, intensity level (pulse/explore), seed template, synthesis usage
+  - All integrations are optional and non-breaking (markdown instruction changes only)
+
+### Fixed
+- **TTS debugging and installer improvements**
+  - Fix `kokoro_status` returning misleading `error: null` by calling `_check_availability()` in `get_status()` so actual import errors are reported
+  - Fix installer silently skipping TTS when kokoro not installed; now offers to install TTS dependencies interactively
+  - Add pip to TTS install flow as workaround for spaCy#13747 (spaCy hangs in uv-managed venvs without pip)
+  - Add repairs framework to `session_init` that detects broken TTS config and suggests fix commands
+- **MCP server resource cleanup** - Garbage collection and memory reclamation for the long-running MCP daemon
+  - SQLite context managers: wrapped all raw `sqlite3.connect()` calls in `try/finally` blocks across health.py, security/tools.py, security/check.py, and server.py to prevent connection leaks on exceptions
+  - Bounded compaction tracking: converted `_processed_compactions` from unbounded set to time-expiring dict (1-hour TTL) in SessionWatcher
+  - Database pruning: added periodic `_cleanup_stale_data()` to SessionWatcher that prunes old rows from high-volume tables (souls, security_events, skill_outcomes, subagents, decisions, corrections, forge_tokens, tool_analytics, reflections)
+  - Graceful shutdown: registered `atexit` hook in server.py to stop watcher threads and close all SQLite connection caches
 
 ## [0.12.0] - 2026-02-27
 

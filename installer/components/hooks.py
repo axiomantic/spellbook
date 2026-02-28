@@ -1,19 +1,31 @@
 """
-Claude Code hook registration for security and TTS hooks.
+Claude Code hook registration for security, TTS, and compaction hooks.
 
-Manages PreToolUse and PostToolUse hook entries in .claude/settings.local.json
-that point to spellbook security scripts and TTS notification hooks.
+Manages hook entries in .claude/settings.local.json that point to
+spellbook security scripts, TTS notification hooks, and compaction
+recovery hooks.
 
 PreToolUse hooks:
   - Bash -> bash-gate.sh
   - spawn_claude_session -> spawn-guard.sh
   - mcp__spellbook__workflow_state_save -> state-sanitize.sh (timeout: 15)
-  - .* -> tts-timer-start.sh (async, timeout: 5) - records tool start time
+  - (catch-all, no matcher) -> tts-timer-start.sh (async, timeout: 5)
 
 PostToolUse hooks:
   - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (async, timeout: 10)
   - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (timeout: 10)
-  - .* -> tts-notify.sh (async, timeout: 15) - announces tool completion
+  - (catch-all, no matcher) -> tts-notify.sh (async, timeout: 15)
+
+PreCompact hooks:
+  - (catch-all, no matcher) -> pre-compact-save.sh (timeout: 5)
+
+SessionStart hooks:
+  - (catch-all, no matcher) -> post-compact-recover.sh (timeout: 10)
+
+Note: Catch-all hooks omit the ``matcher`` field entirely rather than
+using ``".*"`` or ``"*"``.  Claude Code documentation states: "Use ``*``,
+``""``, or omit ``matcher`` entirely to match all occurrences."  In
+practice, omitting the field is the most reliable approach.
 """
 
 import json
@@ -24,6 +36,13 @@ from typing import Any, Dict, List, Optional, Union
 # Hook definitions grouped by phase. Each phase maps to a list of matcher entries.
 # Hooks can be plain strings (simple command path) or dicts with type/command/async/timeout.
 # Paths use $SPELLBOOK_DIR which the hooks resolve at runtime.
+#
+# Entries WITHOUT a "matcher" key are catch-all hooks that fire on every tool
+# invocation.  Claude Code docs: "omit matcher entirely to match all occurrences."
+# Using ".*" does NOT reliably match; omitting the key is the correct approach.
+#
+# Claude Code deduplicates hooks by command string across all matching groups,
+# so a hook appearing in both a specific matcher and the catch-all runs only once.
 HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
     "PreToolUse": [
         {
@@ -45,7 +64,7 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
             ],
         },
         {
-            "matcher": ".*",
+            # Catch-all: no "matcher" key means fire on every tool invocation
             "hooks": [
                 {
                     "type": "command",
@@ -74,13 +93,40 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
             ],
         },
         {
-            "matcher": ".*",
+            # Catch-all: no "matcher" key means fire on every tool invocation
             "hooks": [
                 {
                     "type": "command",
                     "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
                     "async": True,
                     "timeout": 15,
+                },
+            ],
+        },
+    ],
+    "PreCompact": [
+        {
+            # Catch-all: saves workflow state before compaction.
+            # Fail-open (exit 0 always) - must never block compaction.
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/pre-compact-save.sh",
+                    "timeout": 5,
+                },
+            ],
+        },
+    ],
+    "SessionStart": [
+        {
+            # Catch-all: injects recovery context after compaction.
+            # Fail-open (exit 0 always) - must never prevent session start.
+            # The script itself filters on source=="compact" internally.
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/post-compact-recover.sh",
+                    "timeout": 10,
                 },
             ],
         },
@@ -183,6 +229,23 @@ def _load_settings(settings_path: Path) -> Optional[Dict]:
     return json.loads(content)
 
 
+def _matcher_key(entry: Dict) -> Optional[str]:
+    """Return the matcher value from a hook entry, or None if omitted.
+
+    This distinguishes between three cases:
+      - "matcher" key absent  -> None (catch-all, fires on every tool)
+      - "matcher": ".*"       -> ".*" (legacy catch-all, treated as regex)
+      - "matcher": "Bash"     -> "Bash"
+    """
+    return entry.get("matcher")
+
+
+# Legacy catch-all matcher values that should be treated as equivalent
+# to omitting the matcher key entirely.  When we encounter these in
+# existing settings we migrate them to the omitted-key form.
+_LEGACY_CATCHALL_MATCHERS = {".*", "*", ""}
+
+
 def _merge_hooks_for_phase(
     phase_entries: List[Dict],
     hook_defs: List[Dict],
@@ -194,12 +257,19 @@ def _merge_hooks_for_phase(
     any old spellbook hooks, and appends the new ones. User hooks are
     never removed or replaced.
 
+    Catch-all entries (no ``matcher`` key) are matched against existing
+    entries that also have no matcher, or that use legacy catch-all
+    values (``".*"``, ``"*"``, ``""``).  Legacy entries are migrated to
+    the omitted-key form.
+
     If spellbook_dir is provided, $SPELLBOOK_DIR in hook paths is expanded
     to the actual absolute path, and both literal and expanded paths are
     recognized for cleanup of old hooks.
     """
     for hook_def in hook_defs:
-        matcher = hook_def["matcher"]
+        matcher = _matcher_key(hook_def)
+        is_catchall = matcher is None
+
         # Transform hook paths for the current platform (.sh -> .py on Windows)
         spellbook_hooks = [_transform_hook_for_platform(h) for h in hook_def["hooks"]]
         # Expand $SPELLBOOK_DIR to actual path if provided
@@ -209,9 +279,16 @@ def _merge_hooks_for_phase(
         # Find existing entry with this matcher
         existing_entry = None
         for entry in phase_entries:
-            if entry.get("matcher") == matcher:
-                existing_entry = entry
-                break
+            entry_matcher = _matcher_key(entry)
+            if is_catchall:
+                # Match entries with no matcher OR legacy catch-all values
+                if entry_matcher is None or entry_matcher in _LEGACY_CATCHALL_MATCHERS:
+                    existing_entry = entry
+                    break
+            else:
+                if entry_matcher == matcher:
+                    existing_entry = entry
+                    break
 
         if existing_entry is not None:
             # Remove any old spellbook hooks from this entry (both literal and expanded)
@@ -220,12 +297,15 @@ def _merge_hooks_for_phase(
             # Add the new spellbook hooks
             cleaned_hooks.extend(spellbook_hooks)
             existing_entry["hooks"] = cleaned_hooks
+            # Migrate legacy catch-all matchers to omitted-key form
+            if is_catchall and "matcher" in existing_entry:
+                del existing_entry["matcher"]
         else:
             # Add a new entry for this matcher
-            phase_entries.append({
-                "matcher": matcher,
-                "hooks": list(spellbook_hooks),
-            })
+            new_entry: Dict[str, Any] = {"hooks": list(spellbook_hooks)}
+            if matcher is not None:
+                new_entry["matcher"] = matcher
+            phase_entries.append(new_entry)
 
 
 def _clean_hooks_for_phase(phase_entries: List[Dict], spellbook_dir: Optional[Path] = None) -> List[Dict]:
@@ -242,10 +322,10 @@ def _clean_hooks_for_phase(phase_entries: List[Dict], spellbook_dir: Optional[Pa
         hooks_list = entry.get("hooks", [])
         remaining = [h for h in hooks_list if not _is_spellbook_hook(h, spellbook_dir)]
         if remaining:
-            cleaned.append({
-                "matcher": entry["matcher"],
-                "hooks": remaining,
-            })
+            new_entry: Dict[str, Any] = {"hooks": remaining}
+            if "matcher" in entry:
+                new_entry["matcher"] = entry["matcher"]
+            cleaned.append(new_entry)
     return cleaned
 
 

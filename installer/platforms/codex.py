@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
 from ..components.context_files import generate_codex_context
-from ..components.mcp import get_spellbook_server_url, install_daemon
+from ..components.mcp import get_spellbook_server_url
 from ..components.symlinks import (
     create_symlink,
     create_skill_symlinks,
@@ -151,6 +151,7 @@ class CodexInstaller(PlatformInstaller):
             return results
 
         # Create symlink to spellbook root
+        self._step("Creating spellbook link")
         spellbook_link = self.config_dir / "spellbook"
         link_result = create_symlink(self.spellbook_dir, spellbook_link, self.dry_run)
         results.append(
@@ -164,6 +165,7 @@ class CodexInstaller(PlatformInstaller):
         )
 
         # Create per-skill symlinks for native discovery
+        self._step("Installing skills")
         skills_dir = self.config_dir / "skills"
         if not self.dry_run:
             skills_dir.mkdir(parents=True, exist_ok=True)
@@ -186,6 +188,7 @@ class CodexInstaller(PlatformInstaller):
         )
 
         # Install AGENTS.md with demarcated section
+        self._step("Updating AGENTS.md")
         context_file = self.config_dir / "AGENTS.md"
         spellbook_content = generate_codex_context(self.spellbook_dir)
 
@@ -217,44 +220,19 @@ class CodexInstaller(PlatformInstaller):
                     )
                 )
 
-        # Install and start the MCP daemon (HTTP transport)
-        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
-        if server_path.exists():
-            daemon_success, daemon_msg = install_daemon(
-                self.spellbook_dir, dry_run=self.dry_run
+        # Register MCP server connection (daemon is installed centrally by core.py)
+        self._step("Registering MCP server")
+        config_toml = self.config_dir / "config.toml"
+        success, msg = _add_mcp_to_config_toml(config_toml, self.dry_run)
+        results.append(
+            InstallResult(
+                component="mcp_server",
+                platform=self.platform_id,
+                success=success,
+                action="installed" if success else "failed",
+                message=f"MCP server: {msg}",
             )
-            results.append(
-                InstallResult(
-                    component="mcp_daemon",
-                    platform=self.platform_id,
-                    success=daemon_success,
-                    action="installed" if daemon_success else "failed",
-                    message=f"MCP daemon: {daemon_msg}",
-                )
-            )
-
-            # Register MCP server in config.toml (HTTP transport)
-            config_toml = self.config_dir / "config.toml"
-            success, msg = _add_mcp_to_config_toml(config_toml, self.dry_run)
-            results.append(
-                InstallResult(
-                    component="mcp_server",
-                    platform=self.platform_id,
-                    success=success,
-                    action="installed" if success else "failed",
-                    message=f"MCP server: {msg}",
-                )
-            )
-        else:
-            results.append(
-                InstallResult(
-                    component="mcp_daemon",
-                    platform=self.platform_id,
-                    success=False,
-                    action="failed",
-                    message=f"MCP daemon: server.py not found at {server_path}",
-                )
-            )
+        )
 
         return results
 

@@ -35,6 +35,19 @@
 
 - [Quick Install](#quick-install)
   - [Windows Quickstart](#windows-quickstart)
+- [The Magic of `implementing-features`](#the-magic-of-implementing-features)
+  - [How it works](#how-it-works)
+  - [Parallelization](#parallelization)
+  - [What it handles](#what-it-handles)
+  - [What keeps it honest](#what-keeps-it-honest)
+- [Philosophy of Spellbook](#philosophy-of-spellbook)
+  - [The orchestrator pattern](#the-orchestrator-pattern)
+  - [Epistemic rigor](#epistemic-rigor)
+  - [Named failure modes](#named-failure-modes)
+  - [Quality gates that don't negotiate](#quality-gates-that-dont-negotiate)
+  - [Composition](#composition)
+  - [The self-improving system](#the-self-improving-system)
+  - [Security as first-class architecture](#security-as-first-class-architecture)
 - [What's Included](#whats-included)
   - [Skills (54 total)](#skills-54-total)
   - [Commands (85 total)](#commands-85-total)
@@ -91,6 +104,98 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 - Symlinks require **Developer Mode** enabled in Windows Settings (falls back to junctions or copies otherwise)
 - Service management uses **Windows Task Scheduler**
 - Install location: `%LOCALAPPDATA%\spellbook`
+
+## The Magic of `implementing-features`
+
+You say "add dark mode" or "migrate the auth system to OAuth2" or "build a webhook delivery pipeline with retry logic." What happens next is the same thing that would happen at the best engineering org you've ever worked at -- research, design, planning, TDD, code review, verification -- except it takes minutes, and you decide how much of it you want to watch.
+
+The [`implementing-features`][implementing-features] skill orchestrates your entire feature lifecycle through 20+ specialized skills and commands. The first question it asks: how involved do you want to be?
+
+**Fully autonomous.** Describe the feature and walk away. It researches your codebase, surfaces its own ambiguities, resolves them, designs the architecture, writes a detailed implementation plan, builds with test-driven development, reviews its own code, fact-checks its own claims, audits its own tests for false confidence, and opens a PR. Every step runs in a fresh subagent with a fresh perspective. Every step has a quality gate that cannot be bypassed.
+
+**Highly interactive.** Same pipeline, same rigor, but you're in the conversation. Ambiguities become specific questions grounded in what it actually found in your code. Architectural tradeoffs come with evidence. Checkpoints pause for your input. You're pair programming with a system that already read the whole codebase.
+
+**Or anywhere between.** Mostly autonomous with pauses only for critical decisions. Set once at the start.
+
+### How it works
+
+The system classifies your request by complexity using mechanical heuristics -- file count, behavioral change, test impact, structural change, integration points. No vibes-based assessment. Trivial changes exit the skill entirely (you don't need a pipeline to rename a variable). Simple changes follow a lightweight path with automatic upgrade if it turns out harder than it looked. Standard and complex features get the full pipeline:
+
+1. **Research** -- Subagent explores your codebase. Answers come with confidence levels and `file:line` evidence. Every unknown is catalogued.
+2. **Discovery** -- Each ambiguity becomes a specific question. In autonomous mode, it answers its own questions with further research. A devil's advocate reviews the understanding document before design begins.
+3. **Design** -- Architecture brainstorming with tradeoff analysis. A design doc auditor asks "could someone implement this without guessing?" and flags every gap.
+4. **Planning** -- Atomic implementation plan with TDD steps. A plan auditor verifies interface contracts, behavior assumptions, and cross-task dependencies.
+5. **Implementation** -- Test-driven execution with per-task code review, fact-checking, and completion verification. Parallel tracks can run in isolated git worktrees with dependency-ordered smart merge.
+6. **Verification** -- Green mirage audit: "would these tests catch real regressions?" Comprehensive claim validation against design and plan. Full test suite.
+7. **Finish** -- PR with branch-relative description, local merge, or keep the branch. Worktree cleanup.
+
+For features too large for one context window, it generates self-contained work packets and hands them off to separate sessions. The orchestrator plans; the workers build.
+
+### Parallelization
+
+Three strategies, chosen at the start:
+
+- **Conservative** -- Sequential execution. Safest, simplest.
+- **Maximize parallel** -- Independent tasks dispatch as concurrent subagents with conflict detection and integration testing.
+- **Per-track worktrees** -- Most aggressive. One git worktree per parallel track, running simultaneously, merged in dependency order with three-way conflict analysis and per-round test verification.
+
+### What it handles
+
+Complete feature implementation, greenfield project creation, refactoring (with automatic behavior-preservation mode), and migrations. Bug fixes route to the dedicated [debugging] skill -- right tool, right workflow. Simple changes get a lightweight path; complex multi-track features get work packets and parallel sessions.
+
+### What keeps it honest
+
+Seven named rationalization patterns that LLMs use to skip work -- Scope Minimization, Expertise Override, Time Pressure, Similarity Shortcut, Competence Assertion, Phase Collapse, Escape Hatch Abuse -- are catalogued and mechanically blocked. An anti-skip circuit breaker runs before every phase. Quality gates at every transition: tests must pass, code review must clear, claims must be verified against source, tests must actually test what they claim. None have an override. Even in YOLO mode.
+
+## Philosophy of Spellbook
+
+Spellbook starts from a premise: AI coding assistants are not tools to be prompted. They're professionals to be onboarded.
+
+A good CLAUDE.md says "here's how we work." Spellbook says "here's who you are, what you value, how you think under pressure, what your failure modes look like, and what happens when you start rationalizing." The difference is between a job description and a professional identity.
+
+### The orchestrator pattern
+
+The main agent never writes code, reads source files, or runs tests. It dispatches subagents and coordinates their work. Like a conductor who never touches an instrument.
+
+This is architecture, not aesthetics. Context windows are finite -- every line of code read into main context is a line unavailable for strategic oversight. Subagents bring fresh perspectives without accumulated assumptions. Parallel dispatch turns three problems into the time of one. The agent who decides *what* to do is not the agent who does it.
+
+### Epistemic rigor
+
+The system distrusts its own outputs. By design.
+
+[Fact-checking][fact-checking] treats every claim as a hypothesis. [Green mirage auditing][auditing-green-mirage] asks "would this test fail if the code was broken?" -- fundamentally different from "does this test pass?" [Hunch verification][verifying-hunches] intercepts the moment of claimed discovery and forces reframing: "I found it" becomes "Hypothesis: [claim]. Testing now." [Dehallucination][dehallucination] names the specific ways LLMs confabulate and builds recovery protocols for them.
+
+Test-driven development here isn't just a practice. It's an epistemic position. "Tests-first answer 'what should this do?' Tests-after answer 'what does this do?'" The same logic applies at every level: no skill ships without a failing test, no claim without evidence, no verdict without a trace.
+
+### Named failure modes
+
+LLMs fail in predictable ways. Spellbook names those patterns and builds mechanical countermeasures.
+
+Seven rationalization patterns are catalogued and blocked. Three consecutive fix failures trigger architectural reassessment instead of a fourth attempt. Research stagnation triggers a plateau breaker. A devil's advocate review that finds zero issues is flagged as an incomplete review. The personality directive -- "a zen master who does not get bored" -- isn't flavor text; it counters the specific failure mode where LLMs rush through complex work and declare victory early.
+
+### Quality gates that don't negotiate
+
+Every substantial skill is a sequence of phases with mandatory gates between them. Tests must pass. Code review must clear. Claims must verify against source. Tests must actually catch regressions.
+
+These gates cannot be bypassed -- not by YOLO mode, not by autonomy settings, not by the agent deciding it knows better. YOLO mode grants permission to *act* without asking. It does not grant permission to *skip*. Autonomy is a speed dial, not a quality dial.
+
+### Composition
+
+Skills invoke skills. [`implementing-features`][implementing-features] orchestrates [brainstorming], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its limits, it splits into a thin orchestrator and supporting commands.
+
+The hierarchy mirrors good organizations: strategic coordination, tactical management, individual execution. Meta-skills compose domain skills which invoke atomic disciplines.
+
+### The self-improving system
+
+Skills that improve skills. [Usage analytics][analyzing-skill-usage] measure completion and correction rates. The [skill-writing skill][writing-skills] applies TDD to skill creation itself. [Instruction engineering][instruction-engineering] codifies prompt research into technique. [Prompt sharpening][sharpening-prompts] audits for ambiguity. A/B testing compares skill versions.
+
+The feedback loop is the point: measure, identify weakness, apply the improvement skills, measure again.
+
+### Security as first-class architecture
+
+Every subagent operates within a trust tier with hard-capped tool access. External content is data, never instructions. Raw untrusted content stays in subagent context; only summaries return to the orchestrator. Prompt injection defense treats the AI agent as an attack surface. Suspicious tool calls trigger immediate halt.
+
+Five trust tiers: explore (read-only), general (standard tools), yolo (autonomous), review_untrusted (restricted tools for external content), quarantine (read-only with audit logging). Tiers can't escalate. Ever.
 
 ## What's Included
 
@@ -187,9 +292,9 @@ Reusable workflows for structured development:
 | [/feature-research] | Phase 1 codebase research and ambiguity detection |
 | [/feature-design] | Phase 2 design document creation and review |
 | [/feature-implement] | Phase 4 implementation with TDD and code review |
-| [/fractal-think-init] | Phase 1: Create graph and generate seed questions |
-| [/fractal-think-explore] | Phase 2: Recursive question decomposition |
-| [/fractal-think-synthesize] | Phase 3: Generate summary from exploration graph |
+| [/fractal-think-seed] | Seed phase: Create graph and generate seed sub-questions |
+| [/fractal-think-work] | Phase 2: Dispatch workers for recursive fractal exploration |
+| [/fractal-think-harvest] | Phase 3: Read completed graph, verify synthesis, format result |
 | [/simplify] | Code complexity reduction |
 | [/simplify-analyze] | Analyze code for simplification opportunities |
 | [/simplify-transform] | Apply simplification transformations |
@@ -275,9 +380,9 @@ Reusable workflows for structured development:
 [/feature-research]: https://axiomantic.github.io/spellbook/latest/commands/feature-research/
 [/feature-design]: https://axiomantic.github.io/spellbook/latest/commands/feature-design/
 [/feature-implement]: https://axiomantic.github.io/spellbook/latest/commands/feature-implement/
-[/fractal-think-init]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-init/
-[/fractal-think-explore]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-explore/
-[/fractal-think-synthesize]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-synthesize/
+[/fractal-think-seed]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-seed/
+[/fractal-think-work]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-work/
+[/fractal-think-harvest]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-harvest/
 [/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/
 [/simplify-analyze]: https://axiomantic.github.io/spellbook/latest/commands/simplify-analyze/
 [/simplify-transform]: https://axiomantic.github.io/spellbook/latest/commands/simplify-transform/

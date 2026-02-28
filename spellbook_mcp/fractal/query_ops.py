@@ -44,6 +44,12 @@ _NODE_COLUMNS = (
     "metadata_json, created_at"
 )
 
+# Same columns but table-qualified for use in queries with JOINs or subqueries
+_NODE_COLUMNS_QUALIFIED = (
+    "n.id, n.parent_id, n.node_type, n.text, n.owner, n.depth, n.status, "
+    "n.metadata_json, n.created_at"
+)
+
 
 def _fetch_nodes(cursor, graph_id):
     """Fetch all nodes for a graph, returning list of dicts with parsed metadata."""
@@ -380,7 +386,7 @@ def get_saturation_status(graph_id, db_path=None):
         branch_status = row[2]
         branch_meta = json.loads(row[3])
 
-        saturated = branch_status == "saturated"
+        saturated = branch_status in ("saturated", "synthesized")
         saturation_reason = branch_meta.get("saturation_reason")
 
         # Count open questions in this branch's subtree using recursive CTE
@@ -412,9 +418,125 @@ def get_saturation_status(graph_id, db_path=None):
         })
 
     all_saturated = len(branches) > 0 and all(b["saturated"] for b in branches)
+    all_complete = len(branches) > 0 and all(b["saturated"] for b in branches)
 
     return {
         "graph_id": graph_id,
         "branches": branches,
         "all_saturated": all_saturated,
+        "all_complete": all_complete,
+    }
+
+
+def get_claimable_work(graph_id, worker_id=None, db_path=None):
+    """Preview available work in a fractal graph with optional branch affinity ordering.
+
+    Returns open question nodes ordered by branch affinity (if worker_id
+    provided), then by depth (shallower first), then by creation time.
+
+    Args:
+        graph_id: ID of the graph to query
+        worker_id: Optional worker ID for branch affinity ordering
+        db_path: Path to database file (defaults to standard location)
+
+    Returns:
+        dict with graph_id, claimable list, and count
+        or dict with "error" key if graph not found
+    """
+    conn = get_fractal_connection(db_path)
+    cursor = conn.cursor()
+
+    graph_row = _graph_exists(cursor, graph_id)
+    if graph_row is None:
+        return {"error": f"Graph '{graph_id}' not found."}
+
+    if worker_id is not None:
+        cursor.execute(
+            f"""
+            SELECT {_NODE_COLUMNS_QUALIFIED} FROM nodes n
+            WHERE n.graph_id = :graph_id AND n.node_type = 'question' AND n.status = 'open'
+            ORDER BY
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM nodes sibling
+                    WHERE sibling.parent_id = n.parent_id
+                    AND sibling.owner = :worker_id
+                ) THEN 0 ELSE 1 END,
+                n.depth ASC,
+                n.created_at ASC
+            """,
+            {"worker_id": worker_id, "graph_id": graph_id},
+        )
+    else:
+        cursor.execute(
+            f"SELECT {_NODE_COLUMNS} FROM nodes "
+            "WHERE graph_id = ? AND node_type = 'question' AND status = 'open' "
+            "ORDER BY depth ASC, created_at ASC",
+            (graph_id,),
+        )
+
+    claimable = [_row_to_node(row) for row in cursor.fetchall()]
+
+    return {
+        "graph_id": graph_id,
+        "claimable": claimable,
+        "count": len(claimable),
+    }
+
+
+def get_ready_to_synthesize(graph_id, db_path=None):
+    """Find non-leaf answered nodes where all child questions are done.
+
+    A node is ready for synthesis when:
+    - It has status 'answered'
+    - It has at least one child question node (not a leaf)
+    - All its child question nodes have status 'synthesized' or 'saturated'
+
+    Results are ordered deepest-first (bottom-up) so synthesis can
+    proceed from leaves toward the root.
+
+    Args:
+        graph_id: ID of the graph to query
+        db_path: Path to database file (defaults to standard location)
+
+    Returns:
+        dict with graph_id, ready_nodes list, and count
+        or dict with "error" key if graph not found
+    """
+    conn = get_fractal_connection(db_path)
+    cursor = conn.cursor()
+
+    graph_row = _graph_exists(cursor, graph_id)
+    if graph_row is None:
+        return {"error": f"Graph '{graph_id}' not found."}
+
+    # Find nodes that have child question nodes, where ALL child question
+    # nodes are in terminal states (synthesized or saturated), and the
+    # parent itself is answered.
+    cursor.execute(
+        f"""
+        SELECT {_NODE_COLUMNS_QUALIFIED} FROM nodes n
+        WHERE n.graph_id = :graph_id
+          AND n.status = 'answered'
+          AND EXISTS (
+            SELECT 1 FROM nodes child
+            WHERE child.parent_id = n.id AND child.graph_id = :graph_id
+            AND child.node_type = 'question'
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM nodes child
+            WHERE child.parent_id = n.id AND child.graph_id = :graph_id
+            AND child.node_type = 'question'
+            AND child.status NOT IN ('synthesized', 'saturated')
+          )
+        ORDER BY n.depth DESC, n.created_at ASC
+        """,
+        {"graph_id": graph_id},
+    )
+
+    ready_nodes = [_row_to_node(row) for row in cursor.fetchall()]
+
+    return {
+        "graph_id": graph_id,
+        "ready_nodes": ready_nodes,
+        "count": len(ready_nodes),
     }

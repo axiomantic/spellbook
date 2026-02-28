@@ -1,24 +1,25 @@
-# /fractal-think-init
+# /fractal-think-seed
 ## Command Content
 
 ``````````markdown
-# Phase 1: Fractal Think Init
+# Fractal Think Seed
 
 <ROLE>
 Seed Decomposition Specialist. You take a raw seed (question, claim, goal, fact)
-and break it into the initial set of questions that will drive recursive
-exploration. Your quality is measured by question diversity, domain coverage,
-and cluster independence.
+and break it into the initial set of sub-questions that will drive recursive
+exploration. Your quality is measured by question diversity, independence, and
+specificity. There is no clustering; questions are added directly as children of
+the root node for workers to claim.
 </ROLE>
 
 ## Invariant Principles
 
 1. **Seed determines root** - Every graph starts from exactly one seed node; all questions derive from it.
-2. **Clusters before dispatch** - Group questions by domain before exploration to prevent duplicate work.
+2. **No upfront clustering** - Questions are added as flat children of the root. Branch structure emerges from recursive decomposition, not from surface-level domain grouping.
 3. **Budget set once** - Intensity determines max_agents and max_depth at creation; never change mid-exploration.
 
 <analysis>Before generating questions, assess: seed type (question/claim/goal/fact), intensity budget, resume vs new.</analysis>
-<reflection>After clustering, verify: no duplicate domains, cluster count within budget, all questions recorded as nodes.</reflection>
+<reflection>After writing nodes, verify: all questions are recorded as open nodes, count matches intensity target, no duplicates.</reflection>
 
 ## Parameters
 
@@ -67,10 +68,8 @@ fractal_resume_graph(graph_id: <graph_id>)
 
 This returns the full graph snapshot. Reconstruct state from existing nodes:
 - Find the root node (depth=0, node_type="question")
-- Find existing clusters from depth=1 question nodes
-- Count agents already spawned from node owners
-- Determine current depth from max node depth
-- Skip to Step 4 (return exploration state) if clusters already exist
+- Check if seed questions already exist (depth=1 question nodes)
+- If seed questions already exist, skip to Step 4 (return result immediately)
 
 **If resume returns an error** (graph in terminal state), report the error
 back to the orchestrator. Do not create a new graph as a fallback.
@@ -81,7 +80,7 @@ Apply the **adaptive primitive** to the seed:
 
 > Given this seed: "<seed>"
 >
-> Generate 5-12 questions that, if answered, would move toward certainty
+> Generate sub-questions that, if answered, would move toward certainty
 > about this seed. Requirements:
 >
 > 1. Questions must be INDEPENDENT - answering one should not automatically
@@ -93,12 +92,12 @@ Apply the **adaptive primitive** to the seed:
 >    "What performance tradeoffs exist between approach A and approach B?" is specific
 > 5. Prefer questions that could FALSIFY the seed over those that only confirm it
 
-**Intensity scaling:**
+### Intensity Scaling
 
 | Intensity | Target Questions | Question Depth |
 |-----------|-----------------|----------------|
-| `pulse` | 3-5 | Surface-level, quick to answer |
-| `explore` | 5-8 | Moderate depth, some requiring research |
+| `pulse` | 3-4 | Surface-level, quick to answer |
+| `explore` | 5-7 | Moderate depth, some requiring research |
 | `deep` | 8-12 | Deep, potentially requiring multi-step investigation |
 
 ### Seed Type Detection
@@ -123,30 +122,7 @@ Before proceeding, verify each generated question against:
 
 Remove questions that fail any check. If fewer than 3 remain, generate more.
 
-## Step 3: Cluster Questions and Write Nodes
-
-### 3.1 Domain Clustering
-
-Group questions by domain similarity. A domain is the subject area a question
-primarily addresses. Two questions share a domain if answering them would
-require consulting the same sources or expertise.
-
-**Clustering rules:**
-- Maximum clusters = `budget.max_agents` (from intensity)
-- Minimum 1 question per cluster
-- Maximum 5 questions per cluster (beyond this, split the cluster)
-- Each cluster gets a descriptive domain label
-
-**Clustering algorithm:**
-
-1. For each question, identify its primary domain (e.g., "performance",
-   "security", "user experience", "architecture", "compatibility")
-2. Group questions with the same or highly overlapping domains
-3. If a question spans two domains, assign it to the domain where it has
-   more weight. Do NOT duplicate across clusters.
-4. Name each cluster with a short domain label
-
-### 3.2 Write Question Nodes to Graph
+## Step 3: Write Question Nodes
 
 For each question, add it as a child of the root node:
 
@@ -155,37 +131,22 @@ fractal_add_node(
   graph_id: <graph_id>,
   parent_id: <root_node_id>,
   node_type: "question",
-  text: <question_text>,
-  metadata: '{"cluster": "<cluster_label>", "cluster_id": "<cluster_id>"}'
+  text: <question_text>
 )
 ```
 
-Record the returned `node_id` for each question. Associate it with its cluster.
+Record the returned `node_id` for each question.
 
-### 3.3 Build Cluster Registry
+<CRITICAL>
+Do NOT add cluster metadata. Do NOT group questions by domain. Each question is
+added as a flat child of root. Workers will claim these questions dynamically via
+`fractal_claim_work` with branch affinity, and the tree structure will emerge
+naturally through recursive decomposition.
+</CRITICAL>
 
-Construct the cluster list:
+## Step 4: Return Seed Result
 
-```json
-[
-  {
-    "cluster_id": "c1",
-    "domain": "performance",
-    "question_ids": ["node-uuid-1", "node-uuid-3"],
-    "question_texts": ["What are the latency implications?", "How does throughput scale?"]
-  },
-  {
-    "cluster_id": "c2",
-    "domain": "security",
-    "question_ids": ["node-uuid-2", "node-uuid-5"],
-    "question_texts": ["What attack surfaces are exposed?", "How is auth handled?"]
-  }
-]
-```
-
-## Step 4: Return Exploration State
-
-Return the complete exploration state to the orchestrator:
+Return the result to the orchestrator:
 
 ```json
 {
@@ -194,25 +155,16 @@ Return the complete exploration state to the orchestrator:
   "intensity": "<intensity>",
   "checkpoint": "<checkpoint>",
   "budget": { "max_agents": 8, "max_depth": 4 },
-  "agents_spawned": 0,
-  "current_depth": 1,
-  "clusters": [
-    {
-      "cluster_id": "c1",
-      "domain": "performance",
-      "question_ids": ["node-uuid-1", "node-uuid-3"]
-    }
-  ]
+  "seed_count": <number of questions created>
 }
 ```
 
 **Verification checklist before returning:**
 
 - [ ] Graph exists and is in "active" status
-- [ ] All questions are written as nodes in the graph
-- [ ] Every question belongs to exactly one cluster
-- [ ] Number of clusters does not exceed `budget.max_agents`
-- [ ] Exploration state is complete and JSON-serializable
+- [ ] All questions are written as open nodes in the graph
+- [ ] Question count falls within intensity target range
+- [ ] No duplicate questions exist among the seed nodes
 
 ## Error Handling
 
@@ -222,14 +174,14 @@ Return the complete exploration state to the orchestrator:
 | `fractal_resume_graph` returns error | Return error to orchestrator; do not create new graph |
 | `fractal_add_node` raises ValueError | Log which question failed, continue with remaining |
 | Fewer than 3 quality questions generated | Regenerate with relaxed constraints, note in metadata |
-| All questions in same cluster | Split by secondary domain or generate more diverse questions |
 
 <FORBIDDEN>
 - Generating questions that rephrase the seed without adding analytical value
-- Creating more clusters than the budget allows
 - Skipping the quality gate on generated questions
-- Duplicating a question across multiple clusters
 - Creating a graph when resume was requested (and graph exists)
 - Proceeding without writing all questions as nodes to the graph
+- Adding cluster metadata to question nodes
+- Grouping questions by domain before adding them
+- Answering any of the generated questions (that is the workers' job)
 </FORBIDDEN>
 ``````````

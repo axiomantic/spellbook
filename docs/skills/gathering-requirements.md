@@ -137,6 +137,8 @@ What sensitive data? Auth required? Attack vectors? Compliance requirements? Wha
 ### Priestess: Scope Boundaries
 What's IN scope? What's OUT of scope (with reasons)? Edge cases to handle vs defer? What assumptions are we making?
 
+**Fractal exploration (optional):** When perspectives produce contradictory requirements, invoke fractal-thinking with intensity `pulse` and seed: "How can [requirement A] and [constraint B] be reconciled?". Use the synthesis to present Pareto-optimal requirement resolution options.
+
 ---
 
 ## Elicitation Process

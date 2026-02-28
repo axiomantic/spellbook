@@ -209,6 +209,8 @@ Synthesis mode = all context provided. No need to discover, only to design.
 - Propose 2-3 approaches with trade-offs
 - Lead with recommendation and reasoning
 
+**Fractal exploration (optional):** When 2+ approaches have non-obvious trade-offs, invoke fractal-thinking with intensity `pulse` and seed: "What are the deep trade-offs between [approaches] for [feature]?". Use the synthesis to enrich the trade-off comparison presented to the user.
+
 **Design Presentation:**
 - 200-300 word sections
 - Validate after each section

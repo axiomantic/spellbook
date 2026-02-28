@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/analyzing-domains/SKILL.md", "source_hash": "sha256:362b95f33886bce79d827e862180db93dbced3d7e6287ef7ba8e96ed8d893685", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/analyzing-domains/SKILL.md", "source_hash": "sha256:644fe4feb729b1337d74b5343f8bbad428231fa43db34f7114e0b23d9c5de76e", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: analyzing-domains
 
 Performs Domain-Driven Design analysis: mining ubiquitous language, classifying entities and value objects, detecting aggregate boundaries, identifying domain events, mapping bounded contexts, and producing agent/skill recommendations based on domain characteristics.

@@ -120,6 +120,8 @@ Run pressure scenario with subagent WITHOUT the skill. This is "watch the test f
 - Conflicting constraints ("make it fast AND thorough")
 - Social pressure ("the team is waiting, just get something working")
 
+**Fractal exploration (optional):** When the skill being tested is complex (multi-phase), invoke fractal-thinking with intensity `pulse` and seed: "What scenarios would tempt an agent to skip [skill-name]?". Use the synthesis to expand the pressure scenario list.
+
 **What to capture:**
 - Exact quotes of rationalization ("this is too simple to test", "I'll test after")
 - Decision points where agent deviated from desired behavior

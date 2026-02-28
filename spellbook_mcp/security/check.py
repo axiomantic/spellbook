@@ -199,40 +199,40 @@ def get_current_mode(db_path: Optional[str] = None) -> str:
 
     try:
         conn = sqlite3.connect(db_path, timeout=5.0)
-        conn.row_factory = sqlite3.Row
-        row = conn.execute(
-            "SELECT mode, auto_restore_at FROM security_mode WHERE id = 1"
-        ).fetchone()
+        try:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT mode, auto_restore_at FROM security_mode WHERE id = 1"
+            ).fetchone()
 
-        if row is None:
+            if row is None:
+                return "standard"
+
+            mode = row["mode"]
+            auto_restore_at = row["auto_restore_at"]
+
+            # Lazy restore: if mode != standard and auto_restore_at has expired
+            if mode != "standard" and auto_restore_at is not None:
+                try:
+                    restore_time = datetime.fromisoformat(auto_restore_at)
+                    # Ensure timezone-aware comparison
+                    if restore_time.tzinfo is None:
+                        restore_time = restore_time.replace(tzinfo=timezone.utc)
+                    now = datetime.now(timezone.utc)
+                    if now > restore_time:
+                        conn.execute(
+                            "UPDATE security_mode SET mode = 'standard', "
+                            "updated_at = ?, auto_restore_at = NULL WHERE id = 1",
+                            (now.isoformat(),),
+                        )
+                        conn.commit()
+                        return "standard"
+                except (ValueError, TypeError):
+                    pass
+
+            return mode
+        finally:
             conn.close()
-            return "standard"
-
-        mode = row["mode"]
-        auto_restore_at = row["auto_restore_at"]
-
-        # Lazy restore: if mode != standard and auto_restore_at has expired
-        if mode != "standard" and auto_restore_at is not None:
-            try:
-                restore_time = datetime.fromisoformat(auto_restore_at)
-                # Ensure timezone-aware comparison
-                if restore_time.tzinfo is None:
-                    restore_time = restore_time.replace(tzinfo=timezone.utc)
-                now = datetime.now(timezone.utc)
-                if now > restore_time:
-                    conn.execute(
-                        "UPDATE security_mode SET mode = 'standard', "
-                        "updated_at = ?, auto_restore_at = NULL WHERE id = 1",
-                        (now.isoformat(),),
-                    )
-                    conn.commit()
-                    conn.close()
-                    return "standard"
-            except (ValueError, TypeError):
-                pass
-
-        conn.close()
-        return mode
     except (sqlite3.Error, OSError):
         return "standard"
 

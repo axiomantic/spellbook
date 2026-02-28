@@ -14,8 +14,8 @@ Tier 2 (PreToolUse + PostToolUse):
   - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (PostToolUse, timeout: 10)
 
 TTS (PreToolUse + PostToolUse):
-  - .* -> tts-timer-start.sh (PreToolUse, async: true, timeout: 5)
-  - .* -> tts-notify.sh (PostToolUse, async: true, timeout: 15)
+  - (catch-all, no matcher) -> tts-timer-start.sh (PreToolUse, async: true, timeout: 5)
+  - (catch-all, no matcher) -> tts-notify.sh (PostToolUse, async: true, timeout: 15)
 """
 
 import json
@@ -92,34 +92,34 @@ class TestHookDefinitions:
         assert "PostToolUse" in HOOK_DEFINITIONS
 
     def test_pre_tool_use_has_bash_hook(self):
-        matchers = [h["matcher"] for h in HOOK_DEFINITIONS["PreToolUse"]]
+        matchers = [h.get("matcher") for h in HOOK_DEFINITIONS["PreToolUse"]]
         assert "Bash" in matchers
 
     def test_pre_tool_use_has_spawn_hook(self):
-        matchers = [h["matcher"] for h in HOOK_DEFINITIONS["PreToolUse"]]
+        matchers = [h.get("matcher") for h in HOOK_DEFINITIONS["PreToolUse"]]
         assert "spawn_claude_session" in matchers
 
     def test_pre_tool_use_has_state_sanitize_hook(self):
-        matchers = [h["matcher"] for h in HOOK_DEFINITIONS["PreToolUse"]]
+        matchers = [h.get("matcher") for h in HOOK_DEFINITIONS["PreToolUse"]]
         assert "mcp__spellbook__workflow_state_save" in matchers
 
     def test_bash_hook_references_correct_script(self):
         bash_hook = next(
-            h for h in HOOK_DEFINITIONS["PreToolUse"] if h["matcher"] == "Bash"
+            h for h in HOOK_DEFINITIONS["PreToolUse"] if h.get("matcher") == "Bash"
         )
         assert bash_hook["hooks"] == ["$SPELLBOOK_DIR/hooks/bash-gate.sh"]
 
     def test_spawn_hook_references_correct_script(self):
         spawn_hook = next(
             h for h in HOOK_DEFINITIONS["PreToolUse"]
-            if h["matcher"] == "spawn_claude_session"
+            if h.get("matcher") == "spawn_claude_session"
         )
         assert spawn_hook["hooks"] == ["$SPELLBOOK_DIR/hooks/spawn-guard.sh"]
 
     def test_state_sanitize_hook_references_correct_script(self):
         hook = next(
             h for h in HOOK_DEFINITIONS["PreToolUse"]
-            if h["matcher"] == "mcp__spellbook__workflow_state_save"
+            if h.get("matcher") == "mcp__spellbook__workflow_state_save"
         )
         assert len(hook["hooks"]) == 1
         entry = hook["hooks"][0]
@@ -216,7 +216,8 @@ class TestInstallHooks:
         assert len(post_tool_use) == 2
         assert post_tool_use[0]["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
         assert len(post_tool_use[0]["hooks"]) == 2
-        assert post_tool_use[1]["matcher"] == ".*"
+        # Catch-all entry: matcher key is omitted (not ".*")
+        assert "matcher" not in post_tool_use[1]
         assert len(post_tool_use[1]["hooks"]) == 1
 
     def test_bash_hook_entry_correct(self, tmp_path):
@@ -230,7 +231,7 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(
-            (e for e in pre_tool_use if e["matcher"] == "Bash"), None
+            (e for e in pre_tool_use if e.get("matcher") == "Bash"), None
         )
         assert bash_entry is not None
         assert bash_entry["hooks"] == [f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}"]
@@ -246,7 +247,7 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
         spawn_entry = next(
-            (e for e in pre_tool_use if e["matcher"] == "spawn_claude_session"),
+            (e for e in pre_tool_use if e.get("matcher") == "spawn_claude_session"),
             None,
         )
         assert spawn_entry is not None
@@ -264,7 +265,7 @@ class TestInstallHooks:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         state_entry = next(
             (e for e in pre_tool_use
-             if e["matcher"] == "mcp__spellbook__workflow_state_save"),
+             if e.get("matcher") == "mcp__spellbook__workflow_state_save"),
             None,
         )
         assert state_entry is not None
@@ -357,11 +358,11 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
         # User hook should still be present
-        write_hooks = [e for e in pre_tool_use if e["matcher"] == "Write"]
+        write_hooks = [e for e in pre_tool_use if e.get("matcher") == "Write"]
         assert len(write_hooks) == 1
         assert write_hooks[0]["hooks"] == ["/usr/local/bin/my-custom-hook.sh"]
         # Spellbook hooks should also be present
-        matchers = [e["matcher"] for e in pre_tool_use]
+        matchers = [e.get("matcher") for e in pre_tool_use]
         assert "Bash" in matchers
         assert "spawn_claude_session" in matchers
 
@@ -384,13 +385,13 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         # User hook should still be present
-        write_hooks = [e for e in post_tool_use if e["matcher"] == "Write"]
+        write_hooks = [e for e in post_tool_use if e.get("matcher") == "Write"]
         assert len(write_hooks) == 1
         assert write_hooks[0]["hooks"] == ["/usr/local/bin/post-write.sh"]
         # Spellbook PostToolUse hooks should also be present
         spellbook_matchers = [
-            e["matcher"] for e in post_tool_use
-            if e["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
+            e.get("matcher") for e in post_tool_use
+            if e.get("matcher") == "Bash|Read|WebFetch|Grep|mcp__.*"
         ]
         assert len(spellbook_matchers) == 1
 
@@ -417,7 +418,7 @@ class TestInstallHooks:
         post_tool_use = settings["hooks"]["PostToolUse"]
         matching = [
             e for e in post_tool_use
-            if e["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
+            if e.get("matcher") == "Bash|Read|WebFetch|Grep|mcp__.*"
         ]
         assert len(matching) == 1
         hooks_list = matching[0]["hooks"]
@@ -442,13 +443,13 @@ class TestInstallHooks:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
+        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         spawn_entries = [
-            e for e in pre_tool_use if e["matcher"] == "spawn_claude_session"
+            e for e in pre_tool_use if e.get("matcher") == "spawn_claude_session"
         ]
         state_entries = [
             e for e in pre_tool_use
-            if e["matcher"] == "mcp__spellbook__workflow_state_save"
+            if e.get("matcher") == "mcp__spellbook__workflow_state_save"
         ]
         assert len(bash_entries) == 1
         assert len(spawn_entries) == 1
@@ -458,7 +459,7 @@ class TestInstallHooks:
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entries = [
             e for e in post_tool_use
-            if e["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
+            if e.get("matcher") == "Bash|Read|WebFetch|Grep|mcp__.*"
         ]
         assert len(post_entries) == 1
         # Should have exactly 2 hooks, not 4
@@ -486,7 +487,7 @@ class TestInstallHooks:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
+        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
         # The hook list should contain the spellbook path (platform-appropriate extension)
         assert f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}" in bash_entries[0]["hooks"]
@@ -513,7 +514,7 @@ class TestInstallHooks:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
+        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
         # Both hooks should be in the list
         hooks_list = bash_entries[0]["hooks"]
@@ -656,7 +657,7 @@ class TestUninstallHooks:
         assert result.success
         settings = _read_settings(settings_path)
         pre_tool_use = settings.get("hooks", {}).get("PreToolUse", [])
-        matchers = [e["matcher"] for e in pre_tool_use]
+        matchers = [e.get("matcher") for e in pre_tool_use]
         # Spellbook-only matchers should be gone
         assert "spawn_claude_session" not in matchers
         assert "mcp__spellbook__workflow_state_save" not in matchers
@@ -724,7 +725,7 @@ class TestUninstallHooks:
         post_tool_use = settings["hooks"]["PostToolUse"]
         matching = [
             e for e in post_tool_use
-            if e["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
+            if e.get("matcher") == "Bash|Read|WebFetch|Grep|mcp__.*"
         ]
         assert len(matching) == 1
         assert matching[0]["hooks"] == ["/usr/local/bin/my-post-hook.sh"]
@@ -752,7 +753,7 @@ class TestUninstallHooks:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
+        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
         assert bash_entries[0]["hooks"] == ["/usr/local/bin/my-bash-hook.sh"]
 
@@ -829,7 +830,6 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             results = installer.install()
@@ -856,7 +856,6 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             results = installer.install()
@@ -880,7 +879,6 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.uninstall_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
@@ -904,7 +902,6 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             installer.install()
@@ -920,7 +917,7 @@ class TestClaudeCodeInstallerHookIntegration:
         settings = _read_settings(settings_path)
         # Verify specific hook paths are expanded
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(e for e in pre_tool_use if e["matcher"] == "Bash")
+        bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         ext = _hook_ext()
         expected_path = f"{spellbook_dir}/hooks/bash-gate{ext}"
         assert bash_entry["hooks"] == [expected_path]
@@ -1036,7 +1033,7 @@ class TestInstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(e for e in pre_tool_use if e["matcher"] == "Bash")
+        bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         ext = _hook_ext()
         assert bash_entry["hooks"] == [f"{spellbook_dir}/hooks/bash-gate{ext}"]
 
@@ -1072,7 +1069,7 @@ class TestInstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
+        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
         assert len(bash_entries[0]["hooks"]) == 1
 
@@ -1100,7 +1097,7 @@ class TestInstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(e for e in pre_tool_use if e["matcher"] == "Bash")
+        bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         ext = _hook_ext()
         assert bash_entry["hooks"] == [f"{spellbook_dir}/hooks/bash-gate{ext}"]
 
@@ -1123,7 +1120,7 @@ class TestInstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(e for e in pre_tool_use if e["matcher"] == "Bash")
+        bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         assert "/usr/local/bin/my-bash-hook.sh" in bash_entry["hooks"]
         ext = _hook_ext()
         expanded_path = f"{spellbook_dir}/hooks/bash-gate{ext}"
@@ -1222,7 +1219,7 @@ class TestUninstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entries = [e for e in pre_tool_use if e["matcher"] == "Bash"]
+        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
         assert bash_entries[0]["hooks"] == ["/usr/local/bin/my-hook.sh"]
 
@@ -1239,3 +1236,149 @@ class TestUninstallHooksWithSpellbookDir:
         content = settings_path.read_text(encoding="utf-8")
         assert "$SPELLBOOK_DIR" not in content
         assert str(spellbook_dir) + "/hooks/" not in content
+
+
+class TestLegacyCatchallMigration:
+    """Verify that legacy catch-all matchers (".*", "*", "") are migrated
+    to the omitted-matcher form on reinstall."""
+
+    def test_migrates_dotstar_matcher(self, tmp_path):
+        """Re-installing should convert '.*' catch-all to omitted matcher."""
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        # Simulate old installation with ".*" matcher (legacy format)
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PreToolUse": [
+                    {"matcher": "Bash", "hooks": ["$SPELLBOOK_DIR/hooks/bash-gate.sh"]},
+                    {
+                        "matcher": ".*",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "$SPELLBOOK_DIR/hooks/tts-timer-start.sh",
+                                "async": True,
+                                "timeout": 5,
+                            }
+                        ],
+                    },
+                ],
+            },
+        })
+
+        install_hooks(settings_path, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        # Find the catch-all entry (should be the one with tts-timer-start)
+        catchall_entries = [
+            e for e in pre_tool_use
+            if any("tts-timer-start" in str(h) for h in e.get("hooks", []))
+        ]
+        assert len(catchall_entries) == 1
+        # matcher key should be removed (migrated from ".*")
+        assert "matcher" not in catchall_entries[0]
+
+    def test_migrates_star_matcher(self, tmp_path):
+        """Re-installing should convert '*' catch-all to omitted matcher."""
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PostToolUse": [
+                    {
+                        "matcher": "*",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
+                                "async": True,
+                                "timeout": 15,
+                            }
+                        ],
+                    },
+                ],
+            },
+        })
+
+        install_hooks(settings_path, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        post_tool_use = settings["hooks"]["PostToolUse"]
+        catchall_entries = [
+            e for e in post_tool_use
+            if any("tts-notify" in str(h) for h in e.get("hooks", []))
+        ]
+        assert len(catchall_entries) == 1
+        assert "matcher" not in catchall_entries[0]
+
+    def test_migrates_empty_string_matcher(self, tmp_path):
+        """Re-installing should convert '' catch-all to omitted matcher."""
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "$SPELLBOOK_DIR/hooks/tts-timer-start.sh",
+                                "async": True,
+                                "timeout": 5,
+                            }
+                        ],
+                    },
+                ],
+            },
+        })
+
+        install_hooks(settings_path, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        catchall_entries = [
+            e for e in pre_tool_use
+            if any("tts-timer-start" in str(h) for h in e.get("hooks", []))
+        ]
+        assert len(catchall_entries) == 1
+        assert "matcher" not in catchall_entries[0]
+
+    def test_preserves_user_hooks_in_legacy_catchall(self, tmp_path):
+        """User hooks in a legacy '.*' entry should be preserved during migration."""
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir(parents=True)
+        settings_path = config_dir / "settings.local.json"
+
+        _make_settings_file(settings_path, {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": ".*",
+                        "hooks": [
+                            "/usr/local/bin/my-catchall-hook.sh",
+                            "$SPELLBOOK_DIR/hooks/tts-timer-start.sh",
+                        ],
+                    },
+                ],
+            },
+        })
+
+        install_hooks(settings_path, dry_run=False)
+
+        settings = _read_settings(settings_path)
+        pre_tool_use = settings["hooks"]["PreToolUse"]
+        catchall_entries = [e for e in pre_tool_use if "matcher" not in e]
+        assert len(catchall_entries) == 1
+        hook_strs = [str(h) for h in catchall_entries[0]["hooks"]]
+        # User hook should be preserved
+        assert any("/usr/local/bin/my-catchall-hook.sh" in s for s in hook_strs)
+        # Spellbook hook should be present (possibly updated)
+        assert any("tts-timer-start" in s for s in hook_strs)

@@ -4,7 +4,7 @@ import pytest
 import json
 import os
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch, call
 
 
 @pytest.fixture
@@ -212,3 +212,98 @@ def test_split_session_file_not_found():
             start_line=0,
             char_limit=1000
         )
+
+
+# --- Tests for _shutdown_cleanup ---
+
+
+def test_shutdown_cleanup_stops_watchers_and_closes_connections():
+    """Test that _shutdown_cleanup calls stop() on watchers and close functions."""
+    from spellbook_mcp import server
+
+    mock_watcher = MagicMock()
+    mock_update_watcher = MagicMock()
+
+    original_watcher = server._watcher
+    original_update_watcher = server._update_watcher
+
+    try:
+        server._watcher = mock_watcher
+        server._update_watcher = mock_update_watcher
+
+        with patch("spellbook_mcp.db.close_all_connections") as mock_close_db, \
+             patch("spellbook_mcp.forged.schema.close_forged_connections") as mock_close_forged, \
+             patch("spellbook_mcp.fractal.schema.close_all_fractal_connections") as mock_close_fractal:
+            server._shutdown_cleanup()
+
+        mock_watcher.stop.assert_called_once()
+        mock_update_watcher.stop.assert_called_once()
+        mock_close_db.assert_called_once()
+        mock_close_forged.assert_called_once()
+        mock_close_fractal.assert_called_once()
+    finally:
+        server._watcher = original_watcher
+        server._update_watcher = original_update_watcher
+
+
+def test_shutdown_cleanup_handles_none_watchers():
+    """Test that _shutdown_cleanup handles None watchers gracefully."""
+    from spellbook_mcp import server
+
+    original_watcher = server._watcher
+    original_update_watcher = server._update_watcher
+
+    try:
+        server._watcher = None
+        server._update_watcher = None
+
+        with patch("spellbook_mcp.db.close_all_connections"), \
+             patch("spellbook_mcp.forged.schema.close_forged_connections"), \
+             patch("spellbook_mcp.fractal.schema.close_all_fractal_connections"):
+            # Should not raise
+            server._shutdown_cleanup()
+    finally:
+        server._watcher = original_watcher
+        server._update_watcher = original_update_watcher
+
+
+def test_shutdown_cleanup_resilient_to_close_failures():
+    """Test that _shutdown_cleanup doesn't raise even if close functions fail."""
+    from spellbook_mcp import server
+
+    original_watcher = server._watcher
+    original_update_watcher = server._update_watcher
+
+    try:
+        server._watcher = None
+        server._update_watcher = None
+
+        with patch("spellbook_mcp.db.close_all_connections", side_effect=RuntimeError("db error")), \
+             patch("spellbook_mcp.forged.schema.close_forged_connections", side_effect=RuntimeError("forged error")), \
+             patch("spellbook_mcp.fractal.schema.close_all_fractal_connections", side_effect=RuntimeError("fractal error")):
+            # Should not raise despite all close functions failing
+            server._shutdown_cleanup()
+    finally:
+        server._watcher = original_watcher
+        server._update_watcher = original_update_watcher
+
+
+def test_shutdown_cleanup_watcher_stop_not_guarded():
+    """Test that watcher.stop() failures propagate (not wrapped in try/except)."""
+    from spellbook_mcp import server
+
+    mock_watcher = MagicMock()
+    mock_watcher.stop.side_effect = RuntimeError("watcher stop error")
+
+    original_watcher = server._watcher
+    original_update_watcher = server._update_watcher
+
+    try:
+        server._watcher = mock_watcher
+        server._update_watcher = None
+
+        with pytest.raises(RuntimeError, match="watcher stop error"):
+            server._shutdown_cleanup()
+    finally:
+        server._watcher = original_watcher
+        server._update_watcher = original_update_watcher
