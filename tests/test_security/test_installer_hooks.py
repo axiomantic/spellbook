@@ -829,7 +829,6 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             results = installer.install()
@@ -856,7 +855,6 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             results = installer.install()
@@ -880,7 +878,6 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.uninstall_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
@@ -904,7 +901,6 @@ class TestClaudeCodeInstallerHookIntegration:
         config_dir.mkdir(parents=True)
 
         with patch.object(Path, "home", return_value=tmp_path), \
-             patch("installer.platforms.claude_code.install_daemon", return_value=(True, "ok")), \
              patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False):
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             installer.install()

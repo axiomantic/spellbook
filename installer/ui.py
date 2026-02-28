@@ -57,6 +57,10 @@ class Spinner:
         self._thread = threading.Thread(target=self._spin, daemon=True)
         self._thread.start()
 
+    def update(self, message: str) -> None:
+        """Update the spinner message while running."""
+        self.message = message
+
     def stop(self, success: bool = True) -> None:
         """Stop the spinner and show result."""
         self._stop_event.set()
@@ -228,8 +232,14 @@ def print_result(result: "InstallResult") -> None:
     print(f"    {icon} {result.message}")
 
 
-def print_report(session: "InstallSession") -> None:
-    """Print final installation report."""
+def print_report(session: "InstallSession", show_details: bool = True) -> None:
+    """Print final installation report.
+
+    Args:
+        session: The installation session with results.
+        show_details: If True, print per-result details under each platform.
+            Set to False when results were already printed inline during install.
+    """
     print()
     line = "=" * 60
     print(color(line, Colors.CYAN))
@@ -265,9 +275,10 @@ def print_report(session: "InstallSession") -> None:
 
         print(f"  {platform_name}: {status}")
 
-        # Show key details
-        for result in results:
-            print_result(result)
+        if show_details:
+            # Show key details
+            for result in results:
+                print_result(result)
 
         print()
 

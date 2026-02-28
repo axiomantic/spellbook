@@ -106,6 +106,20 @@ def get_uv_path() -> str | None:
     return shutil.which("uv")
 
 
+def get_daemon_python() -> str | None:
+    """Get path to daemon venv Python, or None if not available.
+
+    The installer sets SPELLBOOK_DAEMON_PYTHON to the absolute path of the
+    Python interpreter inside the daemon's isolated venv
+    (~/.local/spellbook/daemon-venv/).  We use it directly in service files
+    so the daemon doesn't depend on ``uv`` at runtime.
+    """
+    path = os.environ.get("SPELLBOOK_DAEMON_PYTHON")
+    if path and Path(path).is_file():
+        return str(Path(path).resolve())
+    return None
+
+
 def check_dependencies() -> bool:
     """Check all required dependencies and prompt to install if missing.
 
@@ -224,16 +238,33 @@ def get_daemon_path() -> str:
 def generate_launchd_plist() -> str:
     """Generate launchd plist content.
 
-    Uses `uv run python -m spellbook_mcp.server` to run the server as a module,
-    which ensures the package is properly installed via pyproject.toml.
+    Prefers the daemon venv Python (SPELLBOOK_DAEMON_PYTHON) when available,
+    falling back to ``uv run python -m spellbook_mcp.server`` for backward
+    compatibility.
     """
-    uv_path = get_uv_path()
     spellbook_dir = get_spellbook_dir()
     log_file = get_log_file()
     err_log_file = get_err_log_file()
     port = get_port()
     host = get_host()
     daemon_path = get_daemon_path()
+
+    daemon_python = get_daemon_python()
+    if daemon_python:
+        program_args = (
+            f"                <string>{daemon_python}</string>\n"
+            f"                <string>-m</string>\n"
+            f"                <string>spellbook_mcp.server</string>"
+        )
+    else:
+        uv_path = get_uv_path()
+        program_args = (
+            f"                <string>{uv_path}</string>\n"
+            f"                <string>run</string>\n"
+            f"                <string>python</string>\n"
+            f"                <string>-m</string>\n"
+            f"                <string>spellbook_mcp.server</string>"
+        )
 
     return textwrap.dedent(f"""\
         <?xml version="1.0" encoding="UTF-8"?>
@@ -245,11 +276,7 @@ def generate_launchd_plist() -> str:
 
             <key>ProgramArguments</key>
             <array>
-                <string>{uv_path}</string>
-                <string>run</string>
-                <string>python</string>
-                <string>-m</string>
-                <string>spellbook_mcp.server</string>
+{program_args}
             </array>
 
             <key>EnvironmentVariables</key>
@@ -381,14 +408,21 @@ def get_linux_daemon_path() -> str:
 def generate_systemd_service() -> str:
     """Generate systemd user service content.
 
-    Uses `uv run python -m spellbook_mcp.server` to run the server as a module,
-    which ensures the package is properly installed via pyproject.toml.
+    Prefers the daemon venv Python (SPELLBOOK_DAEMON_PYTHON) when available,
+    falling back to ``uv run python -m spellbook_mcp.server`` for backward
+    compatibility.
     """
-    uv_path = get_uv_path()
     spellbook_dir = get_spellbook_dir()
     port = get_port()
     host = get_host()
     daemon_path = get_linux_daemon_path()
+
+    daemon_python = get_daemon_python()
+    if daemon_python:
+        exec_start = f"{daemon_python} -m spellbook_mcp.server"
+    else:
+        uv_path = get_uv_path()
+        exec_start = f"{uv_path} run python -m spellbook_mcp.server"
 
     return textwrap.dedent(f"""\
         [Unit]
@@ -397,7 +431,7 @@ def generate_systemd_service() -> str:
 
         [Service]
         Type=simple
-        ExecStart={uv_path} run python -m spellbook_mcp.server
+        ExecStart={exec_start}
         WorkingDirectory={spellbook_dir}
         Restart=always
         RestartSec=5
@@ -606,8 +640,8 @@ def cmd_install() -> int:
     """Install as system service."""
     plat = get_platform()
 
-    # Check for uv
-    if not check_uv_installed():
+    # uv is only required when there's no daemon venv Python
+    if not get_daemon_python() and not check_uv_installed():
         return 1
 
     # Verify server script exists
@@ -691,13 +725,15 @@ def cmd_start(foreground: bool = False) -> int:
         print(f"URL: {get_server_url()}")
         return 0
 
-    # Check for uv
-    if not check_uv_installed():
-        return 1
-
     spellbook_dir = get_spellbook_dir()
     server_script = get_server_script()
-    uv_path = get_uv_path()
+
+    # Prefer daemon venv Python, fall back to uv
+    daemon_python = get_daemon_python()
+    if not daemon_python:
+        if not check_uv_installed():
+            return 1
+        uv_path = get_uv_path()
 
     if not server_script.exists():
         print(f"Error: Server script not found: {server_script}", file=sys.stderr)
@@ -713,8 +749,11 @@ def cmd_start(foreground: bool = False) -> int:
     env["SPELLBOOK_MCP_PORT"] = str(port)
     env["SPELLBOOK_DIR"] = str(spellbook_dir)
 
-    # Use uv run to automatically install dependencies
-    cmd = [uv_path, "run", str(server_script)]
+    if daemon_python:
+        cmd = [daemon_python, "-m", "spellbook_mcp.server"]
+    else:
+        # Use uv run to automatically install dependencies
+        cmd = [uv_path, "run", str(server_script)]
 
     if foreground:
         print(f"Starting server on {host}:{port} (foreground mode)")

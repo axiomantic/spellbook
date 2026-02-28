@@ -1,0 +1,6 @@
+# Spellbook MCP daemon - TTS dependencies (optional)
+# Only installed when user enables TTS.
+# Edit versions here, then run: scripts/update-daemon-deps.sh
+kokoro==0.9.4
+soundfile==0.13.1
+sounddevice==0.5.5

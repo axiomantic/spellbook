@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 from ..components.context_files import generate_codex_context
-from ..components.mcp import get_spellbook_server_url, install_daemon
+from ..components.mcp import get_spellbook_server_url
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
@@ -235,8 +235,8 @@ class CrushInstaller(PlatformInstaller):
             return results
 
         # Install AGENTS.md with demarcated section
+        self._step("Updating AGENTS.md")
         context_file = self.config_dir / "AGENTS.md"
-        # Reuse generate_codex_context since format is identical to OpenCode/Codex
         spellbook_content = generate_codex_context(self.spellbook_dir)
 
         if spellbook_content:
@@ -267,33 +267,8 @@ class CrushInstaller(PlatformInstaller):
                     )
                 )
 
-        # Install and start the MCP daemon (HTTP transport)
-        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
-        if server_path.exists():
-            daemon_success, daemon_msg = install_daemon(
-                self.spellbook_dir, dry_run=self.dry_run
-            )
-            results.append(
-                InstallResult(
-                    component="mcp_daemon",
-                    platform=self.platform_id,
-                    success=daemon_success,
-                    action="installed" if daemon_success else "failed",
-                    message=f"MCP daemon: {daemon_msg}",
-                )
-            )
-        else:
-            results.append(
-                InstallResult(
-                    component="mcp_daemon",
-                    platform=self.platform_id,
-                    success=False,
-                    action="failed",
-                    message=f"MCP daemon: server.py not found at {server_path}",
-                )
-            )
-
         # Register spellbook in crush.json (MCP server + skills path + context path)
+        self._step("Updating crush.json")
         success, msg = _update_crush_config(
             self.crush_config_file,
             context_file,

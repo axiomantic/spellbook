@@ -6,10 +6,14 @@ dry-run skips, and declining sets tts_enabled=False.
 
 When kokoro is NOT installed, the installer should offer to install it
 rather than silently skipping.
+
+Note: check_tts_available() now checks kokoro in the daemon venv by
+shelling out to the daemon venv Python, not by importing in-process.
+Tests mock get_daemon_python and subprocess.run accordingly.
 """
 
-import builtins
 import json
+import subprocess
 import sys
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -31,26 +35,37 @@ def _mock_no_prior_config():
 
 
 class TestCheckTtsAvailable:
-    """check_tts_available() returns True iff kokoro is importable."""
+    """check_tts_available() returns True iff kokoro is importable in daemon venv."""
 
     def test_returns_true_when_kokoro_importable(self):
-        """When kokoro can be imported, return True."""
-        kokoro_mock = MagicMock()
-        with patch.dict(sys.modules, {"kokoro": kokoro_mock}):
+        """When daemon venv exists and kokoro imports successfully, return True."""
+        fake_python = MagicMock(spec=Path)
+        fake_python.exists.return_value = True
+        fake_python.__str__ = lambda self: "/fake/daemon-venv/bin/python"
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        with patch("installer.components.mcp.get_daemon_python", return_value=fake_python), \
+             patch("install.subprocess.run", return_value=mock_result) as mock_run:
             assert check_tts_available() is True
+            mock_run.assert_called_once()
 
     def test_returns_false_when_kokoro_not_importable(self):
-        """When kokoro import raises ImportError, return False."""
-        _real_import = builtins.__import__
+        """When daemon venv exists but kokoro import fails, return False."""
+        fake_python = MagicMock(spec=Path)
+        fake_python.exists.return_value = True
+        fake_python.__str__ = lambda self: "/fake/daemon-venv/bin/python"
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        with patch("installer.components.mcp.get_daemon_python", return_value=fake_python), \
+             patch("install.subprocess.run", return_value=mock_result):
+            assert check_tts_available() is False
 
-        def _fail_kokoro(name, *args, **kwargs):
-            if name == "kokoro":
-                raise ImportError("No module named 'kokoro'")
-            return _real_import(name, *args, **kwargs)
-
-        with patch.dict(sys.modules, {k: v for k, v in sys.modules.items() if k != "kokoro"}):
-            with patch("builtins.__import__", side_effect=_fail_kokoro):
-                assert check_tts_available() is False
+    def test_returns_false_when_daemon_venv_missing(self):
+        """When daemon venv Python does not exist, return False."""
+        fake_python = MagicMock(spec=Path)
+        fake_python.exists.return_value = False
+        with patch("installer.components.mcp.get_daemon_python", return_value=fake_python):
+            assert check_tts_available() is False
 
 
 # ---------------------------------------------------------------------------

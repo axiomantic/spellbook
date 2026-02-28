@@ -519,29 +519,34 @@ def _get_repairs() -> list[dict]:
         severity: "warning" or "error"
         message: Human-readable description
         fix_command: Command the user can run to fix the issue
+
+    Uses importlib.util.find_spec for dependency checks instead of
+    full imports. Full imports (e.g. kokoro -> spacy -> thinc) can
+    take 30+ seconds and should only happen when TTS is actually used.
     """
+    import importlib.util
+
     repairs = []
 
     # Check TTS: enabled but dependencies missing
     tts_enabled = config_get("tts_enabled")
     if tts_enabled is True:
         try:
-            from spellbook_mcp.tts import _check_availability
-
-            if not _check_availability():
+            kokoro_installed = importlib.util.find_spec("kokoro") is not None
+            soundfile_installed = importlib.util.find_spec("soundfile") is not None
+            if not (kokoro_installed and soundfile_installed):
                 repairs.append({
                     "id": "tts-deps-missing",
                     "severity": "warning",
                     "message": "TTS is enabled but kokoro is not installed",
                     "fix_command": "uv pip install 'spellbook[tts]'",
                 })
-        except ImportError:
+        except Exception:
             pass
 
     # Check TTS: kokoro installed but pip missing (spaCy#13747 workaround)
     if tts_enabled is True and not repairs:
         try:
-            import importlib.util
             if importlib.util.find_spec("kokoro") and not importlib.util.find_spec("pip"):
                 repairs.append({
                     "id": "tts-pip-missing",

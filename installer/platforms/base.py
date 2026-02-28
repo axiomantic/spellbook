@@ -5,7 +5,7 @@ Abstract base class for platform installers.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from ..core import InstallResult
@@ -26,12 +26,23 @@ class PlatformInstaller(ABC):
     """Abstract base class for platform-specific installers."""
 
     def __init__(
-        self, spellbook_dir: Path, config_dir: Path, version: str, dry_run: bool = False
+        self,
+        spellbook_dir: Path,
+        config_dir: Path,
+        version: str,
+        dry_run: bool = False,
+        on_step: Optional[Callable[[str], None]] = None,
     ):
         self.spellbook_dir = spellbook_dir
         self.config_dir = config_dir
         self.version = version
         self.dry_run = dry_run
+        self._on_step = on_step
+
+    def _step(self, message: str) -> None:
+        """Emit a progress step message."""
+        if self._on_step:
+            self._on_step(message)
 
     @property
     @abstractmethod

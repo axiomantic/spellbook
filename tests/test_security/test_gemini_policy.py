@@ -279,9 +279,6 @@ class TestGeminiInstallerIntegration:
         ), patch(
             "installer.platforms.gemini.link_extension",
             return_value=(True, "extension linked"),
-        ), patch(
-            "installer.platforms.gemini.install_daemon",
-            return_value=(True, "mocked"),
         ):
             installer = GeminiInstaller(
                 spellbook_dir, config_dir, "1.0.0", dry_run=False

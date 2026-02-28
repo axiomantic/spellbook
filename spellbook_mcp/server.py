@@ -2801,6 +2801,22 @@ def tts_config_set(
     return {"status": "ok", "config": result_config}
 
 
+# --- Health Check REST Endpoint ---
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def api_health(request: Request) -> JSONResponse:
+    """Lightweight health check endpoint for the installer and monitoring.
+
+    Returns JSON: {"status": "ok", "version": "...", "uptime_seconds": ...}
+    """
+    return JSONResponse({
+        "status": "ok",
+        "version": _get_version(),
+        "uptime_seconds": round(time.time() - _server_start_time, 1),
+    })
+
+
 # --- TTS REST Endpoint ---
 
 
