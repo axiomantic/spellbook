@@ -750,12 +750,16 @@ def _set_tts_config(enabled: bool) -> None:
 def _install_tts_deps(spellbook_dir: Path) -> bool:
     """Install TTS dependencies into the daemon venv.
 
-    Uses the pinned TTS lockfile and installs into the daemon-dedicated venv
-    at ~/.local/spellbook/daemon-venv/.
+    Installs:
+    1. Python packages from the TTS lockfile (kokoro, soundfile, sounddevice, etc.)
+    2. spacy language model (en_core_web_sm) required by misaki/kokoro for G2P
+
+    Uses the daemon-dedicated venv at ~/.local/spellbook/daemon-venv/.
 
     Returns True if installation succeeded and kokoro is now importable.
     """
-    print_step("Installing TTS dependencies into daemon venv (kokoro, soundfile, sounddevice)...")
+    print_step("Installing TTS dependencies into daemon venv...")
+    print_info("Packages: kokoro, soundfile, sounddevice, spacy, misaki")
     try:
         from installer.components.mcp import install_tts_to_daemon_venv
 
@@ -763,6 +767,7 @@ def _install_tts_deps(spellbook_dir: Path) -> bool:
         if not success:
             print_error(f"TTS dependency installation failed: {msg}")
             return False
+        print_success("TTS packages and spacy model installed")
         # Verify kokoro is now importable in the daemon venv
         return check_tts_available()
     except ImportError:
@@ -792,7 +797,7 @@ def _preload_tts_model(spellbook_dir: Path) -> bool:
 
     # Check if model is already cached
     cache_dir = Path.home() / ".cache" / "huggingface" / "hub"
-    if cache_dir.exists() and any(cache_dir.glob("models--hexagon*kokoro*")):
+    if cache_dir.exists() and any(cache_dir.glob("models--hexgrad--Kokoro*")):
         print_info("Kokoro model already cached, skipping download")
         return True
 
@@ -802,7 +807,9 @@ def _preload_tts_model(spellbook_dir: Path) -> bool:
     try:
         result = subprocess.run(
             [str(daemon_python), "-c",
-             "from kokoro import KPipeline; KPipeline(lang_code='a'); print('Model loaded successfully')"],
+             "from kokoro import KPipeline; "
+             "KPipeline(lang_code='a', repo_id='hexgrad/Kokoro-82M'); "
+             "print('Model loaded successfully')"],
             capture_output=True,
             text=True,
             timeout=600,  # 10 minutes for large model download
@@ -840,7 +847,24 @@ def setup_tts(
         if existing is not None:
             if check_tts_available():
                 print_info(f"TTS already configured (enabled={existing})")
-            return
+                return
+            elif existing:
+                # TTS was enabled but deps are missing (venv was rebuilt).
+                # Reinstall TTS deps silently to honor the user's prior choice.
+                print_step("TTS was enabled but dependencies are missing. Reinstalling...")
+                if spellbook_dir and _install_tts_deps(spellbook_dir):
+                    _preload_tts_model(spellbook_dir)
+                    print_success("TTS dependencies reinstalled")
+                else:
+                    print_warning(
+                        "TTS reinstall failed. Run manually: "
+                        "uv pip install --python ~/.local/spellbook/daemon-venv/bin/python "
+                        "-r daemon/requirements-tts.txt"
+                    )
+                return
+            else:
+                # TTS was explicitly disabled, nothing to do
+                return
     except ImportError:
         pass
 
@@ -869,8 +893,11 @@ def setup_tts(
             if _install_tts_deps(spellbook_dir):
                 _preload_tts_model(spellbook_dir)
                 _set_tts_config(True)
-                print_success("TTS installed and enabled (voice: af_heart, volume: 0.3)")
-                print_info("Change settings with tts_session_set or tts_config_set MCP tools")
+                print_success("TTS fully installed and enabled")
+                print_info("  Packages: kokoro, soundfile, sounddevice, spacy, misaki")
+                print_info("  Models: Kokoro-82M (HuggingFace), en_core_web_sm (spacy)")
+                print_info("  Voice: af_heart, Volume: 0.3")
+                print_info("  Change settings with tts_session_set or tts_config_set MCP tools")
             else:
                 print_error("TTS installation failed. Install manually:")
                 print_info("Install TTS deps into daemon venv via installer.components.mcp")

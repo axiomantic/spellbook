@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **TTS survives daemon venv rebuilds** - When the daemon venv is rebuilt (lockfile hash change), TTS dependencies are now preserved if the user previously opted in
+  - `install_daemon()` checks `tts_enabled` config and passes `include_tts=True` to `ensure_daemon_venv()` so TTS deps are included in rebuilds
+  - `setup_tts()` detects when TTS was enabled but deps are missing (venv rebuilt) and automatically reinstalls them
+  - Fixed misplaced `return` in `setup_tts()` that caused it to silently skip TTS reinstallation
+- **spacy model installed during TTS setup** - Kokoro's dependency chain (kokoro -> misaki -> spacy) requires the `en_core_web_sm` language model, which spacy tries to auto-download via `pip install` at runtime. This fails in uv-managed venvs (no pip). The installer now pre-installs the spacy model wheel directly from GitHub Releases via uv during TTS setup.
+- **Kokoro model cache detection** - Fixed glob pattern for HuggingFace cache detection (`models--hexgrad--Kokoro*` instead of `models--hexagon*kokoro*`)
+- **Kokoro deprecation warning** - Pass explicit `repo_id='hexgrad/Kokoro-82M'` to suppress defaulting warning
+
+### Added
+- **Daemon install test suite** - 39 tests in `tests/test_daemon_install.py` covering centralized daemon install ordering, platform installer negative tests, `check_daemon_health()`, `get_daemon_python()` symlink preservation, `_get_repairs()` find_spec usage, `ensure_daemon_venv()` hash detection, TTS config inclusion in `install_daemon()`, and `setup_tts()` reinstall behavior
+
 ## [0.12.1] - 2026-02-27
 
 ### Added
