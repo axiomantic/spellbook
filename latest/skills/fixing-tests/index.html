@@ -7434,54 +7434,56 @@
 <a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>
 <a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="gs">**Missing tests entirely:**</span> Read production code. Identify key behaviors. Write tests following codebase patterns. Ensure tests would catch real failures.
 <a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>
-<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>
-<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="gu">### Over-Engineering</span>
-<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="k">-</span><span class="w"> </span>Creating elaborate test infrastructure for simple fixes
-<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="k">-</span><span class="w"> </span>Adding abstraction layers &quot;for future flexibility&quot;
-<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="k">-</span><span class="w"> </span>Refactoring unrelated code while fixing tests
-<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>
-<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a><span class="gu">### Under-Testing</span>
-<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a><span class="k">-</span><span class="w"> </span>Weakening assertions to make tests pass
-<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a><span class="k">-</span><span class="w"> </span>Removing tests instead of fixing them
-<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="k">-</span><span class="w"> </span>Marking tests as skip without fixing
-<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>
-<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="gu">### Scope Creep</span>
-<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a><span class="k">-</span><span class="w"> </span>Fixing production bugs without flagging them
-<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="k">-</span><span class="w"> </span>Refactoring production code to make tests easier
-<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a><span class="k">-</span><span class="w"> </span>Adding features while fixing tests
-<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>
-<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a><span class="gu">### Blind Fixes</span>
-<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a><span class="k">-</span><span class="w"> </span>Applying suggested fixes without reading context
-<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a><span class="k">-</span><span class="w"> </span>Copy-pasting fixes without understanding them
-<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="k">-</span><span class="w"> </span>Not verifying fixes actually catch failures
-<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>
-<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="gs">**Slow/bloated tests:**</span> Tests taking &gt;5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data. Separate slow tests with marks (<span class="sb">`@pytest.mark.slow`</span>, <span class="sb">`@pytest.mark.integration`</span>, etc.) to preserve fast feedback on core functionality. Move real I/O to integration tier. Shrink test inputs to the minimum that exercises the behavior. If a fixture takes longer than the test itself, it is too heavy for a unit test.
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="gu">### Over-Engineering</span>
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="k">-</span><span class="w"> </span>Creating elaborate test infrastructure for simple fixes
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="k">-</span><span class="w"> </span>Adding abstraction layers &quot;for future flexibility&quot;
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a><span class="k">-</span><span class="w"> </span>Refactoring unrelated code while fixing tests
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a><span class="gu">### Under-Testing</span>
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="k">-</span><span class="w"> </span>Weakening assertions to make tests pass
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a><span class="k">-</span><span class="w"> </span>Removing tests instead of fixing them
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="k">-</span><span class="w"> </span>Marking tests as skip without fixing
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="gu">### Scope Creep</span>
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a><span class="k">-</span><span class="w"> </span>Fixing production bugs without flagging them
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="k">-</span><span class="w"> </span>Refactoring production code to make tests easier
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a><span class="k">-</span><span class="w"> </span>Adding features while fixing tests
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a><span class="gu">### Blind Fixes</span>
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="k">-</span><span class="w"> </span>Applying suggested fixes without reading context
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="k">-</span><span class="w"> </span>Copy-pasting fixes without understanding them
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="k">-</span><span class="w"> </span>Not verifying fixes actually catch failures
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>
-<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>&lt;RULE&gt;Before completing, ALL boxes must be checked. If ANY unchecked: STOP and fix.&lt;/RULE&gt;
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a>
-<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a><span class="k">- [ ]</span> All work items processed or explicitly marked stuck
-<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a><span class="k">- [ ]</span> Each fix verified to pass
-<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a><span class="k">- [ ]</span> Each fix verified to catch the failure it should catch
-<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a><span class="k">- [ ]</span> Full test suite ran at end
-<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a><span class="k">- [ ]</span> Production bugs flagged, not silently fixed
-<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a><span class="k">- [ ]</span> Commits follow agreed strategy
-<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a><span class="k">- [ ]</span> Summary report provided
-<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>
-<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a>&lt;reflection&gt;
-<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>After fixing tests, verify:
-<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a><span class="k">-</span><span class="w"> </span>Each fix actually catches the failure it should
-<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a><span class="k">-</span><span class="w"> </span>No production bugs were silently &quot;fixed&quot; as test issues
-<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="k">-</span><span class="w"> </span>Tests detect real bugs, not just achieve green status
-<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a>
-<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>Tests exist to catch bugs. Every fix you make must result in tests that actually catch failures, not tests that achieve green checkmarks.
-<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>
-<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>Fix it. Prove it works. Move on. No over-engineering. No under-testing.
-<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>&lt;RULE&gt;Before completing, ALL boxes must be checked. If ANY unchecked: STOP and fix.&lt;/RULE&gt;
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a>
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a><span class="k">- [ ]</span> All work items processed or explicitly marked stuck
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a><span class="k">- [ ]</span> Each fix verified to pass
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a><span class="k">- [ ]</span> Each fix verified to catch the failure it should catch
+<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a><span class="k">- [ ]</span> Full test suite ran at end
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a><span class="k">- [ ]</span> Production bugs flagged, not silently fixed
+<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a><span class="k">- [ ]</span> Commits follow agreed strategy
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a><span class="k">- [ ]</span> Summary report provided
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a>&lt;reflection&gt;
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a>After fixing tests, verify:
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="k">-</span><span class="w"> </span>Each fix actually catches the failure it should
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="k">-</span><span class="w"> </span>No production bugs were silently &quot;fixed&quot; as test issues
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="k">-</span><span class="w"> </span>Tests detect real bugs, not just achieve green status
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>Tests exist to catch bugs. Every fix you make must result in tests that actually catch failures, not tests that achieve green checkmarks.
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a>Fix it. Prove it works. Move on. No over-engineering. No under-testing.
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
