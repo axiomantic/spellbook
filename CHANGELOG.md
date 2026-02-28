@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Kokoro deprecation warning** - Pass explicit `repo_id='hexgrad/Kokoro-82M'` to suppress defaulting warning
 
 ### Added
+- **TTS model preloading at daemon startup** - Kokoro model now loads in a background thread when the daemon starts, eliminating the ~100s cold-start delay on first `kokoro_speak` call. Preload is skipped if TTS is disabled or dependencies are unavailable.
 - **Daemon install test suite** - 39 tests in `tests/test_daemon_install.py` covering centralized daemon install ordering, platform installer negative tests, `check_daemon_health()`, `get_daemon_python()` symlink preservation, `_get_repairs()` find_spec usage, `ensure_daemon_venv()` hash detection, TTS config inclusion in `install_daemon()`, and `setup_tts()` reinstall behavior
 
 ## [0.12.1] - 2026-02-27

@@ -41,6 +41,7 @@ import os
 import json
 import time
 import functools
+import threading
 
 # FastMCP version detection for v2/v3 compatibility
 _FASTMCP_MAJOR = int(_fastmcp_module.__version__.split(".")[0])
@@ -3024,6 +3025,10 @@ if __name__ == "__main__":
             ),
         )
         _update_watcher.start()
+
+    # Preload TTS model in background (non-blocking)
+    _tts_preload = threading.Thread(target=tts_module.preload, daemon=True)
+    _tts_preload.start()
 
     if transport == "streamable-http":
         host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")

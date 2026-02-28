@@ -209,6 +209,23 @@ def get_status(session_id: str = None) -> dict:
     }
 
 
+def preload() -> None:
+    """Preload Kokoro model if TTS is enabled and available.
+
+    Intended to be called from a background thread at daemon startup.
+    Safe to call multiple times (idempotent via _load_model's double-checked locking).
+    """
+    enabled = config_tools.config_get("tts_enabled")
+    if enabled is False:
+        logger.info("TTS preload skipped: disabled in config")
+        return
+    if not _check_availability():
+        logger.info("TTS preload skipped: dependencies not available")
+        return
+    logger.info("TTS preload: loading Kokoro model...")
+    _load_model()
+
+
 async def ensure_loaded() -> tuple[bool, str | None]:
     """Async wrapper for model loading.
 
