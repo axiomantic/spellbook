@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Kokoro model cache detection** - Fixed glob pattern for HuggingFace cache detection (`models--hexgrad--Kokoro*` instead of `models--hexagon*kokoro*`)
 - **Kokoro deprecation warning** - Pass explicit `repo_id='hexgrad/Kokoro-82M'` to suppress defaulting warning
 - **TTS hook announcements never firing** - Catch-all hooks used `"matcher": ".*"` which Claude Code does not reliably fire. Fixed to omit the `matcher` key entirely (the documented approach for matching all tools). Installer now migrates legacy `".*"`, `"*"`, and `""` matchers on re-install.
+- **Daemon venv missing pip causing TTS hangs** - `uv venv` was called without `--seed`, so the daemon venv had no `pip` package. spaCy's runtime pip invocations (spaCy#13747) would hang. Added `--seed` flag to seed pip into the venv at creation time.
 
 ### Added
 - **TTS model preloading at daemon startup** - Kokoro model now loads in a background thread when the daemon starts, eliminating the ~100s cold-start delay on first `kokoro_speak` call. Preload is skipped if TTS is disabled or dependencies are unavailable.

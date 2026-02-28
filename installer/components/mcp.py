@@ -398,7 +398,7 @@ def ensure_daemon_venv(
 
         try:
             result = subprocess.run(
-                ["uv", "venv", str(venv_dir), "--python", "3.12"],
+                ["uv", "venv", str(venv_dir), "--python", "3.12", "--seed"],
                 capture_output=True,
                 text=True,
                 timeout=120,

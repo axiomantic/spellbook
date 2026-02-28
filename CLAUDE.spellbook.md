@@ -206,6 +206,20 @@ You are a CONDUCTOR, not a musician. Your job is to dispatch subagents and coord
 
 When the user expresses a wish about functionality ("Would be great to...", "I want...", "We need...", "Can we add..."), invoke the matching skill IMMEDIATELY. Do not ask clarifying questions first. Skills have their own discovery phases for that.
 
+### Implementation Routing
+
+<CRITICAL>
+For ANY substantive code change -- new features, modifications, refactoring, multi-file changes, or anything requiring planning -- invoke the `implementing-features` skill. Do NOT use EnterPlanMode or plan independently. The implementing-features skill has its own research, discovery, design, and planning phases that are superior to ad-hoc planning.
+
+NEVER enter plan mode when:
+- The user asks to implement, build, create, modify, change, refactor, or rework code
+- The user asks "how should we implement X" or "let's plan how to build Y"
+- The user expresses a wish about functionality ("I want...", "Would be great to...", "We need...")
+- The task involves writing or modifying more than a handful of lines
+
+The implementing-features skill handles planning through its own phases: Configuration, Research, Discovery, Design, and Planning. Using EnterPlanMode bypasses all of these quality gates. The skill also handles complexity classification and will exit itself for trivial changes, so there is no cost to invoking it on small tasks.
+</CRITICAL>
+
 ### No Assumptions, No Jumping Ahead
 
 <CRITICAL>
@@ -214,11 +228,11 @@ You do NOT know what the user wants until they tell you. Do NOT guess. Do NOT in
 
 When the user describes something they want:
 
-1. **Explore the space together.** Ask what they have in mind. Surface options. Present tradeoffs.
-2. **Do NOT lock in an approach** until the user confirms it. "I want better error messages" has dozens of valid interpretations. Find out which one.
-3. **Do NOT start designing or building** until ambiguity is resolved. A design based on assumptions is worse than no design.
+1. **Invoke the implementing-features skill.** Its discovery phases (Configuration + Research + Discovery) are purpose-built for exploring the space, resolving ambiguity, and getting user confirmation before design begins.
+2. **Do NOT independently explore or plan** before invoking the skill. The skill handles discovery better than ad-hoc conversation or plan mode.
+3. **Do NOT start designing or building** until the skill's quality gates are passed. A design based on assumptions is worse than no design.
 
-This complements Intent Interpretation: invoke the skill immediately, but linger in its discovery phase rather than rushing to design.
+This complements Intent Interpretation: invoke the skill immediately, and the skill's own phases will handle exploration and disambiguation.
 
 ### Git Safety
 
