@@ -297,6 +297,7 @@ class TestPlatformInstallersNoInstallDaemon:
         installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
 
         with patch("installer.platforms.claude_code.check_claude_cli_available", return_value=False), \
+             patch("installer.components.mcp.check_claude_cli_available", return_value=False), \
              patch("installer.components.mcp.install_daemon") as mock_daemon:
             installer.install()
 
