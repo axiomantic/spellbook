@@ -1702,6 +1702,14 @@ def workflow_state_save(
         {"success": True/False, "project_path": str, "trigger": str, "error": str?}
     """
     from spellbook_mcp.db import get_connection
+    from spellbook_mcp.resume import validate_workflow_state
+
+    validation = validate_workflow_state(state)
+    if not validation["valid"]:
+        high_or_above = [f for f in validation["findings"] if f.get("severity") in ("HIGH", "CRITICAL")]
+        if high_or_above:
+            messages = [f.get("message", "unknown") for f in high_or_above]
+            return {"success": False, "project_path": project_path, "trigger": trigger, "error": f"Workflow state failed validation: {'; '.join(messages)}"}
 
     try:
         conn = get_connection()
@@ -1816,6 +1824,13 @@ def workflow_state_load(
             }
 
         state = json.loads(state_json)
+
+        import logging as _logging
+        _logger = _logging.getLogger(__name__)
+        from spellbook_mcp.resume import validate_workflow_state
+        validation = validate_workflow_state(state)
+        if not validation["valid"]:
+            _logger.warning("Loaded workflow state for %s failed validation: %s", project_path, [f.get("message", "unknown") for f in validation["findings"]])
 
         return {
             "success": True,

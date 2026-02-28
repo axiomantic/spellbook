@@ -10,6 +10,7 @@ import logging
 import os
 import re
 from datetime import datetime
+from pathlib import Path
 from typing import Optional, TypedDict
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,9 @@ class ResumeFields(TypedDict, total=False):
     resume_todos_corrupted: Optional[bool]
     resume_workflow_pattern: Optional[str]
     resume_boot_prompt: Optional[str]
+    resume_skill_constraints: Optional[dict]
+    resume_decisions_binding: Optional[list]
+    resume_identity_role: Optional[str]
 
 
 # Fresh start patterns (highest priority, override resume)
@@ -192,12 +196,136 @@ def _find_planning_docs(recent_files: list[str]) -> list[str]:
     return docs[:3]  # Limit to 3 docs
 
 
-def generate_boot_prompt(soul: dict) -> str:
+def _get_spellbook_dir() -> Path:
+    """Resolve the spellbook installation directory.
+
+    Duplicates path resolution from config_tools to avoid circular imports.
+
+    Resolution order:
+    1. SPELLBOOK_DIR environment variable
+    2. Walk up from this file looking for a directory containing skills/ and commands/
+    3. Fallback to ~/.local/spellbook
+
+    Returns:
+        Path to the spellbook directory.
+    """
+    # 1. Check environment variable
+    env_dir = os.environ.get("SPELLBOOK_DIR")
+    if env_dir:
+        return Path(env_dir)
+
+    # 2. Walk up from __file__ looking for skills/ and commands/
+    current = Path(__file__).resolve().parent
+    for _ in range(10):  # Limit traversal depth
+        if (current / "skills").is_dir() and (current / "commands").is_dir():
+            return current
+        parent = current.parent
+        if parent == current:
+            break
+        current = parent
+
+    # 3. Fallback
+    return Path.home() / ".local" / "spellbook"
+
+
+def _extract_section_content(content: str, section_name: str) -> str | None:
+    """Extract content between XML-style tags from a string.
+
+    Looks for <SECTION_NAME>...</SECTION_NAME> patterns (case-insensitive).
+    If multiple matches exist, concatenates them with newlines.
+
+    Args:
+        content: The full text to search.
+        section_name: The tag name (e.g., "FORBIDDEN", "REQUIRED").
+
+    Returns:
+        The extracted content, or None if no match found.
+    """
+    pattern = re.compile(
+        rf"<{section_name}>(.*?)</{section_name}>",
+        re.DOTALL | re.IGNORECASE,
+    )
+    matches = pattern.findall(content)
+    if not matches:
+        return None
+    return "\n".join(m.strip() for m in matches)
+
+
+def _parse_section_items(section_text: str) -> list[str]:
+    """Parse section text into a list of items.
+
+    Strips leading bullet characters (-, *, 1., etc.), skips empty lines,
+    and filters out lines that are entirely bold sub-headers (**...**).
+
+    Args:
+        section_text: Raw text from a section.
+
+    Returns:
+        List of stripped item strings.
+    """
+    items: list[str] = []
+    for line in section_text.split("\n"):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        # Skip bold sub-headers (lines that are entirely **...**)
+        if re.match(r"^\*\*[^*]+\*\*$", stripped):
+            continue
+        # Strip leading bullet chars
+        stripped = re.sub(r"^[-*]\s+", "", stripped)
+        stripped = re.sub(r"^\d+\.\s+", "", stripped)
+        stripped = stripped.strip()
+        if stripped:
+            items.append(stripped)
+    return items
+
+
+def _get_skill_constraints(skill_name: str) -> dict:
+    """Extract FORBIDDEN and REQUIRED constraints from a skill's SKILL.md.
+
+    Args:
+        skill_name: Name of the skill (e.g., "debugging").
+
+    Returns:
+        Dict with "forbidden" and "required" lists of constraint strings.
+        Returns empty lists on any error (file not found, no sections, etc.).
+    """
+    try:
+        spellbook_dir = _get_spellbook_dir()
+        skill_path = spellbook_dir / "skills" / skill_name / "SKILL.md"
+        if not skill_path.is_file():
+            return {"forbidden": [], "required": []}
+
+        content = skill_path.read_text(encoding="utf-8")
+
+        forbidden_text = _extract_section_content(content, "FORBIDDEN")
+        required_text = _extract_section_content(content, "REQUIRED")
+
+        forbidden = _parse_section_items(forbidden_text) if forbidden_text else []
+        required = _parse_section_items(required_text) if required_text else []
+
+        return {"forbidden": forbidden, "required": required}
+    except Exception:
+        return {"forbidden": [], "required": []}
+
+
+def generate_boot_prompt(
+    soul: dict,
+    skill_constraints: dict | None = None,
+    binding_decisions: list[str] | None = None,
+    identity_role: str | None = None,
+) -> str:
     """Generate Section 0 boot prompt from extracted soul.
 
     Args:
         soul: Dict with keys: todos, active_skill, skill_phase,
               recent_files, exact_position, workflow_pattern
+        skill_constraints: Optional dict with "forbidden" and "required" lists
+            from the active skill's SKILL.md or workflow state.
+        binding_decisions: Optional list of decision strings that must not
+            be revisited after compaction.
+        identity_role: Optional string describing the role identity to restore
+            (e.g., "orchestrator").
 
     Returns:
         Markdown-formatted boot prompt for execution
@@ -258,14 +386,81 @@ def generate_boot_prompt(soul: dict) -> str:
 
     # 0.5 Constraints
     sections.append("\n### 0.5 Behavioral Constraints")
-    constraints = []
+    behavioral_constraints = []
     if soul.get("workflow_pattern"):
-        constraints.append(f"- Continue workflow pattern: {soul['workflow_pattern']}")
-    constraints.append("- Honor decisions from prior session")
-    constraints.append("- Run verification before marking tasks complete")
-    sections.append("\n".join(constraints))
+        behavioral_constraints.append(f"- Continue workflow pattern: {soul['workflow_pattern']}")
+    behavioral_constraints.append("- Honor decisions from prior session")
+    behavioral_constraints.append("- Run verification before marking tasks complete")
+    sections.append("\n".join(behavioral_constraints))
 
-    return "\n".join(sections)
+    # 0.6 Orchestrator Identity
+    sections.append("\n### 0.6 Orchestrator Identity")
+    if identity_role:
+        sections.append(f"- Role: {identity_role}")
+    else:
+        sections.append("- Role: ORCHESTRATOR (Senior Software Architect)")
+    sections.append("- You dispatch subagents via the Task tool for ALL substantive work")
+    sections.append("- You do NOT write code, read source files, or run tests in main context")
+
+    # 0.7 Active Skill Constraints (only if skill_constraints provided)
+    if skill_constraints:
+        forbidden = skill_constraints.get("forbidden", [])
+        required = skill_constraints.get("required", [])
+        if forbidden or required:
+            sections.append("\n### 0.7 Active Skill Constraints")
+            if forbidden:
+                sections.append("**FORBIDDEN:**")
+                for item in forbidden[:5]:
+                    sections.append(f"- {str(item)[:150]}")
+            if required:
+                sections.append("**REQUIRED:**")
+                for item in required[:5]:
+                    sections.append(f"- {str(item)[:150]}")
+
+    # 0.8 Binding Decisions (only if binding_decisions provided)
+    if binding_decisions:
+        sections.append("\n### 0.8 Binding Decisions (DO NOT REVISIT)")
+        for decision in binding_decisions[:5]:
+            sections.append(f"- {str(decision)[:200]}")
+
+    result = "\n".join(sections)
+
+    # Priority-based trimming if over budget (~8000 chars = ~2000 tokens)
+    MAX_CHARS = 8000
+    if len(result) > MAX_CHARS:
+        result = _remove_section(result, "### 0.8")
+    if len(result) > MAX_CHARS:
+        result = _remove_section(result, "### 0.7")
+    if len(result) > MAX_CHARS:
+        result = _remove_section(result, "### 0.3")
+
+    return result
+
+
+def _remove_section(text: str, section_header: str) -> str:
+    """Remove a section and its content from boot prompt text.
+
+    Removes from the section header to the next ### header or end of text.
+
+    Args:
+        text: The full boot prompt text.
+        section_header: The section header prefix to match (e.g., "### 0.8").
+
+    Returns:
+        Text with the matching section removed.
+    """
+    lines = text.split("\n")
+    result_lines = []
+    skipping = False
+    for line in lines:
+        if line.strip().startswith(section_header):
+            skipping = True
+            continue
+        if skipping and line.strip().startswith("### "):
+            skipping = False
+        if not skipping:
+            result_lines.append(line)
+    return "\n".join(result_lines)
 
 
 def _calculate_age_hours(bound_at: str) -> float:
@@ -361,6 +556,45 @@ def get_resume_fields(project_path: str, db_path: str) -> ResumeFields:
         # Count pending todos and check for corruption
         pending_count, todos_corrupted = count_pending_todos(todos_json)
 
+        # Query workflow_state table for additional context
+        skill_constraints = None
+        binding_decisions = None
+        identity_role = None
+
+        try:
+            cursor.execute("""
+                SELECT state_json, updated_at
+                FROM workflow_state
+                WHERE project_path = ?
+            """, (project_path,))
+            ws_row = cursor.fetchone()
+
+            if ws_row:
+                ws_state_json, ws_updated_at = ws_row
+                ws_state = json.loads(ws_state_json)
+
+                # Extract skill constraints from workflow state
+                if ws_state.get("skill_constraints"):
+                    skill_constraints = ws_state["skill_constraints"]
+
+                # Extract binding decisions from workflow state
+                if ws_state.get("decisions_binding"):
+                    binding_decisions = ws_state["decisions_binding"]
+
+                # Extract identity role from workflow state
+                if ws_state.get("identity_role"):
+                    identity_role = ws_state["identity_role"]
+        except Exception as e:
+            logger.warning(f"Failed to query workflow_state: {e}")
+
+        # Fallback: read constraints from skill file if not in workflow state
+        if skill_constraints is None and active_skill:
+            file_constraints = _get_skill_constraints(active_skill)
+            if file_constraints and (
+                file_constraints.get("forbidden") or file_constraints.get("required")
+            ):
+                skill_constraints = file_constraints
+
         # Build soul dict for boot prompt generation
         soul = {
             "id": soul_id,
@@ -376,8 +610,13 @@ def get_resume_fields(project_path: str, db_path: str) -> ResumeFields:
             "workflow_pattern": workflow_pattern,
         }
 
-        # Generate boot prompt
-        boot_prompt = generate_boot_prompt(soul)
+        # Generate boot prompt with enriched context
+        boot_prompt = generate_boot_prompt(
+            soul,
+            skill_constraints=skill_constraints,
+            binding_decisions=binding_decisions,
+            identity_role=identity_role,
+        )
 
         return ResumeFields(
             resume_available=True,
@@ -390,6 +629,9 @@ def get_resume_fields(project_path: str, db_path: str) -> ResumeFields:
             resume_todos_corrupted=todos_corrupted if todos_corrupted else None,
             resume_workflow_pattern=workflow_pattern,
             resume_boot_prompt=boot_prompt,
+            resume_skill_constraints=skill_constraints,
+            resume_decisions_binding=binding_decisions,
+            resume_identity_role=identity_role,
         )
 
     except Exception as e:
@@ -410,6 +652,9 @@ _ALLOWED_STATE_KEYS = frozenset({
     "workflow_pattern",
     "boot_prompt",
     "pending_todos",
+    "skill_constraints",
+    "decisions_binding",
+    "identity_role",
 })
 
 # Maximum total state size when serialized to JSON (1 MB).

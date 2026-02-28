@@ -1,8 +1,9 @@
 """
-Claude Code hook registration for security and TTS hooks.
+Claude Code hook registration for security, TTS, and compaction hooks.
 
-Manages PreToolUse and PostToolUse hook entries in .claude/settings.local.json
-that point to spellbook security scripts and TTS notification hooks.
+Manages hook entries in .claude/settings.local.json that point to
+spellbook security scripts, TTS notification hooks, and compaction
+recovery hooks.
 
 PreToolUse hooks:
   - Bash -> bash-gate.sh
@@ -14,6 +15,12 @@ PostToolUse hooks:
   - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (async, timeout: 10)
   - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (timeout: 10)
   - (catch-all, no matcher) -> tts-notify.sh (async, timeout: 15)
+
+PreCompact hooks:
+  - (catch-all, no matcher) -> pre-compact-save.sh (timeout: 5)
+
+SessionStart hooks:
+  - (catch-all, no matcher) -> post-compact-recover.sh (timeout: 10)
 
 Note: Catch-all hooks omit the ``matcher`` field entirely rather than
 using ``".*"`` or ``"*"``.  Claude Code documentation states: "Use ``*``,
@@ -93,6 +100,33 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
                     "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
                     "async": True,
                     "timeout": 15,
+                },
+            ],
+        },
+    ],
+    "PreCompact": [
+        {
+            # Catch-all: saves workflow state before compaction.
+            # Fail-open (exit 0 always) - must never block compaction.
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/pre-compact-save.sh",
+                    "timeout": 5,
+                },
+            ],
+        },
+    ],
+    "SessionStart": [
+        {
+            # Catch-all: injects recovery context after compaction.
+            # Fail-open (exit 0 always) - must never prevent session start.
+            # The script itself filters on source=="compact" internally.
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/post-compact-recover.sh",
+                    "timeout": 10,
                 },
             ],
         },
