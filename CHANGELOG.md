@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **spacy model installed during TTS setup** - Kokoro's dependency chain (kokoro -> misaki -> spacy) requires the `en_core_web_sm` language model, which spacy tries to auto-download via `pip install` at runtime. This fails in uv-managed venvs (no pip). The installer now pre-installs the spacy model wheel directly from GitHub Releases via uv during TTS setup.
 - **Kokoro model cache detection** - Fixed glob pattern for HuggingFace cache detection (`models--hexgrad--Kokoro*` instead of `models--hexagon*kokoro*`)
 - **Kokoro deprecation warning** - Pass explicit `repo_id='hexgrad/Kokoro-82M'` to suppress defaulting warning
+- **TTS hook announcements never firing** - Catch-all hooks used `"matcher": ".*"` which Claude Code does not reliably fire. Fixed to omit the `matcher` key entirely (the documented approach for matching all tools). Installer now migrates legacy `".*"`, `"*"`, and `""` matchers on re-install.
 
 ### Added
 - **TTS model preloading at daemon startup** - Kokoro model now loads in a background thread when the daemon starts, eliminating the ~100s cold-start delay on first `kokoro_speak` call. Preload is skipped if TTS is disabled or dependencies are unavailable.
