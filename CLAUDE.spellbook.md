@@ -379,6 +379,58 @@ Load `enforcing-code-quality` skill for full standards and checklist.
 
 <RULE>Run only ONE test command at a time. Wait for completion before running another. Parallel test commands overwhelm the system.</RULE>
 
+### Minimum Viable Test Run
+
+<RULE>Never run the full test suite when targeted tests suffice. Match test scope to change scope.</RULE>
+
+**Test tiers:**
+
+| Tier | Time | What | When |
+|------|------|------|------|
+| Unit | <1s each | Pure logic, no I/O, no external deps | After every change |
+| Integration | 1-30s each | Real resources (DB, filesystem, network) | After completing a logical unit of work |
+| E2E / Slow | >30s each | Full pipelines, large data, real services | Once per feature branch, before PR |
+
+**Selecting what to run:**
+
+- **Single file changed**: Run only the test file(s) that directly test that module. `src/auth/login.py` changed? Run `tests/test_login.py`.
+- **Shared dependency changed** (types, config, utilities): Grep for imports of the changed module across test files. Run all direct consumers.
+- **Multi-file task complete**: Run unit tests for all changed files in one command.
+- **All tasks in a work unit complete**: Run the full suite once.
+- **If >5 test files affected**: Run the full fast tier rather than listing individually.
+
+**Batching:** Write code for task 1, run targeted tests, write code for task 2, run targeted tests, run full suite once at end. Full-suite runs scale with completed work units, not individual edits.
+
+### Writing Tests for Speed
+
+- **Isolate expensive resources**: Mock GPU, network, and DB calls in unit tests. Real resources belong in integration tests only.
+- **Smallest possible inputs**: 4x4 matrices, not 1024x1024. Save large inputs for integration/performance tests.
+- **Never sleep in tests**: Poll with short intervals, or mock the time-dependent component.
+- **One assertion focus per test**: A test validating 10 things takes 10x longer to debug. Split into focused, independent tests.
+- **No heavy fixtures**: If a fixture takes longer than the test itself, it is too heavy for a unit test.
+
+### Test Marks
+
+<RULE>Apply marks proactively when writing tests. A test that calls a GPU kernel is a GPU test even if it is fast today.</RULE>
+
+| Mark | Meaning |
+|------|---------|
+| `slow` | >5 seconds. Skip during rapid iteration. |
+| `gpu` / `hardware` | Requires specific hardware. Skip on machines without it. |
+| `network` / `external` | Calls external services. Skip in offline/fast modes. |
+| `integration` | Requires multiple components working together. |
+| `smoke` | Minimal sanity checks. Run first. |
+
+If a project lacks marks, infer tiers from `--durations=0` (pytest) or equivalent: >5s is slow, >1s is integration, the rest are unit.
+
+### Cross-Module Regression
+
+When the full suite fails after targeted tests passed:
+
+1. Identify which tests failed
+2. Check if those tests import or depend on any module you changed
+3. If no obvious connection, investigate shared mutable state, test ordering, or resource contention (common with GPU/DB tests)
+
 ## MCP Tools
 
 <RULE>If an MCP tool appears in your available tools list, call it directly. Do not run diagnostic commands (like `claude mcp list`) to verify availability. Your tools list is the source of truth.</RULE>

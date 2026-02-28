@@ -335,6 +335,8 @@ B) No, satisfied with fixes
 
 **Missing tests entirely:** Read production code. Identify key behaviors. Write tests following codebase patterns. Ensure tests would catch real failures.
 
+**Slow/bloated tests:** Tests taking >5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data. Separate slow tests with marks (`@pytest.mark.slow`, `@pytest.mark.integration`, etc.) to preserve fast feedback on core functionality. Move real I/O to integration tier. Shrink test inputs to the minimum that exercises the behavior. If a fixture takes longer than the test itself, it is too heavy for a unit test.
+
 <FORBIDDEN>
 ## Anti-Patterns
 

@@ -311,6 +311,7 @@ Next failing test for next feature. The cycle continues until all behavior is im
 | **Minimal** | One thing. "and" in name? Split it. | `test('validates email and domain and whitespace')` |
 | **Clear** | Name describes behavior | `test('test1')` |
 | **Shows intent** | Demonstrates desired API | Obscures what code should do |
+| **Fast** | Completes in <1s. No I/O or heavy fixtures in unit tests. | 5-second test with database setup for pure logic |
 
 ## Evidence Requirements
 
@@ -495,6 +496,21 @@ When adding mocks or test utilities, avoid common pitfalls:
 | Test-only methods | Production code polluted for tests | Refactor design for testability |
 | Blind mocking | Don't understand what's mocked | Trace dependency chain first |
 | Over-mocking | Tests pass but behavior broken | Mock boundaries only, not internals |
+
+## Test Speed & Scope
+
+Fast tests enable tight red-green-refactor cycles. Slow tests break flow and discourage re-running.
+
+**Design for speed:**
+
+- **Isolate expensive resources**: Mock GPU, network, and DB calls in unit tests. Real resources belong in integration tests only.
+- **Smallest possible inputs**: 4x4 matrices, not 1024x1024. Save large inputs for performance/integration tests.
+- **Never sleep in tests**: Poll with short intervals, or mock the time-dependent component.
+- **Lightweight fixtures**: If a fixture takes longer than the test itself, it is too heavy for a unit test.
+
+**Apply marks proactively** when writing new tests. A test that calls a GPU kernel is a GPU test even if it is fast today. Common marks: `slow`, `gpu`/`hardware`, `network`/`external`, `integration`, `smoke`.
+
+**Scope test runs to changes**: If `src/auth/login.py` changed, run `tests/test_login.py`, not the entire suite. Run the full suite once at the end of a work unit, not after every edit.
 
 ## Final Rule
 

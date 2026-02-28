@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Commands renamed**: `fractal-think-init` -> `fractal-think-seed`, `fractal-think-explore` -> `fractal-think-work`, `fractal-think-synthesize` -> `fractal-think-harvest`
   - **Worker termination**: Workers exit only when no open AND no claimed nodes remain, preventing premature exit race conditions
   - **Budget-exhausted recovery**: Graphs in `budget_exhausted` status can now transition to `active` (for synthesis repair) or `completed`
+- **CLAUDE.spellbook.md testing section** - Expanded from single rule to comprehensive test execution strategy: minimum viable test run principle, test tiers table (unit/integration/E2E), change-scoped test selection, batching guidance, writing-tests-for-speed checklist, test marks table, and cross-module regression debugging
+- **test-driven-development skill** - Added `Fast` quality row to Good Tests table and new `Test Speed & Scope` section covering resource isolation, input minimization, mark application, and change-scoped test runs
+- **fixing-tests skill** - Added `Slow/bloated tests` special case covering mark separation, I/O tier demotion, input shrinking, and fixture weight checks
 
 ### Fixed
 - **TTS survives daemon venv rebuilds** - When the daemon venv is rebuilt (lockfile hash change), TTS dependencies are now preserved if the user previously opted in
