@@ -3862,14 +3862,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/fractal-think-init/" class="md-nav__link">
+      <a href="../../commands/fractal-think-seed/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /fractal-think-init
+    /fractal-think-seed
   
 
     
@@ -3890,14 +3890,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/fractal-think-explore/" class="md-nav__link">
+      <a href="../../commands/fractal-think-work/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /fractal-think-explore
+    /fractal-think-work
   
 
     
@@ -3918,14 +3918,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../commands/fractal-think-synthesize/" class="md-nav__link">
+      <a href="../../commands/fractal-think-harvest/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /fractal-think-synthesize
+    /fractal-think-harvest
   
 
     
@@ -7517,153 +7517,155 @@
 <a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>A finding in isolation tells you a pattern exists. An attack chain tells you what damage is possible. The difference between &quot;this file contains a dynamic execution call&quot; and &quot;an attacker can inject arbitrary code via untrusted skill content that reaches that call through the MCP server&quot; is the difference between awareness and actionable intelligence.
 <a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>&lt;/analysis&gt;
 <a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>
-<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="gu">### Steps</span>
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="gs">**Fractal exploration (optional):**</span> When a finding is HIGH or CRITICAL severity, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What attack vectors exist against [component] and what are the second-order effects?&quot;. Use the synthesis to enrich the attack chain graph.
 <a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>
-<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="k">1.</span> <span class="gs">**For each HIGH/CRITICAL finding, answer:**</span>
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="gu">### Steps</span>
 <a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>
-<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>   | Question | Purpose |
-<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>   |----------|---------|
-<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>   | What is the entry point? | How does attacker-controlled input reach this code? |
-<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>   | What is the trust boundary? | Does input cross from untrusted to trusted context? |
-<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>   | What is the impact? | Data loss, code execution, privilege escalation, exfiltration? |
-<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>   | What is the attack scenario? | Step-by-step exploitation narrative |
-<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>   | What prevents exploitation? | Existing mitigations, if any |
-<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>
-<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="k">2.</span> <span class="gs">**Document attack chains**</span> with these fields:
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="k">1.</span> <span class="gs">**For each HIGH/CRITICAL finding, answer:**</span>
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>   | Question | Purpose |
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>   |----------|---------|
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>   | What is the entry point? | How does attacker-controlled input reach this code? |
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>   | What is the trust boundary? | Does input cross from untrusted to trusted context? |
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>   | What is the impact? | Data loss, code execution, privilege escalation, exfiltration? |
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>   | What is the attack scenario? | Step-by-step exploitation narrative |
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>   | What prevents exploitation? | Existing mitigations, if any |
 <a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>
-<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Attack Chain name
-<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Entry: how attacker input enters the system
-<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Path: entry to component to component to vulnerable code
-<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Impact: what damage results from successful exploitation
-<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Mitigations: existing defenses that slow or prevent exploitation
-<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Exploitability: trivial, moderate, difficult, or theoretical
-<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>
-<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="k">3.</span> <span class="gs">**Re-assess severity**</span> based on attack chain analysis. A HIGH finding with a trivial exploitation path and no mitigations becomes CRITICAL. A CRITICAL finding behind multiple defense layers may remain CRITICAL but with lower exploitability.
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="k">2.</span> <span class="gs">**Document attack chains**</span> with these fields:
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Attack Chain name
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Entry: how attacker input enters the system
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Path: entry to component to component to vulnerable code
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Impact: what damage results from successful exploitation
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Mitigations: existing defenses that slow or prevent exploitation
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Exploitability: trivial, moderate, difficult, or theoretical
 <a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>
-<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>---
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a><span class="k">3.</span> <span class="gs">**Re-assess severity**</span> based on attack chain analysis. A HIGH finding with a trivial exploitation path and no mitigations becomes CRITICAL. A CRITICAL finding behind multiple defense layers may remain CRITICAL but with lower exploitability.
 <a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a>
-<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a><span class="gu">## Phase 5: REPORT</span>
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>---
 <a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a>
-<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a>Generate the structured audit report.
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a><span class="gu">## Phase 5: REPORT</span>
 <a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a>
-<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a><span class="gu">### Report Format</span>
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a>Generate the structured audit report.
 <a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a>
-<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a>The audit report is a markdown document with these sections in order:
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a><span class="gu">### Report Format</span>
 <a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>
-<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a><span class="k">1.</span> <span class="gs">**Header:**</span> Date, scope, security mode, verdict (PASS/WARN/FAIL)
-<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a><span class="k">2.</span> <span class="gs">**Executive Summary:**</span> 1-3 sentences on what was audited, what was found, overall risk
-<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a><span class="k">3.</span> <span class="gs">**Finding Counts:**</span> Table with severity rows (CRITICAL, HIGH, MEDIUM, LOW), count column, and false positives excluded column
-<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a><span class="k">4.</span> <span class="gs">**Findings by Severity:**</span> Sections for each severity level (CRITICAL first, then HIGH, MEDIUM, LOW). Each finding includes:
-<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>RULE_ID and message as heading
-<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>File path and line number
-<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Category (injection, exfiltration, escalation, obfuscation, mcp_tool)
-<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Evidence (matched text)
-<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Attack Chain reference (if applicable, from Phase 4)
-<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Remediation (specific fix)
-<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a><span class="k">5.</span> <span class="gs">**Attack Chains:**</span> Full Phase 4 documentation for HIGH/CRITICAL findings
-<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a><span class="k">6.</span> <span class="gs">**False Positives:**</span> Documented exclusions with rationale
-<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="k">7.</span> <span class="gs">**Recommendations:**</span> Prioritized remediation steps, process improvements, scanner rule adjustments
-<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a>
-<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="gu">### Output Location</span>
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a>The audit report is a markdown document with these sections in order:
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a><span class="k">1.</span> <span class="gs">**Header:**</span> Date, scope, security mode, verdict (PASS/WARN/FAIL)
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a><span class="k">2.</span> <span class="gs">**Executive Summary:**</span> 1-3 sentences on what was audited, what was found, overall risk
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="k">3.</span> <span class="gs">**Finding Counts:**</span> Table with severity rows (CRITICAL, HIGH, MEDIUM, LOW), count column, and false positives excluded column
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="k">4.</span> <span class="gs">**Findings by Severity:**</span> Sections for each severity level (CRITICAL first, then HIGH, MEDIUM, LOW). Each finding includes:
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>RULE_ID and message as heading
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>File path and line number
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Category (injection, exfiltration, escalation, obfuscation, mcp_tool)
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Evidence (matched text)
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Attack Chain reference (if applicable, from Phase 4)
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Remediation (specific fix)
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="k">5.</span> <span class="gs">**Attack Chains:**</span> Full Phase 4 documentation for HIGH/CRITICAL findings
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="k">6.</span> <span class="gs">**False Positives:**</span> Documented exclusions with rationale
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="k">7.</span> <span class="gs">**Recommendations:**</span> Prioritized remediation steps, process improvements, scanner rule adjustments
 <a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a>
-<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a>Save the report to <span class="sb">`$SPELLBOOK_CONFIG_DIR/docs/&lt;project-encoded&gt;/audits/security-audit-&lt;timestamp&gt;.md`</span>.
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="gu">### Output Location</span>
 <a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a>
-<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a>---
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a>Save the report to <span class="sb">`$SPELLBOOK_CONFIG_DIR/docs/&lt;project-encoded&gt;/audits/security-audit-&lt;timestamp&gt;.md`</span>.
 <a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>
-<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a><span class="gu">## Phase 6: GATE</span>
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a>---
 <a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a>
-<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a>Enforce the audit verdict as a quality gate.
+<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a><span class="gu">## Phase 6: GATE</span>
 <a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a>
-<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a><span class="gu">### Verdict Determination</span>
+<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>Enforce the audit verdict as a quality gate.
 <a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>
-<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>| Condition | Verdict | Action |
-<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a>|-----------|---------|--------|
-<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a>| Zero findings after classification | PASS | Proceed |
-<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a>| Only LOW/MEDIUM findings | WARN | Proceed with acknowledgment |
-<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>| Any HIGH finding with no attack chain | WARN | Proceed with acknowledgment |
-<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a>| Any HIGH finding with viable attack chain | FAIL | Block until remediated |
-<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a>| Any CRITICAL finding (regardless of chain) | FAIL | Block until remediated |
-<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a>
-<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="gu">### Gate Enforcement</span>
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a><span class="gu">### Verdict Determination</span>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a>
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a>| Condition | Verdict | Action |
+<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a>|-----------|---------|--------|
+<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>| Zero findings after classification | PASS | Proceed |
+<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a>| Only LOW/MEDIUM findings | WARN | Proceed with acknowledgment |
+<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a>| Any HIGH finding with no attack chain | WARN | Proceed with acknowledgment |
+<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a>| Any HIGH finding with viable attack chain | FAIL | Block until remediated |
+<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a>| Any CRITICAL finding (regardless of chain) | FAIL | Block until remediated |
 <a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a>
-<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="k">-</span><span class="w"> </span><span class="gs">**PASS:**</span> Report the clean audit. No action required.
-<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="k">-</span><span class="w"> </span><span class="gs">**WARN:**</span> Present findings to user. Require explicit acknowledgment before proceeding. Log acknowledgment in report.
-<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a><span class="k">-</span><span class="w"> </span><span class="gs">**FAIL:**</span> Present findings to user. Do NOT proceed with any further workflow steps. The audit blocks progress until findings are remediated and a re-scan passes.
-<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a>
-<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a>---
+<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="gu">### Gate Enforcement</span>
+<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a>
+<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a><span class="k">-</span><span class="w"> </span><span class="gs">**PASS:**</span> Report the clean audit. No action required.
+<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="k">-</span><span class="w"> </span><span class="gs">**WARN:**</span> Present findings to user. Require explicit acknowledgment before proceeding. Log acknowledgment in report.
+<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a><span class="k">-</span><span class="w"> </span><span class="gs">**FAIL:**</span> Present findings to user. Do NOT proceed with any further workflow steps. The audit blocks progress until findings are remediated and a re-scan passes.
 <a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a>
-<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a><span class="gu">## Integration Points</span>
+<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a>---
 <a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a>
-<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a><span class="gu">### With `code-review --audit`</span>
+<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a><span class="gu">## Integration Points</span>
 <a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a>
-<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a>When <span class="sb">`code-review`</span> runs in <span class="sb">`--audit`</span> mode, it can invoke this skill for the security pass:
-<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a><span class="k">1.</span> <span class="sb">`code-review --audit`</span> handles correctness, performance, and maintainability passes
-<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a><span class="k">2.</span> This skill handles the security pass specifically
-<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a><span class="k">3.</span> Findings from both are combined in the final audit report
-<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a>
-<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="gu">### With `implementing-features` Phase 4</span>
+<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a><span class="gu">### With `code-review --audit`</span>
+<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a>
+<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a>When <span class="sb">`code-review`</span> runs in <span class="sb">`--audit`</span> mode, it can invoke this skill for the security pass:
+<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a><span class="k">1.</span> <span class="sb">`code-review --audit`</span> handles correctness, performance, and maintainability passes
+<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a><span class="k">2.</span> This skill handles the security pass specifically
+<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="k">3.</span> Findings from both are combined in the final audit report
 <a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a>
-<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a>During feature implementation quality gates:
-<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a><span class="k">1.</span> <span class="sb">`implementing-features`</span> Phase 4 dispatches a subagent that invokes this skill
-<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="k">2.</span> Scope is set to the changeset (branch diff against base)
-<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a><span class="k">3.</span> FAIL verdict blocks the feature from proceeding to merge
-<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="k">4.</span> WARN verdict requires the implementer to acknowledge findings
-<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a>
-<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a><span class="gu">### With `distilling-prs` for PR Review</span>
+<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a><span class="gu">### With `implementing-features` Phase 4</span>
+<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a>
+<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a>During feature implementation quality gates:
+<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a><span class="k">1.</span> <span class="sb">`implementing-features`</span> Phase 4 dispatches a subagent that invokes this skill
+<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="k">2.</span> Scope is set to the changeset (branch diff against base)
+<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a><span class="k">3.</span> FAIL verdict blocks the feature from proceeding to merge
+<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a><span class="k">4.</span> WARN verdict requires the implementer to acknowledge findings
 <a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a>
-<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a>When distilling a PR for review:
-<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a><span class="k">1.</span> <span class="sb">`distilling-prs`</span> can invoke this skill on the PR diff
-<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a><span class="k">2.</span> Scope is set to changeset mode with the PR&#39;s unified diff
-<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a><span class="k">3.</span> Security findings are surfaced as &quot;review required&quot; items in the PR distillation report
-<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a>
-<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a>---
+<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a><span class="gu">### With `distilling-prs` for PR Review</span>
+<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a>
+<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a>When distilling a PR for review:
+<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a><span class="k">1.</span> <span class="sb">`distilling-prs`</span> can invoke this skill on the PR diff
+<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a><span class="k">2.</span> Scope is set to changeset mode with the PR&#39;s unified diff
+<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a><span class="k">3.</span> Security findings are surfaced as &quot;review required&quot; items in the PR distillation report
 <a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a>
-<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a><span class="k">-</span><span class="w"> </span>Skipping Phase 3 classification (raw scanner output is not an audit)
-<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="k">-</span><span class="w"> </span>Marking a CRITICAL finding as false positive without documented evidence
-<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="k">-</span><span class="w"> </span>Downgrading severity without explaining why in the rationale
-<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="k">-</span><span class="w"> </span>Proceeding past a FAIL gate without remediation
-<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a><span class="k">-</span><span class="w"> </span>Running only skill scans when MCP tools are in scope (or vice versa)
-<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="k">-</span><span class="w"> </span>Treating scanner output as the final word without contextual analysis
-<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a>
-<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a>&lt;reflection&gt;
-<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a>Before finalizing, evaluate your own audit critically: Did you investigate each scanner finding in its full context, or did you rubber-stamp severity levels? Did you trace attack chains end-to-end, or stop at the first plausible-sounding explanation? Are there areas you avoided because they were complex? Honest self-assessment here prevents false confidence in the final report.
-<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a>
-<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a>---
+<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a>
+<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="k">-</span><span class="w"> </span>Skipping Phase 3 classification (raw scanner output is not an audit)
+<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="k">-</span><span class="w"> </span>Marking a CRITICAL finding as false positive without documented evidence
+<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a><span class="k">-</span><span class="w"> </span>Downgrading severity without explaining why in the rationale
+<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="k">-</span><span class="w"> </span>Proceeding past a FAIL gate without remediation
+<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a><span class="k">-</span><span class="w"> </span>Running only skill scans when MCP tools are in scope (or vice versa)
+<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="k">-</span><span class="w"> </span>Treating scanner output as the final word without contextual analysis
+<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a>
+<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a>&lt;reflection&gt;
+<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a>Before finalizing, evaluate your own audit critically: Did you investigate each scanner finding in its full context, or did you rubber-stamp severity levels? Did you trace attack chains end-to-end, or stop at the first plausible-sounding explanation? Are there areas you avoided because they were complex? Honest self-assessment here prevents false confidence in the final report.
+<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a>&lt;/reflection&gt;
 <a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a>
-<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a>Before completing the audit, verify:
+<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a>
-<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a><span class="gs">**Completeness:**</span>
-<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a><span class="k">- [ ]</span> All targets in scope were scanned
-<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a><span class="k">- [ ]</span> Both markdown and Python scanners used (if scope includes both)
-<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="k">- [ ]</span> Every scanner finding has been classified (confirmed, downgraded, or marked false positive)
-<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a>
-<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="gs">**Classification Quality:**</span>
-<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a><span class="k">- [ ]</span> Each finding has assessed severity with rationale
-<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="k">- [ ]</span> False positives documented with evidence
-<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a><span class="k">- [ ]</span> Trust levels applied to contextual assessment
-<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a>
-<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a><span class="gs">**Trace Quality:**</span>
-<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a><span class="k">- [ ]</span> Every HIGH/CRITICAL finding has attack chain analysis
-<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a><span class="k">- [ ]</span> Entry points identified for each chain
-<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a><span class="k">- [ ]</span> Existing mitigations noted
-<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a>
-<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a><span class="gs">**Report Quality:**</span>
-<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a><span class="k">- [ ]</span> Executive summary accurately reflects findings
-<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a><span class="k">- [ ]</span> Finding counts match detailed listings
-<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a><span class="k">- [ ]</span> Remediation steps are specific and actionable
-<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a><span class="k">- [ ]</span> Report written to correct output path
-<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a>
-<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a><span class="gs">**Gate:**</span>
-<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a><span class="k">- [ ]</span> Verdict matches the determination criteria
-<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a><span class="k">- [ ]</span> FAIL verdicts block progress
-<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a><span class="k">- [ ]</span> WARN verdicts require acknowledgment
-<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a>
-<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a>The scanner finds patterns. You find vulnerabilities. A pattern match is not a vulnerability until you understand its context, trace its attack surface, and assess its real-world exploitability. Do the work. Every phase matters.
-<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a>Before completing the audit, verify:
+<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a>
+<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a><span class="gs">**Completeness:**</span>
+<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="k">- [ ]</span> All targets in scope were scanned
+<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a><span class="k">- [ ]</span> Both markdown and Python scanners used (if scope includes both)
+<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="k">- [ ]</span> Every scanner finding has been classified (confirmed, downgraded, or marked false positive)
+<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a>
+<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="gs">**Classification Quality:**</span>
+<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a><span class="k">- [ ]</span> Each finding has assessed severity with rationale
+<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a><span class="k">- [ ]</span> False positives documented with evidence
+<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a><span class="k">- [ ]</span> Trust levels applied to contextual assessment
+<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a>
+<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a><span class="gs">**Trace Quality:**</span>
+<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a><span class="k">- [ ]</span> Every HIGH/CRITICAL finding has attack chain analysis
+<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a><span class="k">- [ ]</span> Entry points identified for each chain
+<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a><span class="k">- [ ]</span> Existing mitigations noted
+<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a>
+<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a><span class="gs">**Report Quality:**</span>
+<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a><span class="k">- [ ]</span> Executive summary accurately reflects findings
+<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a><span class="k">- [ ]</span> Finding counts match detailed listings
+<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a><span class="k">- [ ]</span> Remediation steps are specific and actionable
+<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a><span class="k">- [ ]</span> Report written to correct output path
+<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a>
+<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a><span class="gs">**Gate:**</span>
+<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a><span class="k">- [ ]</span> Verdict matches the determination criteria
+<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a><span class="k">- [ ]</span> FAIL verdicts block progress
+<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a><span class="k">- [ ]</span> WARN verdicts require acknowledgment
+<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a>
+<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a>The scanner finds patterns. You find vulnerabilities. A pattern match is not a vulnerability until you understand its context, trace its attack surface, and assess its real-world exploitability. Do the work. Every phase matters.
+<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

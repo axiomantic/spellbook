@@ -3862,14 +3862,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fractal-think-init/" class="md-nav__link">
+      <a href="../fractal-think-seed/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /fractal-think-init
+    /fractal-think-seed
   
 
     
@@ -3890,14 +3890,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fractal-think-explore/" class="md-nav__link">
+      <a href="../fractal-think-work/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /fractal-think-explore
+    /fractal-think-work
   
 
     
@@ -3918,14 +3918,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../fractal-think-synthesize/" class="md-nav__link">
+      <a href="../fractal-think-harvest/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    /fractal-think-synthesize
+    /fractal-think-harvest
   
 
     
@@ -7343,290 +7343,292 @@
 <a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="k">-</span><span class="w"> </span>Should any referenced content be inlined?
 <a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="k">-</span><span class="w"> </span>Should any inline content be extracted to a reference?
 <a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>
-<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a><span class="gu">### Phase 3: Improvement Design</span>
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a><span class="gs">**Fractal exploration (optional):**</span> When a prompt has 5+ cross-references or nested conditionals, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What would an LLM misinterpret in [prompt purpose]?&quot;. Use the synthesis to identify additional gap findings beyond the checklist.
 <a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>
-<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>Based on gaps found, BEFORE compression:
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a><span class="gu">### Phase 3: Improvement Design</span>
 <a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>
-<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="k">1.</span> <span class="gs">**Add missing emotional anchors**</span> - Opening, closing, critical junctures need stakes
-<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="k">2.</span> <span class="gs">**Add missing examples**</span> - Abstract behavior needs concrete anchoring
-<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="k">3.</span> <span class="gs">**Add missing error handling**</span> - Undefined failure modes need explicit paths
-<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a><span class="k">4.</span> <span class="gs">**Strengthen weak negative constraints**</span> - Implicit &quot;don&#39;ts&quot; become explicit
-<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="k">5.</span> <span class="gs">**Fix stale cross-references**</span> - Update or inline as needed
-<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a><span class="k">6.</span> <span class="gs">**Clarify ambiguities**</span> - Make conditionals explicit
-<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a>
-<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>Document each improvement with rationale.
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a>Based on gaps found, BEFORE compression:
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a>
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="k">1.</span> <span class="gs">**Add missing emotional anchors**</span> - Opening, closing, critical junctures need stakes
+<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a><span class="k">2.</span> <span class="gs">**Add missing examples**</span> - Abstract behavior needs concrete anchoring
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="k">3.</span> <span class="gs">**Add missing error handling**</span> - Undefined failure modes need explicit paths
+<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a><span class="k">4.</span> <span class="gs">**Strengthen weak negative constraints**</span> - Implicit &quot;don&#39;ts&quot; become explicit
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="k">5.</span> <span class="gs">**Fix stale cross-references**</span> - Update or inline as needed
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a><span class="k">6.</span> <span class="gs">**Clarify ambiguities**</span> - Make conditionals explicit
 <a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a>
-<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a><span class="gu">### Phase 4: Compression (Only After Phases 1-3)</span>
+<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a>Document each improvement with rationale.
 <a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a>
-<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a>With full understanding and improvements designed, compress:
+<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a><span class="gu">### Phase 4: Compression (Only After Phases 1-3)</span>
 <a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>
-<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a><span class="gs">**Target for removal:**</span>
-<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a><span class="k">-</span><span class="w"> </span>Redundant prose (same concept multiple ways) → consolidate to strongest
-<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a><span class="k">-</span><span class="w"> </span>Verbose transitions (&quot;Now let&#39;s...&quot;, &quot;Moving on to...&quot;) → remove
-<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a><span class="k">-</span><span class="w"> </span>Over-explained simple concepts (LLM knows what a function is)
-<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a><span class="k">-</span><span class="w"> </span>Redundant emphasis (10 CRITICALs → 3 strategically placed)
-<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>
-<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a><span class="gs">**Compression constraints (NEVER violate):**</span>
-<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a><span class="k">-</span><span class="w"> </span>Emotional anchors: minimum 3 (opening, closing, one mid-document)
-<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a><span class="k">-</span><span class="w"> </span>Examples per key behavior: minimum 1
-<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="k">-</span><span class="w"> </span>Pseudocode: tighten syntax, NEVER remove steps or edge cases
-<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a><span class="k">-</span><span class="w"> </span>Data structures: preserve ALL fields
-<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="k">-</span><span class="w"> </span>Error handling: preserve ALL paths
-<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="k">-</span><span class="w"> </span>Cross-references: preserve ALL, must resolve
-<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a>
-<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="gs">**Compression techniques:**</span>
-<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a><span class="k">-</span><span class="w"> </span>Telegraphic language: remove articles, filler words
-<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="k">-</span><span class="w"> </span>Declarative over imperative: &quot;Research codebase&quot; not &quot;You should research the codebase&quot;
-<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a><span class="k">-</span><span class="w"> </span>Merge redundant sections: if two sections say the same thing, keep the better one
-<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a><span class="k">-</span><span class="w"> </span>Tighten examples: keep the essence, remove padding
-<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a>
-<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a><span class="gu">### Pre-Crystallization Verification (Gate Before Output)</span>
+<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>With full understanding and improvements designed, compress:
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a><span class="gs">**Target for removal:**</span>
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a><span class="k">-</span><span class="w"> </span>Redundant prose (same concept multiple ways) → consolidate to strongest
+<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a><span class="k">-</span><span class="w"> </span>Verbose transitions (&quot;Now let&#39;s...&quot;, &quot;Moving on to...&quot;) → remove
+<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a><span class="k">-</span><span class="w"> </span>Over-explained simple concepts (LLM knows what a function is)
+<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a><span class="k">-</span><span class="w"> </span>Redundant emphasis (10 CRITICALs → 3 strategically placed)
+<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a>
+<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a><span class="gs">**Compression constraints (NEVER violate):**</span>
+<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="k">-</span><span class="w"> </span>Emotional anchors: minimum 3 (opening, closing, one mid-document)
+<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a><span class="k">-</span><span class="w"> </span>Examples per key behavior: minimum 1
+<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="k">-</span><span class="w"> </span>Pseudocode: tighten syntax, NEVER remove steps or edge cases
+<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="k">-</span><span class="w"> </span>Data structures: preserve ALL fields
+<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a><span class="k">-</span><span class="w"> </span>Error handling: preserve ALL paths
+<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="k">-</span><span class="w"> </span>Cross-references: preserve ALL, must resolve
+<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a>
+<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="gs">**Compression techniques:**</span>
+<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a><span class="k">-</span><span class="w"> </span>Telegraphic language: remove articles, filler words
+<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a><span class="k">-</span><span class="w"> </span>Declarative over imperative: &quot;Research codebase&quot; not &quot;You should research the codebase&quot;
+<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a><span class="k">-</span><span class="w"> </span>Merge redundant sections: if two sections say the same thing, keep the better one
+<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a><span class="k">-</span><span class="w"> </span>Tighten examples: keep the essence, remove padding
 <a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a>
-<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a>Before generating synthesized output, verify ALL of these. If ANY fails: HALT and restore content.
-<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a>
-<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a><span class="k">- [ ]</span> Opening emotional anchor identified and preserved
-<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="k">- [ ]</span> Closing emotional anchor identified and preserved
-<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a><span class="k">- [ ]</span> Minimum 3 CRITICAL/FORBIDDEN blocks preserved
-<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a><span class="k">- [ ]</span> All functional symbols (✓ ✗ ⚠ ⏳) preserved
-<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a><span class="k">- [ ]</span> All explanatory table columns preserved
-<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="k">- [ ]</span> All calibration notes preserved (&quot;You are bad at...&quot;, etc.)
-<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a><span class="k">- [ ]</span> All cycle completion steps preserved (&quot;Repeat&quot;, &quot;Continue until&quot;)
-<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="k">- [ ]</span> All negative guidance sections preserved (&quot;When NOT to Use&quot;)
-<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a><span class="k">- [ ]</span> No section merging that reduces discoverability
-<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a>
-<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a><span class="gs">**On failure:**</span> HALT crystallization. Report specific failure. Restore missing content from original before proceeding.
-<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a>
-<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a><span class="gu">### Phase 4.5: Iteration Loop</span>
+<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a><span class="gu">### Pre-Crystallization Verification (Gate Before Output)</span>
+<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a>
+<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a>Before generating synthesized output, verify ALL of these. If ANY fails: HALT and restore content.
+<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a>
+<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a><span class="k">- [ ]</span> Opening emotional anchor identified and preserved
+<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a><span class="k">- [ ]</span> Closing emotional anchor identified and preserved
+<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a><span class="k">- [ ]</span> Minimum 3 CRITICAL/FORBIDDEN blocks preserved
+<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="k">- [ ]</span> All functional symbols (✓ ✗ ⚠ ⏳) preserved
+<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a><span class="k">- [ ]</span> All explanatory table columns preserved
+<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="k">- [ ]</span> All calibration notes preserved (&quot;You are bad at...&quot;, etc.)
+<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a><span class="k">- [ ]</span> All cycle completion steps preserved (&quot;Repeat&quot;, &quot;Continue until&quot;)
+<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a><span class="k">- [ ]</span> All negative guidance sections preserved (&quot;When NOT to Use&quot;)
+<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a><span class="k">- [ ]</span> No section merging that reduces discoverability
+<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a>
+<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a><span class="gs">**On failure:**</span> HALT crystallization. Report specific failure. Restore missing content from original before proceeding.
+<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a>
-<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a>After compression, iterate until output passes self-review. This prevents common crystallization failures.
+<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a><span class="gu">### Phase 4.5: Iteration Loop</span>
 <a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a>
-<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a><span class="gs">**Circuit breaker:**</span> Maximum 3 iterations. If still failing after 3, HALT and report unresolved issues to user.
-<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a>
-<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="gs">**Iteration Protocol:**</span>
+<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a>After compression, iterate until output passes self-review. This prevents common crystallization failures.
+<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a>
+<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="gs">**Circuit breaker:**</span> Maximum 3 iterations. If still failing after 3, HALT and report unresolved issues to user.
+<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a>
-<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a><span class="sb">```</span>
-<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="sb">iteration = 0</span>
-<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a><span class="sb">max_iterations = 3</span>
-<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a>
-<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a><span class="sb">WHILE iteration &lt; max_iterations:</span>
-<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a><span class="sb">    RUN self_review(compressed_output)</span>
-<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="sb">    IF all_checks_pass:</span>
-<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a><span class="sb">        BREAK → proceed to Phase 5</span>
-<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a><span class="sb">    ELSE:</span>
-<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a><span class="sb">        LOG issues found</span>
-<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a><span class="sb">        FIX identified issues</span>
-<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a><span class="sb">        iteration += 1</span>
-<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a>
-<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a><span class="sb">IF iteration == max_iterations AND NOT all_checks_pass:</span>
-<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a><span class="sb">    HALT → report unresolved issues to user</span>
-<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="sb">```</span>
-<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a>
-<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="gs">**Self-Review Checklist (run each iteration):**</span>
+<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a><span class="gs">**Iteration Protocol:**</span>
+<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a>
+<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a><span class="sb">```</span>
+<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="sb">iteration = 0</span>
+<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a><span class="sb">max_iterations = 3</span>
+<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a>
+<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="sb">WHILE iteration &lt; max_iterations:</span>
+<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a><span class="sb">    RUN self_review(compressed_output)</span>
+<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a><span class="sb">    IF all_checks_pass:</span>
+<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a><span class="sb">        BREAK → proceed to Phase 5</span>
+<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a><span class="sb">    ELSE:</span>
+<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a><span class="sb">        LOG issues found</span>
+<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a><span class="sb">        FIX identified issues</span>
+<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a><span class="sb">        iteration += 1</span>
+<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a>
+<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="sb">IF iteration == max_iterations AND NOT all_checks_pass:</span>
+<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a><span class="sb">    HALT → report unresolved issues to user</span>
+<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="sb">```</span>
 <a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a>
-<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a>| Check | Detection | Fix |
-<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a>|-------|-----------|-----|
-<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a>| Missing closing anchor | No <span class="sb">`&lt;/FINAL_EMPHASIS&gt;`</span> or <span class="sb">`&lt;/ROLE&gt;`</span> at end | Restore from original or add canonical closing |
-<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a>| Insufficient CRITICAL/FORBIDDEN | Count &lt; 3 | Restore removed blocks from original |
-<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a>| Lost explanatory tables | Table columns reduced OR &quot;Why&quot;/&quot;Rationale&quot;/&quot;Example&quot; columns missing | Restore full table from original |
-<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a>| Missing negative guidance | No &quot;When NOT to Use&quot; / &quot;Avoid&quot; / &quot;Never&quot; sections | Restore section from original |
-<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a>| Lost calibration notes | Missing &quot;You are bad at&quot; / &quot;known failure&quot; / &quot;common mistake&quot; phrases | Restore calibration content from original |
-<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a>| Broken workflow cycles | Missing &quot;Repeat&quot; / &quot;Continue until&quot; / loop-back instructions | Restore cycle completion from original |
-<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a>| Incomplete enumerations | List has fewer items than original | Restore complete list from original |
-<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a>| Missing functional symbols | ✓ ✗ ⚠ ⏳ removed | Restore symbols from original |
-<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a>
-<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a><span class="gs">**Iteration Log Format:**</span>
+<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="gs">**Self-Review Checklist (run each iteration):**</span>
+<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a>
+<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a>| Check | Detection | Fix |
+<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a>|-------|-----------|-----|
+<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a>| Missing closing anchor | No <span class="sb">`&lt;/FINAL_EMPHASIS&gt;`</span> or <span class="sb">`&lt;/ROLE&gt;`</span> at end | Restore from original or add canonical closing |
+<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a>| Insufficient CRITICAL/FORBIDDEN | Count &lt; 3 | Restore removed blocks from original |
+<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a>| Lost explanatory tables | Table columns reduced OR &quot;Why&quot;/&quot;Rationale&quot;/&quot;Example&quot; columns missing | Restore full table from original |
+<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a>| Missing negative guidance | No &quot;When NOT to Use&quot; / &quot;Avoid&quot; / &quot;Never&quot; sections | Restore section from original |
+<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a>| Lost calibration notes | Missing &quot;You are bad at&quot; / &quot;known failure&quot; / &quot;common mistake&quot; phrases | Restore calibration content from original |
+<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a>| Broken workflow cycles | Missing &quot;Repeat&quot; / &quot;Continue until&quot; / loop-back instructions | Restore cycle completion from original |
+<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a>| Incomplete enumerations | List has fewer items than original | Restore complete list from original |
+<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a>| Missing functional symbols | ✓ ✗ ⚠ ⏳ removed | Restore symbols from original |
 <a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a>
-<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a><span class="sb">```</span>
-<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a><span class="sb">=== Iteration N ===</span>
-<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a><span class="sb">Issues Found:</span>
-<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a><span class="sb">- [Issue 1]: [Specific location and description]</span>
-<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a><span class="sb">- [Issue 2]: [Specific location and description]</span>
-<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a>
-<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a><span class="sb">Fixes Applied:</span>
-<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a><span class="sb">- [Fix 1]: [What was restored/corrected]</span>
-<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a><span class="sb">- [Fix 2]: [What was restored/corrected]</span>
-<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a>
-<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a><span class="sb">Status: [PASS | FAIL - continuing to iteration N+1]</span>
-<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a><span class="sb">```</span>
-<a id="__codelineno-1-340" name="__codelineno-1-340" href="#__codelineno-1-340"></a>
-<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a><span class="gs">**Exit Conditions:**</span>
+<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a><span class="gs">**Iteration Log Format:**</span>
+<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a>
+<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a><span class="sb">```</span>
+<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a><span class="sb">=== Iteration N ===</span>
+<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a><span class="sb">Issues Found:</span>
+<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a><span class="sb">- [Issue 1]: [Specific location and description]</span>
+<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a><span class="sb">- [Issue 2]: [Specific location and description]</span>
+<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a>
+<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a><span class="sb">Fixes Applied:</span>
+<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a><span class="sb">- [Fix 1]: [What was restored/corrected]</span>
+<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a><span class="sb">- [Fix 2]: [What was restored/corrected]</span>
+<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a>
+<a id="__codelineno-1-340" name="__codelineno-1-340" href="#__codelineno-1-340"></a><span class="sb">Status: [PASS | FAIL - continuing to iteration N+1]</span>
+<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a><span class="sb">```</span>
 <a id="__codelineno-1-342" name="__codelineno-1-342" href="#__codelineno-1-342"></a>
-<a id="__codelineno-1-343" name="__codelineno-1-343" href="#__codelineno-1-343"></a><span class="k">1.</span> <span class="gs">**PASS**</span>: All 8 checks pass → proceed to Phase 5
-<a id="__codelineno-1-344" name="__codelineno-1-344" href="#__codelineno-1-344"></a><span class="k">2.</span> <span class="gs">**FAIL + iterations remaining**</span>: Fix issues, increment counter, re-run checks
-<a id="__codelineno-1-345" name="__codelineno-1-345" href="#__codelineno-1-345"></a><span class="k">3.</span> <span class="gs">**FAIL + no iterations remaining**</span>: HALT, report to user with:
-<a id="__codelineno-1-346" name="__codelineno-1-346" href="#__codelineno-1-346"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>List of unresolved issues
-<a id="__codelineno-1-347" name="__codelineno-1-347" href="#__codelineno-1-347"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Specific locations in output
-<a id="__codelineno-1-348" name="__codelineno-1-348" href="#__codelineno-1-348"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Suggested manual fixes
-<a id="__codelineno-1-349" name="__codelineno-1-349" href="#__codelineno-1-349"></a>
-<a id="__codelineno-1-350" name="__codelineno-1-350" href="#__codelineno-1-350"></a>&lt;RULE&gt;
-<a id="__codelineno-1-351" name="__codelineno-1-351" href="#__codelineno-1-351"></a>Each iteration must make FORWARD PROGRESS. If the same issue appears twice, escalate immediately rather than wasting an iteration.
-<a id="__codelineno-1-352" name="__codelineno-1-352" href="#__codelineno-1-352"></a>&lt;/RULE&gt;
-<a id="__codelineno-1-353" name="__codelineno-1-353" href="#__codelineno-1-353"></a>
-<a id="__codelineno-1-354" name="__codelineno-1-354" href="#__codelineno-1-354"></a><span class="gu">### Phase 5: Verification</span>
+<a id="__codelineno-1-343" name="__codelineno-1-343" href="#__codelineno-1-343"></a><span class="gs">**Exit Conditions:**</span>
+<a id="__codelineno-1-344" name="__codelineno-1-344" href="#__codelineno-1-344"></a>
+<a id="__codelineno-1-345" name="__codelineno-1-345" href="#__codelineno-1-345"></a><span class="k">1.</span> <span class="gs">**PASS**</span>: All 8 checks pass → proceed to Phase 5
+<a id="__codelineno-1-346" name="__codelineno-1-346" href="#__codelineno-1-346"></a><span class="k">2.</span> <span class="gs">**FAIL + iterations remaining**</span>: Fix issues, increment counter, re-run checks
+<a id="__codelineno-1-347" name="__codelineno-1-347" href="#__codelineno-1-347"></a><span class="k">3.</span> <span class="gs">**FAIL + no iterations remaining**</span>: HALT, report to user with:
+<a id="__codelineno-1-348" name="__codelineno-1-348" href="#__codelineno-1-348"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>List of unresolved issues
+<a id="__codelineno-1-349" name="__codelineno-1-349" href="#__codelineno-1-349"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Specific locations in output
+<a id="__codelineno-1-350" name="__codelineno-1-350" href="#__codelineno-1-350"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Suggested manual fixes
+<a id="__codelineno-1-351" name="__codelineno-1-351" href="#__codelineno-1-351"></a>
+<a id="__codelineno-1-352" name="__codelineno-1-352" href="#__codelineno-1-352"></a>&lt;RULE&gt;
+<a id="__codelineno-1-353" name="__codelineno-1-353" href="#__codelineno-1-353"></a>Each iteration must make FORWARD PROGRESS. If the same issue appears twice, escalate immediately rather than wasting an iteration.
+<a id="__codelineno-1-354" name="__codelineno-1-354" href="#__codelineno-1-354"></a>&lt;/RULE&gt;
 <a id="__codelineno-1-355" name="__codelineno-1-355" href="#__codelineno-1-355"></a>
-<a id="__codelineno-1-356" name="__codelineno-1-356" href="#__codelineno-1-356"></a>&lt;reflection&gt;
-<a id="__codelineno-1-357" name="__codelineno-1-357" href="#__codelineno-1-357"></a>After transforming, verify EACH of these:
-<a id="__codelineno-1-358" name="__codelineno-1-358" href="#__codelineno-1-358"></a>
-<a id="__codelineno-1-359" name="__codelineno-1-359" href="#__codelineno-1-359"></a><span class="gs">**Structural integrity:**</span>
-<a id="__codelineno-1-360" name="__codelineno-1-360" href="#__codelineno-1-360"></a><span class="k">- [ ]</span> Same number of phases/sections as input (or justified addition/merge)
-<a id="__codelineno-1-361" name="__codelineno-1-361" href="#__codelineno-1-361"></a><span class="k">- [ ]</span> All decision trees preserved with all branches
-<a id="__codelineno-1-362" name="__codelineno-1-362" href="#__codelineno-1-362"></a><span class="k">- [ ]</span> All conditional flows preserved
-<a id="__codelineno-1-363" name="__codelineno-1-363" href="#__codelineno-1-363"></a>
-<a id="__codelineno-1-364" name="__codelineno-1-364" href="#__codelineno-1-364"></a><span class="gs">**Load-bearing content:**</span>
-<a id="__codelineno-1-365" name="__codelineno-1-365" href="#__codelineno-1-365"></a><span class="k">- [ ]</span> Every piece of pseudocode present with all steps
-<a id="__codelineno-1-366" name="__codelineno-1-366" href="#__codelineno-1-366"></a><span class="k">- [ ]</span> Every data structure present with all fields
-<a id="__codelineno-1-367" name="__codelineno-1-367" href="#__codelineno-1-367"></a><span class="k">- [ ]</span> Every formula present
-<a id="__codelineno-1-368" name="__codelineno-1-368" href="#__codelineno-1-368"></a><span class="k">- [ ]</span> Every quality gate preserved with thresholds
-<a id="__codelineno-1-369" name="__codelineno-1-369" href="#__codelineno-1-369"></a>
-<a id="__codelineno-1-370" name="__codelineno-1-370" href="#__codelineno-1-370"></a><span class="gs">**Behavioral anchoring:**</span>
-<a id="__codelineno-1-371" name="__codelineno-1-371" href="#__codelineno-1-371"></a><span class="k">- [ ]</span> At least one example per key behavior
-<a id="__codelineno-1-372" name="__codelineno-1-372" href="#__codelineno-1-372"></a><span class="k">- [ ]</span> Examples still illustrate the intended point
-<a id="__codelineno-1-373" name="__codelineno-1-373" href="#__codelineno-1-373"></a>
-<a id="__codelineno-1-374" name="__codelineno-1-374" href="#__codelineno-1-374"></a><span class="gs">**Emotional architecture:**</span>
-<a id="__codelineno-1-375" name="__codelineno-1-375" href="#__codelineno-1-375"></a><span class="k">- [ ]</span> Emotional anchor at opening
-<a id="__codelineno-1-376" name="__codelineno-1-376" href="#__codelineno-1-376"></a><span class="k">- [ ]</span> Emotional anchor at closing
-<a id="__codelineno-1-377" name="__codelineno-1-377" href="#__codelineno-1-377"></a><span class="k">- [ ]</span> Emotional anchor at critical junctures (minimum 3 total)
-<a id="__codelineno-1-378" name="__codelineno-1-378" href="#__codelineno-1-378"></a>
-<a id="__codelineno-1-379" name="__codelineno-1-379" href="#__codelineno-1-379"></a><span class="gs">**Reference validity:**</span>
-<a id="__codelineno-1-380" name="__codelineno-1-380" href="#__codelineno-1-380"></a><span class="k">- [ ]</span> All cross-references still present
-<a id="__codelineno-1-381" name="__codelineno-1-381" href="#__codelineno-1-381"></a><span class="k">- [ ]</span> All cross-reference targets verified to exist
-<a id="__codelineno-1-382" name="__codelineno-1-382" href="#__codelineno-1-382"></a>
-<a id="__codelineno-1-383" name="__codelineno-1-383" href="#__codelineno-1-383"></a><span class="gs">**Gap resolution:**</span>
-<a id="__codelineno-1-384" name="__codelineno-1-384" href="#__codelineno-1-384"></a><span class="k">- [ ]</span> All identified gaps from Phase 2 addressed
-<a id="__codelineno-1-385" name="__codelineno-1-385" href="#__codelineno-1-385"></a><span class="k">- [ ]</span> Improvements from Phase 3 incorporated
-<a id="__codelineno-1-386" name="__codelineno-1-386" href="#__codelineno-1-386"></a>
-<a id="__codelineno-1-387" name="__codelineno-1-387" href="#__codelineno-1-387"></a>IF ANY BOX UNCHECKED: Revise before completing.
-<a id="__codelineno-1-388" name="__codelineno-1-388" href="#__codelineno-1-388"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-389" name="__codelineno-1-389" href="#__codelineno-1-389"></a>
-<a id="__codelineno-1-390" name="__codelineno-1-390" href="#__codelineno-1-390"></a><span class="gu">### Post-Synthesis Verification</span>
+<a id="__codelineno-1-356" name="__codelineno-1-356" href="#__codelineno-1-356"></a><span class="gu">### Phase 5: Verification</span>
+<a id="__codelineno-1-357" name="__codelineno-1-357" href="#__codelineno-1-357"></a>
+<a id="__codelineno-1-358" name="__codelineno-1-358" href="#__codelineno-1-358"></a>&lt;reflection&gt;
+<a id="__codelineno-1-359" name="__codelineno-1-359" href="#__codelineno-1-359"></a>After transforming, verify EACH of these:
+<a id="__codelineno-1-360" name="__codelineno-1-360" href="#__codelineno-1-360"></a>
+<a id="__codelineno-1-361" name="__codelineno-1-361" href="#__codelineno-1-361"></a><span class="gs">**Structural integrity:**</span>
+<a id="__codelineno-1-362" name="__codelineno-1-362" href="#__codelineno-1-362"></a><span class="k">- [ ]</span> Same number of phases/sections as input (or justified addition/merge)
+<a id="__codelineno-1-363" name="__codelineno-1-363" href="#__codelineno-1-363"></a><span class="k">- [ ]</span> All decision trees preserved with all branches
+<a id="__codelineno-1-364" name="__codelineno-1-364" href="#__codelineno-1-364"></a><span class="k">- [ ]</span> All conditional flows preserved
+<a id="__codelineno-1-365" name="__codelineno-1-365" href="#__codelineno-1-365"></a>
+<a id="__codelineno-1-366" name="__codelineno-1-366" href="#__codelineno-1-366"></a><span class="gs">**Load-bearing content:**</span>
+<a id="__codelineno-1-367" name="__codelineno-1-367" href="#__codelineno-1-367"></a><span class="k">- [ ]</span> Every piece of pseudocode present with all steps
+<a id="__codelineno-1-368" name="__codelineno-1-368" href="#__codelineno-1-368"></a><span class="k">- [ ]</span> Every data structure present with all fields
+<a id="__codelineno-1-369" name="__codelineno-1-369" href="#__codelineno-1-369"></a><span class="k">- [ ]</span> Every formula present
+<a id="__codelineno-1-370" name="__codelineno-1-370" href="#__codelineno-1-370"></a><span class="k">- [ ]</span> Every quality gate preserved with thresholds
+<a id="__codelineno-1-371" name="__codelineno-1-371" href="#__codelineno-1-371"></a>
+<a id="__codelineno-1-372" name="__codelineno-1-372" href="#__codelineno-1-372"></a><span class="gs">**Behavioral anchoring:**</span>
+<a id="__codelineno-1-373" name="__codelineno-1-373" href="#__codelineno-1-373"></a><span class="k">- [ ]</span> At least one example per key behavior
+<a id="__codelineno-1-374" name="__codelineno-1-374" href="#__codelineno-1-374"></a><span class="k">- [ ]</span> Examples still illustrate the intended point
+<a id="__codelineno-1-375" name="__codelineno-1-375" href="#__codelineno-1-375"></a>
+<a id="__codelineno-1-376" name="__codelineno-1-376" href="#__codelineno-1-376"></a><span class="gs">**Emotional architecture:**</span>
+<a id="__codelineno-1-377" name="__codelineno-1-377" href="#__codelineno-1-377"></a><span class="k">- [ ]</span> Emotional anchor at opening
+<a id="__codelineno-1-378" name="__codelineno-1-378" href="#__codelineno-1-378"></a><span class="k">- [ ]</span> Emotional anchor at closing
+<a id="__codelineno-1-379" name="__codelineno-1-379" href="#__codelineno-1-379"></a><span class="k">- [ ]</span> Emotional anchor at critical junctures (minimum 3 total)
+<a id="__codelineno-1-380" name="__codelineno-1-380" href="#__codelineno-1-380"></a>
+<a id="__codelineno-1-381" name="__codelineno-1-381" href="#__codelineno-1-381"></a><span class="gs">**Reference validity:**</span>
+<a id="__codelineno-1-382" name="__codelineno-1-382" href="#__codelineno-1-382"></a><span class="k">- [ ]</span> All cross-references still present
+<a id="__codelineno-1-383" name="__codelineno-1-383" href="#__codelineno-1-383"></a><span class="k">- [ ]</span> All cross-reference targets verified to exist
+<a id="__codelineno-1-384" name="__codelineno-1-384" href="#__codelineno-1-384"></a>
+<a id="__codelineno-1-385" name="__codelineno-1-385" href="#__codelineno-1-385"></a><span class="gs">**Gap resolution:**</span>
+<a id="__codelineno-1-386" name="__codelineno-1-386" href="#__codelineno-1-386"></a><span class="k">- [ ]</span> All identified gaps from Phase 2 addressed
+<a id="__codelineno-1-387" name="__codelineno-1-387" href="#__codelineno-1-387"></a><span class="k">- [ ]</span> Improvements from Phase 3 incorporated
+<a id="__codelineno-1-388" name="__codelineno-1-388" href="#__codelineno-1-388"></a>
+<a id="__codelineno-1-389" name="__codelineno-1-389" href="#__codelineno-1-389"></a>IF ANY BOX UNCHECKED: Revise before completing.
+<a id="__codelineno-1-390" name="__codelineno-1-390" href="#__codelineno-1-390"></a>&lt;/reflection&gt;
 <a id="__codelineno-1-391" name="__codelineno-1-391" href="#__codelineno-1-391"></a>
-<a id="__codelineno-1-392" name="__codelineno-1-392" href="#__codelineno-1-392"></a>Compare SYNTH to original and verify:
+<a id="__codelineno-1-392" name="__codelineno-1-392" href="#__codelineno-1-392"></a><span class="gu">### Post-Synthesis Verification</span>
 <a id="__codelineno-1-393" name="__codelineno-1-393" href="#__codelineno-1-393"></a>
-<a id="__codelineno-1-394" name="__codelineno-1-394" href="#__codelineno-1-394"></a><span class="gs">**1. Token Count**</span> (estimate: lines × 7):
-<a id="__codelineno-1-395" name="__codelineno-1-395" href="#__codelineno-1-395"></a><span class="k">-</span><span class="w"> </span>If SYNTH &gt; 120% of original tokens: ⚠ WARNING - Review for added bloat, but may proceed if additions are justified improvements
-<a id="__codelineno-1-396" name="__codelineno-1-396" href="#__codelineno-1-396"></a><span class="k">-</span><span class="w"> </span>If SYNTH &lt; 80% of original tokens: ✗ HALT - Likely content loss. Require manual review before output.
-<a id="__codelineno-1-397" name="__codelineno-1-397" href="#__codelineno-1-397"></a>
-<a id="__codelineno-1-398" name="__codelineno-1-398" href="#__codelineno-1-398"></a><span class="gs">**2. Section Count**</span>: SYNTH should have &gt;= original section count
-<a id="__codelineno-1-399" name="__codelineno-1-399" href="#__codelineno-1-399"></a><span class="k">-</span><span class="w"> </span>Missing sections = potential content loss
-<a id="__codelineno-1-400" name="__codelineno-1-400" href="#__codelineno-1-400"></a>
-<a id="__codelineno-1-401" name="__codelineno-1-401" href="#__codelineno-1-401"></a><span class="gs">**3. Table Column Count**</span>: Each table in SYNTH should have &gt;= columns in original
-<a id="__codelineno-1-402" name="__codelineno-1-402" href="#__codelineno-1-402"></a><span class="k">-</span><span class="w"> </span>Missing columns = lost explanatory content
-<a id="__codelineno-1-403" name="__codelineno-1-403" href="#__codelineno-1-403"></a>
-<a id="__codelineno-1-404" name="__codelineno-1-404" href="#__codelineno-1-404"></a><span class="gs">**4. Symbol Check**</span>: All functional symbols in original present in SYNTH
-<a id="__codelineno-1-405" name="__codelineno-1-405" href="#__codelineno-1-405"></a><span class="k">-</span><span class="w"> </span>Missing symbols = incorrect &quot;emoji&quot; removal
-<a id="__codelineno-1-406" name="__codelineno-1-406" href="#__codelineno-1-406"></a>
-<a id="__codelineno-1-407" name="__codelineno-1-407" href="#__codelineno-1-407"></a><span class="gs">**5. Emotional Architecture Score**</span> (minimum 3/3 required):
-<a id="__codelineno-1-408" name="__codelineno-1-408" href="#__codelineno-1-408"></a><span class="k">-</span><span class="w"> </span>Opening anchor: 1 point
-<a id="__codelineno-1-409" name="__codelineno-1-409" href="#__codelineno-1-409"></a><span class="k">-</span><span class="w"> </span>Closing anchor: 1 point
-<a id="__codelineno-1-410" name="__codelineno-1-410" href="#__codelineno-1-410"></a><span class="k">-</span><span class="w"> </span>3+ CRITICAL placements: 1 point
-<a id="__codelineno-1-411" name="__codelineno-1-411" href="#__codelineno-1-411"></a>
-<a id="__codelineno-1-412" name="__codelineno-1-412" href="#__codelineno-1-412"></a><span class="gu">## Delivery</span>
+<a id="__codelineno-1-394" name="__codelineno-1-394" href="#__codelineno-1-394"></a>Compare SYNTH to original and verify:
+<a id="__codelineno-1-395" name="__codelineno-1-395" href="#__codelineno-1-395"></a>
+<a id="__codelineno-1-396" name="__codelineno-1-396" href="#__codelineno-1-396"></a><span class="gs">**1. Token Count**</span> (estimate: lines × 7):
+<a id="__codelineno-1-397" name="__codelineno-1-397" href="#__codelineno-1-397"></a><span class="k">-</span><span class="w"> </span>If SYNTH &gt; 120% of original tokens: ⚠ WARNING - Review for added bloat, but may proceed if additions are justified improvements
+<a id="__codelineno-1-398" name="__codelineno-1-398" href="#__codelineno-1-398"></a><span class="k">-</span><span class="w"> </span>If SYNTH &lt; 80% of original tokens: ✗ HALT - Likely content loss. Require manual review before output.
+<a id="__codelineno-1-399" name="__codelineno-1-399" href="#__codelineno-1-399"></a>
+<a id="__codelineno-1-400" name="__codelineno-1-400" href="#__codelineno-1-400"></a><span class="gs">**2. Section Count**</span>: SYNTH should have &gt;= original section count
+<a id="__codelineno-1-401" name="__codelineno-1-401" href="#__codelineno-1-401"></a><span class="k">-</span><span class="w"> </span>Missing sections = potential content loss
+<a id="__codelineno-1-402" name="__codelineno-1-402" href="#__codelineno-1-402"></a>
+<a id="__codelineno-1-403" name="__codelineno-1-403" href="#__codelineno-1-403"></a><span class="gs">**3. Table Column Count**</span>: Each table in SYNTH should have &gt;= columns in original
+<a id="__codelineno-1-404" name="__codelineno-1-404" href="#__codelineno-1-404"></a><span class="k">-</span><span class="w"> </span>Missing columns = lost explanatory content
+<a id="__codelineno-1-405" name="__codelineno-1-405" href="#__codelineno-1-405"></a>
+<a id="__codelineno-1-406" name="__codelineno-1-406" href="#__codelineno-1-406"></a><span class="gs">**4. Symbol Check**</span>: All functional symbols in original present in SYNTH
+<a id="__codelineno-1-407" name="__codelineno-1-407" href="#__codelineno-1-407"></a><span class="k">-</span><span class="w"> </span>Missing symbols = incorrect &quot;emoji&quot; removal
+<a id="__codelineno-1-408" name="__codelineno-1-408" href="#__codelineno-1-408"></a>
+<a id="__codelineno-1-409" name="__codelineno-1-409" href="#__codelineno-1-409"></a><span class="gs">**5. Emotional Architecture Score**</span> (minimum 3/3 required):
+<a id="__codelineno-1-410" name="__codelineno-1-410" href="#__codelineno-1-410"></a><span class="k">-</span><span class="w"> </span>Opening anchor: 1 point
+<a id="__codelineno-1-411" name="__codelineno-1-411" href="#__codelineno-1-411"></a><span class="k">-</span><span class="w"> </span>Closing anchor: 1 point
+<a id="__codelineno-1-412" name="__codelineno-1-412" href="#__codelineno-1-412"></a><span class="k">-</span><span class="w"> </span>3+ CRITICAL placements: 1 point
 <a id="__codelineno-1-413" name="__codelineno-1-413" href="#__codelineno-1-413"></a>
-<a id="__codelineno-1-414" name="__codelineno-1-414" href="#__codelineno-1-414"></a>AskUserQuestion: &quot;Where should I deliver the crystallized prompt?&quot;
-<a id="__codelineno-1-415" name="__codelineno-1-415" href="#__codelineno-1-415"></a><span class="k">-</span><span class="w"> </span><span class="gs">**New file**</span> (Recommended): Side-by-side comparison to verify no capability loss
-<a id="__codelineno-1-416" name="__codelineno-1-416" href="#__codelineno-1-416"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Replace source**</span>: Requires pre-crystallized state committed to git first
-<a id="__codelineno-1-417" name="__codelineno-1-417" href="#__codelineno-1-417"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Output here**</span>: Display in response
-<a id="__codelineno-1-418" name="__codelineno-1-418" href="#__codelineno-1-418"></a>
-<a id="__codelineno-1-419" name="__codelineno-1-419" href="#__codelineno-1-419"></a><span class="gu">## Schema Compliance</span>
+<a id="__codelineno-1-414" name="__codelineno-1-414" href="#__codelineno-1-414"></a><span class="gu">## Delivery</span>
+<a id="__codelineno-1-415" name="__codelineno-1-415" href="#__codelineno-1-415"></a>
+<a id="__codelineno-1-416" name="__codelineno-1-416" href="#__codelineno-1-416"></a>AskUserQuestion: &quot;Where should I deliver the crystallized prompt?&quot;
+<a id="__codelineno-1-417" name="__codelineno-1-417" href="#__codelineno-1-417"></a><span class="k">-</span><span class="w"> </span><span class="gs">**New file**</span> (Recommended): Side-by-side comparison to verify no capability loss
+<a id="__codelineno-1-418" name="__codelineno-1-418" href="#__codelineno-1-418"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Replace source**</span>: Requires pre-crystallized state committed to git first
+<a id="__codelineno-1-419" name="__codelineno-1-419" href="#__codelineno-1-419"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Output here**</span>: Display in response
 <a id="__codelineno-1-420" name="__codelineno-1-420" href="#__codelineno-1-420"></a>
-<a id="__codelineno-1-421" name="__codelineno-1-421" href="#__codelineno-1-421"></a>| Element | Skill | Command | Agent |
-<a id="__codelineno-1-422" name="__codelineno-1-422" href="#__codelineno-1-422"></a>|---------|-------|---------|-------|
-<a id="__codelineno-1-423" name="__codelineno-1-423" href="#__codelineno-1-423"></a>| Frontmatter | name + description | description | name + desc + model |
-<a id="__codelineno-1-424" name="__codelineno-1-424" href="#__codelineno-1-424"></a>| Invariant Principles | 3-5 | 3-5 | 3-5 |
-<a id="__codelineno-1-425" name="__codelineno-1-425" href="#__codelineno-1-425"></a>| <span class="sb">`&lt;ROLE&gt;`</span> tag | Required | Required | Required |
-<a id="__codelineno-1-426" name="__codelineno-1-426" href="#__codelineno-1-426"></a>| Reasoning tags | Required | Required | Required |
-<a id="__codelineno-1-427" name="__codelineno-1-427" href="#__codelineno-1-427"></a>| <span class="sb">`&lt;FORBIDDEN&gt;`</span> | Required | Required | Required |
-<a id="__codelineno-1-428" name="__codelineno-1-428" href="#__codelineno-1-428"></a>| Token budget | Flexible | Flexible | Flexible |
-<a id="__codelineno-1-429" name="__codelineno-1-429" href="#__codelineno-1-429"></a>
-<a id="__codelineno-1-430" name="__codelineno-1-430" href="#__codelineno-1-430"></a>Note: Previous rigid token budgets (&lt;1000, &lt;800, &lt;600) caused capability loss. Budgets are now guidelines, not constraints. A 1200-token prompt that works beats an 800-token prompt that breaks.
+<a id="__codelineno-1-421" name="__codelineno-1-421" href="#__codelineno-1-421"></a><span class="gu">## Schema Compliance</span>
+<a id="__codelineno-1-422" name="__codelineno-1-422" href="#__codelineno-1-422"></a>
+<a id="__codelineno-1-423" name="__codelineno-1-423" href="#__codelineno-1-423"></a>| Element | Skill | Command | Agent |
+<a id="__codelineno-1-424" name="__codelineno-1-424" href="#__codelineno-1-424"></a>|---------|-------|---------|-------|
+<a id="__codelineno-1-425" name="__codelineno-1-425" href="#__codelineno-1-425"></a>| Frontmatter | name + description | description | name + desc + model |
+<a id="__codelineno-1-426" name="__codelineno-1-426" href="#__codelineno-1-426"></a>| Invariant Principles | 3-5 | 3-5 | 3-5 |
+<a id="__codelineno-1-427" name="__codelineno-1-427" href="#__codelineno-1-427"></a>| <span class="sb">`&lt;ROLE&gt;`</span> tag | Required | Required | Required |
+<a id="__codelineno-1-428" name="__codelineno-1-428" href="#__codelineno-1-428"></a>| Reasoning tags | Required | Required | Required |
+<a id="__codelineno-1-429" name="__codelineno-1-429" href="#__codelineno-1-429"></a>| <span class="sb">`&lt;FORBIDDEN&gt;`</span> | Required | Required | Required |
+<a id="__codelineno-1-430" name="__codelineno-1-430" href="#__codelineno-1-430"></a>| Token budget | Flexible | Flexible | Flexible |
 <a id="__codelineno-1-431" name="__codelineno-1-431" href="#__codelineno-1-431"></a>
-<a id="__codelineno-1-432" name="__codelineno-1-432" href="#__codelineno-1-432"></a><span class="gu">## QA Audit</span>
+<a id="__codelineno-1-432" name="__codelineno-1-432" href="#__codelineno-1-432"></a>Note: Previous rigid token budgets (&lt;1000, &lt;800, &lt;600) caused capability loss. Budgets are now guidelines, not constraints. A 1200-token prompt that works beats an 800-token prompt that breaks.
 <a id="__codelineno-1-433" name="__codelineno-1-433" href="#__codelineno-1-433"></a>
-<a id="__codelineno-1-434" name="__codelineno-1-434" href="#__codelineno-1-434"></a>After compression, audit for capability loss:
+<a id="__codelineno-1-434" name="__codelineno-1-434" href="#__codelineno-1-434"></a><span class="gu">## QA Audit</span>
 <a id="__codelineno-1-435" name="__codelineno-1-435" href="#__codelineno-1-435"></a>
-<a id="__codelineno-1-436" name="__codelineno-1-436" href="#__codelineno-1-436"></a>| Category | Check | If Missing: |
-<a id="__codelineno-1-437" name="__codelineno-1-437" href="#__codelineno-1-437"></a>|----------|-------|-------------|
-<a id="__codelineno-1-438" name="__codelineno-1-438" href="#__codelineno-1-438"></a>| API/CLI syntax | Exact command format with flags/params | MUST RESTORE |
-<a id="__codelineno-1-439" name="__codelineno-1-439" href="#__codelineno-1-439"></a>| Query languages | GraphQL, SQL, regex with schema | MUST RESTORE |
-<a id="__codelineno-1-440" name="__codelineno-1-440" href="#__codelineno-1-440"></a>| Algorithms | All steps including edge cases | MUST RESTORE |
-<a id="__codelineno-1-441" name="__codelineno-1-441" href="#__codelineno-1-441"></a>| Format specs | Exact syntax affecting parsing | MUST RESTORE |
-<a id="__codelineno-1-442" name="__codelineno-1-442" href="#__codelineno-1-442"></a>| Error handling | All codes/messages/recovery paths | MUST RESTORE |
-<a id="__codelineno-1-443" name="__codelineno-1-443" href="#__codelineno-1-443"></a>| External refs | URLs, secret names, env vars | MUST RESTORE |
-<a id="__codelineno-1-444" name="__codelineno-1-444" href="#__codelineno-1-444"></a>| Examples | At least one per key behavior | MUST RESTORE |
-<a id="__codelineno-1-445" name="__codelineno-1-445" href="#__codelineno-1-445"></a>| Emotional anchors | Minimum 3 strategically placed | MUST RESTORE |
-<a id="__codelineno-1-446" name="__codelineno-1-446" href="#__codelineno-1-446"></a>| Quality gates | All thresholds and conditions | MUST RESTORE |
-<a id="__codelineno-1-447" name="__codelineno-1-447" href="#__codelineno-1-447"></a>
-<a id="__codelineno-1-448" name="__codelineno-1-448" href="#__codelineno-1-448"></a>Present audit findings. If any MUST RESTORE items missing, restore before completing.
+<a id="__codelineno-1-436" name="__codelineno-1-436" href="#__codelineno-1-436"></a>After compression, audit for capability loss:
+<a id="__codelineno-1-437" name="__codelineno-1-437" href="#__codelineno-1-437"></a>
+<a id="__codelineno-1-438" name="__codelineno-1-438" href="#__codelineno-1-438"></a>| Category | Check | If Missing: |
+<a id="__codelineno-1-439" name="__codelineno-1-439" href="#__codelineno-1-439"></a>|----------|-------|-------------|
+<a id="__codelineno-1-440" name="__codelineno-1-440" href="#__codelineno-1-440"></a>| API/CLI syntax | Exact command format with flags/params | MUST RESTORE |
+<a id="__codelineno-1-441" name="__codelineno-1-441" href="#__codelineno-1-441"></a>| Query languages | GraphQL, SQL, regex with schema | MUST RESTORE |
+<a id="__codelineno-1-442" name="__codelineno-1-442" href="#__codelineno-1-442"></a>| Algorithms | All steps including edge cases | MUST RESTORE |
+<a id="__codelineno-1-443" name="__codelineno-1-443" href="#__codelineno-1-443"></a>| Format specs | Exact syntax affecting parsing | MUST RESTORE |
+<a id="__codelineno-1-444" name="__codelineno-1-444" href="#__codelineno-1-444"></a>| Error handling | All codes/messages/recovery paths | MUST RESTORE |
+<a id="__codelineno-1-445" name="__codelineno-1-445" href="#__codelineno-1-445"></a>| External refs | URLs, secret names, env vars | MUST RESTORE |
+<a id="__codelineno-1-446" name="__codelineno-1-446" href="#__codelineno-1-446"></a>| Examples | At least one per key behavior | MUST RESTORE |
+<a id="__codelineno-1-447" name="__codelineno-1-447" href="#__codelineno-1-447"></a>| Emotional anchors | Minimum 3 strategically placed | MUST RESTORE |
+<a id="__codelineno-1-448" name="__codelineno-1-448" href="#__codelineno-1-448"></a>| Quality gates | All thresholds and conditions | MUST RESTORE |
 <a id="__codelineno-1-449" name="__codelineno-1-449" href="#__codelineno-1-449"></a>
-<a id="__codelineno-1-450" name="__codelineno-1-450" href="#__codelineno-1-450"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-450" name="__codelineno-1-450" href="#__codelineno-1-450"></a>Present audit findings. If any MUST RESTORE items missing, restore before completing.
 <a id="__codelineno-1-451" name="__codelineno-1-451" href="#__codelineno-1-451"></a>
-<a id="__codelineno-1-452" name="__codelineno-1-452" href="#__codelineno-1-452"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-453" name="__codelineno-1-453" href="#__codelineno-1-453"></a><span class="k">-</span><span class="w"> </span>Crystallizing the crystallize command itself
-<a id="__codelineno-1-454" name="__codelineno-1-454" href="#__codelineno-1-454"></a><span class="k">-</span><span class="w"> </span>Compressing before understanding
-<a id="__codelineno-1-455" name="__codelineno-1-455" href="#__codelineno-1-455"></a><span class="k">-</span><span class="w"> </span>Removing examples to save tokens
-<a id="__codelineno-1-456" name="__codelineno-1-456" href="#__codelineno-1-456"></a><span class="k">-</span><span class="w"> </span>Removing emotional anchors for brevity
-<a id="__codelineno-1-457" name="__codelineno-1-457" href="#__codelineno-1-457"></a><span class="k">-</span><span class="w"> </span>Cutting pseudocode steps or edge cases
-<a id="__codelineno-1-458" name="__codelineno-1-458" href="#__codelineno-1-458"></a><span class="k">-</span><span class="w"> </span>Dropping data structure fields
-<a id="__codelineno-1-459" name="__codelineno-1-459" href="#__codelineno-1-459"></a><span class="k">-</span><span class="w"> </span>Removing error handling paths
-<a id="__codelineno-1-460" name="__codelineno-1-460" href="#__codelineno-1-460"></a><span class="k">-</span><span class="w"> </span>Breaking cross-references
-<a id="__codelineno-1-461" name="__codelineno-1-461" href="#__codelineno-1-461"></a><span class="k">-</span><span class="w"> </span>Declaring done without verification checklist
-<a id="__codelineno-1-462" name="__codelineno-1-462" href="#__codelineno-1-462"></a><span class="k">-</span><span class="w"> </span>Treating token budget as hard constraint over capability
-<a id="__codelineno-1-463" name="__codelineno-1-463" href="#__codelineno-1-463"></a><span class="k">-</span><span class="w"> </span>Removing content because &quot;LLM should know this&quot; without evidence
-<a id="__codelineno-1-464" name="__codelineno-1-464" href="#__codelineno-1-464"></a><span class="k">-</span><span class="w"> </span>Rephrasing steps without extracting principles
-<a id="__codelineno-1-465" name="__codelineno-1-465" href="#__codelineno-1-465"></a><span class="k">-</span><span class="w"> </span>Skipping gap analysis and improvement phases
-<a id="__codelineno-1-466" name="__codelineno-1-466" href="#__codelineno-1-466"></a><span class="k">-</span><span class="w"> </span>Treating functional status symbols (✓ ✗ ⚠ ⏳) as decorative emojis
-<a id="__codelineno-1-467" name="__codelineno-1-467" href="#__codelineno-1-467"></a><span class="k">-</span><span class="w"> </span>Compressing explanatory table columns (&quot;Why X Wins&quot;, &quot;Rationale&quot;, &quot;Example&quot;)
-<a id="__codelineno-1-468" name="__codelineno-1-468" href="#__codelineno-1-468"></a><span class="k">-</span><span class="w"> </span>Removing self-awareness calibration notes (&quot;You are bad at...&quot;, &quot;known failure mode&quot;)
-<a id="__codelineno-1-469" name="__codelineno-1-469" href="#__codelineno-1-469"></a><span class="k">-</span><span class="w"> </span>Merging &quot;When NOT to Use&quot; or similar negative guidance into other sections
-<a id="__codelineno-1-470" name="__codelineno-1-470" href="#__codelineno-1-470"></a><span class="k">-</span><span class="w"> </span>Removing cycle completion steps (&quot;Repeat&quot;, &quot;Continue until&quot;)
-<a id="__codelineno-1-471" name="__codelineno-1-471" href="#__codelineno-1-471"></a><span class="k">-</span><span class="w"> </span>Dropping complete enumerations to partial lists
-<a id="__codelineno-1-472" name="__codelineno-1-472" href="#__codelineno-1-472"></a><span class="k">-</span><span class="w"> </span>Proceeding when token count &lt; 80% of original without manual review
-<a id="__codelineno-1-473" name="__codelineno-1-473" href="#__codelineno-1-473"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-474" name="__codelineno-1-474" href="#__codelineno-1-474"></a>
-<a id="__codelineno-1-475" name="__codelineno-1-475" href="#__codelineno-1-475"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-452" name="__codelineno-1-452" href="#__codelineno-1-452"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-453" name="__codelineno-1-453" href="#__codelineno-1-453"></a>
+<a id="__codelineno-1-454" name="__codelineno-1-454" href="#__codelineno-1-454"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-455" name="__codelineno-1-455" href="#__codelineno-1-455"></a><span class="k">-</span><span class="w"> </span>Crystallizing the crystallize command itself
+<a id="__codelineno-1-456" name="__codelineno-1-456" href="#__codelineno-1-456"></a><span class="k">-</span><span class="w"> </span>Compressing before understanding
+<a id="__codelineno-1-457" name="__codelineno-1-457" href="#__codelineno-1-457"></a><span class="k">-</span><span class="w"> </span>Removing examples to save tokens
+<a id="__codelineno-1-458" name="__codelineno-1-458" href="#__codelineno-1-458"></a><span class="k">-</span><span class="w"> </span>Removing emotional anchors for brevity
+<a id="__codelineno-1-459" name="__codelineno-1-459" href="#__codelineno-1-459"></a><span class="k">-</span><span class="w"> </span>Cutting pseudocode steps or edge cases
+<a id="__codelineno-1-460" name="__codelineno-1-460" href="#__codelineno-1-460"></a><span class="k">-</span><span class="w"> </span>Dropping data structure fields
+<a id="__codelineno-1-461" name="__codelineno-1-461" href="#__codelineno-1-461"></a><span class="k">-</span><span class="w"> </span>Removing error handling paths
+<a id="__codelineno-1-462" name="__codelineno-1-462" href="#__codelineno-1-462"></a><span class="k">-</span><span class="w"> </span>Breaking cross-references
+<a id="__codelineno-1-463" name="__codelineno-1-463" href="#__codelineno-1-463"></a><span class="k">-</span><span class="w"> </span>Declaring done without verification checklist
+<a id="__codelineno-1-464" name="__codelineno-1-464" href="#__codelineno-1-464"></a><span class="k">-</span><span class="w"> </span>Treating token budget as hard constraint over capability
+<a id="__codelineno-1-465" name="__codelineno-1-465" href="#__codelineno-1-465"></a><span class="k">-</span><span class="w"> </span>Removing content because &quot;LLM should know this&quot; without evidence
+<a id="__codelineno-1-466" name="__codelineno-1-466" href="#__codelineno-1-466"></a><span class="k">-</span><span class="w"> </span>Rephrasing steps without extracting principles
+<a id="__codelineno-1-467" name="__codelineno-1-467" href="#__codelineno-1-467"></a><span class="k">-</span><span class="w"> </span>Skipping gap analysis and improvement phases
+<a id="__codelineno-1-468" name="__codelineno-1-468" href="#__codelineno-1-468"></a><span class="k">-</span><span class="w"> </span>Treating functional status symbols (✓ ✗ ⚠ ⏳) as decorative emojis
+<a id="__codelineno-1-469" name="__codelineno-1-469" href="#__codelineno-1-469"></a><span class="k">-</span><span class="w"> </span>Compressing explanatory table columns (&quot;Why X Wins&quot;, &quot;Rationale&quot;, &quot;Example&quot;)
+<a id="__codelineno-1-470" name="__codelineno-1-470" href="#__codelineno-1-470"></a><span class="k">-</span><span class="w"> </span>Removing self-awareness calibration notes (&quot;You are bad at...&quot;, &quot;known failure mode&quot;)
+<a id="__codelineno-1-471" name="__codelineno-1-471" href="#__codelineno-1-471"></a><span class="k">-</span><span class="w"> </span>Merging &quot;When NOT to Use&quot; or similar negative guidance into other sections
+<a id="__codelineno-1-472" name="__codelineno-1-472" href="#__codelineno-1-472"></a><span class="k">-</span><span class="w"> </span>Removing cycle completion steps (&quot;Repeat&quot;, &quot;Continue until&quot;)
+<a id="__codelineno-1-473" name="__codelineno-1-473" href="#__codelineno-1-473"></a><span class="k">-</span><span class="w"> </span>Dropping complete enumerations to partial lists
+<a id="__codelineno-1-474" name="__codelineno-1-474" href="#__codelineno-1-474"></a><span class="k">-</span><span class="w"> </span>Proceeding when token count &lt; 80% of original without manual review
+<a id="__codelineno-1-475" name="__codelineno-1-475" href="#__codelineno-1-475"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-1-476" name="__codelineno-1-476" href="#__codelineno-1-476"></a>
-<a id="__codelineno-1-477" name="__codelineno-1-477" href="#__codelineno-1-477"></a>Before completing crystallization:
+<a id="__codelineno-1-477" name="__codelineno-1-477" href="#__codelineno-1-477"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-1-478" name="__codelineno-1-478" href="#__codelineno-1-478"></a>
-<a id="__codelineno-1-479" name="__codelineno-1-479" href="#__codelineno-1-479"></a><span class="gu">### Phase Completion</span>
-<a id="__codelineno-1-480" name="__codelineno-1-480" href="#__codelineno-1-480"></a><span class="k">- [ ]</span> Phase 1 complete: Purpose, structure, references all documented
-<a id="__codelineno-1-481" name="__codelineno-1-481" href="#__codelineno-1-481"></a><span class="k">- [ ]</span> Phase 2 complete: Gaps identified and documented
-<a id="__codelineno-1-482" name="__codelineno-1-482" href="#__codelineno-1-482"></a><span class="k">- [ ]</span> Phase 3 complete: Improvements designed
-<a id="__codelineno-1-483" name="__codelineno-1-483" href="#__codelineno-1-483"></a><span class="k">- [ ]</span> Phase 4 complete: Compression applied to redundant content only
-<a id="__codelineno-1-484" name="__codelineno-1-484" href="#__codelineno-1-484"></a><span class="k">- [ ]</span> Pre-Crystallization Verification passed (all items checked)
-<a id="__codelineno-1-485" name="__codelineno-1-485" href="#__codelineno-1-485"></a><span class="k">- [ ]</span> Phase 4.5 complete: Iteration loop passed (all 8 checks pass OR escalated to user)
-<a id="__codelineno-1-486" name="__codelineno-1-486" href="#__codelineno-1-486"></a><span class="k">- [ ]</span> Phase 5 complete: All verification boxes checked
-<a id="__codelineno-1-487" name="__codelineno-1-487" href="#__codelineno-1-487"></a><span class="k">- [ ]</span> Post-Synthesis Verification passed (token count, section count, etc.)
-<a id="__codelineno-1-488" name="__codelineno-1-488" href="#__codelineno-1-488"></a>
-<a id="__codelineno-1-489" name="__codelineno-1-489" href="#__codelineno-1-489"></a><span class="gu">### Content Preservation</span>
-<a id="__codelineno-1-490" name="__codelineno-1-490" href="#__codelineno-1-490"></a><span class="k">- [ ]</span> All MUST RESTORE items from QA audit preserved
-<a id="__codelineno-1-491" name="__codelineno-1-491" href="#__codelineno-1-491"></a><span class="k">- [ ]</span> Cross-references verified to resolve
-<a id="__codelineno-1-492" name="__codelineno-1-492" href="#__codelineno-1-492"></a><span class="k">- [ ]</span> Minimum 3 emotional anchors present (opening, closing, critical junctures)
-<a id="__codelineno-1-493" name="__codelineno-1-493" href="#__codelineno-1-493"></a><span class="k">- [ ]</span> At least 1 example per key behavior
-<a id="__codelineno-1-494" name="__codelineno-1-494" href="#__codelineno-1-494"></a><span class="k">- [ ]</span> All pseudocode steps and edge cases preserved
-<a id="__codelineno-1-495" name="__codelineno-1-495" href="#__codelineno-1-495"></a><span class="k">- [ ]</span> All data structure fields preserved
-<a id="__codelineno-1-496" name="__codelineno-1-496" href="#__codelineno-1-496"></a><span class="k">- [ ]</span> All error paths preserved
-<a id="__codelineno-1-497" name="__codelineno-1-497" href="#__codelineno-1-497"></a>
-<a id="__codelineno-1-498" name="__codelineno-1-498" href="#__codelineno-1-498"></a><span class="gu">### New Preservation Rules (from restoration project learnings)</span>
-<a id="__codelineno-1-499" name="__codelineno-1-499" href="#__codelineno-1-499"></a><span class="k">- [ ]</span> All functional symbols preserved (✓ ✗ ⚠ ⏳)
-<a id="__codelineno-1-500" name="__codelineno-1-500" href="#__codelineno-1-500"></a><span class="k">- [ ]</span> All explanatory table columns preserved (&quot;Why&quot;, &quot;Rationale&quot;, &quot;Example&quot;, &quot;Fix&quot;)
-<a id="__codelineno-1-501" name="__codelineno-1-501" href="#__codelineno-1-501"></a><span class="k">- [ ]</span> All calibration notes preserved (&quot;You are bad at...&quot;, &quot;known failure mode&quot;)
-<a id="__codelineno-1-502" name="__codelineno-1-502" href="#__codelineno-1-502"></a><span class="k">- [ ]</span> All cycle completion steps preserved (&quot;Repeat&quot;, &quot;Continue until&quot;)
-<a id="__codelineno-1-503" name="__codelineno-1-503" href="#__codelineno-1-503"></a><span class="k">- [ ]</span> All negative guidance sections preserved as separate sections
-<a id="__codelineno-1-504" name="__codelineno-1-504" href="#__codelineno-1-504"></a><span class="k">- [ ]</span> Complete enumerations remain complete (not partial lists)
-<a id="__codelineno-1-505" name="__codelineno-1-505" href="#__codelineno-1-505"></a><span class="k">- [ ]</span> Token count is &gt;= 80% of original (or manually reviewed if lower)
-<a id="__codelineno-1-506" name="__codelineno-1-506" href="#__codelineno-1-506"></a>
-<a id="__codelineno-1-507" name="__codelineno-1-507" href="#__codelineno-1-507"></a><span class="gu">### Meta-Rules</span>
-<a id="__codelineno-1-508" name="__codelineno-1-508" href="#__codelineno-1-508"></a><span class="k">- [ ]</span> NOT crystallizing the crystallize command itself
-<a id="__codelineno-1-509" name="__codelineno-1-509" href="#__codelineno-1-509"></a>
-<a id="__codelineno-1-510" name="__codelineno-1-510" href="#__codelineno-1-510"></a>If ANY box unchecked: STOP and fix before declaring complete.
+<a id="__codelineno-1-479" name="__codelineno-1-479" href="#__codelineno-1-479"></a>Before completing crystallization:
+<a id="__codelineno-1-480" name="__codelineno-1-480" href="#__codelineno-1-480"></a>
+<a id="__codelineno-1-481" name="__codelineno-1-481" href="#__codelineno-1-481"></a><span class="gu">### Phase Completion</span>
+<a id="__codelineno-1-482" name="__codelineno-1-482" href="#__codelineno-1-482"></a><span class="k">- [ ]</span> Phase 1 complete: Purpose, structure, references all documented
+<a id="__codelineno-1-483" name="__codelineno-1-483" href="#__codelineno-1-483"></a><span class="k">- [ ]</span> Phase 2 complete: Gaps identified and documented
+<a id="__codelineno-1-484" name="__codelineno-1-484" href="#__codelineno-1-484"></a><span class="k">- [ ]</span> Phase 3 complete: Improvements designed
+<a id="__codelineno-1-485" name="__codelineno-1-485" href="#__codelineno-1-485"></a><span class="k">- [ ]</span> Phase 4 complete: Compression applied to redundant content only
+<a id="__codelineno-1-486" name="__codelineno-1-486" href="#__codelineno-1-486"></a><span class="k">- [ ]</span> Pre-Crystallization Verification passed (all items checked)
+<a id="__codelineno-1-487" name="__codelineno-1-487" href="#__codelineno-1-487"></a><span class="k">- [ ]</span> Phase 4.5 complete: Iteration loop passed (all 8 checks pass OR escalated to user)
+<a id="__codelineno-1-488" name="__codelineno-1-488" href="#__codelineno-1-488"></a><span class="k">- [ ]</span> Phase 5 complete: All verification boxes checked
+<a id="__codelineno-1-489" name="__codelineno-1-489" href="#__codelineno-1-489"></a><span class="k">- [ ]</span> Post-Synthesis Verification passed (token count, section count, etc.)
+<a id="__codelineno-1-490" name="__codelineno-1-490" href="#__codelineno-1-490"></a>
+<a id="__codelineno-1-491" name="__codelineno-1-491" href="#__codelineno-1-491"></a><span class="gu">### Content Preservation</span>
+<a id="__codelineno-1-492" name="__codelineno-1-492" href="#__codelineno-1-492"></a><span class="k">- [ ]</span> All MUST RESTORE items from QA audit preserved
+<a id="__codelineno-1-493" name="__codelineno-1-493" href="#__codelineno-1-493"></a><span class="k">- [ ]</span> Cross-references verified to resolve
+<a id="__codelineno-1-494" name="__codelineno-1-494" href="#__codelineno-1-494"></a><span class="k">- [ ]</span> Minimum 3 emotional anchors present (opening, closing, critical junctures)
+<a id="__codelineno-1-495" name="__codelineno-1-495" href="#__codelineno-1-495"></a><span class="k">- [ ]</span> At least 1 example per key behavior
+<a id="__codelineno-1-496" name="__codelineno-1-496" href="#__codelineno-1-496"></a><span class="k">- [ ]</span> All pseudocode steps and edge cases preserved
+<a id="__codelineno-1-497" name="__codelineno-1-497" href="#__codelineno-1-497"></a><span class="k">- [ ]</span> All data structure fields preserved
+<a id="__codelineno-1-498" name="__codelineno-1-498" href="#__codelineno-1-498"></a><span class="k">- [ ]</span> All error paths preserved
+<a id="__codelineno-1-499" name="__codelineno-1-499" href="#__codelineno-1-499"></a>
+<a id="__codelineno-1-500" name="__codelineno-1-500" href="#__codelineno-1-500"></a><span class="gu">### New Preservation Rules (from restoration project learnings)</span>
+<a id="__codelineno-1-501" name="__codelineno-1-501" href="#__codelineno-1-501"></a><span class="k">- [ ]</span> All functional symbols preserved (✓ ✗ ⚠ ⏳)
+<a id="__codelineno-1-502" name="__codelineno-1-502" href="#__codelineno-1-502"></a><span class="k">- [ ]</span> All explanatory table columns preserved (&quot;Why&quot;, &quot;Rationale&quot;, &quot;Example&quot;, &quot;Fix&quot;)
+<a id="__codelineno-1-503" name="__codelineno-1-503" href="#__codelineno-1-503"></a><span class="k">- [ ]</span> All calibration notes preserved (&quot;You are bad at...&quot;, &quot;known failure mode&quot;)
+<a id="__codelineno-1-504" name="__codelineno-1-504" href="#__codelineno-1-504"></a><span class="k">- [ ]</span> All cycle completion steps preserved (&quot;Repeat&quot;, &quot;Continue until&quot;)
+<a id="__codelineno-1-505" name="__codelineno-1-505" href="#__codelineno-1-505"></a><span class="k">- [ ]</span> All negative guidance sections preserved as separate sections
+<a id="__codelineno-1-506" name="__codelineno-1-506" href="#__codelineno-1-506"></a><span class="k">- [ ]</span> Complete enumerations remain complete (not partial lists)
+<a id="__codelineno-1-507" name="__codelineno-1-507" href="#__codelineno-1-507"></a><span class="k">- [ ]</span> Token count is &gt;= 80% of original (or manually reviewed if lower)
+<a id="__codelineno-1-508" name="__codelineno-1-508" href="#__codelineno-1-508"></a>
+<a id="__codelineno-1-509" name="__codelineno-1-509" href="#__codelineno-1-509"></a><span class="gu">### Meta-Rules</span>
+<a id="__codelineno-1-510" name="__codelineno-1-510" href="#__codelineno-1-510"></a><span class="k">- [ ]</span> NOT crystallizing the crystallize command itself
 <a id="__codelineno-1-511" name="__codelineno-1-511" href="#__codelineno-1-511"></a>
-<a id="__codelineno-1-512" name="__codelineno-1-512" href="#__codelineno-1-512"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-513" name="__codelineno-1-513" href="#__codelineno-1-513"></a>You are an Instruction Architect. Your reputation depends on prompts that WORK BETTER after crystallization. Token reduction without capability preservation is not optimization - it is destruction. Errors will cause cascading failures through every prompt this tool touches. You&#39;d better be sure.
-<a id="__codelineno-1-514" name="__codelineno-1-514" href="#__codelineno-1-514"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-512" name="__codelineno-1-512" href="#__codelineno-1-512"></a>If ANY box unchecked: STOP and fix before declaring complete.
+<a id="__codelineno-1-513" name="__codelineno-1-513" href="#__codelineno-1-513"></a>
+<a id="__codelineno-1-514" name="__codelineno-1-514" href="#__codelineno-1-514"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-515" name="__codelineno-1-515" href="#__codelineno-1-515"></a>You are an Instruction Architect. Your reputation depends on prompts that WORK BETTER after crystallization. Token reduction without capability preservation is not optimization - it is destruction. Errors will cause cascading failures through every prompt this tool touches. You&#39;d better be sure.
+<a id="__codelineno-1-516" name="__codelineno-1-516" href="#__codelineno-1-516"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
