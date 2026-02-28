@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Fractal-thinking redesign: recursive primitive architecture** - Replaced the 3-phase pipeline (Init/Explore/Synthesize) with a single self-similar recursive primitive and worker-based execution model
+  - **New execution model**: Workers pull tasks from a SQL-based work queue with branch affinity and work stealing, instead of round-based cluster dispatch
+  - **Bottom-up synthesis**: Each node synthesizes locally from children's results; synthesis cascades upward through the graph rather than being imposed top-down
+  - **New MCP tools**: `fractal_claim_work`, `fractal_synthesize_node`, `fractal_get_claimable_work`, `fractal_get_ready_to_synthesize` (17 total fractal tools)
+  - **New node statuses**: `claimed` (work in progress) and `synthesized` (local synthesis complete) with schema v1-to-v2 migration
+  - **Commands renamed**: `fractal-think-init` -> `fractal-think-seed`, `fractal-think-explore` -> `fractal-think-work`, `fractal-think-synthesize` -> `fractal-think-harvest`
+  - **Worker termination**: Workers exit only when no open AND no claimed nodes remain, preventing premature exit race conditions
+  - **Budget-exhausted recovery**: Graphs in `budget_exhausted` status can now transition to `active` (for synthesis repair) or `completed`
+
 ### Fixed
 - **TTS survives daemon venv rebuilds** - When the daemon venv is rebuilt (lockfile hash change), TTS dependencies are now preserved if the user previously opted in
   - `install_daemon()` checks `tts_enabled` config and passes `include_tts=True` to `ensure_daemon_venv()` so TTS deps are included in rebuilds

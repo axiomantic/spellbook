@@ -87,17 +87,6 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
         )
     """)
 
-    # Check if we need to record the schema version
-    cursor.execute(
-        "SELECT COUNT(*) FROM schema_version WHERE version = ?",
-        (SCHEMA_VERSION,),
-    )
-    if cursor.fetchone()[0] == 0:
-        cursor.execute(
-            "INSERT INTO schema_version (version, applied_at) VALUES (?, datetime('now'))",
-            (SCHEMA_VERSION,),
-        )
-
     # Graphs - top-level fractal exploration sessions
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS graphs (
@@ -124,7 +113,7 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
             owner TEXT,
             depth INTEGER NOT NULL DEFAULT 0,
             status TEXT NOT NULL DEFAULT 'open'
-                CHECK(status IN ('open', 'answered', 'saturated', 'error', 'budget_exhausted')),
+                CHECK(status IN ('open', 'claimed', 'answered', 'synthesized', 'saturated', 'error', 'budget_exhausted')),
             metadata_json TEXT DEFAULT '{}',
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
@@ -145,7 +134,66 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
         )
     """)
 
-    # Indexes on nodes
+    # Check current schema version and apply migrations
+    cursor.execute("SELECT MAX(version) FROM schema_version")
+    row = cursor.fetchone()
+    current_version = row[0] if row[0] is not None else 0
+
+    if current_version < 2:
+        # v1 -> v2 migration: add 'claimed' and 'synthesized' node statuses
+        # Check if the nodes table already has data (existing v1 install)
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='nodes'"
+        )
+        if cursor.fetchone() is not None and current_version >= 1:
+            # Migrate existing nodes table within a transaction
+            cursor.execute("BEGIN")
+            try:
+                cursor.execute("""
+                    CREATE TABLE nodes_new (
+                        id TEXT PRIMARY KEY,
+                        graph_id TEXT NOT NULL REFERENCES graphs(id) ON DELETE CASCADE,
+                        parent_id TEXT REFERENCES nodes(id) ON DELETE CASCADE,
+                        node_type TEXT NOT NULL CHECK(node_type IN ('question', 'answer')),
+                        text TEXT NOT NULL,
+                        owner TEXT,
+                        depth INTEGER NOT NULL DEFAULT 0,
+                        status TEXT NOT NULL DEFAULT 'open'
+                            CHECK(status IN ('open', 'claimed', 'answered', 'synthesized', 'saturated', 'error', 'budget_exhausted')),
+                        metadata_json TEXT DEFAULT '{}',
+                        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                    )
+                """)
+                cursor.execute("INSERT INTO nodes_new SELECT * FROM nodes")
+                cursor.execute("DROP TABLE nodes")
+                cursor.execute("ALTER TABLE nodes_new RENAME TO nodes")
+
+                # Recreate all indexes on nodes (with new index replacing old)
+                cursor.execute(
+                    "CREATE INDEX idx_nodes_graph_id ON nodes(graph_id)"
+                )
+                cursor.execute(
+                    "CREATE INDEX idx_nodes_parent_id ON nodes(parent_id)"
+                )
+                cursor.execute(
+                    "CREATE INDEX idx_nodes_graph_type_status ON nodes(graph_id, node_type, status)"
+                )
+
+                cursor.execute("COMMIT")
+            except Exception:
+                cursor.execute("ROLLBACK")
+                raise
+
+        # Record schema version 2
+        cursor.execute(
+            "INSERT INTO schema_version (version, applied_at) VALUES (?, datetime('now'))",
+            (SCHEMA_VERSION,),
+        )
+    elif current_version == SCHEMA_VERSION:
+        # Already at current version, nothing to do
+        pass
+
+    # Indexes on nodes (IF NOT EXISTS for fresh installs)
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_nodes_graph_id ON nodes(graph_id)
     """)
@@ -153,7 +201,7 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
         CREATE INDEX IF NOT EXISTS idx_nodes_parent_id ON nodes(parent_id)
     """)
     cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_nodes_graph_status ON nodes(graph_id, status)
+        CREATE INDEX IF NOT EXISTS idx_nodes_graph_type_status ON nodes(graph_id, node_type, status)
     """)
 
     # Indexes on edges

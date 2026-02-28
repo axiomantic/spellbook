@@ -591,8 +591,8 @@ class TestUpdateGraphStatus:
         cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
         assert cursor.fetchone()[0] == "error"
 
-    def test_budget_exhausted_to_active_rejected(self, fractal_db):
-        """update_graph_status must reject budget_exhausted -> active transition and leave status unchanged."""
+    def test_budget_exhausted_to_active(self, fractal_db):
+        """update_graph_status must allow budget_exhausted -> active transition."""
         from spellbook_mcp.fractal.graph_ops import update_graph_status
         from spellbook_mcp.fractal.schema import get_fractal_connection
 
@@ -600,13 +600,34 @@ class TestUpdateGraphStatus:
 
         result = update_graph_status(graph_id, "active", db_path=fractal_db)
 
-        assert "error" in result
+        assert "error" not in result
+        assert result["status"] == "active"
+        assert result["previous_status"] == "budget_exhausted"
 
-        # Verify status unchanged in DB
+        # Verify status updated in DB
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
         cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
-        assert cursor.fetchone()[0] == "budget_exhausted"
+        assert cursor.fetchone()[0] == "active"
+
+    def test_budget_exhausted_to_completed(self, fractal_db):
+        """update_graph_status must allow budget_exhausted -> completed transition."""
+        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        graph_id = self._create_test_graph(fractal_db, status="budget_exhausted")
+
+        result = update_graph_status(graph_id, "completed", db_path=fractal_db)
+
+        assert "error" not in result
+        assert result["status"] == "completed"
+        assert result["previous_status"] == "budget_exhausted"
+
+        # Verify status updated in DB
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "completed"
 
     def test_paused_to_completed_rejected(self, fractal_db):
         """update_graph_status must reject paused -> completed and leave status unchanged."""
@@ -698,3 +719,80 @@ class TestUpdateGraphStatus:
         cursor = conn.cursor()
         cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
         assert cursor.fetchone()[0] == "active"
+
+
+class TestBudgetExhaustedTransitions:
+    """Tests for transitions from budget_exhausted status via update_graph_status."""
+
+    def _create_budget_exhausted_graph(self, fractal_db):
+        """Helper to create a graph in budget_exhausted status."""
+        from spellbook_mcp.fractal.graph_ops import create_graph, update_graph_status
+
+        result = create_graph(
+            seed="Budget test seed",
+            intensity="pulse",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = result["graph_id"]
+
+        # Transition active -> budget_exhausted via the actual function
+        update_graph_status(graph_id, "budget_exhausted", db_path=fractal_db)
+        return graph_id
+
+    def test_budget_exhausted_to_completed_via_function(self, fractal_db):
+        """budget_exhausted -> completed must succeed through update_graph_status."""
+        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        graph_id = self._create_budget_exhausted_graph(fractal_db)
+
+        result = update_graph_status(graph_id, "completed", db_path=fractal_db)
+
+        assert "error" not in result
+        assert result["graph_id"] == graph_id
+        assert result["status"] == "completed"
+        assert result["previous_status"] == "budget_exhausted"
+
+        # Verify DB reflects the change
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "completed"
+
+    def test_budget_exhausted_to_active_via_function(self, fractal_db):
+        """budget_exhausted -> active must succeed through update_graph_status."""
+        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        graph_id = self._create_budget_exhausted_graph(fractal_db)
+
+        result = update_graph_status(graph_id, "active", db_path=fractal_db)
+
+        assert "error" not in result
+        assert result["graph_id"] == graph_id
+        assert result["status"] == "active"
+        assert result["previous_status"] == "budget_exhausted"
+
+        # Verify DB reflects the change
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "active"
+
+    def test_budget_exhausted_to_paused_rejected(self, fractal_db):
+        """budget_exhausted -> paused must be rejected (not a valid transition)."""
+        from spellbook_mcp.fractal.graph_ops import update_graph_status
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        graph_id = self._create_budget_exhausted_graph(fractal_db)
+
+        result = update_graph_status(graph_id, "paused", db_path=fractal_db)
+
+        assert "error" in result
+
+        # Verify status unchanged in DB
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM graphs WHERE id = ?", (graph_id,))
+        assert cursor.fetchone()[0] == "budget_exhausted"

@@ -169,9 +169,9 @@ nav:
       - commands/feature-design.md
       - commands/feature-implement.md
     - Fractal Thinking Commands:
-      - commands/fractal-think-init.md
-      - commands/fractal-think-explore.md
-      - commands/fractal-think-synthesize.md
+      - commands/fractal-think-seed.md
+      - commands/fractal-think-work.md
+      - commands/fractal-think-harvest.md
     - Code Review Commands:
       - commands/advanced-code-review-plan.md
       - commands/advanced-code-review-context.md

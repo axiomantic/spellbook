@@ -96,11 +96,11 @@ def add_node(graph_id, parent_id, node_type, text, owner=None, metadata_json=Non
             (graph_id, parent_id, node_id),
         )
 
-        # Auto-transition: if adding answer to open question parent, mark parent as answered
+        # Auto-transition: if adding answer to open/claimed question parent, mark parent as answered
         if node_type == "answer":
             parent_node_type = parent_row[1]
             parent_status = parent_row[2]
-            if parent_node_type == "question" and parent_status == "open":
+            if parent_node_type == "question" and parent_status in ("open", "claimed"):
                 cursor.execute(
                     "UPDATE nodes SET status = 'answered' WHERE id = ?",
                     (parent_id,),
@@ -251,10 +251,10 @@ def mark_saturated(graph_id, node_id, reason, db_path=None):
         raise ValueError(f"Node '{node_id}' not found in graph '{graph_id}'.")
 
     current_status = node_row[0]
-    if current_status not in ("open", "answered"):
+    if current_status not in ("open", "claimed", "answered"):
         raise ValueError(
             f"Cannot saturate node with status '{current_status}'. "
-            f"Node must be 'open' or 'answered'."
+            f"Node must be 'open', 'claimed', or 'answered'."
         )
 
     # Update metadata with saturation reason
@@ -273,4 +273,193 @@ def mark_saturated(graph_id, node_id, reason, db_path=None):
         "node_id": node_id,
         "status": "saturated",
         "reason": reason,
+    }
+
+
+def claim_work(graph_id, worker_id, db_path=None):
+    """Atomically claim the next available open question node for a worker.
+
+    Uses branch affinity to prefer sibling nodes of those already owned by
+    the same worker, then prefers shallower nodes, then older nodes.
+
+    Args:
+        graph_id: ID of the graph to claim work from
+        worker_id: ID of the worker claiming work
+        db_path: Path to database file (defaults to standard location)
+
+    Returns:
+        dict with node data and graph_done flag:
+        - If work claimed: node_id, text, depth, parent_id, metadata, graph_done=False
+        - If no open work but claimed nodes exist: node_id=None, graph_done=False
+        - If no open and no claimed work: node_id=None, graph_done=True
+
+    Raises:
+        ValueError: If graph doesn't exist or is not active
+    """
+    conn = get_fractal_connection(db_path)
+    cursor = conn.cursor()
+
+    # Validate graph exists and is active
+    cursor.execute(
+        "SELECT status FROM graphs WHERE id = ?",
+        (graph_id,),
+    )
+    row = cursor.fetchone()
+    if row is None:
+        raise ValueError(f"Graph '{graph_id}' not found.")
+
+    graph_status = row[0]
+    if graph_status != "active":
+        raise ValueError(
+            f"Cannot claim work from graph with status '{graph_status}'. "
+            f"Graph must be 'active'."
+        )
+
+    # Find the best candidate node to claim
+    cursor.execute(
+        """
+        SELECT n.id FROM nodes n
+        WHERE n.graph_id = :graph_id AND n.node_type = 'question' AND n.status = 'open'
+        ORDER BY
+            CASE WHEN EXISTS (
+                SELECT 1 FROM nodes sibling
+                WHERE sibling.parent_id = n.parent_id
+                AND sibling.owner = :worker_id
+            ) THEN 0 ELSE 1 END,
+            n.depth ASC,
+            n.created_at ASC
+        LIMIT 1
+        """,
+        {"worker_id": worker_id, "graph_id": graph_id},
+    )
+    candidate = cursor.fetchone()
+
+    if candidate is None:
+        # No open question nodes available -- check if there is in-flight work
+        cursor.execute(
+            "SELECT COUNT(*) FROM nodes WHERE graph_id = :graph_id AND status = 'claimed'",
+            {"graph_id": graph_id},
+        )
+        claimed_count = cursor.fetchone()[0]
+
+        if claimed_count > 0:
+            return {"node_id": None, "graph_done": False}
+        else:
+            return {"node_id": None, "graph_done": True}
+
+    candidate_id = candidate[0]
+
+    # Atomically claim the node
+    cursor.execute(
+        "UPDATE nodes SET owner = :worker_id, status = 'claimed' WHERE id = :node_id",
+        {"worker_id": worker_id, "node_id": candidate_id},
+    )
+    conn.commit()
+
+    # Fetch the claimed node data
+    cursor.execute(
+        "SELECT id, text, depth, parent_id, metadata_json FROM nodes WHERE id = ?",
+        (candidate_id,),
+    )
+    node_row = cursor.fetchone()
+
+    return {
+        "node_id": node_row[0],
+        "text": node_row[1],
+        "depth": node_row[2],
+        "parent_id": node_row[3],
+        "metadata": json.loads(node_row[4]) if node_row[4] else {},
+        "graph_done": False,
+    }
+
+
+def synthesize_node(graph_id, node_id, synthesis_text, db_path=None):
+    """Mark a node as synthesized with synthesis text stored in metadata.
+
+    Args:
+        graph_id: ID of the graph containing the node
+        node_id: ID of the node to synthesize
+        synthesis_text: The synthesis text to store in metadata
+        db_path: Path to database file (defaults to standard location)
+
+    Returns:
+        dict with node_id and status ("synthesized")
+
+    Raises:
+        ValueError: If graph/node don't exist, node status doesn't allow
+                    synthesis, or child question nodes are not yet done
+    """
+    conn = get_fractal_connection(db_path)
+    cursor = conn.cursor()
+
+    # Validate graph exists and is active
+    cursor.execute(
+        "SELECT status FROM graphs WHERE id = ?",
+        (graph_id,),
+    )
+    row = cursor.fetchone()
+    if row is None:
+        raise ValueError(f"Graph '{graph_id}' not found.")
+
+    graph_status = row[0]
+    if graph_status != "active":
+        raise ValueError(
+            f"Cannot synthesize node in graph with status '{graph_status}'. "
+            f"Graph must be 'active'."
+        )
+
+    # Validate node exists and check status
+    cursor.execute(
+        "SELECT status, metadata_json FROM nodes WHERE id = ? AND graph_id = ?",
+        (node_id, graph_id),
+    )
+    node_row = cursor.fetchone()
+    if node_row is None:
+        raise ValueError(f"Node '{node_id}' not found in graph '{graph_id}'.")
+
+    current_status = node_row[0]
+    if current_status not in ("answered", "claimed"):
+        raise ValueError(
+            f"Cannot synthesize node with status '{current_status}'. "
+            f"Node must be 'answered' or 'claimed'."
+        )
+
+    # Validate all child question nodes are synthesized or saturated
+    cursor.execute(
+        "SELECT COUNT(*) FROM nodes "
+        "WHERE parent_id = :node_id AND graph_id = :graph_id AND node_type = 'question' "
+        "AND status NOT IN ('synthesized', 'saturated')",
+        {"node_id": node_id, "graph_id": graph_id},
+    )
+    incomplete_children = cursor.fetchone()[0]
+
+    # Check if node actually has children
+    cursor.execute(
+        "SELECT COUNT(*) FROM nodes "
+        "WHERE parent_id = :node_id AND graph_id = :graph_id AND node_type = 'question'",
+        {"node_id": node_id, "graph_id": graph_id},
+    )
+    total_children = cursor.fetchone()[0]
+
+    if incomplete_children > 0 and total_children > 0:
+        raise ValueError(
+            f"Cannot synthesize node '{node_id}': "
+            f"{incomplete_children} child question node(s) not yet complete."
+        )
+
+    # Update metadata with synthesis text
+    existing_meta = json.loads(node_row[1]) if node_row[1] else {}
+    existing_meta["synthesis"] = synthesis_text
+
+    # Update node status and metadata
+    cursor.execute(
+        "UPDATE nodes SET status = 'synthesized', metadata_json = ? WHERE id = ?",
+        (json.dumps(existing_meta), node_id),
+    )
+
+    conn.commit()
+
+    return {
+        "node_id": node_id,
+        "status": "synthesized",
     }

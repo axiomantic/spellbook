@@ -181,6 +181,8 @@ from spellbook_mcp.fractal.node_ops import (
     add_node as do_fractal_add_node,
     update_node as do_fractal_update_node,
     mark_saturated as do_fractal_mark_saturated,
+    claim_work as do_fractal_claim_work,
+    synthesize_node as do_fractal_synthesize_node,
 )
 from spellbook_mcp.fractal.query_ops import (
     get_snapshot as do_fractal_get_snapshot,
@@ -189,6 +191,8 @@ from spellbook_mcp.fractal.query_ops import (
     query_convergence as do_fractal_query_convergence,
     query_contradictions as do_fractal_query_contradictions,
     get_saturation_status as do_fractal_get_saturation_status,
+    get_claimable_work as do_fractal_get_claimable_work,
+    get_ready_to_synthesize as do_fractal_get_ready_to_synthesize,
 )
 
 # Track server startup time for uptime calculation
@@ -2953,6 +2957,40 @@ def fractal_query_contradictions(graph_id: str):
 def fractal_get_saturation_status(graph_id: str):
     """Get saturation status of branches in a fractal thinking graph."""
     return do_fractal_get_saturation_status(graph_id=graph_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_claim_work(graph_id: str, worker_id: str):
+    """Atomically claim the next available question node for a worker. Returns node data with branch affinity preference, or graph_done status."""
+    try:
+        return do_fractal_claim_work(graph_id=graph_id, worker_id=worker_id)
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_synthesize_node(graph_id: str, node_id: str, synthesis_text: str):
+    """Mark a node as synthesized with synthesis text. Validates all child questions are complete."""
+    try:
+        return do_fractal_synthesize_node(graph_id=graph_id, node_id=node_id, synthesis_text=synthesis_text)
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_get_claimable_work(graph_id: str, worker_id: str = None):
+    """Preview available work in a fractal graph with optional branch affinity ordering."""
+    return do_fractal_get_claimable_work(graph_id=graph_id, worker_id=worker_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_get_ready_to_synthesize(graph_id: str):
+    """Find nodes ready for bottom-up synthesis (all child questions complete)."""
+    return do_fractal_get_ready_to_synthesize(graph_id=graph_id)
 
 
 if __name__ == "__main__":

@@ -187,9 +187,9 @@ Reusable workflows for structured development:
 | [/feature-research] | Phase 1 codebase research and ambiguity detection |
 | [/feature-design] | Phase 2 design document creation and review |
 | [/feature-implement] | Phase 4 implementation with TDD and code review |
-| [/fractal-think-init] | Phase 1: Create graph and generate seed questions |
-| [/fractal-think-explore] | Phase 2: Recursive question decomposition |
-| [/fractal-think-synthesize] | Phase 3: Generate summary from exploration graph |
+| [/fractal-think-seed] | Seed phase: Create graph and generate seed sub-questions |
+| [/fractal-think-work] | Phase 2: Dispatch workers for recursive fractal exploration |
+| [/fractal-think-harvest] | Phase 3: Read completed graph, verify synthesis, format result |
 | [/simplify] | Code complexity reduction |
 | [/simplify-analyze] | Analyze code for simplification opportunities |
 | [/simplify-transform] | Apply simplification transformations |
@@ -275,9 +275,9 @@ Reusable workflows for structured development:
 [/feature-research]: https://axiomantic.github.io/spellbook/latest/commands/feature-research/
 [/feature-design]: https://axiomantic.github.io/spellbook/latest/commands/feature-design/
 [/feature-implement]: https://axiomantic.github.io/spellbook/latest/commands/feature-implement/
-[/fractal-think-init]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-init/
-[/fractal-think-explore]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-explore/
-[/fractal-think-synthesize]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-synthesize/
+[/fractal-think-seed]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-seed/
+[/fractal-think-work]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-work/
+[/fractal-think-harvest]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-harvest/
 [/simplify]: https://axiomantic.github.io/spellbook/latest/commands/simplify/
 [/simplify-analyze]: https://axiomantic.github.io/spellbook/latest/commands/simplify-analyze/
 [/simplify-transform]: https://axiomantic.github.io/spellbook/latest/commands/simplify-transform/

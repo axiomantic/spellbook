@@ -881,3 +881,279 @@ class TestGetSaturationStatus:
         )
 
         assert "error" in result
+
+
+class TestGetClaimableWork:
+    """Tests for get_claimable_work function."""
+
+    def test_claimable_returns_open_questions(self, branching_graph):
+        """get_claimable_work must return open question nodes."""
+        from spellbook_mcp.fractal.query_ops import get_claimable_work
+
+        gid = branching_graph["graph_id"]
+        db = branching_graph["db_path"]
+
+        result = get_claimable_work(graph_id=gid, db_path=db)
+
+        assert "claimable" in result
+        assert "count" in result
+        assert result["graph_id"] == gid
+        assert result["count"] > 0
+        for node in result["claimable"]:
+            assert node["node_type"] == "question"
+            assert node["status"] == "open"
+
+    def test_claimable_excludes_claimed(self, branching_graph):
+        """get_claimable_work must exclude claimed question nodes."""
+        from spellbook_mcp.fractal.node_ops import claim_work
+        from spellbook_mcp.fractal.query_ops import get_claimable_work
+
+        gid = branching_graph["graph_id"]
+        db = branching_graph["db_path"]
+
+        # Claim a node first
+        claimed = claim_work(graph_id=gid, worker_id="worker-1", db_path=db)
+        claimed_id = claimed["node_id"]
+
+        result = get_claimable_work(graph_id=gid, db_path=db)
+
+        claimable_ids = {n["node_id"] for n in result["claimable"]}
+        assert claimed_id not in claimable_ids
+
+    def test_claimable_affinity_ordering(self, branching_graph):
+        """get_claimable_work with worker_id must return sibling nodes first."""
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+        from spellbook_mcp.fractal.query_ops import get_claimable_work
+
+        gid = branching_graph["graph_id"]
+        db = branching_graph["db_path"]
+
+        # Claim branch_b so worker-1 owns it (it gets status='claimed')
+        # We need sub_b1 to remain open so it has sibling affinity
+        # Instead, let's set up: worker-1 owns a sibling of sub_a1
+        # by claiming sub_a1
+        claimed = claim_work(graph_id=gid, worker_id="worker-1", db_path=db)
+
+        # Add another open question sibling to the claimed node's parent
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+        conn = get_fractal_connection(db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT parent_id FROM nodes WHERE id = ?", (claimed["node_id"],)
+        )
+        parent_id = cursor.fetchone()[0]
+
+        sibling = add_node(
+            graph_id=gid, parent_id=parent_id, node_type="question",
+            text="Sibling question for affinity test", db_path=db,
+        )
+
+        result = get_claimable_work(
+            graph_id=gid, worker_id="worker-1", db_path=db,
+        )
+
+        # The sibling should appear before non-siblings due to affinity
+        assert result["count"] > 0
+        assert result["claimable"][0]["node_id"] == sibling["node_id"]
+
+    def test_claimable_empty(self, graph_with_root):
+        """get_claimable_work with no open questions returns empty list."""
+        from spellbook_mcp.fractal.node_ops import mark_saturated
+        from spellbook_mcp.fractal.query_ops import get_claimable_work
+
+        gid = graph_with_root["graph_id"]
+        db = graph_with_root["db_path"]
+
+        # Saturate the root node so no open questions remain
+        mark_saturated(
+            graph_id=gid, node_id=graph_with_root["root_node_id"],
+            reason="semantic_overlap", db_path=db,
+        )
+
+        result = get_claimable_work(graph_id=gid, db_path=db)
+
+        assert result["claimable"] == []
+        assert result["count"] == 0
+
+
+class TestGetReadyToSynthesize:
+    """Tests for get_ready_to_synthesize function."""
+
+    def test_ready_basic(self, branching_graph):
+        """Node with all children synthesized/saturated is returned."""
+        from spellbook_mcp.fractal.node_ops import (
+            add_node,
+            mark_saturated,
+            synthesize_node,
+        )
+        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+
+        gid = branching_graph["graph_id"]
+        db = branching_graph["db_path"]
+
+        # branch_a is already 'answered' (has answer child sub_a2).
+        # Its question child is sub_a1 (open). Saturate sub_a1 so
+        # branch_a has all question children done.
+        mark_saturated(
+            graph_id=gid, node_id=branching_graph["sub_a1"],
+            reason="semantic_overlap", db_path=db,
+        )
+
+        result = get_ready_to_synthesize(graph_id=gid, db_path=db)
+
+        ready_ids = {n["node_id"] for n in result["ready_nodes"]}
+        assert branching_graph["branch_a"] in ready_ids
+
+    def test_ready_excludes_incomplete(self, branching_graph):
+        """Node with open children is NOT returned."""
+        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+
+        gid = branching_graph["graph_id"]
+        db = branching_graph["db_path"]
+
+        result = get_ready_to_synthesize(graph_id=gid, db_path=db)
+
+        # branch_a has sub_a1 still open, so it should not be ready
+        ready_ids = {n["node_id"] for n in result["ready_nodes"]}
+        assert branching_graph["branch_a"] not in ready_ids
+
+    def test_ready_excludes_leaves(self, branching_graph):
+        """Answered leaf nodes (no question children) are NOT returned."""
+        from spellbook_mcp.fractal.node_ops import add_node
+        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+
+        gid = branching_graph["graph_id"]
+        db = branching_graph["db_path"]
+
+        # branch_c is open, add an answer to make it 'answered' but it
+        # has no question children
+        add_node(
+            graph_id=gid, parent_id=branching_graph["branch_c"],
+            node_type="answer", text="Answer for branch C", db_path=db,
+        )
+
+        result = get_ready_to_synthesize(graph_id=gid, db_path=db)
+
+        ready_ids = {n["node_id"] for n in result["ready_nodes"]}
+        assert branching_graph["branch_c"] not in ready_ids
+
+    def test_ready_depth_ordering(self, branching_graph):
+        """Deeper nodes are returned before shallower nodes."""
+        from spellbook_mcp.fractal.node_ops import (
+            add_node,
+            mark_saturated,
+        )
+        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+
+        gid = branching_graph["graph_id"]
+        db = branching_graph["db_path"]
+
+        # Make branch_a ready: saturate sub_a1
+        mark_saturated(
+            graph_id=gid, node_id=branching_graph["sub_a1"],
+            reason="semantic_overlap", db_path=db,
+        )
+
+        # Make branch_b 'answered' by adding an answer child
+        add_node(
+            graph_id=gid, parent_id=branching_graph["branch_b"],
+            node_type="answer", text="Answer for branch B", db_path=db,
+        )
+        # Saturate sub_b1 so branch_b has all question children done
+        mark_saturated(
+            graph_id=gid, node_id=branching_graph["sub_b1"],
+            reason="semantic_overlap", db_path=db,
+        )
+
+        # Create a deeper ready node under branch_a
+        deep_q = add_node(
+            graph_id=gid, parent_id=branching_graph["branch_a"],
+            node_type="question", text="Deep question", db_path=db,
+        )
+        # Add answer to deep_q to make it 'answered'
+        add_node(
+            graph_id=gid, parent_id=deep_q["node_id"],
+            node_type="answer", text="Deep answer", db_path=db,
+        )
+        # Add a question child and mark it done so deep_q qualifies
+        deep_sub = add_node(
+            graph_id=gid, parent_id=deep_q["node_id"],
+            node_type="question", text="Deep sub-question", db_path=db,
+        )
+        mark_saturated(
+            graph_id=gid, node_id=deep_sub["node_id"],
+            reason="semantic_overlap", db_path=db,
+        )
+
+        # deep_q (depth=2, answered, all question children done) is ready.
+        # branch_a (depth=1) now has deep_q (answered, not synthesized/saturated)
+        # as a question child, so branch_a is NOT ready.
+        # branch_b (depth=1) is ready.
+        result = get_ready_to_synthesize(graph_id=gid, db_path=db)
+
+        ready_ids = [n["node_id"] for n in result["ready_nodes"]]
+        assert deep_q["node_id"] in ready_ids
+        assert branching_graph["branch_b"] in ready_ids
+
+        # deep_q (depth 2) should come before branch_b (depth 1)
+        deep_q_idx = ready_ids.index(deep_q["node_id"])
+        branch_b_idx = ready_ids.index(branching_graph["branch_b"])
+        assert deep_q_idx < branch_b_idx
+
+    def test_ready_empty(self, graph_with_root):
+        """No ready nodes returns empty list."""
+        from spellbook_mcp.fractal.query_ops import get_ready_to_synthesize
+
+        gid = graph_with_root["graph_id"]
+        db = graph_with_root["db_path"]
+
+        result = get_ready_to_synthesize(graph_id=gid, db_path=db)
+
+        assert result["ready_nodes"] == []
+        assert result["count"] == 0
+        assert result["graph_id"] == gid
+
+
+class TestSaturationStatusWithSynthesized:
+    """Tests for get_saturation_status with synthesized branches."""
+
+    def test_synthesized_branch_counts_as_complete(self, branching_graph):
+        """Branch with status 'synthesized' has saturated=True in result."""
+        from spellbook_mcp.fractal.node_ops import (
+            mark_saturated,
+            synthesize_node,
+        )
+        from spellbook_mcp.fractal.query_ops import get_saturation_status
+
+        gid = branching_graph["graph_id"]
+        db = branching_graph["db_path"]
+
+        # branch_a is 'answered' (auto-transitioned when sub_a2 answer was added).
+        # To synthesize it, all its question children must be done.
+        # sub_a1 is a question child, saturate it first.
+        mark_saturated(
+            graph_id=gid, node_id=branching_graph["sub_a1"],
+            reason="semantic_overlap", db_path=db,
+        )
+
+        # Now synthesize branch_a
+        synthesize_node(
+            graph_id=gid, node_id=branching_graph["branch_a"],
+            synthesis_text="Scattering is the cause", db_path=db,
+        )
+
+        result = get_saturation_status(graph_id=gid, db_path=db)
+
+        synth_branches = [
+            b for b in result["branches"]
+            if b["node_id"] == branching_graph["branch_a"]
+        ]
+        assert len(synth_branches) == 1
+        assert synth_branches[0]["saturated"] is True
+
+        # all_complete key should be present
+        assert "all_complete" in result
+        # Not all complete because branch_b and branch_c are still open
+        assert result["all_complete"] is False
+        # Backward compat: all_saturated still present
+        assert "all_saturated" in result

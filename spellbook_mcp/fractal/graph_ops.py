@@ -18,6 +18,7 @@ from spellbook_mcp.fractal.schema import get_fractal_connection
 VALID_TRANSITIONS = {
     "active": ["completed", "paused", "error", "budget_exhausted"],
     "paused": ["active"],
+    "budget_exhausted": ["active", "completed"],
 }
 
 # Terminal states that cannot be resumed
