@@ -256,6 +256,74 @@ def config_set(key: str, value: Any) -> dict:
         return {"status": "ok", "config": config}
 
 
+def config_set_many(updates: dict[str, Any]) -> dict:
+    """Write multiple config values to spellbook.json in a single pass.
+
+    Behaves identically to config_set but applies all key-value pairs from
+    *updates* in one atomic read-modify-write cycle, avoiding redundant
+    file I/O when several keys are changed together.
+
+    Args:
+        updates: Mapping of config keys to values (must be JSON-serializable).
+
+    Returns:
+        Dict with status and the updated config.
+    """
+    if not updates:
+        # Nothing to write; return current config
+        config_path = get_config_path()
+        config = {}
+        if config_path.exists():
+            try:
+                config = json.loads(config_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                pass
+        return {"status": "ok", "config": config}
+
+    config_path = get_config_path()
+
+    def _atomic_write(config: dict, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd_tmp, tmp_path = tempfile.mkstemp(
+            dir=str(path.parent), suffix=".tmp"
+        )
+        fd_tmp_closed = False
+        try:
+            os.write(fd_tmp, (json.dumps(config, indent=2) + "\n").encode("utf-8"))
+            os.close(fd_tmp)
+            fd_tmp_closed = True
+            os.replace(tmp_path, str(path))
+        except BaseException:
+            if not fd_tmp_closed:
+                os.close(fd_tmp)
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+
+    def _read_config() -> dict:
+        if not config_path.exists():
+            return {}
+        try:
+            return json.loads(config_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return {}
+
+    def _apply_and_write() -> dict:
+        config = _read_config()
+        config.update(updates)
+        _atomic_write(config, config_path)
+        return {"status": "ok", "config": config}
+
+    try:
+        with CrossPlatformLock(CONFIG_LOCK_PATH, blocking=True):
+            return _apply_and_write()
+    except LockHeldError:
+        logger.warning("Could not acquire config write lock. Falling back to unlocked write.")
+        return _apply_and_write()
+
+
 def session_mode_set(
     mode: str, permanent: bool = False, session_id: Optional[str] = None
 ) -> dict:

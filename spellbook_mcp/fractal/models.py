@@ -13,6 +13,8 @@ SCHEMA_VERSION = 2
 
 VALID_INTENSITIES = ["pulse", "explore", "deep"]
 
+# Note: "depth:N" patterns (e.g., "depth:3") are also valid but validated
+# separately in validate_checkpoint_mode() due to their dynamic format.
 VALID_CHECKPOINT_MODES = ["autonomous", "convergence", "interactive"]
 
 VALID_GRAPH_STATUSES = [

@@ -34,19 +34,20 @@ Health:
 
 import fastmcp as _fastmcp_module
 from fastmcp import FastMCP, Context
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+
 import atexit
-import os
-import json
-import time
+from dataclasses import asdict
+from datetime import datetime, timezone
 import functools
+import json
+import os
+from pathlib import Path
 import threading
+import time
+from typing import List, Dict, Any, Optional
 
 # FastMCP version detection for v2/v3 compatibility
 _FASTMCP_MAJOR = int(_fastmcp_module.__version__.split(".")[0])
-from dataclasses import asdict
-from datetime import datetime, timezone
 
 # All imports use full package paths - no sys.path manipulation needed
 from spellbook_mcp.path_utils import (
@@ -72,6 +73,7 @@ from spellbook_mcp.swarm_tools import (
 from spellbook_mcp.config_tools import (
     config_get,
     config_set,
+    config_set_many,
     session_init,
     session_mode_set,
     session_mode_get,
@@ -2797,21 +2799,18 @@ def tts_config_set(
         {"status": "ok", "config": {tts_enabled, tts_voice, tts_volume}} with
         updated keys from this call plus current values for unchanged keys.
     """
-    # Three separate config_set calls are non-atomic, but acceptable for
-    # local user config where partial writes are harmless.
-    result_config = {}
+    updates = {}
     if enabled is not None:
-        r = config_set("tts_enabled", enabled)
-        result_config.update(r.get("config", {}))
+        updates["tts_enabled"] = enabled
     if voice is not None:
-        r = config_set("tts_voice", voice)
-        result_config.update(r.get("config", {}))
+        updates["tts_voice"] = voice
     if volume is not None:
-        r = config_set("tts_volume", volume)
-        result_config.update(r.get("config", {}))
+        updates["tts_volume"] = volume
 
-    # If nothing was set, read current config
-    if not result_config:
+    if updates:
+        r = config_set_many(updates)
+        result_config = r.get("config", {})
+    else:
         result_config = {
             "tts_enabled": config_get("tts_enabled"),
             "tts_voice": config_get("tts_voice"),

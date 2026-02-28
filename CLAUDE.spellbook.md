@@ -388,8 +388,8 @@ Load `enforcing-code-quality` skill for full standards and checklist.
 | Tier | Time | What | When |
 |------|------|------|------|
 | Unit | <1s each | Pure logic, no I/O, no external deps | After every change |
-| Integration | 1-30s each | Real resources (DB, filesystem, network) | After completing a logical unit of work |
-| E2E / Slow | >30s each | Full pipelines, large data, real services | Once per feature branch, before PR |
+| Integration | 1-5s each | Real resources (DB, filesystem, network) | After completing a logical unit of work |
+| E2E / Slow | >5s each | Full pipelines, large data, real services | Once per feature branch, before PR |
 
 **Selecting what to run:**
 
@@ -416,7 +416,7 @@ Load `enforcing-code-quality` skill for full standards and checklist.
 | Mark | Meaning |
 |------|---------|
 | `slow` | >5 seconds. Skip during rapid iteration. |
-| `gpu` / `hardware` | Requires specific hardware. Skip on machines without it. |
+| `gpu`, `hardware` | Requires specific hardware. Skip on machines without it. |
 | `network` / `external` | Calls external services. Skip in offline/fast modes. |
 | `integration` | Requires multiple components working together. |
 | `smoke` | Minimal sanity checks. Run first. |

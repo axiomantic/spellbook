@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-02-28
+
+### Fixed
+- **IndexError in TTS notification hook** - `shlex.split(cmd)[0]` crashes when the command string is empty or whitespace-only; now guards against empty list before indexing (`hooks/tts-notify.py`, `hooks/tts-notify.sh`)
+- **Bare except in TTS notification hook** - Narrowed `except:` to `except ValueError:` so `SystemExit` and `KeyboardInterrupt` propagate correctly (`hooks/tts-notify.sh`)
+- **3x file I/O in `tts_config_set`** - Refactored to use new `config_set_many()` for a single atomic read-modify-write cycle instead of three separate `config_set()` calls (`spellbook_mcp/server.py`, `spellbook_mcp/config_tools.py`)
+- **Import organization in MCP server** - Grouped all stdlib imports together before version detection logic per PEP 8 (`spellbook_mcp/server.py`)
+- **Nonexistent `@types/node@^25.3.0`** - Pinned to `^22.0.0` across all three OpenCode extension package.json files
+- **Nonexistent `python:3.14-slim` Docker image** - Changed to `python:3.13-slim` in test Dockerfile
+- **Inconsistent `package-lock.json`** - Regenerated lockfile for `extensions/opencode/context-curator` to resolve nested SDK version mismatch
+- **Test tier time boundary inconsistency** - Aligned integration tier to "1-5s" and E2E/Slow to ">5s" to match the `slow` mark definition (`CLAUDE.spellbook.md`)
+- **Ambiguous `gpu / hardware` test mark** - Changed to comma-separated `` `gpu`, `hardware` `` to clarify these are two distinct pytest marks (`CLAUDE.spellbook.md`)
+- **"All 5 escape strategies" text outdated** - Changed to "escape strategies 1-5" since fractal exploration is now strategy 6 (`commands/deep-research-investigate.md`)
+- **`VALID_CHECKPOINT_MODES` undocumented pattern** - Added comment explaining that `depth:N` patterns are also valid but validated separately (`spellbook_mcp/fractal/models.py`)
+- **Fractal harvest word count ranges unclear** - Labeled each range with its intensity level inline (`commands/fractal-think-harvest.md`)
+
 ## [0.13.0] - 2026-02-28
 
 ### Changed

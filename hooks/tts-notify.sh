@@ -95,8 +95,11 @@ detail = ''
 if tool == 'Bash':
     cmd = inp.get('command', '')
     if cmd:
-        try: detail = shlex.split(cmd)[0].split('/')[-1]
-        except (ValueError, IndexError): detail = cmd.split()[0].split('/')[-1] if cmd.split() else ''
+        try:
+            parts = shlex.split(cmd)
+        except ValueError:
+            parts = cmd.split()
+        detail = parts[0].split('/')[-1] if parts else ''
 elif tool == 'Task':
     detail = inp.get('description', '')[:40]
 

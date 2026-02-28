@@ -415,7 +415,7 @@ overlap = len(current_urls & previous_urls) / max(len(current_urls), 1)
 | 5 | Community pivot | Search for "has anyone done X", "experience with Y", forum threads. |
 | 6 | Fractal exploration | Invoke fractal-thinking to question underlying assumptions (see below). |
 
-**Fractal exploration (optional):** When all 5 escape strategies are exhausted before L3 STOP, invoke fractal-thinking with intensity `pulse` and seed: "What hidden assumptions underlie the research question '[question]'?". Use the synthesis to generate reframed search angles from questioning the question itself.
+**Fractal exploration (optional):** When escape strategies 1-5 are exhausted before L3 STOP, invoke fractal-thinking with intensity `pulse` and seed: "What hidden assumptions underlie the research question '[question]'?". Use the synthesis to generate reframed search angles from questioning the question itself.
 
 If all escape strategies fail to produce new information: escalate to Level 3 and STOP.
 
