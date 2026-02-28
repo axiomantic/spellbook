@@ -78,10 +78,9 @@ def main() -> None:
         if cmd:
             try:
                 parts_cmd = shlex.split(cmd)
-                detail = parts_cmd[0].split("/")[-1] if parts_cmd else ""
             except ValueError:
                 parts_cmd = cmd.split()
-                detail = parts_cmd[0].split("/")[-1] if parts_cmd else ""
+            detail = parts_cmd[0].split("/")[-1] if parts_cmd else ""
     elif tool_name == "Task":
         detail = inp.get("description", "")[:40]
 

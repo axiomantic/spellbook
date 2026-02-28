@@ -302,29 +302,26 @@ def config_set_many(updates: dict[str, Any]) -> dict:
                 pass
             raise
 
-    try:
-        with CrossPlatformLock(CONFIG_LOCK_PATH, blocking=True):
-            config = {}
-            if config_path.exists():
-                try:
-                    config = json.loads(config_path.read_text(encoding="utf-8"))
-                except (json.JSONDecodeError, OSError):
-                    config = {}
+    def _read_config() -> dict:
+        if not config_path.exists():
+            return {}
+        try:
+            return json.loads(config_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return {}
 
-            config.update(updates)
-            _atomic_write(config, config_path)
-            return {"status": "ok", "config": config}
-    except LockHeldError:
-        logger.warning("Could not acquire config write lock. Falling back to unlocked write.")
-        config = {}
-        if config_path.exists():
-            try:
-                config = json.loads(config_path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
-                config = {}
+    def _apply_and_write() -> dict:
+        config = _read_config()
         config.update(updates)
         _atomic_write(config, config_path)
         return {"status": "ok", "config": config}
+
+    try:
+        with CrossPlatformLock(CONFIG_LOCK_PATH, blocking=True):
+            return _apply_and_write()
+    except LockHeldError:
+        logger.warning("Could not acquire config write lock. Falling back to unlocked write.")
+        return _apply_and_write()
 
 
 def session_mode_set(
