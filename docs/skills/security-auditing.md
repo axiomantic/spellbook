@@ -397,6 +397,8 @@ For HIGH and CRITICAL findings that survived classification, trace attack chains
 A finding in isolation tells you a pattern exists. An attack chain tells you what damage is possible. The difference between "this file contains a dynamic execution call" and "an attacker can inject arbitrary code via untrusted skill content that reaches that call through the MCP server" is the difference between awareness and actionable intelligence.
 </analysis>
 
+**Fractal exploration (optional):** When a finding is HIGH or CRITICAL severity, invoke fractal-thinking with intensity `pulse` and seed: "What attack vectors exist against [component] and what are the second-order effects?". Use the synthesis to enrich the attack chain graph.
+
 ### Steps
 
 1. **For each HIGH/CRITICAL finding, answer:**

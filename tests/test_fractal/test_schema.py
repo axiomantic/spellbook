@@ -447,14 +447,14 @@ class TestIndexes:
         )
         assert cursor.fetchone() is not None
 
-    def test_index_nodes_graph_status(self, fractal_db):
-        """Index on nodes(graph_id, status) must exist."""
+    def test_index_nodes_graph_type_status(self, fractal_db):
+        """Index on nodes(graph_id, node_type, status) must exist."""
         from spellbook_mcp.fractal.schema import get_fractal_connection
 
         conn = get_fractal_connection(fractal_db)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_nodes_graph_status'"
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_nodes_graph_type_status'"
         )
         assert cursor.fetchone() is not None
 
@@ -680,3 +680,176 @@ class TestGetFractalDbPath:
 
         assert db_path.parent.name == "spellbook"
         assert db_path.parent.parent.name == ".local"
+
+
+class TestNewNodeStatuses:
+    """Tests for claimed and synthesized node statuses."""
+
+    def test_nodes_accept_claimed_status(self, fractal_db):
+        """nodes.status must accept 'claimed' as a valid status."""
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO graphs (id, seed, intensity, checkpoint_mode)
+            VALUES ('g-claimed', 'test', 'pulse', 'autonomous')
+        """)
+        cursor.execute("""
+            INSERT INTO nodes (id, graph_id, node_type, text, status)
+            VALUES ('n-claimed', 'g-claimed', 'question', 'test', 'claimed')
+        """)
+        cursor.execute("SELECT status FROM nodes WHERE id = 'n-claimed'")
+        assert cursor.fetchone()[0] == "claimed"
+
+    def test_nodes_accept_synthesized_status(self, fractal_db):
+        """nodes.status must accept 'synthesized' as a valid status."""
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO graphs (id, seed, intensity, checkpoint_mode)
+            VALUES ('g-synth', 'test', 'pulse', 'autonomous')
+        """)
+        cursor.execute("""
+            INSERT INTO nodes (id, graph_id, node_type, text, status)
+            VALUES ('n-synth', 'g-synth', 'question', 'test', 'synthesized')
+        """)
+        cursor.execute("SELECT status FROM nodes WHERE id = 'n-synth'")
+        assert cursor.fetchone()[0] == "synthesized"
+
+
+class TestV1ToV2Migration:
+    """Tests for v1 to v2 schema migration."""
+
+    def test_migration_from_v1_to_v2(self, tmp_path):
+        """Running init_fractal_schema on a v1 database must migrate to v2."""
+        from spellbook_mcp.fractal.schema import (
+            close_all_fractal_connections,
+            get_fractal_connection,
+            init_fractal_schema,
+        )
+
+        db_path = str(tmp_path / "migrate.db")
+
+        # Manually create a v1 schema
+        conn = sqlite3.connect(db_path)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+
+        conn.execute("""
+            CREATE TABLE schema_version (
+                version INTEGER NOT NULL,
+                applied_at TEXT NOT NULL
+            )
+        """)
+        conn.execute(
+            "INSERT INTO schema_version (version, applied_at) VALUES (1, datetime('now'))"
+        )
+
+        conn.execute("""
+            CREATE TABLE graphs (
+                id TEXT PRIMARY KEY,
+                seed TEXT NOT NULL,
+                intensity TEXT NOT NULL CHECK(intensity IN ('pulse', 'explore', 'deep')),
+                checkpoint_mode TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'active'
+                    CHECK(status IN ('active', 'paused', 'completed', 'error', 'budget_exhausted')),
+                metadata_json TEXT DEFAULT '{}',
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE nodes (
+                id TEXT PRIMARY KEY,
+                graph_id TEXT NOT NULL REFERENCES graphs(id) ON DELETE CASCADE,
+                parent_id TEXT REFERENCES nodes(id) ON DELETE CASCADE,
+                node_type TEXT NOT NULL CHECK(node_type IN ('question', 'answer')),
+                text TEXT NOT NULL,
+                owner TEXT,
+                depth INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'open'
+                    CHECK(status IN ('open', 'answered', 'saturated', 'error', 'budget_exhausted')),
+                metadata_json TEXT DEFAULT '{}',
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE edges (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                graph_id TEXT NOT NULL REFERENCES graphs(id) ON DELETE CASCADE,
+                from_node TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+                to_node TEXT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+                edge_type TEXT NOT NULL
+                    CHECK(edge_type IN ('parent_child', 'convergence', 'contradiction')),
+                metadata_json TEXT DEFAULT '{}',
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                UNIQUE(graph_id, from_node, to_node, edge_type)
+            )
+        """)
+
+        # Add v1 indexes
+        conn.execute("CREATE INDEX idx_nodes_graph_id ON nodes(graph_id)")
+        conn.execute("CREATE INDEX idx_nodes_parent_id ON nodes(parent_id)")
+        conn.execute("CREATE INDEX idx_nodes_graph_status ON nodes(graph_id, status)")
+        conn.execute("CREATE INDEX idx_edges_graph_id ON edges(graph_id)")
+        conn.execute("CREATE INDEX idx_edges_from_node ON edges(from_node)")
+        conn.execute("CREATE INDEX idx_edges_to_node ON edges(to_node)")
+
+        # Insert some v1 data
+        conn.execute("""
+            INSERT INTO graphs (id, seed, intensity, checkpoint_mode)
+            VALUES ('g-v1', 'test seed', 'pulse', 'autonomous')
+        """)
+        conn.execute("""
+            INSERT INTO nodes (id, graph_id, node_type, text, status)
+            VALUES ('n-v1', 'g-v1', 'question', 'test question', 'open')
+        """)
+        conn.commit()
+        conn.close()
+
+        # Now run init_fractal_schema to trigger migration
+        init_fractal_schema(db_path)
+
+        conn2 = get_fractal_connection(db_path)
+        cursor = conn2.cursor()
+
+        # Verify v1 data survived
+        cursor.execute("SELECT seed FROM graphs WHERE id = 'g-v1'")
+        assert cursor.fetchone()[0] == "test seed"
+
+        cursor.execute("SELECT text FROM nodes WHERE id = 'n-v1'")
+        assert cursor.fetchone()[0] == "test question"
+
+        # Verify new statuses work
+        cursor.execute("""
+            INSERT INTO nodes (id, graph_id, node_type, text, status)
+            VALUES ('n-claimed-mig', 'g-v1', 'question', 'claimed test', 'claimed')
+        """)
+        cursor.execute("""
+            INSERT INTO nodes (id, graph_id, node_type, text, status)
+            VALUES ('n-synth-mig', 'g-v1', 'question', 'synth test', 'synthesized')
+        """)
+        conn2.commit()
+
+        cursor.execute("SELECT status FROM nodes WHERE id = 'n-claimed-mig'")
+        assert cursor.fetchone()[0] == "claimed"
+
+        cursor.execute("SELECT status FROM nodes WHERE id = 'n-synth-mig'")
+        assert cursor.fetchone()[0] == "synthesized"
+
+        # Verify schema version 2 was recorded
+        cursor.execute("SELECT MAX(version) FROM schema_version")
+        assert cursor.fetchone()[0] == 2
+
+        # Verify new index exists
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_nodes_graph_type_status'"
+        )
+        assert cursor.fetchone() is not None
+
+        close_all_fractal_connections()

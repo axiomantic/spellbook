@@ -312,6 +312,8 @@ Look for what's MISSING or WEAK, not just what's verbose. A crystallized prompt 
 - Should any referenced content be inlined?
 - Should any inline content be extracted to a reference?
 
+**Fractal exploration (optional):** When a prompt has 5+ cross-references or nested conditionals, invoke fractal-thinking with intensity `pulse` and seed: "What would an LLM misinterpret in [prompt purpose]?". Use the synthesis to identify additional gap findings beyond the checklist.
+
 ### Phase 3: Improvement Design
 
 Based on gaps found, BEFORE compression:

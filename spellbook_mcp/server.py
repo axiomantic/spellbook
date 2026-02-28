@@ -36,10 +36,12 @@ import fastmcp as _fastmcp_module
 from fastmcp import FastMCP, Context
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+import atexit
 import os
 import json
 import time
 import functools
+import threading
 
 # FastMCP version detection for v2/v3 compatibility
 _FASTMCP_MAJOR = int(_fastmcp_module.__version__.split(".")[0])
@@ -180,6 +182,8 @@ from spellbook_mcp.fractal.node_ops import (
     add_node as do_fractal_add_node,
     update_node as do_fractal_update_node,
     mark_saturated as do_fractal_mark_saturated,
+    claim_work as do_fractal_claim_work,
+    synthesize_node as do_fractal_synthesize_node,
 )
 from spellbook_mcp.fractal.query_ops import (
     get_snapshot as do_fractal_get_snapshot,
@@ -188,6 +192,8 @@ from spellbook_mcp.fractal.query_ops import (
     query_convergence as do_fractal_query_convergence,
     query_contradictions as do_fractal_query_contradictions,
     get_saturation_status as do_fractal_get_saturation_status,
+    get_claimable_work as do_fractal_get_claimable_work,
+    get_ready_to_synthesize as do_fractal_get_ready_to_synthesize,
 )
 
 # Track server startup time for uptime calculation
@@ -203,6 +209,32 @@ _watcher = None
 
 # Global update watcher thread instance (initialized in __main__)
 _update_watcher = None
+
+
+def _shutdown_cleanup():
+    """Stop watcher threads and close database connections on exit."""
+    if _watcher is not None:
+        _watcher.stop()
+    if _update_watcher is not None:
+        _update_watcher.stop()
+    try:
+        from spellbook_mcp.db import close_all_connections
+        close_all_connections()
+    except Exception:
+        pass
+    try:
+        from spellbook_mcp.forged.schema import close_forged_connections
+        close_forged_connections()
+    except Exception:
+        pass
+    try:
+        from spellbook_mcp.fractal.schema import close_all_fractal_connections
+        close_all_fractal_connections()
+    except Exception:
+        pass
+
+
+atexit.register(_shutdown_cleanup)
 
 mcp = FastMCP("spellbook")
 
@@ -390,42 +422,42 @@ async def spawn_claude_session(
     # Rate limit: max 1 call per 5 minutes
     try:
         _conn = _sqlite3.connect(_db_path, timeout=5.0)
+        try:
+            _now = time.time()
+            _cutoff = _now - 300  # 5 minutes
+            _row = _conn.execute(
+                "SELECT COUNT(*) FROM spawn_rate_limit WHERE timestamp > ?",
+                (_cutoff,),
+            ).fetchone()
 
-        _now = time.time()
-        _cutoff = _now - 300  # 5 minutes
-        _row = _conn.execute(
-            "SELECT COUNT(*) FROM spawn_rate_limit WHERE timestamp > ?",
-            (_cutoff,),
-        ).fetchone()
+            if _row[0] > 0:
+                _do_log_event(
+                    event_type="spawn_rate_limited",
+                    severity="MEDIUM",
+                    source="spawn_guard",
+                    detail="Rate limit exceeded: max 1 spawn per 5 minutes",
+                    tool_name="spawn_claude_session",
+                    action_taken="blocked:rate_limit",
+                    db_path=_db_path,
+                )
+                return {
+                    "blocked": True,
+                    "reason": "Rate limit exceeded: max 1 spawn per 5 minutes",
+                    "rule_id": "RATE-LIMIT-001",
+                }
 
-        if _row[0] > 0:
-            _conn.close()
-            _do_log_event(
-                event_type="spawn_rate_limited",
-                severity="MEDIUM",
-                source="spawn_guard",
-                detail="Rate limit exceeded: max 1 spawn per 5 minutes",
-                tool_name="spawn_claude_session",
-                action_taken="blocked:rate_limit",
-                db_path=_db_path,
+            # Record this invocation for rate limiting
+            _conn.execute(
+                "INSERT INTO spawn_rate_limit (timestamp, session_id) VALUES (?, ?)",
+                (_now, _session_id),
             )
-            return {
-                "blocked": True,
-                "reason": "Rate limit exceeded: max 1 spawn per 5 minutes",
-                "rule_id": "RATE-LIMIT-001",
-            }
 
-        # Record this invocation for rate limiting
-        _conn.execute(
-            "INSERT INTO spawn_rate_limit (timestamp, session_id) VALUES (?, ?)",
-            (_now, _session_id),
-        )
+            # Clean up old rate limit records
+            _conn.execute("DELETE FROM spawn_rate_limit WHERE timestamp < ?", (_cutoff,))
 
-        # Clean up old rate limit records
-        _conn.execute("DELETE FROM spawn_rate_limit WHERE timestamp < ?", (_cutoff,))
-
-        _conn.commit()
-        _conn.close()
+            _conn.commit()
+        finally:
+            _conn.close()
     except _sqlite3.Error as e:
         # Fail closed: if rate limit DB is unavailable, block the spawn
         return {"status": "error", "error": f"Rate limit check failed: {e}. Blocking spawn for safety."}
@@ -1670,6 +1702,14 @@ def workflow_state_save(
         {"success": True/False, "project_path": str, "trigger": str, "error": str?}
     """
     from spellbook_mcp.db import get_connection
+    from spellbook_mcp.resume import validate_workflow_state
+
+    validation = validate_workflow_state(state)
+    if not validation["valid"]:
+        high_or_above = [f for f in validation["findings"] if f.get("severity") in ("HIGH", "CRITICAL")]
+        if high_or_above:
+            messages = [f.get("message", "unknown") for f in high_or_above]
+            return {"success": False, "project_path": project_path, "trigger": trigger, "error": f"Workflow state failed validation: {'; '.join(messages)}"}
 
     try:
         conn = get_connection()
@@ -1784,6 +1824,13 @@ def workflow_state_load(
             }
 
         state = json.loads(state_json)
+
+        import logging as _logging
+        _logger = _logging.getLogger(__name__)
+        from spellbook_mcp.resume import validate_workflow_state
+        validation = validate_workflow_state(state)
+        if not validation["valid"]:
+            _logger.warning("Loaded workflow state for %s failed validation: %s", project_path, [f.get("message", "unknown") for f in validation["findings"]])
 
         return {
             "success": True,
@@ -2774,6 +2821,22 @@ def tts_config_set(
     return {"status": "ok", "config": result_config}
 
 
+# --- Health Check REST Endpoint ---
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def api_health(request: Request) -> JSONResponse:
+    """Lightweight health check endpoint for the installer and monitoring.
+
+    Returns JSON: {"status": "ok", "version": "...", "uptime_seconds": ...}
+    """
+    return JSONResponse({
+        "status": "ok",
+        "version": _get_version(),
+        "uptime_seconds": round(time.time() - _server_start_time, 1),
+    })
+
+
 # --- TTS REST Endpoint ---
 
 
@@ -2912,6 +2975,40 @@ def fractal_get_saturation_status(graph_id: str):
     return do_fractal_get_saturation_status(graph_id=graph_id)
 
 
+@mcp.tool()
+@inject_recovery_context
+def fractal_claim_work(graph_id: str, worker_id: str):
+    """Atomically claim the next available question node for a worker. Returns node data with branch affinity preference, or graph_done status."""
+    try:
+        return do_fractal_claim_work(graph_id=graph_id, worker_id=worker_id)
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_synthesize_node(graph_id: str, node_id: str, synthesis_text: str):
+    """Mark a node as synthesized with synthesis text. Validates all child questions are complete."""
+    try:
+        return do_fractal_synthesize_node(graph_id=graph_id, node_id=node_id, synthesis_text=synthesis_text)
+    except ValueError as e:
+        return {"error": str(e)}
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_get_claimable_work(graph_id: str, worker_id: str = None):
+    """Preview available work in a fractal graph with optional branch affinity ordering."""
+    return do_fractal_get_claimable_work(graph_id=graph_id, worker_id=worker_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+def fractal_get_ready_to_synthesize(graph_id: str):
+    """Find nodes ready for bottom-up synthesis (all child questions complete)."""
+    return do_fractal_get_ready_to_synthesize(graph_id=graph_id)
+
+
 if __name__ == "__main__":
     # Initialize database and start watcher thread
     db_path = str(get_db_path())
@@ -2943,6 +3040,10 @@ if __name__ == "__main__":
             ),
         )
         _update_watcher.start()
+
+    # Preload TTS model in background (non-blocking)
+    _tts_preload = threading.Thread(target=tts_module.preload, daemon=True)
+    _tts_preload.start()
 
     if transport == "streamable-http":
         host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")

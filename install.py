@@ -29,7 +29,6 @@ Options:
     --platforms LIST    Comma-separated platforms (claude_code,opencode,codex,gemini)
     --force             Reinstall even if version matches
     --dry-run           Show what would be done without making changes
-    --verify-mcp        Verify MCP server connectivity after installation
     --no-interactive    Skip platform selection UI
 """
 
@@ -723,11 +722,19 @@ def bootstrap(args: argparse.Namespace) -> Path:
 
 
 def check_tts_available() -> bool:
-    """Check if the kokoro TTS package is importable."""
+    """Check if kokoro TTS is installed in the daemon venv."""
     try:
-        import kokoro  # noqa: F401
-        return True
-    except ImportError:
+        from installer.components.mcp import get_daemon_python
+        daemon_python = get_daemon_python()
+        if not daemon_python.exists():
+            return False
+        result = subprocess.run(
+            [str(daemon_python), "-c", "import kokoro"],
+            capture_output=True,
+            timeout=30,
+        )
+        return result.returncode == 0
+    except Exception:
         return False
 
 
@@ -740,30 +747,166 @@ def _set_tts_config(enabled: bool) -> None:
         pass
 
 
-def setup_tts(dry_run: bool = False, auto_yes: bool = False) -> None:
-    """Detect kokoro TTS and optionally enable it.
+def _install_tts_deps(spellbook_dir: Path) -> bool:
+    """Install TTS dependencies into the daemon venv.
 
-    Skipped during dry-run or when kokoro is not installed.
-    In interactive mode, prompts the user. With --yes, auto-enables.
+    Installs:
+    1. Python packages from the TTS lockfile (kokoro, soundfile, sounddevice, etc.)
+    2. spacy language model (en_core_web_sm) required by misaki/kokoro for G2P
+
+    Uses the daemon-dedicated venv at ~/.local/spellbook/daemon-venv/.
+
+    Returns True if installation succeeded and kokoro is now importable.
+    """
+    print_step("Installing TTS dependencies into daemon venv...")
+    print_info("Packages: kokoro, soundfile, sounddevice, spacy, misaki")
+    try:
+        from installer.components.mcp import install_tts_to_daemon_venv
+
+        success, msg = install_tts_to_daemon_venv(spellbook_dir)
+        if not success:
+            print_error(f"TTS dependency installation failed: {msg}")
+            return False
+        print_success("TTS packages and spacy model installed")
+        # Verify kokoro is now importable in the daemon venv
+        return check_tts_available()
+    except ImportError:
+        print_error("Could not import installer components for daemon venv TTS install")
+        return False
+    except Exception as e:
+        print_error(f"TTS dependency installation failed: {e}")
+        return False
+
+
+def _preload_tts_model(spellbook_dir: Path) -> bool:
+    """Pre-download Kokoro TTS model so first speak() call is instant.
+
+    Checks if model is already cached before downloading.
+    Uses the daemon venv's Python to run the download.
+    """
+    try:
+        from installer.components.mcp import get_daemon_python
+    except ImportError:
+        print_warning("Could not import daemon venv helpers, skipping model preload")
+        return False
+
+    daemon_python = get_daemon_python()
+    if not daemon_python.exists():
+        print_warning("Daemon venv not found, skipping model preload")
+        return False
+
+    # Check if model is already cached
+    cache_dir = Path.home() / ".cache" / "huggingface" / "hub"
+    if cache_dir.exists() and any(cache_dir.glob("models--hexgrad--Kokoro*")):
+        print_info("Kokoro model already cached, skipping download")
+        return True
+
+    print_step("Pre-downloading Kokoro TTS model (~500MB)...")
+    print_info("This is a one-time download. Future installs will use the cached model.")
+
+    try:
+        result = subprocess.run(
+            [str(daemon_python), "-c",
+             "from kokoro import KPipeline; "
+             "KPipeline(lang_code='a', repo_id='hexgrad/Kokoro-82M'); "
+             "print('Model loaded successfully')"],
+            capture_output=True,
+            text=True,
+            timeout=600,  # 10 minutes for large model download
+        )
+        if result.returncode == 0:
+            print_success("Kokoro model downloaded and cached")
+            return True
+        else:
+            print_warning(f"Model pre-download failed: {result.stderr[:200]}")
+            print_info("The model will be downloaded on first TTS use instead.")
+            return False
+    except subprocess.TimeoutExpired:
+        print_warning("Model download timed out (>10 minutes)")
+        print_info("The model will be downloaded on first TTS use instead.")
+        return False
+
+
+def setup_tts(
+    dry_run: bool = False,
+    auto_yes: bool = False,
+    spellbook_dir: Path | None = None,
+) -> None:
+    """Offer to install and enable TTS.
+
+    Skipped during dry-run or if user already configured TTS previously.
+    If kokoro is installed, asks to enable. If not, offers to install it.
     """
     if dry_run:
         return
 
-    if not check_tts_available():
-        return
+    # Check if user already made a TTS decision (don't re-prompt on reinstall)
+    try:
+        from spellbook_mcp.config_tools import config_get as _cfg_get
+        existing = _cfg_get("tts_enabled")
+        if existing is not None:
+            if check_tts_available():
+                print_info(f"TTS already configured (enabled={existing})")
+                return
+            elif existing:
+                # TTS was enabled but deps are missing (venv was rebuilt).
+                # Reinstall TTS deps silently to honor the user's prior choice.
+                print_step("TTS was enabled but dependencies are missing. Reinstalling...")
+                if spellbook_dir and _install_tts_deps(spellbook_dir):
+                    _preload_tts_model(spellbook_dir)
+                    print_success("TTS dependencies reinstalled")
+                else:
+                    print_warning(
+                        "TTS reinstall failed. Run manually: "
+                        "uv pip install --python ~/.local/spellbook/daemon-venv/bin/python "
+                        "-r daemon/requirements-tts.txt"
+                    )
+                return
+            else:
+                # TTS was explicitly disabled, nothing to do
+                return
+    except ImportError:
+        pass
 
     print()
-    enabled = prompt_yn(
-        "Kokoro TTS detected. Enable text-to-speech notifications?",
-        default=True,
-        auto_yes=auto_yes,
-    )
-    _set_tts_config(enabled)
-    if enabled:
-        print_success("TTS enabled (voice: af_heart, volume: 0.3)")
-        print_info("Change settings with tts_session_set or tts_config_set MCP tools")
+    if check_tts_available():
+        # Kokoro already installed, just ask to enable
+        enabled = prompt_yn(
+            "Kokoro TTS detected. Enable text-to-speech notifications?",
+            default=True,
+            auto_yes=auto_yes,
+        )
+        _set_tts_config(enabled)
+        if enabled:
+            print_success("TTS enabled (voice: af_heart, volume: 0.3)")
+            print_info("Change settings with tts_session_set or tts_config_set MCP tools")
+        else:
+            print_info("TTS disabled. Enable later with tts_config_set MCP tool")
     else:
-        print_info("TTS disabled. Enable later with tts_config_set MCP tool")
+        # Kokoro not installed, offer to install
+        install = prompt_yn(
+            "Install text-to-speech notifications? (Kokoro TTS, ~500MB download)",
+            default=False,
+            auto_yes=False,  # Never auto-install heavy deps, even with --yes
+        )
+        if install and spellbook_dir:
+            if _install_tts_deps(spellbook_dir):
+                _preload_tts_model(spellbook_dir)
+                _set_tts_config(True)
+                print_success("TTS fully installed and enabled")
+                print_info("  Packages: kokoro, soundfile, sounddevice, spacy, misaki")
+                print_info("  Models: Kokoro-82M (HuggingFace), en_core_web_sm (spacy)")
+                print_info("  Voice: af_heart, Volume: 0.3")
+                print_info("  Change settings with tts_session_set or tts_config_set MCP tools")
+            else:
+                print_error("TTS installation failed. Install manually:")
+                print_info("Install TTS deps into daemon venv via installer.components.mcp")
+        elif install:
+            print_warning("Cannot auto-install: spellbook directory unknown")
+            print_info("Install manually via installer.components.mcp.install_tts_to_daemon_venv()")
+        else:
+            _set_tts_config(False)
+            print_info("TTS skipped. Install later via installer.components.mcp.install_tts_to_daemon_venv()")
 
 
 # =============================================================================
@@ -780,14 +923,18 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         from installer.core import Installer
         from installer.ui import (
             Spinner,
+            color as installer_color,
+            Colors as InstallerColors,
             print_directory_config,
             print_header as print_installer_header,
             print_info as installer_print_info,
+            print_platform_section,
             print_report,
+            print_result,
+            print_step,
             print_warning as installer_print_warning,
             print_success as installer_print_success,
         )
-        from installer.components.mcp import verify_mcp_connectivity
     except ImportError as e:
         print_error(f"Failed to import installer components: {e}")
         print_info("Make sure you're running from a valid spellbook repository.")
@@ -799,7 +946,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     # Determine platforms to install
     if args.platforms:
         platforms = args.platforms.split(",")
-    elif args.no_interactive or not is_interactive():
+    elif args.yes or args.no_interactive or not is_interactive():
         platforms = installer.detect_platforms()
         installer_print_info(f"Auto-detected platforms: {', '.join(platforms)}")
         print()
@@ -828,27 +975,38 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         installer_print_warning("DRY RUN - no changes will be made")
         print()
 
-    with Spinner("Installing"):
-        session = installer.run(
-            platforms=platforms,
-            force=args.force,
-            dry_run=args.dry_run,
-        )
+    def _on_progress(event, data):
+        if event == "daemon_start":
+            print_platform_section("MCP Daemon")
+        elif event == "health_start":
+            print_platform_section("Health Check")
+        elif event == "platform_start":
+            name = data["name"]
+            idx = data["index"]
+            total = data["total"]
+            print_platform_section(f"{name} [{idx}/{total}]")
+        elif event == "platform_skip":
+            installer_print_info(data["message"])
+        elif event == "step":
+            print_step(data["message"])
+        elif event == "result":
+            print_result(data["result"])
 
-    if args.verify_mcp and not args.dry_run:
-        print()
-        server_path = spellbook_dir / "spellbook_mcp" / "server.py"
-        with Spinner("Verifying MCP server"):
-            success, msg = verify_mcp_connectivity(server_path)
-        if success:
-            installer_print_success(f"MCP server: {msg}")
-        else:
-            installer_print_warning(f"MCP server: {msg}")
+    session = installer.run(
+        platforms=platforms,
+        force=args.force,
+        dry_run=args.dry_run,
+        on_progress=_on_progress,
+    )
 
-    print_report(session)
+    print_report(session, show_details=False)
 
     # TTS setup (optional)
-    setup_tts(dry_run=args.dry_run, auto_yes=getattr(args, "yes", False))
+    setup_tts(
+        dry_run=args.dry_run,
+        auto_yes=getattr(args, "yes", False),
+        spellbook_dir=spellbook_dir,
+    )
 
     # Show post-install instructions if interactive and not dry-run
     if not args.dry_run and is_interactive():
@@ -910,11 +1068,6 @@ Examples:
         "--dry-run",
         action="store_true",
         help="Show what would be done without changes",
-    )
-    parser.add_argument(
-        "--verify-mcp",
-        action="store_true",
-        help="Verify MCP server connectivity",
     )
     parser.add_argument(
         "--no-interactive",

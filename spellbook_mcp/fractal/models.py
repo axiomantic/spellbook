@@ -9,7 +9,7 @@ from typing import Optional
 
 
 # Constants
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 VALID_INTENSITIES = ["pulse", "explore", "deep"]
 
@@ -25,7 +25,9 @@ VALID_GRAPH_STATUSES = [
 
 VALID_NODE_STATUSES = [
     "open",
+    "claimed",
     "answered",
+    "synthesized",
     "saturated",
     "error",
     "budget_exhausted",

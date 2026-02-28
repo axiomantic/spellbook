@@ -190,6 +190,8 @@ Problem statement, research findings, architecture, scope, assumptions, integrat
 | **Edge Cases** | Boundary, failure, security | Empty/max/invalid? Network/partial/cascade? Auth bypass? Injection? |
 | **Vocabulary** | Overloaded? Matches code? | Context-dependent meanings? Synonyms to unify? Two devs interpret same? |
 
+**Fractal exploration (optional):** When any finding is classified as CRITICAL, invoke fractal-thinking with intensity `pulse` and seed: "What are the second-order consequences if [critical issue] is not addressed?". Use the synthesis to add depth to CRITICAL findings with impact chains.
+
 ### Challenge Template
 
 ```

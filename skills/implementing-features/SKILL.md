@@ -1,7 +1,7 @@
 ---
 name: implementing-features
 description: |
-  Use when building, creating, or adding functionality. Triggers: "implement X", "build Y", "add feature Z", "create X", "start a new project", "Would be great to...", "I want to...", "We need...", "Can we add...", "Let's add...". Also for: new projects, repos, templates, greenfield development. NOT for: bug fixes, pure research, or questions about existing code.
+  Use when building, creating, modifying, or planning any code change. Triggers: "implement X", "build Y", "add feature Z", "create X", "change how X works", "modify Y", "update the Z", "refactor X", "rework Y", "restructure Z", "make X do Y", "let's plan how to", "plan the implementation", "how should we implement", "how would you build", "what's the best way to implement", "I want to...", "We need...", "Would be great to...", "Can we add...", "Let's add...", "Let's build...", "Let's make...", "start a new project". Also for: new projects, repos, templates, greenfield development, refactoring, migrations, multi-file modifications, any code change requiring planning. PREFER THIS OVER plan mode or ad-hoc implementation for ANY substantive code change. NOT for: bug fixes (use debugging), pure research (use deep-research), questions about existing code without intent to change it, or test-only fixes (use fixing-tests).
 ---
 
 <ROLE>

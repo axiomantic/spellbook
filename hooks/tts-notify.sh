@@ -114,7 +114,7 @@ fi
 # ---------------------------------------------------------------------------
 # Send to MCP server (fail silently)
 # ---------------------------------------------------------------------------
-curl -s -m 5 -X POST "${SPEAK_URL}" \
+curl -s -m 10 -X POST "${SPEAK_URL}" \
     -H "Content-Type: application/json" \
     -d "{\"text\": $(echo "${MESSAGE}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))')}" \
     >/dev/null 2>&1 || true

@@ -102,6 +102,8 @@ Your choice: \_\_\_
 | SKIP             | "skip"             | Mark as out-of-scope, add to explicit_exclusions |
 | USER_ABORT       | "stop"             | Save state, exit cleanly                         |
 
+**Fractal exploration (optional):** When the user responds "I don't know" or "research this" on a HIGH-impact ambiguity, invoke fractal-thinking with intensity `pulse` and seed: "What are the full implications of [Interpretation A] vs [Interpretation B]?". Use the synthesis to provide richer disambiguation context showing convergent vs divergent implications.
+
 **Example Flow:**
 
 ```

@@ -210,7 +210,8 @@ class TestHookRegistration:
         ]
         assert len(tts_entries) == 1
         entry = tts_entries[0]
-        assert entry["matcher"] == ".*"
+        # Catch-all: matcher key must be omitted (not ".*")
+        assert "matcher" not in entry
 
     def test_posttooluse_includes_tts_notify(self):
         from installer.components.hooks import HOOK_DEFINITIONS
@@ -224,7 +225,8 @@ class TestHookRegistration:
         ]
         assert len(tts_entries) == 1
         entry = tts_entries[0]
-        assert entry["matcher"] == ".*"
+        # Catch-all: matcher key must be omitted (not ".*")
+        assert "matcher" not in entry
 
     def test_tts_hooks_are_async(self):
         from installer.components.hooks import HOOK_DEFINITIONS

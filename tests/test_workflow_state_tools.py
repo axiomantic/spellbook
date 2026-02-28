@@ -37,7 +37,7 @@ class TestWorkflowStateSave:
 
         project_path = "/test/project"
         state = {
-            "skill_stack": ["implementing-features"],
+            "active_skill": "implementing-features",
             "todos": [{"id": "1", "text": "Task 1", "status": "pending"}],
         }
 
@@ -63,7 +63,7 @@ class TestWorkflowStateSave:
         row = cursor.fetchone()
         assert row is not None
         loaded_state = json.loads(row[0])
-        assert loaded_state["skill_stack"] == ["implementing-features"]
+        assert loaded_state["active_skill"] == "implementing-features"
         assert row[1] == "manual"
 
     def test_save_updates_existing_record(self, tmp_path):
@@ -76,11 +76,11 @@ class TestWorkflowStateSave:
             mock_conn.return_value = get_connection(self.db_path)
 
             # First save
-            state1 = {"skill_stack": ["debugging"]}
+            state1 = {"active_skill": "debugging"}
             workflow_state_save.fn(project_path=project_path, state=state1, trigger="manual")
 
             # Second save (update)
-            state2 = {"skill_stack": ["implementing-features", "tdd"]}
+            state2 = {"active_skill": "implementing-features"}
             result = workflow_state_save.fn(
                 project_path=project_path, state=state2, trigger="auto"
             )
@@ -97,7 +97,7 @@ class TestWorkflowStateSave:
         row = cursor.fetchone()
         assert row[0] == 1  # Only one record
         loaded_state = json.loads(row[1])
-        assert loaded_state["skill_stack"] == ["implementing-features", "tdd"]
+        assert loaded_state["active_skill"] == "implementing-features"
         assert row[2] == "auto"  # Trigger updated
 
     def test_save_with_different_triggers(self, tmp_path):
@@ -111,7 +111,7 @@ class TestWorkflowStateSave:
 
             for i, trigger in enumerate(triggers):
                 project_path = f"/test/project-{i}"
-                state = {"trigger_test": trigger}
+                state = {"workflow_pattern": trigger}
                 result = workflow_state_save.fn(
                     project_path=project_path, state=state, trigger=trigger
                 )
@@ -141,7 +141,7 @@ class TestWorkflowStateSave:
             # First save
             workflow_state_save.fn(
                 project_path=project_path,
-                state={"version": 1},
+                state={"pending_todos": 1},
                 trigger="manual",
             )
 
@@ -160,7 +160,7 @@ class TestWorkflowStateSave:
             # Second save (update)
             workflow_state_save.fn(
                 project_path=project_path,
-                state={"version": 2},
+                state={"pending_todos": 2},
                 trigger="auto",
             )
 
@@ -183,17 +183,15 @@ class TestWorkflowStateSave:
 
         project_path = "/test/project"
         state = {
-            "skill_stack": ["implementing-features", "tdd"],
+            "active_skill": "implementing-features",
             "todos": [
                 {"id": "1", "text": "Task 1", "status": "completed"},
                 {"id": "2", "text": "Task 2", "status": "pending"},
             ],
-            "subagents": [
-                {"id": "agent-1", "task": "research", "status": "complete"}
-            ],
-            "context": {
-                "files_modified": ["src/main.py", "tests/test_main.py"],
-                "decisions": ["Using pytest for testing"],
+            "recent_files": ["src/main.py", "tests/test_main.py"],
+            "skill_constraints": {
+                "forbidden": ["skip tests"],
+                "required": ["run linter"],
             },
         }
 
@@ -247,7 +245,7 @@ class TestWorkflowStateLoad:
         from spellbook_mcp.server import workflow_state_save, workflow_state_load
 
         project_path = "/test/project"
-        state = {"skill_stack": ["debugging"], "todos": []}
+        state = {"active_skill": "debugging", "todos": []}
 
         with patch("spellbook_mcp.db.get_connection") as mock_conn:
             mock_conn.return_value = get_connection(self.db_path)
@@ -280,7 +278,7 @@ class TestWorkflowStateLoad:
             INSERT INTO workflow_state (project_path, state_json, trigger, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (project_path, '{"old": true}', "manual", old_time, old_time),
+            (project_path, '{"active_skill": "debugging"}', "manual", old_time, old_time),
         )
         conn.commit()
 
@@ -312,7 +310,7 @@ class TestWorkflowStateLoad:
             INSERT INTO workflow_state (project_path, state_json, trigger, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (project_path, '{"recent": true}', "auto", recent_time, recent_time),
+            (project_path, '{"skill_phase": "discovery"}', "auto", recent_time, recent_time),
         )
         conn.commit()
 
@@ -324,7 +322,7 @@ class TestWorkflowStateLoad:
 
         assert result["success"] is True
         assert result["found"] is True
-        assert result["state"] == {"recent": True}
+        assert result["state"] == {"skill_phase": "discovery"}
         assert 1.5 < result["age_hours"] < 3.0  # Approximately 2 hours
 
     def test_load_returns_age_hours(self, tmp_path):
@@ -342,7 +340,7 @@ class TestWorkflowStateLoad:
             INSERT INTO workflow_state (project_path, state_json, trigger, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (project_path, '{"test": true}', "checkpoint", five_hours_ago, five_hours_ago),
+            (project_path, '{"active_skill": "debugging"}', "checkpoint", five_hours_ago, five_hours_ago),
         )
         conn.commit()
 
@@ -370,7 +368,7 @@ class TestWorkflowStateLoad:
             INSERT INTO workflow_state (project_path, state_json, trigger, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (project_path, '{"test": true}', "manual", three_hours_ago, three_hours_ago),
+            (project_path, '{"active_skill": "tdd"}', "manual", three_hours_ago, three_hours_ago),
         )
         conn.commit()
 
@@ -402,7 +400,7 @@ class TestWorkflowStateUpdate:
         from spellbook_mcp.server import workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
-        updates = {"skill_stack": ["debugging"], "active_skill": "debugging"}
+        updates = {"active_skill": "debugging", "skill_phase": "discovery"}
 
         with patch("spellbook_mcp.db.get_connection") as mock_conn:
             mock_conn.return_value = get_connection(self.db_path)
@@ -414,8 +412,8 @@ class TestWorkflowStateUpdate:
             load_result = workflow_state_load.fn(project_path=project_path)
 
         assert load_result["found"] is True
-        assert load_result["state"]["skill_stack"] == ["debugging"]
         assert load_result["state"]["active_skill"] == "debugging"
+        assert load_result["state"]["skill_phase"] == "discovery"
 
     def test_update_merges_nested_dicts(self, tmp_path):
         """Test update deep-merges nested dictionaries."""
@@ -428,18 +426,18 @@ class TestWorkflowStateUpdate:
 
             # Initial state with nested dict
             initial_state = {
-                "context": {
-                    "files_modified": ["file1.py"],
-                    "decisions": ["decision1"],
+                "skill_constraints": {
+                    "forbidden": ["skip tests"],
+                    "required": ["run linter"],
                 }
             }
             workflow_state_save.fn(project_path=project_path, state=initial_state, trigger="manual")
 
             # Update with partial nested dict
             updates = {
-                "context": {
-                    "files_modified": ["file2.py"],  # List - will be appended
-                    "new_key": "new_value",  # New key - will be added
+                "skill_constraints": {
+                    "forbidden": ["skip reviews"],  # List - will be appended
+                    "optional": "new_value",  # New key - will be added
                 }
             }
             workflow_state_update.fn(project_path=project_path, updates=updates)
@@ -448,16 +446,16 @@ class TestWorkflowStateUpdate:
             result = workflow_state_load.fn(project_path=project_path)
 
         assert result["found"] is True
-        context = result["state"]["context"]
+        constraints = result["state"]["skill_constraints"]
         # Lists are appended
-        assert context["files_modified"] == ["file1.py", "file2.py"]
+        assert constraints["forbidden"] == ["skip tests", "skip reviews"]
         # Original keys preserved
-        assert context["decisions"] == ["decision1"]
+        assert constraints["required"] == ["run linter"]
         # New keys added
-        assert context["new_key"] == "new_value"
+        assert constraints["optional"] == "new_value"
 
     def test_update_appends_to_lists(self, tmp_path):
-        """Test update appends to lists (skill_stack, subagents)."""
+        """Test update appends to lists."""
         from spellbook_mcp.server import workflow_state_save, workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
@@ -467,25 +465,25 @@ class TestWorkflowStateUpdate:
 
             # Initial state with lists
             initial_state = {
-                "skill_stack": ["implementing-features"],
-                "subagents": [{"id": "agent-1", "task": "research"}],
+                "recent_files": ["src/main.py"],
+                "todos": [{"id": "1", "text": "research", "status": "pending"}],
             }
             workflow_state_save.fn(project_path=project_path, state=initial_state, trigger="manual")
 
             # Update with additional list items
             updates = {
-                "skill_stack": ["tdd"],  # Should be appended
-                "subagents": [{"id": "agent-2", "task": "review"}],  # Should be appended
+                "recent_files": ["tests/test_main.py"],  # Should be appended
+                "todos": [{"id": "2", "text": "review", "status": "pending"}],  # Should be appended
             }
             workflow_state_update.fn(project_path=project_path, updates=updates)
 
             result = workflow_state_load.fn(project_path=project_path)
 
         assert result["found"] is True
-        assert result["state"]["skill_stack"] == ["implementing-features", "tdd"]
-        assert len(result["state"]["subagents"]) == 2
-        assert result["state"]["subagents"][0]["id"] == "agent-1"
-        assert result["state"]["subagents"][1]["id"] == "agent-2"
+        assert result["state"]["recent_files"] == ["src/main.py", "tests/test_main.py"]
+        assert len(result["state"]["todos"]) == 2
+        assert result["state"]["todos"][0]["id"] == "1"
+        assert result["state"]["todos"][1]["id"] == "2"
 
     def test_update_overwrites_scalars(self, tmp_path):
         """Test update overwrites scalar values."""
@@ -499,16 +497,16 @@ class TestWorkflowStateUpdate:
             # Initial state with scalars
             initial_state = {
                 "active_skill": "debugging",
-                "phase": "discovery",
-                "iteration_count": 1,
+                "skill_phase": "discovery",
+                "pending_todos": 1,
             }
             workflow_state_save.fn(project_path=project_path, state=initial_state, trigger="manual")
 
             # Update scalars
             updates = {
                 "active_skill": "tdd",
-                "phase": "implementation",
-                "iteration_count": 2,
+                "skill_phase": "implementation",
+                "pending_todos": 2,
             }
             workflow_state_update.fn(project_path=project_path, updates=updates)
 
@@ -516,8 +514,8 @@ class TestWorkflowStateUpdate:
 
         assert result["found"] is True
         assert result["state"]["active_skill"] == "tdd"
-        assert result["state"]["phase"] == "implementation"
-        assert result["state"]["iteration_count"] == 2
+        assert result["state"]["skill_phase"] == "implementation"
+        assert result["state"]["pending_todos"] == 2
 
     def test_update_sets_auto_trigger(self, tmp_path):
         """Test that update always sets trigger to 'auto'."""
@@ -528,7 +526,7 @@ class TestWorkflowStateUpdate:
         with patch("spellbook_mcp.db.get_connection") as mock_conn:
             mock_conn.return_value = get_connection(self.db_path)
 
-            workflow_state_update.fn(project_path=project_path, updates={"test": True})
+            workflow_state_update.fn(project_path=project_path, updates={"active_skill": "debugging"})
             result = workflow_state_load.fn(project_path=project_path)
 
         assert result["trigger"] == "auto"
@@ -545,27 +543,27 @@ class TestWorkflowStateUpdate:
             # First update
             workflow_state_update.fn(
                 project_path=project_path,
-                updates={"skill_stack": ["skill1"], "count": 1}
+                updates={"recent_files": ["file1.py"], "pending_todos": 1}
             )
 
             # Second update
             workflow_state_update.fn(
                 project_path=project_path,
-                updates={"skill_stack": ["skill2"], "active": True}
+                updates={"recent_files": ["file2.py"], "workflow_pattern": "TDD"}
             )
 
             # Third update
             workflow_state_update.fn(
                 project_path=project_path,
-                updates={"skill_stack": ["skill3"], "count": 2}
+                updates={"recent_files": ["file3.py"], "pending_todos": 2}
             )
 
             result = workflow_state_load.fn(project_path=project_path)
 
         assert result["found"] is True
-        assert result["state"]["skill_stack"] == ["skill1", "skill2", "skill3"]
-        assert result["state"]["count"] == 2  # Overwritten
-        assert result["state"]["active"] is True  # Preserved
+        assert result["state"]["recent_files"] == ["file1.py", "file2.py", "file3.py"]
+        assert result["state"]["pending_todos"] == 2  # Overwritten
+        assert result["state"]["workflow_pattern"] == "TDD"  # Preserved
 
 
 class TestSkillInstructionsGet:
@@ -975,7 +973,7 @@ class TestWorkflowStateIntegration:
 
             # 1. Initial save (session start)
             initial_state = {
-                "skill_stack": [],
+                "recent_files": [],
                 "todos": [],
                 "active_skill": None,
             }
@@ -990,7 +988,7 @@ class TestWorkflowStateIntegration:
             workflow_state_update.fn(
                 project_path=project_path,
                 updates={
-                    "skill_stack": ["implementing-features"],
+                    "recent_files": ["src/main.py"],
                     "active_skill": "implementing-features",
                 },
             )
@@ -1007,7 +1005,7 @@ class TestWorkflowStateIntegration:
             workflow_state_update.fn(
                 project_path=project_path,
                 updates={
-                    "skill_stack": ["tdd"],
+                    "recent_files": ["tests/test_main.py"],
                     "active_skill": "tdd",
                 },
             )
@@ -1019,8 +1017,8 @@ class TestWorkflowStateIntegration:
         assert load_result["found"] is True
         state = load_result["state"]
 
-        # Skill stack accumulated
-        assert state["skill_stack"] == ["implementing-features", "tdd"]
+        # Recent files accumulated
+        assert state["recent_files"] == ["src/main.py", "tests/test_main.py"]
         # Active skill updated
         assert state["active_skill"] == "tdd"
         # Todos accumulated
@@ -1039,14 +1037,14 @@ class TestWorkflowStateIntegration:
             # Save state for project A
             workflow_state_save.fn(
                 project_path="/project/a",
-                state={"project": "A", "value": 1},
+                state={"active_skill": "debugging", "pending_todos": 1},
                 trigger="manual",
             )
 
             # Save state for project B
             workflow_state_save.fn(
                 project_path="/project/b",
-                state={"project": "B", "value": 2},
+                state={"active_skill": "tdd", "pending_todos": 2},
                 trigger="manual",
             )
 
@@ -1054,7 +1052,7 @@ class TestWorkflowStateIntegration:
             result_a = workflow_state_load.fn(project_path="/project/a")
             result_b = workflow_state_load.fn(project_path="/project/b")
 
-        assert result_a["state"]["project"] == "A"
-        assert result_a["state"]["value"] == 1
-        assert result_b["state"]["project"] == "B"
-        assert result_b["state"]["value"] == 2
+        assert result_a["state"]["active_skill"] == "debugging"
+        assert result_a["state"]["pending_todos"] == 1
+        assert result_b["state"]["active_skill"] == "tdd"
+        assert result_b["state"]["pending_todos"] == 2

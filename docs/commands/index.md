@@ -49,9 +49,9 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/finish-branch-execute](finish-branch-execute.md) | Step 4 of finishing-a-development-branch: Execute chosen integration option (mer... | spellbook |
 | [/fix-tests-execute](fix-tests-execute.md) | Phase 2 of fixing-tests: Fix Execution - investigate, classify, fix, verify, and... | spellbook |
 | [/fix-tests-parse](fix-tests-parse.md) | Phase 0 of fixing-tests: Input Processing - parse audit reports and build work i... | spellbook |
-| [/fractal-think-explore](fractal-think-explore.md) | Phase 2 of fractal-thinking: Recursive exploration with subagent dispatch, conve... | spellbook |
-| [/fractal-think-init](fractal-think-init.md) | Phase 1 of fractal-thinking: Initialize graph, generate seed questions, cluster ... | spellbook |
-| [/fractal-think-synthesize](fractal-think-synthesize.md) | Phase 3 of fractal-thinking: Synthesize exploration graph into natural language ... | spellbook |
+| [/fractal-think-harvest](fractal-think-harvest.md) | Phase 3 of fractal-thinking: Read completed graph, verify synthesis, format Frac... | spellbook |
+| [/fractal-think-seed](fractal-think-seed.md) | Seed phase of fractal-thinking: Create graph and generate seed sub-questions | spellbook |
+| [/fractal-think-work](fractal-think-work.md) | Phase 2 of fractal-thinking: Dispatch workers that execute the recursive fractal... | spellbook |
 | [/handoff](handoff.md) | Shift change: brief successor on context, workflow, pending work, and verificati... | spellbook |
 | [/ie-techniques](ie-techniques.md) | Reference for the 16 proven instruction engineering techniques. Invoke via /ie-t... | spellbook |
 | [/ie-template](ie-template.md) | Template and example for engineered instructions. Invoke via /ie-template when d... | spellbook |

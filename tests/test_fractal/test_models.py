@@ -5,11 +5,11 @@ class TestConstants:
     """Tests for module-level constants."""
 
     def test_schema_version_defined(self):
-        """SCHEMA_VERSION must be defined as integer 1."""
+        """SCHEMA_VERSION must be defined as integer 2."""
         from spellbook_mcp.fractal.models import SCHEMA_VERSION
 
         assert isinstance(SCHEMA_VERSION, int)
-        assert SCHEMA_VERSION == 1
+        assert SCHEMA_VERSION == 2
 
     def test_valid_intensities_defined(self):
         """VALID_INTENSITIES must contain pulse, explore, deep."""
@@ -45,7 +45,9 @@ class TestConstants:
 
         assert VALID_NODE_STATUSES == [
             "open",
+            "claimed",
             "answered",
+            "synthesized",
             "saturated",
             "error",
             "budget_exhausted",

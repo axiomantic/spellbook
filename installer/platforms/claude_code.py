@@ -10,8 +10,6 @@ from ..components.hooks import install_hooks, uninstall_hooks
 from ..components.mcp import (
     check_claude_cli_available,
     get_spellbook_server_url,
-    install_daemon,
-    is_daemon_running,
     register_mcp_http_server,
     uninstall_daemon,
     unregister_mcp_server,
@@ -105,7 +103,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 subdir_path.mkdir(parents=True, exist_ok=True)
 
         # Clean up existing installation before installing new one
-        # This removes orphaned symlinks from renamed/removed skills/commands
+        self._step("Cleaning up old symlinks")
         cleanup_dirs = ["skills", "commands", "scripts"]
         total_cleaned = 0
         for subdir in cleanup_dirs:
@@ -126,6 +124,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
             )
 
         # Install skills
+        self._step("Installing skills")
         skills_results = create_skill_symlinks(
             self.spellbook_dir / "skills",
             self.config_dir / "skills",
@@ -144,6 +143,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
         )
 
         # Install commands
+        self._step("Installing commands")
         cmd_results = create_command_symlinks(
             self.spellbook_dir / "commands",
             self.config_dir / "commands",
@@ -161,6 +161,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
         )
 
         # Install patterns directory
+        self._step("Installing patterns")
         patterns_source = self.spellbook_dir / "patterns"
         patterns_target = self.config_dir / "patterns"
         if patterns_source.exists():
@@ -176,6 +177,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
             )
 
         # Install docs directory
+        self._step("Installing docs")
         docs_source = self.spellbook_dir / "docs"
         docs_target = self.config_dir / "docs"
         if docs_source.exists():
@@ -191,6 +193,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
             )
 
         # Install scripts
+        self._step("Installing scripts")
         scripts_source = self.spellbook_dir / "scripts"
         scripts_target = self.config_dir / "scripts"
         if scripts_source.exists():
@@ -219,9 +222,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
 
         # Install CLAUDE.md with demarcated section.
-        # Always write to ~/.claude/CLAUDE.md (the global location), regardless
-        # of what self.config_dir is. If config_dir is custom, also clean up any
-        # stale spellbook section from the custom dir's CLAUDE.md.
+        self._step("Updating CLAUDE.md")
         global_claude_md = self._global_claude_md
         spellbook_content = generate_claude_context(self.spellbook_dir)
 
@@ -273,65 +274,40 @@ class ClaudeCodeInstaller(PlatformInstaller):
                             )
                         )
 
-        # Install MCP daemon and register with HTTP transport
-        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
-        if server_path.exists():
-            # Remove any old variant names before installing
-            for old_name in ["spellbook-http"]:
-                unregister_mcp_server(old_name, dry_run=self.dry_run)
+        # Register MCP server connection (daemon is installed centrally by core.py)
+        self._step("Registering MCP server")
 
-            # Install and start the daemon (stops/uninstalls existing first)
-            daemon_success, daemon_msg = install_daemon(
-                self.spellbook_dir, dry_run=self.dry_run
+        # Remove any old variant names
+        for old_name in ["spellbook-http"]:
+            unregister_mcp_server(old_name, dry_run=self.dry_run)
+
+        if check_claude_cli_available():
+            server_url = get_spellbook_server_url()
+            reg_success, reg_msg = register_mcp_http_server(
+                "spellbook", server_url, dry_run=self.dry_run
             )
             results.append(
                 InstallResult(
-                    component="mcp_daemon",
+                    component="mcp_server",
                     platform=self.platform_id,
-                    success=daemon_success,
-                    action="installed" if daemon_success else "failed",
-                    message=f"MCP daemon: {daemon_msg}",
+                    success=reg_success,
+                    action="installed" if reg_success else "failed",
+                    message=f"MCP server: {reg_msg}",
                 )
             )
-
-            # Register MCP server with HTTP transport
-            if daemon_success or self.dry_run:
-                if check_claude_cli_available():
-                    server_url = get_spellbook_server_url()
-                    reg_success, reg_msg = register_mcp_http_server(
-                        "spellbook", server_url, dry_run=self.dry_run
-                    )
-                    results.append(
-                        InstallResult(
-                            component="mcp_server",
-                            platform=self.platform_id,
-                            success=reg_success,
-                            action="installed" if reg_success else "failed",
-                            message=f"MCP registration: {reg_msg}",
-                        )
-                    )
-                else:
-                    results.append(
-                        InstallResult(
-                            component="mcp_server",
-                            platform=self.platform_id,
-                            success=True,
-                            action="skipped",
-                            message="MCP registration: claude CLI not available (daemon running, configure manually)",
-                        )
-                    )
         else:
             results.append(
                 InstallResult(
-                    component="mcp_daemon",
+                    component="mcp_server",
                     platform=self.platform_id,
-                    success=False,
-                    action="failed",
-                    message=f"MCP daemon: server.py not found at {server_path}",
+                    success=True,
+                    action="skipped",
+                    message="MCP server: claude CLI not available (configure manually)",
                 )
             )
 
         # Install security hooks in settings.local.json
+        self._step("Installing hooks")
         settings_path = self.config_dir / "settings.local.json"
         hook_result = install_hooks(settings_path, spellbook_dir=self.spellbook_dir, dry_run=self.dry_run)
         results.append(

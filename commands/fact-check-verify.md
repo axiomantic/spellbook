@@ -48,3 +48,5 @@ Spawn category agents via swarm-orchestration (hierarchical topology):
 | Jargon-heavy | Too technical for audience | unexplained terms, accessible version |
 | Stale | Was true, no longer applies | when true, what changed, current state |
 | Extraneous | Unnecessary/redundant | value analysis shows no added info |
+
+**Fractal exploration (optional):** When a claim receives an Inconclusive or Ambiguous verdict, invoke fractal-thinking with intensity `pulse` and seed: "Is '[claim]' true? What evidence would confirm or refute it?". Use the synthesis to upgrade the verdict with multi-path evidence.

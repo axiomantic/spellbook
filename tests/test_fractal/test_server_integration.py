@@ -1,7 +1,7 @@
 """Integration tests for fractal thinking MCP server tools.
 
 Tests that:
-1. All 13 fractal tool functions exist on the server module
+1. All 17 fractal tool functions exist on the server module
 2. Each tool function delegates correctly to its implementation
 3. Parameter mapping works (especially metadata -> metadata_json rename)
 4. init_fractal_schema is imported and called during server init
@@ -26,7 +26,7 @@ def fractal_db(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Task 4.2a: Verify all 13 tool functions exist on the server module
+# Task 4.2a: Verify all 17 tool functions exist on the server module
 # ---------------------------------------------------------------------------
 
 
@@ -44,6 +44,10 @@ EXPECTED_FRACTAL_TOOLS = [
     "fractal_query_convergence",
     "fractal_query_contradictions",
     "fractal_get_saturation_status",
+    "fractal_claim_work",
+    "fractal_synthesize_node",
+    "fractal_get_claimable_work",
+    "fractal_get_ready_to_synthesize",
 ]
 
 

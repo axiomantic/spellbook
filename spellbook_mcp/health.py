@@ -700,10 +700,12 @@ def check_security_domain(db_path: str | None = None) -> DomainCheck:
     # Check 1: Security tables exist
     try:
         conn = sqlite3.connect(db_path, timeout=5.0)
-        cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-        existing_tables = {row[0] for row in cursor.fetchall()}
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            existing_tables = {row[0] for row in cursor.fetchall()}
+        finally:
+            conn.close()
     except (sqlite3.Error, OSError) as e:
         return DomainCheck(
             domain="security",
@@ -742,14 +744,16 @@ def check_security_domain(db_path: str | None = None) -> DomainCheck:
     # Check 2: No CRITICAL events in last 24 hours
     try:
         conn = sqlite3.connect(db_path, timeout=5.0)
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT COUNT(*) FROM security_events "
-            "WHERE severity = 'CRITICAL' "
-            "AND created_at >= datetime('now', '-24 hours')"
-        )
-        critical_count = cursor.fetchone()[0]
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) FROM security_events "
+                "WHERE severity = 'CRITICAL' "
+                "AND created_at >= datetime('now', '-24 hours')"
+            )
+            critical_count = cursor.fetchone()[0]
+        finally:
+            conn.close()
     except sqlite3.Error:
         critical_count = 0
 
@@ -767,14 +771,16 @@ def check_security_domain(db_path: str | None = None) -> DomainCheck:
     # Check 3: Canary tokens registered and not triggered
     try:
         conn = sqlite3.connect(db_path, timeout=5.0)
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM canary_tokens")
-        canary_count = cursor.fetchone()[0]
-        cursor.execute(
-            "SELECT COUNT(*) FROM canary_tokens WHERE triggered_at IS NOT NULL"
-        )
-        triggered_count = cursor.fetchone()[0]
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM canary_tokens")
+            canary_count = cursor.fetchone()[0]
+            cursor.execute(
+                "SELECT COUNT(*) FROM canary_tokens WHERE triggered_at IS NOT NULL"
+            )
+            triggered_count = cursor.fetchone()[0]
+        finally:
+            conn.close()
     except sqlite3.Error:
         canary_count = 0
         triggered_count = 0

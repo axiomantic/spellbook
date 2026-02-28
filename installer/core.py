@@ -104,7 +104,11 @@ class InstallSession:
 
 
 def get_platform_installer(
-    platform: str, spellbook_dir: Path, version: str, dry_run: bool = False
+    platform: str,
+    spellbook_dir: Path,
+    version: str,
+    dry_run: bool = False,
+    on_step=None,
 ) -> PlatformInstaller:
     """Get the appropriate installer for a platform."""
     from .platforms.claude_code import ClaudeCodeInstaller
@@ -127,7 +131,7 @@ def get_platform_installer(
     if not installer_class:
         raise ValueError(f"Unknown platform: {platform}")
 
-    return installer_class(spellbook_dir, config_dir, version, dry_run)
+    return installer_class(spellbook_dir, config_dir, version, dry_run, on_step=on_step)
 
 
 class Installer:
@@ -158,6 +162,7 @@ class Installer:
         platforms: Optional[List[str]] = None,
         force: bool = False,
         dry_run: bool = False,
+        on_progress=None,
     ) -> InstallSession:
         """
         Execute installation workflow.
@@ -166,6 +171,12 @@ class Installer:
             platforms: List of platforms to install (default: auto-detect)
             force: Force reinstall even if version matches
             dry_run: Show what would be done without making changes
+            on_progress: Callback for progress updates.
+                Called with (event, data) where event is one of:
+                "platform_start" - data: {"name", "index", "total"}
+                "platform_skip" - data: {"name", "message"}
+                "step" - data: {"message"}
+                "result" - data: {"result": InstallResult}
 
         Returns InstallSession with all results.
         """
@@ -190,29 +201,103 @@ class Installer:
             previous_version, self.version, force
         )
 
-        for platform in platforms:
-            installer = get_platform_installer(
-                platform, self.spellbook_dir, self.version, dry_run
+        def _on_step(message):
+            if on_progress:
+                on_progress("step", {"message": message})
+
+        # Install MCP daemon once, before any platform installations.
+        # All platforms connect to this shared daemon via HTTP.
+        from .components.mcp import install_daemon
+
+        if on_progress:
+            on_progress("daemon_start", {})
+
+        _on_step("Installing MCP daemon")
+        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
+        if server_path.exists():
+            daemon_success, daemon_msg = install_daemon(
+                self.spellbook_dir, dry_run=dry_run
             )
+            daemon_result = InstallResult(
+                component="mcp_daemon",
+                platform="system",
+                success=daemon_success,
+                action="installed" if daemon_success else "failed",
+                message=f"MCP daemon: {daemon_msg}",
+            )
+        else:
+            daemon_success = False
+            daemon_result = InstallResult(
+                component="mcp_daemon",
+                platform="system",
+                success=False,
+                action="failed",
+                message=f"MCP daemon: server.py not found at {server_path}",
+            )
+
+        session.results.append(daemon_result)
+        if on_progress:
+            on_progress("result", {"result": daemon_result})
+
+        total = len(platforms)
+        for i, platform in enumerate(platforms, 1):
+            installer = get_platform_installer(
+                platform, self.spellbook_dir, self.version, dry_run,
+                on_step=_on_step,
+            )
+
+            if on_progress:
+                on_progress("platform_start", {
+                    "name": installer.platform_name,
+                    "index": i,
+                    "total": total,
+                })
 
             # Check platform status
             status = installer.detect()
 
             if not status.available and platform != "claude_code":
-                session.results.append(
-                    InstallResult(
-                        component="platform",
-                        platform=platform,
-                        success=True,
-                        action="skipped",
-                        message=f"{installer.platform_name} not available",
-                    )
+                skip_result = InstallResult(
+                    component="platform",
+                    platform=platform,
+                    success=True,
+                    action="skipped",
+                    message=f"{installer.platform_name} not available",
                 )
+                session.results.append(skip_result)
+                if on_progress:
+                    on_progress("platform_skip", {
+                        "name": installer.platform_name,
+                        "message": skip_result.message,
+                    })
                 continue
 
             # Install
             results = installer.install(force=force)
+            for result in results:
+                if on_progress:
+                    on_progress("result", {"result": result})
             session.results.extend(results)
+
+        # Health check: verify the daemon is actually responding to MCP requests
+        if not dry_run and daemon_success:
+            from .components.mcp import check_daemon_health
+
+            if on_progress:
+                on_progress("health_start", {})
+
+            _on_step("Checking daemon health")
+            healthy, health_msg = check_daemon_health()
+            health_result = InstallResult(
+                component="mcp_health",
+                platform="system",
+                success=healthy,
+                action="installed" if healthy else "failed",
+                message=f"MCP health: {health_msg}",
+            )
+            session.results.append(health_result)
+            if on_progress:
+                on_progress("result", {"result": health_result})
 
         return session
 

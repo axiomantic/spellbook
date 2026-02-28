@@ -12,7 +12,6 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.mcp import install_daemon
 from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
@@ -316,33 +315,8 @@ class GeminiInstaller(PlatformInstaller):
             )
             return results
 
-        # Install and start the MCP daemon (HTTP transport)
-        server_path = self.spellbook_dir / "spellbook_mcp" / "server.py"
-        if server_path.exists():
-            daemon_success, daemon_msg = install_daemon(
-                self.spellbook_dir, dry_run=self.dry_run
-            )
-            results.append(
-                InstallResult(
-                    component="mcp_daemon",
-                    platform=self.platform_id,
-                    success=daemon_success,
-                    action="installed" if daemon_success else "failed",
-                    message=f"MCP daemon: {daemon_msg}",
-                )
-            )
-        else:
-            results.append(
-                InstallResult(
-                    component="mcp_daemon",
-                    platform=self.platform_id,
-                    success=False,
-                    action="failed",
-                    message=f"MCP daemon: server.py not found at {server_path}",
-                )
-            )
-
         # Ensure skills symlinks exist in extension
+        self._step("Linking extension skills")
         created, errors = self._ensure_extension_skills_symlinks()
         if created > 0 or errors > 0:
             results.append(
@@ -356,6 +330,7 @@ class GeminiInstaller(PlatformInstaller):
             )
 
         # Link the extension
+        self._step("Linking extension")
         success, msg = link_extension(self.extension_dir, dry_run=self.dry_run)
         results.append(
             InstallResult(
@@ -368,6 +343,7 @@ class GeminiInstaller(PlatformInstaller):
         )
 
         # Install security policy
+        self._step("Installing security policy")
         policy_result = install_gemini_policy(
             spellbook_dir=self.spellbook_dir,
             gemini_config_dir=self.config_dir,

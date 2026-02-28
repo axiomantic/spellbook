@@ -369,11 +369,8 @@ class OpenCodeInstaller(PlatformInstaller):
             )
             return results
 
-        # Note: OpenCode (anomalyco/opencode) uses its own Agent Skills system.
-        # Skills should be placed in ~/.config/opencode/skills/ or configured
-        # via options.skills_paths in opencode.json.
-
         # Install AGENTS.md with demarcated section
+        self._step("Updating AGENTS.md")
         context_file = self.config_dir / "AGENTS.md"
         # Reuse generate_codex_context since format is identical
         spellbook_content = generate_codex_context(self.spellbook_dir)
@@ -407,6 +404,7 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
 
         # Register MCP server in opencode.json (connects to HTTP daemon)
+        self._step("Registering MCP server")
         success, msg = _update_opencode_config(
             self.opencode_config_file, self.dry_run
         )
@@ -422,6 +420,7 @@ class OpenCodeInstaller(PlatformInstaller):
             )
 
         # Install spellbook-forged plugin
+        self._step("Installing plugins")
         plugin_source = self.spellbook_forged_plugin_source
         if plugin_source.exists():
             # Ensure plugins directory exists
@@ -467,6 +466,7 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
 
         # Install Claude Code system prompt (behavioral standards)
+        self._step("Installing system prompt")
         if self.system_prompt_source.exists():
             # Ensure instructions directory exists
             if not self.dry_run:

@@ -1000,3 +1000,614 @@ class TestMarkSaturated:
                 reason="semantic_overlap",
                 db_path=graph_with_root["db_path"],
             )
+
+    def test_mark_saturated_from_claimed(self, graph_with_root):
+        """mark_saturated must transition claimed node to saturated."""
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work, mark_saturated
+
+        # Add a question node under root
+        node = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Claimable question for saturation",
+            db_path=graph_with_root["db_path"],
+        )
+
+        # Claim twice: first claims root (depth 0), second claims our node (depth 1)
+        claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-sat",
+            db_path=graph_with_root["db_path"],
+        )
+        claimed = claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-sat",
+            db_path=graph_with_root["db_path"],
+        )
+        assert claimed["node_id"] == node["node_id"], "Expected child node to be claimed"
+
+        # Should succeed because claimed is now an allowed source status
+        result = mark_saturated(
+            graph_id=graph_with_root["graph_id"],
+            node_id=node["node_id"],
+            reason="semantic_overlap",
+            db_path=graph_with_root["db_path"],
+        )
+
+        assert result["status"] == "saturated"
+        assert result["reason"] == "semantic_overlap"
+
+
+class TestClaimWork:
+    """Tests for claim_work function."""
+
+    def test_claim_work_basic(self, graph_with_root):
+        """claim_work must claim an open question node and return its data."""
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+
+        # Add a question node
+        node = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Claimable question",
+            db_path=graph_with_root["db_path"],
+        )
+
+        result = claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-1",
+            db_path=graph_with_root["db_path"],
+        )
+
+        assert result["node_id"] is not None
+        assert result["graph_done"] is False
+        assert "text" in result
+        assert "depth" in result
+        assert "parent_id" in result
+        assert "metadata" in result
+
+    def test_claim_work_sets_owner_and_status(self, graph_with_root):
+        """claim_work must set owner and status='claimed' in the database."""
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        node = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Ownership test",
+            db_path=graph_with_root["db_path"],
+        )
+
+        result = claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-own",
+            db_path=graph_with_root["db_path"],
+        )
+
+        conn = get_fractal_connection(graph_with_root["db_path"])
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT owner, status FROM nodes WHERE id = ?",
+            (result["node_id"],),
+        )
+        row = cursor.fetchone()
+        assert row[0] == "worker-own"
+        assert row[1] == "claimed"
+
+    def test_claim_work_atomicity(self, graph_with_root):
+        """claim_work must not double-claim; each call claims a different node."""
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+
+        node1 = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Question A",
+            db_path=graph_with_root["db_path"],
+        )
+        node2 = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Question B",
+            db_path=graph_with_root["db_path"],
+        )
+
+        result1 = claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-1",
+            db_path=graph_with_root["db_path"],
+        )
+        result2 = claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-1",
+            db_path=graph_with_root["db_path"],
+        )
+
+        assert result1["node_id"] is not None
+        assert result2["node_id"] is not None
+        assert result1["node_id"] != result2["node_id"]
+
+    def test_claim_work_branch_affinity(self, fractal_db):
+        """claim_work must prefer sibling nodes of previously claimed/owned nodes."""
+        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        # Use explore intensity for deeper nesting
+        graph = create_graph(
+            seed="Affinity test",
+            intensity="explore",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = graph["graph_id"]
+        root_id = graph["root_node_id"]
+
+        # Create two parent answer nodes under root
+        parent_a = add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="answer", text="Branch A",
+            db_path=fractal_db,
+        )
+        parent_b = add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="answer", text="Branch B",
+            db_path=fractal_db,
+        )
+
+        # Create questions under each parent
+        q_a1 = add_node(
+            graph_id=graph_id, parent_id=parent_a["node_id"],
+            node_type="question", text="Question A1",
+            db_path=fractal_db,
+        )
+        q_a2 = add_node(
+            graph_id=graph_id, parent_id=parent_a["node_id"],
+            node_type="question", text="Question A2",
+            db_path=fractal_db,
+        )
+        q_b1 = add_node(
+            graph_id=graph_id, parent_id=parent_b["node_id"],
+            node_type="question", text="Question B1",
+            db_path=fractal_db,
+        )
+
+        # Worker claims first node (could be any due to initial state)
+        # Then manually set q_a1 as owned by the worker to set up affinity
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE nodes SET owner = 'worker-affinity', status = 'claimed' WHERE id = ?",
+            (q_a1["node_id"],),
+        )
+        conn.commit()
+
+        # Now claim_work should prefer q_a2 (sibling of q_a1 under parent_a)
+        # over q_b1 (under parent_b) because worker already owns a sibling
+        result = claim_work(
+            graph_id=graph_id,
+            worker_id="worker-affinity",
+            db_path=fractal_db,
+        )
+
+        assert result["node_id"] == q_a2["node_id"]
+
+    def test_claim_work_no_work_available_with_claimed(self, graph_with_root):
+        """claim_work with no open nodes but claimed nodes returns graph_done=False."""
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+
+        # Add one question and claim it
+        add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Only question",
+            db_path=graph_with_root["db_path"],
+        )
+
+        # Claim the only open question (the root is also open, so claim both)
+        claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-1",
+            db_path=graph_with_root["db_path"],
+        )
+        claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-2",
+            db_path=graph_with_root["db_path"],
+        )
+
+        # Now try to claim again -- no open questions left, but claimed exist
+        result = claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-3",
+            db_path=graph_with_root["db_path"],
+        )
+
+        assert result["node_id"] is None
+        assert result["graph_done"] is False
+
+    def test_claim_work_graph_done(self, graph_with_root):
+        """claim_work with no open and no claimed nodes returns graph_done=True."""
+        from spellbook_mcp.fractal.node_ops import add_node, mark_saturated
+
+        # The root node is the only question. Saturate it so no open/claimed remain.
+        mark_saturated(
+            graph_id=graph_with_root["graph_id"],
+            node_id=graph_with_root["root_node_id"],
+            reason="semantic_overlap",
+            db_path=graph_with_root["db_path"],
+        )
+
+        from spellbook_mcp.fractal.node_ops import claim_work
+
+        result = claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-done",
+            db_path=graph_with_root["db_path"],
+        )
+
+        assert result["node_id"] is None
+        assert result["graph_done"] is True
+
+    def test_claim_work_prefers_shallow(self, fractal_db):
+        """claim_work must prefer shallower nodes over deeper ones."""
+        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        graph = create_graph(
+            seed="Depth preference test",
+            intensity="deep",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = graph["graph_id"]
+        root_id = graph["root_node_id"]
+
+        # Create depth-1 question under root
+        depth1_q = add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="question", text="Depth 1 question",
+            db_path=fractal_db,
+        )
+
+        # Create a depth-2 chain: depth-1 answer -> depth-2 question -> depth-3 question
+        depth1_answer = add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="answer", text="Depth 1 answer",
+            db_path=fractal_db,
+        )
+        depth2_q = add_node(
+            graph_id=graph_id, parent_id=depth1_answer["node_id"],
+            node_type="question", text="Depth 2 question",
+            db_path=fractal_db,
+        )
+        depth3_q = add_node(
+            graph_id=graph_id, parent_id=depth2_q["node_id"],
+            node_type="question", text="Depth 3 question",
+            db_path=fractal_db,
+        )
+
+        # Root is now 'answered' (auto-transitioned by adding answer).
+        # Open questions: depth1_q (depth 1), depth2_q (depth 2), depth3_q (depth 3)
+
+        # First claim should pick the shallowest open question: depth1_q at depth 1
+        first_claim = claim_work(
+            graph_id=graph_id,
+            worker_id="worker-depth",
+            db_path=fractal_db,
+        )
+        assert first_claim["node_id"] == depth1_q["node_id"]
+        assert first_claim["depth"] == 1
+
+        # Next claim should pick depth 2 (not depth 3)
+        second_claim = claim_work(
+            graph_id=graph_id,
+            worker_id="worker-depth",
+            db_path=fractal_db,
+        )
+        assert second_claim["depth"] == 2
+        assert second_claim["node_id"] == depth2_q["node_id"]
+
+    def test_claim_work_inactive_graph(self, fractal_db):
+        """claim_work on non-active graph must raise ValueError."""
+        from spellbook_mcp.fractal.graph_ops import create_graph, update_graph_status
+        from spellbook_mcp.fractal.node_ops import claim_work
+
+        graph = create_graph(
+            seed="Inactive test",
+            intensity="pulse",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = graph["graph_id"]
+
+        update_graph_status(graph_id, "completed", db_path=fractal_db)
+
+        with pytest.raises(ValueError, match="active"):
+            claim_work(
+                graph_id=graph_id,
+                worker_id="worker-inactive",
+                db_path=fractal_db,
+            )
+
+
+class TestSynthesizeNode:
+    """Tests for synthesize_node function."""
+
+    def test_synthesize_leaf_node(self, graph_with_root):
+        """synthesize_node on a leaf node (no children) with claimed status must succeed."""
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work, synthesize_node
+
+        # Add a question and claim it (simulating a worker picking it up)
+        node = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Leaf question for synthesis",
+            db_path=graph_with_root["db_path"],
+        )
+
+        claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-synth",
+            db_path=graph_with_root["db_path"],
+        )
+
+        # The claimed node might be root or the new node.
+        # Claim again to get the other one.
+        claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-synth",
+            db_path=graph_with_root["db_path"],
+        )
+
+        # Now synthesize the leaf node (which should be claimed)
+        result = synthesize_node(
+            graph_id=graph_with_root["graph_id"],
+            node_id=node["node_id"],
+            synthesis_text="This is the synthesis of the leaf.",
+            db_path=graph_with_root["db_path"],
+        )
+
+        assert result["node_id"] == node["node_id"]
+        assert result["status"] == "synthesized"
+
+    def test_synthesize_node_with_children(self, fractal_db):
+        """synthesize_node on parent must succeed when all children are synthesized/saturated."""
+        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook_mcp.fractal.node_ops import (
+            add_node,
+            mark_saturated,
+            synthesize_node,
+        )
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        graph = create_graph(
+            seed="Synthesis parent test",
+            intensity="explore",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = graph["graph_id"]
+        root_id = graph["root_node_id"]
+
+        # Add an answer to root to trigger auto-transition root -> answered
+        add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="answer", text="Root answer",
+            db_path=fractal_db,
+        )
+
+        # Add two child questions under root
+        child1 = add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="question", text="Child Q1",
+            db_path=fractal_db,
+        )
+        child2 = add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="question", text="Child Q2",
+            db_path=fractal_db,
+        )
+
+        # Saturate child1, synthesize child2 via claim path
+        mark_saturated(
+            graph_id=graph_id, node_id=child1["node_id"],
+            reason="semantic_overlap", db_path=fractal_db,
+        )
+
+        # Manually set child2 to claimed then synthesize it
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE nodes SET status = 'claimed', owner = 'w1' WHERE id = ?",
+            (child2["node_id"],),
+        )
+        conn.commit()
+
+        synthesize_node(
+            graph_id=graph_id, node_id=child2["node_id"],
+            synthesis_text="Child 2 synthesis", db_path=fractal_db,
+        )
+
+        # Root is 'answered' (from adding the answer node). Synthesize it.
+        result = synthesize_node(
+            graph_id=graph_id, node_id=root_id,
+            synthesis_text="Root synthesis combining children.",
+            db_path=fractal_db,
+        )
+
+        assert result["node_id"] == root_id
+        assert result["status"] == "synthesized"
+
+    def test_synthesize_node_children_not_done(self, fractal_db):
+        """synthesize_node must raise ValueError when children are still open."""
+        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook_mcp.fractal.node_ops import add_node, synthesize_node
+
+        graph = create_graph(
+            seed="Incomplete children test",
+            intensity="explore",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = graph["graph_id"]
+        root_id = graph["root_node_id"]
+
+        # Add an answer to root to trigger auto-transition root -> answered
+        add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="answer", text="Root answer",
+            db_path=fractal_db,
+        )
+
+        # Add a child question (will be open)
+        add_node(
+            graph_id=graph_id, parent_id=root_id,
+            node_type="question", text="Open child",
+            db_path=fractal_db,
+        )
+
+        # Root is 'answered' but child question is still open
+        with pytest.raises(ValueError, match="[Cc]hild|not.*done|not.*complete"):
+            synthesize_node(
+                graph_id=graph_id, node_id=root_id,
+                synthesis_text="Should fail",
+                db_path=fractal_db,
+            )
+
+    def test_synthesize_stores_synthesis_text(self, graph_with_root):
+        """synthesize_node must store synthesis text in metadata under 'synthesis' key."""
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work, synthesize_node
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        node = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Metadata synthesis test",
+            metadata_json=json.dumps({"existing_key": "existing_value"}),
+            db_path=graph_with_root["db_path"],
+        )
+
+        # Claim both open questions (root + new node)
+        claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-meta",
+            db_path=graph_with_root["db_path"],
+        )
+        claim_work(
+            graph_id=graph_with_root["graph_id"],
+            worker_id="worker-meta",
+            db_path=graph_with_root["db_path"],
+        )
+
+        synthesize_node(
+            graph_id=graph_with_root["graph_id"],
+            node_id=node["node_id"],
+            synthesis_text="The synthesized insight.",
+            db_path=graph_with_root["db_path"],
+        )
+
+        conn = get_fractal_connection(graph_with_root["db_path"])
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT metadata_json FROM nodes WHERE id = ?",
+            (node["node_id"],),
+        )
+        stored = json.loads(cursor.fetchone()[0])
+        assert stored["synthesis"] == "The synthesized insight."
+        # Existing metadata must be preserved
+        assert stored["existing_key"] == "existing_value"
+
+    def test_synthesize_node_wrong_status(self, graph_with_root):
+        """synthesize_node on an open node (not answered/claimed) must raise ValueError."""
+        from spellbook_mcp.fractal.node_ops import add_node, synthesize_node
+
+        node = add_node(
+            graph_id=graph_with_root["graph_id"],
+            parent_id=graph_with_root["root_node_id"],
+            node_type="question",
+            text="Still open question",
+            db_path=graph_with_root["db_path"],
+        )
+
+        with pytest.raises(ValueError, match="[Ss]tatus"):
+            synthesize_node(
+                graph_id=graph_with_root["graph_id"],
+                node_id=node["node_id"],
+                synthesis_text="Should fail",
+                db_path=graph_with_root["db_path"],
+            )
+
+
+class TestAddNodeClaimedTransition:
+    """Tests for add_node auto-transition from claimed to answered."""
+
+    def test_add_node_answer_transitions_claimed_parent(self, fractal_db):
+        """Adding answer to claimed question must transition parent to answered."""
+        from spellbook_mcp.fractal.graph_ops import create_graph
+        from spellbook_mcp.fractal.node_ops import add_node, claim_work
+        from spellbook_mcp.fractal.schema import get_fractal_connection
+
+        # Use explore intensity (max_depth=4) to allow depth-2 nodes
+        graph = create_graph(
+            seed="Claimed transition test",
+            intensity="explore",
+            checkpoint_mode="autonomous",
+            db_path=fractal_db,
+        )
+        graph_id = graph["graph_id"]
+        root_id = graph["root_node_id"]
+
+        # Add a question node under root (depth 1)
+        node = add_node(
+            graph_id=graph_id,
+            parent_id=root_id,
+            node_type="question",
+            text="Claim then answer test",
+            db_path=fractal_db,
+        )
+
+        # Claim both open questions (root and the new node)
+        claim_work(
+            graph_id=graph_id,
+            worker_id="worker-trans",
+            db_path=fractal_db,
+        )
+        claim_work(
+            graph_id=graph_id,
+            worker_id="worker-trans",
+            db_path=fractal_db,
+        )
+
+        # Verify the question node is claimed
+        conn = get_fractal_connection(fractal_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT status FROM nodes WHERE id = ?",
+            (node["node_id"],),
+        )
+        assert cursor.fetchone()[0] == "claimed"
+
+        # Add answer to the claimed question node (depth 2, within explore limit)
+        add_node(
+            graph_id=graph_id,
+            parent_id=node["node_id"],
+            node_type="answer",
+            text="Answer to claimed question",
+            db_path=fractal_db,
+        )
+
+        # Verify the parent transitioned from claimed to answered
+        cursor.execute(
+            "SELECT status FROM nodes WHERE id = ?",
+            (node["node_id"],),
+        )
+        assert cursor.fetchone()[0] == "answered"
