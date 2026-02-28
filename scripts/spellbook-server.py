@@ -116,7 +116,11 @@ def get_daemon_python() -> str | None:
     """
     path = os.environ.get("SPELLBOOK_DAEMON_PYTHON")
     if path and Path(path).is_file():
-        return str(Path(path).resolve())
+        # Do NOT resolve() -- the venv Python must stay as-is so that
+        # Python activates the venv site-packages based on the interpreter
+        # path being inside the venv directory.  Resolving follows the
+        # symlink to the underlying system Python which has no packages.
+        return str(Path(path).absolute())
     return None
 
 
