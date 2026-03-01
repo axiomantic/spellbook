@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/audit-mirage-cross.md", "source_hash": "sha256:cf1feb355976c4d9682713eeb935991403592fe65284b510a867bd8bf53d5913", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/audit-mirage-cross.md", "source_hash": "sha256:930a9d7002e59050a8bbe3e8b7b6fc8ae2b56e25803034cb89ffbb857df72465", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: audit-mirage-cross
 
 Cross-test suite-level analysis after individual test audits.

@@ -2,11 +2,15 @@
 Claude Code platform installer.
 """
 
+import logging
+import re as re_module
+import subprocess
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..components.context_files import generate_claude_context
-from ..components.hooks import install_hooks, uninstall_hooks
+from ..components.hooks import _SHELL_TO_NIM_BINARY, install_hooks, uninstall_hooks
 from ..components.mcp import (
     check_claude_cli_available,
     get_spellbook_server_url,
@@ -25,6 +29,101 @@ from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
+
+logger = logging.getLogger(__name__)
+
+
+def _detect_nim() -> "str | None":
+    """Check if Nim is available and meets version requirements.
+
+    Returns the Nim version string if available and >= 1.6, else None.
+    """
+    try:
+        result = subprocess.run(
+            ["nim", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode != 0:
+            return None
+        # Parse version from first line: "Nim Compiler Version 2.0.0 ..."
+        match = re_module.search(r"Version (\d+\.\d+\.\d+)", result.stdout)
+        if not match:
+            return None
+        version = match.group(1)
+        major, minor, _patch = version.split(".")
+        if int(major) < 1 or (int(major) == 1 and int(minor) < 6):
+            return None
+        return version
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+
+
+def _compile_nim_hooks(spellbook_dir: Path) -> bool:
+    """Compile Nim hooks. Returns True if all hooks compiled successfully.
+
+    Uses all-or-none strategy: if any hook fails to compile, returns False
+    and all hooks fall back to shell scripts.
+    """
+    nim_dir = spellbook_dir / "hooks" / "nim"
+    if not nim_dir.exists():
+        return False
+
+    nim_version = _detect_nim()
+    if nim_version is None:
+        logger.info("Nim not found or version < 1.6, skipping hook compilation")
+        return False
+
+    logger.info(f"Nim {nim_version} found, compiling hooks...")
+
+    # Step 1: Run codegen to generate security patterns
+    generate_script = nim_dir / "generate_patterns.py"
+    if not generate_script.exists():
+        logger.warning("generate_patterns.py not found")
+        return False
+
+    try:
+        result = subprocess.run(
+            [sys.executable, str(generate_script)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(spellbook_dir),
+        )
+        if result.returncode != 0:
+            logger.warning(f"Pattern generation failed: {result.stderr}")
+            return False
+    except subprocess.TimeoutExpired:
+        logger.warning("Pattern generation timed out")
+        return False
+
+    # Step 2: Compile all hooks via nimble
+    try:
+        result = subprocess.run(
+            ["nimble", "build", "--opt:size", "-y"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=str(nim_dir),
+        )
+        if result.returncode != 0:
+            logger.warning(f"Nim compilation failed: {result.stderr}")
+            return False
+    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+        logger.warning(f"Nim compilation error: {e}")
+        return False
+
+    # Step 3: Verify all binaries exist (derived from _SHELL_TO_NIM_BINARY)
+    expected_binaries = list(_SHELL_TO_NIM_BINARY.values())
+    for binary_name in expected_binaries:
+        binary_path = nim_dir / "bin" / binary_name
+        if not binary_path.exists():
+            logger.warning(f"Missing compiled binary: {binary_name}")
+            return False
+
+    logger.info(f"All {len(expected_binaries)} Nim hooks compiled successfully")
+    return True
 
 
 class ClaudeCodeInstaller(PlatformInstaller):
@@ -306,13 +405,42 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
             )
 
+        # Attempt Nim hook compilation (optional, fails gracefully to shell fallback)
+        self._step("Compiling Nim hooks")
+        nim_available = _compile_nim_hooks(self.spellbook_dir)
+        if nim_available:
+            results.append(
+                InstallResult(
+                    component="nim_hooks",
+                    platform=self.platform_id,
+                    success=True,
+                    action="installed",
+                    message=f"nim_hooks: all {len(_SHELL_TO_NIM_BINARY)} hooks compiled successfully",
+                )
+            )
+        else:
+            results.append(
+                InstallResult(
+                    component="nim_hooks",
+                    platform=self.platform_id,
+                    success=True,
+                    action="skipped",
+                    message="nim_hooks: using shell script fallback",
+                )
+            )
+
         # Install security hooks in settings.json
         # NOTE: Claude Code only reads hooks from ~/.claude/settings.json (user-level),
         # .claude/settings.json (project), and .claude/settings.local.json (project local).
         # User-level settings.local.json is NOT a supported hooks location.
         self._step("Installing hooks")
         settings_path = self.config_dir / "settings.json"
-        hook_result = install_hooks(settings_path, spellbook_dir=self.spellbook_dir, dry_run=self.dry_run)
+        hook_result = install_hooks(
+            settings_path,
+            spellbook_dir=self.spellbook_dir,
+            nim_available=nim_available,
+            dry_run=self.dry_run,
+        )
         results.append(
             InstallResult(
                 component=hook_result.component,

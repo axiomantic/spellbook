@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md", "source_hash": "sha256:0c76db1b481d682fa01560e0d6637881eb57eee214729da0e985518b505618b3", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md", "source_hash": "sha256:c551122629dbf76a11ea3868f1dd7d7ebd4832787831f2183ad082b32a92b3b2", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: auditing-green-mirage
 
 Forensic test suite audit that traces every test through production code, checks against 8 Green Mirage patterns, and produces a YAML-structured report with dependency-ordered remediation plan.

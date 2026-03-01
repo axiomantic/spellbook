@@ -2407,6 +2407,40 @@ def security_set_mode(
 
 
 # ---------------------------------------------------------------------------
+# Security Tool Input Checking
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@inject_recovery_context
+def security_check_tool_input(
+    tool_name: str,
+    tool_input: dict,
+) -> dict:
+    """Check a tool's input against security pattern rules.
+
+    Routes checks based on tool name:
+    - Bash: dangerous command patterns + exfiltration rules
+    - spawn_claude_session: injection + escalation rules
+    - workflow_state_save: injection rules on all nested strings
+    - Other tools: injection rules on all string values
+
+    Used as an MCP fallback by compiled Nim hooks when their embedded
+    security patterns are stale (hash mismatch with rules.py).
+
+    Args:
+        tool_name: The name of the tool being invoked.
+        tool_input: The input dict for the tool.
+
+    Returns:
+        {"safe": bool, "findings": [...], "tool_name": str}
+    """
+    from spellbook_mcp.security.check import check_tool_input
+
+    return check_tool_input(tool_name=tool_name, tool_input=tool_input)
+
+
+# ---------------------------------------------------------------------------
 # Security Canary Tokens
 # ---------------------------------------------------------------------------
 

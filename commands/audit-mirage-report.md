@@ -36,6 +36,8 @@ summary:
   solid: 31
   green_mirage: 12
   partial: 4
+  skipped_total: 3
+  skipped_unjustified: 2
 
 patterns_found:
   pattern_1_existence_vs_validity: 3
@@ -46,6 +48,7 @@ patterns_found:
   pattern_6_swallowed_errors: 1
   pattern_7_state_mutation: 1
   pattern_8_incomplete_branches: 4
+  pattern_9_skipped_tests: 2
 
 findings:
   - id: "finding-1"
@@ -127,6 +130,7 @@ Patterns Found:
 |-- Pattern 6 (Swallowed Errors): N instances
 |-- Pattern 7 (State Mutation): N instances
 |-- Pattern 8 (Incomplete Branches): N instances
+|-- Pattern 9 (Skipped Tests): N instances (M unjustified)
 
 Effort Breakdown:
 |-- Trivial fixes: N (< 5 min each)

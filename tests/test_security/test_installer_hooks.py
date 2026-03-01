@@ -26,7 +26,9 @@ from unittest.mock import patch
 
 from installer.components.hooks import (
     HOOK_DEFINITIONS,
+    _SHELL_TO_NIM_BINARY,
     _expand_spellbook_dir,
+    _get_hook_path_for_platform,
     _is_spellbook_hook,
     install_hooks,
     uninstall_hooks,
@@ -1411,3 +1413,136 @@ class TestLegacyCatchallMigration:
         assert any("/usr/local/bin/my-catchall-hook.sh" in s for s in hook_strs)
         # Spellbook hook should be present (possibly updated)
         assert any("tts-timer-start" in s for s in hook_strs)
+
+
+# --- Nim compilation integration tests ---
+
+
+class TestNimDetection:
+    """Tests for Nim detection and compilation in the installer."""
+
+    def test_detect_nim_returns_version_string_or_none(self):
+        from installer.platforms.claude_code import _detect_nim
+        result = _detect_nim()
+        # Either None (Nim not installed) or a version string like "2.0.0"
+        assert result is None or isinstance(result, str)
+
+    def test_detect_nim_rejects_old_version(self):
+        """Nim < 1.6 should return None."""
+        from unittest.mock import patch, MagicMock
+        from installer.platforms.claude_code import _detect_nim
+
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "Nim Compiler Version 1.4.8 [Linux: amd64]"
+        with patch("subprocess.run", return_value=mock_result):
+            assert _detect_nim() is None
+
+
+class TestNimPathResolution:
+    """Tests for Nim binary path resolution in hook registration."""
+
+    def test_nim_available_uses_binary_path(self):
+        hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        result = _get_hook_path_for_platform(hook_path, nim_available=True)
+        if sys.platform == "win32":
+            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate.exe"
+        else:
+            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"
+
+    def test_nim_unavailable_keeps_shell_path(self):
+        hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        result = _get_hook_path_for_platform(hook_path, nim_available=False)
+        if sys.platform == "win32":
+            assert result.endswith(".py")
+        else:
+            assert result == hook_path
+
+    def test_all_hooks_have_nim_mapping(self):
+        """Every .sh hook should have a Nim binary mapping."""
+        expected = {
+            "tts-timer-start.sh", "bash-gate.sh", "spawn-guard.sh",
+            "state-sanitize.sh", "audit-log.sh", "canary-check.sh",
+            "tts-notify.sh", "pre-compact-save.sh", "post-compact-recover.sh",
+        }
+        assert set(_SHELL_TO_NIM_BINARY.keys()) == expected
+
+    def test_nim_on_windows_uses_exe(self):
+        """Windows with nim_available=True should use .exe extension."""
+        from unittest.mock import patch
+        with patch("sys.platform", "win32"):
+            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+            result = _get_hook_path_for_platform(hook_path, nim_available=True)
+            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate.exe"
+
+    def test_windows_without_nim_uses_py(self):
+        """Windows without Nim should fall back to .py wrappers."""
+        from unittest.mock import patch
+        with patch("sys.platform", "win32"):
+            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+            result = _get_hook_path_for_platform(hook_path, nim_available=False)
+            assert result.endswith(".py")
+
+
+class TestInstallerNimIntegration:
+    """Tests for Nim hook compilation in the full install flow."""
+
+    def test_install_hooks_with_nim_available_sets_binary_paths(self, tmp_path):
+        """When nim_available=True, hook paths should point to nim/bin/."""
+        settings_path = tmp_path / "settings.json"
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+
+        # Create nim bin dir with dummy binaries
+        nim_bin = spellbook_dir / "hooks" / "nim" / "bin"
+        nim_bin.mkdir(parents=True)
+        for name in _SHELL_TO_NIM_BINARY.values():
+            (nim_bin / name).write_text("#!/bin/sh\nexit 0\n")
+
+        result = install_hooks(settings_path, spellbook_dir=spellbook_dir, nim_available=True)
+        assert result.success
+
+        settings = _read_settings(settings_path)
+        # Check that at least one hook path points to nim/bin/
+        all_commands = []
+        for phase_entries in settings["hooks"].values():
+            for entry in phase_entries:
+                for hook in entry.get("hooks", []):
+                    cmd = _get_hook_command(hook)
+                    all_commands.append(cmd)
+
+        # Normalize path separators for cross-platform comparison
+        nim_commands = [c for c in all_commands if "/nim/bin/" in c.replace("\\", "/")]
+        assert len(nim_commands) == 9, f"Expected 9 Nim paths, got {len(nim_commands)}: {nim_commands}"
+
+    def test_install_hooks_without_nim_keeps_shell_paths(self, tmp_path):
+        """When nim_available=False, hook paths should point to .sh files."""
+        settings_path = tmp_path / "settings.json"
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+
+        result = install_hooks(settings_path, spellbook_dir=spellbook_dir, nim_available=False)
+        assert result.success
+
+        settings = _read_settings(settings_path)
+        all_commands = []
+        for phase_entries in settings["hooks"].values():
+            for entry in phase_entries:
+                for hook in entry.get("hooks", []):
+                    cmd = _get_hook_command(hook)
+                    all_commands.append(cmd)
+
+        # Normalize path separators for cross-platform comparison
+        nim_commands = [c for c in all_commands if "/nim/bin/" in c.replace("\\", "/")]
+        assert len(nim_commands) == 0, f"Expected 0 Nim paths, got {nim_commands}"
+
+
+class TestNimHookRecognition:
+    """Ensure _is_spellbook_hook recognizes Nim binary paths."""
+
+    def test_recognizes_nim_binary_path_with_dollar(self):
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"}
+        assert _is_spellbook_hook(hook) is True
+
+    def test_recognizes_nim_binary_path_expanded(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        hook = {"type": "command", "command": str(spellbook_dir / "hooks" / "nim" / "bin" / "bash_gate")}
+        assert _is_spellbook_hook(hook, spellbook_dir=spellbook_dir) is True

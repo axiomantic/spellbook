@@ -1,6 +1,6 @@
 [project]
 name = "spellbook"
-version = "0.14.0"
+version = "0.15.0"
 description = "Skills, commands, and MCP tools for AI coding assistants"
 readme = "README.md"
 requires-python = ">=3.10"
