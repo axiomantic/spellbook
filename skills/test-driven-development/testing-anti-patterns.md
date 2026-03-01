@@ -313,6 +313,7 @@ BEFORE writing any assertion:
     - len(x) == N (without also checking content)
     - x is not None (without also checking value)
     - "key" in dict (without also checking value at key)
+    - x.exists()
     - mock.ANY / unittest.mock.ANY
 ```
 

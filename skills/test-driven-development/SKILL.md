@@ -209,6 +209,7 @@ Tests must validate CONTENT, not just EXISTENCE. Every assertion must answer: "I
 | **No existence-only assertions** | `assert len(result) > 0` | `assert result == [expected_item_1, expected_item_2]` |
 | **No count-only assertions** | `assert len(result) == 3` | `assert result == [item_1, item_2, item_3]` |
 | **No none-checks without content** | `assert response is not None` | `assert response == expected_response` |
+| **No file existence-only checks** | `assert output_file.exists()` | `assert output_file.read_text() == "expected content"` |
 | **No `mock.ANY` by default** | `assert_called_with(mock.ANY, mock.ANY)` | `assert_called_with("expected_arg", expected_obj)` |
 | **Full structural validation** | `assert "key" in result` | `assert result == {"key": "expected_value", ...}` |
 | **Every field of every object** | `assert result.status == "ok"` | `assert result == ExpectedObject(status="ok", data=..., meta=...)` |
