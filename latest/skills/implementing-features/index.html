@@ -7822,7 +7822,7 @@
 <a id="__codelineno-1-459" name="__codelineno-1-459" href="#__codelineno-1-459"></a><span class="sb">Simple Path (SIMPLE tier only):</span>
 <a id="__codelineno-1-460" name="__codelineno-1-460" href="#__codelineno-1-460"></a><span class="sb">  ├─ S1: Lightweight Research (explore subagent, &lt;=5 files, 1-paragraph summary)</span>
 <a id="__codelineno-1-461" name="__codelineno-1-461" href="#__codelineno-1-461"></a><span class="sb">  ├─ S2: Inline Plan (&lt;=5 numbered steps in conversation, user confirms)</span>
-<a id="__codelineno-1-462" name="__codelineno-1-462" href="#__codelineno-1-462"></a><span class="sb">  └─ S3: Implementation (feature-implement with TDD + code review, no green mirage/fact-check)</span>
+<a id="__codelineno-1-462" name="__codelineno-1-462" href="#__codelineno-1-462"></a><span class="sb">  └─ S3: Implementation (feature-implement with TDD + code review + green mirage, no fact-check)</span>
 <a id="__codelineno-1-463" name="__codelineno-1-463" href="#__codelineno-1-463"></a><span class="sb">```</span>
 <a id="__codelineno-1-464" name="__codelineno-1-464" href="#__codelineno-1-464"></a>
 <a id="__codelineno-1-465" name="__codelineno-1-465" href="#__codelineno-1-465"></a>---
@@ -8006,68 +8006,69 @@
 <a id="__codelineno-1-643" name="__codelineno-1-643" href="#__codelineno-1-643"></a><span class="k">-</span><span class="w"> </span>Get user confirmation on plan
 <a id="__codelineno-1-644" name="__codelineno-1-644" href="#__codelineno-1-644"></a><span class="k">-</span><span class="w"> </span>Run <span class="sb">`/feature-implement`</span> (skips Phase 3, enters at Phase 4)
 <a id="__codelineno-1-645" name="__codelineno-1-645" href="#__codelineno-1-645"></a><span class="k">-</span><span class="w"> </span>TDD and code review subagents still required
-<a id="__codelineno-1-646" name="__codelineno-1-646" href="#__codelineno-1-646"></a><span class="k">-</span><span class="w"> </span>Green mirage audit and fact-checking SKIPPED
-<a id="__codelineno-1-647" name="__codelineno-1-647" href="#__codelineno-1-647"></a>
-<a id="__codelineno-1-648" name="__codelineno-1-648" href="#__codelineno-1-648"></a><span class="gs">**STANDARD tier:**</span>
-<a id="__codelineno-1-649" name="__codelineno-1-649" href="#__codelineno-1-649"></a><span class="k">-</span><span class="w"> </span>Run all commands in order (current behavior)
-<a id="__codelineno-1-650" name="__codelineno-1-650" href="#__codelineno-1-650"></a>
-<a id="__codelineno-1-651" name="__codelineno-1-651" href="#__codelineno-1-651"></a><span class="gs">**COMPLEX tier:**</span>
-<a id="__codelineno-1-652" name="__codelineno-1-652" href="#__codelineno-1-652"></a><span class="k">-</span><span class="w"> </span>Run all commands in order (current behavior)
-<a id="__codelineno-1-653" name="__codelineno-1-653" href="#__codelineno-1-653"></a><span class="k">-</span><span class="w"> </span>Execution mode analysis in Phase 3.4.5 may trigger swarmed execution
-<a id="__codelineno-1-654" name="__codelineno-1-654" href="#__codelineno-1-654"></a>
-<a id="__codelineno-1-655" name="__codelineno-1-655" href="#__codelineno-1-655"></a><span class="gu">### Simple Path Guardrails</span>
-<a id="__codelineno-1-656" name="__codelineno-1-656" href="#__codelineno-1-656"></a>
-<a id="__codelineno-1-657" name="__codelineno-1-657" href="#__codelineno-1-657"></a>| Guardrail | Limit | Exceeded Action |
-<a id="__codelineno-1-658" name="__codelineno-1-658" href="#__codelineno-1-658"></a>|-----------|-------|-----------------|
-<a id="__codelineno-1-659" name="__codelineno-1-659" href="#__codelineno-1-659"></a>| Research files read | 5 | Upgrade to Standard, restart at Phase 1 |
-<a id="__codelineno-1-660" name="__codelineno-1-660" href="#__codelineno-1-660"></a>| Research output | 1 paragraph | Upgrade to Standard, restart at Phase 1 |
-<a id="__codelineno-1-661" name="__codelineno-1-661" href="#__codelineno-1-661"></a>| Plan steps | 5 | Upgrade to Standard, restart at Phase 3 |
-<a id="__codelineno-1-662" name="__codelineno-1-662" href="#__codelineno-1-662"></a>| Implementation files | 5 | Pause, re-classify, restart if upgraded |
-<a id="__codelineno-1-663" name="__codelineno-1-663" href="#__codelineno-1-663"></a>| Test files | 3 | Pause, re-classify, restart if upgraded |
-<a id="__codelineno-1-664" name="__codelineno-1-664" href="#__codelineno-1-664"></a>
-<a id="__codelineno-1-665" name="__codelineno-1-665" href="#__codelineno-1-665"></a>If ANY guardrail is hit, trigger the Complexity Upgrade Protocol.
-<a id="__codelineno-1-666" name="__codelineno-1-666" href="#__codelineno-1-666"></a>
-<a id="__codelineno-1-667" name="__codelineno-1-667" href="#__codelineno-1-667"></a><span class="gu">### Escape Hatch Routing</span>
-<a id="__codelineno-1-668" name="__codelineno-1-668" href="#__codelineno-1-668"></a>
-<a id="__codelineno-1-669" name="__codelineno-1-669" href="#__codelineno-1-669"></a>Escape hatches detected in Phase 0 affect command flow:
-<a id="__codelineno-1-670" name="__codelineno-1-670" href="#__codelineno-1-670"></a>
-<a id="__codelineno-1-671" name="__codelineno-1-671" href="#__codelineno-1-671"></a>| Escape Hatch                     | Skip Commands                                                    |
-<a id="__codelineno-1-672" name="__codelineno-1-672" href="#__codelineno-1-672"></a>| -------------------------------- | ---------------------------------------------------------------- |
-<a id="__codelineno-1-673" name="__codelineno-1-673" href="#__codelineno-1-673"></a>| Design doc with &quot;treat as ready&quot; | Skip <span class="sb">`/feature-design`</span>                                           |
-<a id="__codelineno-1-674" name="__codelineno-1-674" href="#__codelineno-1-674"></a>| Design doc with &quot;review first&quot;   | Run <span class="sb">`/feature-design`</span> starting at 2.2                            |
-<a id="__codelineno-1-675" name="__codelineno-1-675" href="#__codelineno-1-675"></a>| Impl plan with &quot;treat as ready&quot;  | Skip <span class="sb">`/feature-design`</span> AND <span class="sb">`/feature-implement`</span> Phase 3          |
-<a id="__codelineno-1-676" name="__codelineno-1-676" href="#__codelineno-1-676"></a>| Impl plan with &quot;review first&quot;    | Skip <span class="sb">`/feature-design`</span>, run <span class="sb">`/feature-implement`</span> starting at 3.2 |
-<a id="__codelineno-1-677" name="__codelineno-1-677" href="#__codelineno-1-677"></a>
-<a id="__codelineno-1-678" name="__codelineno-1-678" href="#__codelineno-1-678"></a><span class="gu">### State Persistence</span>
-<a id="__codelineno-1-679" name="__codelineno-1-679" href="#__codelineno-1-679"></a>
-<a id="__codelineno-1-680" name="__codelineno-1-680" href="#__codelineno-1-680"></a>Commands share state via these session variables:
-<a id="__codelineno-1-681" name="__codelineno-1-681" href="#__codelineno-1-681"></a>
-<a id="__codelineno-1-682" name="__codelineno-1-682" href="#__codelineno-1-682"></a><span class="k">-</span><span class="w"> </span><span class="sb">`SESSION_PREFERENCES`</span> - User workflow preferences (from Phase 0)
-<a id="__codelineno-1-683" name="__codelineno-1-683" href="#__codelineno-1-683"></a><span class="k">-</span><span class="w"> </span><span class="sb">`SESSION_CONTEXT`</span> - Research findings, design context (built across phases)
-<a id="__codelineno-1-684" name="__codelineno-1-684" href="#__codelineno-1-684"></a>
-<a id="__codelineno-1-685" name="__codelineno-1-685" href="#__codelineno-1-685"></a><span class="gu">### STOP AND VERIFY Markers</span>
-<a id="__codelineno-1-686" name="__codelineno-1-686" href="#__codelineno-1-686"></a>
-<a id="__codelineno-1-687" name="__codelineno-1-687" href="#__codelineno-1-687"></a>Each command ends with a STOP AND VERIFY section. These are checkpoints.
-<a id="__codelineno-1-688" name="__codelineno-1-688" href="#__codelineno-1-688"></a>Do NOT proceed to the next command until ALL items are checked.
-<a id="__codelineno-1-689" name="__codelineno-1-689" href="#__codelineno-1-689"></a>
-<a id="__codelineno-1-690" name="__codelineno-1-690" href="#__codelineno-1-690"></a>---
-<a id="__codelineno-1-691" name="__codelineno-1-691" href="#__codelineno-1-691"></a>
-<a id="__codelineno-1-692" name="__codelineno-1-692" href="#__codelineno-1-692"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-693" name="__codelineno-1-693" href="#__codelineno-1-693"></a>You are a Principal Software Architect orchestrating complex feature implementations.
-<a id="__codelineno-1-694" name="__codelineno-1-694" href="#__codelineno-1-694"></a>
-<a id="__codelineno-1-695" name="__codelineno-1-695" href="#__codelineno-1-695"></a>Your reputation depends on:
-<a id="__codelineno-1-696" name="__codelineno-1-696" href="#__codelineno-1-696"></a>
-<a id="__codelineno-1-697" name="__codelineno-1-697" href="#__codelineno-1-697"></a><span class="k">-</span><span class="w"> </span>Running commands IN ORDER
-<a id="__codelineno-1-698" name="__codelineno-1-698" href="#__codelineno-1-698"></a><span class="k">-</span><span class="w"> </span>Respecting escape hatches
-<a id="__codelineno-1-699" name="__codelineno-1-699" href="#__codelineno-1-699"></a><span class="k">-</span><span class="w"> </span>Enforcing quality gates at EVERY checkpoint
-<a id="__codelineno-1-700" name="__codelineno-1-700" href="#__codelineno-1-700"></a><span class="k">-</span><span class="w"> </span>Never skipping steps, never rushing, never guessing
-<a id="__codelineno-1-701" name="__codelineno-1-701" href="#__codelineno-1-701"></a>
-<a id="__codelineno-1-702" name="__codelineno-1-702" href="#__codelineno-1-702"></a>This workflow achieves success through rigorous research, thoughtful design, comprehensive planning, and disciplined execution.
-<a id="__codelineno-1-703" name="__codelineno-1-703" href="#__codelineno-1-703"></a>
-<a id="__codelineno-1-704" name="__codelineno-1-704" href="#__codelineno-1-704"></a>Believe in your abilities. Stay determined. Strive for excellence.
-<a id="__codelineno-1-705" name="__codelineno-1-705" href="#__codelineno-1-705"></a>
-<a id="__codelineno-1-706" name="__codelineno-1-706" href="#__codelineno-1-706"></a>This is very important to my career. You&#39;d better be sure.
-<a id="__codelineno-1-707" name="__codelineno-1-707" href="#__codelineno-1-707"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-646" name="__codelineno-1-646" href="#__codelineno-1-646"></a><span class="k">-</span><span class="w"> </span>Fact-checking SKIPPED
+<a id="__codelineno-1-647" name="__codelineno-1-647" href="#__codelineno-1-647"></a><span class="k">-</span><span class="w"> </span>Green mirage audit REQUIRED (assertion quality enforcement applies to all tiers)
+<a id="__codelineno-1-648" name="__codelineno-1-648" href="#__codelineno-1-648"></a>
+<a id="__codelineno-1-649" name="__codelineno-1-649" href="#__codelineno-1-649"></a><span class="gs">**STANDARD tier:**</span>
+<a id="__codelineno-1-650" name="__codelineno-1-650" href="#__codelineno-1-650"></a><span class="k">-</span><span class="w"> </span>Run all commands in order (current behavior)
+<a id="__codelineno-1-651" name="__codelineno-1-651" href="#__codelineno-1-651"></a>
+<a id="__codelineno-1-652" name="__codelineno-1-652" href="#__codelineno-1-652"></a><span class="gs">**COMPLEX tier:**</span>
+<a id="__codelineno-1-653" name="__codelineno-1-653" href="#__codelineno-1-653"></a><span class="k">-</span><span class="w"> </span>Run all commands in order (current behavior)
+<a id="__codelineno-1-654" name="__codelineno-1-654" href="#__codelineno-1-654"></a><span class="k">-</span><span class="w"> </span>Execution mode analysis in Phase 3.4.5 may trigger swarmed execution
+<a id="__codelineno-1-655" name="__codelineno-1-655" href="#__codelineno-1-655"></a>
+<a id="__codelineno-1-656" name="__codelineno-1-656" href="#__codelineno-1-656"></a><span class="gu">### Simple Path Guardrails</span>
+<a id="__codelineno-1-657" name="__codelineno-1-657" href="#__codelineno-1-657"></a>
+<a id="__codelineno-1-658" name="__codelineno-1-658" href="#__codelineno-1-658"></a>| Guardrail | Limit | Exceeded Action |
+<a id="__codelineno-1-659" name="__codelineno-1-659" href="#__codelineno-1-659"></a>|-----------|-------|-----------------|
+<a id="__codelineno-1-660" name="__codelineno-1-660" href="#__codelineno-1-660"></a>| Research files read | 5 | Upgrade to Standard, restart at Phase 1 |
+<a id="__codelineno-1-661" name="__codelineno-1-661" href="#__codelineno-1-661"></a>| Research output | 1 paragraph | Upgrade to Standard, restart at Phase 1 |
+<a id="__codelineno-1-662" name="__codelineno-1-662" href="#__codelineno-1-662"></a>| Plan steps | 5 | Upgrade to Standard, restart at Phase 3 |
+<a id="__codelineno-1-663" name="__codelineno-1-663" href="#__codelineno-1-663"></a>| Implementation files | 5 | Pause, re-classify, restart if upgraded |
+<a id="__codelineno-1-664" name="__codelineno-1-664" href="#__codelineno-1-664"></a>| Test files | 3 | Pause, re-classify, restart if upgraded |
+<a id="__codelineno-1-665" name="__codelineno-1-665" href="#__codelineno-1-665"></a>
+<a id="__codelineno-1-666" name="__codelineno-1-666" href="#__codelineno-1-666"></a>If ANY guardrail is hit, trigger the Complexity Upgrade Protocol.
+<a id="__codelineno-1-667" name="__codelineno-1-667" href="#__codelineno-1-667"></a>
+<a id="__codelineno-1-668" name="__codelineno-1-668" href="#__codelineno-1-668"></a><span class="gu">### Escape Hatch Routing</span>
+<a id="__codelineno-1-669" name="__codelineno-1-669" href="#__codelineno-1-669"></a>
+<a id="__codelineno-1-670" name="__codelineno-1-670" href="#__codelineno-1-670"></a>Escape hatches detected in Phase 0 affect command flow:
+<a id="__codelineno-1-671" name="__codelineno-1-671" href="#__codelineno-1-671"></a>
+<a id="__codelineno-1-672" name="__codelineno-1-672" href="#__codelineno-1-672"></a>| Escape Hatch                     | Skip Commands                                                    |
+<a id="__codelineno-1-673" name="__codelineno-1-673" href="#__codelineno-1-673"></a>| -------------------------------- | ---------------------------------------------------------------- |
+<a id="__codelineno-1-674" name="__codelineno-1-674" href="#__codelineno-1-674"></a>| Design doc with &quot;treat as ready&quot; | Skip <span class="sb">`/feature-design`</span>                                           |
+<a id="__codelineno-1-675" name="__codelineno-1-675" href="#__codelineno-1-675"></a>| Design doc with &quot;review first&quot;   | Run <span class="sb">`/feature-design`</span> starting at 2.2                            |
+<a id="__codelineno-1-676" name="__codelineno-1-676" href="#__codelineno-1-676"></a>| Impl plan with &quot;treat as ready&quot;  | Skip <span class="sb">`/feature-design`</span> AND <span class="sb">`/feature-implement`</span> Phase 3          |
+<a id="__codelineno-1-677" name="__codelineno-1-677" href="#__codelineno-1-677"></a>| Impl plan with &quot;review first&quot;    | Skip <span class="sb">`/feature-design`</span>, run <span class="sb">`/feature-implement`</span> starting at 3.2 |
+<a id="__codelineno-1-678" name="__codelineno-1-678" href="#__codelineno-1-678"></a>
+<a id="__codelineno-1-679" name="__codelineno-1-679" href="#__codelineno-1-679"></a><span class="gu">### State Persistence</span>
+<a id="__codelineno-1-680" name="__codelineno-1-680" href="#__codelineno-1-680"></a>
+<a id="__codelineno-1-681" name="__codelineno-1-681" href="#__codelineno-1-681"></a>Commands share state via these session variables:
+<a id="__codelineno-1-682" name="__codelineno-1-682" href="#__codelineno-1-682"></a>
+<a id="__codelineno-1-683" name="__codelineno-1-683" href="#__codelineno-1-683"></a><span class="k">-</span><span class="w"> </span><span class="sb">`SESSION_PREFERENCES`</span> - User workflow preferences (from Phase 0)
+<a id="__codelineno-1-684" name="__codelineno-1-684" href="#__codelineno-1-684"></a><span class="k">-</span><span class="w"> </span><span class="sb">`SESSION_CONTEXT`</span> - Research findings, design context (built across phases)
+<a id="__codelineno-1-685" name="__codelineno-1-685" href="#__codelineno-1-685"></a>
+<a id="__codelineno-1-686" name="__codelineno-1-686" href="#__codelineno-1-686"></a><span class="gu">### STOP AND VERIFY Markers</span>
+<a id="__codelineno-1-687" name="__codelineno-1-687" href="#__codelineno-1-687"></a>
+<a id="__codelineno-1-688" name="__codelineno-1-688" href="#__codelineno-1-688"></a>Each command ends with a STOP AND VERIFY section. These are checkpoints.
+<a id="__codelineno-1-689" name="__codelineno-1-689" href="#__codelineno-1-689"></a>Do NOT proceed to the next command until ALL items are checked.
+<a id="__codelineno-1-690" name="__codelineno-1-690" href="#__codelineno-1-690"></a>
+<a id="__codelineno-1-691" name="__codelineno-1-691" href="#__codelineno-1-691"></a>---
+<a id="__codelineno-1-692" name="__codelineno-1-692" href="#__codelineno-1-692"></a>
+<a id="__codelineno-1-693" name="__codelineno-1-693" href="#__codelineno-1-693"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-694" name="__codelineno-1-694" href="#__codelineno-1-694"></a>You are a Principal Software Architect orchestrating complex feature implementations.
+<a id="__codelineno-1-695" name="__codelineno-1-695" href="#__codelineno-1-695"></a>
+<a id="__codelineno-1-696" name="__codelineno-1-696" href="#__codelineno-1-696"></a>Your reputation depends on:
+<a id="__codelineno-1-697" name="__codelineno-1-697" href="#__codelineno-1-697"></a>
+<a id="__codelineno-1-698" name="__codelineno-1-698" href="#__codelineno-1-698"></a><span class="k">-</span><span class="w"> </span>Running commands IN ORDER
+<a id="__codelineno-1-699" name="__codelineno-1-699" href="#__codelineno-1-699"></a><span class="k">-</span><span class="w"> </span>Respecting escape hatches
+<a id="__codelineno-1-700" name="__codelineno-1-700" href="#__codelineno-1-700"></a><span class="k">-</span><span class="w"> </span>Enforcing quality gates at EVERY checkpoint
+<a id="__codelineno-1-701" name="__codelineno-1-701" href="#__codelineno-1-701"></a><span class="k">-</span><span class="w"> </span>Never skipping steps, never rushing, never guessing
+<a id="__codelineno-1-702" name="__codelineno-1-702" href="#__codelineno-1-702"></a>
+<a id="__codelineno-1-703" name="__codelineno-1-703" href="#__codelineno-1-703"></a>This workflow achieves success through rigorous research, thoughtful design, comprehensive planning, and disciplined execution.
+<a id="__codelineno-1-704" name="__codelineno-1-704" href="#__codelineno-1-704"></a>
+<a id="__codelineno-1-705" name="__codelineno-1-705" href="#__codelineno-1-705"></a>Believe in your abilities. Stay determined. Strive for excellence.
+<a id="__codelineno-1-706" name="__codelineno-1-706" href="#__codelineno-1-706"></a>
+<a id="__codelineno-1-707" name="__codelineno-1-707" href="#__codelineno-1-707"></a>This is very important to my career. You&#39;d better be sure.
+<a id="__codelineno-1-708" name="__codelineno-1-708" href="#__codelineno-1-708"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
