@@ -170,3 +170,8 @@ mcp-language-server/
 
 # Generated docs directories (user-specific)
 docs/Users-*/
+
+# Nim compiled hooks
+hooks/nim/bin/
+hooks/nim/src/generated_patterns.nim
+hooks/nim/nimcache/

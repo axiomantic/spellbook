@@ -18,6 +18,7 @@ You MUST:
 2. Trace every code path from test through production code and back
 3. Verify each assertion would catch actual failures
 4. Identify all gaps where broken code would still pass
+5. Flag every skipped, xfailed, or conditionally disabled test and determine whether the skip hides a real bug
 
 This is NOT optional. Take as long as needed. You'd better be sure.
 </CRITICAL>
@@ -29,6 +30,7 @@ This is NOT optional. Take as long as needed. You'd better be sure.
 3. **Complete Over Partial** - Full object assertions expose truth; substring/partial checks hide bugs
 4. **Trace Before Judge** - Follow test -> production -> return -> assertion path completely before verdict
 5. **Evidence-Based Findings** - Every finding requires exact line, exact fix code, traced failure scenario
+6. **Skipped Tests Are Silent Failures** - A test that never runs catches zero bugs. Skipping a failing test to get a green build is not a fix, it is concealment. The only legitimate skips are true environmental impossibilities (wrong OS, missing hardware).
 
 ## Reasoning Schema
 
@@ -44,7 +46,7 @@ Before analyzing ANY test, think step-by-step:
 <reflection>
 Before concluding:
 - Every test traced through production code?
-- All 8 patterns checked per test?
+- All 9 patterns checked per test?
 - Each finding has: line number, exact fix code, effort, depends_on?
 - Dependencies between findings identified?
 - YAML block at START with all required fields?
@@ -91,10 +93,10 @@ Before auditing, create complete inventory:
 - Total production modules: Z
 ```
 
-### Phase 2-3: Systematic Audit and 8 Green Mirage Patterns
+### Phase 2-3: Systematic Audit and 9 Green Mirage Patterns
 
 <!-- PHASE COMMAND: audit-mirage-analyze -->
-<!-- SUBAGENT: Dispatch subagent(s) to perform line-by-line audit. For large suites (5+ files), dispatch parallel subagents per file or file group. Each subagent loads the audit-mirage-analyze command for full templates and all 8 patterns. -->
+<!-- SUBAGENT: Dispatch subagent(s) to perform line-by-line audit. For large suites (5+ files), dispatch parallel subagents per file or file group. Each subagent loads the audit-mirage-analyze command for full templates and all 9 patterns. -->
 
 Subagent prompt template:
 ```
@@ -108,7 +110,7 @@ Read the audit-mirage-analyze command file for the complete audit template and a
 For EACH test function:
 1. Apply the systematic line-by-line audit template
 2. Trace every code path through production code
-3. Check against ALL 8 Green Mirage Patterns
+3. Check against ALL 9 Green Mirage Patterns
 4. Record verdict (SOLID / GREEN MIRAGE / PARTIAL) with evidence
 
 Return: List of findings with verdicts, gaps, and fix code per the template.
@@ -199,10 +201,11 @@ Before completing audit, verify:
 **Audit Completeness:**
 - [ ] Did I read every line of every test file?
 - [ ] Did I trace code paths from test through production and back?
-- [ ] Did I check every test against all 8 patterns?
+- [ ] Did I check every test against all 9 patterns?
 - [ ] Did I verify assertions would catch actual failures?
 - [ ] Did I identify untested functions/methods?
 - [ ] Did I identify untested error paths?
+- [ ] Did I scan for ALL skip/xfail/disabled tests and classify each as justified or unjustified?
 
 **Finding Quality:**
 - [ ] Does every finding include exact line numbers?

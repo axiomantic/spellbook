@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-02-28
+
+### Added
+- **Compiled Nim hooks with shell fallbacks** - All 9 Claude Code hooks now have native Nim implementations that launch in ~5ms instead of ~200ms for Python/shell scripts. Includes a codegen pipeline (`hooks/nim/generate_patterns.py`) that reads security rules from Python and generates a Nim module with pre-compiled regex patterns and SHA1 hash verification. If Nim is not installed or any hook fails to compile, all hooks fall back to shell scripts (all-or-none strategy).
+  - **9 Nim hook binaries**: `tts_timer_start`, `bash_gate`, `spawn_guard`, `state_sanitize`, `audit_log`, `canary_check`, `tts_notify`, `pre_compact_save`, `post_compact_recover`
+  - **Shared hooklib module** (`hooks/nim/src/hooklib.nim`): JSON stdin parsing, recursive string extraction, MCP JSON-RPC client with SSE response parsing, fail-open/fail-closed exit handlers, SHA1 hash verification
+  - **Security pattern sync**: Generated patterns include SHA1 hash of source rules; at runtime, hooks verify the hash and fall back to MCP `security_check_tool_input` if patterns are stale
+  - **Installer integration**: `_detect_nim()` checks for Nim >= 1.6, `_compile_nim_hooks()` builds all binaries, `nim_available` flag propagated through hook registration to select Nim binary or shell fallback per hook
+- **`security_check_tool_input` MCP tool** - New tool that validates tool call inputs against security rules, used as runtime fallback when Nim hooks detect stale compiled patterns (`spellbook_mcp/server.py`)
+
+### Changed
+- **Green mirage audit expanded** - Added detection of skipped, xfailed, or disabled tests hiding real failures (`commands/audit-green-mirage.md`, `commands/audit-mirage-analyze.md`, `commands/audit-mirage-cross.md`, `commands/audit-mirage-report.md`, `skills/auditing-green-mirage/SKILL.md`)
+- **Mermaid diagram guidance** - Added rule to use `<br>` for newlines within mermaid node labels instead of literal newlines (`AGENTS.spellbook.md`)
+
 ## [0.14.0] - 2026-02-28
 
 ### Changed

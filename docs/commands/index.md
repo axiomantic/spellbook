@@ -13,7 +13,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/advanced-code-review-review](advanced-code-review-review.md) | Advanced Code Review Phase 3: Deep Review - multi-pass code analysis, finding ge... | spellbook |
 | [/advanced-code-review-verify](advanced-code-review-verify.md) | Advanced Code Review Phase 4: Verification - fact-check findings against codebas... | spellbook |
 | [/audit-green-mirage](audit-green-mirage.md) | Audit test suites for Green Mirage anti-patterns: tests that pass but don't veri... | spellbook |
-| [/audit-mirage-analyze](audit-mirage-analyze.md) | Phase 2-3 of auditing-green-mirage: Systematic line-by-line audit and 8 Green Mi... | spellbook |
+| [/audit-mirage-analyze](audit-mirage-analyze.md) | Phase 2-3 of auditing-green-mirage: Systematic line-by-line audit and 9 Green Mi... | spellbook |
 | [/audit-mirage-cross](audit-mirage-cross.md) | Phase 4 of auditing-green-mirage: Cross-test suite-level analysis | spellbook |
 | [/audit-mirage-report](audit-mirage-report.md) | Phase 5-6 of auditing-green-mirage: Findings report generation and output | spellbook |
 | [/brainstorm](brainstorm.md) | You MUST use this before any creative work - creating features, building compone... | [superpowers](https://github.com/obra/superpowers) |

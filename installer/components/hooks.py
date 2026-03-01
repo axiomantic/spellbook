@@ -150,30 +150,60 @@ _HOOK_PHASES = list(HOOK_DEFINITIONS.keys())
 # Prefix used to identify spellbook-managed hook paths
 _SPELLBOOK_HOOK_PREFIX = "$SPELLBOOK_DIR/hooks/"
 
+# Name mapping: shell script name -> Nim binary name
+_SHELL_TO_NIM_BINARY = {
+    "tts-timer-start.sh": "tts_timer_start",
+    "bash-gate.sh": "bash_gate",
+    "spawn-guard.sh": "spawn_guard",
+    "state-sanitize.sh": "state_sanitize",
+    "audit-log.sh": "audit_log",
+    "canary-check.sh": "canary_check",
+    "tts-notify.sh": "tts_notify",
+    "pre-compact-save.sh": "pre_compact_save",
+    "post-compact-recover.sh": "post_compact_recover",
+}
 
-def _get_hook_path_for_platform(hook_path: str) -> str:
-    """Convert a .sh hook path to .py on Windows.
 
-    On Unix, returns the path unchanged. On Windows, replaces .sh with .py
-    so that the Python wrapper is used instead of the shell script.
+def _get_hook_path_for_platform(hook_path: str, nim_available: bool = False) -> str:
+    """Resolve hook path based on platform and Nim availability.
+
+    Priority: Nim binary > shell script > Python wrapper (Windows)
+
+    On Windows, always returns .py path (Nim binaries not supported on Windows).
+    On Unix with nim_available=True, returns Nim binary path.
+    On Unix with nim_available=False, returns original .sh path.
     """
     import sys
+
     if sys.platform == "win32":
         return hook_path.replace(".sh", ".py")
+
+    if nim_available:
+        shell_name = hook_path.split("/")[-1]  # e.g., "bash-gate.sh"
+        nim_name = _SHELL_TO_NIM_BINARY.get(shell_name)
+        if nim_name:
+            # Replace hooks/<name>.sh with hooks/nim/bin/<nim_name>
+            nim_path = hook_path.rsplit("/hooks/", 1)[0] + f"/hooks/nim/bin/{nim_name}"
+            return nim_path
+
     return hook_path
 
 
-def _transform_hook_for_platform(hook: Union[str, Dict[str, Any]]) -> Union[str, Dict[str, Any]]:
+def _transform_hook_for_platform(
+    hook: Union[str, Dict[str, Any]], nim_available: bool = False
+) -> Union[str, Dict[str, Any]]:
     """Transform a hook entry's path for the current platform.
 
     Handles both plain string hooks and object-format hooks.
     """
     if isinstance(hook, str):
-        return _get_hook_path_for_platform(hook)
+        return _get_hook_path_for_platform(hook, nim_available=nim_available)
     # Dict-format hook: transform the 'command' key
     transformed = dict(hook)
     if "command" in transformed:
-        transformed["command"] = _get_hook_path_for_platform(transformed["command"])
+        transformed["command"] = _get_hook_path_for_platform(
+            transformed["command"], nim_available=nim_available
+        )
     return transformed
 
 
@@ -261,6 +291,7 @@ def _merge_hooks_for_phase(
     phase_entries: List[Dict],
     hook_defs: List[Dict],
     spellbook_dir: Optional[Path] = None,
+    nim_available: bool = False,
 ) -> None:
     """Merge spellbook hook definitions into an existing phase array.
 
@@ -281,8 +312,10 @@ def _merge_hooks_for_phase(
         matcher = _matcher_key(hook_def)
         is_catchall = matcher is None
 
-        # Transform hook paths for the current platform (.sh -> .py on Windows)
-        spellbook_hooks = [_transform_hook_for_platform(h) for h in hook_def["hooks"]]
+        # Transform hook paths for the current platform (.sh -> .py on Windows, or Nim binary)
+        spellbook_hooks = [
+            _transform_hook_for_platform(h, nim_available=nim_available) for h in hook_def["hooks"]
+        ]
         # Expand $SPELLBOOK_DIR to actual path if provided
         if spellbook_dir is not None:
             spellbook_hooks = [_expand_spellbook_dir(h, spellbook_dir) for h in spellbook_hooks]
@@ -340,7 +373,12 @@ def _clean_hooks_for_phase(phase_entries: List[Dict], spellbook_dir: Optional[Pa
     return cleaned
 
 
-def install_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry_run: bool = False) -> HookResult:
+def install_hooks(
+    settings_path: Path,
+    spellbook_dir: Optional[Path] = None,
+    nim_available: bool = False,
+    dry_run: bool = False,
+) -> HookResult:
     """Install spellbook security hooks into a Claude Code settings file.
 
     Merges hook entries into PreToolUse and PostToolUse arrays. If a matcher
@@ -360,6 +398,7 @@ def install_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry
         settings_path: Path to the settings file (e.g. settings.json)
         spellbook_dir: Path to the spellbook installation directory. When provided,
             $SPELLBOOK_DIR is expanded to this path in all hook commands.
+        nim_available: If True, use compiled Nim binary paths instead of shell scripts.
         dry_run: If True, do not write any changes
 
     Returns:
@@ -395,7 +434,9 @@ def install_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry
     for phase, hook_defs in HOOK_DEFINITIONS.items():
         if phase not in settings["hooks"]:
             settings["hooks"][phase] = []
-        _merge_hooks_for_phase(settings["hooks"][phase], hook_defs, spellbook_dir)
+        _merge_hooks_for_phase(
+            settings["hooks"][phase], hook_defs, spellbook_dir, nim_available=nim_available
+        )
 
     # Write back
     settings_path.parent.mkdir(parents=True, exist_ok=True)

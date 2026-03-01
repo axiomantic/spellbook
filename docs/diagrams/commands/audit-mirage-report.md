@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/audit-mirage-report.md", "source_hash": "sha256:23bdb12d9f16cfc254fa6841a3c4e8a7c1ddd1eaf4a2383799092c6f184c728a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/audit-mirage-report.md", "source_hash": "sha256:37b0f10cb88519a36c0eccc959029caa57e7d6f5853148320d4b4a2463ab567c", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: audit-mirage-report
 
 Generate findings report with machine-parseable YAML and human-readable summary.

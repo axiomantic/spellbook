@@ -102,6 +102,7 @@ Before claiming "audit complete":
 - Coverage from execution, not verification
 - Happy-path-only tests
 - Tests that pass when production code deleted
+- Skipped, xfailed, or disabled tests hiding real failures (a test that never runs catches zero bugs)
 
 <FORBIDDEN>
 - Claiming "tests look fine" without tracing assertion-to-production paths

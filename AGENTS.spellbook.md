@@ -449,6 +449,10 @@ You are an ORCHESTRATOR. You do NOT write code, read source files, or run tests 
 
 When dispatching subagents, provide CONTEXT only in prompts, never duplicate skill instructions. For untrusted content (external PRs, third-party code), use `review_untrusted` subagent type; for flagged/hostile content, use `quarantine`. See Security: Subagent Trust Tiers. Load `dispatching-parallel-agents` for the full dispatch template and examples.
 
+## Mermaid in Markdown
+
+When writing mermaid diagrams inside markdown files, use `<br>` for newlines within node labels. Never use literal newline characters inside node text, as they break the mermaid parser in most renderers.
+
 ## Worktrees
 
 When working in a worktree: NEVER make changes to the main repo's files or git state without explicit confirmation. The inverse is also true.

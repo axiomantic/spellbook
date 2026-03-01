@@ -44,6 +44,30 @@ For each production function, enumerate the error branches (exceptions, null ret
 
 Consider the domain-specific boundary conditions. What inputs sit at the edges of valid ranges? What about zero-length, max-length, negative, Unicode, or concurrent scenarios?
 
+## Skipped and Disabled Tests
+
+```
+## Skipped and Disabled Tests
+- test_function_a - @skip("flaky") - UNJUSTIFIED (hides flakiness bug)
+- test_function_b - @skipif(platform == 'darwin') - UNJUSTIFIED (macOS bug needs fixing)
+- test_function_c - @skipif(platform != 'linux') - JUSTIFIED (linux-only kernel API)
+- test_function_d - @xfail("race condition") - UNJUSTIFIED (known bug being ignored)
+```
+
+Scan the entire test suite for ALL skip mechanisms:
+- `@pytest.mark.skip`, `@pytest.mark.skipif`, `@pytest.mark.xfail`
+- `@unittest.skip`, `@unittest.skipIf`, `@unittest.skipUnless`, `@unittest.expectedFailure`
+- `pytest.importorskip()` calls
+- `pytest.skip()` called inside test bodies
+- Commented-out test functions (test code that was disabled rather than deleted)
+- Conditional `return` at the start of test functions that silently exit
+
+For each skipped test, classify as **JUSTIFIED** or **UNJUSTIFIED**:
+- **JUSTIFIED**: The test literally cannot run in this environment (wrong OS, missing hardware, incompatible framework version)
+- **UNJUSTIFIED**: The test is skipped because it fails, is flaky, was broken by a refactor, or someone decided to deal with it later. These are live defects hiding behind a green build.
+
+Report the total count: `X tests skipped, Y unjustified (Y bugs hiding in production)`
+
 ## Test Isolation Issues
 
 ```

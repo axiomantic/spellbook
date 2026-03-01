@@ -82,13 +82,13 @@ flowchart TD
 ``````````markdown
 # Phase 2-3: Systematic Audit and Green Mirage Patterns
 
-This command file contains the detailed audit templates and all 8 Green Mirage Patterns for subagent execution.
+This command file contains the detailed audit templates and all 9 Green Mirage Patterns for subagent execution.
 
 ## Invariant Principles
 
 1. **Every test function gets audited** - No skipping tests because they "look fine"; line-by-line analysis catches what scanning misses
 2. **Assertions determine test value** - A test without meaningful assertions is worse than no test; it creates false confidence
-3. **Score by pattern, not by gut** - Use the 8 Green Mirage Patterns as the scoring rubric, not subjective assessment
+3. **Score by pattern, not by gut** - Use the 9 Green Mirage Patterns as the scoring rubric, not subjective assessment
 
 ## Phase 2: Systematic Line-by-Line Audit
 
@@ -137,7 +137,7 @@ Questions at each step:
 - Are error paths tested or only happy paths?
 ```
 
-## Phase 3: The 8 Green Mirage Patterns
+## Phase 3: The 9 Green Mirage Patterns
 
 Check EVERY test against ALL patterns:
 
@@ -245,6 +245,48 @@ def test_process_data():
 # Missing: test_process_invalid_data, test_process_empty, test_process_malformed
 ```
 **Question:** What happens when input is invalid/empty/malformed/boundary?
+
+### Pattern 9: Skipped Tests Hiding Failures
+
+**Symptom:** Tests marked as skipped, xfail, or conditionally excluded to avoid dealing with failures. A skipped test is a test that never runs. A test that never runs catches zero bugs. If the skip exists because the test exposes a real bug, the skip is actively hiding a production problem to keep the build green.
+
+**The only legitimate skips** are environmental constraints where the test literally cannot execute:
+- OS-specific tests on a different OS (`@pytest.mark.skipif(sys.platform != 'linux')`)
+- Hardware-dependent tests without the hardware (GPU, TPU, FPGA)
+- Framework-version-specific tests on an older version
+
+**Everything else is a Green Mirage:**
+```python
+# GREEN MIRAGE - Skipping because it fails is not fixing it
+@pytest.mark.skip(reason="flaky, needs investigation")
+def test_concurrent_writes():
+    ...
+
+# GREEN MIRAGE - xfail used to sweep known bugs under the rug
+@pytest.mark.xfail(reason="race condition in handler")
+def test_event_ordering():
+    ...
+
+# GREEN MIRAGE - Conditional skip to dodge a bug on specific systems
+@pytest.mark.skipif(sys.platform == 'darwin', reason="segfaults on macOS")
+def test_memory_management():
+    ...
+
+# GREEN MIRAGE - unittest style
+@unittest.skip("TODO: fix after refactor")
+def test_data_migration():
+    ...
+
+# GREEN MIRAGE - Conditional import skip hiding missing dependency
+pytest.importorskip("some_module")  # If the module is needed, install it
+```
+
+**Investigation Required:**
+1. WHY is this test skipped? Is it a real environmental constraint, or covering up a failure?
+2. WHAT bug does the test expose when unskipped? That bug exists in production right now.
+3. HOW long has this skip been in place? Stale skips are forgotten bugs.
+
+**Question:** If you remove the skip decorator and the test fails, is that a bug in the test or a bug in the production code? If production code, you found a live defect being hidden by a green build.
 
 ## Effort Estimation Guidelines
 
