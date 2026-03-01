@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-03-01
+
+### Fixed
+- **TTS plays to stale audio device** - Changing the system default output device after the MCP daemon started had no effect; playback always targeted the device that was default at startup. PortAudio now re-initializes before each playback to pick up the current system default (`spellbook_mcp/tts.py`)
+
 ## [0.15.1] - 2026-03-01
 
 ### Changed
