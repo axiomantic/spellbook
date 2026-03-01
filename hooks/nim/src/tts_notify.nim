@@ -29,7 +29,8 @@ proc main() =
   # Validate tool_use_id
   if toolUseId.len == 0: quit(0)
   let sanitized = sanitizeToolUseId(toolUseId)
-  if sanitized.isNone: quit(0)
+
+  if sanitized == none(string): quit(0)
 
   # Read start timestamp
   let startFile = "/tmp/claude-tool-start-" & sanitized.get
