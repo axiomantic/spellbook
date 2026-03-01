@@ -140,6 +140,11 @@ def _play_audio(wav_path: str, volume: float) -> None:
     import sounddevice as sd
 
     data, samplerate = sf.read(wav_path)
+    # Re-initialize PortAudio so it picks up the current system default
+    # output device.  Without this, playback always targets whatever device
+    # was default when the daemon (and thus PortAudio) first started.
+    sd._terminate()
+    sd._initialize()
     sd.play(data * volume, samplerate)
     sd.wait()  # Block until playback finishes
 
