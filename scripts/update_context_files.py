@@ -2,14 +2,14 @@
 """
 Pre-commit hook to update context files.
 
-CLAUDE.spellbook.md is the installable template that gets inserted into user
+AGENTS.spellbook.md is the installable template that gets inserted into user
 config directories for Claude, Codex, and OpenCode. Gemini uses native extensions.
 
 Previously, this hook regenerated a skill registry section and appended it to
-CLAUDE.spellbook.md. The skill registry has been removed because platforms
+AGENTS.spellbook.md. The skill registry has been removed because platforms
 discover skills directly from the skills directory.
 
-This hook now verifies that CLAUDE.spellbook.md content is consistent with the
+This hook now verifies that AGENTS.spellbook.md content is consistent with the
 output of generate_context.py (which passes content through unchanged).
 """
 import subprocess
@@ -19,16 +19,16 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).parent
 REPO_ROOT = SCRIPT_DIR.parent
 GENERATE_SCRIPT = SCRIPT_DIR / "generate_context.py"
-CLAUDE_MD = REPO_ROOT / "CLAUDE.spellbook.md"
+CLAUDE_MD = REPO_ROOT / "AGENTS.spellbook.md"
 
-# Only CLAUDE.spellbook.md needed now (Gemini uses extensions/gemini/GEMINI.md)
+# Only AGENTS.spellbook.md needed now (Gemini uses extensions/gemini/GEMINI.md)
 CONTEXT_FILES = [
-    REPO_ROOT / "CLAUDE.spellbook.md",
+    REPO_ROOT / "AGENTS.spellbook.md",
 ]
 
 
 def get_template_content() -> str:
-    """Read the template content from CLAUDE.spellbook.md."""
+    """Read the template content from AGENTS.spellbook.md."""
     if not CLAUDE_MD.exists():
         return ""
 

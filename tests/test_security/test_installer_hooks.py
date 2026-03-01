@@ -1,7 +1,7 @@
 """Tests for Claude Code security and TTS hook registration in the installer.
 
 The installer should register PreToolUse and PostToolUse hooks in
-~/.claude/settings.local.json that point to spellbook security scripts
+~/.claude/settings.json that point to spellbook security scripts
 and TTS notification hooks.
 
 Tier 1 (PreToolUse):
@@ -107,14 +107,20 @@ class TestHookDefinitions:
         bash_hook = next(
             h for h in HOOK_DEFINITIONS["PreToolUse"] if h.get("matcher") == "Bash"
         )
-        assert bash_hook["hooks"] == ["$SPELLBOOK_DIR/hooks/bash-gate.sh"]
+        assert len(bash_hook["hooks"]) == 1
+        entry = bash_hook["hooks"][0]
+        assert entry["type"] == "command"
+        assert entry["command"] == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
 
     def test_spawn_hook_references_correct_script(self):
         spawn_hook = next(
             h for h in HOOK_DEFINITIONS["PreToolUse"]
             if h.get("matcher") == "spawn_claude_session"
         )
-        assert spawn_hook["hooks"] == ["$SPELLBOOK_DIR/hooks/spawn-guard.sh"]
+        assert len(spawn_hook["hooks"]) == 1
+        entry = spawn_hook["hooks"][0]
+        assert entry["type"] == "command"
+        assert entry["command"] == "$SPELLBOOK_DIR/hooks/spawn-guard.sh"
 
     def test_state_sanitize_hook_references_correct_script(self):
         hook = next(
@@ -234,7 +240,9 @@ class TestInstallHooks:
             (e for e in pre_tool_use if e.get("matcher") == "Bash"), None
         )
         assert bash_entry is not None
-        assert bash_entry["hooks"] == [f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}"]
+        assert len(bash_entry["hooks"]) == 1
+        assert bash_entry["hooks"][0]["type"] == "command"
+        assert bash_entry["hooks"][0]["command"] == f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}"
 
     def test_spawn_hook_entry_correct(self, tmp_path):
         """The spawn_claude_session hook entry should have correct matcher and hook path."""
@@ -251,7 +259,9 @@ class TestInstallHooks:
             None,
         )
         assert spawn_entry is not None
-        assert spawn_entry["hooks"] == [f"$SPELLBOOK_DIR/hooks/spawn-guard{_hook_ext()}"]
+        assert len(spawn_entry["hooks"]) == 1
+        assert spawn_entry["hooks"][0]["type"] == "command"
+        assert spawn_entry["hooks"][0]["command"] == f"$SPELLBOOK_DIR/hooks/spawn-guard{_hook_ext()}"
 
     def test_state_sanitize_hook_entry_correct(self, tmp_path):
         """The state-sanitize hook should be in PreToolUse with timeout."""
@@ -489,8 +499,13 @@ class TestInstallHooks:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
-        # The hook list should contain the spellbook path (platform-appropriate extension)
-        assert f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}" in bash_entries[0]["hooks"]
+        # The hook list should contain the spellbook path as an object (platform-appropriate extension)
+        spellbook_hooks = [
+            h for h in bash_entries[0]["hooks"]
+            if isinstance(h, dict) and h.get("command", "").endswith(f"bash-gate{_hook_ext()}")
+        ]
+        assert len(spellbook_hooks) == 1
+        assert spellbook_hooks[0]["command"] == f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}"
 
     def test_merges_hooks_into_existing_matcher(self, tmp_path):
         """If a user has their own Bash hook, spellbook adds its hook to the same entry's hooks list."""
@@ -516,10 +531,14 @@ class TestInstallHooks:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
-        # Both hooks should be in the list
+        # Both hooks should be in the list (user's string hook + spellbook's object hook)
         hooks_list = bash_entries[0]["hooks"]
         assert "/usr/local/bin/my-bash-hook.sh" in hooks_list
-        assert f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}" in hooks_list
+        spellbook_hooks = [
+            h for h in hooks_list
+            if isinstance(h, dict) and h.get("command", "").endswith(f"bash-gate{_hook_ext()}")
+        ]
+        assert len(spellbook_hooks) == 1
 
     def test_dry_run_does_not_write(self, tmp_path):
         """In dry_run mode, no file should be created or modified."""
@@ -809,7 +828,7 @@ class TestClaudeCodeInstallerHookIntegration:
         mcp_dir = spellbook / "spellbook_mcp"
         mcp_dir.mkdir()
         (mcp_dir / "server.py").write_text("# stub")
-        (spellbook / "CLAUDE.spellbook.md").write_text("# Spellbook Context\n\nTest content.")
+        (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook Context\n\nTest content.")
         (spellbook / "skills").mkdir()
         (spellbook / "commands").mkdir()
         hooks_dir = spellbook / "hooks"
@@ -822,7 +841,7 @@ class TestClaudeCodeInstallerHookIntegration:
         return spellbook
 
     def test_install_registers_hooks(self, tmp_path):
-        """Full installer should register security hooks in settings.local.json."""
+        """Full installer should register security hooks in settings.json."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = self._make_installer_spellbook_dir(tmp_path)
@@ -835,8 +854,8 @@ class TestClaudeCodeInstallerHookIntegration:
             results = installer.install()
 
         # Check that hooks were registered
-        settings_path = config_dir / "settings.local.json"
-        assert settings_path.exists(), "settings.local.json should be created"
+        settings_path = config_dir / "settings.json"
+        assert settings_path.exists(), "settings.json should be created"
         settings = _read_settings(settings_path)
         assert "hooks" in settings
         assert "PreToolUse" in settings["hooks"]
@@ -860,7 +879,7 @@ class TestClaudeCodeInstallerHookIntegration:
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             results = installer.install()
 
-        settings_path = config_dir / "settings.local.json"
+        settings_path = config_dir / "settings.json"
         settings = _read_settings(settings_path)
 
         # Count all individual hook scripts
@@ -871,7 +890,7 @@ class TestClaudeCodeInstallerHookIntegration:
         assert total_hooks == 7
 
     def test_uninstall_removes_hooks(self, tmp_path):
-        """Full uninstaller should remove security hooks from settings.local.json."""
+        """Full uninstaller should remove security hooks from settings.json."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = self._make_installer_spellbook_dir(tmp_path)
@@ -886,7 +905,7 @@ class TestClaudeCodeInstallerHookIntegration:
             results = installer.uninstall()
 
         # Hooks should be removed from both phases
-        settings_path = config_dir / "settings.local.json"
+        settings_path = config_dir / "settings.json"
         if settings_path.exists():
             content = settings_path.read_text(encoding="utf-8")
             assert "$SPELLBOOK_DIR" not in content
@@ -906,7 +925,7 @@ class TestClaudeCodeInstallerHookIntegration:
             installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "1.0.0", dry_run=False)
             installer.install()
 
-        settings_path = config_dir / "settings.local.json"
+        settings_path = config_dir / "settings.json"
         content = settings_path.read_text(encoding="utf-8")
         # Literal $SPELLBOOK_DIR should NOT appear in the written file
         assert "$SPELLBOOK_DIR" not in content
@@ -920,7 +939,9 @@ class TestClaudeCodeInstallerHookIntegration:
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         ext = _hook_ext()
         expected_path = f"{spellbook_dir}/hooks/bash-gate{ext}"
-        assert bash_entry["hooks"] == [expected_path]
+        assert len(bash_entry["hooks"]) == 1
+        assert bash_entry["hooks"][0]["type"] == "command"
+        assert bash_entry["hooks"][0]["command"] == expected_path
 
 
 # --- _expand_spellbook_dir() tests ---
@@ -1035,7 +1056,9 @@ class TestInstallHooksWithSpellbookDir:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         ext = _hook_ext()
-        assert bash_entry["hooks"] == [f"{spellbook_dir}/hooks/bash-gate{ext}"]
+        assert len(bash_entry["hooks"]) == 1
+        assert bash_entry["hooks"][0]["type"] == "command"
+        assert bash_entry["hooks"][0]["command"] == f"{spellbook_dir}/hooks/bash-gate{ext}"
 
     def test_expanded_dict_hook_correct(self, tmp_path):
         spellbook_dir = _make_spellbook_dir(tmp_path)
@@ -1099,7 +1122,9 @@ class TestInstallHooksWithSpellbookDir:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         ext = _hook_ext()
-        assert bash_entry["hooks"] == [f"{spellbook_dir}/hooks/bash-gate{ext}"]
+        assert len(bash_entry["hooks"]) == 1
+        assert bash_entry["hooks"][0]["type"] == "command"
+        assert bash_entry["hooks"][0]["command"] == f"{spellbook_dir}/hooks/bash-gate{ext}"
 
     def test_preserves_user_hooks_with_expanded_paths(self, tmp_path):
         """User hooks should be preserved when installing with expanded paths."""
@@ -1124,7 +1149,11 @@ class TestInstallHooksWithSpellbookDir:
         assert "/usr/local/bin/my-bash-hook.sh" in bash_entry["hooks"]
         ext = _hook_ext()
         expanded_path = f"{spellbook_dir}/hooks/bash-gate{ext}"
-        assert expanded_path in bash_entry["hooks"]
+        spellbook_hooks = [
+            h for h in bash_entry["hooks"]
+            if isinstance(h, dict) and h.get("command") == expanded_path
+        ]
+        assert len(spellbook_hooks) == 1
 
 
 # --- uninstall_hooks() with spellbook_dir tests ---

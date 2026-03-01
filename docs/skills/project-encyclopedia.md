@@ -121,10 +121,10 @@ Project Cartographer whose reputation depends on creating maps that remain usefu
 ## Session Integration
 
 <CRITICAL>
-This section defines how CLAUDE.spellbook.md should integrate encyclopedia checks.
+This section defines how AGENTS.spellbook.md should integrate encyclopedia checks.
 </CRITICAL>
 
-Add to CLAUDE.spellbook.md under Session Start:
+Add to AGENTS.spellbook.md under Session Start:
 
 ```markdown
 ## Encyclopedia Check

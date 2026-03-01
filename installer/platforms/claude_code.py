@@ -306,9 +306,12 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
             )
 
-        # Install security hooks in settings.local.json
+        # Install security hooks in settings.json
+        # NOTE: Claude Code only reads hooks from ~/.claude/settings.json (user-level),
+        # .claude/settings.json (project), and .claude/settings.local.json (project local).
+        # User-level settings.local.json is NOT a supported hooks location.
         self._step("Installing hooks")
-        settings_path = self.config_dir / "settings.local.json"
+        settings_path = self.config_dir / "settings.json"
         hook_result = install_hooks(settings_path, spellbook_dir=self.spellbook_dir, dry_run=self.dry_run)
         results.append(
             InstallResult(
@@ -483,8 +486,8 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
 
-        # Uninstall security hooks from settings.local.json
-        settings_path = self.config_dir / "settings.local.json"
+        # Uninstall security hooks from settings.json
+        settings_path = self.config_dir / "settings.json"
         hook_result = uninstall_hooks(settings_path, spellbook_dir=self.spellbook_dir, dry_run=self.dry_run)
         results.append(
             InstallResult(

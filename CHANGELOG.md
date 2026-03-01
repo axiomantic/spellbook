@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-02-28
+
+### Changed
+- **Rename CLAUDE.md to AGENTS.md** - Project development instructions now live in `AGENTS.md` (platform-agnostic naming). `CLAUDE.md` remains as a thin shim pointing to `AGENTS.md`. User-facing template renamed from `CLAUDE.spellbook.md` to `AGENTS.spellbook.md`. Installation targets unchanged (Claude Code still writes to `~/.claude/CLAUDE.md`).
+- **Rename `get_spellbook_claude_md_content` to `get_spellbook_context_content`** - Function in `installer/components/context_files.py` renamed to reflect platform-agnostic naming. Backward-compatible alias retained.
+- **Shell/PowerShell parity rule** - Added development rule requiring shell script changes to have corresponding PowerShell/Python wrapper changes (`AGENTS.md`).
+
+### Fixed
+- **Hook format validation errors on startup** - `bash-gate.sh` and `spawn-guard.sh` were registered as plain string paths instead of the required object format `{"type": "command", "command": "..."}`. Claude Code rejected these on startup with a settings validation error (`installer/components/hooks.py`).
+- **Hooks installed to wrong settings file** - Installer wrote hooks to `~/.claude/settings.local.json`, which Claude Code does not read for hooks at the user level. Changed to `~/.claude/settings.json` (`installer/platforms/claude_code.py`).
+
 ## [0.13.1] - 2026-02-28
 
 ### Fixed

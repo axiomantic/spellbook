@@ -1,4 +1,4 @@
-"""Tests for TTS Configuration section in CLAUDE.spellbook.md.
+"""Tests for TTS Configuration section in AGENTS.spellbook.md.
 
 Task 17: The installable template should include a TTS Configuration section
 between Session Resume and Encyclopedia, documenting available MCP tools
@@ -7,11 +7,11 @@ and usage patterns.
 
 from pathlib import Path
 
-TEMPLATE_PATH = Path(__file__).resolve().parents[2] / "CLAUDE.spellbook.md"
+TEMPLATE_PATH = Path(__file__).resolve().parents[2] / "AGENTS.spellbook.md"
 
 
 class TestTtsConfigurationSection:
-    """CLAUDE.spellbook.md should contain a TTS Configuration section."""
+    """AGENTS.spellbook.md should contain a TTS Configuration section."""
 
     def _read_template(self) -> str:
         return TEMPLATE_PATH.read_text(encoding="utf-8")

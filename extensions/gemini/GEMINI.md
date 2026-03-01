@@ -16,7 +16,7 @@ Until this lands in an official Gemini CLI release, skills are NOT automatically
 
 ## Spellbook Instructions
 
-@../../CLAUDE.spellbook.md
+@../../AGENTS.spellbook.md
 
 ## Gemini-Specific Tool Mapping
 

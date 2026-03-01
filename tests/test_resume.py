@@ -668,14 +668,14 @@ class TestSessionInitResume:
         assert result["resume_available"] is False
 
 
-class TestClaudeSpellbookMdSessionResume:
-    """Tests for CLAUDE.spellbook.md session resume documentation."""
+class TestAgentsSpellbookMdSessionResume:
+    """Tests for AGENTS.spellbook.md session resume documentation."""
 
     def test_session_resume_section_exists(self):
-        """Test CLAUDE.spellbook.md has ## Session Resume section."""
+        """Test AGENTS.spellbook.md has ## Session Resume section."""
         from pathlib import Path
 
-        spellbook_md = Path(__file__).parent.parent / "CLAUDE.spellbook.md"
+        spellbook_md = Path(__file__).parent.parent / "AGENTS.spellbook.md"
         content = spellbook_md.read_text()
 
         assert "## Session Resume" in content
@@ -684,7 +684,7 @@ class TestClaudeSpellbookMdSessionResume:
         """Test Session Resume section has field documentation table."""
         from pathlib import Path
 
-        spellbook_md = Path(__file__).parent.parent / "CLAUDE.spellbook.md"
+        spellbook_md = Path(__file__).parent.parent / "AGENTS.spellbook.md"
         content = spellbook_md.read_text()
 
         assert "resume_available" in content
@@ -694,7 +694,7 @@ class TestClaudeSpellbookMdSessionResume:
         """Test session_init call site includes continuation_message parameter."""
         from pathlib import Path
 
-        spellbook_md = Path(__file__).parent.parent / "CLAUDE.spellbook.md"
+        spellbook_md = Path(__file__).parent.parent / "AGENTS.spellbook.md"
         content = spellbook_md.read_text()
 
         # Should document passing user's first message

@@ -58,18 +58,22 @@ def generate_spellbook_config_section(spellbook_dir: Path) -> str:
     return "\n".join(lines)
 
 
-def get_spellbook_claude_md_content(spellbook_dir: Path) -> str:
+def get_spellbook_context_content(spellbook_dir: Path) -> str:
     """
-    Get the content of CLAUDE.spellbook.md from the spellbook repository.
+    Get the content of AGENTS.spellbook.md from the spellbook repository.
 
     This is the installable template content that will be placed in the
     demarcated section of user config files. Separate from any project-specific
-    CLAUDE.md that may exist for spellbook development.
+    AGENTS.md that may exist for spellbook development.
     """
-    claude_md = spellbook_dir / "CLAUDE.spellbook.md"
-    if not claude_md.exists():
+    agents_md = spellbook_dir / "AGENTS.spellbook.md"
+    if not agents_md.exists():
         return ""
-    return claude_md.read_text(encoding="utf-8").strip()
+    return agents_md.read_text(encoding="utf-8").strip()
+
+
+# Backward-compatible alias
+get_spellbook_claude_md_content = get_spellbook_context_content
 
 
 def generate_codex_context(spellbook_dir: Path, include_claude_md: bool = True) -> str:
@@ -78,7 +82,7 @@ def generate_codex_context(spellbook_dir: Path, include_claude_md: bool = True) 
 
     Args:
         spellbook_dir: Path to spellbook directory
-        include_claude_md: Whether to include CLAUDE.md content
+        include_claude_md: Whether to include AGENTS.spellbook.md content
 
     Returns complete context content for AGENTS.md demarcated section.
     """
@@ -88,7 +92,7 @@ def generate_codex_context(spellbook_dir: Path, include_claude_md: bool = True) 
     parts.append(generate_spellbook_config_section(spellbook_dir))
 
     if include_claude_md:
-        claude_content = get_spellbook_claude_md_content(spellbook_dir)
+        claude_content = get_spellbook_context_content(spellbook_dir)
         if claude_content:
             parts.append(claude_content)
 
@@ -103,7 +107,7 @@ def generate_claude_context(spellbook_dir: Path) -> str:
 
     Includes:
     1. Spellbook configuration (SPELLBOOK_DIR, SPELLBOOK_CONFIG_DIR)
-    2. The raw CLAUDE.md content
+    2. The raw AGENTS.spellbook.md content
 
     Claude Code handles skills differently (via Skill tool).
     """
@@ -112,8 +116,8 @@ def generate_claude_context(spellbook_dir: Path) -> str:
     # Add configuration section first
     parts.append(generate_spellbook_config_section(spellbook_dir))
 
-    # Add CLAUDE.md content
-    claude_content = get_spellbook_claude_md_content(spellbook_dir)
+    # Add AGENTS.spellbook.md content
+    claude_content = get_spellbook_context_content(spellbook_dir)
     if claude_content:
         parts.append(claude_content)
 

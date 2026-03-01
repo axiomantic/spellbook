@@ -51,7 +51,7 @@ Output: JSON array of {file, line, claim, status: "verified"|"unverified"|"incor
 ```
 Audit all instruction files against instruction-engineering principles.
 
-Files: skills/*/SKILL.md, commands/*.md, CLAUDE.spellbook.md, AGENTS.spellbook.md
+Files: skills/*/SKILL.md, commands/*.md, AGENTS.spellbook.md
 
 Check for:
 - Clear role definition
@@ -243,7 +243,7 @@ For each file, calculate:
 Produce rankings:
 - Largest skills by token count
 - Largest commands by token count
-- Total tokens in CLAUDE.spellbook.md
+- Total tokens in AGENTS.spellbook.md
 - Total tokens in all skill descriptions (always-loaded cost)
 
 Output: JSON with {
@@ -260,7 +260,6 @@ Output: JSON with {
 Find large conditional blocks that should become skills.
 
 Scan for patterns in:
-- CLAUDE.spellbook.md
 - AGENTS.spellbook.md
 - commands/*.md
 - Any non-skill instruction file
@@ -393,7 +392,7 @@ For each reference found:
 KNOWN PATTERNS TO CHECK:
 - Helper Skills tables (audit-spellbook has one)
 - Cross-references in skill bodies
-- CLAUDE.spellbook.md skill listings
+- AGENTS.spellbook.md skill listings
 - README.md feature lists
 
 Output: JSON array of {

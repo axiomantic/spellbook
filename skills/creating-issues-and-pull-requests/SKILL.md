@@ -20,6 +20,9 @@ GitHub Integration Specialist. Your reputation depends on every PR and issue res
 5. **Branch-Relative Documentation Only** - PR descriptions derive from the merge-base delta. No development history, no session narratives.
 6. **Jira Tickets are Real or Absent** - If no Jira ticket is evident from the branch name or user input, omit the prefix entirely. Never fabricate ticket numbers.
 7. **Base Repo Templates for Fork PRs** - When creating a PR from a fork, templates come from the upstream (base) repo, not the fork.
+8. **Zero Tags By Default (Safety-Critical)** - All PR titles, descriptions, and issue bodies MUST be sanitized before submission. GitHub auto-links `#N` to issues/PRs (notifying all subscribers) and `@username` pings users. A single stray `#108` in a PR description pings everyone subscribed to issue 108. This is treated as a SAFETY-CRITICAL concern, not a nice-to-have. The sanitization gate in the create-pr and create-issue commands enforces this.
+9. **Draft-First for Staging PRs** - When creating a PR on a fork (not upstream), default to `--draft`. Staging PRs exist for self-review and CI validation, not for notifying the world. Only use `--draft=false` when the user explicitly requests a ready PR on their fork.
+10. **Fork-Then-Upstream Workflow** - Support a two-stage PR workflow: (a) create draft PR on fork for self-review/CI, then (b) when ready, create the real PR on upstream. The skill must make it impossible to accidentally do step (b) when you meant step (a). When the user says "create a PR" in a fork context, always confirm which stage they're in.
 
 ---
 
@@ -109,19 +112,58 @@ Before dispatching, collect the context that commands need:
 
 Pass all gathered context to the appropriate command.
 
+### Phase 1.5: Safety Pre-Check
+
+Before dispatching, determine the workflow stage and draft mode:
+
+1. **Fork detection:** Check if the repo has both a fork remote (`origin`) and an upstream remote (`upstream`).
+   - If only one remote exists, skip to Phase 2 with `workflow_stage: "direct"`.
+
+2. **If fork detected:** Ask the user:
+   > "You have a fork and upstream configured. Are you staging this on your fork first, or submitting directly to upstream?"
+
+3. **Set workflow variables based on response:**
+
+| User Response | `workflow_stage` | `draft_mode` | Target Remote |
+|---------------|-----------------|--------------|---------------|
+| Staging on fork | `fork_staging` | `true` (forced) | Fork (`origin`) |
+| Submitting to upstream | `upstream_submit` | User's preference | Upstream (`upstream`) |
+| Single remote (no fork) | `direct` | User's preference | Default remote |
+
+4. **Fork staging behavior:**
+   - Force `--draft` by default. The user must explicitly pass `--draft=false` to override.
+   - Set the target to the fork remote.
+
+5. **Upstream submit confirmation:**
+
+<CRITICAL>
+If `workflow_stage` is `upstream_submit`, require explicit confirmation:
+> "This will create a PR visible to the upstream maintainers. Proceed?"
+
+Do not proceed without a clear "yes" from the user.
+</CRITICAL>
+
+6. **Pass forward:** Provide `workflow_stage` and `draft_mode` to Phase 2.
+
 ### Phase 2: Dispatch
 
 **For PR creation:**
 
 Dispatch subagent with command: `/create-pr`
 
-Provide context: branch name, base branch, target repo (if known), jira ticket (if detected), diff summary (if pre-computed), draft flag, labels, reviewers.
+Provide context: branch name, base branch, target repo (if known), jira ticket (if detected), diff summary (if pre-computed), draft flag, labels, reviewers, `workflow_stage`, `draft_mode`.
+
+- If `workflow_stage` is `fork_staging`, pass `--draft` unless the user explicitly overrode it.
+- If `workflow_stage` is `upstream_submit`, pass the confirmed target repo and the user's draft preference.
+- If `workflow_stage` is `direct`, pass context as before (no fork-specific overrides).
 
 **For issue creation:**
 
 Dispatch subagent with command: `/create-issue`
 
-Provide context: target repo (if known), labels.
+Provide context: target repo (if known), labels, `workflow_stage`.
+
+- If `workflow_stage` is `fork_staging` or `upstream_submit`, ensure the issue is created on the correct target repo matching the workflow stage.
 
 ### Phase 3: Report Result
 
