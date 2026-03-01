@@ -261,7 +261,6 @@ Find large conditional blocks that should become skills.
 
 Scan for patterns in:
 - AGENTS.spellbook.md
-- AGENTS.spellbook.md
 - commands/*.md
 - Any non-skill instruction file
 
