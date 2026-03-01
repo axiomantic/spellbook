@@ -7152,16 +7152,40 @@
 <a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
 <a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>Consider the domain-specific boundary conditions. What inputs sit at the edges of valid ranges? What about zero-length, max-length, negative, Unicode, or concurrent scenarios?
 <a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="gu">## Test Isolation Issues</span>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="gu">## Skipped and Disabled Tests</span>
 <a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>
 <a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="sb">```</span>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="sb">## Test Isolation Issues</span>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">- Tests that depend on other tests (shared state)</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="sb">- Tests that depend on external state</span>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="sb">- Tests that don&#39;t clean up</span>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="sb">```</span>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>Identify tests that share mutable state, depend on test execution order, rely on external services or files, or fail to restore state after execution.
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="sb">## Skipped and Disabled Tests</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">- test_function_a - @skip(&quot;flaky&quot;) - UNJUSTIFIED (hides flakiness bug)</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="sb">- test_function_b - @skipif(platform == &#39;darwin&#39;) - UNJUSTIFIED (macOS bug needs fixing)</span>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="sb">- test_function_c - @skipif(platform != &#39;linux&#39;) - JUSTIFIED (linux-only kernel API)</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="sb">- test_function_d - @xfail(&quot;race condition&quot;) - UNJUSTIFIED (known bug being ignored)</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="sb">```</span>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>Scan the entire test suite for ALL skip mechanisms:
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="k">-</span><span class="w"> </span><span class="sb">`@pytest.mark.skip`</span>, <span class="sb">`@pytest.mark.skipif`</span>, <span class="sb">`@pytest.mark.xfail`</span>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="k">-</span><span class="w"> </span><span class="sb">`@unittest.skip`</span>, <span class="sb">`@unittest.skipIf`</span>, <span class="sb">`@unittest.skipUnless`</span>, <span class="sb">`@unittest.expectedFailure`</span>
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="k">-</span><span class="w"> </span><span class="sb">`pytest.importorskip()`</span> calls
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="k">-</span><span class="w"> </span><span class="sb">`pytest.skip()`</span> called inside test bodies
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="k">-</span><span class="w"> </span>Commented-out test functions (test code that was disabled rather than deleted)
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="k">-</span><span class="w"> </span>Conditional <span class="sb">`return`</span> at the start of test functions that silently exit
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>For each skipped test, classify as <span class="gs">**JUSTIFIED**</span> or <span class="gs">**UNJUSTIFIED**</span>:
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="k">-</span><span class="w"> </span><span class="gs">**JUSTIFIED**</span>: The test literally cannot run in this environment (wrong OS, missing hardware, incompatible framework version)
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="k">-</span><span class="w"> </span><span class="gs">**UNJUSTIFIED**</span>: The test is skipped because it fails, is flaky, was broken by a refactor, or someone decided to deal with it later. These are live defects hiding behind a green build.
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>Report the total count: <span class="sb">`X tests skipped, Y unjustified (Y bugs hiding in production)`</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="gu">## Test Isolation Issues</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="sb">```</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="sb">## Test Isolation Issues</span>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="sb">- Tests that depend on other tests (shared state)</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="sb">- Tests that depend on external state</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="sb">- Tests that don&#39;t clean up</span>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="sb">```</span>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>Identify tests that share mutable state, depend on test execution order, rely on external services or files, or fail to restore state after execution.
 </code></pre></div>
 
 

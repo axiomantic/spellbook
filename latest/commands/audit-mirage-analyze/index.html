@@ -7113,13 +7113,13 @@
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Phase 2-3: Systematic Audit and Green Mirage Patterns</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>This command file contains the detailed audit templates and all 8 Green Mirage Patterns for subagent execution.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>This command file contains the detailed audit templates and all 9 Green Mirage Patterns for subagent execution.
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">1.</span> <span class="gs">**Every test function gets audited**</span> - No skipping tests because they &quot;look fine&quot;; line-by-line analysis catches what scanning misses
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">2.</span> <span class="gs">**Assertions determine test value**</span> - A test without meaningful assertions is worse than no test; it creates false confidence
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">3.</span> <span class="gs">**Score by pattern, not by gut**</span> - Use the 8 Green Mirage Patterns as the scoring rubric, not subjective assessment
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">3.</span> <span class="gs">**Score by pattern, not by gut**</span> - Use the 9 Green Mirage Patterns as the scoring rubric, not subjective assessment
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gu">## Phase 2: Systematic Line-by-Line Audit</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
@@ -7168,7 +7168,7 @@
 <a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="sb">- Are error paths tested or only happy paths?</span>
 <a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="sb">```</span>
 <a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="gu">## Phase 3: The 8 Green Mirage Patterns</span>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="gu">## Phase 3: The 9 Green Mirage Patterns</span>
 <a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
 <a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>Check EVERY test against ALL patterns:
 <a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
@@ -7277,13 +7277,55 @@
 <a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a><span class="sb">```</span>
 <a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a><span class="gs">**Question:**</span> What happens when input is invalid/empty/malformed/boundary?
 <a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>
-<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="gu">## Effort Estimation Guidelines</span>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="gu">### Pattern 9: Skipped Tests Hiding Failures</span>
 <a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>
-<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a>| Effort | Criteria | Examples |
-<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>|--------|----------|----------|
-<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>| <span class="gs">**trivial**</span> | &lt; 5 minutes, single assertion change | Add <span class="sb">`.to_equal(expected)`</span> instead of <span class="sb">`.to_be_truthy()`</span> |
-<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>| <span class="gs">**moderate**</span> | 5-30 minutes, requires reading production code | Add state verification, strengthen partial assertions |
-<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>| <span class="gs">**significant**</span> | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="gs">**Symptom:**</span> Tests marked as skipped, xfail, or conditionally excluded to avoid dealing with failures. A skipped test is a test that never runs. A test that never runs catches zero bugs. If the skip exists because the test exposes a real bug, the skip is actively hiding a production problem to keep the build green.
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="gs">**The only legitimate skips**</span> are environmental constraints where the test literally cannot execute:
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="k">-</span><span class="w"> </span>OS-specific tests on a different OS (<span class="sb">`@pytest.mark.skipif(sys.platform != &#39;linux&#39;)`</span>)
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="k">-</span><span class="w"> </span>Hardware-dependent tests without the hardware (GPU, TPU, FPGA)
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="k">-</span><span class="w"> </span>Framework-version-specific tests on an older version
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a><span class="gs">**Everything else is a Green Mirage:**</span>
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a><span class="sb">```python</span>
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a><span class="c1"># GREEN MIRAGE - Skipping because it fails is not fixing it</span>
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">&quot;flaky, needs investigation&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_concurrent_writes</span><span class="p">():</span>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>    <span class="o">...</span>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a><span class="c1"># GREEN MIRAGE - xfail used to sweep known bugs under the rug</span>
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">xfail</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">&quot;race condition in handler&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_event_ordering</span><span class="p">():</span>
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>    <span class="o">...</span>
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="c1"># GREEN MIRAGE - Conditional skip to dodge a bug on specific systems</span>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skipif</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s1">&#39;darwin&#39;</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;segfaults on macOS&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_memory_management</span><span class="p">():</span>
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>    <span class="o">...</span>
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="c1"># GREEN MIRAGE - unittest style</span>
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="nd">@unittest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">&quot;TODO: fix after refactor&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_data_migration</span><span class="p">():</span>
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>    <span class="o">...</span>
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="c1"># GREEN MIRAGE - Conditional import skip hiding missing dependency</span>
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a><span class="n">pytest</span><span class="o">.</span><span class="n">importorskip</span><span class="p">(</span><span class="s2">&quot;some_module&quot;</span><span class="p">)</span>  <span class="c1"># If the module is needed, install it</span>
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="sb">```</span>
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="gs">**Investigation Required:**</span>
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a><span class="k">1.</span> WHY is this test skipped? Is it a real environmental constraint, or covering up a failure?
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="k">2.</span> WHAT bug does the test expose when unskipped? That bug exists in production right now.
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a><span class="k">3.</span> HOW long has this skip been in place? Stale skips are forgotten bugs.
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a><span class="gs">**Question:**</span> If you remove the skip decorator and the test fails, is that a bug in the test or a bug in the production code? If production code, you found a live defect being hidden by a green build.
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a>
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="gu">## Effort Estimation Guidelines</span>
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>| Effort | Criteria | Examples |
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>|--------|----------|----------|
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>| <span class="gs">**trivial**</span> | &lt; 5 minutes, single assertion change | Add <span class="sb">`.to_equal(expected)`</span> instead of <span class="sb">`.to_be_truthy()`</span> |
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a>| <span class="gs">**moderate**</span> | 5-30 minutes, requires reading production code | Add state verification, strengthen partial assertions |
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>| <span class="gs">**significant**</span> | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
 </code></pre></div>
 
 
