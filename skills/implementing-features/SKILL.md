@@ -465,7 +465,7 @@ Phase 4: Implementation (if delegated/direct)
 Simple Path (SIMPLE tier only):
   ├─ S1: Lightweight Research (explore subagent, <=5 files, 1-paragraph summary)
   ├─ S2: Inline Plan (<=5 numbered steps in conversation, user confirms)
-  └─ S3: Implementation (feature-implement with TDD + code review, no green mirage/fact-check)
+  └─ S3: Implementation (feature-implement with TDD + code review + green mirage, no fact-check)
 ```
 
 ---
@@ -649,7 +649,8 @@ After `/feature-config` completes (including Phase 0.7):
 - Get user confirmation on plan
 - Run `/feature-implement` (skips Phase 3, enters at Phase 4)
 - TDD and code review subagents still required
-- Green mirage audit and fact-checking SKIPPED
+- Fact-checking SKIPPED
+- Green mirage audit REQUIRED (assertion quality enforcement applies to all tiers)
 
 **STANDARD tier:**
 - Run all commands in order (current behavior)

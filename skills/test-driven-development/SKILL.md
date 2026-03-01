@@ -196,6 +196,56 @@ Next failing test for next feature. The cycle continues until all behavior is im
 | **Clear** | Name describes behavior | `test('test1')` |
 | **Shows intent** | Demonstrates desired API | Obscures what code should do |
 | **Fast** | Completes in <1s. No I/O or heavy fixtures in unit tests. | 5-second test with database setup for pure logic |
+| **Content-validating** | Asserts exact values, full objects, every field | `assert len(result) > 0`, `assert result is not None` |
+
+## Assertion Quality
+
+Tests must validate CONTENT, not just EXISTENCE. Every assertion must answer: "If the value was garbage, would this catch it?"
+
+### Rules
+
+| Rule | Bad | Good |
+|------|-----|------|
+| **No existence-only assertions** | `assert len(result) > 0` | `assert result == [expected_item_1, expected_item_2]` |
+| **No count-only assertions** | `assert len(result) == 3` | `assert result == [item_1, item_2, item_3]` |
+| **No none-checks without content** | `assert response is not None` | `assert response == expected_response` |
+| **No file existence-only checks** | `assert output_file.exists()` | `assert output_file.read_text() == "expected content"` |
+| **No `mock.ANY` by default** | `assert_called_with(mock.ANY, mock.ANY)` | `assert_called_with("expected_arg", expected_obj)` |
+| **Full structural validation** | `assert "key" in result` | `assert result == {"key": "expected_value", ...}` |
+| **Every field of every object** | `assert result.status == "ok"` | `assert result == ExpectedObject(status="ok", data=..., meta=...)` |
+
+### Pychoir Matchers
+
+Pychoir matchers (including custom subclasses) are the ONE exception to the `mock.ANY` ban. Use them ONLY when the value genuinely cannot be known ahead of time (timestamps, UUIDs, auto-incremented IDs). Each use requires a stated justification in a comment.
+
+```python
+# GOOD: UUID genuinely unknowable, justification stated
+from pychoir import IsInstance
+assert result == {"id": IsInstance(str), "name": "expected_name"}  # id is server-generated UUID
+
+# BAD: Using matcher to avoid computing expected value
+assert result == {"count": IsInstance(int), "items": IsInstance(list)}  # Lazy - compute the expected values
+```
+
+### ESCAPE Analysis (Mandatory Per Test Function)
+
+Before marking ANY test function complete, fill in this template:
+
+```
+ESCAPE: [test_function_name]
+  CLAIM: What does this test claim to verify?
+  PATH:  What code actually executes?
+  CHECK: What do the assertions verify?
+  ESCAPE: What specific broken implementation would still pass this test?
+  IMPACT: What breaks in production if that broken implementation ships?
+```
+
+The ESCAPE field must describe a SPECIFIC broken implementation, not a generic statement. "Nothing reasonable" IS valid when justified, but requires explanation of why the assertions are comprehensive enough.
+
+**Red flags in ESCAPE analysis:**
+- ESCAPE field says "none" or "nothing" without justification
+- ESCAPE field describes something the test DOES catch (means you didn't think hard enough)
+- ESCAPE field is copy-pasted between tests (each test has unique escape paths)
 
 ## Evidence Requirements
 
@@ -313,6 +363,10 @@ Before marking complete:
 - [ ] All tests pass, output pristine
 - [ ] Tests use real code (mocks only if unavoidable)
 - [ ] Edge cases and errors covered
+- [ ] Every assertion validates CONTENT, not just existence/count
+- [ ] ESCAPE analysis completed for every test function
+- [ ] No mock.ANY in assertions (use pychoir matchers with justification comment instead)
+- [ ] No `len() > 0` or `len() == N` without content verification
 
 If ANY unchecked: Skipped TDD. Start over.
 

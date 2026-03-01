@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/implementing-features/SKILL.md", "source_hash": "sha256:45310e5e97a22420f93dc19dd07b6dc387eb1d59a623bd0598acafa1dfe25bfa", "generated_at": "2026-02-20T00:13:23Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/implementing-features/SKILL.md", "source_hash": "sha256:f40e457d8aa173abf986ec1bdee02e6c3644602c3e208359dad3590f351190b6", "generated_at": "2026-02-20T00:13:23Z", "generator": "generate_diagrams.py"} -->
 # Diagram: implementing-features
 
 Overview of the implementing-features skill workflow, which orchestrates complete feature implementation through 5 phases: Configuration (Phase 0), Research (Phase 1), Informed Discovery (Phase 1.5), Design (Phase 2), Implementation Planning (Phase 3), and Execution (Phase 4). Includes a Simple Path shortcut and escape hatch routing for pre-existing artifacts.
