@@ -7054,474 +7054,518 @@
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">-</span><span class="w"> </span>Using unquoted heredocs (<span class="sb">`&lt;&lt;EOF`</span> instead of <span class="sb">`&lt;&lt;&#39;EOF&#39;`</span>) for body content
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">-</span><span class="w"> </span>Passing raw body via <span class="sb">`--body`</span> when content may contain shell special characters
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">-</span><span class="w"> </span>Silently choosing a target repo without user confirmation
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="gu">## Usage</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span>Creating an issue with unsanitized <span class="sb">`#N`</span> or <span class="sb">`@username`</span> references without explicit user opt-in
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span>Skipping the tag sanitization gate for any reason
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">```</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">/create-issue [--repo=OWNER/REPO] [--title=&quot;...&quot;] [--label=&quot;...&quot;] [--assignee=&quot;...&quot;]</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gu">## Usage</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">```</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="gu">## Arguments</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">/create-issue [--repo=OWNER/REPO] [--title=&quot;...&quot;] [--label=&quot;...&quot;] [--assignee=&quot;...&quot;]</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">```</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--repo=OWNER/REPO`</span>: Optional. Target repository (auto-detected from current directory if omitted)
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--title=&quot;...&quot;`</span>: Optional. Pre-set issue title
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--label=&quot;...&quot;`</span>: Optional. Labels to apply (comma-separated)
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--assignee=&quot;...&quot;`</span>: Optional. Assignees (comma-separated)
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>---
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">## Arguments</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--repo=OWNER/REPO`</span>: Optional. Target repository (auto-detected from current directory if omitted)
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--title=&quot;...&quot;`</span>: Optional. Pre-set issue title
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--label=&quot;...&quot;`</span>: Optional. Labels to apply (comma-separated)
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--assignee=&quot;...&quot;`</span>: Optional. Assignees (comma-separated)
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="gu">## Phase 1: Determine Target Repository</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>---
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gs">**Step 1: Detect from current directory**</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gu">## Phase 1: Determine Target Repository</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>gh<span class="w"> </span>repo<span class="w"> </span>view<span class="w"> </span>--json<span class="w"> </span>nameWithOwner<span class="w"> </span>-q<span class="w"> </span><span class="s1">&#39;.nameWithOwner&#39;</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">```</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**Step 2: If `--repo` was provided, use that instead.**</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gs">**Step 1: Detect from current directory**</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>gh<span class="w"> </span>repo<span class="w"> </span>view<span class="w"> </span>--json<span class="w"> </span>nameWithOwner<span class="w"> </span>-q<span class="w"> </span><span class="s1">&#39;.nameWithOwner&#39;</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">```</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gs">**Step 3: Confirm with user via AskUserQuestion:**</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gs">**Step 2: If `--repo` was provided, use that instead.**</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">```</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">Question: &quot;Create issue in repository &#39;&lt;OWNER/REPO&gt;&#39;. Is this correct?&quot;</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">Options:</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">- Yes, use this repository</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">- No, specify a different repository</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">```</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>If user specifies a different repository, store it as <span class="sb">`TARGET_REPO`</span> and use <span class="sb">`--repo TARGET_REPO`</span> for all subsequent <span class="sb">`gh`</span> commands.
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gs">**Step 3: Confirm with user via AskUserQuestion:**</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">```</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">Question: &quot;Create issue in repository &#39;&lt;OWNER/REPO&gt;&#39;. Is this correct?&quot;</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">Options:</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">- Yes, use this repository</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">- No, specify a different repository</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">```</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gs">**Error handling:**</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>If <span class="sb">`gh`</span> is not installed: &quot;Error: GitHub CLI (<span class="sb">`gh`</span>) is not installed. Install from https://cli.github.com/&quot;
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>If not authenticated: &quot;Error: Not authenticated. Run <span class="sb">`gh auth login`</span> first.&quot;
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>If not in a git repository and no <span class="sb">`--repo`</span> provided: ask user to specify the target repository
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>---
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>If user specifies a different repository, store it as <span class="sb">`TARGET_REPO`</span> and use <span class="sb">`--repo TARGET_REPO`</span> for all subsequent <span class="sb">`gh`</span> commands. The confirmed <span class="sb">`TARGET_REPO`</span> MUST be passed as <span class="sb">`--repo TARGET_REPO`</span> in the final <span class="sb">`gh issue create`</span> command. Never rely on git remote defaults.
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gs">**Error handling:**</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>If <span class="sb">`gh`</span> is not installed: &quot;Error: GitHub CLI (<span class="sb">`gh`</span>) is not installed. Install from https://cli.github.com/&quot;
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>If not authenticated: &quot;Error: Not authenticated. Run <span class="sb">`gh auth login`</span> first.&quot;
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>If not in a git repository and no <span class="sb">`--repo`</span> provided: ask user to specify the target repository
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="gu">## Phase 2: Template Discovery</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>---
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>Execute issue template discovery across all tiers. Stop at the first tier that yields results.
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gu">## Phase 2: Template Discovery</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gu">### Tier 1: GraphQL API Query (preferred; works for remote repos and org-level)</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>Execute issue template discovery across all tiers. Stop at the first tier that yields results.
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>gh<span class="w"> </span>api<span class="w"> </span>graphql<span class="w"> </span>-f<span class="w"> </span><span class="nv">query</span><span class="o">=</span><span class="s1">&#39;query($owner:String!,$name:String!){</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="s1">  repository(owner:$owner,name:$name){</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="s1">    issueTemplates { name filename body title about }</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="s1">  }</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="s1">}&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>OWNER<span class="w"> </span>-f<span class="w"> </span><span class="nv">name</span><span class="o">=</span>REPO
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">```</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Parse the response. If <span class="sb">`issueTemplates`</span> is non-empty, store the templates and proceed to Phase 3.
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="gu">### Tier 1: GraphQL API Query (preferred; works for remote repos and org-level)</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>gh<span class="w"> </span>api<span class="w"> </span>graphql<span class="w"> </span>-f<span class="w"> </span><span class="nv">query</span><span class="o">=</span><span class="s1">&#39;query($owner:String!,$name:String!){</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="s1">  repository(owner:$owner,name:$name){</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="s1">    issueTemplates { name filename body title about }</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="s1">  }</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="s1">}&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>OWNER<span class="w"> </span>-f<span class="w"> </span><span class="nv">name</span><span class="o">=</span>REPO
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="sb">```</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>&lt;RULE&gt;
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>The GraphQL <span class="sb">`issueTemplates`</span> endpoint returns only markdown templates. It does NOT return YAML form templates. If the API returns results, those are markdown-only. You must still check locally for YAML forms.
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>&lt;/RULE&gt;
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gu">### Tier 2: Local Filesystem Scan (fallback; also catches YAML forms)</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>Parse the response. If <span class="sb">`issueTemplates`</span> is non-empty, store the templates and proceed to Phase 3.
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>&lt;RULE&gt;
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>The GraphQL <span class="sb">`issueTemplates`</span> endpoint returns only markdown templates. It does NOT return YAML form templates. If the API returns results, those are markdown-only. You must still check locally for YAML forms.
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>&lt;/RULE&gt;
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="c1"># Check .github/ISSUE_TEMPLATE/ directory for .md and .yml files</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>ls<span class="w"> </span>.github/ISSUE_TEMPLATE/*.md<span class="w"> </span>.github/ISSUE_TEMPLATE/*.yml<span class="w"> </span><span class="m">2</span>&gt;/dev/null
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="c1"># Check for config.yml (template chooser configuration)</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>cat<span class="w"> </span>.github/ISSUE_TEMPLATE/config.yml<span class="w"> </span><span class="m">2</span>&gt;/dev/null
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="c1"># Check for legacy issue_template.md</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>ls<span class="w"> </span>.github/issue_template.md<span class="w"> </span>issue_template.md<span class="w"> </span><span class="m">2</span>&gt;/dev/null
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">```</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>For each <span class="sb">`.md`</span> file found in <span class="sb">`.github/ISSUE_TEMPLATE/`</span>:
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">1.</span> Read the file
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">2.</span> Parse YAML frontmatter (<span class="sb">`name`</span>, <span class="sb">`about`</span>, <span class="sb">`title`</span>, <span class="sb">`labels`</span>, <span class="sb">`assignees`</span>)
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">3.</span> Extract the body content below the frontmatter
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">4.</span> Store as <span class="sb">`{format: &quot;markdown&quot;, name, about, title, labels, assignees, body}`</span>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>For each <span class="sb">`.yml`</span> file found in <span class="sb">`.github/ISSUE_TEMPLATE/`</span> (excluding <span class="sb">`config.yml`</span>):
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">1.</span> Read the file
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="k">2.</span> Parse the YAML structure (<span class="sb">`name`</span>, <span class="sb">`description`</span>, <span class="sb">`labels`</span>, <span class="sb">`assignees`</span>, <span class="sb">`body`</span> fields array)
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">3.</span> Store as <span class="sb">`{format: &quot;yaml_form&quot;, name, description, labels, assignees, fields: body}`</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>&lt;RULE&gt;
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>YAML form templates use <span class="sb">`.yml`</span> extension, NOT <span class="sb">`.yaml`</span>. The config file is <span class="sb">`config.yml`</span>, NOT <span class="sb">`config.yaml`</span>. These are GitHub&#39;s conventions and are not negotiable.
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>&lt;/RULE&gt;
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>If <span class="sb">`config.yml`</span> exists, parse it and store:
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span><span class="sb">`blank_issues_enabled`</span> (boolean, default true if absent)
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span><span class="sb">`contact_links`</span> (array of external links)
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>If any templates found, proceed to Phase 3.
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="gu">### Tier 2: Local Filesystem Scan (fallback; also catches YAML forms)</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="c1"># Check .github/ISSUE_TEMPLATE/ directory for .md and .yml files</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>ls<span class="w"> </span>.github/ISSUE_TEMPLATE/*.md<span class="w"> </span>.github/ISSUE_TEMPLATE/*.yml<span class="w"> </span><span class="m">2</span>&gt;/dev/null
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="c1"># Check for config.yml (template chooser configuration)</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>cat<span class="w"> </span>.github/ISSUE_TEMPLATE/config.yml<span class="w"> </span><span class="m">2</span>&gt;/dev/null
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="c1"># Check for legacy issue_template.md</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>ls<span class="w"> </span>.github/issue_template.md<span class="w"> </span>issue_template.md<span class="w"> </span><span class="m">2</span>&gt;/dev/null
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="sb">```</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>For each <span class="sb">`.md`</span> file found in <span class="sb">`.github/ISSUE_TEMPLATE/`</span>:
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">1.</span> Read the file
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">2.</span> Parse YAML frontmatter (<span class="sb">`name`</span>, <span class="sb">`about`</span>, <span class="sb">`title`</span>, <span class="sb">`labels`</span>, <span class="sb">`assignees`</span>)
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">3.</span> Extract the body content below the frontmatter
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">4.</span> Store as <span class="sb">`{format: &quot;markdown&quot;, name, about, title, labels, assignees, body}`</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>For each <span class="sb">`.yml`</span> file found in <span class="sb">`.github/ISSUE_TEMPLATE/`</span> (excluding <span class="sb">`config.yml`</span>):
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">1.</span> Read the file
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">2.</span> Parse the YAML structure (<span class="sb">`name`</span>, <span class="sb">`description`</span>, <span class="sb">`labels`</span>, <span class="sb">`assignees`</span>, <span class="sb">`body`</span> fields array)
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="k">3.</span> Store as <span class="sb">`{format: &quot;yaml_form&quot;, name, description, labels, assignees, fields: body}`</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>&lt;RULE&gt;
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>YAML form templates use <span class="sb">`.yml`</span> extension, NOT <span class="sb">`.yaml`</span>. The config file is <span class="sb">`config.yml`</span>, NOT <span class="sb">`config.yaml`</span>. These are GitHub&#39;s conventions and are not negotiable.
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>&lt;/RULE&gt;
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>If <span class="sb">`config.yml`</span> exists, parse it and store:
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">-</span><span class="w"> </span><span class="sb">`blank_issues_enabled`</span> (boolean, default true if absent)
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">-</span><span class="w"> </span><span class="sb">`contact_links`</span> (array of external links)
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="gu">### Tier 3: Org-Level Fallback</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>If any templates found, proceed to Phase 3.
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>Determine the org from <span class="sb">`TARGET_REPO`</span> owner and query the <span class="sb">`&lt;org&gt;/.github`</span> repository:
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gu">### Tier 3: Org-Level Fallback</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>gh<span class="w"> </span>api<span class="w"> </span>graphql<span class="w"> </span>-f<span class="w"> </span><span class="nv">query</span><span class="o">=</span><span class="s1">&#39;query($owner:String!,$name:String!){</span>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="s1">  repository(owner:$owner,name:$name){</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="s1">    issueTemplates { name filename body title about }</span>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="s1">  }</span>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="s1">}&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>ORG<span class="w"> </span>-f<span class="w"> </span><span class="nv">name</span><span class="o">=</span>.github
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="sb">```</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>If results found, store them and proceed to Phase 3.
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>Determine the org from <span class="sb">`TARGET_REPO`</span> owner and query the <span class="sb">`&lt;org&gt;/.github`</span> repository:
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>gh<span class="w"> </span>api<span class="w"> </span>graphql<span class="w"> </span>-f<span class="w"> </span><span class="nv">query</span><span class="o">=</span><span class="s1">&#39;query($owner:String!,$name:String!){</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="s1">  repository(owner:$owner,name:$name){</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="s1">    issueTemplates { name filename body title about }</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="s1">  }</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="s1">}&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>ORG<span class="w"> </span>-f<span class="w"> </span><span class="nv">name</span><span class="o">=</span>.github
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="sb">```</span>
 <a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="gu">### Tier 4: Legacy Check</span>
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>If results found, store them and proceed to Phase 3.
 <a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="c1"># Check repo root for legacy single-file template</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>cat<span class="w"> </span>issue_template.md<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>cat<span class="w"> </span>ISSUE_TEMPLATE.md<span class="w"> </span><span class="m">2</span>&gt;/dev/null
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="sb">```</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>If found, store as <span class="sb">`{format: &quot;markdown&quot;, name: &quot;Legacy Template&quot;, body: &lt;content&gt;}`</span>.
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="gu">### Tier 4: Legacy Check</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="c1"># Check repo root for legacy single-file template</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>cat<span class="w"> </span>issue_template.md<span class="w"> </span><span class="m">2</span>&gt;/dev/null<span class="w"> </span><span class="o">||</span><span class="w"> </span>cat<span class="w"> </span>ISSUE_TEMPLATE.md<span class="w"> </span><span class="m">2</span>&gt;/dev/null
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="sb">```</span>
 <a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="gu">### Tier 5: No Template Found</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>If found, store as <span class="sb">`{format: &quot;markdown&quot;, name: &quot;Legacy Template&quot;, body: &lt;content&gt;}`</span>.
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>If no templates found at any tier:
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="k">1.</span> Check if <span class="sb">`config.yml`</span> was found with <span class="sb">`blank_issues_enabled: false`</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If so: &quot;Error: This repository does not allow blank issues. A template is required, but none were found.&quot;
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Stop execution.
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="k">2.</span> Otherwise: Inform user that no templates were found. Proceed to Phase 3 with blank issue flow.
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>---
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="gu">### Tier 5: No Template Found</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>If no templates found at any tier:
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="k">1.</span> Check if <span class="sb">`config.yml`</span> was found with <span class="sb">`blank_issues_enabled: false`</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If so: &quot;Error: This repository does not allow blank issues. A template is required, but none were found.&quot;
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Stop execution.
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="k">2.</span> Otherwise: Inform user that no templates were found. Proceed to Phase 3 with blank issue flow.
 <a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="gu">## Phase 3: Template Selection</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>---
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="gu">### Single Template</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="gu">## Phase 3: Template Selection</span>
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>If exactly one template was found, show it to the user:
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="gu">### Single Template</span>
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">```</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">Question: &quot;Found issue template: &#39;&lt;template.name&gt;&#39; - &lt;template.about&gt;. Use this template?&quot;</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">Options:</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">- Yes, use this template</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">- No, create a blank issue instead</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">```</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>If user chooses blank and <span class="sb">`blank_issues_enabled: false`</span>, warn:
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>&quot;This repository has blank issues disabled. Using the available template.&quot;
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="gu">### Multiple Templates</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>If exactly one template was found, show it to the user:
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">```</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">Question: &quot;Found issue template: &#39;&lt;template.name&gt;&#39; - &lt;template.about&gt;. Use this template?&quot;</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">Options:</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">- Yes, use this template</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">- No, create a blank issue instead</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">```</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>If user chooses blank and <span class="sb">`blank_issues_enabled: false`</span>, warn:
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>&quot;This repository has blank issues disabled. Using the available template.&quot;
 <a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>Present all templates for selection via AskUserQuestion:
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="gu">### Multiple Templates</span>
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">```</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="sb">Question: &quot;Multiple issue templates available. Which would you like to use?&quot;</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">Options:</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sb">- &lt;template_1.name&gt; - &lt;template_1.about&gt;</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sb">- &lt;template_2.name&gt; - &lt;template_2.about&gt;</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sb">- ...</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">- Blank issue (no template)</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sb">```</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>If user selects &quot;Blank issue&quot; and <span class="sb">`blank_issues_enabled: false`</span>:
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>&quot;This repository has blank issues disabled. Please select one of the available templates.&quot;
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>Re-present the chooser without the blank option.
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="gu">### Blank Issue (No Template)</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>Present all templates for selection via AskUserQuestion:
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">```</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sb">Question: &quot;Multiple issue templates available. Which would you like to use?&quot;</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sb">Options:</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sb">- &lt;template_1.name&gt; - &lt;template_1.about&gt;</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">- &lt;template_2.name&gt; - &lt;template_2.about&gt;</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sb">- ...</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">- Blank issue (no template)</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sb">```</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>If user selects &quot;Blank issue&quot; and <span class="sb">`blank_issues_enabled: false`</span>:
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>&quot;This repository has blank issues disabled. Please select one of the available templates.&quot;
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>Re-present the chooser without the blank option.
 <a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>Skip to Phase 5 (Title) and Phase 6 (Review) with a freeform body.
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="gu">### Blank Issue (No Template)</span>
 <a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>Ask user for issue body:
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="sb">```</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="sb">Question: &quot;Describe the issue. Provide as much detail as you&#39;d like.&quot;</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>Skip to Phase 5 (Title) and Phase 6 (Review) with a freeform body.
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>Ask user for issue body:
 <a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="sb">```</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>---
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">Question: &quot;Describe the issue. Provide as much detail as you&#39;d like.&quot;</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="sb">```</span>
 <a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="gu">## Phase 4: Template Population</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>---
 <a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>Branch based on the selected template&#39;s format.
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="gu">## Phase 4: Template Population</span>
 <a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="gu">### 4A: Markdown Template Population</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>Branch based on the selected template&#39;s format.
 <a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="k">1.</span> <span class="gs">**Parse frontmatter metadata:**</span>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`name`</span>: Template display name (for reference only)
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`about`</span>: Template description (for reference only)
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`title`</span>: Pre-fill title prefix (e.g., <span class="sb">`&quot;[BUG] &quot;`</span>)
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`labels`</span>: Auto-apply these labels (comma-separated string or YAML list)
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`assignees`</span>: Auto-apply these assignees (comma-separated string or YAML list)
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="k">2.</span> <span class="gs">**Present template body to user:**</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="gu">### 4A: Markdown Template Population</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="k">1.</span> <span class="gs">**Parse frontmatter metadata:**</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`name`</span>: Template display name (for reference only)
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`about`</span>: Template description (for reference only)
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`title`</span>: Pre-fill title prefix (e.g., <span class="sb">`&quot;[BUG] &quot;`</span>)
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`labels`</span>: Auto-apply these labels (comma-separated string or YAML list)
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`assignees`</span>: Auto-apply these assignees (comma-separated string or YAML list)
 <a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>   Display the template body content with its section headers. Ask user to provide content for each section, or present the whole template and ask for a populated version.
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="k">2.</span> <span class="gs">**Present template body to user:**</span>
 <a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">   Question: &quot;Here is the issue template body. Please provide the content to fill in:</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">   &lt;template body with placeholder sections&gt;</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>   Display the template body content with its section headers. Ask user to provide content for each section, or present the whole template and ask for a populated version.
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">   ```</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">   Question: &quot;Here is the issue template body. Please provide the content to fill in:</span>
 <a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">   You can provide the full populated body, or we can go section by section.&quot;</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">   Options:</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">   - I&#39;ll provide the full body now</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">   - Walk me through it section by section</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">3.</span> <span class="gs">**If section-by-section:**</span> For each <span class="sb">`## Section`</span> header in the template body, ask the user to provide content for that section via AskUserQuestion.
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">   &lt;template body with placeholder sections&gt;</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">   You can provide the full populated body, or we can go section by section.&quot;</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">   Options:</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">   - I&#39;ll provide the full body now</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">   - Walk me through it section by section</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">4.</span> <span class="gs">**Store populated body, labels from frontmatter, assignees from frontmatter.**</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">3.</span> <span class="gs">**If section-by-section:**</span> For each <span class="sb">`## Section`</span> header in the template body, ask the user to provide content for that section via AskUserQuestion.
 <a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="gu">### 4B: YAML Form Template Population</span>
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="k">4.</span> <span class="gs">**Store populated body, labels from frontmatter, assignees from frontmatter.**</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>YAML form templates have structured fields that GitHub renders as forms in the web UI. The CLI cannot render these natively, so walk through each field interactively.
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="gu">### 4B: YAML Form Template Population</span>
 <a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="gs">**First, offer the user a choice:**</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>YAML form templates have structured fields that GitHub renders as forms in the web UI. The CLI cannot render these natively, so walk through each field interactively.
 <a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">```</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">Question: &quot;This issue uses a structured form template (&#39;&lt;template.name&gt;&#39;). How would you like to fill it in?&quot;</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="sb">Options:</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">- Fill it in here interactively (I&#39;ll walk you through each field)</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">- Open in browser for native form experience (gh issue create --web)</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="sb">```</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="gs">**If user chooses browser:**</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>gh<span class="w"> </span>issue<span class="w"> </span>create<span class="w"> </span>--repo<span class="w"> </span>TARGET_REPO<span class="w"> </span>--web
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">```</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>Report that the browser was opened and stop execution.
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="gs">**If user chooses interactive, walk through each field in the `body` array:**</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="gs">**First, offer the user a choice:**</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="sb">```</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">Question: &quot;This issue uses a structured form template (&#39;&lt;template.name&gt;&#39;). How would you like to fill it in?&quot;</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">Options:</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="sb">- Fill it in here interactively (I&#39;ll walk you through each field)</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">- Open in browser for native form experience (gh issue create --web)</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb">```</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="gs">**If user chooses browser:**</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>gh<span class="w"> </span>issue<span class="w"> </span>create<span class="w"> </span>--repo<span class="w"> </span>TARGET_REPO<span class="w"> </span>--web
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="sb">```</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>Report that the browser was opened and stop execution.
 <a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>| Field Type | Handling |
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>|------------|----------|
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>| <span class="sb">`markdown`</span> | Display the <span class="sb">`attributes.value`</span> content to the user as context. No input needed. |
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>| <span class="sb">`input`</span> | Ask via AskUserQuestion: &quot;<span class="gs">**&lt;attributes.label&gt;**</span>&lt;if description: &#39; - &#39; + description&gt;&lt;if placeholder: &#39; (e.g., &#39; + placeholder + &#39;)&#39;&gt;&quot;. Enforce <span class="sb">`validations.required`</span> if true. |
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>| <span class="sb">`textarea`</span> | Ask via AskUserQuestion: &quot;<span class="gs">**&lt;attributes.label&gt;**</span>&lt;if description: &#39; - &#39; + description&gt;&quot;. Show <span class="sb">`attributes.placeholder`</span> as hint. Show <span class="sb">`attributes.value`</span> as default if present. Enforce <span class="sb">`validations.required`</span>. |
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>| <span class="sb">`dropdown`</span> | Present via AskUserQuestion: &quot;<span class="gs">**&lt;attributes.label&gt;**</span>&lt;if description: &#39; - &#39; + description&gt;&quot; with <span class="sb">`attributes.options`</span> as choices. If <span class="sb">`attributes.multiple`</span> is true, allow multiple selections. Enforce <span class="sb">`validations.required`</span>. |
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>| <span class="sb">`checkboxes`</span> | Present via AskUserQuestion: &quot;<span class="gs">**&lt;attributes.label&gt;**</span>&lt;if description: &#39; - &#39; + description&gt;&quot; with each <span class="sb">`attributes.options[].label`</span> as a toggleable item. Collect selected items. Enforce <span class="sb">`validations.required`</span> on individual options where <span class="sb">`options[].required: true`</span>. |
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>&lt;RULE&gt;
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>For <span class="sb">`validations.required: true`</span> fields: if the user provides an empty response, inform them the field is required and ask again. Do not proceed with an empty required field. Circuit breaker: after 3 empty attempts for the same field, ask if the user wants to cancel issue creation entirely.
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>&lt;/RULE&gt;
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="gs">**Assemble YAML form responses into markdown body:**</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="gs">**If user chooses interactive, walk through each field in the `body` array:**</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>| Field Type | Handling |
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>|------------|----------|
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>| <span class="sb">`markdown`</span> | Display the <span class="sb">`attributes.value`</span> content to the user as context. No input needed. |
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>| <span class="sb">`input`</span> | Ask via AskUserQuestion: &quot;<span class="gs">**&lt;attributes.label&gt;**</span>&lt;if description: &#39; - &#39; + description&gt;&lt;if placeholder: &#39; (e.g., &#39; + placeholder + &#39;)&#39;&gt;&quot;. Enforce <span class="sb">`validations.required`</span> if true. |
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>| <span class="sb">`textarea`</span> | Ask via AskUserQuestion: &quot;<span class="gs">**&lt;attributes.label&gt;**</span>&lt;if description: &#39; - &#39; + description&gt;&quot;. Show <span class="sb">`attributes.placeholder`</span> as hint. Show <span class="sb">`attributes.value`</span> as default if present. Enforce <span class="sb">`validations.required`</span>. |
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>| <span class="sb">`dropdown`</span> | Present via AskUserQuestion: &quot;<span class="gs">**&lt;attributes.label&gt;**</span>&lt;if description: &#39; - &#39; + description&gt;&quot; with <span class="sb">`attributes.options`</span> as choices. If <span class="sb">`attributes.multiple`</span> is true, allow multiple selections. Enforce <span class="sb">`validations.required`</span>. |
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>| <span class="sb">`checkboxes`</span> | Present via AskUserQuestion: &quot;<span class="gs">**&lt;attributes.label&gt;**</span>&lt;if description: &#39; - &#39; + description&gt;&quot; with each <span class="sb">`attributes.options[].label`</span> as a toggleable item. Collect selected items. Enforce <span class="sb">`validations.required`</span> on individual options where <span class="sb">`options[].required: true`</span>. |
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>&lt;RULE&gt;
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>For <span class="sb">`validations.required: true`</span> fields: if the user provides an empty response, inform them the field is required and ask again. Do not proceed with an empty required field. Circuit breaker: after 3 empty attempts for the same field, ask if the user wants to cancel issue creation entirely.
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>&lt;/RULE&gt;
 <a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="gu">### &lt;label for field 1&gt;</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>&lt;user&#39;s response for field 1&gt;
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a><span class="gs">**Assemble YAML form responses into markdown body:**</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="gu">### &lt;label for field 1&gt;</span>
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="gu">### &lt;label for field 2&gt;</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>&lt;user&#39;s response for field 1&gt;
 <a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>&lt;user&#39;s response for field 2&gt;
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="gu">### &lt;label for field 2&gt;</span>
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="gu">### &lt;label for field 3&gt;</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>&lt;user&#39;s response for field 2&gt;
 <a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="k">- [x]</span> &lt;selected checkbox option&gt;
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="k">- [ ]</span> &lt;unselected checkbox option&gt;
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="sb">```</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>For dropdown fields, just include the selected value(s) as text. For checkboxes, use GitHub-flavored markdown checkbox syntax.
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="gu">### &lt;label for field 3&gt;</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="k">- [x]</span> &lt;selected checkbox option&gt;
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">- [ ]</span> &lt;unselected checkbox option&gt;
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="sb">```</span>
 <a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="gs">**Store the assembled body, plus `labels` and `assignees` from the YAML form&#39;s top-level keys.**</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>For dropdown fields, just include the selected value(s) as text. For checkboxes, use GitHub-flavored markdown checkbox syntax.
 <a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>---
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="gs">**Store the assembled body, plus `labels` and `assignees` from the YAML form&#39;s top-level keys.**</span>
 <a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="gu">## Phase 5: Issue Title</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>---
 <a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="gs">**Priority order for title:**</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="gu">## Phase 5: Issue Title</span>
 <a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">1.</span> If <span class="sb">`--title`</span> argument was provided: use it as-is
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">2.</span> If template frontmatter has a <span class="sb">`title`</span> field (e.g., <span class="sb">`&quot;[BUG] &quot;`</span>): use as prefix, ask user to complete it
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="k">3.</span> Otherwise: ask user for the full title
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="sb">```</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="sb">Question: &quot;What should the issue title be?&quot;</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="sb">&lt;If template had title prefix: &quot;The template suggests a prefix: &#39;&lt;prefix&gt;&#39;. Your title will be: &#39;&lt;prefix&gt;&lt;your text&gt;&#39;&quot;&gt;</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="sb">```</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="gs">**Jira convention:**</span> If context suggests a Jira ticket (user mentions one, or branch name contains <span class="sb">`ODY-XXXX`</span>), format as <span class="sb">`[ODY-XXXX] description`</span>. If no Jira ticket is evident, use a plain title.
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="gs">**Priority order for title:**</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="k">1.</span> If <span class="sb">`--title`</span> argument was provided: use it as-is
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="k">2.</span> If template frontmatter has a <span class="sb">`title`</span> field (e.g., <span class="sb">`&quot;[BUG] &quot;`</span>): use as prefix, ask user to complete it
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">3.</span> Otherwise: ask user for the full title
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="sb">```</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="sb">Question: &quot;What should the issue title be?&quot;</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="sb">&lt;If template had title prefix: &quot;The template suggests a prefix: &#39;&lt;prefix&gt;&#39;. Your title will be: &#39;&lt;prefix&gt;&lt;your text&gt;&#39;&quot;&gt;</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="sb">```</span>
 <a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>NEVER fabricate a Jira ticket number. If no ticket number is provided by the user or evident from context, omit the <span class="sb">`[ODY-XXXX]`</span> prefix entirely. No <span class="sb">`ODY-0000`</span>. No placeholder tickets.
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>---
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="gs">**Jira convention:**</span> If context suggests a Jira ticket (user mentions one, or branch name contains <span class="sb">`ODY-XXXX`</span>), format as <span class="sb">`[ODY-XXXX] description`</span>. If no Jira ticket is evident, use a plain title.
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>NEVER fabricate a Jira ticket number. If no ticket number is provided by the user or evident from context, omit the <span class="sb">`[ODY-XXXX]`</span> prefix entirely. No <span class="sb">`ODY-0000`</span>. No placeholder tickets.
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="gu">## Phase 6: User Review</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>---
 <a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>Present the complete issue for review before creation.
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="gu">## Phase 5.5: Tag Sanitization Gate</span>
 <a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="sb">```</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="sb">===============================================================</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="sb">                    Issue Preview</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="sb">===============================================================</span>
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="sb">Repository: &lt;TARGET_REPO&gt;</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="sb">Title:      &lt;issue title&gt;</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="sb">Labels:     &lt;comma-separated labels, or &quot;none&quot;&gt;</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="sb">Assignees:  &lt;comma-separated assignees, or &quot;none&quot;&gt;</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="sb">--- Issue Body ---</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="sb">&lt;full issue body content&gt;</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="sb">--- End ---</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="sb">===============================================================</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="sb">```</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>Then ask via AskUserQuestion:
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>This phase is SAFETY-CRITICAL. A single <span class="ni">#108</span> in an issue body notifies everyone
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>subscribed to issue/PR 108. A single <span class="ni">@username</span> pings that person. These are
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>embarrassing, unprofessional, and irreversible once the issue is created.
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="k">1.</span> Scan BOTH the issue title and the full issue body for:
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`#\d+`</span> patterns (GitHub auto-links to issues/PRs)
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`@[a-zA-Z0-9_-]+`</span> patterns (GitHub user/team mentions)
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`GH-\d+`</span> patterns (alternate GitHub issue syntax)
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="k">2.</span> If ANY matches found:
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>   a. Build a &quot;Tags Found&quot; report listing each match with context
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>   b. Strip ALL matches from the content:
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="w">      </span><span class="k">-</span><span class="w"> </span><span class="sb">`#123`</span> becomes <span class="sb">`123`</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="w">      </span><span class="k">-</span><span class="w"> </span><span class="sb">`@username`</span> becomes <span class="sb">`username`</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="w">      </span><span class="k">-</span><span class="w"> </span><span class="sb">`GH-123`</span> becomes <span class="sb">`GH 123`</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>   c. Present to user via AskUserQuestion:
 <a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="sb">```</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="sb">Question: &quot;Review the issue above. What would you like to do?&quot;</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="sb">Options:</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="sb">- Create this issue</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">- Edit the title</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="sb">- Edit the body</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="sb">- Edit labels</span>
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="sb">- Edit assignees</span>
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="sb">- Cancel</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="sb">```</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>      &quot;I found references that GitHub will auto-link (notifying subscribers):
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>       Tags stripped:
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="w">       </span><span class="k">-</span><span class="w"> </span>Line 5: <span class="ni">#108</span> -&gt; 108 (would notify all subscribers of issue/PR 108)
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="w">       </span><span class="k">-</span><span class="w"> </span>Line 12: <span class="ni">@alice</span> -&gt; alice (would ping user alice)
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>       Options:
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="w">       </span><span class="k">1.</span> Keep stripped (safe - no notifications)
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="w">       </span><span class="k">2.</span> Restore specific tags (I&#39;ll ask which ones)
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="w">       </span><span class="k">3.</span> Restore all tags (I understand the notification impact)&quot;
 <a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="gs">**If &quot;Edit the title&quot;:**</span> Ask for new title, then re-present for review.
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="gs">**If &quot;Edit the body&quot;:**</span> Ask user to provide the updated body (or specific sections to change), then re-present.
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="gs">**If &quot;Edit labels&quot;:**</span> Ask user for the corrected label list, then re-present.
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="gs">**If &quot;Edit assignees&quot;:**</span> Ask user for the corrected assignee list, then re-present.
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="gs">**If &quot;Cancel&quot;:**</span> Confirm cancellation and stop execution.
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="gs">**Loop on edits until user selects &quot;Create this issue&quot;.**</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>---
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="gu">## Phase 7: Create Issue</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="gs">**Step 1: Write body to temp file**</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>   d. If &quot;Restore specific tags&quot;: ask about each individually
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>   e. If &quot;Restore all&quot;: require typed confirmation
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="k">3.</span> If NO matches found: proceed silently.
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="k">4.</span> Write sanitized content back.
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>---
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="gu">## Phase 6: User Review</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>Present the complete issue for review before creation.
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="sb">```</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="sb">===============================================================</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="sb">                    Issue Preview</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="sb">===============================================================</span>
 <a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="nv">BODY_FILE</span><span class="o">=</span><span class="k">$(</span>mktemp<span class="w"> </span>/tmp/issue-body-XXXXXXXX.md<span class="k">)</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="sb">```</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>Write the final issue body content to <span class="sb">`$BODY_FILE`</span>.
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="gs">**Step 2: Execute creation**</span>
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>gh<span class="w"> </span>issue<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="w">  </span>--repo<span class="w"> </span>TARGET_REPO<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="w">  </span>--title<span class="w"> </span><span class="s2">&quot;&lt;title&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="w">  </span>--body-file<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BODY_FILE</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="w">  </span>--label<span class="w"> </span><span class="s2">&quot;label1&quot;</span><span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;label2&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="w">  </span>--assignee<span class="w"> </span><span class="s2">&quot;user1&quot;</span>
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="sb">```</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>Notes on flags:
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--repo`</span> is always included (even for current repo, for explicitness)
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--label`</span> is repeated per label (not comma-separated in the flag)
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--assignee`</span> is repeated per assignee
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a><span class="k">-</span><span class="w"> </span>Omit <span class="sb">`--label`</span> and <span class="sb">`--assignee`</span> entirely if none specified
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="gs">**Step 3: Capture output**</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="sb">Repository: &lt;TARGET_REPO&gt;</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="sb">Title:      &lt;issue title&gt;</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="sb">Labels:     &lt;comma-separated labels, or &quot;none&quot;&gt;</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="sb">Assignees:  &lt;comma-separated assignees, or &quot;none&quot;&gt;</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="sb">--- Issue Body ---</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="sb">&lt;full issue body content&gt;</span>
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="sb">--- End ---</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="sb">===============================================================</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="sb">```</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>Then ask via AskUserQuestion:
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="sb">```</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="sb">Question: &quot;Review the issue above. What would you like to do?&quot;</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="sb">Options:</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="sb">- Create this issue</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a><span class="sb">- Edit the title</span>
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="sb">- Edit the body</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="sb">- Edit labels</span>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a><span class="sb">- Edit assignees</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="sb">- Cancel</span>
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="sb">```</span>
 <a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>Parse the issue URL and number from <span class="sb">`gh issue create`</span> output (it prints the URL to stdout).
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="gs">**If &quot;Edit the title&quot;:**</span> Ask for new title, then re-present for review.
 <a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="gs">**Step 4: Clean up temp file**</span>
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="gs">**If &quot;Edit the body&quot;:**</span> Ask user to provide the updated body (or specific sections to change), then re-present.
 <a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>rm<span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BODY_FILE</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="sb">```</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="gs">**If &quot;Edit labels&quot;:**</span> Ask user for the corrected label list, then re-present.
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="gs">**If &quot;Edit assignees&quot;:**</span> Ask user for the corrected assignee list, then re-present.
 <a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>---
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a><span class="gs">**If &quot;Cancel&quot;:**</span> Confirm cancellation and stop execution.
 <a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="gu">## Phase 8: Post-Creation</span>
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="gs">**Loop on edits until user selects &quot;Create this issue&quot;.**</span>
 <a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="gs">**Step 1: Report to user**</span>
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>---
 <a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="sb">```</span>
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="sb">Issue created successfully.</span>
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a><span class="sb">  URL:    &lt;issue URL&gt;</span>
-<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="sb">  Number: #&lt;issue number&gt;</span>
-<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="sb">  Repo:   &lt;TARGET_REPO&gt;</span>
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="gu">## Phase 7: Create Issue</span>
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="gs">**Step 1: Write body to temp file**</span>
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="nv">BODY_FILE</span><span class="o">=</span><span class="k">$(</span>mktemp<span class="w"> </span>/tmp/issue-body-XXXXXXXX.md<span class="k">)</span>
 <a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a><span class="sb">```</span>
 <a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="gs">**Step 2: Offer additional actions if relevant**</span>
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>Write the final issue body content to <span class="sb">`$BODY_FILE`</span>.
 <a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a>
-<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="sb">```</span>
-<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a><span class="sb">Question: &quot;Issue #&lt;number&gt; created. Anything else?&quot;</span>
-<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a><span class="sb">Options:</span>
-<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a><span class="sb">- Add to a GitHub project</span>
-<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="sb">- Add additional labels or assignees</span>
-<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="sb">- Done</span>
-<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a><span class="sb">```</span>
-<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>
-<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a><span class="gs">**If &quot;Add to a GitHub project&quot;:**</span>
-<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>Use <span class="sb">`gh api`</span> to assign the issue to a project. This requires the project number:
+<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="gs">**Step 2: Execute creation**</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>gh<span class="w"> </span>issue<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="w">  </span>--repo<span class="w"> </span>TARGET_REPO<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="w">  </span>--title<span class="w"> </span><span class="s2">&quot;&lt;title&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a><span class="w">  </span>--body-file<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BODY_FILE</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a><span class="w">  </span>--label<span class="w"> </span><span class="s2">&quot;label1&quot;</span><span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;label2&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a><span class="w">  </span>--assignee<span class="w"> </span><span class="s2">&quot;user1&quot;</span>
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a><span class="sb">```</span>
 <a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>
-<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="c1"># List projects</span>
-<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a>gh<span class="w"> </span>api<span class="w"> </span>graphql<span class="w"> </span>-f<span class="w"> </span><span class="nv">query</span><span class="o">=</span><span class="s1">&#39;query($owner:String!,$name:String!){</span>
-<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="s1">  repository(owner:$owner,name:$name){</span>
-<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="s1">    projectsV2(first:10){ nodes{ id title number } }</span>
-<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a><span class="s1">  }</span>
-<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="s1">}&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>OWNER<span class="w"> </span>-f<span class="w"> </span><span class="nv">name</span><span class="o">=</span>REPO
-<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a><span class="sb">```</span>
-<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a>
-<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a>Present projects for selection, then add the issue:
-<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a>
-<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a>gh<span class="w"> </span>api<span class="w"> </span>graphql<span class="w"> </span>-f<span class="w"> </span><span class="nv">query</span><span class="o">=</span><span class="s1">&#39;mutation($projectId:ID!,$contentId:ID!){</span>
-<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="s1">  addProjectV2ItemById(input:{projectId:$projectId,contentId:$contentId}){</span>
-<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a><span class="s1">    item{ id }</span>
-<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="s1">  }</span>
-<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a><span class="s1">}&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">projectId</span><span class="o">=</span>PROJECT_ID<span class="w"> </span>-f<span class="w"> </span><span class="nv">contentId</span><span class="o">=</span>ISSUE_NODE_ID
-<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="sb">```</span>
-<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>
-<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a><span class="gs">**If &quot;Add additional labels or assignees&quot;:**</span>
-<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a>Use <span class="sb">`gh api`</span> (not <span class="sb">`gh issue edit`</span>):
+<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>Notes on flags:
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--repo`</span> is always included (even for current repo, for explicitness)
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--label`</span> is repeated per label (not comma-separated in the flag)
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--assignee`</span> is repeated per assignee
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="k">-</span><span class="w"> </span>Omit <span class="sb">`--label`</span> and <span class="sb">`--assignee`</span> entirely if none specified
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a>
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="gs">**Step 3: Capture output**</span>
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a>
+<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a>Parse the issue URL and number from <span class="sb">`gh issue create`</span> output (it prints the URL to stdout).
+<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a>
+<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a><span class="gs">**Step 4: Clean up temp file**</span>
+<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a>
+<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a>rm<span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BODY_FILE</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a><span class="sb">```</span>
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a>
+<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>---
+<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a>
+<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a><span class="gu">## Phase 8: Post-Creation</span>
+<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a>
+<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a><span class="gs">**Step 1: Report to user**</span>
 <a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a>
-<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="c1"># Add labels</span>
-<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/issues/NUMBER/labels<span class="w"> </span>--method<span class="w"> </span>POST<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">&#39;labels[]=label1&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="s1">&#39;labels[]=label2&#39;</span>
-<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a>
-<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="c1"># Add assignees</span>
-<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/issues/NUMBER/assignees<span class="w"> </span>--method<span class="w"> </span>POST<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">&#39;assignees[]=user1&#39;</span>
-<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="sb">```</span>
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="sb">```</span>
+<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="sb">Issue created successfully.</span>
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>
+<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="sb">  URL:    &lt;issue URL&gt;</span>
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a><span class="sb">  Number: #&lt;issue number&gt;</span>
+<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="sb">  Repo:   &lt;TARGET_REPO&gt;</span>
+<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a><span class="sb">```</span>
+<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a>
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="gs">**Step 2: Offer additional actions if relevant**</span>
 <a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>
-<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>---
-<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>
-<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a><span class="gu">## Error Handling</span>
-<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a>
-<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a>| Error Condition | Response |
-<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a>|----------------|----------|
-<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a>| <span class="sb">`gh`</span> CLI not installed | Error with install link: https://cli.github.com/ |
-<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>| Not authenticated with <span class="sb">`gh`</span> | Error: &quot;Run <span class="sb">`gh auth login`</span> first&quot; |
-<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a>| Repository not found | Ask user to verify OWNER/REPO |
-<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a>| GraphQL query fails (API error) | Fall back to local filesystem scan; warn user |
-<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a>| No templates found + blank issues disabled | Error: &quot;This repo does not allow blank issues. A template is required.&quot; |
-<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a>| Template file cannot be parsed | Warn user; offer to use raw content or skip to blank |
-<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a>| <span class="sb">`gh issue create`</span> fails | Show full error output; offer to retry or open in browser (<span class="sb">`--web`</span>) |
-<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a>| Post-creation API call fails (labels/project) | Warn but do not fail; issue was created successfully |
-<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a>| Required YAML form field left empty (3 attempts) | Offer to cancel issue creation |
-<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a>
-<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a>---
-<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a>
-<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a>&lt;SELF_CHECK&gt;
-<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a>Before completing issue creation, verify:
-<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a>
-<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="k">- [ ]</span> Target repository determined and confirmed with user
-<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="k">- [ ]</span> Template discovery attempted across all tiers (API, local, org, legacy)
-<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a><span class="k">- [ ]</span> Template format correctly identified (markdown, YAML form, or blank)
-<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a><span class="k">- [ ]</span> If YAML form: all fields walked through interactively
-<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a><span class="k">- [ ]</span> Required field validations enforced
-<a id="__codelineno-0-489" name="__codelineno-0-489" href="#__codelineno-0-489"></a><span class="k">- [ ]</span> Issue title determined (with correct Jira prefix handling)
-<a id="__codelineno-0-490" name="__codelineno-0-490" href="#__codelineno-0-490"></a><span class="k">- [ ]</span> Issue title and body presented to user for review
-<a id="__codelineno-0-491" name="__codelineno-0-491" href="#__codelineno-0-491"></a><span class="k">- [ ]</span> User explicitly approved creation via AskUserQuestion
-<a id="__codelineno-0-492" name="__codelineno-0-492" href="#__codelineno-0-492"></a><span class="k">- [ ]</span> Issue created via <span class="sb">`--body-file`</span> (not <span class="sb">`--template`</span>, not <span class="sb">`--fill`</span>)
-<a id="__codelineno-0-493" name="__codelineno-0-493" href="#__codelineno-0-493"></a><span class="k">- [ ]</span> Temp file cleaned up
-<a id="__codelineno-0-494" name="__codelineno-0-494" href="#__codelineno-0-494"></a><span class="k">- [ ]</span> Issue URL and number reported to user
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a><span class="sb">```</span>
+<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a><span class="sb">Question: &quot;Issue #&lt;number&gt; created. Anything else?&quot;</span>
+<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a><span class="sb">Options:</span>
+<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a><span class="sb">- Add to a GitHub project</span>
+<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a><span class="sb">- Add additional labels or assignees</span>
+<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a><span class="sb">- Done</span>
+<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a><span class="sb">```</span>
+<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>
+<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a><span class="gs">**If &quot;Add to a GitHub project&quot;:**</span>
+<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a>Use <span class="sb">`gh api`</span> to assign the issue to a project. This requires the project number:
+<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a>
+<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a><span class="c1"># List projects</span>
+<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a>gh<span class="w"> </span>api<span class="w"> </span>graphql<span class="w"> </span>-f<span class="w"> </span><span class="nv">query</span><span class="o">=</span><span class="s1">&#39;query($owner:String!,$name:String!){</span>
+<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a><span class="s1">  repository(owner:$owner,name:$name){</span>
+<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a><span class="s1">    projectsV2(first:10){ nodes{ id title number } }</span>
+<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a><span class="s1">  }</span>
+<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a><span class="s1">}&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>OWNER<span class="w"> </span>-f<span class="w"> </span><span class="nv">name</span><span class="o">=</span>REPO
+<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a><span class="sb">```</span>
+<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a>
+<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a>Present projects for selection, then add the issue:
+<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a>
+<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a>gh<span class="w"> </span>api<span class="w"> </span>graphql<span class="w"> </span>-f<span class="w"> </span><span class="nv">query</span><span class="o">=</span><span class="s1">&#39;mutation($projectId:ID!,$contentId:ID!){</span>
+<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a><span class="s1">  addProjectV2ItemById(input:{projectId:$projectId,contentId:$contentId}){</span>
+<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a><span class="s1">    item{ id }</span>
+<a id="__codelineno-0-489" name="__codelineno-0-489" href="#__codelineno-0-489"></a><span class="s1">  }</span>
+<a id="__codelineno-0-490" name="__codelineno-0-490" href="#__codelineno-0-490"></a><span class="s1">}&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">projectId</span><span class="o">=</span>PROJECT_ID<span class="w"> </span>-f<span class="w"> </span><span class="nv">contentId</span><span class="o">=</span>ISSUE_NODE_ID
+<a id="__codelineno-0-491" name="__codelineno-0-491" href="#__codelineno-0-491"></a><span class="sb">```</span>
+<a id="__codelineno-0-492" name="__codelineno-0-492" href="#__codelineno-0-492"></a>
+<a id="__codelineno-0-493" name="__codelineno-0-493" href="#__codelineno-0-493"></a><span class="gs">**If &quot;Add additional labels or assignees&quot;:**</span>
+<a id="__codelineno-0-494" name="__codelineno-0-494" href="#__codelineno-0-494"></a>Use <span class="sb">`gh api`</span> (not <span class="sb">`gh issue edit`</span>):
 <a id="__codelineno-0-495" name="__codelineno-0-495" href="#__codelineno-0-495"></a>
-<a id="__codelineno-0-496" name="__codelineno-0-496" href="#__codelineno-0-496"></a>If ANY item is unchecked, STOP and complete it before proceeding.
-<a id="__codelineno-0-497" name="__codelineno-0-497" href="#__codelineno-0-497"></a>&lt;/SELF_CHECK&gt;
-<a id="__codelineno-0-498" name="__codelineno-0-498" href="#__codelineno-0-498"></a>
-<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-500" name="__codelineno-0-500" href="#__codelineno-0-500"></a>Your reputation depends on creating issues that respect repository conventions. NEVER skip template discovery. NEVER create without user approval. NEVER use <span class="sb">`--template`</span>. NEVER fabricate Jira tickets. Every field must be validated. Every action must be user-approved. Be thorough. Be safe.
-<a id="__codelineno-0-501" name="__codelineno-0-501" href="#__codelineno-0-501"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-496" name="__codelineno-0-496" href="#__codelineno-0-496"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-497" name="__codelineno-0-497" href="#__codelineno-0-497"></a><span class="c1"># Add labels</span>
+<a id="__codelineno-0-498" name="__codelineno-0-498" href="#__codelineno-0-498"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/issues/NUMBER/labels<span class="w"> </span>--method<span class="w"> </span>POST<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">&#39;labels[]=label1&#39;</span><span class="w"> </span>-f<span class="w"> </span><span class="s1">&#39;labels[]=label2&#39;</span>
+<a id="__codelineno-0-500" name="__codelineno-0-500" href="#__codelineno-0-500"></a>
+<a id="__codelineno-0-501" name="__codelineno-0-501" href="#__codelineno-0-501"></a><span class="c1"># Add assignees</span>
+<a id="__codelineno-0-502" name="__codelineno-0-502" href="#__codelineno-0-502"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/issues/NUMBER/assignees<span class="w"> </span>--method<span class="w"> </span>POST<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-503" name="__codelineno-0-503" href="#__codelineno-0-503"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">&#39;assignees[]=user1&#39;</span>
+<a id="__codelineno-0-504" name="__codelineno-0-504" href="#__codelineno-0-504"></a><span class="sb">```</span>
+<a id="__codelineno-0-505" name="__codelineno-0-505" href="#__codelineno-0-505"></a>
+<a id="__codelineno-0-506" name="__codelineno-0-506" href="#__codelineno-0-506"></a>---
+<a id="__codelineno-0-507" name="__codelineno-0-507" href="#__codelineno-0-507"></a>
+<a id="__codelineno-0-508" name="__codelineno-0-508" href="#__codelineno-0-508"></a><span class="gu">## Error Handling</span>
+<a id="__codelineno-0-509" name="__codelineno-0-509" href="#__codelineno-0-509"></a>
+<a id="__codelineno-0-510" name="__codelineno-0-510" href="#__codelineno-0-510"></a>| Error Condition | Response |
+<a id="__codelineno-0-511" name="__codelineno-0-511" href="#__codelineno-0-511"></a>|----------------|----------|
+<a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a>| <span class="sb">`gh`</span> CLI not installed | Error with install link: https://cli.github.com/ |
+<a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a>| Not authenticated with <span class="sb">`gh`</span> | Error: &quot;Run <span class="sb">`gh auth login`</span> first&quot; |
+<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a>| Repository not found | Ask user to verify OWNER/REPO |
+<a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a>| GraphQL query fails (API error) | Fall back to local filesystem scan; warn user |
+<a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a>| No templates found + blank issues disabled | Error: &quot;This repo does not allow blank issues. A template is required.&quot; |
+<a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a>| Template file cannot be parsed | Warn user; offer to use raw content or skip to blank |
+<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a>| <span class="sb">`gh issue create`</span> fails | Show full error output; offer to retry or open in browser (<span class="sb">`--web`</span>) |
+<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a>| Post-creation API call fails (labels/project) | Warn but do not fail; issue was created successfully |
+<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a>| Required YAML form field left empty (3 attempts) | Offer to cancel issue creation |
+<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a>
+<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a>---
+<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a>
+<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a>&lt;SELF_CHECK&gt;
+<a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a>Before completing issue creation, verify:
+<a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a>
+<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a><span class="k">- [ ]</span> Target repository determined and confirmed with user
+<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a><span class="k">- [ ]</span> Template discovery attempted across all tiers (API, local, org, legacy)
+<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a><span class="k">- [ ]</span> Template format correctly identified (markdown, YAML form, or blank)
+<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a><span class="k">- [ ]</span> If YAML form: all fields walked through interactively
+<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a><span class="k">- [ ]</span> Required field validations enforced
+<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a><span class="k">- [ ]</span> Issue title determined (with correct Jira prefix handling)
+<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="k">- [ ]</span> Tag sanitization gate passed (no unsanitized <span class="sb">`#N`</span> or <span class="sb">`@username`</span> references)
+<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a><span class="k">- [ ]</span> Issue title and body presented to user for review
+<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a><span class="k">- [ ]</span> User explicitly approved creation via AskUserQuestion
+<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a><span class="k">- [ ]</span> Issue created via <span class="sb">`--body-file`</span> (not <span class="sb">`--template`</span>, not <span class="sb">`--fill`</span>)
+<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a><span class="k">- [ ]</span> Temp file cleaned up
+<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="k">- [ ]</span> Issue URL and number reported to user
+<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a>
+<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a>If ANY item is unchecked, STOP and complete it before proceeding.
+<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a>
+<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a>Your reputation depends on creating issues that respect repository conventions. NEVER skip template discovery. NEVER create without user approval. NEVER use <span class="sb">`--template`</span>. NEVER fabricate Jira tickets. Every field must be validated. Every action must be user-approved. Be thorough. Be safe.
+<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
