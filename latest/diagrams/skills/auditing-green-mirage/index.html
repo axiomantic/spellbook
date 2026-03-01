@@ -6968,9 +6968,9 @@
   
 
 
-<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md", "source_hash": "sha256:059ff52720bd181e48e83a04f1a433d7b1a705c8a10000d03934c502207ce8e8", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md", "source_hash": "sha256:0211b4b645b1bc70fa5d85978eef5c7fc3e6077d7d9171517521b4a2e0a9e606", "generated_at": "2026-03-01T00:00:00Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-auditing-green-mirage">Diagram: auditing-green-mirage<a class="headerlink" href="#diagram-auditing-green-mirage" title="Permanent link">&para;</a></h1>
-<p>Forensic test suite audit that traces every test through production code, checks against 8 Green Mirage patterns, and produces a YAML-structured report with dependency-ordered remediation plan.</p>
+<p>Forensic test suite audit that traces every test through production code, checks against 9 Green Mirage patterns, and produces a YAML-structured report with dependency-ordered remediation plan. Includes fix verification phase with Test Adversary subagent.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start]) --&gt; P1[Phase 1: Inventory]
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    P1 --&gt; ListTests[List All Test Files]
@@ -7020,53 +7020,71 @@
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    DetailedFindings --&gt; RemPlan[Remediation Plan]
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    RemPlan --&gt; WriteReport[Write Report to Artifacts]
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    WriteReport --&gt; SelfCheck[Self-Check Checklist]
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    SelfCheck --&gt; SelfGate{All Items Checked?}
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    SelfGate --&gt;|No| GoBack[Go Back and Complete]
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    GoBack --&gt; SelfCheck
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    SelfGate --&gt;|Yes| QuickStart[Suggest /fixing-tests]
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    QuickStart --&gt; End([End])
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style End fill:#4CAF50,color:#fff
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style P1 fill:#2196F3,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style ListTests fill:#2196F3,color:#fff
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style ListProd fill:#2196F3,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style ScopeEst fill:#2196F3,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style ParallelDispatch fill:#2196F3,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style SingleAudit fill:#2196F3,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style P2 fill:#2196F3,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style ForEachTest fill:#2196F3,color:#fff
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style Claim fill:#2196F3,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style Path fill:#2196F3,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style Check fill:#2196F3,color:#fff
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style Escape fill:#2196F3,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style Impact fill:#2196F3,color:#fff
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style Pattern8 fill:#2196F3,color:#fff
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style RecordSolid fill:#2196F3,color:#fff
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style RecordPartial fill:#2196F3,color:#fff
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style RecordMirage fill:#2196F3,color:#fff
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style P4 fill:#2196F3,color:#fff
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style UntestedFns fill:#2196F3,color:#fff
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style UntestedErrors fill:#2196F3,color:#fff
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style UntestedEdges fill:#2196F3,color:#fff
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style IsolationIssues fill:#2196F3,color:#fff
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style P5 fill:#2196F3,color:#fff
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style YAMLBlock fill:#2196F3,color:#fff
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style HumanSummary fill:#2196F3,color:#fff
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style DetailedFindings fill:#2196F3,color:#fff
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style RemPlan fill:#2196F3,color:#fff
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style WriteReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style SelfCheck fill:#2196F3,color:#fff
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style GoBack fill:#2196F3,color:#fff
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    style QuickStart fill:#2196F3,color:#fff
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    style ScopeCheck fill:#FF9800,color:#fff
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    style Verdict fill:#FF9800,color:#fff
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>    style MoreTests fill:#FF9800,color:#fff
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    style SelfGate fill:#f44336,color:#fff
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>    style P2_Sub fill:#4CAF50,color:#fff
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>    style P4_Sub fill:#4CAF50,color:#fff
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    style P5_Sub fill:#4CAF50,color:#fff
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    WriteReport --&gt; QuickStart[Suggest /fixing-tests]
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    QuickStart --&gt; FixesWritten{Fixes Written?}
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    FixesWritten --&gt;|No| SelfCheck[Self-Check Checklist]
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    FixesWritten --&gt;|Yes| P7[Phase 7: Fix Verification]
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    P7 --&gt; AdversaryAgent[Dispatch Test Adversary Subagent]
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    AdversaryAgent --&gt; LadderCheck[Assertion Ladder Check]
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    LadderCheck --&gt; EscapeAnalysis[ESCAPE Analysis per Assertion]
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    EscapeAnalysis --&gt; AdversarialReview[Adversarial Review]
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    AdversarialReview --&gt; FixVerdict{All KILLED + Level 4+?}
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    FixVerdict --&gt;|FAIL| RequireChanges[List Required Changes]
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    RequireChanges --&gt; P7
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    FixVerdict --&gt;|PASS| SelfCheck
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    SelfCheck --&gt; SelfGate{All Items Checked?}
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    SelfGate --&gt;|No| GoBack[Go Back and Complete]
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    GoBack --&gt; SelfCheck
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    SelfGate --&gt;|Yes| End([End])
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style End fill:#4CAF50,color:#fff
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style P1 fill:#2196F3,color:#fff
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style ListTests fill:#2196F3,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style ListProd fill:#2196F3,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style ScopeEst fill:#2196F3,color:#fff
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style ParallelDispatch fill:#2196F3,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style SingleAudit fill:#2196F3,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style P2 fill:#2196F3,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style ForEachTest fill:#2196F3,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style Claim fill:#2196F3,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style Path fill:#2196F3,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style Check fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style Escape fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style Impact fill:#2196F3,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style Pattern8 fill:#2196F3,color:#fff
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style RecordSolid fill:#2196F3,color:#fff
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style RecordPartial fill:#2196F3,color:#fff
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style RecordMirage fill:#2196F3,color:#fff
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style P4 fill:#2196F3,color:#fff
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style UntestedFns fill:#2196F3,color:#fff
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style UntestedErrors fill:#2196F3,color:#fff
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    style UntestedEdges fill:#2196F3,color:#fff
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    style IsolationIssues fill:#2196F3,color:#fff
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    style P5 fill:#2196F3,color:#fff
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>    style YAMLBlock fill:#2196F3,color:#fff
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    style HumanSummary fill:#2196F3,color:#fff
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>    style DetailedFindings fill:#2196F3,color:#fff
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>    style RemPlan fill:#2196F3,color:#fff
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    style WriteReport fill:#2196F3,color:#fff
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>    style SelfCheck fill:#2196F3,color:#fff
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    style GoBack fill:#2196F3,color:#fff
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>    style QuickStart fill:#2196F3,color:#fff
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    style ScopeCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    style Verdict fill:#FF9800,color:#fff
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>    style MoreTests fill:#FF9800,color:#fff
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>    style FixesWritten fill:#FF9800,color:#fff
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>    style P7 fill:#2196F3,color:#fff
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>    style AdversaryAgent fill:#2196F3,color:#fff
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>    style LadderCheck fill:#2196F3,color:#fff
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>    style EscapeAnalysis fill:#2196F3,color:#fff
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>    style AdversarialReview fill:#2196F3,color:#fff
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>    style RequireChanges fill:#2196F3,color:#fff
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>    style FixVerdict fill:#f44336,color:#fff
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>    style SelfGate fill:#f44336,color:#fff
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>    style P2_Sub fill:#4CAF50,color:#fff
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>    style P4_Sub fill:#4CAF50,color:#fff
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>    style P5_Sub fill:#4CAF50,color:#fff
 </code></pre></div>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
@@ -7211,6 +7229,38 @@
 <tr>
 <td>Suggest /fixing-tests</td>
 <td>Output: "Suggested /fixing-tests invocation" (line 67)</td>
+</tr>
+<tr>
+<td>Fixes Written?</td>
+<td>Phase 7 trigger: "When this skill is used end-to-end (audit + remediation)"</td>
+</tr>
+<tr>
+<td>Phase 7: Fix Verification</td>
+<td>Phase 7 (lines 190-262)</td>
+</tr>
+<tr>
+<td>Dispatch Test Adversary Subagent</td>
+<td>Subagent prompt template (lines 197-260)</td>
+</tr>
+<tr>
+<td>Assertion Ladder Check</td>
+<td>Task 1: Classify on Assertion Strength Ladder</td>
+</tr>
+<tr>
+<td>ESCAPE Analysis per Assertion</td>
+<td>Task 2: CLAIM/PATH/CHECK/MUTATION/ESCAPE/IMPACT</td>
+</tr>
+<tr>
+<td>Adversarial Review</td>
+<td>Task 3: Construct broken implementations</td>
+</tr>
+<tr>
+<td>All KILLED + Level 4+?</td>
+<td>Task 4 verdict: PASS requires all KILLED + Level 4+</td>
+</tr>
+<tr>
+<td>List Required Changes</td>
+<td>FAIL path: any SURVIVED or Level 2 assertion</td>
 </tr>
 </tbody>
 </table>
