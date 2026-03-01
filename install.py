@@ -440,7 +440,7 @@ def is_spellbook_repo(path: Path) -> bool:
     # Key indicators of spellbook repo
     return (
         (path / "skills").is_dir()
-        and (path / "CLAUDE.spellbook.md").is_file()
+        and (path / "AGENTS.spellbook.md").is_file()
     )
 
 

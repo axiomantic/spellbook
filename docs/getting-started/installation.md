@@ -213,7 +213,7 @@ rm -rf ~/.local/share/spellbook
     The installer and MCP server automatically find the spellbook directory by:
 
     1. Checking `SPELLBOOK_DIR` environment variable
-    2. Walking up from the script location looking for `skills/` and `CLAUDE.spellbook.md`
+    2. Walking up from the script location looking for `skills/` and `AGENTS.spellbook.md`
     3. Defaulting to `~/.local/spellbook`
 
 ## Troubleshooting

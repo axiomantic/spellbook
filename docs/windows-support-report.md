@@ -318,7 +318,7 @@ Without this, spellbook uses directory junctions (slightly less flexible).
 | `docs/getting-started/` | Add Windows quick start alongside existing guides |
 | `docs/reference/` | Document Windows-specific config locations |
 | `docs/contributing/` | Add Windows development setup instructions |
-| `CLAUDE.spellbook.md` | Note Windows support in the user-facing template |
+| `AGENTS.spellbook.md` | Note Windows support in the user-facing template |
 
 ---
 
@@ -449,7 +449,7 @@ Windows Defender or other AV may flag the MCP server or hook scripts. May need t
 2. Update README with Windows installation
 3. Add Windows troubleshooting guide
 4. Full CI matrix (Windows 10, 11, with/without Developer Mode)
-5. Update `CLAUDE.spellbook.md` template for Windows users
+5. Update `AGENTS.spellbook.md` template for Windows users
 
 **Result:** Complete Windows support with documentation.
 
@@ -488,5 +488,5 @@ Windows Defender or other AV may flag the MCP server or hook scripts. May need t
 | `spellbook_mcp/terminal_utils.py` | 3 | Windows terminal detection |
 | `.github/workflows/test.yml` | 1 | Add windows-latest to matrix |
 | `README.md` | 5 | Windows installation instructions |
-| `CLAUDE.spellbook.md` | 5 | Note Windows support |
+| `AGENTS.spellbook.md` | 5 | Note Windows support |
 | `.gitattributes` | 1 | Enforce LF for shell scripts |

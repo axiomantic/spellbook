@@ -39,6 +39,10 @@ This is NOT optional. This is NOT negotiable.
 - Using unquoted heredocs (`<<EOF` instead of `<<'EOF'`)
 - Passing raw body via `--body` when content may contain shell special characters
 - Silently choosing a target repo without user confirmation
+- Creating a PR with unsanitized `#N` or `@username` references without explicit user opt-in
+- Defaulting to non-draft when creating a staging PR on a fork
+- Targeting upstream without confirming the user isn't in the fork-staging step
+- Skipping the tag sanitization gate for any reason
 </FORBIDDEN>
 
 # Create PR Command
@@ -128,6 +132,34 @@ Use AskUserQuestion in all cases. The question varies by context:
 - `IS_FORK`: Whether creating a cross-repo PR
 - `HEAD_SPEC`: For forks: `username:branch-name`. For same-repo: just the branch name.
 - `OWNER` / `REPO`: Parsed from `TARGET_REPO` for API calls.
+
+### 2.3 Fork-Then-Upstream Workflow Detection
+
+After confirming the target repo, detect staging workflow intent:
+
+1. **If the target is a FORK (not upstream):**
+   - Ask via AskUserQuestion: "This targets your fork. Is this a staging PR for self-review/CI before submitting upstream?"
+   - If yes (staging): Set `DRAFT_MODE = true`, `WORKFLOW_STAGE = "fork_staging"`
+   - If no: Proceed normally
+
+2. **If the target is UPSTREAM and a fork exists:**
+   - Ask via AskUserQuestion: "You're targeting upstream directly. Do you have a staging PR on your fork already?"
+   - Present options:
+     - A) "Yes, I've reviewed on my fork - proceed to upstream"
+     - B) "No, let me create a fork PR first" (redirect to fork workflow)
+     - C) "No fork staging needed - submit directly to upstream"
+   - Option A: Proceed with upstream, non-draft
+   - Option B: Redirect to fork with `DRAFT_MODE = true`, `WORKFLOW_STAGE = "fork_staging"`
+   - Option C: Proceed with upstream, but add extra confirmation via AskUserQuestion before Phase 7
+
+3. **Default draft behavior:**
+   - Fork target + staging: ALWAYS `--draft` (user must explicitly override in Phase 6)
+   - Fork target + non-staging: Ask draft preference in Phase 6
+   - Upstream target: Ask draft preference in Phase 6 (but recommend draft if first PR to this repo)
+
+**Store results:**
+- `DRAFT_MODE`: boolean, true if staging workflow detected
+- `WORKFLOW_STAGE`: `"fork_staging"` | `"upstream_direct"` | `"normal"`
 
 ---
 
@@ -321,15 +353,94 @@ TEMPLATE_EOF
 
 ---
 
+## Phase 5.5: Tag Sanitization Gate
+
+<CRITICAL>
+This phase is SAFETY-CRITICAL. A single #108 in a PR description notifies everyone
+subscribed to issue 108. A single @username pings that person. These are embarrassing,
+unprofessional, and irreversible once the PR is created.
+</CRITICAL>
+
+### 5.5.1 Scan for Auto-Linking Patterns
+
+Scan BOTH the PR title (`$TITLE`) and the full PR body (from `$BODY_FILE`) for:
+
+- `#\d+` patterns (GitHub auto-links to issues/PRs)
+- `@[a-zA-Z0-9_-]+` patterns (GitHub user/team mentions)
+- `GH-\d+` patterns (alternate GitHub issue syntax)
+
+### 5.5.2 Handle Matches
+
+**If ANY matches found:**
+
+1. Build a "Tags Found" report listing each match with the line it appears on.
+2. Strip ALL matches from the content:
+   - `#123` becomes `123` (number only)
+   - `@username` becomes `username` (name only)
+   - `GH-123` becomes `GH 123` (space-separated)
+3. Present the stripped content and report to the user via AskUserQuestion:
+
+   ```
+   Question: "I found references that GitHub will auto-link (notifying subscribers):
+
+   Tags stripped:
+   - Line 5: #108 -> 108 (would notify all subscribers of issue 108)
+   - Line 12: @alice -> alice (would ping user alice)
+
+   How should I handle these?"
+   Suggested Answers:
+   - A) Keep stripped (safe - no notifications)
+   - B) Restore specific tags (I'll ask which ones)
+   - C) Restore all tags (I understand the notification impact)
+   ```
+
+4. If user chooses **B (Restore specific tags)**: present each tag individually via AskUserQuestion with "This will notify all subscribers of issue/PR #X. Restore this tag?" for each match.
+5. If user chooses **C (Restore all)**: require typed confirmation "I understand these tags will send notifications" before restoring.
+
+**Store results:**
+- `TAGS_STRIPPED`: list of tags that were stripped (for Safety Summary in Phase 6)
+- `TAGS_RESTORED`: list of tags the user chose to restore
+- `TAGS_FINAL_NOTIFY`: list of tags that WILL send notifications (restored tags only)
+
+### 5.5.3 No Matches
+
+If NO matches found: proceed silently to Phase 6.
+
+### 5.5.4 Write Sanitized Content
+
+Write the sanitized (or user-approved) content back to `$BODY_FILE`. Also update `$TITLE` if tags were stripped from it.
+
+---
+
 ## Phase 6: User Review
 
 Present the complete PR for review before any creation or push actions.
 
-### 6.1 Display PR Preview
+### 6.1 Safety Summary
+
+Present a safety summary block BEFORE the PR content preview:
+
+```
++-- PR Safety Summary ------------------------------------+
+| Target: <TARGET_REPO> (<origin or upstream>)            |
+| Mode:   <Draft or Ready> (<staging for self-review>)    |
+| Tags:   <N stripped (list)> or "None found (clean)"     |
+| Push:   <Will push branch 'X' first> or "Already pushed"|
+| Notify: <No notifications> or "Will notify: <list>"    |
++---------------------------------------------------------+
+```
+
+- **Target**: From Phase 2 (`TARGET_REPO` and whether it is origin/upstream)
+- **Mode**: Draft if `DRAFT_MODE = true`, otherwise Ready. Include workflow stage context.
+- **Tags**: Count and list of stripped tags from Phase 5.5, or "None found (clean)"
+- **Push**: Whether branch needs pushing (from Phase 1.4)
+- **Notify**: If any tags were restored, list which notifications will be sent. Otherwise "No notifications will be sent."
+
+### 6.2 Display PR Preview
 
 Show title, base, target repo, branch, draft status, and full populated body.
 
-### 6.2 Ask for Approval
+### 6.3 Ask for Approval
 
 ```
 AskUserQuestion:
@@ -364,12 +475,26 @@ MUST get explicit user confirmation before pushing.
 
 Use AskUserQuestion: "Branch needs to be pushed. Push now?" If approved: `git push -u origin "$CURRENT_BRANCH"`. If push fails, STOP. If user declines, clean up and exit.
 
-### 7.2 Create the PR
+### 7.2 Resolve Draft Flag
+
+Determine `DRAFT_FLAG` based on workflow state and user choices:
+
+- If `DRAFT_MODE = true` (from Phase 2.3 or Phase 6 user choice): `DRAFT_FLAG="--draft"`
+- If user chose "Create as draft PR" in Phase 6: `DRAFT_FLAG="--draft"`
+- Otherwise: `DRAFT_FLAG=""` (omit)
+
+### 7.3 Create the PR
+
+<CRITICAL>
+The `--repo` flag MUST ALWAYS be explicitly specified. Never rely on git remote defaults.
+The `--repo` value MUST come from `$TARGET_REPO` confirmed in Phase 2.
+</CRITICAL>
 
 **Same-repo pattern:**
 
 ```bash
 gh pr create \
+  --repo "$TARGET_REPO" \
   --title "$TITLE" \
   --base "$BASE_BRANCH" \
   --body-file "$BODY_FILE" \
@@ -390,7 +515,7 @@ gh pr create \
 
 Capture the PR URL from output. If creation fails, report the error (auth issue, PR already exists, etc.).
 
-### 7.3 Clean Up and Report
+### 7.4 Clean Up and Report
 
 ```bash
 rm -f "$BODY_FILE"
@@ -450,12 +575,17 @@ Before completing PR creation, verify:
 
 - [ ] Prerequisites verified (not on default branch, commits ahead, branch state checked)
 - [ ] Target repository confirmed with user via AskUserQuestion
+- [ ] Fork-then-upstream workflow detected and handled (Phase 2.3)
 - [ ] Template discovery attempted (all applicable tiers)
 - [ ] Template populated from merge-base delta only (branch-relative)
 - [ ] Jira ticket prefix applied correctly (real ticket or omitted entirely)
+- [ ] Tag sanitization gate executed (Phase 5.5) - no unsanitized #N or @user references
+- [ ] Safety summary displayed before PR preview (Phase 6.1)
 - [ ] PR title and body presented to user for review
 - [ ] User explicitly approved creation via AskUserQuestion
 - [ ] Push confirmed by user before executing (if needed)
+- [ ] `--repo` explicitly specified in `gh pr create` command
+- [ ] `--draft` included when DRAFT_MODE is true (staging PRs on forks)
 - [ ] PR created via --body-file (not --fill, not --template)
 - [ ] PR URL reported to user
 - [ ] Temp file cleaned up

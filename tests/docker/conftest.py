@@ -42,7 +42,7 @@ ESSENTIAL_FILES = [
     "install.py",
     "pyproject.toml",
     ".version",
-    "CLAUDE.spellbook.md",
+    "AGENTS.spellbook.md",
     "bootstrap.sh",
 ]
 

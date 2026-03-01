@@ -35,6 +35,8 @@ This is NOT optional. This is NOT negotiable.
 - Using unquoted heredocs (`<<EOF` instead of `<<'EOF'`) for body content
 - Passing raw body via `--body` when content may contain shell special characters
 - Silently choosing a target repo without user confirmation
+- Creating an issue with unsanitized `#N` or `@username` references without explicit user opt-in
+- Skipping the tag sanitization gate for any reason
 </FORBIDDEN>
 
 ## Usage
@@ -71,7 +73,7 @@ Options:
 - No, specify a different repository
 ```
 
-If user specifies a different repository, store it as `TARGET_REPO` and use `--repo TARGET_REPO` for all subsequent `gh` commands.
+If user specifies a different repository, store it as `TARGET_REPO` and use `--repo TARGET_REPO` for all subsequent `gh` commands. The confirmed `TARGET_REPO` MUST be passed as `--repo TARGET_REPO` in the final `gh issue create` command. Never rely on git remote defaults.
 
 **Error handling:**
 - If `gh` is not installed: "Error: GitHub CLI (`gh`) is not installed. Install from https://cli.github.com/"
@@ -320,6 +322,47 @@ NEVER fabricate a Jira ticket number. If no ticket number is provided by the use
 
 ---
 
+## Phase 5.5: Tag Sanitization Gate
+
+<CRITICAL>
+This phase is SAFETY-CRITICAL. A single #108 in an issue body notifies everyone
+subscribed to issue/PR 108. A single @username pings that person. These are
+embarrassing, unprofessional, and irreversible once the issue is created.
+</CRITICAL>
+
+1. Scan BOTH the issue title and the full issue body for:
+   - `#\d+` patterns (GitHub auto-links to issues/PRs)
+   - `@[a-zA-Z0-9_-]+` patterns (GitHub user/team mentions)
+   - `GH-\d+` patterns (alternate GitHub issue syntax)
+
+2. If ANY matches found:
+   a. Build a "Tags Found" report listing each match with context
+   b. Strip ALL matches from the content:
+      - `#123` becomes `123`
+      - `@username` becomes `username`
+      - `GH-123` becomes `GH 123`
+   c. Present to user via AskUserQuestion:
+
+      "I found references that GitHub will auto-link (notifying subscribers):
+
+       Tags stripped:
+       - Line 5: #108 -> 108 (would notify all subscribers of issue/PR 108)
+       - Line 12: @alice -> alice (would ping user alice)
+
+       Options:
+       1. Keep stripped (safe - no notifications)
+       2. Restore specific tags (I'll ask which ones)
+       3. Restore all tags (I understand the notification impact)"
+
+   d. If "Restore specific tags": ask about each individually
+   e. If "Restore all": require typed confirmation
+
+3. If NO matches found: proceed silently.
+
+4. Write sanitized content back.
+
+---
+
 ## Phase 6: User Review
 
 Present the complete issue for review before creation.
@@ -491,6 +534,7 @@ Before completing issue creation, verify:
 - [ ] If YAML form: all fields walked through interactively
 - [ ] Required field validations enforced
 - [ ] Issue title determined (with correct Jira prefix handling)
+- [ ] Tag sanitization gate passed (no unsanitized `#N` or `@username` references)
 - [ ] Issue title and body presented to user for review
 - [ ] User explicitly approved creation via AskUserQuestion
 - [ ] Issue created via `--body-file` (not `--template`, not `--fill`)

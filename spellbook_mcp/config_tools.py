@@ -88,9 +88,9 @@ def _is_spellbook_root(path: Path) -> bool:
     Returns:
         True if the directory contains spellbook indicators
     """
-    # Key indicators: skills/ directory and CLAUDE.spellbook.md file
+    # Key indicators: skills/ directory and AGENTS.spellbook.md file
     skills_dir = path / "skills"
-    spellbook_md = path / "CLAUDE.spellbook.md"
+    spellbook_md = path / "AGENTS.spellbook.md"
     return skills_dir.is_dir() and spellbook_md.is_file()
 
 

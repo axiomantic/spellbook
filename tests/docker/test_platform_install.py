@@ -41,7 +41,7 @@ def _make_spellbook_dir(base: Path) -> Path:
     (mcp_dir / "server.py").write_text("# MCP server stub\n")
 
     # Context file template
-    (spellbook / "CLAUDE.spellbook.md").write_text(
+    (spellbook / "AGENTS.spellbook.md").write_text(
         "# Spellbook\n\nTest spellbook context content.\n"
     )
 

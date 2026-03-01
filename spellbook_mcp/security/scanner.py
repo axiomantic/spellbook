@@ -66,7 +66,7 @@ _ENTROPY_THRESHOLD = 4.5
 # Paths are matched against the file path suffix (using str.endswith) so that both
 # absolute paths and diff-relative paths are handled.
 _DOCUMENTATION_EXCLUDE_SUFFIXES: list[str] = [
-    "CLAUDE.spellbook.md",
+    "AGENTS.spellbook.md",
 ]
 
 

@@ -53,7 +53,7 @@ def _make_opencode_installer(tmp_path, dry_run=False):
 
     # Create minimal required structure
     (spellbook_dir / ".version").write_text("1.0.0")
-    (spellbook_dir / "CLAUDE.spellbook.md").write_text("# Spellbook")
+    (spellbook_dir / "AGENTS.spellbook.md").write_text("# Spellbook")
     (spellbook_dir / "skills").mkdir()
     (spellbook_dir / "commands").mkdir()
 

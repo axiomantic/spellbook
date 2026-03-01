@@ -1,7 +1,7 @@
 """
 Claude Code hook registration for security, TTS, and compaction hooks.
 
-Manages hook entries in .claude/settings.local.json that point to
+Manages hook entries in Claude Code settings files that point to
 spellbook security scripts, TTS notification hooks, and compaction
 recovery hooks.
 
@@ -34,7 +34,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 # Hook definitions grouped by phase. Each phase maps to a list of matcher entries.
-# Hooks can be plain strings (simple command path) or dicts with type/command/async/timeout.
+# All hooks MUST use the object format {type, command, ...}. Plain string hooks
+# are no longer accepted by Claude Code (as of ~v2.1).
 # Paths use $SPELLBOOK_DIR which the hooks resolve at runtime.
 #
 # Entries WITHOUT a "matcher" key are catch-all hooks that fire on every tool
@@ -47,11 +48,21 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
     "PreToolUse": [
         {
             "matcher": "Bash",
-            "hooks": ["$SPELLBOOK_DIR/hooks/bash-gate.sh"],
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh",
+                },
+            ],
         },
         {
             "matcher": "spawn_claude_session",
-            "hooks": ["$SPELLBOOK_DIR/hooks/spawn-guard.sh"],
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/spawn-guard.sh",
+                },
+            ],
         },
         {
             "matcher": "mcp__spellbook__workflow_state_save",
@@ -218,7 +229,7 @@ def _expand_spellbook_dir(hook: Union[str, Dict[str, Any]], spellbook_dir: Path)
 
 
 def _load_settings(settings_path: Path) -> Optional[Dict]:
-    """Load and parse settings.local.json, returning None on missing file or empty content."""
+    """Load and parse a settings JSON file, returning None on missing file or empty content."""
     if not settings_path.exists():
         return {}
 
@@ -330,7 +341,7 @@ def _clean_hooks_for_phase(phase_entries: List[Dict], spellbook_dir: Optional[Pa
 
 
 def install_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry_run: bool = False) -> HookResult:
-    """Install spellbook security hooks into settings.local.json.
+    """Install spellbook security hooks into a Claude Code settings file.
 
     Merges hook entries into PreToolUse and PostToolUse arrays. If a matcher
     already exists (e.g., user has their own Bash hook), the spellbook
@@ -341,8 +352,12 @@ def install_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry
     to the actual absolute path so hooks work without environment variable
     expansion at runtime.
 
+    NOTE: Claude Code only reads hooks from ~/.claude/settings.json (user-level),
+    .claude/settings.json (project), and .claude/settings.local.json (project local).
+    User-level ~/.claude/settings.local.json is NOT a supported hooks location.
+
     Args:
-        settings_path: Path to .claude/settings.local.json
+        settings_path: Path to the settings file (e.g. settings.json)
         spellbook_dir: Path to the spellbook installation directory. When provided,
             $SPELLBOOK_DIR is expanded to this path in all hook commands.
         dry_run: If True, do not write any changes
@@ -393,12 +408,12 @@ def install_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry
         component="hooks",
         success=True,
         action="installed",
-        message="hooks: security hooks registered in settings.local.json",
+        message=f"hooks: security hooks registered in {settings_path.name}",
     )
 
 
 def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, dry_run: bool = False) -> HookResult:
-    """Remove spellbook security hooks from settings.local.json.
+    """Remove spellbook security hooks from a Claude Code settings file.
 
     Removes only spellbook-managed hook paths from all phases. User-defined
     hooks are preserved. If removing the spellbook hook leaves a matcher
@@ -408,7 +423,7 @@ def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, d
     paths when spellbook_dir is provided, ensuring backward compatibility.
 
     Args:
-        settings_path: Path to .claude/settings.local.json
+        settings_path: Path to the settings file (e.g. settings.json)
         spellbook_dir: Path to the spellbook installation directory. When provided,
             hooks with expanded absolute paths are also recognized for removal.
         dry_run: If True, do not write any changes
@@ -421,7 +436,7 @@ def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, d
             component="hooks",
             success=True,
             action="unchanged",
-            message="hooks: settings.local.json not found, nothing to remove",
+            message=f"hooks: {settings_path.name} not found, nothing to remove",
         )
 
     if dry_run:
@@ -439,7 +454,7 @@ def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, d
             component="hooks",
             success=True,
             action="unchanged",
-            message="hooks: settings.local.json has invalid JSON, skipping",
+            message=f"hooks: {settings_path.name} has invalid JSON, skipping",
         )
 
     if settings is None:
@@ -486,5 +501,5 @@ def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, d
         component="hooks",
         success=True,
         action="removed",
-        message="hooks: spellbook security hooks removed from settings.local.json",
+        message=f"hooks: spellbook security hooks removed from {settings_path.name}",
     )
