@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-03-01
+
+### Added
+- **Assertion quality standard pattern** (`patterns/assertion-quality-standard.md`) - Shared reference document defining the Assertion Strength Ladder (5 levels for string, object, and collection output), the Bare Substring Problem, the Broken Implementation Test (mutation check annotation), and justification requirements. Referenced by TDD, green mirage audit, fixing-tests, and code quality skills.
+- **Fix verification phase for green mirage audit** - Phase 7 in `auditing-green-mirage` closes the audit-to-fix loop with a Test Adversary subagent that applies ESCAPE analysis and assertion ladder classification to every new assertion
+- **Specialized subagent templates** (`dispatching-parallel-agents`) - Test Writer and Test Adversary templates for consistent assertion quality enforcement when dispatching test-writing or test-reviewing subagents
+- **Assertion quality gate for fixing-tests** - `audit_report` mode loads the assertion quality standard and rejects assertions below Level 4 on the Assertion Strength Ladder
+
+### Changed
+- **TDD skill assertion rules expanded** - Added bare substring ban, string containment position requirement, and MUTATION field to ESCAPE analysis template
+- **Code quality checklists updated** - Both pre-completion and post-implementation checklists now require Level 4+ assertions per the Assertion Strength Ladder
+
 ## [0.16.0] - 2026-03-01
 
 ### Added

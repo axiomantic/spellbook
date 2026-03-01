@@ -6,7 +6,7 @@ Use when auditing whether tests genuinely catch failures, or when user expresses
 
 # Diagram: auditing-green-mirage
 
-Forensic test suite audit that traces every test through production code, checks against 8 Green Mirage patterns, and produces a YAML-structured report with dependency-ordered remediation plan.
+Forensic test suite audit that traces every test through production code, checks against 9 Green Mirage patterns, and produces a YAML-structured report with dependency-ordered remediation plan. Includes fix verification phase with Test Adversary subagent.
 
 ```mermaid
 flowchart TD
@@ -58,12 +58,22 @@ flowchart TD
     DetailedFindings --> RemPlan[Remediation Plan]
     RemPlan --> WriteReport[Write Report to Artifacts]
 
-    WriteReport --> SelfCheck[Self-Check Checklist]
+    WriteReport --> QuickStart[Suggest /fixing-tests]
+    QuickStart --> FixesWritten{Fixes Written?}
+    FixesWritten -->|No| SelfCheck[Self-Check Checklist]
+    FixesWritten -->|Yes| P7[Phase 7: Fix Verification]
+    P7 --> AdversaryAgent[Dispatch Test Adversary Subagent]
+    AdversaryAgent --> LadderCheck[Assertion Ladder Check]
+    LadderCheck --> EscapeAnalysis[ESCAPE Analysis per Assertion]
+    EscapeAnalysis --> AdversarialReview[Adversarial Review]
+    AdversarialReview --> FixVerdict{All KILLED + Level 4+?}
+    FixVerdict -->|FAIL| RequireChanges[List Required Changes]
+    RequireChanges --> P7
+    FixVerdict -->|PASS| SelfCheck
     SelfCheck --> SelfGate{All Items Checked?}
     SelfGate -->|No| GoBack[Go Back and Complete]
     GoBack --> SelfCheck
-    SelfGate -->|Yes| QuickStart[Suggest /fixing-tests]
-    QuickStart --> End([End])
+    SelfGate -->|Yes| End([End])
 
     style Start fill:#4CAF50,color:#fff
     style End fill:#4CAF50,color:#fff
@@ -101,6 +111,14 @@ flowchart TD
     style ScopeCheck fill:#FF9800,color:#fff
     style Verdict fill:#FF9800,color:#fff
     style MoreTests fill:#FF9800,color:#fff
+    style FixesWritten fill:#FF9800,color:#fff
+    style P7 fill:#2196F3,color:#fff
+    style AdversaryAgent fill:#2196F3,color:#fff
+    style LadderCheck fill:#2196F3,color:#fff
+    style EscapeAnalysis fill:#2196F3,color:#fff
+    style AdversarialReview fill:#2196F3,color:#fff
+    style RequireChanges fill:#2196F3,color:#fff
+    style FixVerdict fill:#f44336,color:#fff
     style SelfGate fill:#f44336,color:#fff
     style P2_Sub fill:#4CAF50,color:#fff
     style P4_Sub fill:#4CAF50,color:#fff
@@ -147,6 +165,14 @@ flowchart TD
 | Self-Check Checklist | Self-Check (lines 195-222) |
 | All Items Checked? | Line 222: "If NO to ANY item, go back and complete it." |
 | Suggest /fixing-tests | Output: "Suggested /fixing-tests invocation" (line 67) |
+| Fixes Written? | Phase 7 trigger: "When this skill is used end-to-end (audit + remediation)" |
+| Phase 7: Fix Verification | Phase 7 (lines 190-262) |
+| Dispatch Test Adversary Subagent | Subagent prompt template (lines 197-260) |
+| Assertion Ladder Check | Task 1: Classify on Assertion Strength Ladder |
+| ESCAPE Analysis per Assertion | Task 2: CLAIM/PATH/CHECK/MUTATION/ESCAPE/IMPACT |
+| Adversarial Review | Task 3: Construct broken implementations |
+| All KILLED + Level 4+? | Task 4 verdict: PASS requires all KILLED + Level 4+ |
+| List Required Changes | FAIL path: any SURVIVED or Level 2 assertion |
 
 ## Skill Content
 
@@ -334,6 +360,76 @@ Compile the full audit report:
 Return: File path of written report and inline summary.
 ```
 
+### Phase 7: Fix Verification
+
+When this skill is used end-to-end (audit + remediation), apply this phase after fixes are written. This phase closes the audit-to-fix loop by verifying fixes don't reproduce the same anti-patterns the audit found.
+
+<!-- SUBAGENT: Dispatch subagent to verify fixes. Subagent loads assertion-quality-standard pattern and applies the Test Adversary persona. -->
+
+Subagent prompt template:
+```
+Load the assertion quality standard (patterns/assertion-quality-standard.md).
+
+## Your Role: Test Adversary
+
+Your job is to BREAK the new/modified tests, not validate them.
+Your reputation depends on finding weaknesses others missed.
+
+## Context
+- New/modified test assertions from fix phase: [paste diffs or file paths]
+- Original audit findings these fixes address: [paste finding IDs and patterns]
+- Production files under test: [paths]
+
+## Tasks
+
+### 1. Assertion Ladder Check
+For each new/modified assertion, classify it on the Assertion Strength Ladder:
+- Level 5 (GOLD): exact match
+- Level 4 (PREFERRED): parsed structural / all-field
+- Level 3 (ACCEPTABLE with justification): structural containment
+- Level 2 (BANNED): bare substring
+- Level 1 (BANNED): length/existence
+
+REJECT any assertion at Level 2 or below.
+Level 3 requires written justification present in the code.
+
+### 2. ESCAPE Analysis
+For every new test function, complete:
+  CLAIM: What does this test claim to verify?
+  PATH:  What code actually executes?
+  CHECK: What do the assertions verify?
+  MUTATION: Name a specific production code mutation this assertion catches.
+  ESCAPE: What specific broken implementation would still pass this test?
+  IMPACT: What breaks in production if that broken implementation ships?
+
+The ESCAPE field must contain a specific mutation, not "none."
+
+### 3. Adversarial Review
+For each assertion:
+1. Read the assertion and the production code it exercises
+2. Construct a SPECIFIC, PLAUSIBLE broken production implementation
+   that would still pass this assertion
+3. Report verdict:
+
+   SURVIVED: [the broken implementation that passes]
+   FIX: [what the assertion should be instead]
+
+   -- or --
+
+   KILLED: [why no plausible broken implementation survives]
+
+A "plausible" broken implementation is one that could result from a
+real bug (off-by-one, wrong variable, missing field, swapped arguments,
+dropped output section) -- not adversarial construction.
+
+### 4. Verdict
+- Any SURVIVED result: FAIL the fix. List required changes.
+- Any Level 2 or below assertion: FAIL the fix. List required changes.
+- All KILLED + Level 4+: PASS the fix.
+
+Return: Per-assertion verdicts and overall PASS/FAIL.
+```
+
 ## Effort Estimation Guidelines
 
 | Effort | Criteria | Examples |
@@ -383,6 +479,11 @@ Before completing audit, verify:
 - [ ] Does every finding have effort estimate (trivial/moderate/significant)?
 - [ ] Does every finding have depends_on specified (even if empty [])?
 - [ ] Did I prioritize findings (critical/important/minor)?
+
+**Fix Verification (when fixes are written):**
+- [ ] Every new assertion is Level 4+ on the Assertion Strength Ladder
+- [ ] Every new assertion has a named mutation that would cause it to fail
+- [ ] Adversarial review found no SURVIVED assertions
 
 **Report Structure:**
 - [ ] Did I output YAML block at START?

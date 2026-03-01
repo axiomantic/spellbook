@@ -101,6 +101,9 @@ Before marking code complete:
 - [ ] No items from FORBIDDEN list
 - [ ] Error handling is explicit and complete
 - [ ] Tests have meaningful assertions
+- [ ] Test assertions are Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
+- [ ] No bare substring checks on string output
+- [ ] No length/existence-only assertions
 - [ ] Pre-existing issues addressed or explicitly tracked
 - [ ] Would confidently deploy this
 
@@ -111,6 +114,9 @@ Before completing implementation:
 - [ ] No `any` types introduced
 - [ ] No try-catch swallowing errors
 - [ ] Tests verify behavior, not just run
+- [ ] Test assertions are Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
+- [ ] No bare substring checks on string output
+- [ ] No length/existence-only assertions
 - [ ] Pre-existing issues flagged to user
 - [ ] Code matches existing patterns
 

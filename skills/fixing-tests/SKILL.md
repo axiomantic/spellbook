@@ -36,7 +36,7 @@ Detect mode from user input, build work items accordingly.
 
 | Mode | Detection | Action |
 |------|-----------|--------|
-| `audit_report` | Structured findings with patterns 1-8, "GREEN MIRAGE" verdicts, YAML block | Parse YAML, extract findings |
+| `audit_report` | Structured findings with patterns 1-8, "GREEN MIRAGE" verdicts, YAML block | Parse YAML, extract findings. Load `patterns/assertion-quality-standard.md` for assertion quality gate. |
 | `general_instructions` | "Fix tests in X", "test_foo is broken", specific test references | Extract target tests/files |
 | `run_and_fix` | "Run tests and fix failures", "get suite green" | Run tests, parse failures |
 
@@ -85,6 +85,19 @@ Parse failures into WorkItems with error_type, message, stack trace, expected/ac
 ## Phase 2: Fix Execution
 
 Dispatch subagent with `/fix-tests-execute` command. Subagent investigates, classifies, fixes, verifies, and commits each WorkItem.
+
+### Assertion Quality Gate (audit_report mode)
+
+When processing green-mirage audit findings, every fix must pass the Assertion Strength Ladder check before being marked complete:
+
+1. Load `patterns/assertion-quality-standard.md`
+2. Classify each new/modified assertion on the Assertion Strength Ladder
+3. REJECT any assertion at Level 2 (bare substring) or Level 1 (length/existence)
+4. Level 3 (structural containment) requires written justification in the code
+5. For each new assertion, name the specific production code mutation it catches
+6. If you cannot name a mutation, the assertion is too weak; strengthen it
+
+Include the Test Writer Template from `dispatching-parallel-agents` in subagent prompts that write test code.
 
 ### 2.3 Production Bug Protocol
 
@@ -222,6 +235,9 @@ B) No, satisfied with fixes
 - [ ] All work items processed or explicitly marked stuck
 - [ ] Each fix verified to pass
 - [ ] Each fix verified to catch the failure it should catch
+- [ ] Each fix verified to be Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
+- [ ] Each new assertion has a named mutation that would cause it to fail
+- [ ] No bare substring checks introduced
 - [ ] Full test suite ran at end
 - [ ] Production bugs flagged, not silently fixed
 - [ ] Commits follow agreed strategy

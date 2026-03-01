@@ -1,7 +1,7 @@
-<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md", "source_hash": "sha256:059ff52720bd181e48e83a04f1a433d7b1a705c8a10000d03934c502207ce8e8", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md", "source_hash": "sha256:0211b4b645b1bc70fa5d85978eef5c7fc3e6077d7d9171517521b4a2e0a9e606", "generated_at": "2026-03-01T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: auditing-green-mirage
 
-Forensic test suite audit that traces every test through production code, checks against 8 Green Mirage patterns, and produces a YAML-structured report with dependency-ordered remediation plan.
+Forensic test suite audit that traces every test through production code, checks against 9 Green Mirage patterns, and produces a YAML-structured report with dependency-ordered remediation plan. Includes fix verification phase with Test Adversary subagent.
 
 ```mermaid
 flowchart TD
@@ -53,12 +53,22 @@ flowchart TD
     DetailedFindings --> RemPlan[Remediation Plan]
     RemPlan --> WriteReport[Write Report to Artifacts]
 
-    WriteReport --> SelfCheck[Self-Check Checklist]
+    WriteReport --> QuickStart[Suggest /fixing-tests]
+    QuickStart --> FixesWritten{Fixes Written?}
+    FixesWritten -->|No| SelfCheck[Self-Check Checklist]
+    FixesWritten -->|Yes| P7[Phase 7: Fix Verification]
+    P7 --> AdversaryAgent[Dispatch Test Adversary Subagent]
+    AdversaryAgent --> LadderCheck[Assertion Ladder Check]
+    LadderCheck --> EscapeAnalysis[ESCAPE Analysis per Assertion]
+    EscapeAnalysis --> AdversarialReview[Adversarial Review]
+    AdversarialReview --> FixVerdict{All KILLED + Level 4+?}
+    FixVerdict -->|FAIL| RequireChanges[List Required Changes]
+    RequireChanges --> P7
+    FixVerdict -->|PASS| SelfCheck
     SelfCheck --> SelfGate{All Items Checked?}
     SelfGate -->|No| GoBack[Go Back and Complete]
     GoBack --> SelfCheck
-    SelfGate -->|Yes| QuickStart[Suggest /fixing-tests]
-    QuickStart --> End([End])
+    SelfGate -->|Yes| End([End])
 
     style Start fill:#4CAF50,color:#fff
     style End fill:#4CAF50,color:#fff
@@ -96,6 +106,14 @@ flowchart TD
     style ScopeCheck fill:#FF9800,color:#fff
     style Verdict fill:#FF9800,color:#fff
     style MoreTests fill:#FF9800,color:#fff
+    style FixesWritten fill:#FF9800,color:#fff
+    style P7 fill:#2196F3,color:#fff
+    style AdversaryAgent fill:#2196F3,color:#fff
+    style LadderCheck fill:#2196F3,color:#fff
+    style EscapeAnalysis fill:#2196F3,color:#fff
+    style AdversarialReview fill:#2196F3,color:#fff
+    style RequireChanges fill:#2196F3,color:#fff
+    style FixVerdict fill:#f44336,color:#fff
     style SelfGate fill:#f44336,color:#fff
     style P2_Sub fill:#4CAF50,color:#fff
     style P4_Sub fill:#4CAF50,color:#fff
@@ -142,3 +160,11 @@ flowchart TD
 | Self-Check Checklist | Self-Check (lines 195-222) |
 | All Items Checked? | Line 222: "If NO to ANY item, go back and complete it." |
 | Suggest /fixing-tests | Output: "Suggested /fixing-tests invocation" (line 67) |
+| Fixes Written? | Phase 7 trigger: "When this skill is used end-to-end (audit + remediation)" |
+| Phase 7: Fix Verification | Phase 7 (lines 190-262) |
+| Dispatch Test Adversary Subagent | Subagent prompt template (lines 197-260) |
+| Assertion Ladder Check | Task 1: Classify on Assertion Strength Ladder |
+| ESCAPE Analysis per Assertion | Task 2: CLAIM/PATH/CHECK/MUTATION/ESCAPE/IMPACT |
+| Adversarial Review | Task 3: Construct broken implementations |
+| All KILLED + Level 4+? | Task 4 verdict: PASS requires all KILLED + Level 4+ |
+| List Required Changes | FAIL path: any SURVIVED or Level 2 assertion |

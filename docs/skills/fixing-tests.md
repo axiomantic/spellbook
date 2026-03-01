@@ -16,7 +16,8 @@ flowchart TD
     DetectMode -->|Specific Test References| GeneralMode[Mode: general_instructions]
     DetectMode -->|Run Tests and Fix| RunFixMode[Mode: run_and_fix]
 
-    AuditMode --> P0[Phase 0: Parse Input]
+    AuditMode --> LoadAQS[Load Assertion Quality Standard]
+    LoadAQS --> P0[Phase 0: Parse Input]
     GeneralMode --> P0
     RunFixMode --> P1[Phase 1: Discovery]
 
@@ -51,7 +52,10 @@ flowchart TD
 
     Classify -->|No| ApplyFix[Apply Test Fix]
     ApplyFix --> VerifyFix[Verify Fix Passes]
-    VerifyFix --> CatchGate{Fix Catches Failures?}
+    VerifyFix --> AQGate{Assertion Level 4+?}
+    AQGate -->|No| StrengthenAssert[Strengthen Assertions]
+    StrengthenAssert --> ApplyFix
+    AQGate -->|Yes| CatchGate{Fix Catches Failures?}
     CatchGate -->|Yes| Commit[Commit Fix]
     CatchGate -->|No| RetryFix{Attempts < 2?}
     RetryFix -->|Yes| Investigate
@@ -77,6 +81,9 @@ flowchart TD
     style Classify fill:#FF9800,color:#fff
     style ProdChoice fill:#FF9800,color:#fff
     style PriorityLoop fill:#FF9800,color:#fff
+    style LoadAQS fill:#2196F3,color:#fff
+    style AQGate fill:#f44336,color:#fff
+    style StrengthenAssert fill:#2196F3,color:#fff
     style CatchGate fill:#f44336,color:#fff
     style RetryFix fill:#FF9800,color:#fff
     style FromAudit fill:#FF9800,color:#fff
@@ -144,7 +151,10 @@ flowchart TD
 | Generate Summary Report | Summary Report template (lines 146-174) |
 | Re-audit Offered | Re-audit Option (lines 176-182) |
 | /auditing-green-mirage/ | Re-audit invocation (line 179) |
-| Self-Check Checklist | Self-Check (lines 216-227) |
+| Load Assertion Quality Standard | Assertion Quality Gate (lines 89-100): audit_report mode loads patterns/assertion-quality-standard.md |
+| Assertion Level 4+? | Quality gate: REJECT Level 2 (bare substring) or Level 1 (length/existence) |
+| Strengthen Assertions | Level 3 requires justification; must name specific mutation caught |
+| Self-Check Checklist | Self-Check (lines 229-241) |
 
 ## Skill Content
 
@@ -182,7 +192,7 @@ Detect mode from user input, build work items accordingly.
 
 | Mode | Detection | Action |
 |------|-----------|--------|
-| `audit_report` | Structured findings with patterns 1-8, "GREEN MIRAGE" verdicts, YAML block | Parse YAML, extract findings |
+| `audit_report` | Structured findings with patterns 1-8, "GREEN MIRAGE" verdicts, YAML block | Parse YAML, extract findings. Load `patterns/assertion-quality-standard.md` for assertion quality gate. |
 | `general_instructions` | "Fix tests in X", "test_foo is broken", specific test references | Extract target tests/files |
 | `run_and_fix` | "Run tests and fix failures", "get suite green" | Run tests, parse failures |
 
@@ -231,6 +241,19 @@ Parse failures into WorkItems with error_type, message, stack trace, expected/ac
 ## Phase 2: Fix Execution
 
 Dispatch subagent with `/fix-tests-execute` command. Subagent investigates, classifies, fixes, verifies, and commits each WorkItem.
+
+### Assertion Quality Gate (audit_report mode)
+
+When processing green-mirage audit findings, every fix must pass the Assertion Strength Ladder check before being marked complete:
+
+1. Load `patterns/assertion-quality-standard.md`
+2. Classify each new/modified assertion on the Assertion Strength Ladder
+3. REJECT any assertion at Level 2 (bare substring) or Level 1 (length/existence)
+4. Level 3 (structural containment) requires written justification in the code
+5. For each new assertion, name the specific production code mutation it catches
+6. If you cannot name a mutation, the assertion is too weak; strengthen it
+
+Include the Test Writer Template from `dispatching-parallel-agents` in subagent prompts that write test code.
 
 ### 2.3 Production Bug Protocol
 
@@ -368,6 +391,9 @@ B) No, satisfied with fixes
 - [ ] All work items processed or explicitly marked stuck
 - [ ] Each fix verified to pass
 - [ ] Each fix verified to catch the failure it should catch
+- [ ] Each fix verified to be Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
+- [ ] Each new assertion has a named mutation that would cause it to fail
+- [ ] No bare substring checks introduced
 - [ ] Full test suite ran at end
 - [ ] Production bugs flagged, not silently fixed
 - [ ] Commits follow agreed strategy

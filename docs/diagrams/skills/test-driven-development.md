@@ -1,7 +1,7 @@
-<!-- diagram-meta: {"source": "skills/test-driven-development/SKILL.md", "source_hash": "sha256:c8ef7af081f73bb45846398e3752a57506e559831e63dc96c6177b15f8d76642", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/test-driven-development/SKILL.md", "source_hash": "sha256:8c20f5eaaf83977a40cfa4b6ae6ef51b528cf9fe8571c30a4025af23feff1f96", "generated_at": "2026-03-01T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: test-driven-development
 
-Red-Green-Refactor cycle enforcing strict test-first discipline. Tests must fail before implementation, implementation must be minimal, and refactoring must preserve green state.
+Red-Green-Refactor cycle enforcing strict test-first discipline. Tests must fail before implementation, implementation must be minimal, and refactoring must preserve green state. All assertions must be Level 4+ on the Assertion Strength Ladder with named mutations.
 
 ```mermaid
 flowchart TD
@@ -105,5 +105,5 @@ flowchart TD
 | Remove Duplication, Improve Names | Line 185: "Remove duplication, improve names, extract helpers." |
 | Still All Green? | REFACTOR gate (line 185): "Keep tests green." |
 | More Behavior Needed? | Repeat section (lines 187-189) |
-| Self-Check Checklist | Self-Check (lines 305-316) |
-| All Items Checked? | Line 316: "If ANY unchecked: Skipped TDD. Start over." |
+| Self-Check Checklist | Self-Check (lines 371-385) |
+| All Items Checked? | Line 385: "If ANY unchecked: Skipped TDD. Start over." |

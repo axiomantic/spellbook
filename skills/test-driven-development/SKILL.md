@@ -202,6 +202,8 @@ Next failing test for next feature. The cycle continues until all behavior is im
 
 Tests must validate CONTENT, not just EXISTENCE. Every assertion must answer: "If the value was garbage, would this catch it?"
 
+**Reference:** Load `patterns/assertion-quality-standard.md` for the full Assertion Strength Ladder, Bare Substring Problem analysis, and Broken Implementation Test. Every assertion must be Level 4+ on the ladder.
+
 ### Rules
 
 | Rule | Bad | Good |
@@ -213,6 +215,8 @@ Tests must validate CONTENT, not just EXISTENCE. Every assertion must answer: "I
 | **No `mock.ANY` by default** | `assert_called_with(mock.ANY, mock.ANY)` | `assert_called_with("expected_arg", expected_obj)` |
 | **Full structural validation** | `assert "key" in result` | `assert result == {"key": "expected_value", ...}` |
 | **Every field of every object** | `assert result.status == "ok"` | `assert result == ExpectedObject(status="ok", data=..., meta=...)` |
+| **No bare substring on string output** | `assert "data" in output` | `assert output == expected` or parse and assert on structure |
+| **String containment requires position** | `assert "field" in generated_code` | Parse output, verify field is inside the correct block/scope |
 
 ### Pychoir Matchers
 
@@ -236,9 +240,12 @@ ESCAPE: [test_function_name]
   CLAIM: What does this test claim to verify?
   PATH:  What code actually executes?
   CHECK: What do the assertions verify?
+  MUTATION: For each assertion, name the specific production code mutation it catches.
   ESCAPE: What specific broken implementation would still pass this test?
   IMPACT: What breaks in production if that broken implementation ships?
 ```
+
+The MUTATION field is a forcing function: for each assertion in the test, you must name a specific, plausible production code change that would cause that assertion to fail. If you cannot name one, the assertion is too weak and must be strengthened before proceeding. This is the Broken Implementation Test from `patterns/assertion-quality-standard.md`.
 
 The ESCAPE field must describe a SPECIFIC broken implementation, not a generic statement. "Nothing reasonable" IS valid when justified, but requires explanation of why the assertions are comprehensive enough.
 
@@ -364,9 +371,12 @@ Before marking complete:
 - [ ] Tests use real code (mocks only if unavoidable)
 - [ ] Edge cases and errors covered
 - [ ] Every assertion validates CONTENT, not just existence/count
-- [ ] ESCAPE analysis completed for every test function
+- [ ] Every assertion is Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
+- [ ] ESCAPE analysis completed for every test function (including MUTATION field)
+- [ ] Every assertion has a named mutation that would cause it to fail
 - [ ] No mock.ANY in assertions (use pychoir matchers with justification comment instead)
 - [ ] No `len() > 0` or `len() == N` without content verification
+- [ ] No bare substring checks on string output
 
 If ANY unchecked: Skipped TDD. Start over.
 

@@ -187,6 +187,76 @@ Compile the full audit report:
 Return: File path of written report and inline summary.
 ```
 
+### Phase 7: Fix Verification
+
+When this skill is used end-to-end (audit + remediation), apply this phase after fixes are written. This phase closes the audit-to-fix loop by verifying fixes don't reproduce the same anti-patterns the audit found.
+
+<!-- SUBAGENT: Dispatch subagent to verify fixes. Subagent loads assertion-quality-standard pattern and applies the Test Adversary persona. -->
+
+Subagent prompt template:
+```
+Load the assertion quality standard (patterns/assertion-quality-standard.md).
+
+## Your Role: Test Adversary
+
+Your job is to BREAK the new/modified tests, not validate them.
+Your reputation depends on finding weaknesses others missed.
+
+## Context
+- New/modified test assertions from fix phase: [paste diffs or file paths]
+- Original audit findings these fixes address: [paste finding IDs and patterns]
+- Production files under test: [paths]
+
+## Tasks
+
+### 1. Assertion Ladder Check
+For each new/modified assertion, classify it on the Assertion Strength Ladder:
+- Level 5 (GOLD): exact match
+- Level 4 (PREFERRED): parsed structural / all-field
+- Level 3 (ACCEPTABLE with justification): structural containment
+- Level 2 (BANNED): bare substring
+- Level 1 (BANNED): length/existence
+
+REJECT any assertion at Level 2 or below.
+Level 3 requires written justification present in the code.
+
+### 2. ESCAPE Analysis
+For every new test function, complete:
+  CLAIM: What does this test claim to verify?
+  PATH:  What code actually executes?
+  CHECK: What do the assertions verify?
+  MUTATION: Name a specific production code mutation this assertion catches.
+  ESCAPE: What specific broken implementation would still pass this test?
+  IMPACT: What breaks in production if that broken implementation ships?
+
+The ESCAPE field must contain a specific mutation, not "none."
+
+### 3. Adversarial Review
+For each assertion:
+1. Read the assertion and the production code it exercises
+2. Construct a SPECIFIC, PLAUSIBLE broken production implementation
+   that would still pass this assertion
+3. Report verdict:
+
+   SURVIVED: [the broken implementation that passes]
+   FIX: [what the assertion should be instead]
+
+   -- or --
+
+   KILLED: [why no plausible broken implementation survives]
+
+A "plausible" broken implementation is one that could result from a
+real bug (off-by-one, wrong variable, missing field, swapped arguments,
+dropped output section) -- not adversarial construction.
+
+### 4. Verdict
+- Any SURVIVED result: FAIL the fix. List required changes.
+- Any Level 2 or below assertion: FAIL the fix. List required changes.
+- All KILLED + Level 4+: PASS the fix.
+
+Return: Per-assertion verdicts and overall PASS/FAIL.
+```
+
 ## Effort Estimation Guidelines
 
 | Effort | Criteria | Examples |
@@ -236,6 +306,11 @@ Before completing audit, verify:
 - [ ] Does every finding have effort estimate (trivial/moderate/significant)?
 - [ ] Does every finding have depends_on specified (even if empty [])?
 - [ ] Did I prioritize findings (critical/important/minor)?
+
+**Fix Verification (when fixes are written):**
+- [ ] Every new assertion is Level 4+ on the Assertion Strength Ladder
+- [ ] Every new assertion has a named mutation that would cause it to fail
+- [ ] Adversarial review found no SURVIVED assertions
 
 **Report Structure:**
 - [ ] Did I output YAML block at START?

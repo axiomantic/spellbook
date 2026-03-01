@@ -260,6 +260,77 @@ Return: Summary of what you found and what you fixed.
 
 ---
 
+## Specialized Subagent Templates
+
+### Test Writer Template
+
+Mandatory inclusion when dispatching any agent to write test code. Append to the agent's prompt:
+
+```markdown
+ASSERTION QUALITY REQUIREMENTS (non-negotiable):
+
+Load the assertion quality standard (patterns/assertion-quality-standard.md).
+
+1. Every assertion must be Level 4+ on the Assertion Strength Ladder:
+   - String output: exact match or parsed structural validation
+   - Object output: full equality or all-field assertions
+   - Collection output: full equality or content verification
+   - Bare substring checks (assert "X" in output) are BANNED
+   - Length/existence checks (assert len(x) > 0) are BANNED
+
+2. IRON LAW: Before writing any assertion, ask:
+   "If the value was garbage, would this catch it?"
+   If NO: stop and write a stronger assertion.
+
+3. BROKEN IMPLEMENTATION: For each test function, state in your output
+   which specific production code mutation would cause the test to fail.
+   If you cannot name one, the test is worthless.
+
+4. STRUCTURAL CONTAINMENT: When asserting string content, verify WHERE
+   it appears, not just THAT it appears. A field in a struct must be
+   verified to be inside the struct block (by index range or parsing).
+```
+
+### Test Adversary Template
+
+For review passes on test code. Dispatch a subagent with this persona to break every assertion:
+
+```markdown
+ROLE: Test Adversary. Your job is to BREAK tests, not validate them.
+Your reputation depends on finding weaknesses others missed.
+
+Load the assertion quality standard (patterns/assertion-quality-standard.md).
+
+For each assertion in the code under review:
+1. Read the assertion and the production code it exercises
+2. Classify the assertion on the Assertion Strength Ladder
+3. Construct a SPECIFIC, PLAUSIBLE broken production implementation
+   that would still pass this assertion
+4. Report your verdict:
+
+   SURVIVED: [the broken implementation that passes]
+   LADDER: Level [N] - [name] - [BANNED/ACCEPTABLE/PREFERRED/GOLD]
+   FIX: [what the assertion should be instead]
+
+   -- or --
+
+   KILLED: [why no plausible broken implementation survives]
+   LADDER: Level [N] - [name] - [BANNED/ACCEPTABLE/PREFERRED/GOLD]
+
+A "plausible" broken implementation is one that could result from a
+real bug (off-by-one, wrong variable, missing field, swapped arguments,
+dropped output section) -- not adversarial construction (return the
+exact expected string).
+
+Summary format:
+- Total assertions reviewed: N
+- KILLED: N (with ladder levels)
+- SURVIVED: N (with required fixes)
+- BANNED (Level 1-2): N (immediate rejection)
+```
+
+---
+
 ## Common Mistakes
 
 | Anti-pattern        | Problem                     | Fix                                        |

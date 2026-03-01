@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/fixing-tests/SKILL.md", "source_hash": "sha256:77f8b1e41c04e37cdd867659abf4c8b2d75b147ef72a35bf4b7a6c0c37c79f95", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/fixing-tests/SKILL.md", "source_hash": "sha256:50710b36446069a103f45743493ccfb35386d4d9bd44be3f3b003a2b5ac52706", "generated_at": "2026-03-01T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: fixing-tests
 
 Three-mode test fixing workflow that processes audit reports, general instructions, or run-and-fix cycles. Includes production bug detection, priority-based batch processing, and a stuck-items circuit breaker.
@@ -11,7 +11,8 @@ flowchart TD
     DetectMode -->|Specific Test References| GeneralMode[Mode: general_instructions]
     DetectMode -->|Run Tests and Fix| RunFixMode[Mode: run_and_fix]
 
-    AuditMode --> P0[Phase 0: Parse Input]
+    AuditMode --> LoadAQS[Load Assertion Quality Standard]
+    LoadAQS --> P0[Phase 0: Parse Input]
     GeneralMode --> P0
     RunFixMode --> P1[Phase 1: Discovery]
 
@@ -46,7 +47,10 @@ flowchart TD
 
     Classify -->|No| ApplyFix[Apply Test Fix]
     ApplyFix --> VerifyFix[Verify Fix Passes]
-    VerifyFix --> CatchGate{Fix Catches Failures?}
+    VerifyFix --> AQGate{Assertion Level 4+?}
+    AQGate -->|No| StrengthenAssert[Strengthen Assertions]
+    StrengthenAssert --> ApplyFix
+    AQGate -->|Yes| CatchGate{Fix Catches Failures?}
     CatchGate -->|Yes| Commit[Commit Fix]
     CatchGate -->|No| RetryFix{Attempts < 2?}
     RetryFix -->|Yes| Investigate
@@ -72,6 +76,9 @@ flowchart TD
     style Classify fill:#FF9800,color:#fff
     style ProdChoice fill:#FF9800,color:#fff
     style PriorityLoop fill:#FF9800,color:#fff
+    style LoadAQS fill:#2196F3,color:#fff
+    style AQGate fill:#f44336,color:#fff
+    style StrengthenAssert fill:#2196F3,color:#fff
     style CatchGate fill:#f44336,color:#fff
     style RetryFix fill:#FF9800,color:#fff
     style FromAudit fill:#FF9800,color:#fff
@@ -139,4 +146,7 @@ flowchart TD
 | Generate Summary Report | Summary Report template (lines 146-174) |
 | Re-audit Offered | Re-audit Option (lines 176-182) |
 | /auditing-green-mirage/ | Re-audit invocation (line 179) |
-| Self-Check Checklist | Self-Check (lines 216-227) |
+| Load Assertion Quality Standard | Assertion Quality Gate (lines 89-100): audit_report mode loads patterns/assertion-quality-standard.md |
+| Assertion Level 4+? | Quality gate: REJECT Level 2 (bare substring) or Level 1 (length/existence) |
+| Strengthen Assertions | Level 3 requires justification; must name specific mutation caught |
+| Self-Check Checklist | Self-Check (lines 229-241) |
