@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-03-01
+
+### Changed
+- **Bump dependencies** - fastapi 0.128.0 -> 0.134.0, @types/node 20.19.30 -> 25.3.3, @opencode-ai/plugin 1.2.14 -> 1.2.15, @opencode-ai/sdk 1.2.14 -> 1.2.15, actions/upload-artifact v6 -> v7
+
 ## [0.15.0] - 2026-02-28
 
 ### Added
