@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-03-01
+
+### Added
+- **Assertion quality enforcement across skill system** - Defense-in-depth approach to prevent green mirage tests (tests that pass but don't validate correctness)
+  - **TDD skill**: Mandatory ESCAPE analysis per test function (5-field template: CLAIM/PATH/CHECK/ESCAPE/IMPACT), assertion quality rules banning `len() > 0`, `len() == N`, `mock.ANY`, and existence-only checks without content verification. 4 new self-check items enforce compliance.
+  - **Testing anti-patterns**: New Anti-Pattern 6 (Existence-Only Assertions) with violation examples, fix examples, pychoir exception rule, and gate function. Cross-references Green Mirage Pattern 1.
+  - **Green mirage audit**: Worked ESCAPE example showing good vs bad analysis of a weak test. Pattern 1 expanded to detect count-only (`len() == N`) and wildcard matcher (`mock.ANY`, `unittest.mock.ANY`) assertions. Pattern 2 expanded with pychoir/matcher investigation point.
+  - **Implementing-features**: SIMPLE tier no longer exempts green mirage audit. All tiers now run the audit when tests are written or updated. Fact-checking exemption remains for SIMPLE tier.
+
+### Fixed
+- **Green mirage pattern count** - Fixed stale reference "8 Green Mirage Patterns" to "9 Green Mirage Patterns" in auditing-green-mirage skill
+
 ## [0.15.2] - 2026-03-01
 
 ### Fixed

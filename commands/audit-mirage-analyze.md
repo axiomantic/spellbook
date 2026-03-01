@@ -66,12 +66,22 @@ Check EVERY test against ALL patterns:
 ### Pattern 1: Existence vs. Validity
 **Symptom:** Checking something exists without validating correctness.
 ```python
-# GREEN MIRAGE
+# GREEN MIRAGE - Existence-only
 assert output_file.exists()
 assert len(result) > 0
 assert response is not None
+
+# GREEN MIRAGE - Count-only (right number, wrong content)
+assert len(result) == 3
+assert len(response["items"]) == expected_count
+
+# GREEN MIRAGE - Wildcard matchers (accept anything)
+mock_handler.assert_called_with(mock.ANY, mock.ANY)
+assert result == {"id": unittest.mock.ANY, "name": unittest.mock.ANY}
 ```
-**Question:** If the content was garbage, would this catch it?
+**Question:** If the content was garbage (but the right count/type/existence), would this catch it?
+
+**Detection patterns:** `len(x) > 0`, `len(x) == <number>` without content assertion on same object, `is not None` without value assertion, `.exists()`, `key in dict` without value assertion, `mock.ANY`, `unittest.mock.ANY`.
 
 ### Pattern 2: Partial Assertions (CODE SMELL - INVESTIGATE DEEPER)
 **Symptom:** Using `in`, substring checks, or partial matches instead of complete values.
@@ -84,6 +94,9 @@ assert 'SELECT' in query           # Garbage SQL could contain SELECT
 assert 'error' not in output       # Wrong output might not have 'error'
 assert expected_id in result       # Result could have wrong structure
 assert key in response_dict        # Value at key could be garbage
+# GREEN MIRAGE - Pychoir/matcher used to avoid computing expected value
+from pychoir import IsInstance
+assert result == {"count": IsInstance(int), "items": IsInstance(list)}  # Accepts any int/list
 ```
 
 **SOLID tests assert COMPLETE objects:**
@@ -97,6 +110,7 @@ assert result == {"id": 123, "name": "test", "status": "active"}
 1. WHY is this a partial assertion? What is the test avoiding checking?
 2. WHAT could be wrong with the unchecked parts?
 3. HOW would a complete assertion change this test?
+4. If pychoir matchers or custom matcher subclasses are used: is there a justification comment? Is the value genuinely unknowable (UUID, timestamp) or is the matcher hiding laziness?
 
 ### Pattern 3: Shallow String/Value Matching
 **Symptom:** Checking keywords without validating structure.

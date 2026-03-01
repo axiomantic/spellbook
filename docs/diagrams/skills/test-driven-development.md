@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/test-driven-development/SKILL.md", "source_hash": "sha256:3bb7232dfe292417c64d5680bed04f37435c6f856d6427b05ac7c9ebe3fe53bc", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/test-driven-development/SKILL.md", "source_hash": "sha256:efded7668a9f80ace7543363b0482e0ceaf21e1404a927be8a1103625a1594ec", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: test-driven-development
 
 Red-Green-Refactor cycle enforcing strict test-first discipline. Tests must fail before implementation, implementation must be minimal, and refactoring must preserve green state.

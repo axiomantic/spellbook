@@ -41,6 +41,29 @@ Before analyzing ANY test, think step-by-step:
 3. CHECK: What do assertions verify?
 4. ESCAPE: What garbage passes this test?
 5. IMPACT: What breaks in production?
+
+#### Worked ESCAPE Example
+
+Consider this test:
+
+```python
+def test_export_generates_csv(exporter, sample_data):
+    result = exporter.export(sample_data, format="csv")
+    assert len(result) > 0
+    assert result.endswith("\n")
+```
+
+**Applying the 5 ESCAPE questions:**
+
+| # | Question | Good Answer | Bad Answer |
+|---|----------|-------------|------------|
+| 1 | **CLAIM:** What does name/docstring promise? | "Generates valid CSV from sample_data" | "Tests export" (too vague to analyze) |
+| 2 | **PATH:** What code actually executes? | "exporter.export() calls csv_writer.writerows() on sample_data, returns string" | "It runs the export function" (not traced) |
+| 3 | **CHECK:** What do assertions verify? | "Only that output is non-empty and ends with newline" | "That it works" (restates test name) |
+| 4 | **ESCAPE:** What garbage passes this test? | "A single newline character `\n` passes both assertions. So does `garbage\n`. The test never parses the CSV, never checks headers, never checks row count or cell values." | "Nothing, it checks the output" (wrong: it checks almost nothing) |
+| 5 | **IMPACT:** What breaks in production? | "Users get corrupted CSV files. Data loss if downstream systems parse them." | "Export might not work" (too vague) |
+
+**Verdict:** GREEN MIRAGE. The assertions check existence, not validity. Fix: parse the CSV and assert headers and row contents match sample_data.
 </analysis>
 
 <reflection>
@@ -100,7 +123,7 @@ Before auditing, create complete inventory:
 
 Subagent prompt template:
 ```
-Read the audit-mirage-analyze command file for the complete audit template and all 8 Green Mirage Patterns.
+Read the audit-mirage-analyze command file for the complete audit template and all 9 Green Mirage Patterns.
 
 ## Context
 - Test file(s) to audit: [paths]

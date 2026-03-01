@@ -248,6 +248,74 @@ TDD cycle:
 4. THEN claim complete
 ```
 
+## Anti-Pattern 6: Existence-Only Assertions
+
+**The violation:**
+```python
+# BAD: Existence-only -- would pass with garbage data
+assert len(results) > 0
+assert response is not None
+assert output_file.exists()
+assert "key" in response_dict
+```
+
+```python
+# BAD: Count-only -- right number, wrong content
+assert len(results) == 3
+assert len(response["items"]) == 2
+```
+
+```python
+# BAD: Wildcard matchers -- accepts anything
+mock_handler.assert_called_with(mock.ANY, mock.ANY)
+assert result == {"id": unittest.mock.ANY, "name": unittest.mock.ANY}
+```
+
+**Why this is wrong:**
+- Existence checks pass when the value is garbage
+- Count checks pass when every item is wrong but the right number exist
+- `mock.ANY` / `unittest.mock.ANY` accepts literally anything, defeating the assertion
+- These create **false confidence**: the test suite is green but validates nothing
+- See also: Green Mirage Pattern 1 (Existence vs. Validity) in `commands/audit-mirage-analyze.md`
+
+**The fix:**
+```python
+# GOOD: Assert exact content
+assert results == [
+    {"id": 1, "name": "Alice", "role": "admin"},
+    {"id": 2, "name": "Bob", "role": "user"},
+]
+
+# GOOD: Assert complete response
+assert response == {"status": "ok", "data": expected_data, "meta": expected_meta}
+
+# GOOD: Assert exact call arguments
+mock_handler.assert_called_with("expected_event", expected_payload)
+```
+
+**Pychoir exception:** Pychoir matchers (including custom subclasses) are allowed for genuinely unknowable values (timestamps, UUIDs, auto-incremented IDs). Each use requires a justification comment explaining why the value cannot be known ahead of time.
+
+### Gate Function
+
+```
+BEFORE writing any assertion:
+  Ask: "If the value was garbage, would this assertion catch it?"
+
+  IF answer is NO:
+    STOP - Assert the actual expected value instead
+
+  IF value is genuinely unknowable (UUID, timestamp):
+    Use pychoir matcher with justification comment
+    NOT mock.ANY (mock.ANY is never the right tool for assertions)
+
+  Red flags (always replace with content assertions):
+    - len(x) > 0
+    - len(x) == N (without also checking content)
+    - x is not None (without also checking value)
+    - "key" in dict (without also checking value at key)
+    - mock.ANY / unittest.mock.ANY
+```
+
 ## When Mocks Become Too Complex
 
 **Warning signs:**
@@ -280,6 +348,7 @@ TDD cycle:
 | Incomplete mocks | Mirror real API completely |
 | Tests as afterthought | TDD - tests first |
 | Over-complex mocks | Consider integration tests |
+| Existence-only assertions | Assert exact expected values, not just existence/count |
 
 ## Red Flags
 
@@ -289,6 +358,9 @@ TDD cycle:
 - Test fails when you remove mock
 - Can't explain why mock is needed
 - Mocking "just to be safe"
+- `assert len(x) > 0` without content verification
+- `assert x is not None` without value verification
+- `mock.ANY` in assertions
 
 ## The Bottom Line
 
