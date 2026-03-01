@@ -329,3 +329,26 @@ proc verifyPatternsHash*(rulesPath: string, expectedHash: string): bool =
     return currentHash == expectedHash
   except IOError:
     return false
+
+proc mcpFallbackCheck*(toolInput: JsonNode, toolNameForMcp: string, hookName: string) =
+  ## Fall back to MCP server when embedded patterns are stale (hash mismatch).
+  ##
+  ## Calls security_check_tool_input via MCP JSON-RPC and fails closed if:
+  ##   - MCP is unavailable (nil result)
+  ##   - MCP reports the input as unsafe
+  ##
+  ## On success (safe=true or no response issues), returns normally so the
+  ## caller can exit cleanly.
+  debugLog(hookName, "hash mismatch, falling back to MCP")
+  let host = getEnvOr("SPELLBOOK_MCP_HOST", "127.0.0.1")
+  let port = parseInt(getEnvOr("SPELLBOOK_MCP_PORT", "8765"))
+  let mcpResult = mcpCall(host, port, "security_check_tool_input",
+    %*{"tool_name": toolNameForMcp, "tool_input": toolInput})
+  if mcpResult.isNil:
+    failClosed("Security check failed: stale patterns and MCP unavailable")
+  if not mcpResult.getOrDefault("safe").getBool(true):
+    let findings = mcpResult.getOrDefault("findings")
+    var reason = "Security check failed: blocked by MCP"
+    if not findings.isNil and findings.kind == JArray and findings.len > 0:
+      reason = "Security check failed: " & findings[0].getOrDefault("message").getStr("blocked")
+    failClosed(reason)

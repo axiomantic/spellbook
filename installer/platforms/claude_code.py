@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..components.context_files import generate_claude_context
-from ..components.hooks import install_hooks, uninstall_hooks
+from ..components.hooks import _SHELL_TO_NIM_BINARY, install_hooks, uninstall_hooks
 from ..components.mcp import (
     check_claude_cli_available,
     get_spellbook_server_url,
@@ -114,25 +114,15 @@ def _compile_nim_hooks(spellbook_dir: Path) -> bool:
         logger.warning(f"Nim compilation error: {e}")
         return False
 
-    # Step 3: Verify all 9 binaries exist
-    expected_binaries = [
-        "tts_timer_start",
-        "bash_gate",
-        "spawn_guard",
-        "state_sanitize",
-        "audit_log",
-        "canary_check",
-        "tts_notify",
-        "pre_compact_save",
-        "post_compact_recover",
-    ]
+    # Step 3: Verify all binaries exist (derived from _SHELL_TO_NIM_BINARY)
+    expected_binaries = list(_SHELL_TO_NIM_BINARY.values())
     for binary_name in expected_binaries:
         binary_path = nim_dir / "bin" / binary_name
         if not binary_path.exists():
             logger.warning(f"Missing compiled binary: {binary_name}")
             return False
 
-    logger.info("All 9 Nim hooks compiled successfully")
+    logger.info(f"All {len(expected_binaries)} Nim hooks compiled successfully")
     return True
 
 
@@ -425,7 +415,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     platform=self.platform_id,
                     success=True,
                     action="installed",
-                    message="nim_hooks: all 9 hooks compiled successfully",
+                    message=f"nim_hooks: all {len(_SHELL_TO_NIM_BINARY)} hooks compiled successfully",
                 )
             )
         else:

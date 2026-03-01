@@ -169,22 +169,35 @@ def _get_hook_path_for_platform(hook_path: str, nim_available: bool = False) -> 
 
     Priority: Nim binary > shell script > Python wrapper (Windows)
 
-    On Windows, always returns .py path (Nim binaries not supported on Windows).
+    On Windows with nim_available=True, returns Nim binary path with .exe extension.
+    On Windows with nim_available=False, returns .py wrapper path.
     On Unix with nim_available=True, returns Nim binary path.
     On Unix with nim_available=False, returns original .sh path.
     """
     import sys
 
-    if sys.platform == "win32":
-        return hook_path.replace(".sh", ".py")
+    is_windows = sys.platform == "win32"
 
     if nim_available:
-        shell_name = hook_path.split("/")[-1]  # e.g., "bash-gate.sh"
+        # Extract shell script name using PurePosixPath since template paths
+        # always use forward slashes ($SPELLBOOK_DIR/hooks/foo.sh)
+        from pathlib import PurePosixPath
+
+        shell_name = PurePosixPath(hook_path).name  # e.g., "bash-gate.sh"
         nim_name = _SHELL_TO_NIM_BINARY.get(shell_name)
         if nim_name:
-            # Replace hooks/<name>.sh with hooks/nim/bin/<nim_name>
-            nim_path = hook_path.rsplit("/hooks/", 1)[0] + f"/hooks/nim/bin/{nim_name}"
-            return nim_path
+            # Split on /hooks/ to get the prefix before the hooks directory.
+            # Template paths always use forward slashes.
+            parts = hook_path.rsplit("/hooks/", 1)
+            if len(parts) == 2:
+                if is_windows:
+                    nim_path = parts[0] + f"/hooks/nim/bin/{nim_name}.exe"
+                else:
+                    nim_path = parts[0] + f"/hooks/nim/bin/{nim_name}"
+                return nim_path
+
+    if is_windows:
+        return hook_path.replace(".sh", ".py")
 
     return hook_path
 
@@ -232,17 +245,21 @@ def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional
 
     Works with both string hooks ("$SPELLBOOK_DIR/hooks/foo.sh") and
     object hooks ({"type": "command", "command": "$SPELLBOOK_DIR/hooks/foo.sh"}).
-    Also detects .py wrapper hooks on Windows.
+    Also detects .py wrapper hooks on Windows and Nim binary paths.
 
     Recognizes both legacy literal $SPELLBOOK_DIR paths and expanded absolute
-    paths when spellbook_dir is provided.
+    paths when spellbook_dir is provided. On Windows, path separators are
+    normalized before comparison so both forward and back slashes match.
     """
     path = _get_hook_path(hook)
-    if path.startswith(_SPELLBOOK_HOOK_PREFIX):
+    # Normalize to forward slashes for consistent comparison across platforms
+    normalized_path = path.replace("\\", "/")
+    if normalized_path.startswith(_SPELLBOOK_HOOK_PREFIX):
         return True
     if spellbook_dir is not None:
-        expanded_prefix = str(spellbook_dir) + "/hooks/"
-        if path.startswith(expanded_prefix):
+        # Normalize spellbook_dir to forward slashes as well
+        expanded_prefix = str(spellbook_dir).replace("\\", "/") + "/hooks/"
+        if normalized_path.startswith(expanded_prefix):
             return True
     return False
 

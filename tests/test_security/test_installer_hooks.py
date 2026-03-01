@@ -1445,7 +1445,10 @@ class TestNimPathResolution:
     def test_nim_available_uses_binary_path(self):
         hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
         result = _get_hook_path_for_platform(hook_path, nim_available=True)
-        assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"
+        if sys.platform == "win32":
+            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate.exe"
+        else:
+            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"
 
     def test_nim_unavailable_keeps_shell_path(self):
         hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
@@ -1464,12 +1467,20 @@ class TestNimPathResolution:
         }
         assert set(_SHELL_TO_NIM_BINARY.keys()) == expected
 
-    def test_nim_not_used_on_windows(self):
-        """Windows should always use .py even when nim_available=True."""
+    def test_nim_on_windows_uses_exe(self):
+        """Windows with nim_available=True should use .exe extension."""
         from unittest.mock import patch
         with patch("sys.platform", "win32"):
             hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
             result = _get_hook_path_for_platform(hook_path, nim_available=True)
+            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate.exe"
+
+    def test_windows_without_nim_uses_py(self):
+        """Windows without Nim should fall back to .py wrappers."""
+        from unittest.mock import patch
+        with patch("sys.platform", "win32"):
+            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+            result = _get_hook_path_for_platform(hook_path, nim_available=False)
             assert result.endswith(".py")
 
 
@@ -1499,7 +1510,8 @@ class TestInstallerNimIntegration:
                     cmd = _get_hook_command(hook)
                     all_commands.append(cmd)
 
-        nim_commands = [c for c in all_commands if "/nim/bin/" in c]
+        # Normalize path separators for cross-platform comparison
+        nim_commands = [c for c in all_commands if "/nim/bin/" in c.replace("\\", "/")]
         assert len(nim_commands) == 9, f"Expected 9 Nim paths, got {len(nim_commands)}: {nim_commands}"
 
     def test_install_hooks_without_nim_keeps_shell_paths(self, tmp_path):
@@ -1518,7 +1530,8 @@ class TestInstallerNimIntegration:
                     cmd = _get_hook_command(hook)
                     all_commands.append(cmd)
 
-        nim_commands = [c for c in all_commands if "/nim/bin/" in c]
+        # Normalize path separators for cross-platform comparison
+        nim_commands = [c for c in all_commands if "/nim/bin/" in c.replace("\\", "/")]
         assert len(nim_commands) == 0, f"Expected 0 Nim paths, got {nim_commands}"
 
 

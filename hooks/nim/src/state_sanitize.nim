@@ -26,20 +26,7 @@ proc main() =
   let rulesPath = spellbookDir / "spellbook_mcp" / "security" / "rules.py"
 
   if not verifyPatternsHash(rulesPath, RULES_PY_HASH):
-    debugLog("state_sanitize", "hash mismatch, falling back to MCP")
-    let host = getEnvOr("SPELLBOOK_MCP_HOST", "127.0.0.1")
-    let port = parseInt(getEnvOr("SPELLBOOK_MCP_PORT", "8765"))
-    let mcpResult = mcpCall(host, port, "security_check_tool_input",
-      %*{"tool_name": "workflow_state_save", "tool_input": toolInput})
-    if mcpResult.isNil:
-      failClosed("Security check failed: stale patterns and MCP unavailable")
-    let safe = mcpResult.getOrDefault("safe").getBool(true)
-    if not safe:
-      let findings = mcpResult.getOrDefault("findings")
-      var reason = "Security check failed: blocked by MCP"
-      if not findings.isNil and findings.kind == JArray and findings.len > 0:
-        reason = "Security check failed: " & findings[0].getOrDefault("message").getStr("blocked")
-      failClosed(reason)
+    mcpFallbackCheck(toolInput, "workflow_state_save", "state_sanitize")
   else:
     debugLog("state_sanitize", "hash OK, using embedded patterns")
     # Recursively extract all string values from the nested tool_input
