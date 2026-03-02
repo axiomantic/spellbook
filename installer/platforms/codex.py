@@ -132,7 +132,7 @@ class CodexInstaller(PlatformInstaller):
             },
         )
 
-    def install(self, force: bool = False) -> List["InstallResult"]:
+    def install(self, force: bool = False, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Install Codex components."""
         from ..core import InstallResult
 
@@ -236,7 +236,7 @@ class CodexInstaller(PlatformInstaller):
 
         return results
 
-    def uninstall(self) -> List["InstallResult"]:
+    def uninstall(self, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Uninstall Codex components."""
         from ..core import InstallResult
 

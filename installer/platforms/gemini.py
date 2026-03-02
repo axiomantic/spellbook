@@ -283,8 +283,15 @@ class GeminiInstaller(PlatformInstaller):
             },
         )
 
-    def install(self, force: bool = False) -> List["InstallResult"]:
-        """Install Gemini CLI extension via `gemini extensions link`."""
+    def install(self, force: bool = False, skip_global_steps: bool = False) -> List["InstallResult"]:
+        """Install Gemini CLI extension via `gemini extensions link`.
+
+        Args:
+            force: Reinstall even if already installed.
+            skip_global_steps: If True, skip global steps (extension skills
+                symlinks and extension linking). Used when installing to
+                multiple config dirs for the same platform.
+        """
         from ..core import InstallResult
 
         results = []
@@ -315,34 +322,35 @@ class GeminiInstaller(PlatformInstaller):
             )
             return results
 
-        # Ensure skills symlinks exist in extension
-        self._step("Linking extension skills")
-        created, errors = self._ensure_extension_skills_symlinks()
-        if created > 0 or errors > 0:
+        if not skip_global_steps:
+            # Ensure skills symlinks exist in extension
+            self._step("Linking extension skills")
+            created, errors = self._ensure_extension_skills_symlinks()
+            if created > 0 or errors > 0:
+                results.append(
+                    InstallResult(
+                        component="extension_skills",
+                        platform=self.platform_id,
+                        success=errors == 0,
+                        action="installed",
+                        message=f"extension skills: {created} linked, {errors} errors",
+                    )
+                )
+
+            # Link the extension
+            self._step("Linking extension")
+            success, msg = link_extension(self.extension_dir, dry_run=self.dry_run)
             results.append(
                 InstallResult(
-                    component="extension_skills",
+                    component="extension",
                     platform=self.platform_id,
-                    success=errors == 0,
-                    action="installed",
-                    message=f"extension skills: {created} linked, {errors} errors",
+                    success=success,
+                    action="installed" if success else "failed",
+                    message=f"extension: {msg}",
                 )
             )
 
-        # Link the extension
-        self._step("Linking extension")
-        success, msg = link_extension(self.extension_dir, dry_run=self.dry_run)
-        results.append(
-            InstallResult(
-                component="extension",
-                platform=self.platform_id,
-                success=success,
-                action="installed" if success else "failed",
-                message=f"extension: {msg}",
-            )
-        )
-
-        # Install security policy
+        # Install security policy (per-config-dir)
         self._step("Installing security policy")
         policy_result = install_gemini_policy(
             spellbook_dir=self.spellbook_dir,
@@ -353,60 +361,101 @@ class GeminiInstaller(PlatformInstaller):
 
         return results
 
-    def uninstall(self) -> List["InstallResult"]:
-        """Uninstall Gemini CLI extension via `gemini extensions unlink`."""
+    def uninstall(self, skip_global_steps: bool = False) -> List["InstallResult"]:
+        """Uninstall Gemini CLI extension via `gemini extensions unlink`.
+
+        Args:
+            skip_global_steps: If True, skip global cleanup steps (extension
+                unlinking). Used when uninstalling from multiple config dirs.
+        """
         from ..core import InstallResult
 
         results = []
 
-        if not check_gemini_cli_available():
-            # Try to remove symlink manually if CLI not available
-            if self.linked_extension_path.is_symlink():
-                if self.dry_run:
-                    results.append(
-                        InstallResult(
-                            component="extension",
-                            platform=self.platform_id,
-                            success=True,
-                            action="removed",
-                            message="extension: would remove symlink (CLI not available)",
-                        )
-                    )
-                else:
-                    try:
-                        self.linked_extension_path.unlink()
+        if not skip_global_steps:
+            if not check_gemini_cli_available():
+                # Try to remove symlink manually if CLI not available
+                if self.linked_extension_path.is_symlink():
+                    if self.dry_run:
                         results.append(
                             InstallResult(
                                 component="extension",
                                 platform=self.platform_id,
                                 success=True,
                                 action="removed",
-                                message="extension: removed symlink (CLI not available)",
+                                message="extension: would remove symlink (CLI not available)",
                             )
                         )
-                    except OSError as e:
-                        results.append(
-                            InstallResult(
-                                component="extension",
-                                platform=self.platform_id,
-                                success=False,
-                                action="failed",
-                                message=f"extension: failed to remove symlink: {e}",
+                    else:
+                        try:
+                            self.linked_extension_path.unlink()
+                            results.append(
+                                InstallResult(
+                                    component="extension",
+                                    platform=self.platform_id,
+                                    success=True,
+                                    action="removed",
+                                    message="extension: removed symlink (CLI not available)",
+                                )
                             )
-                        )
-            return results
+                        except OSError as e:
+                            results.append(
+                                InstallResult(
+                                    component="extension",
+                                    platform=self.platform_id,
+                                    success=False,
+                                    action="failed",
+                                    message=f"extension: failed to remove symlink: {e}",
+                                )
+                            )
+            else:
+                # Unlink using CLI
+                success, msg = unlink_extension("spellbook", dry_run=self.dry_run)
+                results.append(
+                    InstallResult(
+                        component="extension",
+                        platform=self.platform_id,
+                        success=success,
+                        action="removed" if success else "failed",
+                        message=f"extension: {msg}",
+                    )
+                )
 
-        # Unlink using CLI
-        success, msg = unlink_extension("spellbook", dry_run=self.dry_run)
-        results.append(
-            InstallResult(
-                component="extension",
-                platform=self.platform_id,
-                success=success,
-                action="removed" if success else "failed",
-                message=f"extension: {msg}",
-            )
-        )
+        # Remove security policy (per-config-dir)
+        policy_file = self.config_dir / "policies" / POLICY_FILENAME
+        if policy_file.exists():
+            if self.dry_run:
+                results.append(
+                    InstallResult(
+                        component="security_policy",
+                        platform=self.platform_id,
+                        success=True,
+                        action="removed",
+                        message=f"would remove security policy at {policy_file}",
+                    )
+                )
+            else:
+                try:
+                    policy_file.unlink()
+                    results.append(
+                        InstallResult(
+                            component="security_policy",
+                            platform=self.platform_id,
+                            success=True,
+                            action="removed",
+                            message=f"security policy removed from {policy_file}",
+                        )
+                    )
+                except OSError as e:
+                    results.append(
+                        InstallResult(
+                            component="security_policy",
+                            platform=self.platform_id,
+                            success=False,
+                            action="failed",
+                            message=f"failed to remove security policy: {e}",
+                        )
+                    )
 
         return results
 

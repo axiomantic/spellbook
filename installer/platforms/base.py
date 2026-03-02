@@ -32,12 +32,14 @@ class PlatformInstaller(ABC):
         version: str,
         dry_run: bool = False,
         on_step: Optional[Callable[[str], None]] = None,
+        context: Optional[Dict[str, Any]] = None,
     ):
         self.spellbook_dir = spellbook_dir
         self.config_dir = config_dir
         self.version = version
         self.dry_run = dry_run
         self._on_step = on_step
+        self._context = context or {}
 
     def _step(self, message: str) -> None:
         """Emit a progress step message."""
@@ -69,21 +71,28 @@ class PlatformInstaller(ABC):
         pass
 
     @abstractmethod
-    def install(self, force: bool = False) -> List["InstallResult"]:
+    def install(self, force: bool = False, skip_global_steps: bool = False) -> List["InstallResult"]:
         """
         Install spellbook components for this platform.
 
         Args:
             force: Reinstall even if already installed
+            skip_global_steps: If True, skip steps that are global (not
+                per-config-dir). Used when installing to multiple config dirs
+                for the same platform: global steps run on the first dir,
+                then are skipped on subsequent dirs.
 
         Returns list of InstallResult for each component.
         """
         pass
 
     @abstractmethod
-    def uninstall(self) -> List["InstallResult"]:
+    def uninstall(self, skip_global_steps: bool = False) -> List["InstallResult"]:
         """
         Uninstall spellbook components from this platform.
+
+        Args:
+            skip_global_steps: If True, skip global cleanup steps.
 
         Returns list of InstallResult for each component.
         """
