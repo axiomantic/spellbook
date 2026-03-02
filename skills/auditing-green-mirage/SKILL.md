@@ -69,7 +69,7 @@ def test_export_generates_csv(exporter, sample_data):
 <reflection>
 Before concluding:
 - Every test traced through production code?
-- All 9 patterns checked per test?
+- All 10 patterns checked per test?
 - Each finding has: line number, exact fix code, effort, depends_on?
 - Dependencies between findings identified?
 - YAML block at START with all required fields?
@@ -116,25 +116,32 @@ Before auditing, create complete inventory:
 - Total production modules: Z
 ```
 
-### Phase 2-3: Systematic Audit and 9 Green Mirage Patterns
+### Phase 2-3: Systematic Audit and 10 Green Mirage Patterns
 
 <!-- PHASE COMMAND: audit-mirage-analyze -->
-<!-- SUBAGENT: Dispatch subagent(s) to perform line-by-line audit. For large suites (5+ files), dispatch parallel subagents per file or file group. Each subagent loads the audit-mirage-analyze command for full templates and all 9 patterns. -->
+<!-- SUBAGENT: Dispatch subagent(s) to perform line-by-line audit. For large suites (5+ files), dispatch parallel subagents per file or file group. Each subagent MUST read the audit-mirage-analyze command file and patterns/assertion-quality-standard.md for full templates and all 10 patterns. -->
 
 Subagent prompt template:
 ```
-Read the audit-mirage-analyze command file for the complete audit template and all 9 Green Mirage Patterns.
+IMPORTANT: Before doing ANY audit work, you MUST read these files in full:
+1. Read the audit-mirage-analyze command file - read the ENTIRE file, every pattern definition
+2. Read patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Deterministic Output Principle
+
+Do NOT skip reading these files. Do NOT summarize or abbreviate them.
+Do NOT take shortcuts in your analysis. Every test function must be individually analyzed.
+Do NOT batch verdicts or use shorthand. Each test gets the full audit template.
 
 ## Context
 - Test file(s) to audit: [paths]
 - Production file(s) under test: [paths]
 - Inventory from Phase 1: [paste inventory]
 
-For EACH test function:
-1. Apply the systematic line-by-line audit template
+For EACH test function (no skipping, no "looks fine"):
+1. Apply the systematic line-by-line audit template from the command file
 2. Trace every code path through production code
-3. Check against ALL 9 Green Mirage Patterns
-4. Record verdict (SOLID / GREEN MIRAGE / PARTIAL) with evidence
+3. Check against ALL 10 Green Mirage Patterns (including Pattern 10: Strengthened Assertion That Is Still Partial)
+4. For Pattern 2: if function is deterministic and assertion uses `in`, verdict is GREEN MIRAGE with no further investigation needed - it is BANNED
+5. Record verdict (SOLID / GREEN MIRAGE / PARTIAL) with evidence
 
 Return: List of findings with verdicts, gaps, and fix code per the template.
 ```
@@ -187,15 +194,25 @@ Compile the full audit report:
 Return: File path of written report and inline summary.
 ```
 
-### Phase 7: Fix Verification
+### Phase 7: Fix Verification (MANDATORY)
 
-When this skill is used end-to-end (audit + remediation), apply this phase after fixes are written. This phase closes the audit-to-fix loop by verifying fixes don't reproduce the same anti-patterns the audit found.
+<CRITICAL>
+This phase is MANDATORY whenever fixes are written, whether through this skill's end-to-end flow, through the fixing-tests skill, or through any other path. Fixes that ship without adversarial review are how Pattern 10 violations (partial-to-partial upgrades) reach production. NEVER skip this phase.
+</CRITICAL>
 
-<!-- SUBAGENT: Dispatch subagent to verify fixes. Subagent loads assertion-quality-standard pattern and applies the Test Adversary persona. -->
+<!-- SUBAGENT: Dispatch subagent to verify fixes. Subagent MUST READ the assertion-quality-standard pattern file and apply the Test Adversary persona. No shortcuts. -->
 
 Subagent prompt template:
 ```
-Load the assertion quality standard (patterns/assertion-quality-standard.md).
+IMPORTANT: Before doing ANY analysis, you MUST read these files in full:
+1. Read patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Deterministic Output Principle
+2. Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md
+
+Do NOT skip reading these files. Do NOT summarize them. Read them completely.
+Do NOT take shortcuts in your analysis. Every assertion must be individually reviewed.
+Do NOT abbreviate your verdicts. Every assertion gets a full SURVIVED/KILLED analysis.
+
+Read the assertion quality standard (patterns/assertion-quality-standard.md).
 
 ## Your Role: Test Adversary
 
@@ -209,15 +226,28 @@ Your reputation depends on finding weaknesses others missed.
 
 ## Tasks
 
+### 0. Deterministic Output Check (DO THIS FIRST)
+For each function under test, determine: is this function deterministic?
+(Same input always produces same output?)
+
+If YES: ONLY Level 5 (exact equality) is acceptable for assertions on its output.
+assert "substring" in result is BANNED. No exceptions. No "investigate deeper."
+Multiple substring checks are STILL BANNED. They are not an improvement.
+
+If a fix replaced one BANNED pattern (e.g., assert len(x) > 0) with another
+BANNED pattern (e.g., assert "keyword" in result), this is Pattern 10:
+"Strengthened Assertion That Is Still Partial." REJECT immediately.
+
 ### 1. Assertion Ladder Check
 For each new/modified assertion, classify it on the Assertion Strength Ladder:
-- Level 5 (GOLD): exact match
+- Level 5 (GOLD): exact match - `assert result == expected_complete_output`
 - Level 4 (PREFERRED): parsed structural / all-field
 - Level 3 (ACCEPTABLE with justification): structural containment
-- Level 2 (BANNED): bare substring
-- Level 1 (BANNED): length/existence
+- Level 2 (BANNED): bare substring - `assert "X" in result`
+- Level 1 (BANNED): length/existence - `assert len(x) > 0`
 
 REJECT any assertion at Level 2 or below.
+REJECT any fix that moved from one BANNED level to another (Pattern 10).
 Level 3 requires written justification present in the code.
 
 ### 2. ESCAPE Analysis
@@ -252,7 +282,9 @@ dropped output section) -- not adversarial construction.
 ### 4. Verdict
 - Any SURVIVED result: FAIL the fix. List required changes.
 - Any Level 2 or below assertion: FAIL the fix. List required changes.
-- All KILLED + Level 4+: PASS the fix.
+- Any Pattern 10 violation (partial-to-partial upgrade): FAIL the fix. List required changes.
+- Any bare substring on deterministic output: FAIL the fix, regardless of other factors.
+- All KILLED + Level 4+ + no Pattern 10: PASS the fix.
 
 Return: Per-assertion verdicts and overall PASS/FAIL.
 ```
@@ -262,7 +294,7 @@ Return: Per-assertion verdicts and overall PASS/FAIL.
 | Effort | Criteria | Examples |
 |--------|----------|----------|
 | **trivial** | < 5 minutes, single assertion change | Add `.to_equal(expected)` instead of `.to_be_truthy()` |
-| **moderate** | 5-30 minutes, requires reading production code | Add state verification, strengthen partial assertions |
+| **moderate** | 5-30 minutes, requires reading production code | Add state verification, replace partial assertions with exact equality (Level 4+) |
 | **significant** | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
 
 ## Anti-Patterns
@@ -294,7 +326,7 @@ Before completing audit, verify:
 **Audit Completeness:**
 - [ ] Did I read every line of every test file?
 - [ ] Did I trace code paths from test through production and back?
-- [ ] Did I check every test against all 9 patterns?
+- [ ] Did I check every test against all 10 patterns?
 - [ ] Did I verify assertions would catch actual failures?
 - [ ] Did I identify untested functions/methods?
 - [ ] Did I identify untested error paths?

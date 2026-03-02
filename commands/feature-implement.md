@@ -550,8 +550,25 @@ For each individual task:
 Task:
   description: "Implement Task N: [name]"
   prompt: |
-    First, invoke the test-driven-development skill using the Skill tool.
+    IMPORTANT: Before writing ANY test code, read these files in full:
+    1. Read patterns/assertion-quality-standard.md - the ENTIRE file
+    2. Read the Test Writer Template section in skills/dispatching-parallel-agents/SKILL.md
+
+    Then invoke the test-driven-development skill using the Skill tool.
     Implement this task following TDD strictly.
+
+    ## Assertion Quality (Non-Negotiable)
+
+    THE DETERMINISTIC OUTPUT PRINCIPLE: If the function under test produces
+    the same output for the same input, every assertion MUST be exact equality
+    against the COMPLETE expected output:
+      assert result == expected_complete_output  -- CORRECT
+      assert "substring" in result               -- BANNED. ALWAYS.
+      assert len(result) > 0                     -- BANNED.
+
+    Every assertion must be Level 4+ on the Assertion Strength Ladder.
+    Do NOT take shortcuts on assertions. Do NOT use partial assertions
+    as a substitute for computing the complete expected value.
 
     ## Context for the Skill
 
@@ -848,8 +865,18 @@ If tests fail:
 Task:
   description: "Audit test quality"
   prompt: |
-    First, invoke the audit-green-mirage skill using the Skill tool.
+    IMPORTANT: Before starting the audit, read these files in full:
+    1. Read patterns/assertion-quality-standard.md - the ENTIRE file
+    2. Read the audit-mirage-analyze command file - the ENTIRE file
+
+    Do NOT skip reading these files. Do NOT take shortcuts in your analysis.
+
+    Then invoke the audit-green-mirage skill using the Skill tool.
     Verify tests actually validate correctness.
+
+    KEY RULE: For deterministic functions (same input = same output),
+    the ONLY acceptable assertion is exact equality: assert result == expected.
+    assert "substring" in result is BANNED on deterministic output. Always.
 
     ## Context for the Skill
 

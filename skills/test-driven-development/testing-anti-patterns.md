@@ -248,11 +248,11 @@ TDD cycle:
 4. THEN claim complete
 ```
 
-## Anti-Pattern 6: Existence-Only Assertions
+## Anti-Pattern 6: Existence-Only and Partial Assertions
 
 **The violation:**
 ```python
-# BAD: Existence-only -- would pass with garbage data
+# BANNED: Existence-only -- would pass with garbage data
 assert len(results) > 0
 assert response is not None
 assert output_file.exists()
@@ -260,23 +260,33 @@ assert "key" in response_dict
 ```
 
 ```python
-# BAD: Count-only -- right number, wrong content
+# BANNED: Count-only -- right number, wrong content
 assert len(results) == 3
 assert len(response["items"]) == 2
 ```
 
 ```python
-# BAD: Wildcard matchers -- accepts anything
+# BANNED: Wildcard matchers -- accepts anything
 mock_handler.assert_called_with(mock.ANY, mock.ANY)
 assert result == {"id": unittest.mock.ANY, "name": unittest.mock.ANY}
+```
+
+```python
+# BANNED: Partial assertions on deterministic output
+assert "struct Point" in result      # Wrong fields, extra garbage pass
+assert "SELECT" in query             # Garbage SQL passes
+assert "foo" in r and "bar" in r     # Still partial, still BANNED
 ```
 
 **Why this is wrong:**
 - Existence checks pass when the value is garbage
 - Count checks pass when every item is wrong but the right number exist
+- Substring checks on deterministic output hide structural errors, missing content, and extra garbage
+- Multiple substring checks are STILL partial and STILL BANNED
 - `mock.ANY` / `unittest.mock.ANY` accepts literally anything, defeating the assertion
 - These create **false confidence**: the test suite is green but validates nothing
-- See also: Green Mirage Pattern 1 (Existence vs. Validity) in `commands/audit-mirage-analyze.md`
+- See also: Green Mirage Pattern 1 (Existence vs. Validity) and Pattern 2 (Partial Assertion on Deterministic Output) in `commands/audit-mirage-analyze.md`
+- See also: The Deterministic Output Principle in `patterns/assertion-quality-standard.md`
 
 **The fix:**
 ```python
@@ -317,6 +327,59 @@ BEFORE writing any assertion:
     - mock.ANY / unittest.mock.ANY
 ```
 
+## Anti-Pattern 7: "Strengthened" Assertion That Is Still Partial (Pattern 10)
+
+**The violation:**
+```python
+# BEFORE: Existence-only (Level 1 - BANNED)
+assert result is not None
+assert len(result) > 0
+
+# "FIX" that is STILL a green mirage (Level 2 - STILL BANNED):
+assert "struct Point" in result
+assert "expected_field" in result
+
+# ANOTHER BAD "FIX" (tautological):
+assert result == writer.write(data)  # Tests function against itself
+```
+
+**Why this is wrong:**
+- Replacing one BANNED assertion with a different BANNED assertion is not a fix
+- Moving from Level 1 (existence) to Level 2 (substring) still fails to catch structural errors, missing content, extra garbage, and wrong ordering
+- Tautological assertions (testing a function against itself) test nothing
+- This creates the most dangerous illusion: the appearance of improvement without actual improvement
+- See also: Green Mirage Pattern 10 in `commands/audit-mirage-analyze.md`
+
+**The fix:**
+```python
+# CORRECT: Exact equality on complete output (Level 5 - GOLD)
+expected = textwrap.dedent("""\
+    struct Point {
+        int x;
+        int y;
+    };
+""")
+assert result == expected
+```
+
+### Gate Function
+
+```
+AFTER writing a "strengthened" assertion:
+  Ask: "What Assertion Strength Ladder level was the OLD assertion?"
+  Ask: "What level is my NEW assertion?"
+
+  IF new level <= 2 (BANNED):
+    STOP - Your fix is still a green mirage
+    Rewrite to Level 4+ (exact equality or parsed structural)
+
+  IF new assertion tests function against itself:
+    STOP - Tautological. Compute expected value independently.
+
+  The goal is Level 5 (exact equality) for deterministic output.
+  Level 4 (parsed structural) for non-deterministic output after normalization.
+```
+
 ## When Mocks Become Too Complex
 
 **Warning signs:**
@@ -350,6 +413,8 @@ BEFORE writing any assertion:
 | Tests as afterthought | TDD - tests first |
 | Over-complex mocks | Consider integration tests |
 | Existence-only assertions | Assert exact expected values, not just existence/count |
+| Partial assertions on deterministic output | `assert result == expected_complete_output` (exact equality) |
+| "Strengthened" assertion still partial | Must reach Level 4+, not just move from Level 1 to Level 2 |
 
 ## Red Flags
 

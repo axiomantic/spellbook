@@ -102,8 +102,10 @@ Before marking code complete:
 - [ ] Error handling is explicit and complete
 - [ ] Tests have meaningful assertions
 - [ ] Test assertions are Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
-- [ ] No bare substring checks on string output
+- [ ] Deterministic Output Principle enforced: deterministic functions tested with exact equality (`assert result == expected`), never substring checks
+- [ ] No bare substring checks on string output (`assert "X" in result` is BANNED)
 - [ ] No length/existence-only assertions
+- [ ] No partial-to-partial upgrades (Pattern 10: replacing one BANNED assertion with another is not a fix)
 - [ ] Pre-existing issues addressed or explicitly tracked
 - [ ] Would confidently deploy this
 
@@ -115,8 +117,10 @@ Before completing implementation:
 - [ ] No try-catch swallowing errors
 - [ ] Tests verify behavior, not just run
 - [ ] Test assertions are Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
-- [ ] No bare substring checks on string output
+- [ ] Deterministic functions tested with exact equality (`assert result == expected_complete_output`)
+- [ ] No bare substring checks on string output (`assert "X" in result` is BANNED on deterministic output)
 - [ ] No length/existence-only assertions
+- [ ] No tautological assertions (`assert result == func(same_input)`)
 - [ ] Pre-existing issues flagged to user
 - [ ] Code matches existing patterns
 

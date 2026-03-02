@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-02
+
+### Added
+- **Deterministic Output Principle** (`patterns/assertion-quality-standard.md`) - New foundational rule: when testing deterministic functions (same input = same output), tests MUST assert exact equality against the complete expected output. `assert "substring" in result` is BANNED on deterministic output. No exceptions. Added as Invariant Principle #1 and prominently placed before the Assertion Strength Ladder.
+- **Green Mirage Pattern 10: "Strengthened Assertion That Is Still Partial"** (`commands/audit-mirage-analyze.md`) - Catches fixes that replace one weak assertion with another (e.g., replacing `assert len(x) > 0` with `assert "keyword" in result`). Both are BANNED. A real fix must reach Level 4+.
+- **Phase 3.5: Mandatory Post-Fix Adversarial Review** (`skills/fixing-tests/SKILL.md`) - After all fixes are applied, a Test Adversary subagent verifies every new assertion meets Level 4+ and checks for Pattern 10 violations. Previously, adversarial review was only available through the green mirage audit's end-to-end flow.
+- **Inline assertion quality requirements in fix-tests-execute** (`commands/fix-tests-execute.md`) - The fix execution prompt now embeds the Deterministic Output Principle, BANNED patterns list, and per-assertion verification requirements directly. Previously relied on orchestrator to append the Test Writer Template, which was not enforced.
+- **Anti-Pattern 7: Partial-to-Partial Upgrades** (`skills/test-driven-development/testing-anti-patterns.md`) - New testing anti-pattern covering fixes that move from one BANNED assertion level to another without reaching Level 4+.
+
+### Changed
+- **Pattern 2 renamed from "CODE SMELL" to "BANNED"** (`commands/audit-mirage-analyze.md`) - Pattern 2 (Partial Assertions) changed from "CODE SMELL - INVESTIGATE DEEPER" to "Partial Assertion on Deterministic Output (BANNED)". Language changed from investigative to prohibitive.
+- **Phase 7 Fix Verification made MANDATORY** (`skills/auditing-green-mirage/SKILL.md`) - Was conditional on "end-to-end" usage; now required whenever fixes are written through any path. New Step 0 (Deterministic Output Check) runs before all other analysis.
+- **Assertion Quality Gate expanded to ALL modes** (`skills/fixing-tests/SKILL.md`) - Was only enforced in `audit_report` mode; now applies to `general_instructions` and `run_and_fix` modes too.
+- **Subagent dispatch prompts require explicit Read() directives** - All test-related subagent prompts across `auditing-green-mirage`, `fixing-tests`, `dispatching-parallel-agents`, and `feature-implement` now include explicit "Read these files in full" instructions and anti-shortcut mandates. Changed "Load" to "Read" throughout.
+- **Test Writer Template strengthened** (`skills/dispatching-parallel-agents/SKILL.md`) - Deterministic Output Principle as Rule 0, additional BANNED patterns (multiple partials, tautological assertions), no partial-to-partial upgrade mandate.
+- **Test Adversary Template strengthened** (`skills/dispatching-parallel-agents/SKILL.md`) - Added immediate rejection criteria, deterministic output field in verdicts, Pattern 10 detection in summary.
+- **TDD skill assertion rules table** (`skills/test-driven-development/SKILL.md`) - Renamed columns to "BANNED Pattern / CORRECT Pattern" with explicit Level labels. Added rows for multiple partials and tautological assertions. New CRITICAL section for Deterministic Output Principle.
+- **Code quality checklists** (`skills/enforcing-code-quality/SKILL.md`) - Added Deterministic Output Principle enforcement, Pattern 10 awareness, and tautological assertion ban.
+- **Green mirage pattern count** - Updated all references from "9 Green Mirage Patterns" to "10 Green Mirage Patterns" and "patterns 1-8" to "patterns 1-10" across skills and commands.
+- **Effort estimation tables** - "Strengthen partial assertions" replaced with "replace partial assertions with exact equality (Level 4+)" in audit skill and command.
+- **Code review anti-patterns** (`patterns/code-review-antipatterns.md`) - Green Mirage detection heuristics updated with BANNED substring pattern, Pattern 10 reference, and Deterministic Output Principle cross-reference.
+
 ## [0.17.0] - 2026-03-01
 
 ### Added

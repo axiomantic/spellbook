@@ -111,8 +111,58 @@ flowchart TD
 1. **Read before fixing** - Always read the test file and production code before making any changes; never guess at code structure
 2. **Verify the fix, not just the pass** - A test that passes after modification must be confirmed to catch the originally identified blind spot
 3. **One fix per commit** - Each work item fix is verified and committed independently for traceability and safe rollback
+4. **Deterministic output demands exact equality** - When the function under test is deterministic (same input, same output), every assertion MUST be `assert result == expected_complete_output`. `assert "substring" in result` is BANNED. No exceptions. See: `patterns/assertion-quality-standard.md`.
+5. **Fixes must reach Level 4+** - Replacing one weak assertion with another weak assertion is NOT a fix. Every new assertion must be Level 4+ on the Assertion Strength Ladder. Moving from Level 1 to Level 2 is still BANNED.
 
 Process by priority: critical > important > minor.
+
+<CRITICAL>
+## Assertion Quality Requirements (Non-Negotiable)
+
+Read the assertion quality standard (`patterns/assertion-quality-standard.md`) in full before writing ANY fix.
+
+### The Deterministic Output Principle
+
+If the function under test produces the same output for the same input, your assertion MUST be exact equality against the COMPLETE expected output:
+
+```python
+# CORRECT
+assert result == "the complete expected output, every character"
+
+# BANNED - still a green mirage even if it looks like an "improvement"
+assert "some keyword" in result
+assert "struct Point" in result
+assert "expected_field" in result and "other_field" in result
+```
+
+### BANNED Assertion Patterns
+
+These patterns are NEVER acceptable in a fix. If your fix introduces any of these, it is not a fix:
+
+- `assert "X" in output` (bare substring on deterministic output)
+- `assert len(result) > 0` (existence only)
+- `assert len(result) == N` without content verification
+- `assert result is not None` without value assertion
+- `assert result == function_under_test(same_input)` (tautological)
+- Multiple `assert "X" in result` checks (still partial, still BANNED)
+
+### Required Assertion Level
+
+Every new or modified assertion must be:
+- **Level 5 (GOLD):** `assert result == expected` (exact equality on complete output)
+- **Level 4 (PREFERRED):** Parse output, assert on full parsed structure
+
+Levels 3 and below require written justification. Levels 1-2 are BANNED outright.
+
+### Per-Assertion Verification
+
+For EACH assertion you write, answer in your reasoning:
+1. Is the function under test deterministic? If yes, only Level 5 is acceptable.
+2. What specific production code mutation would cause this assertion to fail?
+3. If the production code returned garbage, would this assertion catch it?
+
+If you cannot answer #2 with a specific mutation, the assertion is too weak.
+</CRITICAL>
 
 ## 2.1 Investigation
 
@@ -133,7 +183,7 @@ For EACH work item:
 
 | Situation | Fix Type |
 |-----------|----------|
-| Weak assertions (green mirage) | Strengthen assertions |
+| Weak assertions (green mirage) | Replace with exact equality assertions (Level 4+). "Strengthen" means reaching `assert result == expected_complete_output`, NOT replacing one partial check with another. |
 | Missing edge cases | Add test cases |
 | Wrong expectations | Correct expectations |
 | Broken setup | Fix setup, not weaken test |
@@ -146,24 +196,30 @@ For EACH work item:
 **Green Mirage Fix (Pattern 2: Partial Assertions):**
 
 ```python
-# BEFORE: Checks existence only
+# BEFORE: Checks existence only (Level 1 - BANNED)
 def test_generate_report():
     report = generate_report(data)
     assert report is not None
     assert len(report) > 0
 
-# AFTER: Validates actual content
+# WRONG "FIX": Still partial (Level 2 - STILL BANNED)
+def test_generate_report():
+    report = generate_report(data)
+    assert "Expected Title" in str(report)  # STILL A GREEN MIRAGE
+    assert len(report["sections"]) == 3     # Count without content
+
+# CORRECT FIX: Exact equality on complete output (Level 5 - GOLD)
 def test_generate_report():
     report = generate_report(data)
     assert report == {
         "title": "Expected Title",
-        "sections": [...expected sections...],
+        "sections": [
+            {"name": "Section 1", "valid": True, "content": "..."},
+            {"name": "Section 2", "valid": True, "content": "..."},
+            {"name": "Section 3", "valid": True, "content": "..."},
+        ],
         "generated_at": mock_timestamp
     }
-    # OR at minimum:
-    assert report["title"] == "Expected Title"
-    assert len(report["sections"]) == 3
-    assert all(s["valid"] for s in report["sections"])
 ```
 
 **Edge Case Addition:**
@@ -228,6 +284,10 @@ Verification checklist:
 - [ ] Specific test passes
 - [ ] Other tests in file still pass
 - [ ] Fix would actually catch the failure it should catch
+- [ ] Every new assertion is Level 4+ on the Assertion Strength Ladder
+- [ ] No bare substring checks (`assert "X" in result`) on deterministic output
+- [ ] For each assertion: named a specific production code mutation it catches
+- [ ] Fix is NOT just moving from one BANNED level to another (Pattern 10)
 
 ## 2.6 Commit (per-fix strategy)
 

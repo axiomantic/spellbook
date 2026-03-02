@@ -2,10 +2,52 @@
 
 ## Invariant Principles
 
-1. **Assertions must catch garbage.** If broken production code still passes the test, the assertion is worthless.
-2. **Position matters, not just presence.** Proving X exists SOMEWHERE is not proving X is WHERE it should be.
-3. **Stronger is always better.** Downgrade from exact match only with written justification.
-4. **Every assertion must name its kill.** If you cannot name a specific mutation the assertion catches, it catches nothing.
+1. **Deterministic output demands exact equality.** If a function produces the same output for the same input, the test MUST assert `result == expected_complete_output`. No substring checks. No partial matches. No exceptions. (See: The Deterministic Output Principle below.)
+2. **Assertions must catch garbage.** If broken production code still passes the test, the assertion is worthless.
+3. **Position matters, not just presence.** Proving X exists SOMEWHERE is not proving X is WHERE it should be.
+4. **Stronger is always better.** Downgrade from exact match only with written justification.
+5. **Every assertion must name its kill.** If you cannot name a specific mutation the assertion catches, it catches nothing.
+
+## The Deterministic Output Principle
+
+<CRITICAL>
+When testing a function with deterministic output (same input always produces same output), you MUST assert exact equality against the COMPLETE expected output. Always. No exceptions.
+
+```python
+# CORRECT: exact equality on complete output
+assert result == "the entire expected string, every character"
+
+# WRONG: partial assertion. Extra garbage, missing declarations,
+# wrong ordering, malformed syntax all slip through undetected.
+assert "some substring" in result
+
+# WRONG: meaningless
+assert len(result) > 0
+
+# WRONG: still partial. Doesn't verify structure, ordering,
+# completeness, or absence of unexpected content.
+assert "foo" in result and "bar" in result
+```
+
+**Deterministic functions include:** writers, serializers, formatters, code generators, template renderers, config builders, query builders, and any function where the same input always produces the same output.
+
+**There is never a reason to use partial assertions on deterministic output.** The fact that the output is long does not justify partial assertions. Use triple-quoted strings, dedent helpers, or computed expected values for multi-line output.
+
+**The ONLY exception** is when output contains genuinely non-deterministic elements (timestamps, random IDs, memory addresses, PIDs). In that case: normalize or strip the non-deterministic parts first, THEN assert exact equality on the rest. Document which parts are non-deterministic and why.
+
+```python
+# CORRECT: non-deterministic element handled, then exact equality
+result = generate_report(data)
+# Normalize timestamp (non-deterministic) before comparing
+normalized = re.sub(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', 'TIMESTAMP', result)
+assert normalized == expected_output_with_timestamp_placeholder
+
+# WRONG: using "in" because output has a timestamp somewhere
+assert "report title" in result  # Ignores everything else!
+```
+
+This principle is the FOUNDATION of assertion quality. Every other rule in this document supports it. If you remember nothing else, remember: deterministic output demands exact equality.
+</CRITICAL>
 
 ## The Assertion Strength Ladder
 
@@ -122,10 +164,12 @@ Using levels below PREFERRED requires an inline comment explaining why:
 | Output too large for exact match | Sometimes | Parse and assert on structure (Level 4); justify why parsing is impossible if using Level 3 |
 | "It's just a quick test" | Never | No such thing as a quick test. Tests outlive the code they test. |
 | "The important thing is that it contains X" | Never | WHERE it contains X matters. Use structural containment at minimum. |
+| "Output is too long for exact match" | Never | Use triple-quoted strings or dedent helpers. Length is not a justification for partial assertions. |
+| "I'll just check the key parts" | Never | Deterministic output demands complete verification. Partial checks miss structural errors, ordering bugs, and extra garbage. |
 
 ## Usage Reference
 
 ```markdown
-Load assertion quality standard (patterns/assertion-quality-standard.md).
+Read assertion quality standard (patterns/assertion-quality-standard.md) in full.
 Classify each assertion on the Assertion Strength Ladder.
 ```

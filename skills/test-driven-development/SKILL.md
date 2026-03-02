@@ -200,23 +200,44 @@ Next failing test for next feature. The cycle continues until all behavior is im
 
 ## Assertion Quality
 
+<CRITICAL>
+### The Deterministic Output Principle
+
+If the function under test is deterministic (same input always produces same output), the test MUST assert exact equality against the COMPLETE expected output. This is non-negotiable.
+
+```python
+# CORRECT: exact equality on complete output
+assert result == expected_complete_output
+
+# BANNED: partial assertion on deterministic output
+assert "substring" in result          # Hides structural errors, missing content, extra garbage
+assert "foo" in result and "bar" in result  # Still partial, still BANNED
+assert len(result) > 0                # Meaningless
+```
+
+Deterministic functions include: writers, serializers, formatters, code generators, query builders, template renderers, config builders. For multi-line output, use triple-quoted strings or dedent helpers. Output length is NEVER a justification for partial assertions.
+
+The only exception: output contains genuinely non-deterministic elements (timestamps, UUIDs). Normalize those first, then assert exact equality on the rest.
+</CRITICAL>
+
 Tests must validate CONTENT, not just EXISTENCE. Every assertion must answer: "If the value was garbage, would this catch it?"
 
-**Reference:** Load `patterns/assertion-quality-standard.md` for the full Assertion Strength Ladder, Bare Substring Problem analysis, and Broken Implementation Test. Every assertion must be Level 4+ on the ladder.
+**Reference:** Read `patterns/assertion-quality-standard.md` for the full Assertion Strength Ladder, Deterministic Output Principle, Bare Substring Problem analysis, and Broken Implementation Test. Every assertion must be Level 4+ on the ladder.
 
 ### Rules
 
-| Rule | Bad | Good |
-|------|-----|------|
-| **No existence-only assertions** | `assert len(result) > 0` | `assert result == [expected_item_1, expected_item_2]` |
-| **No count-only assertions** | `assert len(result) == 3` | `assert result == [item_1, item_2, item_3]` |
-| **No none-checks without content** | `assert response is not None` | `assert response == expected_response` |
-| **No file existence-only checks** | `assert output_file.exists()` | `assert output_file.read_text() == "expected content"` |
-| **No `mock.ANY` by default** | `assert_called_with(mock.ANY, mock.ANY)` | `assert_called_with("expected_arg", expected_obj)` |
-| **Full structural validation** | `assert "key" in result` | `assert result == {"key": "expected_value", ...}` |
-| **Every field of every object** | `assert result.status == "ok"` | `assert result == ExpectedObject(status="ok", data=..., meta=...)` |
-| **No bare substring on string output** | `assert "data" in output` | `assert output == expected` or parse and assert on structure |
-| **String containment requires position** | `assert "field" in generated_code` | Parse output, verify field is inside the correct block/scope |
+| Rule | BANNED Pattern | CORRECT Pattern |
+|------|----------------|-----------------|
+| **No existence-only assertions** | `assert len(result) > 0` (BANNED Level 1) | `assert result == [expected_item_1, expected_item_2]` |
+| **No count-only assertions** | `assert len(result) == 3` (BANNED Level 2) | `assert result == [item_1, item_2, item_3]` |
+| **No none-checks without content** | `assert response is not None` (BANNED Level 1) | `assert response == expected_response` |
+| **No file existence-only checks** | `assert output_file.exists()` (BANNED Level 1) | `assert output_file.read_text() == "expected content"` |
+| **No `mock.ANY` by default** | `assert_called_with(mock.ANY, mock.ANY)` (BANNED Level 2) | `assert_called_with("expected_arg", expected_obj)` |
+| **No partial checks on deterministic output** | `assert "key" in result` (BANNED Level 2) | `assert result == {"key": "expected_value", ...}` |
+| **Every field of every object** | `assert result.status == "ok"` (BANNED Level 3 without justification) | `assert result == ExpectedObject(status="ok", data=..., meta=...)` |
+| **No bare substring on string output** | `assert "data" in output` (BANNED Level 2) | `assert output == expected` (exact equality) |
+| **No multiple partials as substitute** | `assert "foo" in r and "bar" in r` (BANNED: still partial) | `assert r == expected_complete_string` |
+| **No tautological assertions** | `assert result == func(same_input)` (BANNED: tests nothing) | Compute expected value independently |
 
 ### Pychoir Matchers
 

@@ -36,7 +36,7 @@ Detect mode from user input, build work items accordingly.
 
 | Mode | Detection | Action |
 |------|-----------|--------|
-| `audit_report` | Structured findings with patterns 1-8, "GREEN MIRAGE" verdicts, YAML block | Parse YAML, extract findings. Load `patterns/assertion-quality-standard.md` for assertion quality gate. |
+| `audit_report` | Structured findings with patterns 1-10, "GREEN MIRAGE" verdicts, YAML block | Parse YAML, extract findings. Read `patterns/assertion-quality-standard.md` for assertion quality gate and Deterministic Output Principle. |
 | `general_instructions` | "Fix tests in X", "test_foo is broken", specific test references | Extract target tests/files |
 | `run_and_fix` | "Run tests and fix failures", "get suite green" | Run tests, parse failures |
 
@@ -51,7 +51,7 @@ interface WorkItem {
   test_file: string;
   test_function?: string;
   line_number?: number;
-  pattern?: number;                     // 1-8 from green mirage
+  pattern?: number;                     // 1-10 from green mirage
   pattern_name?: string;
   current_code?: string;                // Problematic test code
   blind_spot?: string;                  // What broken code would pass
@@ -84,20 +84,47 @@ Parse failures into WorkItems with error_type, message, stack trace, expected/ac
 
 ## Phase 2: Fix Execution
 
-Dispatch subagent with `/fix-tests-execute` command. Subagent investigates, classifies, fixes, verifies, and commits each WorkItem.
+Dispatch subagent with the following prompt structure. The subagent MUST be given explicit instructions to read the referenced files:
 
-### Assertion Quality Gate (audit_report mode)
+```
+First, read these files to understand the quality requirements:
+- Read the fix-tests-execute command file for the fix execution protocol
+- Read patterns/assertion-quality-standard.md for the complete Assertion Strength Ladder and Deterministic Output Principle
 
-When processing green-mirage audit findings, every fix must pass the Assertion Strength Ladder check before being marked complete:
+Then execute the fix protocol on these work items: [work items]
 
-1. Load `patterns/assertion-quality-standard.md`
+THE DETERMINISTIC OUTPUT PRINCIPLE (most important rule):
+If the function under test produces the same output for the same input,
+you MUST assert exact equality against the COMPLETE expected output.
+assert result == expected_complete_output  -- CORRECT
+assert "substring" in result               -- BANNED. ALWAYS. NO EXCEPTIONS.
+
+BANNED PATTERNS (if your fix introduces ANY of these, it is NOT a fix):
+- assert "X" in result (bare substring on deterministic output)
+- assert len(result) > 0 (existence only)
+- assert result is not None without value assertion
+- assert "X" in result and "Y" in result (multiple partials are still partial)
+- assert result == function_under_test(same_input) (tautological)
+
+Every assertion must be Level 4+ on the Assertion Strength Ladder.
+Replacing a Level 1 assertion with a Level 2 assertion is NOT a fix.
+
+[Append Test Writer Template from dispatching-parallel-agents/SKILL.md]
+```
+
+### Assertion Quality Gate (ALL modes)
+
+<CRITICAL>
+Every fix, regardless of input mode, must pass the Assertion Strength Ladder check before being marked complete. This is NOT limited to audit_report mode.
+</CRITICAL>
+
+1. Read `patterns/assertion-quality-standard.md` - the Deterministic Output Principle and Assertion Strength Ladder
 2. Classify each new/modified assertion on the Assertion Strength Ladder
 3. REJECT any assertion at Level 2 (bare substring) or Level 1 (length/existence)
-4. Level 3 (structural containment) requires written justification in the code
-5. For each new assertion, name the specific production code mutation it catches
-6. If you cannot name a mutation, the assertion is too weak; strengthen it
-
-Include the Test Writer Template from `dispatching-parallel-agents` in subagent prompts that write test code.
+4. REJECT any fix that moves from one BANNED level to another (Pattern 10)
+5. Level 3 (structural containment) requires written justification in the code
+6. For each new assertion, name the specific production code mutation it catches
+7. If you cannot name a mutation, the assertion is too weak; strengthen it
 
 ### 2.3 Production Bug Protocol
 
@@ -145,6 +172,49 @@ FOR priority IN [critical, important, minor]:
 **Blocked by:** [why it didn't work]
 **Recommendation:** [manual intervention / more context / etc.]
 ```
+
+## Phase 3.5: Post-Fix Adversarial Review (MANDATORY)
+
+<CRITICAL>
+This phase is NOT optional. After ALL fixes are applied, dispatch a Test Adversary subagent to verify that every new or modified assertion actually meets quality standards. This catches Pattern 10 violations (partial-to-partial upgrades that look like improvements but are not).
+</CRITICAL>
+
+Dispatch subagent with the following prompt:
+
+```
+First, read these files to understand the quality requirements:
+- Read patterns/assertion-quality-standard.md (especially The Deterministic Output Principle)
+- Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md
+
+ROLE: Test Adversary. Your job is to BREAK the new/modified test assertions.
+
+## Context
+- Modified test files: [list of files changed during fix phase]
+- Git diff of changes: [paste or reference the diff]
+- Production files under test: [paths]
+
+## Mandatory Checks
+
+1. IMMEDIATE REJECTION: Flag any assertion that is:
+   - assert "X" in result on deterministic output (BANNED)
+   - assert len(x) > 0 or assert x is not None (BANNED)
+   - A fix that replaced one BANNED pattern with another (Pattern 10)
+
+2. For each new/modified assertion:
+   - Classify on Assertion Strength Ladder (must be Level 4+)
+   - Determine if function under test is deterministic
+   - If deterministic: only Level 5 (exact equality) is acceptable
+   - Construct a plausible broken implementation that still passes
+   - Verdict: KILLED or SURVIVED
+
+3. Overall verdict:
+   - Any SURVIVED or BANNED assertion: FAIL (list required re-fixes)
+   - All KILLED + Level 4+: PASS
+
+Return: Per-assertion verdicts and overall PASS/FAIL.
+```
+
+**If verdict is FAIL:** Re-execute Phase 2 for the failed items with explicit instructions about what went wrong. Do NOT skip re-review.
 
 ## Phase 4: Final Verification
 
@@ -237,7 +307,9 @@ B) No, satisfied with fixes
 - [ ] Each fix verified to catch the failure it should catch
 - [ ] Each fix verified to be Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
 - [ ] Each new assertion has a named mutation that would cause it to fail
-- [ ] No bare substring checks introduced
+- [ ] No bare substring checks introduced (assert "X" in result is BANNED)
+- [ ] No Pattern 10 violations (partial-to-partial upgrades)
+- [ ] Phase 3.5 adversarial review completed with PASS verdict
 - [ ] Full test suite ran at end
 - [ ] Production bugs flagged, not silently fixed
 - [ ] Commits follow agreed strategy
