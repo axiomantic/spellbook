@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .config import PLATFORM_CONFIG, SUPPORTED_PLATFORMS, get_platform_config_dir
+from .config import PLATFORM_CONFIG, SUPPORTED_PLATFORMS, get_platform_config_dir, resolve_config_dirs
 from .platforms.base import PlatformInstaller
 from .version import check_upgrade_needed, read_version
 
@@ -109,15 +109,29 @@ def get_platform_installer(
     version: str,
     dry_run: bool = False,
     on_step=None,
+    config_dir_override: Optional[Path] = None,
+    context: Optional[Dict[str, Any]] = None,
 ) -> PlatformInstaller:
-    """Get the appropriate installer for a platform."""
+    """Get the appropriate installer for a platform.
+
+    Args:
+        platform: Platform identifier.
+        spellbook_dir: Path to spellbook repository.
+        version: Spellbook version string.
+        dry_run: If True, don't make changes.
+        on_step: Callback for step progress.
+        config_dir_override: If provided, use this dir instead of the
+            platform default. Used by multi-target orchestration.
+        context: Cross-platform context dict (e.g., claude_config_dirs
+            for Crush installer).
+    """
     from .platforms.claude_code import ClaudeCodeInstaller
     from .platforms.codex import CodexInstaller
     from .platforms.crush import CrushInstaller
     from .platforms.gemini import GeminiInstaller
     from .platforms.opencode import OpenCodeInstaller
 
-    config_dir = get_platform_config_dir(platform)
+    config_dir = config_dir_override or get_platform_config_dir(platform)
 
     installers = {
         "claude_code": ClaudeCodeInstaller,
@@ -131,7 +145,10 @@ def get_platform_installer(
     if not installer_class:
         raise ValueError(f"Unknown platform: {platform}")
 
-    return installer_class(spellbook_dir, config_dir, version, dry_run, on_step=on_step)
+    return installer_class(
+        spellbook_dir, config_dir, version, dry_run,
+        on_step=on_step, context=context,
+    )
 
 
 class Installer:
@@ -163,6 +180,7 @@ class Installer:
         force: bool = False,
         dry_run: bool = False,
         on_progress=None,
+        config_dir_overrides: Optional[Dict[str, List[Path]]] = None,
     ) -> InstallSession:
         """
         Execute installation workflow.
@@ -177,17 +195,26 @@ class Installer:
                 "platform_skip" - data: {"name", "message"}
                 "step" - data: {"message"}
                 "result" - data: {"result": InstallResult}
+            config_dir_overrides: Per-platform list of config dirs from CLI
+                flags. Keys are platform IDs, values are lists of Path.
 
         Returns InstallSession with all results.
         """
         if platforms is None:
             platforms = self.detect_platforms()
 
-        # Determine previous version from Claude Code context file
-        claude_config = get_platform_config_dir("claude_code")
+        # Pre-resolve Claude dirs for cross-platform context (order-independent)
+        # and for version detection
+        claude_dirs = resolve_config_dirs(
+            "claude_code",
+            cli_dirs=(config_dir_overrides or {}).get("claude_code"),
+        )
+
+        # Determine previous version from first Claude Code config dir
         from .demarcation import get_installed_version
 
-        previous_version = get_installed_version(claude_config / "CLAUDE.md")
+        version_dir = claude_dirs[0] if claude_dirs else get_platform_config_dir("claude_code")
+        previous_version = get_installed_version(version_dir / "CLAUDE.md")
 
         session = InstallSession(
             spellbook_dir=self.spellbook_dir,
@@ -204,6 +231,11 @@ class Installer:
         def _on_step(message):
             if on_progress:
                 on_progress("step", {"message": message})
+
+        # Shared context for cross-platform data
+        shared_context: Dict[str, Any] = {
+            "claude_config_dirs": claude_dirs,
+        }
 
         # Install MCP daemon once, before any platform installations.
         # All platforms connect to this shared daemon via HTTP.
@@ -241,43 +273,84 @@ class Installer:
 
         total = len(platforms)
         for i, platform in enumerate(platforms, 1):
-            installer = get_platform_installer(
-                platform, self.spellbook_dir, self.version, dry_run,
-                on_step=_on_step,
-            )
+            # Resolve config dirs for this platform
+            cli_dirs = (config_dir_overrides or {}).get(platform)
+            dirs = resolve_config_dirs(platform, cli_dirs=cli_dirs)
 
-            if on_progress:
-                on_progress("platform_start", {
-                    "name": installer.platform_name,
-                    "index": i,
-                    "total": total,
-                })
-
-            # Check platform status
-            status = installer.detect()
-
-            if not status.available and platform != "claude_code":
+            if not dirs:
+                # All specified dirs were invalid
                 skip_result = InstallResult(
                     component="platform",
                     platform=platform,
                     success=True,
                     action="skipped",
-                    message=f"{installer.platform_name} not available",
+                    message=f"{platform}: no valid config directories",
                 )
                 session.results.append(skip_result)
                 if on_progress:
                     on_progress("platform_skip", {
-                        "name": installer.platform_name,
+                        "name": platform,
                         "message": skip_result.message,
                     })
                 continue
 
-            # Install
-            results = installer.install(force=force)
-            for result in results:
+            for dir_idx, config_dir in enumerate(dirs):
+                skip_global = dir_idx > 0
+
+                installer = get_platform_installer(
+                    platform, self.spellbook_dir, self.version, dry_run,
+                    on_step=_on_step,
+                    config_dir_override=config_dir,
+                    context=shared_context,
+                )
+
                 if on_progress:
-                    on_progress("result", {"result": result})
-            session.results.extend(results)
+                    dir_label = f" ({config_dir})" if len(dirs) > 1 else ""
+                    on_progress("platform_start", {
+                        "name": f"{installer.platform_name}{dir_label}",
+                        "index": i,
+                        "total": total,
+                    })
+
+                # Check platform status
+                status = installer.detect()
+
+                if not status.available and platform != "claude_code":
+                    skip_result = InstallResult(
+                        component="platform",
+                        platform=platform,
+                        success=True,
+                        action="skipped",
+                        message=f"{installer.platform_name} not available at {config_dir}",
+                    )
+                    session.results.append(skip_result)
+                    if on_progress:
+                        on_progress("platform_skip", {
+                            "name": installer.platform_name,
+                            "message": skip_result.message,
+                        })
+                    continue
+
+                # Install with error isolation per dir
+                try:
+                    results = installer.install(
+                        force=force, skip_global_steps=skip_global,
+                    )
+                    for result in results:
+                        if on_progress:
+                            on_progress("result", {"result": result})
+                    session.results.extend(results)
+                except Exception as e:
+                    fail_result = InstallResult(
+                        component="platform",
+                        platform=platform,
+                        success=False,
+                        action="failed",
+                        message=f"Installation to {config_dir} failed: {e}",
+                    )
+                    session.results.append(fail_result)
+                    if on_progress:
+                        on_progress("result", {"result": fail_result})
 
         # Health check: verify the daemon is actually responding to MCP requests
         if not dry_run and daemon_success:
@@ -331,6 +404,7 @@ class Uninstaller:
         self,
         platforms: Optional[List[str]] = None,
         dry_run: bool = False,
+        config_dir_overrides: Optional[Dict[str, List[Path]]] = None,
     ) -> InstallSession:
         """
         Execute uninstallation workflow.
@@ -338,11 +412,23 @@ class Uninstaller:
         Args:
             platforms: List of platforms to uninstall (default: all installed)
             dry_run: Show what would be done without making changes
+            config_dir_overrides: Per-platform list of config dirs from CLI
+                flags.
 
         Returns InstallSession with all results.
         """
         if platforms is None:
             platforms = self.detect_installed_platforms()
+
+        # Pre-resolve Claude dirs for cross-platform context (Crush needs these)
+        claude_dirs = resolve_config_dirs(
+            "claude_code",
+            cli_dirs=(config_dir_overrides or {}).get("claude_code"),
+        )
+
+        shared_context: Dict[str, Any] = {
+            "claude_config_dirs": claude_dirs,
+        }
 
         session = InstallSession(
             spellbook_dir=self.spellbook_dir,
@@ -352,25 +438,48 @@ class Uninstaller:
         )
 
         for platform in platforms:
-            try:
-                installer = get_platform_installer(
-                    platform, self.spellbook_dir, self.version, dry_run
-                )
-            except ValueError:
-                session.results.append(
-                    InstallResult(
+            cli_dirs = (config_dir_overrides or {}).get(platform)
+            config_dirs = resolve_config_dirs(platform, cli_dirs=cli_dirs)
+
+            for dir_idx, config_dir in enumerate(config_dirs):
+                skip_global = dir_idx > 0
+
+                try:
+                    installer = get_platform_installer(
+                        platform, self.spellbook_dir, self.version, dry_run,
+                        config_dir_override=config_dir,
+                        context=shared_context,
+                    )
+                except ValueError:
+                    session.results.append(
+                        InstallResult(
+                            component="platform",
+                            platform=platform,
+                            success=False,
+                            action="failed",
+                            message=f"Unknown platform: {platform}",
+                        )
+                    )
+                    continue
+
+                # Check if anything is installed at this dir
+                status = installer.detect()
+                if not status.installed:
+                    continue
+
+                # Uninstall
+                try:
+                    results = installer.uninstall(skip_global_steps=skip_global)
+                    session.results.extend(results)
+                except Exception as e:
+                    fail_result = InstallResult(
                         component="platform",
                         platform=platform,
                         success=False,
                         action="failed",
-                        message=f"Unknown platform: {platform}",
+                        message=f"Uninstallation from {config_dir} failed: {e}",
                     )
-                )
-                continue
-
-            # Uninstall
-            results = installer.uninstall()
-            session.results.extend(results)
+                    session.results.append(fail_result)
 
         # Uninstall MCP server system service if installed
         mcp_result = self._uninstall_mcp_service(dry_run)

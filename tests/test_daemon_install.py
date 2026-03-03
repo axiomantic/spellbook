@@ -106,12 +106,12 @@ class TestInstallerRunDaemonCentralized:
             call_order.append("install_daemon")
             return (True, "daemon installed")
 
-        def mock_get_platform_installer(platform, sb_dir, version, dry_run=False, on_step=None):
+        def mock_get_platform_installer(platform, sb_dir, version, dry_run=False, on_step=None, **kwargs):
             mock_installer = MagicMock()
             mock_installer.platform_name = platform
             mock_installer.platform_id = platform
 
-            def mock_install(force=False):
+            def mock_install(force=False, skip_global_steps=False):
                 call_order.append(f"platform_install:{platform}")
                 return []
             mock_installer.install = mock_install

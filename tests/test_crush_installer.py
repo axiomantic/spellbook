@@ -301,7 +301,7 @@ class TestCrushConfig:
         context_path = tmp_path / "AGENTS.md"
         skills_path = tmp_path / ".claude" / "skills"
 
-        success, msg = _update_crush_config(config_path, context_path, skills_path)
+        success, msg = _update_crush_config(config_path, context_path, [skills_path])
 
         assert success is True
         assert config_path.exists()
@@ -320,7 +320,7 @@ class TestCrushConfig:
         context_path = tmp_path / "AGENTS.md"
         skills_path = tmp_path / ".claude" / "skills"
 
-        _update_crush_config(config_path, context_path, skills_path)
+        _update_crush_config(config_path, context_path, [skills_path])
 
         config = json.loads(config_path.read_text())
         assert config["existing"] is True  # Preserved
@@ -335,10 +335,10 @@ class TestCrushConfig:
         skills_path = tmp_path / ".claude" / "skills"
 
         # First add
-        _update_crush_config(config_path, context_path, skills_path)
+        _update_crush_config(config_path, context_path, [skills_path])
 
         # Then remove
-        success, msg = _remove_crush_config(config_path, context_path, skills_path)
+        success, msg = _remove_crush_config(config_path, context_path, [skills_path])
 
         assert success is True
 

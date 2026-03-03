@@ -302,8 +302,14 @@ class OpenCodeInstaller(PlatformInstaller):
         """Get the path to use in the instructions config array.
 
         Uses ~ for home directory to be portable across systems.
+        Falls back to absolute path if config_dir is not under $HOME.
         """
-        return "~/.config/opencode/instructions/claude-code-system-prompt.md"
+        target = self.instructions_dir / "claude-code-system-prompt.md"
+        try:
+            return f"~/{target.relative_to(Path.home()).as_posix()}"
+        except ValueError:
+            # config_dir is not under $HOME; use absolute path
+            return str(target)
 
     def detect(self) -> PlatformStatus:
         """Detect OpenCode installation status."""
@@ -351,7 +357,7 @@ class OpenCodeInstaller(PlatformInstaller):
             },
         )
 
-    def install(self, force: bool = False) -> List["InstallResult"]:
+    def install(self, force: bool = False, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Install OpenCode components."""
         from ..core import InstallResult
 
@@ -503,7 +509,7 @@ class OpenCodeInstaller(PlatformInstaller):
 
         return results
 
-    def uninstall(self) -> List["InstallResult"]:
+    def uninstall(self, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Uninstall OpenCode components."""
         from ..core import InstallResult
 
