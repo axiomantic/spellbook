@@ -269,14 +269,27 @@ Mandatory inclusion when dispatching any agent to write test code. Append to the
 ```markdown
 ASSERTION QUALITY REQUIREMENTS (non-negotiable):
 
-Load the assertion quality standard (patterns/assertion-quality-standard.md).
+Read the assertion quality standard (patterns/assertion-quality-standard.md) in full before writing any assertions.
+
+0. THE FULL ASSERTION PRINCIPLE (most important rule):
+   ALL assertions must assert exact equality against the COMPLETE expected output.
+   This applies to ALL output -- static, dynamic, or partially dynamic.
+   assert result == "the complete expected string"  -- CORRECT
+   assert result == f"Today is {datetime.date.today()}"  -- CORRECT (dynamic: construct full expected)
+   assert "substring" in result                     -- BANNED. ALWAYS.
+   assert dynamic_value in result                   -- BANNED. Dynamic content is no excuse.
+   assert "foo" in result and "bar" in result       -- STILL BANNED.
+   This applies to all functions. Multi-line output? Use triple-quoted strings. Length is not an excuse.
 
 1. Every assertion must be Level 4+ on the Assertion Strength Ladder:
-   - String output: exact match or parsed structural validation
+   - String output: exact match (Level 5) or parsed structural (Level 4)
    - Object output: full equality or all-field assertions
    - Collection output: full equality or content verification
    - Bare substring checks (assert "X" in output) are BANNED
    - Length/existence checks (assert len(x) > 0) are BANNED
+   - Multiple substring checks are STILL BANNED (not an improvement)
+   - Tautological assertions (assert result == func(same_input)) are BANNED
+   - mock.ANY in call assertions is BANNED (construct expected argument)
 
 2. IRON LAW: Before writing any assertion, ask:
    "If the value was garbage, would this catch it?"
@@ -289,6 +302,14 @@ Load the assertion quality standard (patterns/assertion-quality-standard.md).
 4. STRUCTURAL CONTAINMENT: When asserting string content, verify WHERE
    it appears, not just THAT it appears. A field in a struct must be
    verified to be inside the struct block (by index range or parsing).
+
+5. NO PARTIAL-TO-PARTIAL UPGRADES: Replacing assert len(x) > 0 with
+   assert "keyword" in result is NOT a fix. Both are BANNED. A real fix
+   reaches Level 4+ (exact equality or parsed structural validation).
+
+6. MOCK CALL ASSERTIONS: Assert EVERY call made to a mock, with ALL args,
+   and verify call count. Never use mock.ANY -- construct expected args
+   dynamically if they are dynamic. Asserting only some calls hides behavior gaps.
 ```
 
 ### Test Adversary Template
@@ -299,23 +320,34 @@ For review passes on test code. Dispatch a subagent with this persona to break e
 ROLE: Test Adversary. Your job is to BREAK tests, not validate them.
 Your reputation depends on finding weaknesses others missed.
 
-Load the assertion quality standard (patterns/assertion-quality-standard.md).
+Read the assertion quality standard (patterns/assertion-quality-standard.md) in full before writing any assertions.
+Pay special attention to The Full Assertion Principle.
+
+IMMEDIATE REJECTION CRITERIA (check these FIRST):
+- Any assert "X" in result on ANY output (static or dynamic): REJECTED (Level 2)
+- Any assert len(x) > 0 or assert x is not None: REJECTED (Level 1)
+- Any fix that replaced one BANNED pattern with another: REJECTED (Pattern 10)
+- Any tautological assertion (assert result == func(same_input)): REJECTED
 
 For each assertion in the code under review:
 1. Read the assertion and the production code it exercises
-2. Classify the assertion on the Assertion Strength Ladder
-3. Construct a SPECIFIC, PLAUSIBLE broken production implementation
+2. Determine if the function is deterministic (same input = same output)
+3. If deterministic: ONLY Level 5 (exact equality) is acceptable
+4. Classify the assertion on the Assertion Strength Ladder
+5. Construct a SPECIFIC, PLAUSIBLE broken production implementation
    that would still pass this assertion
-4. Report your verdict:
+6. Report your verdict:
 
    SURVIVED: [the broken implementation that passes]
    LADDER: Level [N] - [name] - [BANNED/ACCEPTABLE/PREFERRED/GOLD]
+   DETERMINISTIC: [Yes/No - is the function under test deterministic?]
    FIX: [what the assertion should be instead]
 
    -- or --
 
    KILLED: [why no plausible broken implementation survives]
    LADDER: Level [N] - [name] - [BANNED/ACCEPTABLE/PREFERRED/GOLD]
+   DETERMINISTIC: [Yes/No]
 
 A "plausible" broken implementation is one that could result from a
 real bug (off-by-one, wrong variable, missing field, swapped arguments,
@@ -327,6 +359,7 @@ Summary format:
 - KILLED: N (with ladder levels)
 - SURVIVED: N (with required fixes)
 - BANNED (Level 1-2): N (immediate rejection)
+- Pattern 10 violations (partial-to-partial): N
 ```
 
 ---
