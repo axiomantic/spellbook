@@ -189,11 +189,11 @@ def resolve_config_dirs(
                     "Config directory does not exist, skipping: %s", abs_path
                 )
                 continue
-            result.append(d)
+            result.append(abs_path)
         else:
             # Default dir: create if missing (preserve existing behavior)
             abs_path.mkdir(parents=True, exist_ok=True)
-            result.append(d)
+            result.append(abs_path)
 
     return result
 

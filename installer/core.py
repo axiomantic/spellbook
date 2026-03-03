@@ -468,8 +468,18 @@ class Uninstaller:
                     continue
 
                 # Uninstall
-                results = installer.uninstall(skip_global_steps=skip_global)
-                session.results.extend(results)
+                try:
+                    results = installer.uninstall(skip_global_steps=skip_global)
+                    session.results.extend(results)
+                except Exception as e:
+                    fail_result = InstallResult(
+                        component="platform",
+                        platform=platform,
+                        success=False,
+                        action="failed",
+                        message=f"Uninstallation from {config_dir} failed: {e}",
+                    )
+                    session.results.append(fail_result)
 
         # Uninstall MCP server system service if installed
         mcp_result = self._uninstall_mcp_service(dry_run)
