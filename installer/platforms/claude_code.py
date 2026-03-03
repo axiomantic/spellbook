@@ -137,32 +137,18 @@ class ClaudeCodeInstaller(PlatformInstaller):
     def platform_id(self) -> str:
         return "claude_code"
 
-    @property
-    def _default_config_dir(self) -> Path:
-        """The default/global Claude Code config directory (~/.claude)."""
-        return Path.home() / ".claude"
-
-    @property
-    def _is_custom_config_dir(self) -> bool:
-        """Whether config_dir differs from the default ~/.claude location."""
-        try:
-            return self.config_dir.resolve() != self._default_config_dir.resolve()
-        except OSError:
-            return str(self.config_dir) != str(self._default_config_dir)
-
-    @property
-    def _global_claude_md(self) -> Path:
-        """The global CLAUDE.md where spellbook content always lives."""
-        return self._default_config_dir / "CLAUDE.md"
+    def _check_nim_binaries_exist(self) -> bool:
+        """Check if Nim hook binaries exist (without compiling)."""
+        nim_dir = self.spellbook_dir / "hooks" / "nim"
+        if not nim_dir.exists():
+            return False
+        expected_binaries = list(_SHELL_TO_NIM_BINARY.values())
+        return all((nim_dir / "bin" / b).exists() for b in expected_binaries)
 
     def detect(self) -> PlatformStatus:
-        """Detect Claude Code installation status.
-
-        Always checks ~/.claude/CLAUDE.md for installed version, since
-        spellbook content is always written to the global location.
-        """
-        global_claude_md = self._global_claude_md
-        installed_version = get_installed_version(global_claude_md)
+        """Detect Claude Code installation status."""
+        claude_md = self.config_dir / "CLAUDE.md"
+        installed_version = get_installed_version(claude_md)
 
         return PlatformStatus(
             platform=self.platform_id,
@@ -175,7 +161,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
             },
         )
 
-    def install(self, force: bool = False) -> List["InstallResult"]:
+    def install(self, force: bool = False, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Install Claude Code components."""
         from ..core import InstallResult
 
@@ -320,9 +306,9 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
 
-        # Install CLAUDE.md with demarcated section.
+        # Install CLAUDE.md with demarcated section (per-dir).
         self._step("Updating CLAUDE.md")
-        global_claude_md = self._global_claude_md
+        claude_md = self.config_dir / "CLAUDE.md"
         spellbook_content = generate_claude_context(self.spellbook_dir)
 
         if spellbook_content:
@@ -338,11 +324,8 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
             else:
-                # Ensure global config dir exists
-                global_claude_md.parent.mkdir(parents=True, exist_ok=True)
-
                 action, backup_path = update_demarcated_section(
-                    global_claude_md, spellbook_content, self.version
+                    claude_md, spellbook_content, self.version
                 )
                 msg = f"CLAUDE.md: {action}"
                 if backup_path:
@@ -357,77 +340,66 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
 
-                # If using a custom config_dir, clean up any stale spellbook
-                # section from the custom location's CLAUDE.md
-                if self._is_custom_config_dir:
-                    custom_claude_md = self.config_dir / "CLAUDE.md"
-                    cleanup_action, _backup = remove_demarcated_section(custom_claude_md)
-                    if cleanup_action == "removed":
-                        results.append(
-                            InstallResult(
-                                component="CLAUDE.md",
-                                platform=self.platform_id,
-                                success=True,
-                                action="removed",
-                                message=f"CLAUDE.md: removed stale spellbook section from custom config dir ({self.config_dir})",
-                            )
-                        )
-
         # Register MCP server connection (daemon is installed centrally by core.py)
-        self._step("Registering MCP server")
+        # This is a global step: MCP registration is system-wide, not per-dir.
+        if not skip_global_steps:
+            self._step("Registering MCP server")
 
-        # Remove any old variant names
-        for old_name in ["spellbook-http"]:
-            unregister_mcp_server(old_name, dry_run=self.dry_run)
+            # Remove any old variant names
+            for old_name in ["spellbook-http"]:
+                unregister_mcp_server(old_name, dry_run=self.dry_run)
 
-        if check_claude_cli_available():
-            server_url = get_spellbook_server_url()
-            reg_success, reg_msg = register_mcp_http_server(
-                "spellbook", server_url, dry_run=self.dry_run
-            )
-            results.append(
-                InstallResult(
-                    component="mcp_server",
-                    platform=self.platform_id,
-                    success=reg_success,
-                    action="installed" if reg_success else "failed",
-                    message=f"MCP server: {reg_msg}",
+            if check_claude_cli_available():
+                server_url = get_spellbook_server_url()
+                reg_success, reg_msg = register_mcp_http_server(
+                    "spellbook", server_url, dry_run=self.dry_run
                 )
-            )
+                results.append(
+                    InstallResult(
+                        component="mcp_server",
+                        platform=self.platform_id,
+                        success=reg_success,
+                        action="installed" if reg_success else "failed",
+                        message=f"MCP server: {reg_msg}",
+                    )
+                )
+            else:
+                results.append(
+                    InstallResult(
+                        component="mcp_server",
+                        platform=self.platform_id,
+                        success=True,
+                        action="skipped",
+                        message="MCP server: claude CLI not available (configure manually)",
+                    )
+                )
+
+            # Attempt Nim hook compilation (optional, fails gracefully to shell fallback)
+            self._step("Compiling Nim hooks")
+            nim_available = _compile_nim_hooks(self.spellbook_dir)
+            if nim_available:
+                results.append(
+                    InstallResult(
+                        component="nim_hooks",
+                        platform=self.platform_id,
+                        success=True,
+                        action="installed",
+                        message=f"nim_hooks: all {len(_SHELL_TO_NIM_BINARY)} hooks compiled successfully",
+                    )
+                )
+            else:
+                results.append(
+                    InstallResult(
+                        component="nim_hooks",
+                        platform=self.platform_id,
+                        success=True,
+                        action="skipped",
+                        message="nim_hooks: using shell script fallback",
+                    )
+                )
         else:
-            results.append(
-                InstallResult(
-                    component="mcp_server",
-                    platform=self.platform_id,
-                    success=True,
-                    action="skipped",
-                    message="MCP server: claude CLI not available (configure manually)",
-                )
-            )
-
-        # Attempt Nim hook compilation (optional, fails gracefully to shell fallback)
-        self._step("Compiling Nim hooks")
-        nim_available = _compile_nim_hooks(self.spellbook_dir)
-        if nim_available:
-            results.append(
-                InstallResult(
-                    component="nim_hooks",
-                    platform=self.platform_id,
-                    success=True,
-                    action="installed",
-                    message=f"nim_hooks: all {len(_SHELL_TO_NIM_BINARY)} hooks compiled successfully",
-                )
-            )
-        else:
-            results.append(
-                InstallResult(
-                    component="nim_hooks",
-                    platform=self.platform_id,
-                    success=True,
-                    action="skipped",
-                    message="nim_hooks: using shell script fallback",
-                )
-            )
+            # When skipping global steps, check if nim binaries already exist
+            nim_available = self._check_nim_binaries_exist()
 
         # Install security hooks in settings.json
         # NOTE: Claude Code only reads hooks from ~/.claude/settings.json (user-level),
@@ -453,17 +425,15 @@ class ClaudeCodeInstaller(PlatformInstaller):
 
         return results
 
-    def uninstall(self) -> List["InstallResult"]:
+    def uninstall(self, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Uninstall Claude Code components."""
         from ..core import InstallResult
 
         results = []
 
-        # Remove demarcated section from CLAUDE.md.
-        # Always target ~/.claude/CLAUDE.md (the global location).
-        # If config_dir is custom, also check and clean the custom location.
-        global_claude_md = self._global_claude_md
-        if global_claude_md.exists():
+        # Remove demarcated section from CLAUDE.md (per-dir).
+        claude_md = self.config_dir / "CLAUDE.md"
+        if claude_md.exists():
             if self.dry_run:
                 results.append(
                     InstallResult(
@@ -475,7 +445,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
                     )
                 )
             else:
-                action, _backup = remove_demarcated_section(global_claude_md)
+                action, _backup = remove_demarcated_section(claude_md)
                 msg = f"CLAUDE.md: {action}"
                 results.append(
                     InstallResult(
@@ -486,33 +456,6 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         message=msg,
                     )
                 )
-
-        # If using custom config_dir, also clean up any stale section there
-        if self._is_custom_config_dir:
-            custom_claude_md = self.config_dir / "CLAUDE.md"
-            if custom_claude_md.exists():
-                if self.dry_run:
-                    results.append(
-                        InstallResult(
-                            component="CLAUDE.md",
-                            platform=self.platform_id,
-                            success=True,
-                            action="removed",
-                            message="CLAUDE.md: would remove spellbook section from custom config dir",
-                        )
-                    )
-                else:
-                    custom_action, _backup = remove_demarcated_section(custom_claude_md)
-                    if custom_action == "removed":
-                        results.append(
-                            InstallResult(
-                                component="CLAUDE.md",
-                                platform=self.platform_id,
-                                success=True,
-                                action="removed",
-                                message=f"CLAUDE.md: removed stale spellbook section from custom config dir ({self.config_dir})",
-                            )
-                        )
 
         # Remove ALL symlinks in managed directories (handles orphaned symlinks too)
         cleanup_dirs = [
@@ -571,48 +514,49 @@ class ClaudeCodeInstaller(PlatformInstaller):
                             )
                         )
 
-        # Uninstall MCP daemon
-        daemon_success, daemon_msg = uninstall_daemon(dry_run=self.dry_run)
-        results.append(
-            InstallResult(
-                component="mcp_daemon",
-                platform=self.platform_id,
-                success=daemon_success,
-                action="removed" if daemon_success else "failed",
-                message=f"MCP daemon: {daemon_msg}",
+        # Uninstall MCP daemon and unregister MCP servers (global steps)
+        if not skip_global_steps:
+            daemon_success, daemon_msg = uninstall_daemon(dry_run=self.dry_run)
+            results.append(
+                InstallResult(
+                    component="mcp_daemon",
+                    platform=self.platform_id,
+                    success=daemon_success,
+                    action="removed" if daemon_success else "failed",
+                    message=f"MCP daemon: {daemon_msg}",
+                )
             )
-        )
 
-        # Unregister MCP servers (both stdio and HTTP variants)
-        if check_claude_cli_available():
-            # Remove all known spellbook MCP server names
-            mcp_names = ["spellbook", "spellbook-http"]
-            removed = []
-            for name in mcp_names:
-                success, msg = unregister_mcp_server(name, dry_run=self.dry_run)
-                if success and "not registered" not in msg.lower():
-                    removed.append(name)
+            # Unregister MCP servers (both stdio and HTTP variants)
+            if check_claude_cli_available():
+                # Remove all known spellbook MCP server names
+                mcp_names = ["spellbook", "spellbook-http"]
+                removed = []
+                for name in mcp_names:
+                    success, msg = unregister_mcp_server(name, dry_run=self.dry_run)
+                    if success and "not registered" not in msg.lower():
+                        removed.append(name)
 
-            if removed:
-                results.append(
-                    InstallResult(
-                        component="mcp_server",
-                        platform=self.platform_id,
-                        success=True,
-                        action="removed",
-                        message=f"MCP servers: removed {', '.join(removed)}",
+                if removed:
+                    results.append(
+                        InstallResult(
+                            component="mcp_server",
+                            platform=self.platform_id,
+                            success=True,
+                            action="removed",
+                            message=f"MCP servers: removed {', '.join(removed)}",
+                        )
                     )
-                )
-            else:
-                results.append(
-                    InstallResult(
-                        component="mcp_server",
-                        platform=self.platform_id,
-                        success=True,
-                        action="unchanged",
-                        message="MCP servers: none were registered",
+                else:
+                    results.append(
+                        InstallResult(
+                            component="mcp_server",
+                            platform=self.platform_id,
+                            success=True,
+                            action="unchanged",
+                            message="MCP servers: none were registered",
+                        )
                     )
-                )
 
         # Uninstall security hooks from settings.json
         settings_path = self.config_dir / "settings.json"
@@ -630,12 +574,8 @@ class ClaudeCodeInstaller(PlatformInstaller):
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Get context files for this platform.
-
-        Always returns the global ~/.claude/CLAUDE.md since spellbook
-        content is always written there.
-        """
-        return [self._global_claude_md]
+        """Get context files for this platform."""
+        return [self.config_dir / "CLAUDE.md"]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

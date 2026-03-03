@@ -920,6 +920,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     # Import installer components
     try:
+        from installer.config import PLATFORM_CONFIG
         from installer.core import Installer
         from installer.ui import (
             Spinner,
@@ -942,6 +943,13 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     installer = Installer(spellbook_dir)
     print_installer_header(installer.version)
+
+    # Build config_dir_overrides from per-platform CLI flags
+    config_dir_overrides: dict[str, list[Path]] = {}
+    for platform_id in PLATFORM_CONFIG:
+        cli_dirs = getattr(args, f"{platform_id}_config_dirs", None)
+        if cli_dirs:
+            config_dir_overrides[platform_id] = [Path(d) for d in cli_dirs]
 
     # Determine platforms to install
     if args.platforms:
@@ -997,6 +1005,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         force=args.force,
         dry_run=args.dry_run,
         on_progress=_on_progress,
+        config_dir_overrides=config_dir_overrides if config_dir_overrides else None,
     )
 
     print_report(session, show_details=False)
@@ -1040,6 +1049,9 @@ Examples:
 
   # Specific platforms only
   python3 install.py --platforms claude_code,codex
+
+  # Install to multiple config dirs for a platform
+  python3 install.py --claude-config-dir ~/.claude --claude-config-dir ~/.claude-work
 """,
     )
     parser.add_argument(
@@ -1087,6 +1099,35 @@ Examples:
         action="store_true",
         help=argparse.SUPPRESS,  # Hidden flag - set after bootstrap phase
     )
+
+    # Per-platform config dir overrides (repeatable)
+    # These are registered dynamically from PLATFORM_CONFIG to stay in sync.
+    # Import is deferred because PLATFORM_CONFIG lives in the installer package,
+    # which may not be on sys.path until after bootstrap. We use a try/except
+    # so the parser can still be built when running from curl-pipe (pre-clone).
+    try:
+        from installer.config import PLATFORM_CONFIG
+
+        for platform_id, pconfig in PLATFORM_CONFIG.items():
+            flag_name = pconfig.get("cli_flag_name")
+            if flag_name:
+                parser.add_argument(
+                    f"--{flag_name}",
+                    action="append",
+                    type=str,
+                    default=None,
+                    dest=f"{platform_id}_config_dirs",
+                    metavar="DIR",
+                    help=(
+                        f"Config directory for {pconfig.get('name', platform_id)} "
+                        "(repeatable, overrides default and env var). "
+                        "Platform must also be selected via --platforms or TUI."
+                    ),
+                )
+    except ImportError:
+        # Pre-bootstrap: installer package not yet available.
+        # Flags will be available after re-exec from cloned repo.
+        pass
 
     args = parser.parse_args()
 

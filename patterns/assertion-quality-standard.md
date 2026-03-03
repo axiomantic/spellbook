@@ -2,10 +2,183 @@
 
 ## Invariant Principles
 
-1. **Assertions must catch garbage.** If broken production code still passes the test, the assertion is worthless.
-2. **Position matters, not just presence.** Proving X exists SOMEWHERE is not proving X is WHERE it should be.
-3. **Stronger is always better.** Downgrade from exact match only with written justification.
-4. **Every assertion must name its kill.** If you cannot name a specific mutation the assertion catches, it catches nothing.
+1. **Assert EVERYTHING.** A test must verify the COMPLETE observable behavior of the unit under test: return value, every mock call with all args, all side effects, all state mutations. No observation left unverified.
+2. **ALL assertions must be full.** Assert exact equality against the COMPLETE expected output, always, for all output types -- static, dynamic, or partially dynamic. No partial assertions. No exceptions. (See: The Full Assertion Principle below.)
+3. **Assertions must catch garbage.** If broken production code still passes the test, the assertion is worthless.
+4. **Position matters, not just presence.** Proving X exists SOMEWHERE is not proving X is WHERE it should be.
+5. **Stronger is always better.** Downgrade from exact match only with written justification.
+6. **Every assertion must name its kill.** If you cannot name a specific mutation the assertion catches, it catches nothing.
+
+## The Full Assertion Principle
+
+<CRITICAL>
+Every assertion MUST assert exact equality against the COMPLETE expected output. This applies to ALL output -- static, dynamic, or partially dynamic. There are no categories of output exempt from this rule.
+
+```python
+# CORRECT: exact equality on complete output (static)
+assert result == "the entire expected string, every character"
+
+# CORRECT: exact equality with dynamically constructed expected value
+def get_message():
+    return f"Today's date is {datetime.date.today().isoformat()}"
+
+message = get_message()
+assert message == f"Today's date is {datetime.date.today().isoformat()}"
+
+# WRONG: partial assertion. Dynamic value is no excuse for a partial check.
+assert datetime.date.today().isoformat() in message
+
+# WRONG: meaningless
+assert len(result) > 0
+
+# WRONG: still partial. Doesn't verify structure, ordering,
+# completeness, or absence of unexpected content.
+assert "foo" in result and "bar" in result
+```
+
+**Even dynamic content must be fully asserted.** When output contains dynamic values (timestamps, computed IDs, derived strings), construct the complete expected value using the same logic, then assert `==`. Do not assert partial membership of the dynamic value.
+
+```python
+# CORRECT: construct full expected object dynamically
+user = create_user(name="Alice", role="admin")
+assert user == User(
+    name="Alice",
+    role="admin",
+    created_at=user.created_at,  # dynamic field: assert the actual value roundtrips
+    slug="alice",
+)
+
+# WRONG: partial field check, misses ordering bugs, missing fields, extra fields
+assert user.name == "Alice"
+assert user.role == "admin"
+
+# CORRECT: full dict equality with dynamically constructed expected
+result = build_config(env="prod")
+assert result == {
+    "env": "prod",
+    "host": "prod.example.com",
+    "timeout": 30,
+    "features": ["a", "b", "c"],
+}
+
+# WRONG: key presence check
+assert "env" in result
+assert result["env"] == "prod"
+
+# CORRECT: full list equality
+items = get_sorted_items()
+assert items == ["alpha", "beta", "gamma"]
+
+# WRONG: count + membership, misses order and extra items
+assert len(items) == 3
+assert "alpha" in items
+```
+
+**Normalization is the last resort, not a technique.** Strip or replace a value only when it is genuinely unknowable at test time (random UUIDs, OS-assigned PIDs, memory addresses). Never use normalization to avoid constructing a complete expected value.
+
+```python
+# LAST RESORT ONLY: normalize a truly unknowable value (random UUID),
+# then assert exact equality on everything else
+result = create_session(user_id=42)
+assert result == {
+    "user_id": 42,
+    "token": result["token"],  # token is cryptographically random: assert it roundtrips
+    "expires_in": 3600,
+}
+
+# WRONG: using normalization to avoid a full assertion
+normalized = re.sub(r'[0-9a-f-]{36}', 'UUID', result_str)
+assert "user_id" in normalized  # still partial after normalization!
+```
+
+This principle is the FOUNDATION of assertion quality. Every other rule in this document supports it. If you remember nothing else: ALL assertions must be full, regardless of whether output is static or dynamic. Build the expected value -- do not skip it.
+</CRITICAL>
+
+## Mock Call Assertions
+
+<CRITICAL>
+When a dependency is mocked, you MUST assert EVERY call made to that mock, with ALL arguments, in order. Partial mock assertions are BANNED with no exceptions.
+
+```python
+# CORRECT: assert every call, all args, in order
+mock_sender.send.assert_has_calls([
+    call(to="alice@example.com", subject="Welcome", body="Hello Alice"),
+    call(to="bob@example.com", subject="Welcome", body="Hello Bob"),
+])
+mock_sender.send.assert_call_count == 2  # verify no extra calls
+
+# WRONG: only asserted one call, missed the second
+mock_sender.send.assert_called_once_with(
+    to="alice@example.com", subject="Welcome", body="Hello Alice"
+)
+
+# WRONG: only checked it was called, no argument verification
+mock_sender.send.assert_called()
+
+# WRONG: only checked some arguments
+mock_sender.send.assert_called_with(to="alice@example.com")
+
+# WRONG: mock.ANY hides argument values -- BANNED
+mock_sender.send.assert_called_with(to=mock.ANY, subject=mock.ANY, body=mock.ANY)
+```
+
+**Rules for mock assertions:**
+
+1. **Every mock call must be verified.** If the code calls a mock 3 times, assert all 3 calls. Missing calls means missing behavior verification.
+2. **All arguments must be specified.** Never use `mock.ANY` as a substitute for an actual expected value. Construct the expected argument if it is dynamic.
+3. **Call count must be verified.** After `assert_has_calls`, also assert `call_count` to prevent unexpected extra calls from passing.
+4. **Order matters.** Use `assert_has_calls([...], any_order=False)` by default. Use `any_order=True` only when order is genuinely irrelevant and document why.
+5. **No `mock.ANY`.** If the value is dynamic, construct the expected value dynamically and assert it exactly. `mock.ANY` is as weak as `assert "foo" in result` -- it proves nothing.
+
+```python
+# CORRECT: dynamic argument -- construct expected, assert exactly
+expected_payload = build_expected_payload(user_id=42, timestamp=freeze_time.now())
+mock_client.post.assert_called_once_with("/api/events", json=expected_payload)
+
+# WRONG: dynamic argument -- mock.ANY hides the content
+mock_client.post.assert_called_once_with("/api/events", json=mock.ANY)
+```
+</CRITICAL>
+
+## Side Effects and State Mutations
+
+<CRITICAL>
+Every observable side effect of the unit under test MUST be asserted. Do not limit assertions to the return value.
+
+**What counts as a side effect (must be asserted):**
+- Database writes: assert the complete record as written, all fields
+- File writes: assert the complete file contents
+- Cache updates: assert the exact cached value
+- Event emissions: assert every event, all payload fields
+- Queue publishes: assert every message, all fields
+- External API calls: assert via mock (see Mock Call Assertions above)
+
+```python
+# CORRECT: assert return value AND all side effects
+result = process_order(order)
+assert result == OrderResult(id=order.id, status="confirmed", total=99.99)
+
+# Assert the database write happened with all fields
+saved = db.orders.get(order.id)
+assert saved == Order(
+    id=order.id,
+    user_id=order.user_id,
+    status="confirmed",
+    total=99.99,
+    confirmed_at=saved.confirmed_at,  # dynamic: assert it roundtrips
+    items=order.items,
+)
+
+# Assert the event was emitted
+mock_event_bus.publish.assert_called_once_with(
+    "order.confirmed",
+    {"order_id": order.id, "user_id": order.user_id, "total": 99.99},
+)
+
+# WRONG: only asserted return value, missed database write and event
+assert result.status == "confirmed"
+```
+</CRITICAL>
 
 ## The Assertion Strength Ladder
 
@@ -117,15 +290,21 @@ Using levels below PREFERRED requires an inline comment explaining why:
 
 | Reason | Valid? | Required Mitigation |
 |--------|--------|---------------------|
-| Non-deterministic output (timestamps, UUIDs) | Yes | Use matchers for non-deterministic fields, exact match for everything else |
-| Platform-dependent output (line endings, paths) | Yes | Use highest cross-platform level; normalize before comparing |
+| Output contains dynamic values (timestamps, IDs) | Never alone | Construct expected value dynamically, assert == full output |
+| Truly unknowable runtime values (random UUIDs, OS PIDs, memory addresses) | Sometimes | Assert the field roundtrips OR strip ONLY the unknowable part and assert == on everything else |
+| Platform-dependent output (line endings, paths) | Yes | Normalize platform differences before comparing; assert == on normalized form |
 | Output too large for exact match | Sometimes | Parse and assert on structure (Level 4); justify why parsing is impossible if using Level 3 |
 | "It's just a quick test" | Never | No such thing as a quick test. Tests outlive the code they test. |
 | "The important thing is that it contains X" | Never | WHERE it contains X matters. Use structural containment at minimum. |
+| "Output is too long for exact match" | Never | Use triple-quoted strings or dedent helpers. Length is not a justification for partial assertions. |
+| "I'll just check the key parts" | Never | ALL output demands complete verification. Partial checks miss structural errors, ordering bugs, and extra garbage. |
+| "Output has a dynamic element so I can't do exact match" | Never | Construct the expected value dynamically. Dynamic content is not an excuse for partial assertions. |
+| "I'll use mock.ANY for the dynamic argument" | Never | Construct the expected argument dynamically. `mock.ANY` proves nothing. |
+| "I only need to verify the important calls" | Never | Assert every mock call. Unverified calls hide behavior gaps. |
 
 ## Usage Reference
 
 ```markdown
-Load assertion quality standard (patterns/assertion-quality-standard.md).
+Read assertion quality standard (patterns/assertion-quality-standard.md) in full.
 Classify each assertion on the Assertion Strength Ladder.
 ```

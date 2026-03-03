@@ -550,8 +550,28 @@ For each individual task:
 Task:
   description: "Implement Task N: [name]"
   prompt: |
-    First, invoke the test-driven-development skill using the Skill tool.
+    IMPORTANT: Before writing ANY test code, read these files in full:
+    1. Read patterns/assertion-quality-standard.md - the ENTIRE file
+    2. Read the Test Writer Template section in skills/dispatching-parallel-agents/SKILL.md
+
+    Then invoke the test-driven-development skill using the Skill tool.
     Implement this task following TDD strictly.
+
+    ## Assertion Quality (Non-Negotiable)
+
+    THE FULL ASSERTION PRINCIPLE: Every assertion MUST assert exact equality
+    against the COMPLETE expected output. This applies to ALL output -- static,
+    dynamic, or partially dynamic. For dynamic output, construct the expected
+    value using the same logic, then assert ==:
+      assert result == expected_complete_output  -- CORRECT
+      assert message == f"Today: {date.today()}"  -- CORRECT (dynamic)
+      assert "substring" in result               -- BANNED. ALWAYS.
+      assert len(result) > 0                     -- BANNED.
+      mock_fn.assert_called_with(mock.ANY, ...)  -- BANNED.
+
+    Every assertion must be Level 4+ on the Assertion Strength Ladder.
+    Do NOT take shortcuts on assertions. Do NOT use partial assertions
+    as a substitute for computing the complete expected value.
 
     ## Context for the Skill
 
@@ -848,8 +868,18 @@ If tests fail:
 Task:
   description: "Audit test quality"
   prompt: |
-    First, invoke the audit-green-mirage skill using the Skill tool.
+    IMPORTANT: Before starting the audit, read these files in full:
+    1. Read patterns/assertion-quality-standard.md - the ENTIRE file
+    2. Read the audit-mirage-analyze command file - the ENTIRE file
+
+    Do NOT skip reading these files. Do NOT take shortcuts in your analysis.
+
+    Then invoke the audit-green-mirage skill using the Skill tool.
     Verify tests actually validate correctness.
+
+    KEY RULE: For ALL output (static or dynamic), the ONLY acceptable assertion
+    is exact equality: assert result == expected.
+    assert "substring" in result is BANNED. Always. No exceptions.
 
     ## Context for the Skill
 

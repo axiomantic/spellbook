@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 def _update_crush_config(
     config_path: Path,
     context_file_path: Path,
-    claude_skills_path: Path,
+    claude_skills_paths: list[Path],
     dry_run: bool = False,
 ) -> Tuple[bool, str]:
     """
@@ -35,7 +35,7 @@ def _update_crush_config(
 
     This configures:
     - MCP server (spellbook) under the 'mcp' key (HTTP daemon transport)
-    - Skills path (~/.claude/skills) under 'options.skills_paths'
+    - Skills paths (e.g. ~/.claude/skills) under 'options.skills_paths'
     - Context file path under 'options.context_paths'
     """
     if dry_run:
@@ -64,13 +64,17 @@ def _update_crush_config(
     if "options" not in config:
         config["options"] = {}
 
-    # Configure skills_paths to include ~/.claude/skills
+    # Configure skills_paths to include all Claude skills directories
     skills_paths = config["options"].get("skills_paths", [])
-    claude_skills_str = str(claude_skills_path)
-    if claude_skills_str not in skills_paths:
-        skills_paths.append(claude_skills_str)
+    added_count = 0
+    for claude_skills_path in claude_skills_paths:
+        claude_skills_str = str(claude_skills_path)
+        if claude_skills_str not in skills_paths:
+            skills_paths.append(claude_skills_str)
+            added_count += 1
+    if added_count > 0:
         config["options"]["skills_paths"] = skills_paths
-        actions.append("added skills path")
+        actions.append(f"added {added_count} skills path(s)")
 
     # Configure context_paths to include our AGENTS.md
     context_paths = config["options"].get("context_paths", [])
@@ -109,7 +113,7 @@ def _update_crush_config(
 def _remove_crush_config(
     config_path: Path,
     context_file_path: Path,
-    claude_skills_path: Path,
+    claude_skills_paths: list[Path],
     dry_run: bool = False,
 ) -> Tuple[bool, str]:
     """Remove spellbook configuration from Crush config."""
@@ -141,13 +145,17 @@ def _remove_crush_config(
             config["options"]["context_paths"] = context_paths
             actions.append("removed context path")
 
-        # Remove claude skills path from options.skills_paths
+        # Remove all Claude skills paths from options.skills_paths
         skills_paths = config["options"].get("skills_paths", [])
-        claude_skills_str = str(claude_skills_path)
-        if claude_skills_str in skills_paths:
-            skills_paths.remove(claude_skills_str)
+        removed_count = 0
+        for claude_skills_path in claude_skills_paths:
+            claude_skills_str = str(claude_skills_path)
+            if claude_skills_str in skills_paths:
+                skills_paths.remove(claude_skills_str)
+                removed_count += 1
+        if removed_count > 0:
             config["options"]["skills_paths"] = skills_paths
-            actions.append("removed skills path")
+            actions.append(f"removed {removed_count} skills path(s)")
 
     # Write config back
     config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
@@ -174,9 +182,16 @@ class CrushInstaller(PlatformInstaller):
         return self.config_dir / "crush.json"
 
     @property
-    def claude_skills_path(self) -> Path:
-        """Get the Claude skills path (shared with Claude Code)."""
-        return Path.home() / ".claude" / "skills"
+    def claude_skills_paths(self) -> list[Path]:
+        """Get all Claude Code skills paths (for cross-platform skill sharing).
+
+        Uses resolved Claude config dirs from the shared context if available,
+        otherwise falls back to the default ~/.claude/skills.
+        """
+        claude_dirs = self._context.get("claude_config_dirs", [])
+        if not claude_dirs:
+            claude_dirs = [Path.home() / ".claude"]
+        return [d / "skills" for d in claude_dirs]
 
     def detect(self) -> PlatformStatus:
         """Detect Crush installation status."""
@@ -198,7 +213,9 @@ class CrushInstaller(PlatformInstaller):
                 skills_paths = options.get("skills_paths", [])
                 context_paths = options.get("context_paths", [])
 
-                has_skills_path = str(self.claude_skills_path) in skills_paths
+                has_skills_path = any(
+                    str(p) in skills_paths for p in self.claude_skills_paths
+                )
                 has_context_path = str(self.config_dir / "AGENTS.md") in context_paths
             except json.JSONDecodeError:
                 pass
@@ -216,7 +233,7 @@ class CrushInstaller(PlatformInstaller):
             },
         )
 
-    def install(self, force: bool = False) -> List["InstallResult"]:
+    def install(self, force: bool = False, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Install Crush components."""
         from ..core import InstallResult
 
@@ -272,7 +289,7 @@ class CrushInstaller(PlatformInstaller):
         success, msg = _update_crush_config(
             self.crush_config_file,
             context_file,
-            self.claude_skills_path,
+            self.claude_skills_paths,
             self.dry_run,
         )
         results.append(
@@ -287,7 +304,7 @@ class CrushInstaller(PlatformInstaller):
 
         return results
 
-    def uninstall(self) -> List["InstallResult"]:
+    def uninstall(self, skip_global_steps: bool = False) -> List["InstallResult"]:
         """Uninstall Crush components."""
         from ..core import InstallResult
 
@@ -328,7 +345,7 @@ class CrushInstaller(PlatformInstaller):
         success, msg = _remove_crush_config(
             self.crush_config_file,
             context_file,
-            self.claude_skills_path,
+            self.claude_skills_paths,
             self.dry_run,
         )
         results.append(

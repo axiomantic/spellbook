@@ -15,6 +15,12 @@ Shared reference for code review skills. Each anti-pattern includes detection he
 - Test mocks the function being tested
 - No assertions after async operations complete
 - `expect(result).toBeTruthy()` on complex objects
+- `assert "substring" in result` on ANY output -- static or dynamic (BANNED -- see Full Assertion Principle in `patterns/assertion-quality-standard.md`)
+- Partial assertion on dynamic output instead of constructing full expected value (BANNED -- dynamic content is no excuse for partial assertions)
+- `mock.ANY` used in call assertions (BANNED -- proves nothing about actual arguments)
+- Not asserting all mock calls (every call must be verified with all args and call count)
+- Partial field checks on objects with many fields
+- "Strengthened" assertions that replaced one BANNED pattern with another (Pattern 10 in `commands/audit-mirage-analyze.md`)
 
 **Impact:** Bugs ship to production despite "passing" test suite. Regressions go undetected. Team loses trust in tests.
 
@@ -26,12 +32,23 @@ test('processes order', async () => {
   expect(result).toBeTruthy();  // Only checks not null/undefined
 });
 
-// CORRECT: Verifies actual behavior
+// STILL GREEN MIRAGE: Partial check, missing fields
 test('processes order', async () => {
   const result = await processOrder(mockOrder);
-  expect(result.status).toBe('completed');
-  expect(result.totalCharged).toBe(99.99);
+  expect(result.status).toBe('completed');  // What about other fields?
+});
+
+// CORRECT: Full object equality verifies complete behavior
+test('processes order', async () => {
+  const result = await processOrder(mockOrder);
+  expect(result).toEqual({
+    status: 'completed',
+    totalCharged: 99.99,
+    items: [{ id: 'item-1', qty: 2, price: 49.995 }],
+    paymentId: 'pay-123',
+  });
   expect(mockPaymentService.charge).toHaveBeenCalledWith(99.99);
+  expect(mockPaymentService.charge).toHaveBeenCalledTimes(1);  // verify no extra calls
 });
 ```
 
