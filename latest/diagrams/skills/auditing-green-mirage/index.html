@@ -6927,10 +6927,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#overview-auditing-green-mirage-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        Overview: Auditing Green Mirage Workflow
       
     </span>
   </a>
@@ -6938,10 +6938,87 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+  <a href="#cross-reference-table" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        Cross-Reference Table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detail-1-phase-1-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detail 1: Phase 1 - Inventory
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detail-2-phase-2-3-systematic-audit-10-green-mirage-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detail 2: Phase 2-3 - Systematic Audit + 10 Green Mirage Patterns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detail-3-phase-4-cross-test-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detail 3: Phase 4 - Cross-Test Analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detail-4-phase-5-6-findings-report-and-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detail 4: Phase 5-6 - Findings Report and Output
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detail-5-phase-7-fix-verification-mandatory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detail 5: Phase 7 - Fix Verification (MANDATORY)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-check-checklist-referenced-in-phase-5-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-Check Checklist (Referenced in Phase 5-6)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-green-mirage-patterns-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10 Green Mirage Patterns Reference
       
     </span>
   </a>
@@ -6968,299 +7045,590 @@
   
 
 
-<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md", "source_hash": "sha256:0211b4b645b1bc70fa5d85978eef5c7fc3e6077d7d9171517521b4a2e0a9e606", "generated_at": "2026-03-01T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source":"skills/auditing-green-mirage/SKILL.md","source_hash":"sha256:52095ab8067f589ba0ae69c7c26453265d0cc5495051369b067bf334dd0827d3","generated_at":"2026-03-02T19:07:13Z","generator":"generate_diagrams.py"} -->
 <h1 id="diagram-auditing-green-mirage">Diagram: auditing-green-mirage<a class="headerlink" href="#diagram-auditing-green-mirage" title="Permanent link">&para;</a></h1>
-<p>Forensic test suite audit that traces every test through production code, checks against 9 Green Mirage patterns, and produces a YAML-structured report with dependency-ordered remediation plan. Includes fix verification phase with Test Adversary subagent.</p>
+<p>Now I have all the source material. Let me construct the diagrams.</p>
+<h2 id="overview-auditing-green-mirage-workflow">Overview: Auditing Green Mirage Workflow<a class="headerlink" href="#overview-auditing-green-mirage-workflow" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start]) --&gt; P1[Phase 1: Inventory]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    P1 --&gt; ListTests[List All Test Files]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ListTests --&gt; ListProd[Map Production Files]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ListProd --&gt; ScopeEst[Estimate Scope]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ScopeEst --&gt; ScopeCheck{5+ Test Files?}
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    ScopeCheck --&gt;|Yes| ParallelDispatch[Dispatch Parallel Subagents]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ScopeCheck --&gt;|No| SingleAudit[Single Audit Subagent]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    ParallelDispatch --&gt; P2[Phase 2-3: Systematic Audit]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    SingleAudit --&gt; P2
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    P2 --&gt; P2_Sub[/audit-mirage-analyze/]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    P2_Sub --&gt; ForEachTest[For Each Test Function]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    ForEachTest --&gt; Claim[1. CLAIM: What Does Name Promise?]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    Claim --&gt; Path[2. PATH: What Code Executes?]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    Path --&gt; Check[3. CHECK: What Do Assertions Verify?]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    Check --&gt; Escape[4. ESCAPE: What Garbage Passes?]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    Escape --&gt; Impact[5. IMPACT: What Breaks in Prod?]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    Impact --&gt; Pattern8[Check All 8 Mirage Patterns]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    Pattern8 --&gt; Verdict{Verdict?}
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    Verdict --&gt;|SOLID| RecordSolid[Record: SOLID]
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    Verdict --&gt;|PARTIAL| RecordPartial[Record: PARTIAL + Gaps]
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    Verdict --&gt;|GREEN MIRAGE| RecordMirage[Record: GREEN MIRAGE + Fix]
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    RecordSolid --&gt; MoreTests{More Tests?}
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    RecordPartial --&gt; MoreTests
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    RecordMirage --&gt; MoreTests
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    MoreTests --&gt;|Yes| ForEachTest
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    MoreTests --&gt;|No| P4
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    P4[Phase 4: Cross-Test Analysis]
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    P4 --&gt; P4_Sub[/audit-mirage-cross/]
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    P4_Sub --&gt; UntestedFns[Find Untested Functions]
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    UntestedFns --&gt; UntestedErrors[Find Untested Error Paths]
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    UntestedErrors --&gt; UntestedEdges[Find Untested Edge Cases]
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    UntestedEdges --&gt; IsolationIssues[Check Test Isolation]
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    IsolationIssues --&gt; P5[Phase 5-6: Report]
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    P5 --&gt; P5_Sub[/audit-mirage-report/]
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    P5_Sub --&gt; YAMLBlock[Generate YAML Block]
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    YAMLBlock --&gt; HumanSummary[Human-Readable Summary]
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    HumanSummary --&gt; DetailedFindings[Detailed Findings + Fix Code]
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    DetailedFindings --&gt; RemPlan[Remediation Plan]
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    RemPlan --&gt; WriteReport[Write Report to Artifacts]
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    WriteReport --&gt; QuickStart[Suggest /fixing-tests]
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    QuickStart --&gt; FixesWritten{Fixes Written?}
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    FixesWritten --&gt;|No| SelfCheck[Self-Check Checklist]
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    FixesWritten --&gt;|Yes| P7[Phase 7: Fix Verification]
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    P7 --&gt; AdversaryAgent[Dispatch Test Adversary Subagent]
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    AdversaryAgent --&gt; LadderCheck[Assertion Ladder Check]
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    LadderCheck --&gt; EscapeAnalysis[ESCAPE Analysis per Assertion]
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    EscapeAnalysis --&gt; AdversarialReview[Adversarial Review]
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    AdversarialReview --&gt; FixVerdict{All KILLED + Level 4+?}
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    FixVerdict --&gt;|FAIL| RequireChanges[List Required Changes]
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    RequireChanges --&gt; P7
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    FixVerdict --&gt;|PASS| SelfCheck
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    SelfCheck --&gt; SelfGate{All Items Checked?}
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    SelfGate --&gt;|No| GoBack[Go Back and Complete]
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    GoBack --&gt; SelfCheck
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    SelfGate --&gt;|Yes| End([End])
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style End fill:#4CAF50,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style P1 fill:#2196F3,color:#fff
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style ListTests fill:#2196F3,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style ListProd fill:#2196F3,color:#fff
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style ScopeEst fill:#2196F3,color:#fff
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style ParallelDispatch fill:#2196F3,color:#fff
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style SingleAudit fill:#2196F3,color:#fff
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style P2 fill:#2196F3,color:#fff
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style ForEachTest fill:#2196F3,color:#fff
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style Claim fill:#2196F3,color:#fff
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style Path fill:#2196F3,color:#fff
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style Check fill:#2196F3,color:#fff
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style Escape fill:#2196F3,color:#fff
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style Impact fill:#2196F3,color:#fff
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style Pattern8 fill:#2196F3,color:#fff
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style RecordSolid fill:#2196F3,color:#fff
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style RecordPartial fill:#2196F3,color:#fff
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style RecordMirage fill:#2196F3,color:#fff
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style P4 fill:#2196F3,color:#fff
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style UntestedFns fill:#2196F3,color:#fff
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style UntestedErrors fill:#2196F3,color:#fff
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    style UntestedEdges fill:#2196F3,color:#fff
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    style IsolationIssues fill:#2196F3,color:#fff
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    style P5 fill:#2196F3,color:#fff
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>    style YAMLBlock fill:#2196F3,color:#fff
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    style HumanSummary fill:#2196F3,color:#fff
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>    style DetailedFindings fill:#2196F3,color:#fff
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>    style RemPlan fill:#2196F3,color:#fff
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    style WriteReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>    style SelfCheck fill:#2196F3,color:#fff
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    style GoBack fill:#2196F3,color:#fff
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>    style QuickStart fill:#2196F3,color:#fff
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    style ScopeCheck fill:#FF9800,color:#fff
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    style Verdict fill:#FF9800,color:#fff
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>    style MoreTests fill:#FF9800,color:#fff
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>    style FixesWritten fill:#FF9800,color:#fff
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>    style P7 fill:#2196F3,color:#fff
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>    style AdversaryAgent fill:#2196F3,color:#fff
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>    style LadderCheck fill:#2196F3,color:#fff
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>    style EscapeAnalysis fill:#2196F3,color:#fff
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>    style AdversarialReview fill:#2196F3,color:#fff
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>    style RequireChanges fill:#2196F3,color:#fff
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>    style FixVerdict fill:#f44336,color:#fff
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>    style SelfGate fill:#f44336,color:#fff
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>    style P2_Sub fill:#4CAF50,color:#fff
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>    style P4_Sub fill:#4CAF50,color:#fff
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>    style P5_Sub fill:#4CAF50,color:#fff
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        direction LR
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        lp[Process]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        ld{Decision}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        lt([Terminal])
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        ls[Subagent Dispatch]:::subagent
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        lg[Quality Gate]:::gate
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        lk([Success]):::success
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    end
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    START([Skill Invoked]) --&gt; INPUTS
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    INPUTS[Receive Inputs:&lt;br&gt;Test files required&lt;br&gt;Production files required&lt;br&gt;Test run results optional]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    INPUTS --&gt; P1
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    P1[Phase 1: Inventory&lt;br&gt;Enumerate files, map coverage,&lt;br&gt;estimate scope]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    P1 --&gt; P23
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    P23[Phase 2-3: Systematic Audit&lt;br&gt;Line-by-line analysis&lt;br&gt;+ 10 Green Mirage Patterns]:::subagent
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    P23 --&gt; P4
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    P4[Phase 4: Cross-Test Analysis&lt;br&gt;Suite-level gap detection]:::subagent
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    P4 --&gt; P56
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    P56[Phase 5-6: Findings Report&lt;br&gt;YAML + human-readable output]:::subagent
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    P56 --&gt; SC
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    SC{Self-Check&lt;br&gt;Checklist passes?}:::gate
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    SC --&gt;|No: gaps found| GOBACK[Return to incomplete phase]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    GOBACK --&gt; P23
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    SC --&gt;|Yes: all checks pass| FW
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    FW{Fixes written?}
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    FW --&gt;|No| DONE([Audit Complete:&lt;br&gt;Report delivered]):::success
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    FW --&gt;|Yes| P7
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    P7[Phase 7: Fix Verification&lt;br&gt;Test Adversary review&lt;br&gt;MANDATORY]:::subagent
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    P7 --&gt; VERDICT
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    VERDICT{All assertions&lt;br&gt;PASS?}:::gate
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    VERDICT --&gt;|PASS: All KILLED +&lt;br&gt;Level 4+ + no Pattern 10| DONE
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    VERDICT --&gt;|FAIL: SURVIVED or&lt;br&gt;Level 2 or Pattern 10| REWORK[Return to fix phase&lt;br&gt;with required changes]
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    REWORK --&gt; P7
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    classDef subagent fill:#4a9eff,color:#fff
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    classDef gate fill:#ff6b6b,color:#fff
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    classDef success fill:#51cf66,color:#fff
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<hr />
+<h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
-</tr>
-<tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
-</tr>
-<tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
-</tr>
-<tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
-</tr>
-</tbody>
-</table>
-<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Node</th>
+<th>Overview Node</th>
+<th>Detail Diagram</th>
 <th>Source Reference</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Phase 1: Inventory</td>
-<td>Phase 1 (lines 69-92)</td>
-</tr>
-<tr>
-<td>List All Test Files</td>
-<td>Inventory template (lines 78-81)</td>
-</tr>
-<tr>
-<td>Map Production Files</td>
-<td>Inventory template (lines 83-85)</td>
-</tr>
-<tr>
-<td>Estimate Scope</td>
-<td>Inventory template (lines 87-91)</td>
-</tr>
-<tr>
-<td>5+ Test Files?</td>
-<td>Subagent dispatch guidance (lines 73, 97)</td>
+<td>Detail 1</td>
+<td>SKILL.md lines 96-117</td>
 </tr>
 <tr>
 <td>Phase 2-3: Systematic Audit</td>
-<td>Phase 2-3 (lines 94-115)</td>
-</tr>
-<tr>
-<td>/audit-mirage-analyze/</td>
-<td>Command dispatch (line 96)</td>
-</tr>
-<tr>
-<td>1. CLAIM: What Does Name Promise?</td>
-<td>Reasoning Schema (line 38)</td>
-</tr>
-<tr>
-<td>2. PATH: What Code Executes?</td>
-<td>Reasoning Schema (line 39)</td>
-</tr>
-<tr>
-<td>3. CHECK: What Do Assertions Verify?</td>
-<td>Reasoning Schema (line 40)</td>
-</tr>
-<tr>
-<td>4. ESCAPE: What Garbage Passes?</td>
-<td>Reasoning Schema (line 41)</td>
-</tr>
-<tr>
-<td>5. IMPACT: What Breaks in Prod?</td>
-<td>Reasoning Schema (line 42)</td>
-</tr>
-<tr>
-<td>Check All 8 Mirage Patterns</td>
-<td>Phase 2-3 (line 97): "all 8 Green Mirage Patterns"</td>
-</tr>
-<tr>
-<td>Verdict?</td>
-<td>Verdicts: SOLID / GREEN MIRAGE / PARTIAL (line 112)</td>
+<td>Detail 2</td>
+<td>SKILL.md lines 119-147, <code>audit-mirage-analyze</code> command</td>
 </tr>
 <tr>
 <td>Phase 4: Cross-Test Analysis</td>
-<td>Phase 4 (lines 117-138)</td>
+<td>Detail 3</td>
+<td>SKILL.md lines 149-170, <code>audit-mirage-cross</code> command</td>
 </tr>
 <tr>
-<td>/audit-mirage-cross/</td>
-<td>Command dispatch (line 119)</td>
-</tr>
-<tr>
-<td>Find Untested Functions</td>
-<td>Cross-test template (line 130)</td>
-</tr>
-<tr>
-<td>Find Untested Error Paths</td>
-<td>Cross-test template (line 131)</td>
-</tr>
-<tr>
-<td>Find Untested Edge Cases</td>
-<td>Cross-test template (line 132)</td>
-</tr>
-<tr>
-<td>Check Test Isolation</td>
-<td>Cross-test template (line 133)</td>
-</tr>
-<tr>
-<td>Phase 5-6: Report</td>
-<td>Phase 5-6 (lines 140-163)</td>
-</tr>
-<tr>
-<td>/audit-mirage-report/</td>
-<td>Command dispatch (line 142)</td>
-</tr>
-<tr>
-<td>Generate YAML Block</td>
-<td>Report format (line 157)</td>
-</tr>
-<tr>
-<td>Remediation Plan</td>
-<td>Report format (line 159)</td>
-</tr>
-<tr>
-<td>Self-Check Checklist</td>
-<td>Self-Check (lines 195-222)</td>
-</tr>
-<tr>
-<td>All Items Checked?</td>
-<td>Line 222: "If NO to ANY item, go back and complete it."</td>
-</tr>
-<tr>
-<td>Suggest /fixing-tests</td>
-<td>Output: "Suggested /fixing-tests invocation" (line 67)</td>
-</tr>
-<tr>
-<td>Fixes Written?</td>
-<td>Phase 7 trigger: "When this skill is used end-to-end (audit + remediation)"</td>
+<td>Phase 5-6: Findings Report</td>
+<td>Detail 4</td>
+<td>SKILL.md lines 172-195, <code>audit-mirage-report</code> command</td>
 </tr>
 <tr>
 <td>Phase 7: Fix Verification</td>
-<td>Phase 7 (lines 190-262)</td>
+<td>Detail 5</td>
+<td>SKILL.md lines 197-290, <code>assertion-quality-standard</code> pattern</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="detail-1-phase-1-inventory">Detail 1: Phase 1 - Inventory<a class="headerlink" href="#detail-1-phase-1-inventory" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        direction LR
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        lp[Process]
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        ld{Decision}
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        ls[Subagent Dispatch]:::subagent
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        lg[Quality Gate]:::gate
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    end
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    START([Phase 1 Start]) --&gt; SCOPE
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    SCOPE{Scope known?&lt;br&gt;Test files identified?}
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    SCOPE --&gt;|No| EXPLORE[Dispatch Explore subagent&lt;br&gt;for file discovery]:::subagent
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    SCOPE --&gt;|Yes| ENUM
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    EXPLORE --&gt; ENUM
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    ENUM[Enumerate test files&lt;br&gt;with test function counts]
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    ENUM --&gt; MAP
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    MAP[Map production code&lt;br&gt;to test files:&lt;br&gt;module.py tested by test_module.py]
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    MAP --&gt; COUNT
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    COUNT[Compute totals:&lt;br&gt;test files, test functions,&lt;br&gt;production modules]
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    COUNT --&gt; SIZE
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    SIZE{5+ test files?}
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    SIZE --&gt;|Yes| TAG_PAR[Tag for parallel&lt;br&gt;subagent dispatch&lt;br&gt;in Phase 2-3]
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    SIZE --&gt;|No| TAG_SINGLE[Tag for single subagent&lt;br&gt;or main context&lt;br&gt;in Phase 2-3]
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    TAG_PAR --&gt; OUTPUT
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    TAG_SINGLE --&gt; OUTPUT
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    OUTPUT[Output inventory document:&lt;br&gt;Files to Audit list&lt;br&gt;Production Code Under Test list&lt;br&gt;Estimated Scope totals]:::gate
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    OUTPUT --&gt; DONE([Phase 1 Complete])
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    classDef subagent fill:#4a9eff,color:#fff
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    classDef gate fill:#ff6b6b,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="detail-2-phase-2-3-systematic-audit-10-green-mirage-patterns">Detail 2: Phase 2-3 - Systematic Audit + 10 Green Mirage Patterns<a class="headerlink" href="#detail-2-phase-2-3-systematic-audit-10-green-mirage-patterns" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        direction LR
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        lp[Process]
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        ld{Decision}
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        ls[Subagent Dispatch]:::subagent
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        lg[Quality Gate]:::gate
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    end
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    START([Phase 2-3 Start]) --&gt; RECV[Receive inventory&lt;br&gt;from Phase 1]
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    RECV --&gt; DISPATCH_Q
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    DISPATCH_Q{5+ test files?}
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    DISPATCH_Q --&gt;|Yes| PAR[Dispatch parallel subagents&lt;br&gt;one per file or file group]:::subagent
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    DISPATCH_Q --&gt;|No| SINGLE[Dispatch single subagent]:::subagent
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    PAR --&gt; EACH
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    SINGLE --&gt; EACH
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    EACH[Each subagent reads:&lt;br&gt;1. audit-mirage-analyze command&lt;br&gt;2. assertion-quality-standard pattern]:::gate
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    EACH --&gt; LOOP
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    subgraph LOOP[&quot; Per Test Function Loop &quot;]
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>        direction TB
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>        TF[Select next test function] --&gt; SETUP
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>        SETUP[Setup Analysis:&lt;br&gt;What is set up? Mocks introduced?&lt;br&gt;Does setup hide real behavior?]
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>        SETUP --&gt; ACTION
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>        ACTION[Action Analysis:&lt;br&gt;What operation is tested?&lt;br&gt;Trace code path through production]
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>        ACTION --&gt; TRACE
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>        TRACE[Code Path Trace:&lt;br&gt;test -&gt; production_fn -&gt; helper -&gt;&lt;br&gt;external call mocked/real? -&gt; return]
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>        TRACE --&gt; ASSERT_A
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>        ASSERT_A[Assertion Analysis:&lt;br&gt;What does each assert verify?&lt;br&gt;What would it catch vs miss?]
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>        ASSERT_A --&gt; P2CHECK
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>        P2CHECK{Pattern 2 fast path:&lt;br&gt;Uses bare &#39;in&#39; check&lt;br&gt;on ANY output?}
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>        P2CHECK --&gt;|Yes| P2BANNED[Verdict: GREEN MIRAGE&lt;br&gt;Pattern 2 BANNED&lt;br&gt;No further investigation]
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>        P2CHECK --&gt;|No| ALL10
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>        ALL10[Check against ALL&lt;br&gt;10 Green Mirage Patterns:&lt;br&gt;P1 Existence vs Validity&lt;br&gt;P3 Shallow Matching&lt;br&gt;P4 Lack of Consumption&lt;br&gt;P5 Mocking Reality&lt;br&gt;P6 Swallowed Errors&lt;br&gt;P7 State Mutation&lt;br&gt;P8 Incomplete Branches&lt;br&gt;P9 Skipped Tests&lt;br&gt;P10 Partial-to-Partial]
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>        ALL10 --&gt; VERDICT_T
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>        P2BANNED --&gt; RECORD
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>        VERDICT_T{Pattern matches?}
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>        VERDICT_T --&gt;|None| SOLID[Verdict: SOLID]
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>        VERDICT_T --&gt;|Some gaps| PARTIAL[Verdict: PARTIAL]
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>        VERDICT_T --&gt;|Critical gaps| MIRAGE[Verdict: GREEN MIRAGE]
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>        SOLID --&gt; RECORD
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>        PARTIAL --&gt; RECORD
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>        MIRAGE --&gt; RECORD
+<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a>
+<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>        RECORD[Record: verdict, gap description,&lt;br&gt;line numbers, fix code,&lt;br&gt;effort estimate, depends_on]
+<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a>        RECORD --&gt; MORE
+<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>
+<a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a>        MORE{More test&lt;br&gt;functions?}
+<a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a>        MORE --&gt;|Yes| TF
+<a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a>    end
+<a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a>
+<a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a>    MORE --&gt;|No| COLLECT
+<a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>    COLLECT[Collect all subagent&lt;br&gt;results into findings list]
+<a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a>    COLLECT --&gt; DONE([Phase 2-3 Complete])
+<a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a>
+<a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a>    classDef subagent fill:#4a9eff,color:#fff
+<a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a>    classDef gate fill:#ff6b6b,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="detail-3-phase-4-cross-test-analysis">Detail 3: Phase 4 - Cross-Test Analysis<a class="headerlink" href="#detail-3-phase-4-cross-test-analysis" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        direction LR
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        lp[Process]
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        ls[Subagent Dispatch]:::subagent
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        lg[Quality Gate]:::gate
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    end
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    START([Phase 4 Start]) --&gt; DISPATCH
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    DISPATCH[Dispatch cross-analysis subagent&lt;br&gt;with Phase 2-3 findings]:::subagent
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    DISPATCH --&gt; READ
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    READ[Read audit-mirage-cross command]
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    READ --&gt; UNTESTED
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    UNTESTED[Identify functions/methods&lt;br&gt;never directly tested:&lt;br&gt;No test at all vs&lt;br&gt;Only tested as side effect]
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    UNTESTED --&gt; ERRORS
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    ERRORS[Identify untested error paths:&lt;br&gt;Exception branches&lt;br&gt;Null returns&lt;br&gt;Timeouts&lt;br&gt;Invalid input handling]
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    ERRORS --&gt; EDGES
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    EDGES[Identify untested edge cases:&lt;br&gt;Empty input&lt;br&gt;Max size input&lt;br&gt;Boundary values&lt;br&gt;Concurrent access&lt;br&gt;Unicode, negative values]
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    EDGES --&gt; SKIPS
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    SKIPS[Scan ALL skip mechanisms:&lt;br&gt;pytest.mark.skip/skipif/xfail&lt;br&gt;unittest.skip/skipIf/skipUnless&lt;br&gt;pytest.importorskip&lt;br&gt;Commented-out tests&lt;br&gt;Conditional early returns]
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    SKIPS --&gt; CLASSIFY
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    CLASSIFY{For each skipped test:&lt;br&gt;Environmental constraint?}
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    CLASSIFY --&gt;|Yes: wrong OS,&lt;br&gt;missing hardware| JUSTIFIED[Classify: JUSTIFIED]
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    CLASSIFY --&gt;|No: flaky, broken,&lt;br&gt;deferred, failing| UNJUSTIFIED[Classify: UNJUSTIFIED&lt;br&gt;= live defect hiding&lt;br&gt;behind green build]
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>    JUSTIFIED --&gt; ISOLATION
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>    UNJUSTIFIED --&gt; ISOLATION
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    ISOLATION[Identify test isolation issues:&lt;br&gt;Shared mutable state&lt;br&gt;Execution order dependencies&lt;br&gt;External service dependencies&lt;br&gt;Missing cleanup]
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>    ISOLATION --&gt; OUTPUT
+<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>    OUTPUT[Output suite-level gap analysis:&lt;br&gt;Untested functions count&lt;br&gt;Untested error paths&lt;br&gt;Untested edge cases&lt;br&gt;X skipped, Y unjustified&lt;br&gt;Isolation issues]:::gate
+<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>
+<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>    OUTPUT --&gt; DONE([Phase 4 Complete])
+<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>
+<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a>    classDef subagent fill:#4a9eff,color:#fff
+<a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a>    classDef gate fill:#ff6b6b,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="detail-4-phase-5-6-findings-report-and-output">Detail 4: Phase 5-6 - Findings Report and Output<a class="headerlink" href="#detail-4-phase-5-6-findings-report-and-output" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        direction LR
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        lp[Process]
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        ld{Decision}
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        ls[Subagent Dispatch]:::subagent
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        lg[Quality Gate]:::gate
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        lk([Success]):::success
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    end
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    START([Phase 5-6 Start]) --&gt; DISPATCH
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    DISPATCH[Dispatch report subagent&lt;br&gt;with all prior findings]:::subagent
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    DISPATCH --&gt; READ
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    READ[Read audit-mirage-report command]
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    READ --&gt; YAML
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    YAML[Compile YAML block at START:&lt;br&gt;audit_metadata&lt;br&gt;summary totals&lt;br&gt;patterns_found counts&lt;br&gt;findings with all fields&lt;br&gt;remediation_plan]
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    YAML --&gt; FIELDS
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    FIELDS[Per finding required fields:&lt;br&gt;id, priority, test_file,&lt;br&gt;test_function, line_number,&lt;br&gt;pattern, pattern_name,&lt;br&gt;effort, depends_on,&lt;br&gt;blind_spot, production_impact]:::gate
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    FIELDS --&gt; SUMMARY
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    SUMMARY[Human-readable summary:&lt;br&gt;Tests audited, SOLID/MIRAGE/PARTIAL&lt;br&gt;Pattern counts&lt;br&gt;Effort breakdown&lt;br&gt;Total remediation estimate]
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    SUMMARY --&gt; DETAILED
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    DETAILED[Detailed findings:&lt;br&gt;Current code, blind spot,&lt;br&gt;execution trace, production impact,&lt;br&gt;consumption fix, why fix works]
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    DETAILED --&gt; DEPS
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    DEPS[Detect dependencies:&lt;br&gt;Shared fixtures&lt;br&gt;Cascading assertions&lt;br&gt;File-level batching&lt;br&gt;Independent findings]
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    DEPS --&gt; REMED
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    REMED[Remediation plan:&lt;br&gt;Dependency-ordered phases&lt;br&gt;Findings per phase&lt;br&gt;Rationale for ordering&lt;br&gt;Total effort estimate&lt;br&gt;Approach: sequential/parallel/mixed]
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    REMED --&gt; PATH_Q
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>    PATH_Q{In git repo?}
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    PATH_Q --&gt;|Yes| WRITE_PATH[Write to:&lt;br&gt;SPELLBOOK_CONFIG_DIR/docs/&lt;br&gt;project-encoded/audits/&lt;br&gt;auditing-green-mirage-timestamp.md]
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    PATH_Q --&gt;|No| ASK_GIT{User wants&lt;br&gt;git init?}
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>    ASK_GIT --&gt;|Yes| INIT[Run git init] --&gt; WRITE_PATH
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>    ASK_GIT --&gt;|No| WRITE_ALT[Write to:&lt;br&gt;SPELLBOOK_CONFIG_DIR/docs/&lt;br&gt;_no-repo/basename/audits/]
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>
+<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    WRITE_PATH --&gt; SELFCHECK
+<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>    WRITE_ALT --&gt; SELFCHECK
+<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>
+<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    SELFCHECK{Self-Check Checklist&lt;br&gt;ALL items pass?}:::gate
+<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>
+<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>    SELFCHECK --&gt;|No to ANY item| GOBACK[Go back and&lt;br&gt;complete missing items]
+<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>    GOBACK --&gt; YAML
+<a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a>
+<a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>    SELFCHECK --&gt;|All pass| OUTPUT
+<a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a>    OUTPUT[Deliver to user:&lt;br&gt;Report file path&lt;br&gt;Inline summary&lt;br&gt;Next: /fixing-tests path]:::success
+<a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a>
+<a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a>    OUTPUT --&gt; DONE([Phase 5-6 Complete])
+<a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a>
+<a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a>    classDef subagent fill:#4a9eff,color:#fff
+<a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a>    classDef gate fill:#ff6b6b,color:#fff
+<a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a>    classDef success fill:#51cf66,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="detail-5-phase-7-fix-verification-mandatory">Detail 5: Phase 7 - Fix Verification (MANDATORY)<a class="headerlink" href="#detail-5-phase-7-fix-verification-mandatory" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>flowchart TD
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    subgraph legend[&quot; Legend &quot;]
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        direction LR
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        lp[Process]
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        ld{Decision}
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        ls[Subagent Dispatch]:::subagent
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        lg[Quality Gate]:::gate
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>        lk([Success]):::success
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>        lf([Failure]):::fail
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    end
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    START([Phase 7 Start:&lt;br&gt;Fixes have been written]) --&gt; DISPATCH
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    DISPATCH[Dispatch Test Adversary subagent&lt;br&gt;Reads: assertion-quality-standard&lt;br&gt;+ Test Adversary Template]:::subagent
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    DISPATCH --&gt; STEP0
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    subgraph STEP0_G[&quot; Step 0: Full Assertion Check - DO FIRST &quot;]
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>        STEP0[For each assertion in every test]
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>        STEP0 --&gt; BARE_Q{Uses bare&lt;br&gt;substring check&lt;br&gt;on ANY output?}
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>        BARE_Q --&gt;|Yes| BANNED_IMM[BANNED: REJECT immediately&lt;br&gt;regardless of other factors]:::gate
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>        BARE_Q --&gt;|No| P10_Q{Replaced one BANNED&lt;br&gt;pattern with another?}
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>        P10_Q --&gt;|Yes| P10_REJ[Pattern 10 violation:&lt;br&gt;REJECT immediately]:::gate
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>        P10_Q --&gt;|No| STEP1_ENTRY
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    end
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    BANNED_IMM --&gt; FAIL_OUT
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>    P10_REJ --&gt; FAIL_OUT
+<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>
+<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>    subgraph STEP1_G[&quot; Step 1: Assertion Ladder Check &quot;]
+<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>        STEP1_ENTRY[Classify each assertion&lt;br&gt;on Strength Ladder]
+<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>        STEP1_ENTRY --&gt; LEVEL_Q{Assertion&lt;br&gt;level?}
+<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>        LEVEL_Q --&gt;|Level 5: exact match| ACCEPT_5[GOLD: Accept]
+<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>        LEVEL_Q --&gt;|Level 4: parsed structural| ACCEPT_4[PREFERRED: Accept]
+<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>        LEVEL_Q --&gt;|Level 3: structural containment| JUST_Q{Written justification&lt;br&gt;present in code?}
+<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>        LEVEL_Q --&gt;|Level 2: bare substring| REJ_2[BANNED: REJECT]:::gate
+<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>        LEVEL_Q --&gt;|Level 1: length/existence| REJ_1[BANNED: REJECT]:::gate
+<a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>        JUST_Q --&gt;|Yes| ACCEPT_3[ACCEPTABLE: Accept]
+<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a>        JUST_Q --&gt;|No| REJ_3[Missing justification:&lt;br&gt;REJECT]:::gate
+<a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>    end
+<a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>
+<a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a>    REJ_2 --&gt; FAIL_OUT
+<a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a>    REJ_1 --&gt; FAIL_OUT
+<a id="__codelineno-5-43" name="__codelineno-5-43" href="#__codelineno-5-43"></a>    REJ_3 --&gt; FAIL_OUT
+<a id="__codelineno-5-44" name="__codelineno-5-44" href="#__codelineno-5-44"></a>    ACCEPT_5 --&gt; STEP2_ENTRY
+<a id="__codelineno-5-45" name="__codelineno-5-45" href="#__codelineno-5-45"></a>    ACCEPT_4 --&gt; STEP2_ENTRY
+<a id="__codelineno-5-46" name="__codelineno-5-46" href="#__codelineno-5-46"></a>    ACCEPT_3 --&gt; STEP2_ENTRY
+<a id="__codelineno-5-47" name="__codelineno-5-47" href="#__codelineno-5-47"></a>
+<a id="__codelineno-5-48" name="__codelineno-5-48" href="#__codelineno-5-48"></a>    subgraph STEP2_G[&quot; Step 2: ESCAPE Analysis &quot;]
+<a id="__codelineno-5-49" name="__codelineno-5-49" href="#__codelineno-5-49"></a>        STEP2_ENTRY[For each test function complete:]
+<a id="__codelineno-5-50" name="__codelineno-5-50" href="#__codelineno-5-50"></a>        STEP2_ENTRY --&gt; ESCAPE
+<a id="__codelineno-5-51" name="__codelineno-5-51" href="#__codelineno-5-51"></a>        ESCAPE[CLAIM: What does test claim to verify?&lt;br&gt;PATH: What code actually executes?&lt;br&gt;CHECK: What do assertions verify?&lt;br&gt;MUTATION: Named mutation this catches&lt;br&gt;ESCAPE: What broken impl still passes?&lt;br&gt;IMPACT: What breaks in production?]
+<a id="__codelineno-5-52" name="__codelineno-5-52" href="#__codelineno-5-52"></a>        ESCAPE --&gt; ESC_Q{ESCAPE field&lt;br&gt;has specific mutation?}
+<a id="__codelineno-5-53" name="__codelineno-5-53" href="#__codelineno-5-53"></a>        ESC_Q --&gt;|No: says &#39;none&#39;| ESC_REJ[Invalid: must name&lt;br&gt;a specific mutation]:::gate
+<a id="__codelineno-5-54" name="__codelineno-5-54" href="#__codelineno-5-54"></a>        ESC_Q --&gt;|Yes: specific mutation| STEP3_ENTRY
+<a id="__codelineno-5-55" name="__codelineno-5-55" href="#__codelineno-5-55"></a>    end
+<a id="__codelineno-5-56" name="__codelineno-5-56" href="#__codelineno-5-56"></a>
+<a id="__codelineno-5-57" name="__codelineno-5-57" href="#__codelineno-5-57"></a>    ESC_REJ --&gt; FAIL_OUT
+<a id="__codelineno-5-58" name="__codelineno-5-58" href="#__codelineno-5-58"></a>
+<a id="__codelineno-5-59" name="__codelineno-5-59" href="#__codelineno-5-59"></a>    subgraph STEP3_G[&quot; Step 3: Adversarial Review &quot;]
+<a id="__codelineno-5-60" name="__codelineno-5-60" href="#__codelineno-5-60"></a>        STEP3_ENTRY[For each assertion:]
+<a id="__codelineno-5-61" name="__codelineno-5-61" href="#__codelineno-5-61"></a>        STEP3_ENTRY --&gt; READ_PROD[Read assertion +&lt;br&gt;production code it exercises]
+<a id="__codelineno-5-62" name="__codelineno-5-62" href="#__codelineno-5-62"></a>        READ_PROD --&gt; CONSTRUCT[Construct specific, plausible&lt;br&gt;broken production implementation&lt;br&gt;that would still pass]
+<a id="__codelineno-5-63" name="__codelineno-5-63" href="#__codelineno-5-63"></a>        CONSTRUCT --&gt; ADV_Q{Broken impl&lt;br&gt;passes assertion?}
+<a id="__codelineno-5-64" name="__codelineno-5-64" href="#__codelineno-5-64"></a>        ADV_Q --&gt;|Yes| SURVIVED[SURVIVED:&lt;br&gt;Report broken impl + required fix]
+<a id="__codelineno-5-65" name="__codelineno-5-65" href="#__codelineno-5-65"></a>        ADV_Q --&gt;|No: no plausible&lt;br&gt;broken impl survives| KILLED[KILLED:&lt;br&gt;Report why assertion holds]
+<a id="__codelineno-5-66" name="__codelineno-5-66" href="#__codelineno-5-66"></a>    end
+<a id="__codelineno-5-67" name="__codelineno-5-67" href="#__codelineno-5-67"></a>
+<a id="__codelineno-5-68" name="__codelineno-5-68" href="#__codelineno-5-68"></a>    SURVIVED --&gt; FAIL_OUT
+<a id="__codelineno-5-69" name="__codelineno-5-69" href="#__codelineno-5-69"></a>
+<a id="__codelineno-5-70" name="__codelineno-5-70" href="#__codelineno-5-70"></a>    subgraph STEP4_G[&quot; Step 4: Final Verdict &quot;]
+<a id="__codelineno-5-71" name="__codelineno-5-71" href="#__codelineno-5-71"></a>        KILLED --&gt; ALL_Q{All assertions&lt;br&gt;across all steps?}
+<a id="__codelineno-5-72" name="__codelineno-5-72" href="#__codelineno-5-72"></a>        ALL_Q --&gt;|Any SURVIVED| FAIL_OUT
+<a id="__codelineno-5-73" name="__codelineno-5-73" href="#__codelineno-5-73"></a>        ALL_Q --&gt;|Any Level 2 or below| FAIL_OUT
+<a id="__codelineno-5-74" name="__codelineno-5-74" href="#__codelineno-5-74"></a>        ALL_Q --&gt;|Any Pattern 10| FAIL_OUT
+<a id="__codelineno-5-75" name="__codelineno-5-75" href="#__codelineno-5-75"></a>        ALL_Q --&gt;|Any bare substring&lt;br&gt;on any output| FAIL_OUT
+<a id="__codelineno-5-76" name="__codelineno-5-76" href="#__codelineno-5-76"></a>        ALL_Q --&gt;|All KILLED +&lt;br&gt;Level 4+ +&lt;br&gt;no Pattern 10| PASS_OUT
+<a id="__codelineno-5-77" name="__codelineno-5-77" href="#__codelineno-5-77"></a>    end
+<a id="__codelineno-5-78" name="__codelineno-5-78" href="#__codelineno-5-78"></a>
+<a id="__codelineno-5-79" name="__codelineno-5-79" href="#__codelineno-5-79"></a>    FAIL_OUT([FAIL: List required changes&lt;br&gt;Return to fix phase]):::fail
+<a id="__codelineno-5-80" name="__codelineno-5-80" href="#__codelineno-5-80"></a>    PASS_OUT([PASS: Fixes verified&lt;br&gt;Audit complete]):::success
+<a id="__codelineno-5-81" name="__codelineno-5-81" href="#__codelineno-5-81"></a>
+<a id="__codelineno-5-82" name="__codelineno-5-82" href="#__codelineno-5-82"></a>    classDef subagent fill:#4a9eff,color:#fff
+<a id="__codelineno-5-83" name="__codelineno-5-83" href="#__codelineno-5-83"></a>    classDef gate fill:#ff6b6b,color:#fff
+<a id="__codelineno-5-84" name="__codelineno-5-84" href="#__codelineno-5-84"></a>    classDef success fill:#51cf66,color:#fff
+<a id="__codelineno-5-85" name="__codelineno-5-85" href="#__codelineno-5-85"></a>    classDef fail fill:#ff6b6b,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="self-check-checklist-referenced-in-phase-5-6">Self-Check Checklist (Referenced in Phase 5-6)<a class="headerlink" href="#self-check-checklist-referenced-in-phase-5-6" title="Permanent link">&para;</a></h2>
+<p>The Self-Check is a quality gate between Phase 5-6 output and completion. All items must pass:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Check Item</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Audit Completeness</strong></td>
+<td>Every line of every test file read</td>
+<td>SKILL.md line 327</td>
 </tr>
 <tr>
-<td>Dispatch Test Adversary Subagent</td>
-<td>Subagent prompt template (lines 197-260)</td>
+<td></td>
+<td>Code paths traced test -&gt; production -&gt; back</td>
+<td>SKILL.md line 328</td>
 </tr>
 <tr>
-<td>Assertion Ladder Check</td>
-<td>Task 1: Classify on Assertion Strength Ladder</td>
+<td></td>
+<td>Every test checked against all 10 patterns</td>
+<td>SKILL.md line 329</td>
 </tr>
 <tr>
-<td>ESCAPE Analysis per Assertion</td>
-<td>Task 2: CLAIM/PATH/CHECK/MUTATION/ESCAPE/IMPACT</td>
+<td></td>
+<td>Assertions verified to catch actual failures</td>
+<td>SKILL.md line 330</td>
 </tr>
 <tr>
-<td>Adversarial Review</td>
-<td>Task 3: Construct broken implementations</td>
+<td></td>
+<td>Untested functions/methods identified</td>
+<td>SKILL.md line 331</td>
 </tr>
 <tr>
-<td>All KILLED + Level 4+?</td>
-<td>Task 4 verdict: PASS requires all KILLED + Level 4+</td>
+<td></td>
+<td>Untested error paths identified</td>
+<td>SKILL.md line 332</td>
 </tr>
 <tr>
-<td>List Required Changes</td>
-<td>FAIL path: any SURVIVED or Level 2 assertion</td>
+<td></td>
+<td>All skip/xfail/disabled tests classified</td>
+<td>SKILL.md line 333</td>
+</tr>
+<tr>
+<td><strong>Finding Quality</strong></td>
+<td>Every finding has exact line numbers</td>
+<td>SKILL.md line 336</td>
+</tr>
+<tr>
+<td></td>
+<td>Every finding has exact fix code</td>
+<td>SKILL.md line 337</td>
+</tr>
+<tr>
+<td></td>
+<td>Every finding has effort estimate</td>
+<td>SKILL.md line 338</td>
+</tr>
+<tr>
+<td></td>
+<td>Every finding has depends_on</td>
+<td>SKILL.md line 339</td>
+</tr>
+<tr>
+<td></td>
+<td>Findings prioritized: critical/important/minor</td>
+<td>SKILL.md line 340</td>
+</tr>
+<tr>
+<td><strong>Fix Verification</strong></td>
+<td>Every assertion Level 4+ on ladder</td>
+<td>SKILL.md line 343</td>
+</tr>
+<tr>
+<td></td>
+<td>Every assertion has named mutation</td>
+<td>SKILL.md line 344</td>
+</tr>
+<tr>
+<td></td>
+<td>Adversarial review: no SURVIVED</td>
+<td>SKILL.md line 345</td>
+</tr>
+<tr>
+<td><strong>Report Structure</strong></td>
+<td>YAML block at START</td>
+<td>SKILL.md line 348</td>
+</tr>
+<tr>
+<td></td>
+<td>YAML has all required sections</td>
+<td>SKILL.md line 349</td>
+</tr>
+<tr>
+<td></td>
+<td>Each finding has all required fields</td>
+<td>SKILL.md line 350</td>
+</tr>
+<tr>
+<td></td>
+<td>Remediation plan dependency-ordered</td>
+<td>SKILL.md line 351</td>
+</tr>
+<tr>
+<td></td>
+<td>Human-readable summary present</td>
+<td>SKILL.md line 352</td>
+</tr>
+<tr>
+<td></td>
+<td>Quick Start section with /fixing-tests</td>
+<td>SKILL.md line 353</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-green-mirage-patterns-reference">10 Green Mirage Patterns Reference<a class="headerlink" href="#10-green-mirage-patterns-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Name</th>
+<th>Key Detection Signal</th>
+<th>Command Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Existence vs. Validity</td>
+<td><code>len(x) &gt; 0</code>, <code>is not None</code>, <code>.exists()</code>, <code>mock.ANY</code></td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Partial Assertion on Any Output</td>
+<td><code>"substring" in result</code> on any output (BANNED)</td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Shallow String/Value Matching</td>
+<td>Single-field check on multi-field object</td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Lack of Consumption</td>
+<td>Output never compiled/parsed/executed/deserialized</td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Mocking Reality Away</td>
+<td>Mocking system under test, not just dependencies</td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Swallowed Errors</td>
+<td><code>except: pass</code>, unchecked return codes</td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>7</td>
+<td>State Mutation Without Verification</td>
+<td>Side effect triggered but state never verified</td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Incomplete Branch Coverage</td>
+<td>Happy path only, missing error/edge/boundary tests</td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Skipped Tests Hiding Failures</td>
+<td>skip/xfail/disabled to avoid dealing with failures</td>
+<td>audit-mirage-analyze</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Strengthened Assertion Still Partial</td>
+<td>Fix replaces one BANNED level with another BANNED level</td>
+<td>audit-mirage-analyze</td>
 </tr>
 </tbody>
 </table>
