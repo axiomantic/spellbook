@@ -23,6 +23,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/create-issue](create-issue.md) | Create a GitHub issue with proper template discovery and population | spellbook |
 | [/create-pr](create-pr.md) | Create a pull request with proper template discovery and population | spellbook |
 | [/crystallize](crystallize.md) | Transform verbose SOPs into high-performance agentic prompts via principled comp... | spellbook |
+| [/crystallize-verify](crystallize-verify.md) | Adversarial review of a crystallized document against its original. Use when cry... | spellbook |
 | [/dead-code-analyze](dead-code-analyze.md) | Extract, triage, and verify code items for dead code. Part of dead-code-* family... | spellbook |
 | [/dead-code-implement](dead-code-implement.md) | Implement dead code deletions with user approval. Part of dead-code-* family. | spellbook |
 | [/dead-code-report](dead-code-report.md) | Generate dead code findings report with implementation plan. Part of dead-code-*... | spellbook |

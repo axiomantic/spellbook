@@ -140,6 +140,7 @@ nav:
       - commands/create-issue.md
       - commands/create-pr.md
       - commands/crystallize.md
+      - commands/crystallize-verify.md
       - commands/design-assessment.md
       - commands/simplify.md
       - commands/simplify-analyze.md

@@ -277,6 +277,7 @@ Reusable workflows for structured development:
 | [/create-issue] | Create a GitHub issue with proper template discovery and population |
 | [/create-pr] | Create a pull request with proper template discovery and population |
 | [/crystallize] | Transform SOPs into agentic CoT prompts |
+| [/crystallize-verify] | Structurally isolated adversarial review of crystallized output |
 | [/dead-code-setup] | Initialize dead code analysis with git safety and scope selection |
 | [/dead-code-analyze] | Extract and triage code items for dead code verification |
 | [/dead-code-report] | Generate dead code findings report with deletion plan |
@@ -365,6 +366,7 @@ Reusable workflows for structured development:
 [/create-issue]: https://axiomantic.github.io/spellbook/latest/commands/create-issue/
 [/create-pr]: https://axiomantic.github.io/spellbook/latest/commands/create-pr/
 [/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
+[/crystallize-verify]: https://axiomantic.github.io/spellbook/latest/commands/crystallize-verify/
 [/dead-code-setup]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-setup/
 [/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
 [/dead-code-report]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-report/
