@@ -15,7 +15,10 @@ Shared reference for code review skills. Each anti-pattern includes detection he
 - Test mocks the function being tested
 - No assertions after async operations complete
 - `expect(result).toBeTruthy()` on complex objects
-- `assert "substring" in result` on deterministic output (BANNED -- see Deterministic Output Principle in `patterns/assertion-quality-standard.md`)
+- `assert "substring" in result` on ANY output -- static or dynamic (BANNED -- see Full Assertion Principle in `patterns/assertion-quality-standard.md`)
+- Partial assertion on dynamic output instead of constructing full expected value (BANNED -- dynamic content is no excuse for partial assertions)
+- `mock.ANY` used in call assertions (BANNED -- proves nothing about actual arguments)
+- Not asserting all mock calls (every call must be verified with all args and call count)
 - Partial field checks on objects with many fields
 - "Strengthened" assertions that replaced one BANNED pattern with another (Pattern 10 in `commands/audit-mirage-analyze.md`)
 
@@ -45,6 +48,7 @@ test('processes order', async () => {
     paymentId: 'pay-123',
   });
   expect(mockPaymentService.charge).toHaveBeenCalledWith(99.99);
+  expect(mockPaymentService.charge).toHaveBeenCalledTimes(1);  // verify no extra calls
 });
 ```
 

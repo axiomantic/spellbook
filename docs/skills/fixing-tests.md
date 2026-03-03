@@ -192,7 +192,7 @@ Detect mode from user input, build work items accordingly.
 
 | Mode | Detection | Action |
 |------|-----------|--------|
-| `audit_report` | Structured findings with patterns 1-10, "GREEN MIRAGE" verdicts, YAML block | Parse YAML, extract findings. Read `patterns/assertion-quality-standard.md` for assertion quality gate and Deterministic Output Principle. |
+| `audit_report` | Structured findings with patterns 1-10, "GREEN MIRAGE" verdicts, YAML block | Parse YAML, extract findings. Read `patterns/assertion-quality-standard.md` for assertion quality gate and Full Assertion Principle. |
 | `general_instructions` | "Fix tests in X", "test_foo is broken", specific test references | Extract target tests/files |
 | `run_and_fix` | "Run tests and fix failures", "get suite green" | Run tests, parse failures |
 
@@ -245,22 +245,36 @@ Dispatch subagent with the following prompt structure. The subagent MUST be give
 ```
 First, read these files to understand the quality requirements:
 - Read the fix-tests-execute command file for the fix execution protocol
-- Read patterns/assertion-quality-standard.md for the complete Assertion Strength Ladder and Deterministic Output Principle
+- Read patterns/assertion-quality-standard.md for the complete Assertion Strength Ladder and Full Assertion Principle
 
 Then execute the fix protocol on these work items: [work items]
 
-THE DETERMINISTIC OUTPUT PRINCIPLE (most important rule):
-If the function under test produces the same output for the same input,
-you MUST assert exact equality against the COMPLETE expected output.
+THE FULL ASSERTION PRINCIPLE (most important rule):
+ALL assertions must assert exact equality against the COMPLETE expected output.
+This applies to ALL output -- static, dynamic, or partially dynamic.
 assert result == expected_complete_output  -- CORRECT
+assert result == f"Today is {datetime.date.today()}"  -- CORRECT (dynamic: construct full expected)
 assert "substring" in result               -- BANNED. ALWAYS. NO EXCEPTIONS.
+assert dynamic_value in result             -- BANNED. Dynamic content is no excuse for partial check.
+
+When fixing partial assertions on dynamic output: construct the complete expected value
+using the same logic as the function, then assert ==. Prefer construct-then-compare
+over normalization. Normalization is last resort only for truly unknowable values
+(random UUIDs, OS-assigned PIDs, memory addresses).
+
+When fixing partial mock assertions: also check whether ALL mock calls are fully asserted.
+Assert EVERY call with ALL args; verify call count. NEVER use mock.ANY -- construct
+the expected argument dynamically if it is dynamic.
 
 BANNED PATTERNS (if your fix introduces ANY of these, it is NOT a fix):
-- assert "X" in result (bare substring on deterministic output)
+- assert "X" in result (bare substring on any output -- static or dynamic)
 - assert len(result) > 0 (existence only)
 - assert result is not None without value assertion
 - assert "X" in result and "Y" in result (multiple partials are still partial)
 - assert result == function_under_test(same_input) (tautological)
+- mock.ANY in any call assertion
+- assert_called() or assert_called_once() without argument verification
+- Asserting only some mock calls
 
 Every assertion must be Level 4+ on the Assertion Strength Ladder.
 Replacing a Level 1 assertion with a Level 2 assertion is NOT a fix.
@@ -274,7 +288,7 @@ Replacing a Level 1 assertion with a Level 2 assertion is NOT a fix.
 Every fix, regardless of input mode, must pass the Assertion Strength Ladder check before being marked complete. This is NOT limited to audit_report mode.
 </CRITICAL>
 
-1. Read `patterns/assertion-quality-standard.md` - the Deterministic Output Principle and Assertion Strength Ladder
+1. Read `patterns/assertion-quality-standard.md` - the Full Assertion Principle and Assertion Strength Ladder
 2. Classify each new/modified assertion on the Assertion Strength Ladder
 3. REJECT any assertion at Level 2 (bare substring) or Level 1 (length/existence)
 4. REJECT any fix that moves from one BANNED level to another (Pattern 10)
@@ -339,7 +353,7 @@ Dispatch subagent with the following prompt:
 
 ```
 First, read these files to understand the quality requirements:
-- Read patterns/assertion-quality-standard.md (especially The Deterministic Output Principle)
+- Read patterns/assertion-quality-standard.md (especially The Full Assertion Principle)
 - Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md
 
 ROLE: Test Adversary. Your job is to BREAK the new/modified test assertions.
@@ -463,7 +477,10 @@ B) No, satisfied with fixes
 - [ ] Each fix verified to catch the failure it should catch
 - [ ] Each fix verified to be Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
 - [ ] Each new assertion has a named mutation that would cause it to fail
-- [ ] No bare substring checks introduced (assert "X" in result is BANNED)
+- [ ] No bare substring checks introduced (assert "X" in result is BANNED on all output)
+- [ ] No partial assertions on dynamic output (full expected constructed, not membership checked)
+- [ ] All mock calls fully asserted: every call, all args, call count verified
+- [ ] No mock.ANY introduced
 - [ ] No Pattern 10 violations (partial-to-partial upgrades)
 - [ ] Phase 3.5 adversarial review completed with PASS verdict
 - [ ] Full test suite ran at end

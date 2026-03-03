@@ -83,17 +83,17 @@ assert result == {"id": unittest.mock.ANY, "name": unittest.mock.ANY}
 
 **Detection patterns:** `len(x) > 0`, `len(x) == <number>` without content assertion on same object, `is not None` without value assertion, `.exists()`, `key in dict` without value assertion, `mock.ANY`, `unittest.mock.ANY`.
 
-### Pattern 2: Partial Assertion on Deterministic Output (BANNED)
-**Symptom:** Using `in`, substring checks, or partial matches on output from a deterministic function (same input always produces same output).
+### Pattern 2: Partial Assertion on Any Output (BANNED)
+**Symptom:** Using `in`, substring checks, or partial matches on any output -- static, dynamic, or partially dynamic.
 
 <CRITICAL>
-**This is not a code smell to investigate. This is BANNED.** When a function's output is deterministic (writers, serializers, formatters, code generators, query builders, template renderers), the test MUST assert exact equality against the COMPLETE expected output. `assert "substring" in result` is NEVER acceptable for verifying deterministic function output. No exceptions.
+**This is not a code smell to investigate. This is BANNED.** The Full Assertion Principle requires that EVERY test assert exact equality against the COMPLETE expected output. `assert "substring" in result` is NEVER acceptable. For dynamic output, construct the expected value using the same logic, then assert `==`. No exceptions.
 
-See: The Deterministic Output Principle in `patterns/assertion-quality-standard.md`.
+See: The Full Assertion Principle in `patterns/assertion-quality-standard.md`.
 </CRITICAL>
 
 ```python
-# BANNED - Partial assertions on deterministic output
+# BANNED - Partial assertions on any output
 assert 'SELECT' in query           # Garbage SQL could contain SELECT
 assert 'error' not in output       # Wrong output might not have 'error'
 assert "struct Point" in result    # STILL WRONG: wrong fields, missing fields, extra garbage all pass
@@ -112,7 +112,7 @@ assert result == {"count": IsInstance(int), "items": IsInstance(list)}  # Accept
 assert query == "SELECT id, name FROM users WHERE active = true"
 assert result == {"id": 123, "name": "test", "status": "active"}
 
-# CORRECT - Multi-line deterministic output uses exact equality
+# CORRECT - Multi-line output uses exact equality
 expected = textwrap.dedent("""\
     struct Point {
         int x;
@@ -123,16 +123,16 @@ assert result == expected
 ```
 
 **Classification:**
-1. Is the function under test deterministic? (Same input always produces same output?)
-2. If YES: `assert "x" in result` is BANNED. Must use `assert result == expected_complete_output`.
-3. If NO (contains timestamps, UUIDs, etc.): Normalize non-deterministic parts, THEN assert exact equality.
-4. If pychoir matchers are used: is the value genuinely unknowable (UUID, timestamp)? Each use requires a justification comment. If the value IS knowable, compute it and assert exact equality.
+1. `assert "x" in result` is BANNED on ALL output -- static or dynamic. Must use `assert result == expected_complete_output`.
+2. For output with dynamic values (timestamps, derived strings): construct the complete expected value using the same logic, then assert `==`.
+3. Normalization (masking non-deterministic parts) is LAST RESORT only -- for truly unknowable values (random UUIDs, OS-assigned PIDs, memory addresses). Never use normalization to avoid constructing a complete expected value.
+4. If pychoir matchers are used: is the value genuinely unknowable (UUID, random token)? Each use requires a justification comment. If the value IS knowable or constructable, compute it and assert exact equality.
 
 ### Pattern 3: Shallow String/Value Matching
 **Symptom:** Checking keywords without validating structure. Overlaps with Pattern 2 for string output; Pattern 3 also catches single-field checks on objects that have many fields.
 ```python
 # GREEN MIRAGE
-assert 'SELECT' in query              # BANNED for deterministic output (Pattern 2)
+assert 'SELECT' in query              # BANNED for any output (Pattern 2)
 assert 'error' not in output           # Absence check proves nothing about correctness
 assert result.status == 'success'      # But is the data correct? What about other fields?
 ```

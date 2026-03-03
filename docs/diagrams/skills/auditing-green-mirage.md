@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/auditing-green-mirage/SKILL.md", "source_hash": "sha256:057118fd53215aca46b29a6b4f1ba727d503b0199f930108d18f9a46906ee166", "generated_at": "2026-03-02T19:07:13Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source":"skills/auditing-green-mirage/SKILL.md","source_hash":"sha256:52095ab8067f589ba0ae69c7c26453265d0cc5495051369b067bf334dd0827d3","generated_at":"2026-03-02T19:07:13Z","generator":"generate_diagrams.py"} -->
 # Diagram: auditing-green-mirage
 
 Now I have all the source material. Let me construct the diagrams.
@@ -154,7 +154,7 @@ flowchart TD
         ASSERT_A[Assertion Analysis:<br>What does each assert verify?<br>What would it catch vs miss?]
         ASSERT_A --> P2CHECK
 
-        P2CHECK{Pattern 2 fast path:<br>Function deterministic<br>AND uses 'in' check?}
+        P2CHECK{Pattern 2 fast path:<br>Uses bare 'in' check<br>on ANY output?}
         P2CHECK -->|Yes| P2BANNED[Verdict: GREEN MIRAGE<br>Pattern 2 BANNED<br>No further investigation]
         P2CHECK -->|No| ALL10
 
@@ -320,17 +320,13 @@ flowchart TD
 
     DISPATCH --> STEP0
 
-    subgraph STEP0_G[" Step 0: Deterministic Output Check - DO FIRST "]
-        STEP0[For each function under test]
-        STEP0 --> DET_Q{Function<br>deterministic?}
-        DET_Q -->|Yes: same input<br>= same output| ONLY5[ONLY Level 5<br>exact equality acceptable]
-        DET_Q -->|No: timestamps,<br>UUIDs, etc.| NORMALIZE[Normalize non-deterministic<br>parts, then exact equality]
-        ONLY5 --> BARE_Q{Uses bare<br>substring check?}
+    subgraph STEP0_G[" Step 0: Full Assertion Check - DO FIRST "]
+        STEP0[For each assertion in every test]
+        STEP0 --> BARE_Q{Uses bare<br>substring check<br>on ANY output?}
         BARE_Q -->|Yes| BANNED_IMM[BANNED: REJECT immediately<br>regardless of other factors]:::gate
         BARE_Q -->|No| P10_Q{Replaced one BANNED<br>pattern with another?}
         P10_Q -->|Yes| P10_REJ[Pattern 10 violation:<br>REJECT immediately]:::gate
         P10_Q -->|No| STEP1_ENTRY
-        NORMALIZE --> STEP1_ENTRY
     end
 
     BANNED_IMM --> FAIL_OUT
@@ -382,7 +378,7 @@ flowchart TD
         ALL_Q -->|Any SURVIVED| FAIL_OUT
         ALL_Q -->|Any Level 2 or below| FAIL_OUT
         ALL_Q -->|Any Pattern 10| FAIL_OUT
-        ALL_Q -->|Any bare substring<br>on deterministic| FAIL_OUT
+        ALL_Q -->|Any bare substring<br>on any output| FAIL_OUT
         ALL_Q -->|All KILLED +<br>Level 4+ +<br>no Pattern 10| PASS_OUT
     end
 
@@ -432,7 +428,7 @@ The Self-Check is a quality gate between Phase 5-6 output and completion. All it
 | Pattern | Name | Key Detection Signal | Command Source |
 |---|---|---|---|
 | 1 | Existence vs. Validity | `len(x) > 0`, `is not None`, `.exists()`, `mock.ANY` | audit-mirage-analyze |
-| 2 | Partial Assertion on Deterministic Output | `"substring" in result` on deterministic function (BANNED) | audit-mirage-analyze |
+| 2 | Partial Assertion on Any Output | `"substring" in result` on any output (BANNED) | audit-mirage-analyze |
 | 3 | Shallow String/Value Matching | Single-field check on multi-field object | audit-mirage-analyze |
 | 4 | Lack of Consumption | Output never compiled/parsed/executed/deserialized | audit-mirage-analyze |
 | 5 | Mocking Reality Away | Mocking system under test, not just dependencies | audit-mirage-analyze |

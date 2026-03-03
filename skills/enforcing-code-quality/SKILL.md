@@ -102,8 +102,11 @@ Before marking code complete:
 - [ ] Error handling is explicit and complete
 - [ ] Tests have meaningful assertions
 - [ ] Test assertions are Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
-- [ ] Deterministic Output Principle enforced: deterministic functions tested with exact equality (`assert result == expected`), never substring checks
-- [ ] No bare substring checks on string output (`assert "X" in result` is BANNED)
+- [ ] Full Assertion Principle enforced: ALL output tested with exact equality (`assert result == expected`), never substring checks; for dynamic output, construct full expected value dynamically
+- [ ] No bare substring checks on any output (`assert "X" in result` is BANNED -- static or dynamic)
+- [ ] No partial assertions on dynamic output (construct full expected, do not use membership checks)
+- [ ] No mock.ANY in call assertions (BANNED -- construct expected argument)
+- [ ] Every mock call asserted with ALL args; call count verified
 - [ ] No length/existence-only assertions
 - [ ] No partial-to-partial upgrades (Pattern 10: replacing one BANNED assertion with another is not a fix)
 - [ ] Pre-existing issues addressed or explicitly tracked
@@ -117,8 +120,10 @@ Before completing implementation:
 - [ ] No try-catch swallowing errors
 - [ ] Tests verify behavior, not just run
 - [ ] Test assertions are Level 4+ on the Assertion Strength Ladder (`patterns/assertion-quality-standard.md`)
-- [ ] Deterministic functions tested with exact equality (`assert result == expected_complete_output`)
-- [ ] No bare substring checks on string output (`assert "X" in result` is BANNED on deterministic output)
+- [ ] ALL output tested with exact equality (`assert result == expected_complete_output`); for dynamic output, construct full expected value dynamically
+- [ ] No bare substring checks on any output (`assert "X" in result` is BANNED -- static or dynamic)
+- [ ] No mock.ANY in call assertions (BANNED -- construct expected argument dynamically)
+- [ ] Every mock call asserted with ALL args; call count verified
 - [ ] No length/existence-only assertions
 - [ ] No tautological assertions (`assert result == func(same_input)`)
 - [ ] Pre-existing issues flagged to user

@@ -746,12 +746,15 @@ Task:
 
     ## Assertion Quality (Non-Negotiable)
 
-    THE DETERMINISTIC OUTPUT PRINCIPLE: If the function under test produces
-    the same output for the same input, every assertion MUST be exact equality
-    against the COMPLETE expected output:
+    THE FULL ASSERTION PRINCIPLE: Every assertion MUST assert exact equality
+    against the COMPLETE expected output. This applies to ALL output -- static,
+    dynamic, or partially dynamic. For dynamic output, construct the expected
+    value using the same logic, then assert ==:
       assert result == expected_complete_output  -- CORRECT
+      assert message == f"Today: {date.today()}"  -- CORRECT (dynamic)
       assert "substring" in result               -- BANNED. ALWAYS.
       assert len(result) > 0                     -- BANNED.
+      mock_fn.assert_called_with(mock.ANY, ...)  -- BANNED.
 
     Every assertion must be Level 4+ on the Assertion Strength Ladder.
     Do NOT take shortcuts on assertions. Do NOT use partial assertions
@@ -1061,9 +1064,9 @@ Task:
     Then invoke the audit-green-mirage skill using the Skill tool.
     Verify tests actually validate correctness.
 
-    KEY RULE: For deterministic functions (same input = same output),
-    the ONLY acceptable assertion is exact equality: assert result == expected.
-    assert "substring" in result is BANNED on deterministic output. Always.
+    KEY RULE: For ALL output (static or dynamic), the ONLY acceptable assertion
+    is exact equality: assert result == expected.
+    assert "substring" in result is BANNED. Always. No exceptions.
 
     ## Context for the Skill
 

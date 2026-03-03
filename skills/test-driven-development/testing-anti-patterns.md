@@ -272,21 +272,28 @@ assert result == {"id": unittest.mock.ANY, "name": unittest.mock.ANY}
 ```
 
 ```python
-# BANNED: Partial assertions on deterministic output
+# BANNED: Partial assertions on any output (dynamic content is no excuse)
 assert "struct Point" in result      # Wrong fields, extra garbage pass
 assert "SELECT" in query             # Garbage SQL passes
 assert "foo" in r and "bar" in r     # Still partial, still BANNED
+# BANNED: Dynamic content used as excuse for partial assertion
+assert datetime.date.today().isoformat() in message  # Construct full expected instead
+# BANNED: mock.ANY -- accepts literally anything, proves nothing
+mock_handler.assert_called_with(mock.ANY, mock.ANY)
+# BANNED: Asserting only some mock calls
+mock_sender.send.assert_called_once_with(...)  # when send was called multiple times
 ```
 
 **Why this is wrong:**
 - Existence checks pass when the value is garbage
 - Count checks pass when every item is wrong but the right number exist
-- Substring checks on deterministic output hide structural errors, missing content, and extra garbage
+- Substring checks on ANY output hide structural errors, missing content, and extra garbage -- dynamic content does not excuse partial assertions
 - Multiple substring checks are STILL partial and STILL BANNED
 - `mock.ANY` / `unittest.mock.ANY` accepts literally anything, defeating the assertion
+- Asserting only some mock calls hides behavior gaps -- every call must be verified
 - These create **false confidence**: the test suite is green but validates nothing
 - See also: Green Mirage Pattern 1 (Existence vs. Validity) and Pattern 2 (Partial Assertion on Deterministic Output) in `commands/audit-mirage-analyze.md`
-- See also: The Deterministic Output Principle in `patterns/assertion-quality-standard.md`
+- See also: The Full Assertion Principle in `patterns/assertion-quality-standard.md`
 
 **The fix:**
 ```python
@@ -301,9 +308,19 @@ assert response == {"status": "ok", "data": expected_data, "meta": expected_meta
 
 # GOOD: Assert exact call arguments
 mock_handler.assert_called_with("expected_event", expected_payload)
+
+# GOOD: Assert ALL mock calls with ALL args and verify call count
+mock_sender.send.assert_has_calls([
+    call(to="alice@example.com", subject="Welcome", body="Hello Alice"),
+    call(to="bob@example.com", subject="Welcome", body="Hello Bob"),
+])
+assert mock_sender.send.call_count == 2  # verify no unexpected extra calls
+
+# GOOD: For dynamic output, construct full expected and assert ==
+assert message == f"Today's date is {datetime.date.today().isoformat()}"
 ```
 
-**Pychoir exception:** Pychoir matchers (including custom subclasses) are allowed for genuinely unknowable values (timestamps, UUIDs, auto-incremented IDs). Each use requires a justification comment explaining why the value cannot be known ahead of time.
+**Pychoir exception:** Pychoir matchers (including custom subclasses) are allowed for genuinely unknowable values (random UUIDs, OS-assigned PIDs, memory addresses). Each use requires a justification comment explaining why the value cannot be known ahead of time.
 
 ### Gate Function
 
@@ -324,7 +341,10 @@ BEFORE writing any assertion:
     - x is not None (without also checking value)
     - "key" in dict (without also checking value at key)
     - x.exists()
-    - mock.ANY / unittest.mock.ANY
+    - mock.ANY / unittest.mock.ANY (BANNED -- construct expected value)
+    - assert_called() or assert_called_once() without argument verification
+    - Asserting only some mock calls (assert every call)
+    - Partial assertion on dynamic output (construct full expected instead)
 ```
 
 ## Anti-Pattern 7: "Strengthened" Assertion That Is Still Partial (Pattern 10)
@@ -376,8 +396,9 @@ AFTER writing a "strengthened" assertion:
   IF new assertion tests function against itself:
     STOP - Tautological. Compute expected value independently.
 
-  The goal is Level 5 (exact equality) for deterministic output.
-  Level 4 (parsed structural) for non-deterministic output after normalization.
+  The goal is Level 5 (exact equality) for all output.
+  Construct the expected value dynamically if output contains dynamic content.
+  Level 4 (parsed structural) with normalization is LAST RESORT for truly unknowable values only.
 ```
 
 ## When Mocks Become Too Complex
@@ -413,7 +434,10 @@ AFTER writing a "strengthened" assertion:
 | Tests as afterthought | TDD - tests first |
 | Over-complex mocks | Consider integration tests |
 | Existence-only assertions | Assert exact expected values, not just existence/count |
-| Partial assertions on deterministic output | `assert result == expected_complete_output` (exact equality) |
+| Partial assertions on any output | `assert result == expected_complete_output` (construct dynamically for dynamic output) |
+| Dynamic content used as excuse for partial assertion | Construct full expected value dynamically, then assert == |
+| mock.ANY in call assertions | Construct expected argument and assert exactly |
+| Asserting only some mock calls | Assert every call with all args; verify call count |
 | "Strengthened" assertion still partial | Must reach Level 4+, not just move from Level 1 to Level 2 |
 
 ## Red Flags
@@ -426,7 +450,10 @@ AFTER writing a "strengthened" assertion:
 - Mocking "just to be safe"
 - `assert len(x) > 0` without content verification
 - `assert x is not None` without value verification
-- `mock.ANY` in assertions
+- `mock.ANY` in assertions (BANNED -- construct expected value)
+- `assert_called()` or `assert_called_once()` without argument verification
+- Asserting only some mock calls (every call must be asserted)
+- Partial assertion on dynamic output (construct full expected instead of membership check)
 
 ## The Bottom Line
 

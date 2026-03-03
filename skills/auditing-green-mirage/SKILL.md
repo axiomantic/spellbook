@@ -125,7 +125,7 @@ Subagent prompt template:
 ```
 IMPORTANT: Before doing ANY audit work, you MUST read these files in full:
 1. Read the audit-mirage-analyze command file - read the ENTIRE file, every pattern definition
-2. Read patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Deterministic Output Principle
+2. Read patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Full Assertion Principle
 
 Do NOT skip reading these files. Do NOT summarize or abbreviate them.
 Do NOT take shortcuts in your analysis. Every test function must be individually analyzed.
@@ -140,7 +140,10 @@ For EACH test function (no skipping, no "looks fine"):
 1. Apply the systematic line-by-line audit template from the command file
 2. Trace every code path through production code
 3. Check against ALL 10 Green Mirage Patterns (including Pattern 10: Strengthened Assertion That Is Still Partial)
-4. For Pattern 2: if function is deterministic and assertion uses `in`, verdict is GREEN MIRAGE with no further investigation needed - it is BANNED
+4. For Pattern 2: any assertion using `in` on output (whether deterministic or dynamic) is GREEN MIRAGE with no further investigation needed - it is BANNED. Dynamic content is no excuse for partial assertion.
+5. Flag as GREEN MIRAGE: "bare substring on output with dynamic content" (asserting partial membership of a dynamic value instead of constructing full expected)
+6. Flag as GREEN MIRAGE: "mock.ANY used in call assertions" (proves nothing about actual arguments)
+7. Flag as GREEN MIRAGE: "not all mock calls asserted" (unverified calls hide behavior gaps)
 5. Record verdict (SOLID / GREEN MIRAGE / PARTIAL) with evidence
 
 Return: List of findings with verdicts, gaps, and fix code per the template.
@@ -205,7 +208,7 @@ This phase is MANDATORY whenever fixes are written, whether through this skill's
 Subagent prompt template:
 ```
 IMPORTANT: Before doing ANY analysis, you MUST read these files in full:
-1. Read patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Deterministic Output Principle
+1. Read patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Full Assertion Principle
 2. Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md
 
 Do NOT skip reading these files. Do NOT summarize them. Read them completely.
@@ -226,13 +229,17 @@ Your reputation depends on finding weaknesses others missed.
 
 ## Tasks
 
-### 0. Deterministic Output Check (DO THIS FIRST)
-For each function under test, determine: is this function deterministic?
-(Same input always produces same output?)
+### 0. Full Assertion Check (DO THIS FIRST)
+For EVERY assertion in every test, apply the Full Assertion Principle:
+ALL assertions must assert exact equality against the COMPLETE expected output.
+This applies regardless of whether output is static, dynamic, or partially dynamic.
 
-If YES: ONLY Level 5 (exact equality) is acceptable for assertions on its output.
 assert "substring" in result is BANNED. No exceptions. No "investigate deeper."
+Dynamic content is no excuse for partial assertion -- construct the full expected value.
 Multiple substring checks are STILL BANNED. They are not an improvement.
+
+For mock calls: every call must be asserted with ALL args; call count must be verified;
+mock.ANY is BANNED -- construct expected arguments dynamically if needed.
 
 If a fix replaced one BANNED pattern (e.g., assert len(x) > 0) with another
 BANNED pattern (e.g., assert "keyword" in result), this is Pattern 10:
@@ -283,7 +290,7 @@ dropped output section) -- not adversarial construction.
 - Any SURVIVED result: FAIL the fix. List required changes.
 - Any Level 2 or below assertion: FAIL the fix. List required changes.
 - Any Pattern 10 violation (partial-to-partial upgrade): FAIL the fix. List required changes.
-- Any bare substring on deterministic output: FAIL the fix, regardless of other factors.
+- Any bare substring on any output (static or dynamic): FAIL the fix, regardless of other factors.
 - All KILLED + Level 4+ + no Pattern 10: PASS the fix.
 
 Return: Per-assertion verdicts and overall PASS/FAIL.

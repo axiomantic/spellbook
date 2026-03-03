@@ -317,28 +317,39 @@ Next failing test for next feature. The cycle continues until all behavior is im
 ## Assertion Quality
 
 <CRITICAL>
-### The Deterministic Output Principle
+### The Full Assertion Principle
 
-If the function under test is deterministic (same input always produces same output), the test MUST assert exact equality against the COMPLETE expected output. This is non-negotiable.
+Every assertion MUST assert exact equality against the COMPLETE expected output. This applies to ALL output -- static, dynamic, or partially dynamic. There are no categories of output exempt from this rule.
 
 ```python
-# CORRECT: exact equality on complete output
+# CORRECT: exact equality on complete static output
 assert result == expected_complete_output
 
-# BANNED: partial assertion on deterministic output
+# CORRECT: exact equality with dynamically constructed expected value
+assert message == f"Today's date is {datetime.date.today().isoformat()}"
+
+# BANNED: partial assertion on any output -- dynamic content is no excuse
 assert "substring" in result          # Hides structural errors, missing content, extra garbage
+assert datetime.date.today().isoformat() in message  # Dynamic value is no excuse for partial check
 assert "foo" in result and "bar" in result  # Still partial, still BANNED
 assert len(result) > 0                # Meaningless
+
+# BANNED: mock.ANY hides argument values
+mock_fn.assert_called_with(mock.ANY, mock.ANY)
 ```
 
-Deterministic functions include: writers, serializers, formatters, code generators, query builders, template renderers, config builders. For multi-line output, use triple-quoted strings or dedent helpers. Output length is NEVER a justification for partial assertions.
+ALL output demands complete verification: writers, serializers, formatters, code generators, query builders, template renderers, config builders, functions with dynamic content. For multi-line output, use triple-quoted strings or dedent helpers. Output length is NEVER a justification for partial assertions.
 
-The only exception: output contains genuinely non-deterministic elements (timestamps, UUIDs). Normalize those first, then assert exact equality on the rest.
+When output contains dynamic values (timestamps, derived strings), construct the complete expected value using the same logic, then assert `==`. Do not assert partial membership of the dynamic value.
+
+For mock assertions: assert EVERY call with ALL args, verify call count. `mock.ANY` is BANNED -- construct the expected argument dynamically if needed.
+
+Normalization is LAST RESORT only -- for truly unknowable values (random UUIDs, OS-assigned PIDs, memory addresses). Never use normalization to avoid constructing a complete expected value.
 </CRITICAL>
 
 Tests must validate CONTENT, not just EXISTENCE. Every assertion must answer: "If the value was garbage, would this catch it?"
 
-**Reference:** Read `patterns/assertion-quality-standard.md` for the full Assertion Strength Ladder, Deterministic Output Principle, Bare Substring Problem analysis, and Broken Implementation Test. Every assertion must be Level 4+ on the ladder.
+**Reference:** Read `patterns/assertion-quality-standard.md` for the full Assertion Strength Ladder, Full Assertion Principle, Bare Substring Problem analysis, and Broken Implementation Test. Every assertion must be Level 4+ on the ladder.
 
 ### Rules
 
@@ -348,8 +359,9 @@ Tests must validate CONTENT, not just EXISTENCE. Every assertion must answer: "I
 | **No count-only assertions** | `assert len(result) == 3` (BANNED Level 2) | `assert result == [item_1, item_2, item_3]` |
 | **No none-checks without content** | `assert response is not None` (BANNED Level 1) | `assert response == expected_response` |
 | **No file existence-only checks** | `assert output_file.exists()` (BANNED Level 1) | `assert output_file.read_text() == "expected content"` |
-| **No `mock.ANY` by default** | `assert_called_with(mock.ANY, mock.ANY)` (BANNED Level 2) | `assert_called_with("expected_arg", expected_obj)` |
-| **No partial checks on deterministic output** | `assert "key" in result` (BANNED Level 2) | `assert result == {"key": "expected_value", ...}` |
+| **No `mock.ANY` ever** | `assert_called_with(mock.ANY, mock.ANY)` (BANNED -- proves nothing) | `assert_called_with("expected_arg", expected_obj)` (construct dynamically if needed) |
+| **Assert every mock call, all args** | `mock_fn.assert_called()` or `mock_fn.assert_called_once()` (no argument check) | `mock_fn.assert_has_calls([call(arg1, arg2), ...])` + verify `call_count` |
+| **No partial checks on any output** | `assert "key" in result` (BANNED Level 2) | `assert result == {"key": "expected_value", ...}` (construct dynamically for dynamic output) |
 | **Every field of every object** | `assert result.status == "ok"` (BANNED Level 3 without justification) | `assert result == ExpectedObject(status="ok", data=..., meta=...)` |
 | **No bare substring on string output** | `assert "data" in output` (BANNED Level 2) | `assert output == expected` (exact equality) |
 | **No multiple partials as substitute** | `assert "foo" in r and "bar" in r` (BANNED: still partial) | `assert r == expected_complete_string` |
@@ -512,8 +524,9 @@ Before marking complete:
 - [ ] ESCAPE analysis completed for every test function (including MUTATION field)
 - [ ] Every assertion has a named mutation that would cause it to fail
 - [ ] No mock.ANY in assertions (use pychoir matchers with justification comment instead)
+- [ ] Every mock call asserted with ALL arguments; call count verified
 - [ ] No `len() > 0` or `len() == N` without content verification
-- [ ] No bare substring checks on string output
+- [ ] No bare substring checks on string output (dynamic content is no excuse -- construct full expected value)
 
 If ANY unchecked: Skipped TDD. Start over.
 

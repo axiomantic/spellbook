@@ -111,7 +111,7 @@ flowchart TD
 1. **Read before fixing** - Always read the test file and production code before making any changes; never guess at code structure
 2. **Verify the fix, not just the pass** - A test that passes after modification must be confirmed to catch the originally identified blind spot
 3. **One fix per commit** - Each work item fix is verified and committed independently for traceability and safe rollback
-4. **Deterministic output demands exact equality** - When the function under test is deterministic (same input, same output), every assertion MUST be `assert result == expected_complete_output`. `assert "substring" in result` is BANNED. No exceptions. See: `patterns/assertion-quality-standard.md`.
+4. **ALL output demands exact equality** - Every assertion MUST be `assert result == expected_complete_output`. `assert "substring" in result` is BANNED. No exceptions. For dynamic output, construct the expected value dynamically. See: `patterns/assertion-quality-standard.md`.
 5. **Fixes must reach Level 4+** - Replacing one weak assertion with another weak assertion is NOT a fix. Every new assertion must be Level 4+ on the Assertion Strength Ladder. Moving from Level 1 to Level 2 is still BANNED.
 
 Process by priority: critical > important > minor.
@@ -121,30 +121,37 @@ Process by priority: critical > important > minor.
 
 Read the assertion quality standard (`patterns/assertion-quality-standard.md`) in full before writing ANY fix.
 
-### The Deterministic Output Principle
+### The Full Assertion Principle
 
-If the function under test produces the same output for the same input, your assertion MUST be exact equality against the COMPLETE expected output:
+Every assertion MUST assert exact equality against the COMPLETE expected output. This applies to ALL output -- static, dynamic, or partially dynamic. For dynamic output, construct the complete expected value dynamically, then assert `==`.
 
 ```python
 # CORRECT
 assert result == "the complete expected output, every character"
 
+# CORRECT - dynamic output: construct expected dynamically
+assert message == f"Today's date is {datetime.date.today().isoformat()}"
+
 # BANNED - still a green mirage even if it looks like an "improvement"
 assert "some keyword" in result
 assert "struct Point" in result
 assert "expected_field" in result and "other_field" in result
+
+# BANNED - mock.ANY hides argument values
+mock_fn.assert_called_with(mock.ANY, mock.ANY)
 ```
 
 ### BANNED Assertion Patterns
 
 These patterns are NEVER acceptable in a fix. If your fix introduces any of these, it is not a fix:
 
-- `assert "X" in output` (bare substring on deterministic output)
+- `assert "X" in output` (bare substring on any output -- static or dynamic)
 - `assert len(result) > 0` (existence only)
 - `assert len(result) == N` without content verification
 - `assert result is not None` without value assertion
 - `assert result == function_under_test(same_input)` (tautological)
 - Multiple `assert "X" in result` checks (still partial, still BANNED)
+- `mock.ANY` in any mock call assertion (BANNED -- construct expected argument)
 
 ### Required Assertion Level
 
@@ -157,7 +164,7 @@ Levels 3 and below require written justification. Levels 1-2 are BANNED outright
 ### Per-Assertion Verification
 
 For EACH assertion you write, answer in your reasoning:
-1. Is the function under test deterministic? If yes, only Level 5 is acceptable.
+1. Does this assertion verify the COMPLETE expected output? If not, only Level 5 is acceptable.
 2. What specific production code mutation would cause this assertion to fail?
 3. If the production code returned garbage, would this assertion catch it?
 
@@ -285,7 +292,7 @@ Verification checklist:
 - [ ] Other tests in file still pass
 - [ ] Fix would actually catch the failure it should catch
 - [ ] Every new assertion is Level 4+ on the Assertion Strength Ladder
-- [ ] No bare substring checks (`assert "X" in result`) on deterministic output
+- [ ] No bare substring checks (`assert "X" in result`) on any output (static or dynamic)
 - [ ] For each assertion: named a specific production code mutation it catches
 - [ ] Fix is NOT just moving from one BANNED level to another (Pattern 10)
 
