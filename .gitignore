@@ -176,3 +176,4 @@ hooks/nim/bin/
 hooks/nim/src/generated_patterns.nim
 hooks/nim/nimcache/
 mise.toml
+.claude/worktrees
