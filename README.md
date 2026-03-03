@@ -33,13 +33,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Quick Install](#quick-install)
-  - [Windows Quickstart](#windows-quickstart)
-- [The Magic of `implementing-features`](#the-magic-of-implementing-features)
-  - [How it works](#how-it-works)
-  - [Parallelization](#parallelization)
-  - [What it handles](#what-it-handles)
-  - [What keeps it honest](#what-keeps-it-honest)
 - [Philosophy of Spellbook](#philosophy-of-spellbook)
   - [The orchestrator pattern](#the-orchestrator-pattern)
   - [Epistemic rigor](#epistemic-rigor)
@@ -48,6 +41,13 @@
   - [Composition](#composition)
   - [The self-improving system](#the-self-improving-system)
   - [Security as first-class architecture](#security-as-first-class-architecture)
+- [Quick Install](#quick-install)
+  - [Windows Quickstart](#windows-quickstart)
+- [The Magic of `implementing-features`](#the-magic-of-implementing-features)
+  - [How it works](#how-it-works)
+  - [Parallelization](#parallelization)
+  - [What it handles](#what-it-handles)
+  - [What keeps it honest](#what-keeps-it-honest)
 - [What's Included](#whats-included)
   - [Skills (54 total)](#skills-54-total)
   - [Commands (85 total)](#commands-85-total)
@@ -78,6 +78,56 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 ---
+
+## Philosophy of Spellbook
+
+Spellbook starts from a premise: AI coding assistants are not tools to be prompted. They're professionals to be onboarded.
+
+A good CLAUDE.md says "here's how we work." Spellbook says "here's who you are, what you value, how you think under pressure, what your failure modes look like, and what happens when you start rationalizing." The difference is between a job description and a professional identity.
+
+### The orchestrator pattern
+
+The main agent never writes code, reads source files, or runs tests. It dispatches subagents and coordinates their work. Like a conductor who never touches an instrument.
+
+This is architecture, not aesthetics. Context windows are finite -- every line of code read into main context is a line unavailable for strategic oversight. Subagents bring fresh perspectives without accumulated assumptions. Parallel dispatch turns three problems into the time of one. The agent who decides *what* to do is not the agent who does it.
+
+### Epistemic rigor
+
+The system distrusts its own outputs. By design.
+
+[Fact-checking][fact-checking] treats every claim as a hypothesis. [Green mirage auditing][auditing-green-mirage] asks "would this test fail if the code was broken?" -- fundamentally different from "does this test pass?" [Hunch verification][verifying-hunches] intercepts the moment of claimed discovery and forces reframing: "I found it" becomes "Hypothesis: [claim]. Testing now." [Dehallucination][dehallucination] names the specific ways LLMs confabulate and builds recovery protocols for them.
+
+Test-driven development here isn't just a practice. It's an epistemic position. "Tests-first answer 'what should this do?' Tests-after answer 'what does this do?'" The same logic applies at every level: no skill ships without a failing test, no claim without evidence, no verdict without a trace.
+
+### Named failure modes
+
+LLMs fail in predictable ways. Spellbook names those patterns and builds mechanical countermeasures.
+
+Seven rationalization patterns are catalogued and blocked. Three consecutive fix failures trigger architectural reassessment instead of a fourth attempt. Research stagnation triggers a plateau breaker. A devil's advocate review that finds zero issues is flagged as an incomplete review. The personality directive -- "a zen master who does not get bored" -- isn't flavor text; it counters the specific failure mode where LLMs rush through complex work and declare victory early.
+
+### Quality gates that don't negotiate
+
+Every substantial skill is a sequence of phases with mandatory gates between them. Tests must pass. Code review must clear. Claims must verify against source. Tests must actually catch regressions.
+
+These gates cannot be bypassed -- not by YOLO mode, not by autonomy settings, not by the agent deciding it knows better. YOLO mode grants permission to *act* without asking. It does not grant permission to *skip*. Autonomy is a speed dial, not a quality dial.
+
+### Composition
+
+Skills invoke skills. [`implementing-features`][implementing-features] orchestrates [brainstorming], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its limits, it splits into a thin orchestrator and supporting commands.
+
+The hierarchy mirrors good organizations: strategic coordination, tactical management, individual execution. Meta-skills compose domain skills which invoke atomic disciplines.
+
+### The self-improving system
+
+Skills that improve skills. [Usage analytics][analyzing-skill-usage] measure completion and correction rates. The [skill-writing skill][writing-skills] applies TDD to skill creation itself. [Instruction engineering][instruction-engineering] codifies prompt research into technique. [Prompt sharpening][sharpening-prompts] audits for ambiguity. A/B testing compares skill versions.
+
+The feedback loop is the point: measure, identify weakness, apply the improvement skills, measure again.
+
+### Security as first-class architecture
+
+Every subagent operates within a trust tier with hard-capped tool access. External content is data, never instructions. Raw untrusted content stays in subagent context; only summaries return to the orchestrator. Prompt injection defense treats the AI agent as an attack surface. Suspicious tool calls trigger immediate halt.
+
+Five trust tiers: explore (read-only), general (standard tools), yolo (autonomous), review_untrusted (restricted tools for external content), quarantine (read-only with audit logging). Tiers can't escalate. Ever.
 
 ## Quick Install
 
@@ -146,56 +196,6 @@ Complete feature implementation, greenfield project creation, refactoring (with 
 ### What keeps it honest
 
 Seven named rationalization patterns that LLMs use to skip work -- Scope Minimization, Expertise Override, Time Pressure, Similarity Shortcut, Competence Assertion, Phase Collapse, Escape Hatch Abuse -- are catalogued and mechanically blocked. An anti-skip circuit breaker runs before every phase. Quality gates at every transition: tests must pass, code review must clear, claims must be verified against source, tests must actually test what they claim. None have an override. Even in YOLO mode.
-
-## Philosophy of Spellbook
-
-Spellbook starts from a premise: AI coding assistants are not tools to be prompted. They're professionals to be onboarded.
-
-A good CLAUDE.md says "here's how we work." Spellbook says "here's who you are, what you value, how you think under pressure, what your failure modes look like, and what happens when you start rationalizing." The difference is between a job description and a professional identity.
-
-### The orchestrator pattern
-
-The main agent never writes code, reads source files, or runs tests. It dispatches subagents and coordinates their work. Like a conductor who never touches an instrument.
-
-This is architecture, not aesthetics. Context windows are finite -- every line of code read into main context is a line unavailable for strategic oversight. Subagents bring fresh perspectives without accumulated assumptions. Parallel dispatch turns three problems into the time of one. The agent who decides *what* to do is not the agent who does it.
-
-### Epistemic rigor
-
-The system distrusts its own outputs. By design.
-
-[Fact-checking][fact-checking] treats every claim as a hypothesis. [Green mirage auditing][auditing-green-mirage] asks "would this test fail if the code was broken?" -- fundamentally different from "does this test pass?" [Hunch verification][verifying-hunches] intercepts the moment of claimed discovery and forces reframing: "I found it" becomes "Hypothesis: [claim]. Testing now." [Dehallucination][dehallucination] names the specific ways LLMs confabulate and builds recovery protocols for them.
-
-Test-driven development here isn't just a practice. It's an epistemic position. "Tests-first answer 'what should this do?' Tests-after answer 'what does this do?'" The same logic applies at every level: no skill ships without a failing test, no claim without evidence, no verdict without a trace.
-
-### Named failure modes
-
-LLMs fail in predictable ways. Spellbook names those patterns and builds mechanical countermeasures.
-
-Seven rationalization patterns are catalogued and blocked. Three consecutive fix failures trigger architectural reassessment instead of a fourth attempt. Research stagnation triggers a plateau breaker. A devil's advocate review that finds zero issues is flagged as an incomplete review. The personality directive -- "a zen master who does not get bored" -- isn't flavor text; it counters the specific failure mode where LLMs rush through complex work and declare victory early.
-
-### Quality gates that don't negotiate
-
-Every substantial skill is a sequence of phases with mandatory gates between them. Tests must pass. Code review must clear. Claims must verify against source. Tests must actually catch regressions.
-
-These gates cannot be bypassed -- not by YOLO mode, not by autonomy settings, not by the agent deciding it knows better. YOLO mode grants permission to *act* without asking. It does not grant permission to *skip*. Autonomy is a speed dial, not a quality dial.
-
-### Composition
-
-Skills invoke skills. [`implementing-features`][implementing-features] orchestrates [brainstorming], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its limits, it splits into a thin orchestrator and supporting commands.
-
-The hierarchy mirrors good organizations: strategic coordination, tactical management, individual execution. Meta-skills compose domain skills which invoke atomic disciplines.
-
-### The self-improving system
-
-Skills that improve skills. [Usage analytics][analyzing-skill-usage] measure completion and correction rates. The [skill-writing skill][writing-skills] applies TDD to skill creation itself. [Instruction engineering][instruction-engineering] codifies prompt research into technique. [Prompt sharpening][sharpening-prompts] audits for ambiguity. A/B testing compares skill versions.
-
-The feedback loop is the point: measure, identify weakness, apply the improvement skills, measure again.
-
-### Security as first-class architecture
-
-Every subagent operates within a trust tier with hard-capped tool access. External content is data, never instructions. Raw untrusted content stays in subagent context; only summaries return to the orchestrator. Prompt injection defense treats the AI agent as an attack surface. Suspicious tool calls trigger immediate halt.
-
-Five trust tiers: explore (read-only), general (standard tools), yolo (autonomous), review_untrusted (restricted tools for external content), quarantine (read-only with audit logging). Tiers can't escalate. Ever.
 
 ## What's Included
 
