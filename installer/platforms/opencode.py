@@ -306,7 +306,7 @@ class OpenCodeInstaller(PlatformInstaller):
         """
         target = self.instructions_dir / "claude-code-system-prompt.md"
         try:
-            return f"~/{target.relative_to(Path.home())}"
+            return f"~/{target.relative_to(Path.home()).as_posix()}"
         except ValueError:
             # config_dir is not under $HOME; use absolute path
             return str(target)
