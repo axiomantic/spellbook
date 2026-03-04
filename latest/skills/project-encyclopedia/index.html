@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1285,6 +1285,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2906,6 +2934,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7167,7 +7223,7 @@
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
 <a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">4.</span> <span class="gs">**Staleness Detection**</span>: Check mtime. Encyclopedias older than 30 days get refresh offers, not silent reads.
 <a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">5.</span> <span class="gs">**Context Budget**</span>: Target 500-1000 lines. An encyclopedia that doesn&#39;t fit in context defeats its purpose.
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">5.</span> <span class="gs">**Context Budget**</span>: Target 500-1000 lines.
 <a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="gu">## Inputs</span>
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
@@ -7251,7 +7307,7 @@
 <a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">5.</span> User declines: Keep existing
 <a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
 <a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>&lt;RULE&gt;
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>Refresh is surgical. Don&#39;t regenerate from scratch. Preserve stable content.
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>Refresh is surgical; preserve stable content.
 <a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>&lt;/RULE&gt;
 <a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
 <a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="gu">## Template</span>
@@ -7330,6 +7386,10 @@
 <a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>&lt;reflection&gt;
 <a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>After each phase, verify: outputs produced match template sections, no duplication of existing docs, content stays within context budget, staleness metadata is current.
 <a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>Maps that agents cannot trust are worse than no maps. Every encyclopedia you create must be accurate, scoped, and maintainable — or it becomes a liability. Offer first. Compress ruthlessly. Refresh surgically. This is the obligation.
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

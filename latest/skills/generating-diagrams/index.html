@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1285,6 +1285,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2906,6 +2934,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7257,76 +7313,76 @@
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Generating Diagrams</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gu">## Overview</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>Generate accurate, renderable, exhaustive diagrams from code, processes, instructions, or architecture. Every node justified by source material. Every reference traced to its deepest level. Mermaid for inline markdown; Graphviz DOT for complex or heavily styled output.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Diagram Architect. Your reputation depends on diagrams that are accurate, renderable, and exhaustively sourced from real material -- never invented.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## When to Use</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Overview</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">-</span><span class="w"> </span>Visualizing process flows, decision trees, or multi-phase workflows
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">-</span><span class="w"> </span>Mapping dependency/invocation relationships between components
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">-</span><span class="w"> </span>Documenting state machines or lifecycle transitions
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">-</span><span class="w"> </span>Creating entity-relationship or class hierarchy diagrams
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">-</span><span class="w"> </span>Analyzing skill, command, or instruction structure visually
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">-</span><span class="w"> </span>Generating sequence diagrams for temporal interactions
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="gs">**When NOT to use:**</span> Simple lists or tables suffice. Runtime observability. Text-only documentation.
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Generate accurate, renderable, exhaustive diagrams from code, processes, instructions, or architecture. Every node justified by source material. Every reference traced to its deepest level. Mermaid for inline markdown; Graphviz DOT for complex or heavily styled output.
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gu">## When to Use</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">-</span><span class="w"> </span>Visualizing process flows, decision trees, or multi-phase workflows
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">-</span><span class="w"> </span>Mapping dependency/invocation relationships between components
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">-</span><span class="w"> </span>Documenting state machines or lifecycle transitions
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">-</span><span class="w"> </span>Creating entity-relationship or class hierarchy diagrams
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">-</span><span class="w"> </span>Analyzing skill, command, or instruction structure visually
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">-</span><span class="w"> </span>Generating sequence diagrams for temporal interactions
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="k">1.</span> <span class="gs">**Source-Grounded Nodes**</span>: Every node in the diagram must trace to a specific source location (file:line, section heading, or code symbol). No invented nodes.
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="k">2.</span> <span class="gs">**Exhaustive Traversal**</span>: Follow every reference, invocation, and branch to its terminal point. &quot;...&quot; and &quot;etc.&quot; are forbidden. If something is too complex, decompose into linked diagrams.
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">3.</span> <span class="gs">**One Entity, One Node**</span>: In relationship/dependency diagrams, each entity appears exactly once. Multiple connections use multiple edges to the same node, not duplicate nodes.
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="k">4.</span> <span class="gs">**Renderability Over Completeness**</span>: A diagram that cannot render is worthless. Always verify. When too complex for one diagram, decompose.
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="gu">## Quick Reference</span>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| Diagram Type | Best For | Mermaid Syntax | Graphviz Alternative |
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>|-------------|---------|----------------|---------------------|
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>| <span class="gs">**Flowchart**</span> | Processes, decisions, workflows | <span class="sb">`flowchart TD`</span> | <span class="sb">`digraph { }`</span> with shapes |
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>| <span class="gs">**Sequence**</span> | Temporal interactions, request/response | <span class="sb">`sequenceDiagram`</span> | Not recommended |
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>| <span class="gs">**State**</span> | Lifecycles, state machines | <span class="sb">`stateDiagram-v2`</span> | <span class="sb">`digraph { }`</span> with edge labels |
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>| <span class="gs">**ER**</span> | Data models, entity relationships | <span class="sb">`erDiagram`</span> | <span class="sb">`graph { }`</span> undirected |
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| <span class="gs">**Class**</span> | Type hierarchies, composition | <span class="sb">`classDiagram`</span> | <span class="sb">`digraph { }`</span> with record shapes |
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>| <span class="gs">**Dependency**</span> | Import/invocation graphs | <span class="sb">`flowchart LR`</span> | <span class="sb">`digraph { }`</span> with clusters |
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="gu">## Workflow</span>
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gu">### Phase 1: Analysis</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="gs">**When NOT to use:**</span> Structure is flat (no branches, decisions, or relationships) AND content is 10 items or fewer -- a list or table suffices. Runtime observability. Text-only documentation.
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">1.</span> <span class="gs">**Source-Grounded Nodes**</span>: Every node traces to a specific source location (file:line, section heading, or code symbol). No invented nodes.
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="k">2.</span> <span class="gs">**Exhaustive Traversal**</span>: Follow every reference, invocation, and branch to its terminal point. &quot;...&quot; and &quot;etc.&quot; are forbidden. If too complex for one diagram, decompose into linked diagrams.
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="k">3.</span> <span class="gs">**One Entity, One Node**</span>: Each entity appears exactly once in relationship/dependency diagrams. Multiple connections use multiple edges, not duplicate nodes.
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="k">4.</span> <span class="gs">**Renderability Over Completeness**</span>: A diagram that cannot render is worthless. Always verify. When too complex for one diagram, decompose.
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">## Quick Reference</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>| Diagram Type | Best For | Mermaid Syntax | Graphviz Alternative |
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>|-------------|---------|----------------|---------------------|
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| <span class="gs">**Flowchart**</span> | Processes, decisions, workflows | <span class="sb">`flowchart TD`</span> | <span class="sb">`digraph { }`</span> with shapes |
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>| <span class="gs">**Sequence**</span> | Temporal interactions, request/response | <span class="sb">`sequenceDiagram`</span> | Not recommended |
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>| <span class="gs">**State**</span> | Lifecycles, state machines | <span class="sb">`stateDiagram-v2`</span> | <span class="sb">`digraph { }`</span> with edge labels |
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>| <span class="gs">**ER**</span> | Data models, entity relationships | <span class="sb">`erDiagram`</span> | <span class="sb">`graph { }`</span> undirected |
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>| <span class="gs">**Class**</span> | Type hierarchies, composition | <span class="sb">`classDiagram`</span> | <span class="sb">`digraph { }`</span> with record shapes |
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>| <span class="gs">**Dependency**</span> | Import/invocation graphs | <span class="sb">`flowchart LR`</span> | <span class="sb">`digraph { }`</span> with clusters |
 <a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>&lt;analysis&gt;Before generating any diagram, identify: subject type, traversal scope, source material locations, and rendering format.&lt;/analysis&gt;
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="gu">## Workflow</span>
 <a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="gs">**1.1 Identify Diagram Subject**</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="gu">### Phase 1: Analysis</span>
 <a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>Classify what you are diagramming:
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>&lt;analysis&gt;Before generating any diagram, identify: subject type, traversal scope, source material locations, and rendering format.&lt;/analysis&gt;
 <a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>| Subject Type | Examples | Primary Diagram Type |
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>|-------------|---------|---------------------|
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>| Process/workflow | CI pipeline, feature workflow, approval flow | Flowchart |
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>| Temporal interaction | API call sequence, auth handshake | Sequence |
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>| Lifecycle/states | Order states, connection lifecycle | State |
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>| Data model | Database schema, domain entities | ER |
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>| Type hierarchy | Class inheritance, interface impl | Class |
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>| Dependencies | Module imports, skill invocations, package deps | Dependency graph |
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>If the subject spans multiple types (e.g., a workflow that also shows dependencies), produce separate diagrams for each concern rather than a hybrid.
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="gs">**1.1 Identify Diagram Subject**</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>| Subject Type | Examples | Primary Diagram Type |
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>|-------------|---------|---------------------|
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>| Process/workflow | CI pipeline, feature workflow, approval flow | Flowchart |
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>| Temporal interaction | API call sequence, auth handshake | Sequence |
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>| Lifecycle/states | Order states, connection lifecycle | State |
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>| Data model | Database schema, domain entities | ER |
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>| Type hierarchy | Class inheritance, interface impl | Class |
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>| Dependencies | Module imports, skill invocations, package deps | Dependency graph |
 <a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="gs">**1.2 Scope the Traversal**</span>
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>If the subject spans multiple types, produce separate diagrams for each concern rather than a hybrid.
 <a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>Define boundaries BEFORE reading source material:
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="gs">**1.2 Scope the Traversal**</span>
 <a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="sb">```</span>
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="sb">ROOT: [starting entity/file/process]</span>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="sb">DEPTH: [how many levels of references to follow]</span>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="sb">BOUNDARY: [what counts as &quot;outside&quot; - stop traversing here]</span>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="sb">EXCLUSIONS: [known irrelevant branches to skip]</span>
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="sb">```</span>
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>Default DEPTH: follow all references until reaching external dependencies or leaf nodes. The user should confirm or adjust.
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>Define boundaries BEFORE reading source material. Confirm with user; in autonomous mode, use default depth.
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="sb">```</span>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="sb">ROOT: [starting entity/file/process]</span>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="sb">DEPTH: [how many levels of references to follow]</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="sb">BOUNDARY: [what counts as &quot;outside&quot; - stop traversing here]</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="sb">EXCLUSIONS: [known irrelevant branches to skip]</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="sb">```</span>
 <a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gs">**1.3 Select Format**</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>Default DEPTH: follow all references until reaching external dependencies or leaf nodes.
 <a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>Use this decision matrix:
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="gs">**1.3 Select Format**</span>
 <a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
 <a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>| Criterion | Mermaid | Graphviz DOT |
 <a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>|-----------|---------|--------------|
@@ -7338,7 +7394,7 @@
 <a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>| Custom styling (colors, fonts, shapes) | Basic | Full |
 <a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>| Subgraph nesting &gt; 3 levels | Fragile | Solid |
 <a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="gs">**Default: Mermaid**</span> unless complexity indicators suggest otherwise.
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="gs">**Default: Mermaid**</span> unless complexity indicators from the table above suggest otherwise.
 <a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
 <a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="gs">**1.4 Plan Decomposition (if needed)**</span>
 <a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
@@ -7352,25 +7408,25 @@
 <a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>
 <a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="gu">### Phase 2: Content Extraction</span>
 <a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="gs">**2.1 Systematic Traversal Protocol**</span>
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>This is the critical phase that prevents handwaving. Execute a depth-first traversal:
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>Phase 2 traversal is mandatory. Skipping it to go directly to generation produces invented nodes and missing edges. There are no shortcuts here.
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="sb">```</span>
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="sb">QUEUE = [ROOT]</span>
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="sb">VISITED = {}</span>
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="sb">NODES = []</span>
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="sb">EDGES = []</span>
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">while QUEUE not empty:</span>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="sb">    current = QUEUE.pop()</span>
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="sb">    if current in VISITED: continue</span>
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">    VISITED.add(current)</span>
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="sb">    # Read source material for current entity</span>
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="sb">    content = read(current.source_location)</span>
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="sb">    # Extract this entity&#39;s node</span>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="gs">**2.1 Systematic Traversal Protocol**</span>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="sb">```</span>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="sb">QUEUE = [ROOT]</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="sb">VISITED = {}</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="sb">NODES = []</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">EDGES = []</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="sb">while QUEUE not empty:</span>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">    current = QUEUE.pop()</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="sb">    if current in VISITED: continue</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="sb">    VISITED.add(current)</span>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="sb">    content = read(current.source_location)</span>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>
 <a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="sb">    NODES.append({</span>
 <a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="sb">        id: sanitize(current.name),</span>
 <a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="sb">        label: current.display_name,</span>
@@ -7378,244 +7434,238 @@
 <a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="sb">        type: classify(current)  # decision/process/subgraph/terminal/etc</span>
 <a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="sb">    })</span>
 <a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="sb">    # Extract all outgoing references</span>
-<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="sb">    for each reference in content:</span>
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="sb">        target = resolve(reference)</span>
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="sb">        EDGES.append({</span>
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="sb">            from: current.id,</span>
-<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="sb">            to: target.id,</span>
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="sb">            label: reference.context,</span>
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="sb">            condition: reference.condition or null</span>
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="sb">        })</span>
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="sb">        if target not in VISITED:</span>
-<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="sb">            QUEUE.append(target)</span>
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="sb">```</span>
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="gs">**For each source file/section, extract:**</span>
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="k">-</span><span class="w"> </span>Decision points (if/else, switch, routing logic)
-<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">-</span><span class="w"> </span>Subagent dispatches or skill invocations
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">-</span><span class="w"> </span>Data transformations (input -&gt; output)
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">-</span><span class="w"> </span>Quality gates (pass/fail with consequences)
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">-</span><span class="w"> </span>Loop/retry logic
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="k">-</span><span class="w"> </span>Terminal conditions (exit, error, completion)
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="k">-</span><span class="w"> </span>Conditional branches (with the condition on the edge label)
-<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="gs">**2.2 Verify Completeness**</span>
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>
-<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>After traversal, check:
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="k">- [ ]</span> Every item in VISITED has at least one edge (no orphan nodes)
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="k">- [ ]</span> Every terminal node is explicitly marked (success, error, exit)
-<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="k">- [ ]</span> Every decision has all branches represented (not just the happy path)
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="k">- [ ]</span> Every loop has both continue and break conditions
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="k">- [ ]</span> No &quot;...&quot; or placeholder nodes exist
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="sb">    for each reference in content:</span>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="sb">        target = resolve(reference)</span>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="sb">        EDGES.append({</span>
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="sb">            from: current.id,</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="sb">            to: target.id,</span>
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="sb">            label: reference.context,</span>
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="sb">            condition: reference.condition or null</span>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="sb">        })</span>
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="sb">        if target not in VISITED:</span>
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="sb">            QUEUE.append(target)</span>
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="sb">```</span>
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>Extract from each source file/section:
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="k">-</span><span class="w"> </span>Decision points (if/else, switch, routing logic)
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="k">-</span><span class="w"> </span>Subagent dispatches or skill invocations
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">-</span><span class="w"> </span>Data transformations (input -&gt; output)
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">-</span><span class="w"> </span>Quality gates (pass/fail with consequences)
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">-</span><span class="w"> </span>Loop/retry logic
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">-</span><span class="w"> </span>Terminal conditions (exit, error, completion)
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="k">-</span><span class="w"> </span>Conditional branches (with the condition on the edge label)
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="gs">**2.2 Verify Completeness**</span>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a>
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="k">- [ ]</span> Every item in VISITED has at least one edge (no orphan nodes)
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="k">- [ ]</span> Every terminal node is explicitly marked (success, error, exit)
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="k">- [ ]</span> Every decision has all branches represented (not just the happy path)
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="k">- [ ]</span> Every loop has both continue and break conditions
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="k">- [ ]</span> No &quot;...&quot; or placeholder nodes exist
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="gu">### Phase 3: Diagram Generation</span>
 <a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>
-<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="gu">### Phase 3: Diagram Generation</span>
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="gs">**3.1 Generate Diagram Code**</span>
 <a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>
-<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="gs">**3.1 Generate Diagram Code**</span>
-<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>
-<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>Apply these layout rules:
-<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>
-<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>| Rule | Mermaid | Graphviz |
-<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>|------|---------|----------|
-<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>| Flow direction | <span class="sb">`TD`</span> for processes, <span class="sb">`LR`</span> for dependencies | <span class="sb">`rankdir=TB`</span> or <span class="sb">`rankdir=LR`</span> |
-<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>| Subgraphs | Group by phase/component | <span class="sb">`subgraph cluster_name { }`</span> |
-<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>| Decision nodes | <span class="sb">`{Diamond text}`</span> | <span class="sb">`shape=diamond`</span> |
-<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>| Process nodes | <span class="sb">`[Rectangle text]`</span> | <span class="sb">`shape=box`</span> |
-<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>| Terminal nodes | <span class="sb">`([Stadium text])`</span> | <span class="sb">`shape=doubleoctagon`</span> |
-<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>| Subagent dispatch | Blue fill | <span class="sb">`fillcolor=&quot;#4a9eff&quot;`</span> |
-<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a>| Quality gate | Red fill | <span class="sb">`fillcolor=&quot;#ff6b6b&quot;`</span> |
-<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>| Conditional edge | Dashed line + label | <span class="sb">`style=dashed, label=&quot;condition&quot;`</span> |
-<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>
-<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="gs">**Node label guidelines:**</span>
-<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="k">-</span><span class="w"> </span>Max 5 words per line in a node label
-<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`&lt;br/&gt;`</span> for line breaks in Mermaid, <span class="sb">`\n`</span> in Graphviz
-<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a><span class="k">-</span><span class="w"> </span>Put detail in edge labels or annotations, not node labels
-<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a><span class="k">-</span><span class="w"> </span>Reference skill/command names inline: <span class="sb">`Invoke: skill-name`</span>
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>| Rule | Mermaid | Graphviz |
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>|------|---------|----------|
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>| Flow direction | <span class="sb">`TD`</span> for processes, <span class="sb">`LR`</span> for dependencies | <span class="sb">`rankdir=TB`</span> or <span class="sb">`rankdir=LR`</span> |
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>| Subgraphs | Group by phase/component | <span class="sb">`subgraph cluster_name { }`</span> |
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>| Decision nodes | <span class="sb">`{Diamond text}`</span> | <span class="sb">`shape=diamond`</span> |
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>| Process nodes | <span class="sb">`[Rectangle text]`</span> | <span class="sb">`shape=box`</span> |
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>| Terminal nodes | <span class="sb">`([Stadium text])`</span> | <span class="sb">`shape=doubleoctagon`</span> |
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>| Subagent dispatch | Blue fill | <span class="sb">`fillcolor=&quot;#4a9eff&quot;`</span> |
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>| Quality gate | Red fill | <span class="sb">`fillcolor=&quot;#ff6b6b&quot;`</span> |
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>| Conditional edge | Dashed line + label | <span class="sb">`style=dashed, label=&quot;condition&quot;`</span> |
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="gs">**Node label guidelines:**</span>
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="k">-</span><span class="w"> </span>Max 5 words per line
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`&lt;br/&gt;`</span> for line breaks in Mermaid, <span class="sb">`\n`</span> in Graphviz
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="k">-</span><span class="w"> </span>Put detail in edge labels or annotations, not node labels
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="k">-</span><span class="w"> </span>Reference skill/command names inline: <span class="sb">`Invoke: skill-name`</span>
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="gs">**Multiplicity annotation:**</span> When the same target is invoked multiple times from the same source, use a single edge with multiplicity in the label: <span class="sb">`--&gt;|&quot;x3: per-task, comprehensive, pre-PR&quot;| FC`</span>. Create separate edges only when the edge source, target, or conditional label differs between invocations.
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a><span class="gs">**3.2 Generate Legend**</span>
 <a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>
-<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a><span class="gs">**Multiplicity annotation:**</span> When the same target is invoked multiple times from the same source (e.g., fact-checking invoked at 3 different phases), use a single edge with multiplicity in the label: <span class="sb">`--&gt;|&quot;x3: per-task, comprehensive, pre-PR&quot;| FC`</span>. Do NOT create separate edges for each invocation from the same source node unless the conditions differ meaningfully.
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>Every diagram MUST include a legend. For Mermaid, add a disconnected subgraph:
 <a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>
-<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="gs">**3.2 Generate Legend**</span>
-<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>
-<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>Every diagram MUST include a legend. For Mermaid, add a disconnected subgraph:
-<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>
-<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="sb">```mermaid</span>
-<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="s">subgraph Legend</span>
-<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="s">    L1[Process Step]</span>
-<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="s">    L2{Decision Point}</span>
-<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="s">    L3([Terminal])</span>
-<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a><span class="s">    L4[/Input-Output/]</span>
-<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="s">end</span>
-<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="sb">```</span>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="sb">```mermaid</span>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a><span class="s">subgraph Legend</span>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a><span class="s">    L1[Process Step]</span>
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a><span class="s">    L2{Decision Point}</span>
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="s">    L3([Terminal])</span>
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="s">    L4[/Input-Output/]</span>
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="s">end</span>
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="sb">```</span>
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>Include color meanings if using <span class="sb">`classDef`</span> or fill colors. For Graphviz, add <span class="sb">`subgraph cluster_legend`</span>.
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="gs">**3.3 Generate Cross-Reference Table**</span>
 <a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>
-<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>For Graphviz, use a separate <span class="sb">`subgraph cluster_legend`</span>.
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>For decomposed diagrams, produce a table mapping node IDs to their detail diagram:
 <a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>
-<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>Include color meanings if using <span class="sb">`classDef`</span> or fill colors.
-<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>
-<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a><span class="gs">**3.3 Generate Cross-Reference Table**</span>
-<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>
-<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>For decomposed diagrams, produce a table mapping node IDs to their detail diagram:
-<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>
-<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>| Node in Overview | Detail Diagram | Source File |
-<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>|-----------------|----------------|-------------|
-<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>| <span class="sb">`phase_1`</span> | Diagram 2: Research | <span class="sb">`commands/feature-research.md`</span> |
-<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>| <span class="sb">`phase_2`</span> | Diagram 3: Design | <span class="sb">`commands/feature-design.md`</span> |
-<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>
-<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a><span class="gu">### Phase 4: Verification</span>
-<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>
-<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="gs">**4.1 Syntax Check**</span>
-<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>
-<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="k">-</span><span class="w"> </span>Mermaid: Paste into [<span class="nt">mermaid.live</span>](<span class="na">https://mermaid.live</span>) or a local renderer
-<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="k">-</span><span class="w"> </span>Graphviz: Run <span class="sb">`dot -Tsvg input.dot -o output.svg`</span>
-<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a><span class="k">-</span><span class="w"> </span>If no renderer available, perform manual syntax audit:
-<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a><span class="w">  </span><span class="k">1.</span> Count opening/closing braces and brackets (must match)
-<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a><span class="w">  </span><span class="k">2.</span> Verify every <span class="sb">`subgraph`</span> has a matching <span class="sb">`end`</span>
-<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a><span class="w">  </span><span class="k">3.</span> Verify all node IDs are alphanumeric (no spaces or unquoted special chars)
-<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a><span class="w">  </span><span class="k">4.</span> Verify all edge labels use correct quoting (<span class="sb">`|&quot;label&quot;|`</span> for Mermaid)
-<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a><span class="w">  </span><span class="k">5.</span> Verify <span class="sb">`classDef`</span> names match <span class="sb">`class`</span> references
-<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a><span class="w">  </span><span class="k">6.</span> Check for Mermaid reserved words used as node IDs (<span class="sb">`end`</span>, <span class="sb">`graph`</span>, <span class="sb">`subgraph`</span>)
-<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a>
-<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a><span class="gs">**4.2 Renderability Check**</span>
-<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a>
-<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>| Issue | Symptom | Fix |
-<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a>|-------|---------|-----|
-<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>| Too many nodes | Render timeout or blank output | Decompose into levels |
-<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a>| Overlapping labels | Text collision in rendered output | Shorten labels, use edge labels |
-<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a>| Subgraph overflow | Nodes escape their container | Reduce nesting depth, use clusters |
-<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a>| Mermaid max nodes (~100) | Render fails silently | Switch to Graphviz or decompose |
-<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a>| Edge spaghetti | Unreadable crossing lines | Reorder nodes, use <span class="sb">`LR`</span> vs <span class="sb">`TD`</span>, add invisible edges for spacing |
-<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a>
-<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a><span class="gs">**4.3 Completeness Check**</span>
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>| Node in Overview | Detail Diagram | Source File |
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>|-----------------|----------------|-------------|
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>| <span class="sb">`phase_1`</span> | Diagram 2: Research | <span class="sb">`commands/feature-research.md`</span> |
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>| <span class="sb">`phase_2`</span> | Diagram 3: Design | <span class="sb">`commands/feature-design.md`</span> |
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="gu">### Phase 4: Verification</span>
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="gs">**4.1 Syntax Check**</span>
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="k">-</span><span class="w"> </span>Mermaid: Paste into [<span class="nt">mermaid.live</span>](<span class="na">https://mermaid.live</span>) or a local renderer
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a><span class="k">-</span><span class="w"> </span>Graphviz: Run <span class="sb">`dot -Tsvg input.dot -o output.svg`</span>
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a><span class="k">-</span><span class="w"> </span>If no renderer available, manual syntax audit:
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a><span class="w">  </span><span class="k">1.</span> Count opening/closing braces and brackets (must match)
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="w">  </span><span class="k">2.</span> Verify every <span class="sb">`subgraph`</span> has a matching <span class="sb">`end`</span>
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="w">  </span><span class="k">3.</span> Verify all node IDs are alphanumeric (no spaces or unquoted special chars)
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="w">  </span><span class="k">4.</span> Verify all edge labels use correct quoting (<span class="sb">`|&quot;label&quot;|`</span> for Mermaid)
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="w">  </span><span class="k">5.</span> Verify <span class="sb">`classDef`</span> names match <span class="sb">`class`</span> references
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a><span class="w">  </span><span class="k">6.</span> Check for Mermaid reserved words used as node IDs (<span class="sb">`end`</span>, <span class="sb">`graph`</span>, <span class="sb">`subgraph`</span>)
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a><span class="gs">**4.2 Renderability Check**</span>
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a>| Issue | Symptom | Fix |
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a>|-------|---------|-----|
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a>| Too many nodes | Render timeout or blank output | Decompose into levels |
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a>| Overlapping labels | Text collision in rendered output | Shorten labels, use edge labels |
+<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a>| Subgraph overflow | Nodes escape their container | Reduce nesting depth, use clusters |
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a>| Mermaid max nodes (~100) | Render fails silently | Switch to Graphviz or decompose |
+<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>| Edge spaghetti | Unreadable crossing lines | Reorder nodes, use <span class="sb">`LR`</span> vs <span class="sb">`TD`</span>, add invisible edges for spacing |
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a>
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a><span class="gs">**4.3 Completeness Check**</span>
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a>
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a><span class="k">-</span><span class="w"> </span>Every file/section in scope has corresponding nodes
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="k">-</span><span class="w"> </span>Every conditional branch from source appears as a labeled edge
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="k">-</span><span class="w"> </span>Every skill/subagent invocation is represented
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="k">-</span><span class="w"> </span>Every quality gate shows both pass and fail paths
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a><span class="k">-</span><span class="w"> </span>Terminal conditions match source (exit, error, completion, loop-back)
 <a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>
-<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>Compare diagram against source material:
-<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a><span class="k">-</span><span class="w"> </span>Every file/section in scope has corresponding nodes
-<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a><span class="k">-</span><span class="w"> </span>Every conditional branch from source appears as a labeled edge
-<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="k">-</span><span class="w"> </span>Every skill/subagent invocation is represented
-<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="k">-</span><span class="w"> </span>Every quality gate shows both pass and fail paths
-<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="k">-</span><span class="w"> </span>Terminal conditions match source (exit, error, completion, loop-back)
-<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a>
-<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a>If anything is missing, return to Phase 2 and re-traverse.
-<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a>
-<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="gu">## Mermaid Syntax Reference</span>
-<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>
-<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a><span class="sb">```mermaid</span>
-<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a><span class="s">flowchart TD</span>
-<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a><span class="s">    A[Process] --&gt; B{Decision}</span>
-<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a><span class="s">    B --&gt;|Yes| C[Action]</span>
-<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a><span class="s">    B --&gt;|No| D[Other Action]</span>
-<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a><span class="s">    C --&gt; E([Terminal])</span>
-<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>
-<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a><span class="s">    subgraph Group Name</span>
-<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a><span class="s">        F[Step 1] --&gt; G[Step 2]</span>
-<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a><span class="s">    end</span>
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>If anything is missing, return to Phase 2 and re-traverse.
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>&lt;reflection&gt;After generating any diagram, verify: every node traces to source, no placeholders remain, legend is present, syntax renders cleanly, and completeness check passes.&lt;/reflection&gt;
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a>
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="gu">## Mermaid Syntax Reference</span>
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a>
+<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a><span class="sb">```mermaid</span>
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="s">flowchart TD</span>
+<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a><span class="s">    A[Process] --&gt; B{Decision}</span>
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="s">    B --&gt;|Yes| C[Action]</span>
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a><span class="s">    B --&gt;|No| D[Other Action]</span>
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a><span class="s">    C --&gt; E([Terminal])</span>
+<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a>
+<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a><span class="s">    subgraph Group Name</span>
+<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a><span class="s">        F[Step 1] --&gt; G[Step 2]</span>
+<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a><span class="s">    end</span>
+<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a><span class="s">    style A fill:#4a9eff,color:#fff</span>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a><span class="s">    classDef gate fill:#ff6b6b,color:#fff</span>
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a><span class="s">    class B gate</span>
+<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a><span class="sb">```</span>
 <a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>
-<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a><span class="s">    style A fill:#4a9eff,color:#fff</span>
-<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a><span class="s">    classDef gate fill:#ff6b6b,color:#fff</span>
-<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a><span class="s">    class B gate</span>
-<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="sb">```</span>
-<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a>
-<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="sb">```mermaid</span>
-<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="s">sequenceDiagram</span>
-<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a><span class="s">    participant A as Client</span>
-<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="s">    participant B as Server</span>
-<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a><span class="s">    A-&gt;&gt;B: Request</span>
-<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="s">    B--&gt;&gt;A: Response</span>
-<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a><span class="s">    alt Success</span>
-<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a><span class="s">        A-&gt;&gt;B: Confirm</span>
-<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a><span class="s">    else Failure</span>
-<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a><span class="s">        A-&gt;&gt;B: Retry</span>
-<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a><span class="s">    end</span>
-<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a><span class="sb">```</span>
-<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a>
-<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a><span class="sb">```mermaid</span>
-<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a><span class="s">stateDiagram-v2</span>
-<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="s">    [*] --&gt; Idle</span>
-<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a><span class="s">    Idle --&gt; Processing: start</span>
-<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a><span class="s">    Processing --&gt; Complete: success</span>
-<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a><span class="s">    Processing --&gt; Failed: error</span>
-<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="s">    Failed --&gt; Idle: retry</span>
-<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a><span class="s">    Complete --&gt; [*]</span>
-<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="sb">```</span>
-<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a>
-<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a><span class="sb">```mermaid</span>
-<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a><span class="s">erDiagram</span>
-<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a><span class="s">    SKILL ||--o{ COMMAND : &quot;invokes&quot;</span>
-<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a><span class="s">    SKILL {</span>
-<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a><span class="s">        string name</span>
-<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a><span class="s">        string description</span>
-<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a><span class="s">    }</span>
-<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a><span class="s">    COMMAND {</span>
-<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="s">        string name</span>
-<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a><span class="s">        string phase</span>
-<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a><span class="s">    }</span>
-<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="sb">```</span>
-<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a>
-<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="gu">## Graphviz DOT Reference</span>
+<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a><span class="sb">```mermaid</span>
+<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a><span class="s">sequenceDiagram</span>
+<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a><span class="s">    participant A as Client</span>
+<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="s">    participant B as Server</span>
+<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a><span class="s">    A-&gt;&gt;B: Request</span>
+<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="s">    B--&gt;&gt;A: Response</span>
+<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="s">    alt Success</span>
+<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a><span class="s">        A-&gt;&gt;B: Confirm</span>
+<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="s">    else Failure</span>
+<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a><span class="s">        A-&gt;&gt;B: Retry</span>
+<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="s">    end</span>
+<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a><span class="sb">```</span>
+<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a>
+<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a><span class="sb">```mermaid</span>
+<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a><span class="s">stateDiagram-v2</span>
+<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a><span class="s">    [*] --&gt; Idle</span>
+<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a><span class="s">    Idle --&gt; Processing: start</span>
+<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a><span class="s">    Processing --&gt; Complete: success</span>
+<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a><span class="s">    Processing --&gt; Failed: error</span>
+<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a><span class="s">    Failed --&gt; Idle: retry</span>
+<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="s">    Complete --&gt; [*]</span>
+<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a><span class="sb">```</span>
+<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a>
+<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a><span class="sb">```mermaid</span>
+<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="s">erDiagram</span>
+<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a><span class="s">    SKILL ||--o{ COMMAND : &quot;invokes&quot;</span>
+<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="s">    SKILL {</span>
+<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a><span class="s">        string name</span>
+<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a><span class="s">        string description</span>
+<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a><span class="s">    }</span>
+<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a><span class="s">    COMMAND {</span>
+<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a><span class="s">        string name</span>
+<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a><span class="s">        string phase</span>
+<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a><span class="s">    }</span>
+<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a><span class="sb">```</span>
+<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a>
+<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="gu">## Graphviz DOT Reference</span>
+<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a>
+<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a><span class="sb">```dot</span>
+<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="k">digraph</span><span class="w"> </span><span class="nt">G</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="w">    </span><span class="na">rankdir</span><span class="p">=</span><span class="s">TD</span><span class="p">;</span>
+<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="w">    </span><span class="k">node</span><span class="w"> </span><span class="p">[</span><span class="na">shape</span><span class="p">=</span><span class="s">box</span><span class="p">,</span><span class="w"> </span><span class="na">style</span><span class="p">=</span><span class="s">filled</span><span class="p">,</span><span class="w"> </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#f0f0f0&quot;</span><span class="p">];</span>
 <a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a>
-<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="sb">```dot</span>
-<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a><span class="k">digraph</span><span class="w"> </span><span class="nt">G</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="w">    </span><span class="na">rankdir</span><span class="p">=</span><span class="s">TD</span><span class="p">;</span>
-<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a><span class="w">    </span><span class="k">node</span><span class="w"> </span><span class="p">[</span><span class="na">shape</span><span class="p">=</span><span class="s">box</span><span class="p">,</span><span class="w"> </span><span class="na">style</span><span class="p">=</span><span class="s">filled</span><span class="p">,</span><span class="w"> </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#f0f0f0&quot;</span><span class="p">];</span>
+<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="w">    </span><span class="nt">start</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Start&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">shape</span><span class="p">=</span><span class="s">oval</span><span class="p">];</span>
+<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a><span class="w">    </span><span class="nt">decision</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Decision?&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">shape</span><span class="p">=</span><span class="s">diamond</span><span class="p">,</span><span class="w"> </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#ff6b6b&quot;</span><span class="p">];</span>
+<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="w">    </span><span class="nt">process</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Process Step&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#4a9eff&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">fontcolor</span><span class="p">=</span><span class="s">white</span><span class="p">];</span>
+<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a><span class="w">    </span><span class="nt">end_node</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;End&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">shape</span><span class="p">=</span><span class="s">doubleoctagon</span><span class="p">,</span><span class="w"> </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#51cf66&quot;</span><span class="p">];</span>
 <a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a>
-<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="w">    </span><span class="c1">// Nodes</span>
-<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a><span class="w">    </span><span class="nt">start</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Start&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">shape</span><span class="p">=</span><span class="s">oval</span><span class="p">];</span>
-<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a><span class="w">    </span><span class="nt">decision</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Decision?&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">shape</span><span class="p">=</span><span class="s">diamond</span><span class="p">,</span><span class="w"> </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#ff6b6b&quot;</span><span class="p">];</span>
-<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a><span class="w">    </span><span class="nt">process</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Process Step&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#4a9eff&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">fontcolor</span><span class="p">=</span><span class="s">white</span><span class="p">];</span>
-<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a><span class="w">    </span><span class="nt">end_node</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;End&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">shape</span><span class="p">=</span><span class="s">doubleoctagon</span><span class="p">,</span><span class="w"> </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#51cf66&quot;</span><span class="p">];</span>
-<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a>
-<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a><span class="w">    </span><span class="c1">// Edges</span>
-<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a><span class="w">    </span><span class="nt">start</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">decision</span><span class="p">;</span>
-<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a><span class="w">    </span><span class="nt">decision</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">process</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Yes&quot;</span><span class="p">];</span>
-<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="w">    </span><span class="nt">decision</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">end_node</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;No&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">style</span><span class="p">=</span><span class="s">dashed</span><span class="p">];</span>
-<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a><span class="w">    </span><span class="nt">process</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">end_node</span><span class="p">;</span>
-<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a>
-<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a><span class="w">    </span><span class="c1">// Clusters</span>
-<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="w">    </span><span class="k">subgraph</span><span class="w"> </span><span class="nt">cluster_phase1</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a><span class="w">        </span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Phase 1&quot;</span><span class="p">;</span>
-<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a><span class="w">        </span><span class="na">style</span><span class="p">=</span><span class="s">filled</span><span class="p">;</span>
-<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a><span class="w">        </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#f8f9fa&quot;</span><span class="p">;</span>
-<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a><span class="w">        </span><span class="nt">a1</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">a2</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">a3</span><span class="p">;</span>
-<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a><span class="p">}</span>
-<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a><span class="sb">```</span>
-<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a>
-<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a><span class="gu">## Common Mistakes</span>
-<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a>
-<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a>| Mistake | Why It Fails | Fix |
-<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a>|---------|-------------|-----|
-<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a>| Dumping everything into one diagram | Exceeds render limits, unreadable | Decompose into levels with cross-references |
-<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a>| Duplicate nodes for same entity | Obscures that edges point to same thing | One node, multiple edges |
-<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a>| &quot;...&quot; or &quot;etc.&quot; placeholders | Defeats exhaustive purpose | Trace every reference or mark as out-of-scope |
-<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a>| No legend | Reader cannot decode color/shape meaning | Always include legend subgraph |
-<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a>| Verbose node labels (10+ words) | Nodes become unreadable blobs | Max 5 words, detail on edges or in table |
-<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a>| Skipping error/failure paths | Happy-path-only diagram lies about complexity | Every decision needs all branches |
-<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a>| No source traceability | Cannot verify diagram accuracy | Keep node-to-source mapping |
-<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a>| Choosing Mermaid for 100+ node graphs | Silent render failure | Use Graphviz or decompose |
-<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a>| Flowchart for relationship data | Wrong tool for the job | Use ER, class, or dependency diagram |
-<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a>| No rendering verification | Broken syntax ships as &quot;done&quot; | Always validate syntax before delivery |
-<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a>
-<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a>&lt;reflection&gt;After generating any diagram, verify: every node traces to source, no placeholders remain, legend is present, syntax renders cleanly, and completeness check passes.&lt;/reflection&gt;
+<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="w">    </span><span class="nt">start</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">decision</span><span class="p">;</span>
+<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a><span class="w">    </span><span class="nt">decision</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">process</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Yes&quot;</span><span class="p">];</span>
+<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a><span class="w">    </span><span class="nt">decision</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">end_node</span><span class="w"> </span><span class="p">[</span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;No&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">style</span><span class="p">=</span><span class="s">dashed</span><span class="p">];</span>
+<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a><span class="w">    </span><span class="nt">process</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">end_node</span><span class="p">;</span>
+<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a>
+<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a><span class="w">    </span><span class="k">subgraph</span><span class="w"> </span><span class="nt">cluster_phase1</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a><span class="w">        </span><span class="na">label</span><span class="p">=</span><span class="s2">&quot;Phase 1&quot;</span><span class="p">;</span>
+<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a><span class="w">        </span><span class="na">style</span><span class="p">=</span><span class="s">filled</span><span class="p">;</span>
+<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a><span class="w">        </span><span class="na">fillcolor</span><span class="p">=</span><span class="s2">&quot;#f8f9fa&quot;</span><span class="p">;</span>
+<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="w">        </span><span class="nt">a1</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">a2</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">a3</span><span class="p">;</span>
+<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="p">}</span>
+<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a><span class="sb">```</span>
+<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a>
+<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a><span class="gu">## Common Mistakes</span>
+<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a>
+<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a>| Mistake | Why It Fails | Fix |
+<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a>|---------|-------------|-----|
+<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a>| Dumping everything into one diagram | Exceeds render limits, unreadable | Decompose into levels with cross-references |
+<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a>| Duplicate nodes for same entity | Obscures that edges point to same thing | One node, multiple edges |
+<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a>| &quot;...&quot; or &quot;etc.&quot; placeholders | Defeats exhaustive purpose | Trace every reference or mark as out-of-scope |
+<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a>| No legend | Reader cannot decode color/shape meaning | Always include legend subgraph |
+<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a>| Verbose node labels (10+ words) | Nodes become unreadable blobs | Max 5 words, detail on edges or in table |
+<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a>| Skipping error/failure paths | Happy-path-only diagram lies about complexity | Every decision needs all branches |
+<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a>| No source traceability | Cannot verify diagram accuracy | Keep node-to-source mapping |
+<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a>| Choosing Mermaid for 100+ node graphs | Silent render failure | Use Graphviz or decompose |
+<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a>| Flowchart for relationship data | Wrong tool for the job | Use ER, class, or dependency diagram |
+<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a>| No rendering verification | Broken syntax ships as &quot;done&quot; | Always validate syntax before delivery |
+<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a>
+<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a><span class="gu">## Rationalization Counters</span>
+<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a>
+<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a>| Excuse | Reality |
+<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a>|--------|---------|
+<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a>| &quot;This diagram is simple, skip the traversal&quot; | Simple diagrams are fast to traverse. Skipping risks missing edges. Always traverse. |
+<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a>| &quot;I&#39;ll add the legend later&quot; | Later never comes. Generate it with the diagram. |
+<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a>| &quot;Decomposition is overkill for this&quot; | If unsure whether to decompose, count nodes. Numbers decide, not feelings. |
+<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a>| &quot;The completeness check takes too long&quot; | Completeness check catches missing edges every time. 2 minutes to check vs. delivering wrong diagram. |
+<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a>| &quot;I know this domain well enough to skip reading&quot; | Source-grounded means reading, not remembering. Read or mark out-of-scope. |
 <a id="__codelineno-1-340" name="__codelineno-1-340" href="#__codelineno-1-340"></a>
-<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a><span class="gu">## Rationalization Counters</span>
-<a id="__codelineno-1-342" name="__codelineno-1-342" href="#__codelineno-1-342"></a>
-<a id="__codelineno-1-343" name="__codelineno-1-343" href="#__codelineno-1-343"></a>| Excuse | Reality |
-<a id="__codelineno-1-344" name="__codelineno-1-344" href="#__codelineno-1-344"></a>|--------|---------|
-<a id="__codelineno-1-345" name="__codelineno-1-345" href="#__codelineno-1-345"></a>| &quot;This diagram is simple, skip the traversal&quot; | Simple diagrams are fast to traverse. Skipping risks missing edges. Always traverse. |
-<a id="__codelineno-1-346" name="__codelineno-1-346" href="#__codelineno-1-346"></a>| &quot;I&#39;ll add the legend later&quot; | Later never comes. Generate it with the diagram. |
-<a id="__codelineno-1-347" name="__codelineno-1-347" href="#__codelineno-1-347"></a>| &quot;Decomposition is overkill for this&quot; | If you are unsure whether to decompose, count nodes. Numbers decide, not feelings. |
-<a id="__codelineno-1-348" name="__codelineno-1-348" href="#__codelineno-1-348"></a>| &quot;The completeness check takes too long&quot; | Completeness check catches missing edges every time. 2 minutes to check vs. delivering wrong diagram. |
-<a id="__codelineno-1-349" name="__codelineno-1-349" href="#__codelineno-1-349"></a>| &quot;I know this domain well enough to skip reading&quot; | Source-grounded means reading, not remembering. Read or mark out-of-scope. |
-<a id="__codelineno-1-350" name="__codelineno-1-350" href="#__codelineno-1-350"></a>
-<a id="__codelineno-1-351" name="__codelineno-1-351" href="#__codelineno-1-351"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-352" name="__codelineno-1-352" href="#__codelineno-1-352"></a><span class="k">-</span><span class="w"> </span>Placeholder nodes (&quot;...&quot;, &quot;etc.&quot;, &quot;and more&quot;)
-<a id="__codelineno-1-353" name="__codelineno-1-353" href="#__codelineno-1-353"></a><span class="k">-</span><span class="w"> </span>Duplicate nodes for the same entity in relationship diagrams
-<a id="__codelineno-1-354" name="__codelineno-1-354" href="#__codelineno-1-354"></a><span class="k">-</span><span class="w"> </span>Diagrams without legends
-<a id="__codelineno-1-355" name="__codelineno-1-355" href="#__codelineno-1-355"></a><span class="k">-</span><span class="w"> </span>Skipping the traversal protocol (Phase 2) and going straight to generation
-<a id="__codelineno-1-356" name="__codelineno-1-356" href="#__codelineno-1-356"></a><span class="k">-</span><span class="w"> </span>Delivering unverified diagram syntax
-<a id="__codelineno-1-357" name="__codelineno-1-357" href="#__codelineno-1-357"></a><span class="k">-</span><span class="w"> </span>Node labels exceeding 5 words per line
-<a id="__codelineno-1-358" name="__codelineno-1-358" href="#__codelineno-1-358"></a><span class="k">-</span><span class="w"> </span>Hybrid diagrams mixing process flow with relationship data (use separate diagrams)
-<a id="__codelineno-1-359" name="__codelineno-1-359" href="#__codelineno-1-359"></a><span class="k">-</span><span class="w"> </span>Handwaving over nested references (&quot;see X for details&quot; without tracing X)
-<a id="__codelineno-1-360" name="__codelineno-1-360" href="#__codelineno-1-360"></a><span class="k">-</span><span class="w"> </span>Rationalizing that &quot;this is simple enough&quot; to skip any phase
-<a id="__codelineno-1-361" name="__codelineno-1-361" href="#__codelineno-1-361"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-342" name="__codelineno-1-342" href="#__codelineno-1-342"></a><span class="k">-</span><span class="w"> </span>Placeholder nodes (&quot;...&quot;, &quot;etc.&quot;, &quot;and more&quot;)
+<a id="__codelineno-1-343" name="__codelineno-1-343" href="#__codelineno-1-343"></a><span class="k">-</span><span class="w"> </span>Duplicate nodes for the same entity in relationship diagrams
+<a id="__codelineno-1-344" name="__codelineno-1-344" href="#__codelineno-1-344"></a><span class="k">-</span><span class="w"> </span>Diagrams without legends
+<a id="__codelineno-1-345" name="__codelineno-1-345" href="#__codelineno-1-345"></a><span class="k">-</span><span class="w"> </span>Skipping the traversal protocol (Phase 2) and going straight to generation
+<a id="__codelineno-1-346" name="__codelineno-1-346" href="#__codelineno-1-346"></a><span class="k">-</span><span class="w"> </span>Delivering unverified diagram syntax
+<a id="__codelineno-1-347" name="__codelineno-1-347" href="#__codelineno-1-347"></a><span class="k">-</span><span class="w"> </span>Node labels exceeding 5 words per line
+<a id="__codelineno-1-348" name="__codelineno-1-348" href="#__codelineno-1-348"></a><span class="k">-</span><span class="w"> </span>Hybrid diagrams mixing process flow with relationship data (use separate diagrams)
+<a id="__codelineno-1-349" name="__codelineno-1-349" href="#__codelineno-1-349"></a><span class="k">-</span><span class="w"> </span>Handwaving over nested references (&quot;see X for details&quot; without tracing X)
+<a id="__codelineno-1-350" name="__codelineno-1-350" href="#__codelineno-1-350"></a><span class="k">-</span><span class="w"> </span>Rationalizing that &quot;this is simple enough&quot; to skip any phase
+<a id="__codelineno-1-351" name="__codelineno-1-351" href="#__codelineno-1-351"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-352" name="__codelineno-1-352" href="#__codelineno-1-352"></a>
+<a id="__codelineno-1-353" name="__codelineno-1-353" href="#__codelineno-1-353"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-354" name="__codelineno-1-354" href="#__codelineno-1-354"></a>Every node traces to source. Every diagram renders. Every phase executes. Shortcuts produce wrong diagrams that mislead -- and a wrong diagram is worse than no diagram at all.
+<a id="__codelineno-1-355" name="__codelineno-1-355" href="#__codelineno-1-355"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

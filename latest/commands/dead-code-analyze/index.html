@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1285,6 +1285,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2848,6 +2876,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7150,247 +7206,249 @@
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># MISSION</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Extract code items from scope, present for triage, verify usage, and re-scan until fixed-point.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Dead Code Analyst. Your reputation depends on verdicts backed by evidence, not assumption. False-positive removal breaks a codebase; false-negative miss perpetuates debt. Accuracy is non-negotiable.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;/ROLE&gt;
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>**Part of the dead-code-* command family.** Run after <span class="sb">`/dead-code-setup`</span> completes.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gh"># MISSION</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gs">**Prerequisites:**</span> Git safety completed, scope selected.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>Extract all code items from scoped files, present for user triage, verify each item&#39;s liveness via whole-codebase search, and re-scan to fixed-point.
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Run after <span class="sb">`/dead-code-setup`</span> completes.
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">1.</span> <span class="gs">**Assume dead until proven alive**</span> - Start from the premise that code is unused; evidence of usage clears the item
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">2.</span> <span class="gs">**Evidence-based verdicts**</span> - Every verdict requires grep output, caller locations, or explicit proof
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">3.</span> <span class="gs">**Transitive analysis required**</span> - Code called only by dead code is itself dead; iterate to fixed-point
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">4.</span> <span class="gs">**Write-only detection**</span> - Setters without getter usage indicate dead features, not just dead functions
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>---
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="gu">## Phase 2: Code Item Extraction</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gs">**Prerequisites:**</span> Git safety completed, scope selected.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">1.</span> <span class="gs">**Assume dead until proven alive**</span> - Evidence of usage clears the item; absence of evidence condemns it
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">2.</span> <span class="gs">**Evidence-based verdicts**</span> - Every verdict requires grep output, caller locations, or explicit proof
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">3.</span> <span class="gs">**Transitive analysis required**</span> - Code called only by dead code is itself dead; iterate to fixed-point
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">4.</span> <span class="gs">**Write-only detection**</span> - Setters without getter usage indicate dead features (entire feature unused, not just dead functions)
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>Extract ALL added code items from scoped files.
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="gu">### What to Extract</span>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| Item Type | Examples | How to Identify |
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>|-----------|----------|-----------------|
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| <span class="gs">**Procedures/Functions**</span> | <span class="sb">`proc foo()`</span>, <span class="sb">`func bar()`</span>, <span class="sb">`def baz()`</span> | Declaration lines |
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| <span class="gs">**Types/Classes**</span> | <span class="sb">`type Foo = object`</span>, <span class="sb">`class Bar`</span> | Type definitions |
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>| <span class="gs">**Object Fields**</span> | <span class="sb">`field: int`</span> in type definitions | Field declarations |
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>| <span class="gs">**Imports/Includes**</span> | <span class="sb">`import foo`</span>, <span class="sb">`from x import y`</span> | Import statements |
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>| <span class="gs">**Methods**</span> | Procs on objects, class methods | Method definitions |
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>| <span class="gs">**Constants**</span> | <span class="sb">`const X = 5`</span>, <span class="sb">`#define X`</span> | Constant declarations |
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>| <span class="gs">**Macros/Templates**</span> | <span class="sb">`macro foo()`</span>, <span class="sb">`template bar()`</span> | Macro/template defs |
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| <span class="gs">**Global Variables**</span> | Top-level vars | Variable declarations |
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>| <span class="gs">**Getters/Setters**</span> | Accessor procs/methods | Property accessors |
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>| <span class="gs">**Iterators**</span> | <span class="sb">`iterator items()`</span>, <span class="sb">`for x in y`</span> | Iterator definitions |
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>| <span class="gs">**Convenience Wrappers**</span> | Simple forwarding functions | Thin wrapper procs |
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="gu">### Language-Specific Patterns</span>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="gs">**Nim:**</span>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="sb">```nim</span>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="n">proc</span><span class="o">|</span><span class="n">func</span><span class="o">|</span><span class="n">method</span><span class="o">|</span><span class="n">macro</span><span class="o">|</span><span class="n">template</span><span class="o">|</span><span class="k">iterator</span><span class="w"> </span><span class="n">NAME</span>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="k">type</span><span class="w"> </span><span class="n">NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">object</span><span class="o">|</span><span class="k">enum</span><span class="o">|</span><span class="k">distinct</span><span class="o">|</span><span class="p">...)</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="n">field</span><span class="p">:</span><span class="w"> </span><span class="k">TYPE</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="k">object</span><span class="w"> </span><span class="n">definitions</span>
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="kn">import</span><span class="o">|</span><span class="kn">from</span><span class="o">|</span><span class="kn">include</span><span class="w"> </span><span class="n">MODULE</span>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">const</span><span class="o">|</span><span class="k">let</span><span class="o">|</span><span class="kd">var</span><span class="w"> </span><span class="n">NAME</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">top</span><span class="w"> </span><span class="n">level</span>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">```</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="gs">**Python:**</span>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="sb">```python</span>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="k">def</span><span class="w"> </span><span class="nf">NAME</span><span class="p">,</span> <span class="k">class</span><span class="w"> </span><span class="nc">NAME</span><span class="p">,</span> <span class="n">import</span><span class="o">/</span><span class="kn">from</span><span class="w"> </span><span class="nn">statements</span>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="sb">```</span>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="gs">**TypeScript/JavaScript:**</span>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="sb">```typescript</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="kd">function</span><span class="w"> </span><span class="nx">NAME</span><span class="p">,</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">NAME</span><span class="p">,</span><span class="w"> </span><span class="kd">const</span><span class="err">/let/var at top level</span>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="k">export</span><span class="err">/import statements</span>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="sb">```</span>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="gu">### Extraction Strategy</span>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>For each added/modified file in scope:
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="k">1.</span> Get the diff of added lines: <span class="sb">`git diff &lt;base&gt; &lt;file&gt; | grep &quot;^+&quot;`</span>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="k">2.</span> Parse added lines for code item declarations
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">3.</span> Record: <span class="sb">`{type, name, location, signature}`</span>
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">4.</span> Group symmetric pairs (get/set, create/destroy, etc.)
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="k">5.</span> <span class="gs">**For each setter/store call**</span>: Record corresponding getter/read pattern to check later
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">6.</span> <span class="gs">**For each field assignment**</span>: Record field read patterns to check later
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="k">-</span><span class="w"> </span>Marking code dead without grep evidence from the entire codebase
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">-</span><span class="w"> </span>Stopping re-scan before fixed-point is confirmed
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="k">-</span><span class="w"> </span>Treating &quot;Test-only&quot; as DEAD without asking the user
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">-</span><span class="w"> </span>Marking a symmetric pair member dead without checking all members
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="k">-</span><span class="w"> </span>Offering experimental removal without user consent
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="k">-</span><span class="w"> </span>Skipping write-only detection for setters and field assignments
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>---
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="gu">## Phase 2: Code Item Extraction</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>Extract ALL added code items from scoped files.
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="gu">### What to Extract</span>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>| Item Type | Examples | How to Identify |
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>|-----------|----------|-----------------|
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>| <span class="gs">**Procedures/Functions**</span> | <span class="sb">`proc foo()`</span>, <span class="sb">`func bar()`</span>, <span class="sb">`def baz()`</span> | Declaration lines |
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>| <span class="gs">**Types/Classes**</span> | <span class="sb">`type Foo = object`</span>, <span class="sb">`class Bar`</span> | Type definitions |
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>| <span class="gs">**Object Fields**</span> | <span class="sb">`field: int`</span> in type definitions | Field declarations |
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>| <span class="gs">**Imports/Includes**</span> | <span class="sb">`import foo`</span>, <span class="sb">`from x import y`</span> | Import statements |
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>| <span class="gs">**Methods**</span> | Procs on objects, class methods | Method definitions |
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>| <span class="gs">**Constants**</span> | <span class="sb">`const X = 5`</span>, <span class="sb">`#define X`</span> | Constant declarations |
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>| <span class="gs">**Macros/Templates**</span> | <span class="sb">`macro foo()`</span>, <span class="sb">`template bar()`</span> | Macro/template defs |
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>| <span class="gs">**Global Variables**</span> | Top-level vars | Variable declarations |
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>| <span class="gs">**Getters/Setters**</span> | Accessor procs/methods | Property accessors |
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>| <span class="gs">**Iterators**</span> | <span class="sb">`iterator items()`</span>, <span class="sb">`for x in y`</span> | Iterator definitions |
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>| <span class="gs">**Convenience Wrappers**</span> | Simple forwarding functions | Thin wrapper procs |
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="gu">### Language-Specific Patterns</span>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="gs">**Nim:**</span> <span class="sb">`proc|func|method|macro|template|iterator NAME`</span>, <span class="sb">`type NAME = (object|enum|distinct|...)`</span>, <span class="sb">`field: TYPE`</span> in object defs, <span class="sb">`import|from|include MODULE`</span>, <span class="sb">`const|let|var NAME`</span> at top level
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gs">**Python:**</span> <span class="sb">`def NAME`</span>, <span class="sb">`class NAME`</span>, <span class="sb">`import`</span>/<span class="sb">`from`</span> statements
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="gs">**TypeScript/JavaScript:**</span> <span class="sb">`function NAME`</span>, <span class="sb">`class NAME`</span>, <span class="sb">`const|let|var`</span> at top level, <span class="sb">`export|import`</span> statements
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="gu">### Extraction Strategy</span>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>For each added/modified file in scope:
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="k">1.</span> Get diff of added lines: <span class="sb">`git diff &lt;base&gt; &lt;file&gt; | grep &quot;^+&quot;`</span>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="k">2.</span> Parse added lines for code item declarations
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="k">3.</span> Record: <span class="sb">`{type, name, location, signature}`</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">4.</span> <span class="gs">**Group symmetric pairs**</span> (get/set, create/destroy, <span class="sb">`foo`</span>/<span class="sb">`foo=`</span>) — grouping heuristic: same root with get/set/clear/create/destroy prefix or <span class="sb">`=`</span> suffix
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">5.</span> For each setter/store and each field assignment: record corresponding getter/read pattern to check in Phase 4
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>---
 <a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>---
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="gu">## Phase 3: Initial Triage</span>
 <a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="gu">## Phase 3: Initial Triage</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>&lt;RULE&gt;Present ALL extracted items upfront before verification begins. User must see full scope.&lt;/RULE&gt;
 <a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>&lt;RULE&gt;Present ALL extracted items upfront before verification begins. User must see full scope.&lt;/RULE&gt;
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>Display items grouped by type with counts:
 <a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>Display items grouped by type with counts:
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="sb">```</span>
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="sb">## Code Items Found: 47</span>
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="sb">### Procedures/Functions (23 items)</span>
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="sb">1. proc getDeferredExpr(t: PType): PNode - compiler/semtypes.nim:342</span>
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="sb">2. proc setDeferredExpr(t: PType, n: PNode) - compiler/semtypes.nim:349</span>
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="sb">3. proc clearDeferredExpr(t: PType) - compiler/semtypes.nim:356</span>
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="sb">...</span>
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="sb">### Type Fields (12 items)</span>
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="sb">24. deferredPragmas: seq[PNode] - compiler/ast.nim:234</span>
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="sb">...</span>
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="sb">### Symmetric Pairs Detected (4 groups)</span>
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="sb">Group A: getDeferredExpr / setDeferredExpr / clearDeferredExpr</span>
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="sb">Group B: sizeExpr / sizeExpr= (getter/setter)</span>
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="sb">...</span>
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="sb">Proceed with verification? (yes/no)</span>
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="sb">```</span>
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a><span class="sb">```</span>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="sb">## Code Items Found: 47</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="sb">### Procedures/Functions (23 items)</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="sb">1. proc getDeferredExpr(t: PType): PNode - compiler/semtypes.nim:342</span>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="sb">2. proc setDeferredExpr(t: PType, n: PNode) - compiler/semtypes.nim:349</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="sb">3. proc clearDeferredExpr(t: PType) - compiler/semtypes.nim:356</span>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="sb">...</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="sb">### Type Fields (12 items)</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="sb">24. deferredPragmas: seq[PNode] - compiler/ast.nim:234</span>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="sb">...</span>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="sb">### Symmetric Pairs Detected (4 groups)</span>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="sb">Group A: getDeferredExpr / setDeferredExpr / clearDeferredExpr</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="sb">Group B: sizeExpr / sizeExpr= (getter/setter)</span>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="sb">...</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="sb">Proceed with verification? (yes/no)</span>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="sb">```</span>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="gs">**Symmetric Pairs**</span>: Group <span class="sb">`getFoo`</span> / <span class="sb">`setFoo`</span> / <span class="sb">`clearFoo`</span>, or <span class="sb">`foo`</span> / <span class="sb">`foo=`</span>. They often live or die together.
 <a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="gs">**Symmetric Pairs**</span>: If you see <span class="sb">`getFoo`</span> / <span class="sb">`setFoo`</span> / <span class="sb">`clearFoo`</span>, or <span class="sb">`foo`</span> / <span class="sb">`foo=`</span>, group them. They often live or die together.
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>---
 <a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>---
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="gu">## Phase 4: Verification</span>
 <a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="gu">## Phase 4: Verification</span>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>&lt;RULE&gt;For EVERY code item, search the ENTIRE codebase for usages. Start from &quot;dead&quot; assumption.&lt;/RULE&gt;
 <a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>&lt;RULE&gt;For EVERY code item, search the ENTIRE codebase for usages. Start from &quot;dead&quot; assumption.&lt;/RULE&gt;
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="gu">### Step 1: Generate &quot;Dead Code&quot; Claim</span>
 <a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="gu">### Step 1: Generate &quot;Dead Code&quot; Claim</span>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="sb">```</span>
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">CLAIM: &quot;proc getDeferredExpr is dead code&quot;</span>
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="sb">ASSUMPTION: Unused until proven otherwise</span>
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="sb">LOCATION: compiler/semtypes.nim:342</span>
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="sb">```</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">```</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="sb">CLAIM: &quot;proc getDeferredExpr is dead code&quot;</span>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="sb">ASSUMPTION: Unused until proven otherwise</span>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">LOCATION: compiler/semtypes.nim:342</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="sb">```</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="gu">### Step 2: Search for Usage Evidence</span>
 <a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="gu">### Step 2: Search for Usage Evidence</span>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="gs">**Search Strategy:**</span>
 <a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>
-<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="gs">**Search Strategy:**</span>
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="k">1.</span> <span class="gs">**Direct calls**</span>: <span class="sb">`grep -rn &quot;getDeferredExpr&quot; --include=&quot;*.nim&quot; &lt;repo_root&gt;`</span>
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">2.</span> <span class="gs">**Exclude definition**</span>: Filter out the line where it&#39;s defined
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">3.</span> <span class="gs">**Check callers**</span>: Are there calls outside the definition?
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">4.</span> <span class="gs">**Check exports**</span>: Is it exported and could be used externally?
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="k">5.</span> <span class="gs">**Check dynamic invocation**</span>: Could it be called via reflection, eval, or string-based dispatch?
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="k">1.</span> <span class="gs">**Direct calls**</span>: <span class="sb">`grep -rn &quot;getDeferredExpr&quot; --include=&quot;*.nim&quot; &lt;repo_root&gt;`</span>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="k">2.</span> <span class="gs">**Exclude definition**</span>: Filter out the definition line from grep results
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="k">3.</span> <span class="gs">**Check callers**</span>: Any calls outside the definition site?
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">4.</span> <span class="gs">**Check exports**</span>: Is it exported and could be used externally?
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">5.</span> <span class="gs">**Check dynamic invocation**</span>: Could it be called via reflection, eval, or string-based dispatch?
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="gs">**Evidence Categories:**</span>
 <a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="gs">**Evidence Categories:**</span>
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>| Evidence Type | Verdict | What to Check |
-<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>|---------------|---------|---------------|
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>| <span class="gs">**Zero callers**</span> | DEAD | No grep results except definition |
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>| <span class="gs">**Self-call only**</span> | DEAD | Only calls itself (recursion) |
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>| <span class="gs">**Write-only**</span> | DEAD | Setter/store called but getter/read never called |
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>| <span class="gs">**Dead caller only**</span> | TRANSITIVE DEAD | Only called by other dead code |
-<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>| <span class="gs">**Test-only**</span> | MAYBE DEAD | Only called in tests (ask user) |
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>| <span class="gs">**One+ live callers**</span> | ALIVE | Real usage found |
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>| <span class="gs">**Exported API**</span> | MAYBE ALIVE | Public API, might be used externally |
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>| <span class="gs">**Dynamic possible**</span> | INVESTIGATE | Check for reflection/eval patterns |
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>
-<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="gu">### Step 3: Write-Only Dead Code Detection</span>
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>Check for code that STORES values but stored values are NEVER READ:
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="gs">**Patterns:**</span>
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="k">1.</span> <span class="gs">**Setter without getter**</span>: <span class="sb">`setFoo()`</span> has callers but <span class="sb">`getFoo()`</span> has zero callers
-<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="k">2.</span> <span class="gs">**Iterator without consumers**</span>: <span class="sb">`iterator items()`</span> defined but never used in <span class="sb">`for`</span> loops
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">3.</span> <span class="gs">**Field assigned but never read**</span>: Field appears on LHS of <span class="sb">`=`</span> but never on RHS
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="k">4.</span> <span class="gs">**Collection stored but never accessed**</span>: <span class="sb">`seq.add(x)`</span> called but seq never iterated
-<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="gs">**Algorithm:**</span>
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="sb">```</span>
-<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="sb">FOR each setter/store found:</span>
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="sb">  Search for corresponding getter/read</span>
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="sb">  IF setter has callers BUT getter has zero:</span>
-<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="sb">    → WRITE-ONLY DEAD</span>
-<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="sb">    Mark BOTH setter and getter as dead (entire feature unused)</span>
-<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="sb">```</span>
-<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>
-<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="gu">### Step 4: Transitive Dead Code Detection</span>
-<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>
-<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>If item only called by other items, check if ALL callers are dead:
-<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>
-<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a><span class="sb">```</span>
-<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a><span class="sb">getDeferredExpr:</span>
-<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a><span class="sb">  - Called by: showDeferredPragmas (1 call)</span>
-<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a><span class="sb">  - showDeferredPragmas: Called by: nobody</span>
-<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="sb">  → BOTH are transitive dead code</span>
-<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="sb">```</span>
-<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>
-<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="gs">**Algorithm:**</span>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>| Evidence Type | Verdict | What to Check |
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>|---------------|---------|---------------|
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>| <span class="gs">**Zero callers**</span> | DEAD | No grep results except definition |
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>| <span class="gs">**Self-call only**</span> | DEAD | Only calls itself (recursion) |
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>| <span class="gs">**Write-only**</span> | DEAD | Setter/store called but getter/read never called |
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>| <span class="gs">**Dead caller only**</span> | TRANSITIVE DEAD | Only called by other dead code |
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>| <span class="gs">**Test-only**</span> | MAYBE DEAD | Only called in tests; ask: &quot;Keep as test utility, or remove?&quot; |
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>| <span class="gs">**One+ live callers**</span> | ALIVE | Real usage found |
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>| <span class="gs">**Exported API**</span> | MAYBE ALIVE | Public API, might be used externally |
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>| <span class="gs">**Dynamic possible**</span> | INVESTIGATE | See dynamic invocation protocol below |
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="gs">**Dynamic Invocation Protocol (INVESTIGATE verdict):**</span>
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="k">1.</span> Search for <span class="sb">`eval`</span>, <span class="sb">`reflect`</span>, <span class="sb">`getattr`</span>, <span class="sb">`Method(name)`</span>, <span class="sb">`dispatch[name]`</span>, string-based call patterns near or referencing the item
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">2.</span> If found: mark MAYBE ALIVE, flag for user review with location
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">3.</span> If not found after exhaustive search: treat as DEAD with note &quot;no dynamic dispatch patterns found&quot;
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="gu">### Step 3: Write-Only Dead Code Detection</span>
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>Check for code that STORES values but stored values are NEVER READ:
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="gs">**Patterns:**</span>
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="k">1.</span> <span class="gs">**Setter without getter**</span>: <span class="sb">`setFoo()`</span> has callers but <span class="sb">`getFoo()`</span> has zero callers
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="k">2.</span> <span class="gs">**Iterator without consumers**</span>: <span class="sb">`iterator items()`</span> defined but never used in <span class="sb">`for`</span> loops
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="k">3.</span> <span class="gs">**Field assigned but never read**</span>: Field appears on LHS of <span class="sb">`=`</span> but never on RHS
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="k">4.</span> <span class="gs">**Collection stored but never accessed**</span>: <span class="sb">`seq.add(x)`</span> called but seq never iterated
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="gs">**Algorithm:**</span>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="sb">```</span>
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="sb">FOR each setter/store found:</span>
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="sb">  Search for corresponding getter/read</span>
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="sb">  IF setter has callers BUT getter has zero:</span>
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="sb">    → WRITE-ONLY DEAD</span>
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="sb">    Mark BOTH setter and getter as dead (entire feature unused)</span>
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="sb">```</span>
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="gu">### Step 4: Transitive Dead Code Detection</span>
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>If item is only called by other items, check if ALL callers are dead:
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a><span class="sb">```</span>
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="sb">getDeferredExpr:</span>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="sb">  - Called by: showDeferredPragmas (1 call)</span>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="sb">  - showDeferredPragmas: Called by: nobody</span>
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="sb">  → BOTH are transitive dead code</span>
 <a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="sb">```</span>
-<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="sb">WHILE changes detected:</span>
-<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="sb">  FOR each item with callers:</span>
-<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="sb">    IF ALL callers are marked dead:</span>
-<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="sb">      Mark item as TRANSITIVE DEAD</span>
-<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a><span class="sb">  Repeat until no new transitive dead code found (fixed point)</span>
-<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a><span class="sb">```</span>
-<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>
-<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a><span class="gu">### Step 5: Remove and Test Verification (Optional)</span>
-<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>
-<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>For high-confidence dead code, offer experimental verification:
-<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>
-<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a><span class="gs">**Protocol:**</span>
-<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a><span class="k">1.</span> Ask user: &quot;Would you like me to experimentally verify by removing and testing?&quot;
-<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="k">2.</span> If yes, create temporary git worktree or branch
-<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="k">3.</span> Remove the suspected dead code
-<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="k">4.</span> Run the test suite
-<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="k">5.</span> If tests pass → definitive proof code was dead
-<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="k">6.</span> If tests fail → code was used (or tests are incomplete)
-<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a><span class="k">7.</span> Restore original state
-<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>
-<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="gs">**When to offer:**</span>
-<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="k">-</span><span class="w"> </span>User uncertain about grep-based verdict
-<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="k">-</span><span class="w"> </span>Code looks &quot;important&quot; but has zero callers
-<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="k">-</span><span class="w"> </span>High-value cleanup (large amount of code)
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="gs">**Algorithm:**</span>
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="sb">```</span>
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="sb">WHILE changes detected:</span>
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a><span class="sb">  FOR each item with callers:</span>
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a><span class="sb">    IF ALL callers are marked dead:</span>
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a><span class="sb">      Mark item as TRANSITIVE DEAD</span>
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a><span class="sb">  Repeat until no new transitive dead code found (fixed point)</span>
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a><span class="sb">```</span>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a><span class="gu">### Step 5: Remove and Test Verification (Optional)</span>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>For high-confidence dead code (zero callers, not exported, no dynamic dispatch), offer experimental verification:
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="gs">**Protocol:**</span>
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a><span class="k">1.</span> Ask user: &quot;Would you like me to experimentally verify by removing and testing?&quot;
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a><span class="k">2.</span> If yes: create temporary git worktree or branch
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="k">3.</span> Remove the suspected dead code
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a><span class="k">4.</span> Run the test suite
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="k">5.</span> Tests pass → definitive proof code was dead
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="k">6.</span> Tests fail → code was live (or tests are incomplete); restore from git
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="k">7.</span> Restore original state regardless of outcome
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="gs">**When to offer:**</span> grep result ambiguous, code appears important with zero callers, or high-value cleanup.
 <a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>
 <a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a><span class="gu">### Step 6: Symmetric Pair Analysis</span>
 <a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>
-<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>For detected symmetric pairs:
-<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>
-<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="sb">```</span>
-<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a><span class="sb">IF ANY of {getFoo, setFoo, clearFoo} is ALIVE → all potentially alive</span>
-<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="sb">IF ALL are dead → entire group is dead</span>
-<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a><span class="sb">IF SOME alive, SOME dead → flag asymmetry for user review</span>
-<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="sb">```</span>
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="sb">```</span>
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a><span class="sb">IF ANY of {getFoo, setFoo, clearFoo} is ALIVE → flag all for user review</span>
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a><span class="sb">IF ALL are dead → entire group is dead</span>
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a><span class="sb">IF SOME alive, SOME dead → flag asymmetry for explicit user decision</span>
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a><span class="sb">```</span>
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>---
 <a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>
-<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>---
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a><span class="gu">## Phase 5: Iterative Re-scanning</span>
 <a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>
-<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="gu">## Phase 5: Iterative Re-scanning</span>
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a>&lt;RULE&gt;After identifying dead code, re-scan for newly orphaned code. Removal cascades.&lt;/RULE&gt;
 <a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>
-<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>&lt;RULE&gt;After identifying dead code, re-scan for newly orphaned code. Removal may cascade.&lt;/RULE&gt;
-<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>
-<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a><span class="gs">**Why Re-scan:**</span>
-<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a><span class="sb">```</span>
-<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a><span class="sb">Round 1: evaluateDeferredFieldPragmas → 0 callers → DEAD</span>
-<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a><span class="sb">Round 2: iterator deferredPragmas → only called by above → NOW TRANSITIVE DEAD</span>
-<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a><span class="sb">Round 3: setDeferredExpr → stores to iterator that&#39;s dead → NOW WRITE-ONLY DEAD</span>
-<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a><span class="sb">```</span>
-<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a>
-<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a><span class="gs">**Re-scan Algorithm:**</span>
-<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a><span class="k">1.</span> Mark initial dead code (zero callers)
-<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a><span class="k">2.</span> Re-extract remaining items, excluding already-marked-dead
-<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a><span class="k">3.</span> Re-run verification on remaining items
-<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a><span class="k">4.</span> Check for newly transitive dead code
-<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a><span class="k">5.</span> Check for newly write-only dead code (getter removed → setter orphaned)
-<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a><span class="k">6.</span> Repeat until no new dead code found (fixed point)
-<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a>
-<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="gs">**Cascade Detection:**</span>
-<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="k">-</span><span class="w"> </span>If removal of A makes B dead → note &quot;B depends on A&quot; in report
-<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a><span class="k">-</span><span class="w"> </span>Present cascade chains: &quot;Removing X enables removing Y, Z&quot;
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="gs">**Why cascade matters:**</span>
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="sb">```</span>
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a><span class="sb">Round 1: evaluateDeferredFieldPragmas → 0 callers → DEAD</span>
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a><span class="sb">Round 2: iterator deferredPragmas → only called by above → NOW TRANSITIVE DEAD</span>
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a><span class="sb">Round 3: setDeferredExpr → stores to iterator that&#39;s dead → NOW WRITE-ONLY DEAD</span>
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a><span class="sb">```</span>
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a>
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a><span class="gs">**Re-scan Algorithm:**</span>
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a><span class="k">1.</span> Mark initial dead code (zero callers)
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a><span class="k">2.</span> Re-examine remaining items, excluding already-marked-dead
+<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a><span class="k">3.</span> Re-run verification on remaining items
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a><span class="k">4.</span> Check for newly transitive dead code
+<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a><span class="k">5.</span> Check for newly write-only dead code (getter removed → setter orphaned)
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a><span class="k">6.</span> Repeat until no new dead code found (fixed point)
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a><span class="gs">**Cascade Detection:**</span>
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a><span class="k">-</span><span class="w"> </span>If removal of A makes B dead → note &quot;B depends on A&quot; in report
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a><span class="k">-</span><span class="w"> </span>Present cascade chains: &quot;Removing X enables removing Y, Z&quot;
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a>
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a>---
 <a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>
-<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>---
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a><span class="gu">## Output</span>
 <a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>
-<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a><span class="gu">## Output</span>
-<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>
-<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a>This command produces:
-<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="k">1.</span> List of all code items with verdicts
-<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="k">2.</span> Evidence for each verdict (grep output, caller locations)
-<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a><span class="k">3.</span> Cascade chains documented
-<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="k">4.</span> Fixed-point reached
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>Produces:
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a><span class="k">1.</span> All code items with verdicts
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="k">2.</span> Evidence for each verdict (grep output, caller locations)
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="k">3.</span> Cascade chains documented
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="k">4.</span> Fixed-point confirmed
+<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a>
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="gs">**Next:**</span> Run <span class="sb">`/dead-code-report`</span>.
 <a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a>
-<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="gs">**Next:**</span> Run <span class="sb">`/dead-code-report`</span> to generate the findings report.
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>Every verdict requires evidence. Every transitive chain must close. Never declare fixed-point until re-scan confirms it. A careless verdict breaks production code.
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

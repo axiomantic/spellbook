@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1285,6 +1285,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2848,6 +2876,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7154,390 +7210,441 @@
 </tbody>
 </table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Phase 4: Verification</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gu">## Invariant Principles</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>Verification Engineer. Your reputation depends on a clean, accurate finding set. Every false positive you leave in the report destroys a developer&#39;s trust. Every false negative you miss lets a real bug ship. Precision is the only acceptable standard.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;/ROLE&gt;
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">1.</span> <span class="gs">**Every finding must be verifiable against actual code**</span>: If a finding cannot be verified by reading the file at the specified line, it is not a valid finding.
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">2.</span> <span class="gs">**REFUTED findings must be removed, not just flagged**</span>: False positives erode trust. They are removed from the final output entirely (logged in audit for transparency).
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">3.</span> <span class="gs">**INCONCLUSIVE findings must be clearly marked**</span>: Uncertainty is acceptable; hidden uncertainty is not. Mark findings that could not be verified so humans can assess.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gh"># Phase 4: Verification</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gs">**Purpose:**</span> Fact-check every finding against the actual codebase. Remove false positives. Flag uncertain claims for human review.
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gu">## 4.1 Verification Overview</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>This is a simplified verification protocol, not a full invocation of the <span class="sb">`fact-checking`</span> skill. It focuses on:
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">-</span><span class="w"> </span>Line content verification
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">-</span><span class="w"> </span>Function behavior checks
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">-</span><span class="w"> </span>Call pattern analysis
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">-</span><span class="w"> </span>Pattern violation confirmation
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Every finding must be verifiable against actual code**</span>: If a finding cannot be verified by reading the file at the specified line, it is not a valid finding.
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**REFUTED findings must be removed, not just flagged**</span>: False positives erode trust. Remove them from final output entirely; log in audit for transparency.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**INCONCLUSIVE findings must be clearly marked**</span>: Uncertainty is acceptable; hidden uncertainty is not. Mark findings that could not be verified so humans can assess.
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">4.</span> <span class="gs">**PR mode = diff-only source**</span>: When reviewing a PR (not a local branch), the diff is the only authoritative code. Local files reflect a different git state and MUST NOT be used to verify or refute findings.
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="gu">## 4.0 Pre-Flight: Branch Safety Check</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>Before verifying any finding, determine whether local files can be trusted.
 <a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="gu">## 4.2 Claim Types</span>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>| Claim Type | Example | Verification Method |
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>|------------|---------|---------------------|
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>| line_content | &quot;Line 45 contains SQL interpolation&quot; | Read line 45, pattern match |
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| function_behavior | &quot;Function X doesn&#39;t validate input&quot; | Read function, check for validation |
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>| call_pattern | &quot;Y is called without error handling&quot; | Trace callers of Y |
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| pattern_violation | &quot;Same code at A and B (DRY violation)&quot; | Compare code at A and B |
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="sb">```python</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_review_source</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine if local files are safe for verification. Returns &#39;LOCAL_FILES&#39; or &#39;DIFF_ONLY&#39;.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="n">pr_head_sha</span> <span class="o">=</span> <span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pr_head_sha&quot;</span><span class="p">)</span>  <span class="c1"># from review-manifest.json</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">pr_head_sha</span><span class="p">:</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>        <span class="k">return</span> <span class="s2">&quot;LOCAL_FILES&quot;</span>  <span class="c1"># local branch review; files are authoritative</span>
 <a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="gu">## 4.3 Claim Extraction Algorithm</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>Extract verifiable claims from finding text:
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    <span class="n">local_head</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;rev-parse&quot;</span><span class="p">,</span> <span class="s2">&quot;HEAD&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>    <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 <a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="sb">```python</span>
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="n">ClaimType</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;line_content&quot;</span><span class="p">,</span> <span class="s2">&quot;function_behavior&quot;</span><span class="p">,</span> <span class="s2">&quot;call_pattern&quot;</span><span class="p">,</span> <span class="s2">&quot;pattern_violation&quot;</span><span class="p">]</span>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="nd">@dataclass</span>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">class</span><span class="w"> </span><span class="nc">Claim</span><span class="p">:</span>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">ClaimType</span>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>    <span class="n">line</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    <span class="n">function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>    <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>    <span class="n">expected</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>    <span class="n">compare_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="c1"># Extraction patterns (most specific first)</span>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="n">CLAIM_PATTERNS</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>    <span class="c1"># Line content: &quot;Line 45 contains X&quot; / &quot;at line 45&quot;</span>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:line\s+(\d+)|at\s+line\s+(\d+)).*?(?:contains?|has|shows?)\s+[&#39;</span><span class="se">\&quot;</span><span class="s2">]?([^&#39;</span><span class="se">\&quot;</span><span class="s2">]+)[&#39;</span><span class="se">\&quot;</span><span class="s2">]?&quot;</span><span class="p">,</span> <span class="s2">&quot;line_content&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>    <span class="c1"># Function behavior: &quot;function X doesn&#39;t validate&quot;</span>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:function|method)\s+[&#39;</span><span class="se">\&quot;</span><span class="s2">]?(\w+)[&#39;</span><span class="se">\&quot;</span><span class="s2">]?\s+(?:doesn&#39;t|lacks?|missing)\s+(\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;function_behavior&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>    <span class="c1"># Call pattern: &quot;X is called without error handling&quot;</span>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[&#39;</span><span class="se">\&quot;</span><span class="s2">]?(\w+)[&#39;</span><span class="se">\&quot;</span><span class="s2">]?\s+(?:is\s+)?called\s+without\s+([^.]+)&quot;</span><span class="p">,</span> <span class="s2">&quot;call_pattern&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>    <span class="c1"># Pattern violation: &quot;same code at A and B&quot;</span>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:same|identical|duplicated?)\s+(?:code|logic)\s+(?:at|in)\s+([^and]+)\s+and\s+([^\s.]+)&quot;</span><span class="p">,</span> <span class="s2">&quot;pattern_violation&quot;</span><span class="p">),</span>
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="p">]</span>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_claims</span><span class="p">(</span><span class="n">finding</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Claim</span><span class="p">]:</span>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract verifiable claims from a finding.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>    <span class="n">claims</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>    <span class="n">text</span> <span class="o">=</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reason&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;evidence&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>    <span class="n">file_context</span> <span class="o">=</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>    <span class="n">line_context</span> <span class="o">=</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;line&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>    <span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">claim_type</span> <span class="ow">in</span> <span class="n">CLAIM_PATTERNS</span><span class="p">:</span>
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>            <span class="n">groups</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>            <span class="n">claim</span> <span class="o">=</span> <span class="n">build_claim</span><span class="p">(</span><span class="n">claim_type</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">file_context</span><span class="p">,</span> <span class="n">line_context</span><span class="p">)</span>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>            <span class="k">if</span> <span class="n">claim</span><span class="p">:</span>
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>                <span class="n">claims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">claim</span><span class="p">)</span>
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>    <span class="c1"># Always add implicit claim from finding&#39;s file:line</span>
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>    <span class="k">if</span> <span class="n">line_context</span> <span class="ow">and</span> <span class="n">file_context</span><span class="p">:</span>
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>        <span class="n">evidence</span> <span class="o">=</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;evidence&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>        <span class="k">if</span> <span class="n">evidence</span><span class="p">:</span>
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>            <span class="n">claims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Claim</span><span class="p">(</span>
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;line_content&quot;</span><span class="p">,</span>
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>                <span class="n">file</span><span class="o">=</span><span class="n">file_context</span><span class="p">,</span>
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>                <span class="n">line</span><span class="o">=</span><span class="n">line_context</span><span class="p">,</span>
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>                <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>                <span class="n">pattern</span><span class="o">=</span><span class="n">evidence</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span>
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>                <span class="n">expected</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>                <span class="n">compare_to</span><span class="o">=</span><span class="kc">None</span>
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>            <span class="p">))</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    <span class="k">return</span> <span class="s2">&quot;LOCAL_FILES&quot;</span> <span class="k">if</span> <span class="n">local_head</span> <span class="o">==</span> <span class="n">pr_head_sha</span> <span class="k">else</span> <span class="s2">&quot;DIFF_ONLY&quot;</span>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="sb">```</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="gs">**When `review_source == &quot;DIFF_ONLY&quot;`**</span> (PR review, local branch not checked out to PR HEAD):
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="k">-</span><span class="w"> </span>ALL verify_* functions return <span class="sb">`&quot;INCONCLUSIVE&quot;`</span> immediately — do NOT read local files
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="k">-</span><span class="w"> </span>Mark the finding <span class="sb">`[NEEDS VERIFICATION]`</span> in the report
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="k">-</span><span class="w"> </span>Reason: &quot;PR review — local HEAD does not match PR HEAD SHA; local files reflect different code&quot;
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>A REFUTED verdict from local files in DIFF_ONLY mode is a <span class="gs">**wrong verdict**</span>. Real bugs introduced by the PR will not appear in the local pre-PR code. Reading local files will cause you to declare them absent.
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>Read local files to verify or refute findings when <span class="sb">`review_source == &quot;DIFF_ONLY&quot;`</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span>Return REFUTED based on local file content when local branch differs from PR branch
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">-</span><span class="w"> </span>Skip the Section 4.0 branch safety check for PR reviews
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="k">-</span><span class="w"> </span>Treat a finding as REFUTED because local files do not show the issue — in PR mode, that just means local doesn&#39;t have the PR&#39;s changes yet
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gu">## 4.1 Verification Scope</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>&lt;analysis&gt;
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>This phase covers four verification dimensions: line content, function behavior, call patterns, and pattern violations. It does not invoke the full <span class="sb">`fact-checking`</span> skill — scope is constrained to what can be confirmed by reading files and matching patterns.
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="gu">## 4.2 Claim Types</span>
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>| Claim Type | Example | Verification Method |
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>|------------|---------|---------------------|
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>| line_content | &quot;Line 45 contains SQL interpolation&quot; | Read line 45, pattern match |
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>| function_behavior | &quot;Function X doesn&#39;t validate input&quot; | Read function, check for validation |
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>| call_pattern | &quot;Y is called without error handling&quot; | Trace callers of Y |
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>| pattern_violation | &quot;Same code at A and B (DRY violation)&quot; | Compare code at A and B |
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="gu">## 4.3 Claim Extraction Algorithm</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="sb">```python</span>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="n">ClaimType</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;line_content&quot;</span><span class="p">,</span> <span class="s2">&quot;function_behavior&quot;</span><span class="p">,</span> <span class="s2">&quot;call_pattern&quot;</span><span class="p">,</span> <span class="s2">&quot;pattern_violation&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="k">class</span><span class="w"> </span><span class="nc">Claim</span><span class="p">:</span>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">ClaimType</span>
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>    <span class="n">line</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>    <span class="n">function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>    <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>    <span class="n">expected</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>    <span class="n">compare_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="c1"># Extraction patterns (most specific first)</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="n">CLAIM_PATTERNS</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>    <span class="c1"># Line content: &quot;Line 45 contains X&quot; / &quot;at line 45&quot;</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:line\s+(\d+)|at\s+line\s+(\d+)).*?(?:contains?|has|shows?)\s+[&#39;</span><span class="se">\&quot;</span><span class="s2">]?([^&#39;</span><span class="se">\&quot;</span><span class="s2">]+)[&#39;</span><span class="se">\&quot;</span><span class="s2">]?&quot;</span><span class="p">,</span> <span class="s2">&quot;line_content&quot;</span><span class="p">),</span>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>    <span class="c1"># Function behavior: &quot;function X doesn&#39;t validate&quot;</span>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:function|method)\s+[&#39;</span><span class="se">\&quot;</span><span class="s2">]?(\w+)[&#39;</span><span class="se">\&quot;</span><span class="s2">]?\s+(?:doesn&#39;t|lacks?|missing)\s+(\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;function_behavior&quot;</span><span class="p">),</span>
 <a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>    <span class="k">return</span> <span class="n">claims</span>
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="sb">```</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>    <span class="c1"># Call pattern: &quot;X is called without error handling&quot;</span>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[&#39;</span><span class="se">\&quot;</span><span class="s2">]?(\w+)[&#39;</span><span class="se">\&quot;</span><span class="s2">]?\s+(?:is\s+)?called\s+without\s+([^.]+)&quot;</span><span class="p">,</span> <span class="s2">&quot;call_pattern&quot;</span><span class="p">),</span>
 <a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="gu">## 4.4 Verification Functions</span>
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="sb">```python</span>
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_line_content</span><span class="p">(</span><span class="n">claim</span><span class="p">:</span> <span class="n">Claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify that a line contains expected content.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>        <span class="n">file_path</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">file</span>
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>        <span class="n">lines</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>        <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">line</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">claim</span><span class="o">.</span><span class="n">line</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>        <span class="n">actual_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">claim</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># 1-indexed</span>
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>        <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">actual_line</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>            <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span>
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>        <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span>
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_function_behavior</span><span class="p">(</span><span class="n">claim</span><span class="p">:</span> <span class="n">Claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify function has or lacks expected behavior.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>        <span class="n">file_path</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">file</span>
-<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>        <span class="n">content</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>    <span class="c1"># Pattern violation: &quot;same code at A and B&quot;</span>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>    <span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?:same|identical|duplicated?)\s+(?:code|logic)\s+(?:at|in)\s+([^and]+)\s+and\s+([^\s.]+)&quot;</span><span class="p">,</span> <span class="s2">&quot;pattern_violation&quot;</span><span class="p">),</span>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="p">]</span>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_claim</span><span class="p">(</span><span class="n">claim_type</span><span class="p">:</span> <span class="n">ClaimType</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">file_context</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">line_context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Claim</span><span class="p">]:</span>
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct a Claim from regex match groups and finding context.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>    <span class="k">if</span> <span class="n">claim_type</span> <span class="o">==</span> <span class="s2">&quot;line_content&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>        <span class="n">line</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>        <span class="n">pattern</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>        <span class="k">return</span> <span class="n">Claim</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;line_content&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file_context</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="n">line</span><span class="p">,</span>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>                     <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span> <span class="n">expected</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compare_to</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>    <span class="k">elif</span> <span class="n">claim_type</span> <span class="o">==</span> <span class="s2">&quot;function_behavior&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>        <span class="n">func_name</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>        <span class="n">missing_attr</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>        <span class="k">return</span> <span class="n">Claim</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;function_behavior&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file_context</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="n">line_context</span><span class="p">,</span>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>                     <span class="n">function</span><span class="o">=</span><span class="n">func_name</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="n">missing_attr</span><span class="p">,</span> <span class="n">expected</span><span class="o">=</span><span class="s2">&quot;missing&quot;</span><span class="p">,</span> <span class="n">compare_to</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>    <span class="k">elif</span> <span class="n">claim_type</span> <span class="o">==</span> <span class="s2">&quot;call_pattern&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>        <span class="n">func_name</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>        <span class="n">missing_ctx</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>        <span class="k">return</span> <span class="n">Claim</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;call_pattern&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file_context</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="n">line_context</span><span class="p">,</span>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>                     <span class="n">function</span><span class="o">=</span><span class="n">func_name</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="n">missing_ctx</span><span class="p">,</span> <span class="n">expected</span><span class="o">=</span><span class="s2">&quot;missing&quot;</span><span class="p">,</span> <span class="n">compare_to</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>    <span class="k">elif</span> <span class="n">claim_type</span> <span class="o">==</span> <span class="s2">&quot;pattern_violation&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>        <span class="n">loc_a</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>        <span class="n">loc_b</span> <span class="o">=</span> <span class="n">groups</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>        <span class="k">return</span> <span class="n">Claim</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;pattern_violation&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">loc_a</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>                     <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">expected</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compare_to</span><span class="o">=</span><span class="n">loc_b</span><span class="p">)</span>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>    <span class="k">return</span> <span class="kc">None</span>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_claims</span><span class="p">(</span><span class="n">finding</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Claim</span><span class="p">]:</span>
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract verifiable claims from a finding. Returns [] if no patterns match — caller treats as INCONCLUSIVE.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>    <span class="n">claims</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>    <span class="n">text</span> <span class="o">=</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reason&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;evidence&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>    <span class="n">file_context</span> <span class="o">=</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>    <span class="n">line_context</span> <span class="o">=</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;line&quot;</span><span class="p">)</span>
 <a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>        <span class="c1"># Find function definition</span>
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>        <span class="n">func_pattern</span> <span class="o">=</span> <span class="sa">rf</span><span class="s2">&quot;def\s+</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">claim</span><span class="o">.</span><span class="n">function</span><span class="p">)</span><span class="si">}</span><span class="s2">\s*\([^)]*\):&quot;</span>
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">func_pattern</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
-<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>        <span class="c1"># Extract function body</span>
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>        <span class="n">start</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>        <span class="n">func_body</span> <span class="o">=</span> <span class="n">extract_function_body</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
-<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>        <span class="c1"># Check for expected pattern</span>
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>        <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">func_body</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>            <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span> <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">expected</span> <span class="o">==</span> <span class="s2">&quot;missing&quot;</span> <span class="k">else</span> <span class="s2">&quot;VERIFIED&quot;</span>
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>        <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>            <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span> <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">expected</span> <span class="o">==</span> <span class="s2">&quot;missing&quot;</span> <span class="k">else</span> <span class="s2">&quot;REFUTED&quot;</span>
-<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>
-<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_call_pattern</span><span class="p">(</span><span class="n">claim</span><span class="p">:</span> <span class="n">Claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify call sites have or lack expected pattern.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>        <span class="n">file_path</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">file</span>
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>    <span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">claim_type</span> <span class="ow">in</span> <span class="n">CLAIM_PATTERNS</span><span class="p">:</span>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>            <span class="n">groups</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>            <span class="n">claim</span> <span class="o">=</span> <span class="n">build_claim</span><span class="p">(</span><span class="n">claim_type</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">file_context</span><span class="p">,</span> <span class="n">line_context</span><span class="p">)</span>
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>            <span class="k">if</span> <span class="n">claim</span><span class="p">:</span>
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>                <span class="n">claims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">claim</span><span class="p">)</span>
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>    <span class="c1"># Always add implicit claim from finding&#39;s file:line</span>
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>    <span class="k">if</span> <span class="n">line_context</span> <span class="ow">and</span> <span class="n">file_context</span><span class="p">:</span>
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>        <span class="n">evidence</span> <span class="o">=</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;evidence&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>        <span class="k">if</span> <span class="n">evidence</span><span class="p">:</span>
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>            <span class="n">claims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Claim</span><span class="p">(</span>
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>                <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;line_content&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>                <span class="n">file</span><span class="o">=</span><span class="n">file_context</span><span class="p">,</span>
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>                <span class="n">line</span><span class="o">=</span><span class="n">line_context</span><span class="p">,</span>
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>                <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a>                <span class="n">pattern</span><span class="o">=</span><span class="n">evidence</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span>
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>                <span class="n">expected</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>                <span class="n">compare_to</span><span class="o">=</span><span class="kc">None</span>
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>            <span class="p">))</span>
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>    <span class="k">return</span> <span class="n">claims</span>
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="sb">```</span>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="gu">## 4.4 Verification Functions</span>
 <a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>
-<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>        <span class="n">content</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
-<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>
-<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>        <span class="c1"># Find calls to the function</span>
-<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>        <span class="n">call_pattern</span> <span class="o">=</span> <span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">claim</span><span class="o">.</span><span class="n">function</span><span class="p">)</span><span class="si">}</span><span class="s2">\s*\(&quot;</span>
-<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>        <span class="n">matches</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">call_pattern</span><span class="p">,</span> <span class="n">content</span><span class="p">))</span>
-<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>
-<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
-<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>
-<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>        <span class="c1"># Check context around each call</span>
-<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
-<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>            <span class="n">start_pos</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">-</span> <span class="mi">500</span><span class="p">)</span>
-<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>            <span class="n">end_pos</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="o">+</span> <span class="mi">500</span><span class="p">)</span>
-<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a>            <span class="n">context</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">start_pos</span><span class="p">:</span><span class="n">end_pos</span><span class="p">]</span>
-<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>
-<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>            <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>                <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span>  <span class="c1"># Found what was claimed missing</span>
-<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>
-<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>        <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span>  <span class="c1"># Pattern truly missing</span>
-<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>
-<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>
-<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_pattern_violation</span><span class="p">(</span><span class="n">claim</span><span class="p">:</span> <span class="n">Claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify duplicate code exists at two locations.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">difflib</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceMatcher</span>
-<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>
-<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>        <span class="n">path_a</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">file</span>
-<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a>        <span class="n">path_b</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">compare_to</span>
-<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>
-<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">path_a</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">path_b</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="sb">```python</span>
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_function_body</span><span class="p">(</span><span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract function body from content starting after the def line.</span>
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="sd">    Collects lines until indentation returns to base level (or EOF).&quot;&quot;&quot;</span>
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>    <span class="n">lines</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">start</span><span class="p">:]</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">lines</span><span class="p">:</span>
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>    <span class="c1"># Determine base indent from first non-empty line</span>
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>    <span class="n">base_indent</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>    <span class="n">body_lines</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a>    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a>            <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>            <span class="k">continue</span>
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a>        <span class="n">indent</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">())</span>
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>        <span class="k">if</span> <span class="n">base_indent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>            <span class="n">base_indent</span> <span class="o">=</span> <span class="n">indent</span>
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>        <span class="k">if</span> <span class="n">indent</span> <span class="o">&lt;</span> <span class="n">base_indent</span><span class="p">:</span>
+<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>            <span class="k">break</span>
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>        <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body_lines</span><span class="p">)</span>
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_line_content</span><span class="p">(</span><span class="n">claim</span><span class="p">:</span> <span class="n">Claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify a line contains expected content.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>        <span class="n">file_path</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">file</span>
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>        <span class="n">lines</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>        <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">line</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">claim</span><span class="o">.</span><span class="n">line</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
 <a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>
-<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>        <span class="n">content_a</span> <span class="o">=</span> <span class="n">path_a</span><span class="o">.</span><span class="n">read_text</span><span class="p">()[:</span><span class="mi">1000</span><span class="p">]</span>
-<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>        <span class="n">content_b</span> <span class="o">=</span> <span class="n">path_b</span><span class="o">.</span><span class="n">read_text</span><span class="p">()[:</span><span class="mi">1000</span><span class="p">]</span>
-<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>
-<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>        <span class="c1"># Normalize and compare</span>
-<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>        <span class="n">norm_a</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">content_a</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>        <span class="n">norm_b</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">content_b</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>        <span class="n">actual_line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">claim</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># 1-indexed</span>
+<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>        <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">actual_line</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>            <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span>
+<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>        <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span>
+<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a>
 <a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a>
-<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>        <span class="n">ratio</span> <span class="o">=</span> <span class="n">SequenceMatcher</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">norm_a</span><span class="p">,</span> <span class="n">norm_b</span><span class="p">)</span><span class="o">.</span><span class="n">ratio</span><span class="p">()</span>
-<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>
-<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>        <span class="k">if</span> <span class="n">ratio</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
-<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>            <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span>
-<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>        <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span>
-<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a><span class="sb">```</span>
-<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>
-<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a><span class="gu">## 4.5 Finding Verification</span>
-<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>
-<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a><span class="sb">```python</span>
-<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_finding</span><span class="p">(</span><span class="n">finding</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a><span class="sd">    Verify a single finding&#39;s claims.</span>
-<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>
-<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a><span class="sd">    Returns: &quot;VERIFIED&quot; | &quot;REFUTED&quot; | &quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>    <span class="n">claims</span> <span class="o">=</span> <span class="n">extract_claims</span><span class="p">(</span><span class="n">finding</span><span class="p">)</span>
-<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a>    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a>
-<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a>    <span class="k">for</span> <span class="n">claim</span> <span class="ow">in</span> <span class="n">claims</span><span class="p">:</span>
-<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a>        <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;line_content&quot;</span><span class="p">:</span>
-<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a>            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verify_line_content</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">))</span>
-<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a>        <span class="k">elif</span> <span class="n">claim</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;function_behavior&quot;</span><span class="p">:</span>
-<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verify_function_behavior</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">))</span>
-<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a>        <span class="k">elif</span> <span class="n">claim</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;call_pattern&quot;</span><span class="p">:</span>
-<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verify_call_pattern</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">))</span>
-<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a>        <span class="k">elif</span> <span class="n">claim</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;pattern_violation&quot;</span><span class="p">:</span>
-<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a>            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verify_pattern_violation</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">))</span>
-<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a>
-<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a>    <span class="c1"># Aggregate: any REFUTED = REFUTED, any INCONCLUSIVE = INCONCLUSIVE</span>
-<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a>    <span class="k">if</span> <span class="s2">&quot;REFUTED&quot;</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
-<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>        <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span>
-<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>    <span class="k">elif</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
-<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
-<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>    <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>        <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span>
-<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a><span class="sb">```</span>
-<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a>
-<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="gu">## 4.6 Duplicate Detection</span>
+<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_function_behavior</span><span class="p">(</span><span class="n">claim</span><span class="p">:</span> <span class="n">Claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify function has or lacks expected behavior.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>        <span class="n">file_path</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">file</span>
+<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>        <span class="n">content</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+<a id="__codelineno-1-204" name="__codelineno-1-204" href="#__codelineno-1-204"></a>        <span class="n">func_pattern</span> <span class="o">=</span> <span class="sa">rf</span><span class="s2">&quot;def\s+</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">claim</span><span class="o">.</span><span class="n">function</span><span class="p">)</span><span class="si">}</span><span class="s2">\s*\([^)]*\):&quot;</span>
+<a id="__codelineno-1-205" name="__codelineno-1-205" href="#__codelineno-1-205"></a>        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">func_pattern</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+<a id="__codelineno-1-206" name="__codelineno-1-206" href="#__codelineno-1-206"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+<a id="__codelineno-1-207" name="__codelineno-1-207" href="#__codelineno-1-207"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-208" name="__codelineno-1-208" href="#__codelineno-1-208"></a>        <span class="n">func_body</span> <span class="o">=</span> <span class="n">extract_function_body</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">())</span>
+<a id="__codelineno-1-209" name="__codelineno-1-209" href="#__codelineno-1-209"></a>        <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">func_body</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+<a id="__codelineno-1-210" name="__codelineno-1-210" href="#__codelineno-1-210"></a>            <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span> <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">expected</span> <span class="o">==</span> <span class="s2">&quot;missing&quot;</span> <span class="k">else</span> <span class="s2">&quot;VERIFIED&quot;</span>
+<a id="__codelineno-1-211" name="__codelineno-1-211" href="#__codelineno-1-211"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-1-212" name="__codelineno-1-212" href="#__codelineno-1-212"></a>            <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span> <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">expected</span> <span class="o">==</span> <span class="s2">&quot;missing&quot;</span> <span class="k">else</span> <span class="s2">&quot;REFUTED&quot;</span>
+<a id="__codelineno-1-213" name="__codelineno-1-213" href="#__codelineno-1-213"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-1-214" name="__codelineno-1-214" href="#__codelineno-1-214"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-215" name="__codelineno-1-215" href="#__codelineno-1-215"></a>
+<a id="__codelineno-1-216" name="__codelineno-1-216" href="#__codelineno-1-216"></a>
+<a id="__codelineno-1-217" name="__codelineno-1-217" href="#__codelineno-1-217"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_call_pattern</span><span class="p">(</span><span class="n">claim</span><span class="p">:</span> <span class="n">Claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-218" name="__codelineno-1-218" href="#__codelineno-1-218"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify call sites have or lack expected pattern.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-219" name="__codelineno-1-219" href="#__codelineno-1-219"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-1-220" name="__codelineno-1-220" href="#__codelineno-1-220"></a>        <span class="n">file_path</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">file</span>
+<a id="__codelineno-1-221" name="__codelineno-1-221" href="#__codelineno-1-221"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-1-222" name="__codelineno-1-222" href="#__codelineno-1-222"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-223" name="__codelineno-1-223" href="#__codelineno-1-223"></a>        <span class="n">content</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+<a id="__codelineno-1-224" name="__codelineno-1-224" href="#__codelineno-1-224"></a>        <span class="n">call_pattern</span> <span class="o">=</span> <span class="sa">rf</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">claim</span><span class="o">.</span><span class="n">function</span><span class="p">)</span><span class="si">}</span><span class="s2">\s*\(&quot;</span>
+<a id="__codelineno-1-225" name="__codelineno-1-225" href="#__codelineno-1-225"></a>        <span class="n">matches</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">call_pattern</span><span class="p">,</span> <span class="n">content</span><span class="p">))</span>
+<a id="__codelineno-1-226" name="__codelineno-1-226" href="#__codelineno-1-226"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
+<a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a>        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+<a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a>            <span class="n">start_pos</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">-</span> <span class="mi">500</span><span class="p">)</span>
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>            <span class="n">end_pos</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="o">+</span> <span class="mi">500</span><span class="p">)</span>
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>            <span class="n">context</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">start_pos</span><span class="p">:</span><span class="n">end_pos</span><span class="p">]</span>
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a>            <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>                <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span>  <span class="c1"># Found what was claimed missing</span>
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a>        <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span>  <span class="c1"># Pattern truly missing</span>
+<a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a>
 <a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a>
-<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a>Before verification, check for duplicate findings:
-<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a>
-<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="sb">```python</span>
-<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a><span class="k">def</span><span class="w"> </span><span class="nf">detect_duplicates</span><span class="p">(</span><span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Find duplicate or near-duplicate findings.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a>    <span class="n">duplicates</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a>
-<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">findings</span><span class="p">):</span>
-<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>        <span class="k">for</span> <span class="n">f2</span> <span class="ow">in</span> <span class="n">findings</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span>
-<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>            <span class="k">if</span> <span class="n">is_duplicate</span><span class="p">(</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">):</span>
-<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>                <span class="n">duplicates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">f1</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">f2</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]))</span>
-<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a>
-<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a>    <span class="k">return</span> <span class="n">duplicates</span>
-<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a>
-<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_duplicate</span><span class="p">(</span><span class="n">f1</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">f2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two findings are duplicates.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a>    <span class="k">return</span> <span class="p">(</span>
-<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a>        <span class="n">f1</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">f2</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="ow">and</span>
-<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a>        <span class="n">f1</span><span class="p">[</span><span class="s2">&quot;line&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">f2</span><span class="p">[</span><span class="s2">&quot;line&quot;</span><span class="p">]</span> <span class="ow">and</span>
-<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a>        <span class="n">f1</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">f2</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span>
-<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a>    <span class="p">)</span>
-<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a><span class="sb">```</span>
-<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a>
-<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="gu">## 4.7 Line Number Validation</span>
-<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a>
-<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a>Ensure line numbers are accurate:
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_pattern_violation</span><span class="p">(</span><span class="n">claim</span><span class="p">:</span> <span class="n">Claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify duplicate code exists at two locations. Compares first 1000 chars only.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">difflib</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceMatcher</span>
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a>        <span class="n">path_a</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">file</span>
+<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a>        <span class="n">path_b</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">claim</span><span class="o">.</span><span class="n">compare_to</span>
+<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">path_a</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">path_b</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a>            <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>        <span class="n">content_a</span> <span class="o">=</span> <span class="n">path_a</span><span class="o">.</span><span class="n">read_text</span><span class="p">()[:</span><span class="mi">1000</span><span class="p">]</span>
+<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>        <span class="n">content_b</span> <span class="o">=</span> <span class="n">path_b</span><span class="o">.</span><span class="n">read_text</span><span class="p">()[:</span><span class="mi">1000</span><span class="p">]</span>
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>        <span class="n">norm_a</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">content_a</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a>        <span class="n">norm_b</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">content_b</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a>        <span class="n">ratio</span> <span class="o">=</span> <span class="n">SequenceMatcher</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">norm_a</span><span class="p">,</span> <span class="n">norm_b</span><span class="p">)</span><span class="o">.</span><span class="n">ratio</span><span class="p">()</span>
+<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a>        <span class="k">if</span> <span class="n">ratio</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>            <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span>
+<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a>        <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span>
+<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a>    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="sb">```</span>
+<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a>
+<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="gu">## 4.5 Finding Verification</span>
+<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a>
+<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a><span class="sb">```python</span>
+<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_finding</span><span class="p">(</span><span class="n">finding</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="sd">    Verify a single finding&#39;s claims.</span>
 <a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a>
-<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a><span class="sb">```python</span>
-<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate_line_numbers</span><span class="p">(</span><span class="n">finding</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify line numbers exist and contain expected content.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a>    <span class="n">file_path</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">finding</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span>
-<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a>        <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a>
-<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a>    <span class="n">lines</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a>
-<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a>    <span class="k">if</span> <span class="n">finding</span><span class="p">[</span><span class="s2">&quot;line&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
-<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a>        <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a>
-<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a>    <span class="k">if</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;end_line&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">finding</span><span class="p">[</span><span class="s2">&quot;end_line&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
-<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a>        <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a>
-<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a>    <span class="k">return</span> <span class="kc">True</span>
-<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a><span class="sb">```</span>
-<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a>
-<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a><span class="gu">## 4.8 Signal-to-Noise Calculation</span>
-<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a>
-<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a>Compute ratio of valuable findings to noise:
-<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a>
-<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a><span class="sb">```python</span>
-<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a><span class="k">def</span><span class="w"> </span><span class="nf">calculate_snr</span><span class="p">(</span><span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a><span class="sd">    Calculate signal-to-noise ratio.</span>
-<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a>
-<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="sd">    Signal = CRITICAL + HIGH + MEDIUM (verified)</span>
-<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="sd">    Noise = LOW + NIT + INCONCLUSIVE</span>
-<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a>
-<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a><span class="sd">    Returns ratio 0.0 to 1.0</span>
-<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a>    <span class="n">signal</span> <span class="o">=</span> <span class="mi">0</span>
-<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a>    <span class="n">noise</span> <span class="o">=</span> <span class="mi">0</span>
-<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a>
-<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a>    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">findings</span><span class="p">:</span>
-<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a>        <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;verification_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;REFUTED&quot;</span><span class="p">:</span>
-<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a>            <span class="k">continue</span>  <span class="c1"># Don&#39;t count refuted</span>
-<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a>
-<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a>        <span class="n">severity</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;severity&quot;</span><span class="p">]</span>
-<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a>        <span class="n">status</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;verification_status&quot;</span><span class="p">]</span>
-<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a>
-<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a>        <span class="k">if</span> <span class="n">severity</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span> <span class="s2">&quot;HIGH&quot;</span><span class="p">,</span> <span class="s2">&quot;MEDIUM&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;VERIFIED&quot;</span><span class="p">:</span>
-<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a>            <span class="n">signal</span> <span class="o">+=</span> <span class="mi">1</span>
-<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a>        <span class="k">elif</span> <span class="n">severity</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;LOW&quot;</span><span class="p">,</span> <span class="s2">&quot;NIT&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span><span class="p">:</span>
-<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a>            <span class="n">noise</span> <span class="o">+=</span> <span class="mi">1</span>
+<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a><span class="sd">    Returns: &quot;VERIFIED&quot; | &quot;REFUTED&quot; | &quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a>
+<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a><span class="sd">    Returns: &quot;VERIFIED&quot; | &quot;REFUTED&quot; | &quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a>    <span class="n">claims</span> <span class="o">=</span> <span class="n">extract_claims</span><span class="p">(</span><span class="n">finding</span><span class="p">)</span>
+<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a>    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a>    <span class="k">for</span> <span class="n">claim</span> <span class="ow">in</span> <span class="n">claims</span><span class="p">:</span>
+<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a>        <span class="k">if</span> <span class="n">claim</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;line_content&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a>            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verify_line_content</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">))</span>
+<a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a>        <span class="k">elif</span> <span class="n">claim</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;function_behavior&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a>            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verify_function_behavior</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">))</span>
+<a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a>        <span class="k">elif</span> <span class="n">claim</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;call_pattern&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a>            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verify_call_pattern</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">))</span>
+<a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a>        <span class="k">elif</span> <span class="n">claim</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;pattern_violation&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a>            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verify_pattern_violation</span><span class="p">(</span><span class="n">claim</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">))</span>
+<a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a>
+<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a>    <span class="c1"># Aggregate: any REFUTED = REFUTED; any INCONCLUSIVE (no REFUTED) = INCONCLUSIVE</span>
+<a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a>    <span class="k">if</span> <span class="s2">&quot;REFUTED&quot;</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a>        <span class="k">return</span> <span class="s2">&quot;REFUTED&quot;</span>
+<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a>    <span class="k">elif</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a>        <span class="k">return</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span>
+<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a>    <span class="k">return</span> <span class="s2">&quot;VERIFIED&quot;</span>
+<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a><span class="sb">```</span>
+<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a>
+<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="gu">## 4.6 Duplicate Detection</span>
+<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a>
+<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a><span class="sb">```python</span>
+<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="k">def</span><span class="w"> </span><span class="nf">detect_duplicates</span><span class="p">(</span><span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Find duplicate or near-duplicate findings.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a>    <span class="n">duplicates</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">findings</span><span class="p">):</span>
+<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a>        <span class="k">for</span> <span class="n">f2</span> <span class="ow">in</span> <span class="n">findings</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span>
+<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a>            <span class="k">if</span> <span class="n">is_duplicate</span><span class="p">(</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">):</span>
+<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a>                <span class="n">duplicates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">f1</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="n">f2</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]))</span>
+<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a>    <span class="k">return</span> <span class="n">duplicates</span>
+<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a>
+<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_duplicate</span><span class="p">(</span><span class="n">f1</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">f2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if two findings are duplicates.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a>    <span class="k">return</span> <span class="p">(</span>
+<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a>        <span class="n">f1</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">f2</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span> <span class="ow">and</span>
+<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a>        <span class="n">f1</span><span class="p">[</span><span class="s2">&quot;line&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">f2</span><span class="p">[</span><span class="s2">&quot;line&quot;</span><span class="p">]</span> <span class="ow">and</span>
+<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a>        <span class="n">f1</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">f2</span><span class="p">[</span><span class="s2">&quot;category&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a>    <span class="p">)</span>
+<a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a><span class="sb">```</span>
+<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a>
+<a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a><span class="gu">## 4.7 Line Number Validation</span>
 <a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a>
-<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a>    <span class="n">total</span> <span class="o">=</span> <span class="n">signal</span> <span class="o">+</span> <span class="n">noise</span>
-<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a>    <span class="k">if</span> <span class="n">total</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a>        <span class="k">return</span> <span class="mf">1.0</span>
-<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a>
-<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a>    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">signal</span> <span class="o">/</span> <span class="n">total</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a><span class="sb">```</span>
-<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a>
-<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a><span class="gu">## 4.9 REFUTED Finding Handling</span>
-<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a>
-<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a><span class="k">-</span><span class="w"> </span>REFUTED findings are <span class="gs">**removed**</span> from final output
-<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a><span class="k">-</span><span class="w"> </span>They are logged in verification-audit.md for transparency
-<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a><span class="k">-</span><span class="w"> </span>User is informed: &quot;N findings removed after verification&quot;
-<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a>
-<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a><span class="gu">## 4.10 INCONCLUSIVE Finding Handling</span>
-<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a>
-<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a><span class="k">-</span><span class="w"> </span>INCONCLUSIVE findings are <span class="gs">**kept**</span> with a flag
-<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a><span class="k">-</span><span class="w"> </span>Report marks them: <span class="sb">`[NEEDS VERIFICATION]`</span>
-<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a><span class="k">-</span><span class="w"> </span>User should manually verify these
-<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a>
-<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a><span class="gu">## 4.11 Output: verification-audit.md</span>
+<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="sb">```python</span>
+<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate_line_numbers</span><span class="p">(</span><span class="n">finding</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">repo_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify line numbers exist and contain expected content.&quot;&quot;&quot;</span>
+<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a>    <span class="n">file_path</span> <span class="o">=</span> <span class="n">repo_root</span> <span class="o">/</span> <span class="n">finding</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a>    <span class="n">lines</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a>    <span class="k">if</span> <span class="n">finding</span><span class="p">[</span><span class="s2">&quot;line&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a>    <span class="k">if</span> <span class="n">finding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;end_line&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">finding</span><span class="p">[</span><span class="s2">&quot;end_line&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a>    <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a><span class="sb">```</span>
+<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a>
+<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a><span class="gu">## 4.8 Signal-to-Noise Calculation</span>
+<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a>
+<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a><span class="sb">```python</span>
+<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a><span class="k">def</span><span class="w"> </span><span class="nf">calculate_snr</span><span class="p">(</span><span class="n">findings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a><span class="sd">    Signal/noise ratio: 0.0 (all noise) to 1.0 (all signal).</span>
 <a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a>
-<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a><span class="sb">```markdown</span>
-<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a><span class="gh"># Verification Audit</span>
-<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a>
-<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a><span class="gs">**Findings Checked:**</span> 10
-<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a><span class="gs">**Verified:**</span> 6
-<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a><span class="gs">**Refuted:**</span> 2
-<a id="__codelineno-1-340" name="__codelineno-1-340" href="#__codelineno-1-340"></a><span class="gs">**Inconclusive:**</span> 2
-<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a><span class="gs">**Signal/Noise:**</span> 0.75
-<a id="__codelineno-1-342" name="__codelineno-1-342" href="#__codelineno-1-342"></a>
-<a id="__codelineno-1-343" name="__codelineno-1-343" href="#__codelineno-1-343"></a><span class="gu">## Refuted Findings (Removed)</span>
-<a id="__codelineno-1-344" name="__codelineno-1-344" href="#__codelineno-1-344"></a>
-<a id="__codelineno-1-345" name="__codelineno-1-345" href="#__codelineno-1-345"></a><span class="gu">### finding-003: &quot;Unused import os&quot;</span>
-<a id="__codelineno-1-346" name="__codelineno-1-346" href="#__codelineno-1-346"></a><span class="gs">**Reason:**</span> Line 5 does not contain <span class="sb">`import os`</span>
-<a id="__codelineno-1-347" name="__codelineno-1-347" href="#__codelineno-1-347"></a><span class="gs">**Actual:**</span> Line 5 is <span class="sb">`import sys`</span>
-<a id="__codelineno-1-348" name="__codelineno-1-348" href="#__codelineno-1-348"></a>
-<a id="__codelineno-1-349" name="__codelineno-1-349" href="#__codelineno-1-349"></a><span class="gu">### finding-007: &quot;Missing null check&quot;</span>
-<a id="__codelineno-1-350" name="__codelineno-1-350" href="#__codelineno-1-350"></a><span class="gs">**Reason:**</span> Null check found at line 88
-<a id="__codelineno-1-351" name="__codelineno-1-351" href="#__codelineno-1-351"></a><span class="gs">**Actual:**</span> <span class="sb">`if user is None: return`</span>
-<a id="__codelineno-1-352" name="__codelineno-1-352" href="#__codelineno-1-352"></a>
-<a id="__codelineno-1-353" name="__codelineno-1-353" href="#__codelineno-1-353"></a><span class="gu">## Inconclusive Findings (Flagged)</span>
-<a id="__codelineno-1-354" name="__codelineno-1-354" href="#__codelineno-1-354"></a>
-<a id="__codelineno-1-355" name="__codelineno-1-355" href="#__codelineno-1-355"></a><span class="gu">### finding-005: &quot;Potential race condition&quot;</span>
-<a id="__codelineno-1-356" name="__codelineno-1-356" href="#__codelineno-1-356"></a><span class="gs">**Reason:**</span> Could not trace all code paths
-<a id="__codelineno-1-357" name="__codelineno-1-357" href="#__codelineno-1-357"></a><span class="gs">**Action:**</span> Human verification required
+<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a><span class="sd">    Signal = CRITICAL + HIGH + MEDIUM findings with status VERIFIED</span>
+<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a><span class="sd">    Noise  = LOW + NIT findings, or any INCONCLUSIVE finding</span>
+<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a><span class="sd">    REFUTED findings excluded entirely.</span>
+<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a>
+<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a><span class="sd">    Returns 1.0 if no findings remain after filtering REFUTED.</span>
+<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-1-340" name="__codelineno-1-340" href="#__codelineno-1-340"></a>    <span class="n">signal</span> <span class="o">=</span> <span class="mi">0</span>
+<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a>    <span class="n">noise</span> <span class="o">=</span> <span class="mi">0</span>
+<a id="__codelineno-1-342" name="__codelineno-1-342" href="#__codelineno-1-342"></a>    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">findings</span><span class="p">:</span>
+<a id="__codelineno-1-343" name="__codelineno-1-343" href="#__codelineno-1-343"></a>        <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;verification_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;REFUTED&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-344" name="__codelineno-1-344" href="#__codelineno-1-344"></a>            <span class="k">continue</span>
+<a id="__codelineno-1-345" name="__codelineno-1-345" href="#__codelineno-1-345"></a>        <span class="n">severity</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;severity&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-346" name="__codelineno-1-346" href="#__codelineno-1-346"></a>        <span class="n">status</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;verification_status&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-347" name="__codelineno-1-347" href="#__codelineno-1-347"></a>        <span class="k">if</span> <span class="n">severity</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span> <span class="s2">&quot;HIGH&quot;</span><span class="p">,</span> <span class="s2">&quot;MEDIUM&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;VERIFIED&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-348" name="__codelineno-1-348" href="#__codelineno-1-348"></a>            <span class="n">signal</span> <span class="o">+=</span> <span class="mi">1</span>
+<a id="__codelineno-1-349" name="__codelineno-1-349" href="#__codelineno-1-349"></a>        <span class="k">elif</span> <span class="n">severity</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;LOW&quot;</span><span class="p">,</span> <span class="s2">&quot;NIT&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;INCONCLUSIVE&quot;</span><span class="p">:</span>
+<a id="__codelineno-1-350" name="__codelineno-1-350" href="#__codelineno-1-350"></a>            <span class="n">noise</span> <span class="o">+=</span> <span class="mi">1</span>
+<a id="__codelineno-1-351" name="__codelineno-1-351" href="#__codelineno-1-351"></a>    <span class="n">total</span> <span class="o">=</span> <span class="n">signal</span> <span class="o">+</span> <span class="n">noise</span>
+<a id="__codelineno-1-352" name="__codelineno-1-352" href="#__codelineno-1-352"></a>    <span class="k">if</span> <span class="n">total</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-1-353" name="__codelineno-1-353" href="#__codelineno-1-353"></a>        <span class="k">return</span> <span class="mf">1.0</span>
+<a id="__codelineno-1-354" name="__codelineno-1-354" href="#__codelineno-1-354"></a>    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">signal</span> <span class="o">/</span> <span class="n">total</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<a id="__codelineno-1-355" name="__codelineno-1-355" href="#__codelineno-1-355"></a><span class="sb">```</span>
+<a id="__codelineno-1-356" name="__codelineno-1-356" href="#__codelineno-1-356"></a>
+<a id="__codelineno-1-357" name="__codelineno-1-357" href="#__codelineno-1-357"></a><span class="gu">## 4.9 REFUTED Finding Handling</span>
 <a id="__codelineno-1-358" name="__codelineno-1-358" href="#__codelineno-1-358"></a>
-<a id="__codelineno-1-359" name="__codelineno-1-359" href="#__codelineno-1-359"></a><span class="gu">## Verification Log</span>
-<a id="__codelineno-1-360" name="__codelineno-1-360" href="#__codelineno-1-360"></a>
-<a id="__codelineno-1-361" name="__codelineno-1-361" href="#__codelineno-1-361"></a>| Finding | Status | Claims | Result |
-<a id="__codelineno-1-362" name="__codelineno-1-362" href="#__codelineno-1-362"></a>|---------|--------|--------|--------|
-<a id="__codelineno-1-363" name="__codelineno-1-363" href="#__codelineno-1-363"></a>| finding-001 | VERIFIED | 2 | All claims confirmed |
-<a id="__codelineno-1-364" name="__codelineno-1-364" href="#__codelineno-1-364"></a>| finding-002 | VERIFIED | 1 | Claim confirmed |
-<a id="__codelineno-1-365" name="__codelineno-1-365" href="#__codelineno-1-365"></a>| finding-003 | REFUTED | 1 | Line content mismatch |
-<a id="__codelineno-1-366" name="__codelineno-1-366" href="#__codelineno-1-366"></a>...
-<a id="__codelineno-1-367" name="__codelineno-1-367" href="#__codelineno-1-367"></a><span class="sb">```</span>
+<a id="__codelineno-1-359" name="__codelineno-1-359" href="#__codelineno-1-359"></a><span class="k">-</span><span class="w"> </span>REFUTED findings are <span class="gs">**removed**</span> from final output
+<a id="__codelineno-1-360" name="__codelineno-1-360" href="#__codelineno-1-360"></a><span class="k">-</span><span class="w"> </span>Logged in verification-audit.md for transparency
+<a id="__codelineno-1-361" name="__codelineno-1-361" href="#__codelineno-1-361"></a><span class="k">-</span><span class="w"> </span>User is informed: &quot;N findings removed after verification&quot;
+<a id="__codelineno-1-362" name="__codelineno-1-362" href="#__codelineno-1-362"></a>
+<a id="__codelineno-1-363" name="__codelineno-1-363" href="#__codelineno-1-363"></a><span class="gu">## 4.10 INCONCLUSIVE Finding Handling</span>
+<a id="__codelineno-1-364" name="__codelineno-1-364" href="#__codelineno-1-364"></a>
+<a id="__codelineno-1-365" name="__codelineno-1-365" href="#__codelineno-1-365"></a><span class="k">-</span><span class="w"> </span>INCONCLUSIVE findings are <span class="gs">**kept**</span> with a flag
+<a id="__codelineno-1-366" name="__codelineno-1-366" href="#__codelineno-1-366"></a><span class="k">-</span><span class="w"> </span>Report marks them: <span class="sb">`[NEEDS VERIFICATION]`</span>
+<a id="__codelineno-1-367" name="__codelineno-1-367" href="#__codelineno-1-367"></a><span class="k">-</span><span class="w"> </span>User must manually verify these before acting on them
 <a id="__codelineno-1-368" name="__codelineno-1-368" href="#__codelineno-1-368"></a>
-<a id="__codelineno-1-369" name="__codelineno-1-369" href="#__codelineno-1-369"></a><span class="gu">## Phase 4 Self-Check</span>
+<a id="__codelineno-1-369" name="__codelineno-1-369" href="#__codelineno-1-369"></a><span class="gu">## 4.11 Output: verification-audit.md</span>
 <a id="__codelineno-1-370" name="__codelineno-1-370" href="#__codelineno-1-370"></a>
-<a id="__codelineno-1-371" name="__codelineno-1-371" href="#__codelineno-1-371"></a>Before proceeding to Phase 5:
-<a id="__codelineno-1-372" name="__codelineno-1-372" href="#__codelineno-1-372"></a>
-<a id="__codelineno-1-373" name="__codelineno-1-373" href="#__codelineno-1-373"></a><span class="k">- [ ]</span> All findings verified against codebase
-<a id="__codelineno-1-374" name="__codelineno-1-374" href="#__codelineno-1-374"></a><span class="k">- [ ]</span> REFUTED findings removed and logged
-<a id="__codelineno-1-375" name="__codelineno-1-375" href="#__codelineno-1-375"></a><span class="k">- [ ]</span> INCONCLUSIVE findings flagged
-<a id="__codelineno-1-376" name="__codelineno-1-376" href="#__codelineno-1-376"></a><span class="k">- [ ]</span> Duplicates detected and merged
-<a id="__codelineno-1-377" name="__codelineno-1-377" href="#__codelineno-1-377"></a><span class="k">- [ ]</span> Line numbers validated
-<a id="__codelineno-1-378" name="__codelineno-1-378" href="#__codelineno-1-378"></a><span class="k">- [ ]</span> Signal-to-noise ratio calculated
-<a id="__codelineno-1-379" name="__codelineno-1-379" href="#__codelineno-1-379"></a><span class="k">- [ ]</span> verification-audit.md written
-<a id="__codelineno-1-380" name="__codelineno-1-380" href="#__codelineno-1-380"></a><span class="k">- [ ]</span> findings.json updated with verification_status
+<a id="__codelineno-1-371" name="__codelineno-1-371" href="#__codelineno-1-371"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-372" name="__codelineno-1-372" href="#__codelineno-1-372"></a><span class="gh"># Verification Audit</span>
+<a id="__codelineno-1-373" name="__codelineno-1-373" href="#__codelineno-1-373"></a>
+<a id="__codelineno-1-374" name="__codelineno-1-374" href="#__codelineno-1-374"></a><span class="gs">**Findings Checked:**</span> 10
+<a id="__codelineno-1-375" name="__codelineno-1-375" href="#__codelineno-1-375"></a><span class="gs">**Verified:**</span> 6
+<a id="__codelineno-1-376" name="__codelineno-1-376" href="#__codelineno-1-376"></a><span class="gs">**Refuted:**</span> 2
+<a id="__codelineno-1-377" name="__codelineno-1-377" href="#__codelineno-1-377"></a><span class="gs">**Inconclusive:**</span> 2
+<a id="__codelineno-1-378" name="__codelineno-1-378" href="#__codelineno-1-378"></a><span class="gs">**Signal/Noise:**</span> 0.75
+<a id="__codelineno-1-379" name="__codelineno-1-379" href="#__codelineno-1-379"></a>
+<a id="__codelineno-1-380" name="__codelineno-1-380" href="#__codelineno-1-380"></a><span class="gu">## Refuted Findings (Removed)</span>
 <a id="__codelineno-1-381" name="__codelineno-1-381" href="#__codelineno-1-381"></a>
-<a id="__codelineno-1-382" name="__codelineno-1-382" href="#__codelineno-1-382"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-383" name="__codelineno-1-383" href="#__codelineno-1-383"></a>Every finding in the final report must have verification_status set. Unverified findings indicate incomplete Phase 4.
-<a id="__codelineno-1-384" name="__codelineno-1-384" href="#__codelineno-1-384"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-382" name="__codelineno-1-382" href="#__codelineno-1-382"></a><span class="gu">### finding-003: &quot;Unused import os&quot;</span>
+<a id="__codelineno-1-383" name="__codelineno-1-383" href="#__codelineno-1-383"></a><span class="gs">**Reason:**</span> Line 5 does not contain <span class="sb">`import os`</span>
+<a id="__codelineno-1-384" name="__codelineno-1-384" href="#__codelineno-1-384"></a><span class="gs">**Actual:**</span> Line 5 is <span class="sb">`import sys`</span>
+<a id="__codelineno-1-385" name="__codelineno-1-385" href="#__codelineno-1-385"></a>
+<a id="__codelineno-1-386" name="__codelineno-1-386" href="#__codelineno-1-386"></a><span class="gu">### finding-007: &quot;Missing null check&quot;</span>
+<a id="__codelineno-1-387" name="__codelineno-1-387" href="#__codelineno-1-387"></a><span class="gs">**Reason:**</span> Null check found at line 88
+<a id="__codelineno-1-388" name="__codelineno-1-388" href="#__codelineno-1-388"></a><span class="gs">**Actual:**</span> <span class="sb">`if user is None: return`</span>
+<a id="__codelineno-1-389" name="__codelineno-1-389" href="#__codelineno-1-389"></a>
+<a id="__codelineno-1-390" name="__codelineno-1-390" href="#__codelineno-1-390"></a><span class="gu">## Inconclusive Findings (Flagged)</span>
+<a id="__codelineno-1-391" name="__codelineno-1-391" href="#__codelineno-1-391"></a>
+<a id="__codelineno-1-392" name="__codelineno-1-392" href="#__codelineno-1-392"></a><span class="gu">### finding-005: &quot;Potential race condition&quot;</span>
+<a id="__codelineno-1-393" name="__codelineno-1-393" href="#__codelineno-1-393"></a><span class="gs">**Reason:**</span> Could not trace all code paths
+<a id="__codelineno-1-394" name="__codelineno-1-394" href="#__codelineno-1-394"></a><span class="gs">**Action:**</span> Human verification required
+<a id="__codelineno-1-395" name="__codelineno-1-395" href="#__codelineno-1-395"></a>
+<a id="__codelineno-1-396" name="__codelineno-1-396" href="#__codelineno-1-396"></a><span class="gu">## Verification Log</span>
+<a id="__codelineno-1-397" name="__codelineno-1-397" href="#__codelineno-1-397"></a>
+<a id="__codelineno-1-398" name="__codelineno-1-398" href="#__codelineno-1-398"></a>| Finding | Status | Claims | Result |
+<a id="__codelineno-1-399" name="__codelineno-1-399" href="#__codelineno-1-399"></a>|---------|--------|--------|--------|
+<a id="__codelineno-1-400" name="__codelineno-1-400" href="#__codelineno-1-400"></a>| finding-001 | VERIFIED | 2 | All claims confirmed |
+<a id="__codelineno-1-401" name="__codelineno-1-401" href="#__codelineno-1-401"></a>| finding-002 | VERIFIED | 1 | Claim confirmed |
+<a id="__codelineno-1-402" name="__codelineno-1-402" href="#__codelineno-1-402"></a>| finding-003 | REFUTED | 1 | Line content mismatch |
+<a id="__codelineno-1-403" name="__codelineno-1-403" href="#__codelineno-1-403"></a>...
+<a id="__codelineno-1-404" name="__codelineno-1-404" href="#__codelineno-1-404"></a><span class="sb">```</span>
+<a id="__codelineno-1-405" name="__codelineno-1-405" href="#__codelineno-1-405"></a>
+<a id="__codelineno-1-406" name="__codelineno-1-406" href="#__codelineno-1-406"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-407" name="__codelineno-1-407" href="#__codelineno-1-407"></a>Every finding in the final report must have <span class="sb">`verification_status`</span> set. An unset status means Phase 4 is incomplete — do not proceed to Phase 5.
+<a id="__codelineno-1-408" name="__codelineno-1-408" href="#__codelineno-1-408"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-1-409" name="__codelineno-1-409" href="#__codelineno-1-409"></a>
+<a id="__codelineno-1-410" name="__codelineno-1-410" href="#__codelineno-1-410"></a><span class="gu">## Phase 4 Self-Check</span>
+<a id="__codelineno-1-411" name="__codelineno-1-411" href="#__codelineno-1-411"></a>
+<a id="__codelineno-1-412" name="__codelineno-1-412" href="#__codelineno-1-412"></a>Before proceeding to Phase 5:
+<a id="__codelineno-1-413" name="__codelineno-1-413" href="#__codelineno-1-413"></a>
+<a id="__codelineno-1-414" name="__codelineno-1-414" href="#__codelineno-1-414"></a><span class="k">- [ ]</span> All findings verified against codebase
+<a id="__codelineno-1-415" name="__codelineno-1-415" href="#__codelineno-1-415"></a><span class="k">- [ ]</span> REFUTED findings removed and logged in verification-audit.md
+<a id="__codelineno-1-416" name="__codelineno-1-416" href="#__codelineno-1-416"></a><span class="k">- [ ]</span> INCONCLUSIVE findings flagged with <span class="sb">`[NEEDS VERIFICATION]`</span>
+<a id="__codelineno-1-417" name="__codelineno-1-417" href="#__codelineno-1-417"></a><span class="k">- [ ]</span> Duplicates detected and merged
+<a id="__codelineno-1-418" name="__codelineno-1-418" href="#__codelineno-1-418"></a><span class="k">- [ ]</span> Line numbers validated
+<a id="__codelineno-1-419" name="__codelineno-1-419" href="#__codelineno-1-419"></a><span class="k">- [ ]</span> Signal-to-noise ratio calculated
+<a id="__codelineno-1-420" name="__codelineno-1-420" href="#__codelineno-1-420"></a><span class="k">- [ ]</span> verification-audit.md written
+<a id="__codelineno-1-421" name="__codelineno-1-421" href="#__codelineno-1-421"></a><span class="k">- [ ]</span> findings.json updated with <span class="sb">`verification_status`</span>
+<a id="__codelineno-1-422" name="__codelineno-1-422" href="#__codelineno-1-422"></a>
+<a id="__codelineno-1-423" name="__codelineno-1-423" href="#__codelineno-1-423"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-424" name="__codelineno-1-424" href="#__codelineno-1-424"></a><span class="k">-</span><span class="w"> </span>Flagging REFUTED findings instead of removing them
+<a id="__codelineno-1-425" name="__codelineno-1-425" href="#__codelineno-1-425"></a><span class="k">-</span><span class="w"> </span>Leaving <span class="sb">`verification_status`</span> unset on any finding
+<a id="__codelineno-1-426" name="__codelineno-1-426" href="#__codelineno-1-426"></a><span class="k">-</span><span class="w"> </span>Merging INCONCLUSIVE findings without marking them
+<a id="__codelineno-1-427" name="__codelineno-1-427" href="#__codelineno-1-427"></a><span class="k">-</span><span class="w"> </span>Treating an empty-claims finding as VERIFIED
+<a id="__codelineno-1-428" name="__codelineno-1-428" href="#__codelineno-1-428"></a><span class="k">-</span><span class="w"> </span>Skipping line number validation
+<a id="__codelineno-1-429" name="__codelineno-1-429" href="#__codelineno-1-429"></a><span class="k">-</span><span class="w"> </span>Skipping duplicate detection before verification
+<a id="__codelineno-1-430" name="__codelineno-1-430" href="#__codelineno-1-430"></a><span class="k">-</span><span class="w"> </span>Proceeding to Phase 5 with any Self-Check item unchecked
+<a id="__codelineno-1-431" name="__codelineno-1-431" href="#__codelineno-1-431"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-432" name="__codelineno-1-432" href="#__codelineno-1-432"></a>
+<a id="__codelineno-1-433" name="__codelineno-1-433" href="#__codelineno-1-433"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-434" name="__codelineno-1-434" href="#__codelineno-1-434"></a>You are a Verification Engineer. A false positive in the final report is your failure. A false negative that hides a real bug is also your failure. Remove what is wrong. Flag what is uncertain. Let nothing through that you cannot prove.
+<a id="__codelineno-1-435" name="__codelineno-1-435" href="#__codelineno-1-435"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

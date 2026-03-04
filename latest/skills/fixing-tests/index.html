@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1343,6 +1343,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2906,6 +2934,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7279,11 +7335,11 @@
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">1.</span> <span class="gs">**Tests catch bugs, not checkmarks.**</span> Every fix must detect real failures, not just pass.
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">2.</span> <span class="gs">**Production bugs are not test issues.**</span> Flag and escalate; never silently &quot;fix&quot; broken behavior.
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">3.</span> <span class="gs">**Read before fixing.**</span> Never guess at code structure or blindly apply suggestions.
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">1.</span> <span class="gs">**Tests catch bugs, not checkmarks.**</span> Every fix must detect real failures, not just achieve green status.
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">2.</span> <span class="gs">**Production bugs are not test issues.**</span> Flag and escalate; never silently fix broken behavior.
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">3.</span> <span class="gs">**Read before fixing.**</span> Read the test file AND the production file under test. Never guess.
 <a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">4.</span> <span class="gs">**Verify proves value.**</span> Unverified fixes are unfinished fixes.
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">5.</span> <span class="gs">**Scope discipline.**</span> Fix tests, not features. No over-engineering, no under-testing.
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">5.</span> <span class="gs">**Scope discipline.**</span> Fix tests, not features.
 <a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="gu">## Inputs</span>
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
@@ -7334,7 +7390,7 @@
 <a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
 <a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="gu">## Phase 0: Input Processing</span>
 <a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>Dispatch subagent with <span class="sb">`/fix-tests-parse`</span> command. Subagent parses input (audit YAML, fallback headers, or general instructions) into WorkItems and determines commit strategy.
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>Dispatch subagent (Task tool) with <span class="sb">`/fix-tests-parse`</span> command. Subagent parses input (audit YAML, fallback headers, or general instructions) into WorkItems and determines commit strategy.
 <a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
 <a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gu">## Phase 1: Discovery (run_and_fix only)</span>
 <a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
@@ -7344,11 +7400,11 @@
 <a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>pytest<span class="w"> </span>--tb<span class="o">=</span>short<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span><span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>cargo<span class="w"> </span><span class="nb">test</span><span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
 <a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="sb">```</span>
 <a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>Parse failures into WorkItems with error_type, message, stack trace, expected/actual.
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>Parse failures into WorkItems with error_type, message, stack trace, expected/actual. If suite passes completely: report &quot;no failures found&quot; and confirm with user before exiting.
 <a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
 <a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="gu">## Phase 2: Fix Execution</span>
 <a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>Dispatch subagent with the following prompt structure. The subagent MUST be given explicit instructions to read the referenced files:
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>Dispatch subagent (Task tool). Subagent MUST read the referenced files:
 <a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
 <a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="sb">```</span>
 <a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="sb">First, read these files to understand the quality requirements:</span>
@@ -7357,40 +7413,40 @@
 <a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
 <a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="sb">Then execute the fix protocol on these work items: [work items]</span>
 <a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="sb">THE FULL ASSERTION PRINCIPLE (most important rule):</span>
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="sb">ALL assertions must assert exact equality against the COMPLETE expected output.</span>
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="sb">This applies to ALL output -- static, dynamic, or partially dynamic.</span>
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="sb">assert result == expected_complete_output  -- CORRECT</span>
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="sb">assert result == f&quot;Today is {datetime.date.today()}&quot;  -- CORRECT (dynamic: construct full expected)</span>
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="sb">assert &quot;substring&quot; in result               -- BANNED. ALWAYS. NO EXCEPTIONS.</span>
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="sb">assert dynamic_value in result             -- BANNED. Dynamic content is no excuse for partial check.</span>
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="sb">When fixing partial assertions on dynamic output: construct the complete expected value</span>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="sb">using the same logic as the function, then assert ==. Prefer construct-then-compare</span>
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="sb">over normalization. Normalization is last resort only for truly unknowable values</span>
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="sb">(random UUIDs, OS-assigned PIDs, memory addresses).</span>
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="sb">When fixing partial mock assertions: also check whether ALL mock calls are fully asserted.</span>
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="sb">Assert EVERY call with ALL args; verify call count. NEVER use mock.ANY -- construct</span>
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="sb">the expected argument dynamically if it is dynamic.</span>
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">BANNED PATTERNS (if your fix introduces ANY of these, it is NOT a fix):</span>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="sb">- assert &quot;X&quot; in result (bare substring on any output -- static or dynamic)</span>
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="sb">- assert len(result) &gt; 0 (existence only)</span>
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">- assert result is not None without value assertion</span>
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="sb">- assert &quot;X&quot; in result and &quot;Y&quot; in result (multiple partials are still partial)</span>
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="sb">- assert result == function_under_test(same_input) (tautological)</span>
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="sb">- mock.ANY in any call assertion</span>
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="sb">- assert_called() or assert_called_once() without argument verification</span>
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="sb">- Asserting only some mock calls</span>
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>
-<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="sb">Every assertion must be Level 4+ on the Assertion Strength Ladder.</span>
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="sb">Replacing a Level 1 assertion with a Level 2 assertion is NOT a fix.</span>
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="sb">[Append Test Writer Template from dispatching-parallel-agents/SKILL.md]</span>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="sb">[Copy in the full Test Writer Template from skills/dispatching-parallel-agents/SKILL.md before dispatching]</span>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="sb">THE FULL ASSERTION PRINCIPLE (most important rule):</span>
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="sb">ALL assertions must assert exact equality against the COMPLETE expected output.</span>
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="sb">This applies to ALL output -- static, dynamic, or partially dynamic.</span>
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="sb">assert result == expected_complete_output  -- CORRECT</span>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="sb">assert result == f&quot;Today is {datetime.date.today()}&quot;  -- CORRECT (dynamic: construct full expected)</span>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="sb">assert &quot;substring&quot; in result               -- BANNED. ALWAYS. NO EXCEPTIONS.</span>
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="sb">assert dynamic_value in result             -- BANNED. Dynamic content is no excuse for partial check.</span>
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="sb">When fixing partial assertions on dynamic output: construct the complete expected value</span>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="sb">using the same logic as the function, then assert ==. Prefer construct-then-compare</span>
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="sb">over normalization. Normalization is last resort only for truly unknowable values</span>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="sb">(random UUIDs, OS-assigned PIDs, memory addresses).</span>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="sb">When fixing partial mock assertions: also check whether ALL mock calls are fully asserted.</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="sb">Assert EVERY call with ALL args; verify call count. NEVER use mock.ANY -- construct</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">the expected argument dynamically if it is dynamic.</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="sb">BANNED PATTERNS (if your fix introduces ANY of these, it is NOT a fix):</span>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="sb">- assert &quot;X&quot; in result (bare substring on any output -- static or dynamic)</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="sb">- assert len(result) &gt; 0 (existence only)</span>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="sb">- assert result is not None without value assertion</span>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="sb">- assert &quot;X&quot; in result and &quot;Y&quot; in result (multiple partials are still partial)</span>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="sb">- assert result == function_under_test(same_input) (tautological)</span>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="sb">- mock.ANY in any call assertion</span>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="sb">- assert_called() or assert_called_once() without argument verification</span>
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="sb">- Asserting only some mock calls</span>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="sb">Every assertion must be Level 4+ on the Assertion Strength Ladder.</span>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="sb">Replacing a Level 1 assertion with a Level 2 assertion is NOT a fix.</span>
 <a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="sb">```</span>
 <a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="gu">### Assertion Quality Gate (ALL modes)</span>
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="gu">### 2.1 Assertion Quality Gate (ALL modes)</span>
 <a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>
 <a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>Every fix, regardless of input mode, must pass the Assertion Strength Ladder check before being marked complete. This is NOT limited to audit_report mode.
@@ -7404,7 +7460,7 @@
 <a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="k">6.</span> For each new assertion, name the specific production code mutation it catches
 <a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a><span class="k">7.</span> If you cannot name a mutation, the assertion is too weak; strengthen it
 <a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="gu">### 2.3 Production Bug Protocol</span>
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="gu">### 2.2 Production Bug Protocol</span>
 <a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>
 <a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>If investigation reveals production bug:
@@ -7454,15 +7510,15 @@
 <a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="gu">## Phase 3.5: Post-Fix Adversarial Review (MANDATORY)</span>
 <a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>
 <a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>This phase is NOT optional. After ALL fixes are applied, dispatch a Test Adversary subagent to verify that every new or modified assertion actually meets quality standards. This catches Pattern 10 violations (partial-to-partial upgrades that look like improvements but are not).
+<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a>This phase is NOT optional. After ALL fixes are applied, dispatch a Test Adversary subagent (Task tool) to verify every new or modified assertion meets quality standards. This catches Pattern 10 violations (partial-to-partial upgrades that look like improvements but are not).
 <a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a>
-<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>Dispatch subagent with the following prompt:
+<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a>Dispatch subagent (Task tool):
 <a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a>
 <a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="sb">```</span>
 <a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="sb">First, read these files to understand the quality requirements:</span>
 <a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a><span class="sb">- Read patterns/assertion-quality-standard.md (especially The Full Assertion Principle)</span>
-<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a><span class="sb">- Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md</span>
+<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a><span class="sb">- Copy in the full Test Adversary Template from skills/dispatching-parallel-agents/SKILL.md</span>
 <a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a>
 <a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a><span class="sb">ROLE: Test Adversary. Your job is to BREAK the new/modified test assertions.</span>
 <a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>
@@ -7496,118 +7552,116 @@
 <a id="__codelineno-1-227" name="__codelineno-1-227" href="#__codelineno-1-227"></a>
 <a id="__codelineno-1-228" name="__codelineno-1-228" href="#__codelineno-1-228"></a><span class="gu">## Phase 4: Final Verification</span>
 <a id="__codelineno-1-229" name="__codelineno-1-229" href="#__codelineno-1-229"></a>
-<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a>Run full test suite:
-<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>
-<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a><span class="sb">```bash</span>
-<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>pytest<span class="w"> </span>-v<span class="w">  </span><span class="c1"># or appropriate test command</span>
-<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a><span class="sb">```</span>
+<a id="__codelineno-1-230" name="__codelineno-1-230" href="#__codelineno-1-230"></a><span class="sb">```bash</span>
+<a id="__codelineno-1-231" name="__codelineno-1-231" href="#__codelineno-1-231"></a>pytest<span class="w"> </span>-v<span class="w">  </span><span class="c1"># or appropriate test command</span>
+<a id="__codelineno-1-232" name="__codelineno-1-232" href="#__codelineno-1-232"></a><span class="sb">```</span>
+<a id="__codelineno-1-233" name="__codelineno-1-233" href="#__codelineno-1-233"></a>
+<a id="__codelineno-1-234" name="__codelineno-1-234" href="#__codelineno-1-234"></a><span class="gu">### Summary Report</span>
 <a id="__codelineno-1-235" name="__codelineno-1-235" href="#__codelineno-1-235"></a>
-<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="gu">### Summary Report</span>
-<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a>
-<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a><span class="sb">```markdown</span>
-<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="gu">## Fix Tests Summary</span>
-<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a>
-<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a><span class="gu">### Input Mode</span>
-<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a>[audit_report / general_instructions / run_and_fix]
-<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a>
-<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a><span class="gu">### Metrics</span>
-<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a>| Metric | Value |
-<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a>|--------|-------|
-<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>| Total items | N |
-<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>| Fixed | X |
-<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>| Stuck | Y |
-<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a>| Production bugs | Z |
-<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a>
-<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a><span class="gu">### Fixes Applied</span>
-<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>| Test | File | Issue | Fix | Commit |
-<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a>|------|------|-------|-----|--------|
-<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a>| test_foo | test_auth.py | Pattern 2 | Strengthened to full object match | abc123 |
-<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a>
-<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="gu">### Test Suite Status</span>
-<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a><span class="k">-</span><span class="w"> </span>Before: X passing, Y failing
-<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="k">-</span><span class="w"> </span>After: X passing, Y failing
-<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a>
-<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a><span class="gu">### Stuck Items (if any)</span>
-<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a>[List with recommendations]
-<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a>
-<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="gu">### Production Bugs Found (if any)</span>
-<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a>[List with recommended actions]
-<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a><span class="sb">```</span>
+<a id="__codelineno-1-236" name="__codelineno-1-236" href="#__codelineno-1-236"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-237" name="__codelineno-1-237" href="#__codelineno-1-237"></a><span class="gu">## Fix Tests Summary</span>
+<a id="__codelineno-1-238" name="__codelineno-1-238" href="#__codelineno-1-238"></a>
+<a id="__codelineno-1-239" name="__codelineno-1-239" href="#__codelineno-1-239"></a><span class="gu">### Input Mode</span>
+<a id="__codelineno-1-240" name="__codelineno-1-240" href="#__codelineno-1-240"></a>[audit_report / general_instructions / run_and_fix]
+<a id="__codelineno-1-241" name="__codelineno-1-241" href="#__codelineno-1-241"></a>
+<a id="__codelineno-1-242" name="__codelineno-1-242" href="#__codelineno-1-242"></a><span class="gu">### Metrics</span>
+<a id="__codelineno-1-243" name="__codelineno-1-243" href="#__codelineno-1-243"></a>| Metric | Value |
+<a id="__codelineno-1-244" name="__codelineno-1-244" href="#__codelineno-1-244"></a>|--------|-------|
+<a id="__codelineno-1-245" name="__codelineno-1-245" href="#__codelineno-1-245"></a>| Total items | N |
+<a id="__codelineno-1-246" name="__codelineno-1-246" href="#__codelineno-1-246"></a>| Fixed | X |
+<a id="__codelineno-1-247" name="__codelineno-1-247" href="#__codelineno-1-247"></a>| Stuck | Y |
+<a id="__codelineno-1-248" name="__codelineno-1-248" href="#__codelineno-1-248"></a>| Production bugs | Z |
+<a id="__codelineno-1-249" name="__codelineno-1-249" href="#__codelineno-1-249"></a>
+<a id="__codelineno-1-250" name="__codelineno-1-250" href="#__codelineno-1-250"></a><span class="gu">### Fixes Applied</span>
+<a id="__codelineno-1-251" name="__codelineno-1-251" href="#__codelineno-1-251"></a>| Test | File | Issue | Fix | Commit |
+<a id="__codelineno-1-252" name="__codelineno-1-252" href="#__codelineno-1-252"></a>|------|------|-------|-----|--------|
+<a id="__codelineno-1-253" name="__codelineno-1-253" href="#__codelineno-1-253"></a>| test_foo | test_auth.py | Pattern 2 | Strengthened to full object match | abc123 |
+<a id="__codelineno-1-254" name="__codelineno-1-254" href="#__codelineno-1-254"></a>
+<a id="__codelineno-1-255" name="__codelineno-1-255" href="#__codelineno-1-255"></a><span class="gu">### Test Suite Status</span>
+<a id="__codelineno-1-256" name="__codelineno-1-256" href="#__codelineno-1-256"></a><span class="k">-</span><span class="w"> </span>Before: X passing, Y failing
+<a id="__codelineno-1-257" name="__codelineno-1-257" href="#__codelineno-1-257"></a><span class="k">-</span><span class="w"> </span>After: X passing, Y failing
+<a id="__codelineno-1-258" name="__codelineno-1-258" href="#__codelineno-1-258"></a>
+<a id="__codelineno-1-259" name="__codelineno-1-259" href="#__codelineno-1-259"></a><span class="gu">### Stuck Items (if any)</span>
+<a id="__codelineno-1-260" name="__codelineno-1-260" href="#__codelineno-1-260"></a>[List with recommendations]
+<a id="__codelineno-1-261" name="__codelineno-1-261" href="#__codelineno-1-261"></a>
+<a id="__codelineno-1-262" name="__codelineno-1-262" href="#__codelineno-1-262"></a><span class="gu">### Production Bugs Found (if any)</span>
+<a id="__codelineno-1-263" name="__codelineno-1-263" href="#__codelineno-1-263"></a>[List with recommended actions]
+<a id="__codelineno-1-264" name="__codelineno-1-264" href="#__codelineno-1-264"></a><span class="sb">```</span>
+<a id="__codelineno-1-265" name="__codelineno-1-265" href="#__codelineno-1-265"></a>
+<a id="__codelineno-1-266" name="__codelineno-1-266" href="#__codelineno-1-266"></a><span class="gu">### Re-audit Option (if from audit_report)</span>
 <a id="__codelineno-1-267" name="__codelineno-1-267" href="#__codelineno-1-267"></a>
-<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a><span class="gu">### Re-audit Option (if from audit_report)</span>
-<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a>
-<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a><span class="sb">```</span>
-<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a><span class="sb">Fixes complete. Re-run audit-green-mirage to verify no new mirages?</span>
-<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a><span class="sb">A) Yes, audit fixed files</span>
-<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a><span class="sb">B) No, satisfied with fixes</span>
-<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="sb">```</span>
+<a id="__codelineno-1-268" name="__codelineno-1-268" href="#__codelineno-1-268"></a><span class="sb">```</span>
+<a id="__codelineno-1-269" name="__codelineno-1-269" href="#__codelineno-1-269"></a><span class="sb">Fixes complete. Re-run audit-green-mirage to verify no new mirages?</span>
+<a id="__codelineno-1-270" name="__codelineno-1-270" href="#__codelineno-1-270"></a><span class="sb">A) Yes, audit fixed files</span>
+<a id="__codelineno-1-271" name="__codelineno-1-271" href="#__codelineno-1-271"></a><span class="sb">B) No, satisfied with fixes</span>
+<a id="__codelineno-1-272" name="__codelineno-1-272" href="#__codelineno-1-272"></a><span class="sb">```</span>
+<a id="__codelineno-1-273" name="__codelineno-1-273" href="#__codelineno-1-273"></a>
+<a id="__codelineno-1-274" name="__codelineno-1-274" href="#__codelineno-1-274"></a><span class="gu">## Special Cases</span>
 <a id="__codelineno-1-275" name="__codelineno-1-275" href="#__codelineno-1-275"></a>
-<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a><span class="gu">## Special Cases</span>
+<a id="__codelineno-1-276" name="__codelineno-1-276" href="#__codelineno-1-276"></a><span class="gs">**Flaky tests:**</span> Identify non-determinism source (time, random, ordering, external state). Mock or control it. Use deterministic waits, not sleep-and-hope.
 <a id="__codelineno-1-277" name="__codelineno-1-277" href="#__codelineno-1-277"></a>
-<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="gs">**Flaky tests:**</span> Identify non-determinism source (time, random, ordering, external state). Mock or control it. Use deterministic waits, not sleep-and-hope.
+<a id="__codelineno-1-278" name="__codelineno-1-278" href="#__codelineno-1-278"></a><span class="gs">**Implementation-coupled tests:**</span> Identify the BEHAVIOR the test should verify. Rewrite to test through the public interface. Remove mocks of the unit under test&#39;s own internals; do not remove mocks of external services.
 <a id="__codelineno-1-279" name="__codelineno-1-279" href="#__codelineno-1-279"></a>
-<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="gs">**Implementation-coupled tests:**</span> Identify BEHAVIOR test should verify. Rewrite to test through public interface. Remove internal mocking.
+<a id="__codelineno-1-280" name="__codelineno-1-280" href="#__codelineno-1-280"></a><span class="gs">**Missing tests entirely:**</span> Read production code. Identify key behaviors. Write tests following existing test file patterns in the codebase. Ensure tests would catch real failures.
 <a id="__codelineno-1-281" name="__codelineno-1-281" href="#__codelineno-1-281"></a>
-<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a><span class="gs">**Missing tests entirely:**</span> Read production code. Identify key behaviors. Write tests following codebase patterns. Ensure tests would catch real failures.
+<a id="__codelineno-1-282" name="__codelineno-1-282" href="#__codelineno-1-282"></a><span class="gs">**Slow/bloated tests:**</span> Tests taking &gt;5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data (e.g., 1024x1024 matrix where 4x4 suffices). Separate slow tests with marks (<span class="sb">`@pytest.mark.slow`</span>, <span class="sb">`@pytest.mark.integration`</span>, etc.). Shrink test inputs to the minimum that exercises the behavior. Move real I/O to integration tier. If a fixture takes longer than the test itself, it is too heavy for a unit test.
 <a id="__codelineno-1-283" name="__codelineno-1-283" href="#__codelineno-1-283"></a>
-<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a><span class="gs">**Slow/bloated tests:**</span> Tests taking &gt;5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data. Separate slow tests with marks (<span class="sb">`@pytest.mark.slow`</span>, <span class="sb">`@pytest.mark.integration`</span>, etc.) to preserve fast feedback on core functionality. Move real I/O to integration tier. Shrink test inputs to the minimum that exercises the behavior. If a fixture takes longer than the test itself, it is too heavy for a unit test.
-<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a>
-<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a>
-<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a><span class="gu">### Over-Engineering</span>
-<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="k">-</span><span class="w"> </span>Creating elaborate test infrastructure for simple fixes
-<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a><span class="k">-</span><span class="w"> </span>Adding abstraction layers &quot;for future flexibility&quot;
-<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a><span class="k">-</span><span class="w"> </span>Refactoring unrelated code while fixing tests
-<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a>
-<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="gu">### Under-Testing</span>
-<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="k">-</span><span class="w"> </span>Weakening assertions to make tests pass
-<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a><span class="k">-</span><span class="w"> </span>Removing tests instead of fixing them
-<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="k">-</span><span class="w"> </span>Marking tests as skip without fixing
-<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a>
-<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="gu">### Scope Creep</span>
-<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a><span class="k">-</span><span class="w"> </span>Fixing production bugs without flagging them
-<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a><span class="k">-</span><span class="w"> </span>Refactoring production code to make tests easier
-<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="k">-</span><span class="w"> </span>Adding features while fixing tests
-<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a>
-<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a><span class="gu">### Blind Fixes</span>
-<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a><span class="k">-</span><span class="w"> </span>Applying suggested fixes without reading context
-<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a><span class="k">-</span><span class="w"> </span>Copy-pasting fixes without understanding them
-<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a><span class="k">-</span><span class="w"> </span>Not verifying fixes actually catch failures
-<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-284" name="__codelineno-1-284" href="#__codelineno-1-284"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-285" name="__codelineno-1-285" href="#__codelineno-1-285"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-286" name="__codelineno-1-286" href="#__codelineno-1-286"></a>
+<a id="__codelineno-1-287" name="__codelineno-1-287" href="#__codelineno-1-287"></a><span class="gu">### Over-Engineering</span>
+<a id="__codelineno-1-288" name="__codelineno-1-288" href="#__codelineno-1-288"></a><span class="k">-</span><span class="w"> </span>Creating elaborate test infrastructure for simple fixes
+<a id="__codelineno-1-289" name="__codelineno-1-289" href="#__codelineno-1-289"></a><span class="k">-</span><span class="w"> </span>Adding abstraction layers &quot;for future flexibility&quot;
+<a id="__codelineno-1-290" name="__codelineno-1-290" href="#__codelineno-1-290"></a><span class="k">-</span><span class="w"> </span>Refactoring unrelated code while fixing tests
+<a id="__codelineno-1-291" name="__codelineno-1-291" href="#__codelineno-1-291"></a>
+<a id="__codelineno-1-292" name="__codelineno-1-292" href="#__codelineno-1-292"></a><span class="gu">### Under-Testing</span>
+<a id="__codelineno-1-293" name="__codelineno-1-293" href="#__codelineno-1-293"></a><span class="k">-</span><span class="w"> </span>Weakening assertions to make tests pass
+<a id="__codelineno-1-294" name="__codelineno-1-294" href="#__codelineno-1-294"></a><span class="k">-</span><span class="w"> </span>Removing tests instead of fixing them
+<a id="__codelineno-1-295" name="__codelineno-1-295" href="#__codelineno-1-295"></a><span class="k">-</span><span class="w"> </span>Marking tests as skip without fixing
+<a id="__codelineno-1-296" name="__codelineno-1-296" href="#__codelineno-1-296"></a>
+<a id="__codelineno-1-297" name="__codelineno-1-297" href="#__codelineno-1-297"></a><span class="gu">### Scope Creep</span>
+<a id="__codelineno-1-298" name="__codelineno-1-298" href="#__codelineno-1-298"></a><span class="k">-</span><span class="w"> </span>Fixing production bugs without flagging them
+<a id="__codelineno-1-299" name="__codelineno-1-299" href="#__codelineno-1-299"></a><span class="k">-</span><span class="w"> </span>Refactoring production code to make tests easier
+<a id="__codelineno-1-300" name="__codelineno-1-300" href="#__codelineno-1-300"></a><span class="k">-</span><span class="w"> </span>Adding features while fixing tests
+<a id="__codelineno-1-301" name="__codelineno-1-301" href="#__codelineno-1-301"></a>
+<a id="__codelineno-1-302" name="__codelineno-1-302" href="#__codelineno-1-302"></a><span class="gu">### Blind Fixes</span>
+<a id="__codelineno-1-303" name="__codelineno-1-303" href="#__codelineno-1-303"></a><span class="k">-</span><span class="w"> </span>Applying suggested fixes without reading context
+<a id="__codelineno-1-304" name="__codelineno-1-304" href="#__codelineno-1-304"></a><span class="k">-</span><span class="w"> </span>Copy-pasting fixes without understanding them
+<a id="__codelineno-1-305" name="__codelineno-1-305" href="#__codelineno-1-305"></a><span class="k">-</span><span class="w"> </span>Not verifying fixes actually catch failures
+<a id="__codelineno-1-306" name="__codelineno-1-306" href="#__codelineno-1-306"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-307" name="__codelineno-1-307" href="#__codelineno-1-307"></a>
+<a id="__codelineno-1-308" name="__codelineno-1-308" href="#__codelineno-1-308"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-1-309" name="__codelineno-1-309" href="#__codelineno-1-309"></a>
-<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-310" name="__codelineno-1-310" href="#__codelineno-1-310"></a>&lt;RULE&gt;Before completing, ALL boxes must be checked. If ANY unchecked: STOP and fix.&lt;/RULE&gt;
 <a id="__codelineno-1-311" name="__codelineno-1-311" href="#__codelineno-1-311"></a>
-<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a>&lt;RULE&gt;Before completing, ALL boxes must be checked. If ANY unchecked: STOP and fix.&lt;/RULE&gt;
-<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a>
-<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a><span class="k">- [ ]</span> All work items processed or explicitly marked stuck
-<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="k">- [ ]</span> Each fix verified to pass
-<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a><span class="k">- [ ]</span> Each fix verified to catch the failure it should catch
-<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a><span class="k">- [ ]</span> Each fix verified to be Level 4+ on the Assertion Strength Ladder (<span class="sb">`patterns/assertion-quality-standard.md`</span>)
-<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a><span class="k">- [ ]</span> Each new assertion has a named mutation that would cause it to fail
-<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a><span class="k">- [ ]</span> No bare substring checks introduced (assert &quot;X&quot; in result is BANNED on all output)
-<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a><span class="k">- [ ]</span> No partial assertions on dynamic output (full expected constructed, not membership checked)
-<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a><span class="k">- [ ]</span> All mock calls fully asserted: every call, all args, call count verified
-<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a><span class="k">- [ ]</span> No mock.ANY introduced
-<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a><span class="k">- [ ]</span> No Pattern 10 violations (partial-to-partial upgrades)
-<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a><span class="k">- [ ]</span> Phase 3.5 adversarial review completed with PASS verdict
-<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a><span class="k">- [ ]</span> Full test suite ran at end
-<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a><span class="k">- [ ]</span> Production bugs flagged, not silently fixed
-<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a><span class="k">- [ ]</span> Commits follow agreed strategy
-<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a><span class="k">- [ ]</span> Summary report provided
-<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a>
-<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a>&lt;reflection&gt;
-<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a>After fixing tests, verify:
-<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a><span class="k">-</span><span class="w"> </span>Each fix actually catches the failure it should
-<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a><span class="k">-</span><span class="w"> </span>No production bugs were silently &quot;fixed&quot; as test issues
-<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a><span class="k">-</span><span class="w"> </span>Tests detect real bugs, not just achieve green status
-<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a>
-<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a>Tests exist to catch bugs. Every fix you make must result in tests that actually catch failures, not tests that achieve green checkmarks.
-<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a>
-<a id="__codelineno-1-340" name="__codelineno-1-340" href="#__codelineno-1-340"></a>Fix it. Prove it works. Move on. No over-engineering. No under-testing.
-<a id="__codelineno-1-341" name="__codelineno-1-341" href="#__codelineno-1-341"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-312" name="__codelineno-1-312" href="#__codelineno-1-312"></a><span class="k">- [ ]</span> All work items processed or explicitly marked stuck
+<a id="__codelineno-1-313" name="__codelineno-1-313" href="#__codelineno-1-313"></a><span class="k">- [ ]</span> Each fix verified to pass
+<a id="__codelineno-1-314" name="__codelineno-1-314" href="#__codelineno-1-314"></a><span class="k">- [ ]</span> Each fix verified to catch the failure it should catch
+<a id="__codelineno-1-315" name="__codelineno-1-315" href="#__codelineno-1-315"></a><span class="k">- [ ]</span> Each fix verified to be Level 4+ on the Assertion Strength Ladder (<span class="sb">`patterns/assertion-quality-standard.md`</span>)
+<a id="__codelineno-1-316" name="__codelineno-1-316" href="#__codelineno-1-316"></a><span class="k">- [ ]</span> Each new assertion has a named mutation that would cause it to fail
+<a id="__codelineno-1-317" name="__codelineno-1-317" href="#__codelineno-1-317"></a><span class="k">- [ ]</span> No bare substring checks introduced (assert &quot;X&quot; in result is BANNED on all output)
+<a id="__codelineno-1-318" name="__codelineno-1-318" href="#__codelineno-1-318"></a><span class="k">- [ ]</span> No partial assertions on dynamic output (full expected constructed, not membership checked)
+<a id="__codelineno-1-319" name="__codelineno-1-319" href="#__codelineno-1-319"></a><span class="k">- [ ]</span> All mock calls fully asserted: every call, all args, call count verified
+<a id="__codelineno-1-320" name="__codelineno-1-320" href="#__codelineno-1-320"></a><span class="k">- [ ]</span> No mock.ANY introduced
+<a id="__codelineno-1-321" name="__codelineno-1-321" href="#__codelineno-1-321"></a><span class="k">- [ ]</span> No Pattern 10 violations (partial-to-partial upgrades)
+<a id="__codelineno-1-322" name="__codelineno-1-322" href="#__codelineno-1-322"></a><span class="k">- [ ]</span> Phase 3.5 adversarial review completed with PASS verdict
+<a id="__codelineno-1-323" name="__codelineno-1-323" href="#__codelineno-1-323"></a><span class="k">- [ ]</span> Full test suite ran at end
+<a id="__codelineno-1-324" name="__codelineno-1-324" href="#__codelineno-1-324"></a><span class="k">- [ ]</span> Production bugs flagged, not silently fixed
+<a id="__codelineno-1-325" name="__codelineno-1-325" href="#__codelineno-1-325"></a><span class="k">- [ ]</span> Commits follow agreed strategy
+<a id="__codelineno-1-326" name="__codelineno-1-326" href="#__codelineno-1-326"></a><span class="k">- [ ]</span> Summary report provided
+<a id="__codelineno-1-327" name="__codelineno-1-327" href="#__codelineno-1-327"></a>
+<a id="__codelineno-1-328" name="__codelineno-1-328" href="#__codelineno-1-328"></a>&lt;reflection&gt;
+<a id="__codelineno-1-329" name="__codelineno-1-329" href="#__codelineno-1-329"></a>After fixing tests, verify:
+<a id="__codelineno-1-330" name="__codelineno-1-330" href="#__codelineno-1-330"></a><span class="k">-</span><span class="w"> </span>Each fix actually catches the failure it should
+<a id="__codelineno-1-331" name="__codelineno-1-331" href="#__codelineno-1-331"></a><span class="k">-</span><span class="w"> </span>No production bugs were silently &quot;fixed&quot; as test issues
+<a id="__codelineno-1-332" name="__codelineno-1-332" href="#__codelineno-1-332"></a><span class="k">-</span><span class="w"> </span>Tests detect real bugs, not just achieve green status
+<a id="__codelineno-1-333" name="__codelineno-1-333" href="#__codelineno-1-333"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-334" name="__codelineno-1-334" href="#__codelineno-1-334"></a>
+<a id="__codelineno-1-335" name="__codelineno-1-335" href="#__codelineno-1-335"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-336" name="__codelineno-1-336" href="#__codelineno-1-336"></a>Tests exist to catch bugs. Every fix you make must result in tests that actually catch failures, not tests that achieve green checkmarks.
+<a id="__codelineno-1-337" name="__codelineno-1-337" href="#__codelineno-1-337"></a>
+<a id="__codelineno-1-338" name="__codelineno-1-338" href="#__codelineno-1-338"></a>Fix it. Prove it works. Move on. No over-engineering. No under-testing.
+<a id="__codelineno-1-339" name="__codelineno-1-339" href="#__codelineno-1-339"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1343,6 +1343,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2906,6 +2934,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7247,7 +7303,7 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 </thead>
 <tbody>
 <tr>
-<td><code>--self</code>, <code>-s</code>, (default)</td>
+<td><code>--self</code>, <code>-s</code>, (default: no flag given)</td>
 <td>Pre-PR self-review</td>
 <td>(inline below)</td>
 </tr>
@@ -7297,8 +7353,7 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 </tr>
 </tbody>
 </table>
-<p><strong>Principle:</strong> MCP tools for read/analyze. <code>gh</code> CLI for write operations (posting reviews, replies).</p>
-<p><strong>Fallback:</strong> MCP unavailable -&gt; gh CLI -&gt; local diff -&gt; manual paste.</p>
+<p>MCP tools for read/analyze. <code>gh</code> CLI for write operations (posting reviews, replies). Fallback: MCP unavailable -&gt; gh CLI -&gt; local diff -&gt; manual paste.</p>
 <hr />
 <h2 id="self-mode-self">Self Mode (<code>--self</code>)<a class="headerlink" href="#self-mode-self" title="Permanent link">&para;</a></h2>
 <p><reflection>
@@ -7307,13 +7362,16 @@ Self-review finds what you missed. Assume bugs exist. Hunt them.
 <p><strong>Workflow:</strong>
 1. Get diff: <code>git diff $(git merge-base origin/main HEAD)..HEAD</code>
 2. Multi-pass: Logic &gt; Integration &gt; Security &gt; Style
-3. Generate findings with severity, file:line, description
-4. Gate: Critical=FAIL, Important=WARN, Minor only=PASS</p>
+3. Generate findings with severity, file:line, description</p>
+<p>Example finding: <code>src/auth/login.py:42 [Critical] Token written to log — data exposure risk</code></p>
+<ol>
+<li>Gate: Critical=FAIL, Important=WARN, Minor only=PASS</li>
+</ol>
 <hr />
 <h2 id="audit-mode-audit-scope">Audit Mode (<code>--audit [scope]</code>)<a class="headerlink" href="#audit-mode-audit-scope" title="Permanent link">&para;</a></h2>
 <p>Scopes: (none)=branch changes, file.py, dir/, security, all</p>
 <p><strong>Passes:</strong> Correctness &gt; Security &gt; Performance &gt; Maintainability &gt; Edge Cases</p>
-<p>Output: Executive Summary, findings by category, Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)</p>
+<p>Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)</p>
 <hr />
 <p><FORBIDDEN>
 - Skip self-review for "small" changes
@@ -7328,9 +7386,12 @@ Self-review finds what you missed. Assume bugs exist. Hunt them.
 <li>[ ] Correct mode identified</li>
 <li>[ ] All findings have file:line</li>
 <li>[ ] Severity based on impact, not effort</li>
-<li>[ ] Output matches mode spec
-``````````</li>
+<li>[ ] Output matches mode spec</li>
 </ul>
+<p><FINAL_EMPHASIS>
+Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
+</FINAL_EMPHASIS>
+``````````</p>
 
 
 

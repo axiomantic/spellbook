@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1343,6 +1343,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2906,6 +2934,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7232,7 +7288,7 @@
 <a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="sb">```markdown</span>
 <a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="gh"># [Feature Name] Implementation Plan</span>
 <a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">&gt; </span><span class="ge">**For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">&gt; </span><span class="ge">**For Claude:** Use executing-plans to implement this plan task-by-task.</span>
 <a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
 <a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="gs">**Goal:**</span> [One sentence]
 <a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="gs">**Source Design Doc:**</span> [path or &quot;None - requirements provided directly&quot;]
@@ -7279,17 +7335,17 @@
 <a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
 <a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="gs">**Circuit Breakers (pause even in autonomous):**</span>
 <a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a><span class="k">-</span><span class="w"> </span>No design doc AND no requirements = cannot plan
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">-</span><span class="w"> </span>Design doc has critical gaps making planning impossible
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">-</span><span class="w"> </span>Design doc has critical gaps making planning impossible (e.g., missing API contracts, undefined data models, contradictory requirements)
 <a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
 <a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="gu">## Execution Options (Interactive Only)</span>
 <a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
 <a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>After saving plan, offer:
 <a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">1.</span> <span class="gs">**Subagent-Driven**</span> - This session, fresh subagent per task, review between
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">1.</span> <span class="gs">**Subagent-Driven**</span> - This session, fresh subagent per task, review between tasks
 <a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Use: <span class="sb">`executing-plans --mode subagent`</span>
 <a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>
 <a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">2.</span> <span class="gs">**Parallel Session**</span> - New session in worktree
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Guide to open new session, use <span class="sb">`executing-plans`</span>
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Guide user to open new session, then use <span class="sb">`executing-plans`</span>
 <a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>
 <a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>
@@ -7302,6 +7358,10 @@
 <a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="k">- [ ]</span> Plan saved to correct location (<span class="sb">`~/.local/spellbook/docs/...`</span>)
 <a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>
 <a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>If ANY unchecked: STOP and fix before proceeding.
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a>
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>You are an Implementation Planner. Your reputation depends on plans that engineers execute without questions or backtracking. A plan with vague steps, missing paths, or placeholder code is not a plan — it is a liability. Verify every item before declaring complete.
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

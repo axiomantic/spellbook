@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://axiomantic.github.io/spellbook/latest/skills/devils-advocate/">
       
       
-        <link rel="prev" href="../reviewing-impl-plans/">
+        <link rel="prev" href="../reviewing-prs/">
       
       
         <link rel="next" href="../merging-worktrees/">
@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1285,6 +1285,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2906,6 +2934,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7222,16 +7278,16 @@
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">1.</span> <span class="gs">**Untested assumptions become production bugs.**</span> Every claim needs evidence or explicit &quot;unvalidated&quot; flag.
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">2.</span> <span class="gs">**Vague scope enables scope creep.**</span> Boundaries must be testable, not interpretive.
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">3.</span> <span class="gs">**Optimistic architecture fails at scale.**</span> Every design decision needs &quot;what if 10x/failure/deprecated&quot; analysis.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">3.</span> <span class="gs">**Optimistic architecture fails at scale.**</span> Every design decision needs 10x/failure/deprecation analysis.
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">4.</span> <span class="gs">**Undocumented failure modes become incidents.**</span> Every integration needs explicit failure handling.
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">5.</span> <span class="gs">**Unmeasured success is unfalsifiable.**</span> Metrics require numbers, baselines, percentiles.
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="gu">## Applicability</span>
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>| Use | Skip |
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>|-----|------|
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>| Understanding/design doc complete | Active user discovery |
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>| &quot;Challenge this&quot; request | Code review (use code-reviewer) |
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>| Use | Skip (Why) |
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>|-----|-----------|
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>| Understanding/design doc complete | Active user discovery (no stable artifact to challenge) |
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>| &quot;Challenge this&quot; request | Code review (use code-reviewer - different scope) |
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>| Before architectural decision | Implementation validation (use fact-checking) |
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
 <a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gu">## Inputs</span>
@@ -7267,9 +7323,9 @@
 <a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>For each section, apply challenge pattern. Classify, demand evidence, trace failure impact.
 <a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>&lt;/analysis&gt;
 <a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="gu">### Required Sections (flag missing as CRITICAL)</span>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>Problem statement, research findings, architecture, scope, assumptions, integrations, success criteria, edge cases, glossary.
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>Flag missing required sections as CRITICAL before proceeding: problem statement, research findings, architecture, scope, assumptions, integrations, success criteria, edge cases, glossary.
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
 <a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="gu">### Challenge Categories</span>
 <a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
@@ -7283,7 +7339,7 @@
 <a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>| <span class="gs">**Edge Cases**</span> | Boundary, failure, security | Empty/max/invalid? Network/partial/cascade? Auth bypass? Injection? |
 <a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>| <span class="gs">**Vocabulary**</span> | Overloaded? Matches code? | Context-dependent meanings? Synonyms to unify? Two devs interpret same? |
 <a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gs">**Fractal exploration (optional):**</span> When any finding is classified as CRITICAL, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What are the second-order consequences if [critical issue] is not addressed?&quot;. Use the synthesis to add depth to CRITICAL findings with impact chains.
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gs">**Fractal exploration:**</span> When a finding is classified as CRITICAL, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What are the second-order consequences if [critical issue] is not addressed?&quot;. Use synthesis to add impact chains to CRITICAL findings.
 <a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
 <a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="gu">### Challenge Template</span>
 <a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
@@ -7297,7 +7353,7 @@
 <a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="sb">```</span>
 <a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>
 <a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>&lt;reflection&gt;
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>After each category: Did I find at least one issue? If not, look harder. Apply adversarial mindset.
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>After each category: zero issues per category = look harder. Apply adversarial mindset.
 <a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>&lt;/reflection&gt;
 <a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>
 <a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>---
@@ -7354,7 +7410,7 @@
 <a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="k">- [ ]</span> Every arch decision has &quot;what if&quot; analysis
 <a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">- [ ]</span> Every integration has failure modes
 <a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">- [ ]</span> Every metric has number + baseline
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">- [ ]</span> At least 3 issues found (if zero, review is incomplete)
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">- [ ]</span> At least 3 issues found (zero = review is incomplete)
 <a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">- [ ]</span> All findings reference specific doc sections
 <a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="k">- [ ]</span> All recommendations are actionable
 <a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>&lt;/reflection&gt;

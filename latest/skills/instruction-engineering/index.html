@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1285,6 +1285,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2906,6 +2934,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7167,13 +7223,13 @@
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Simplicity First**</span>: The most effective prompts are the shortest that achieve the goal. Add complexity only when simplicity fails. Every line must justify its existence.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Simplicity First**</span>: Shortest prompt that achieves the goal. Add complexity only when simplicity fails. Every line must justify its existence.
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">2.</span> <span class="gs">**Emotional Stimuli Work**</span>: [<span class="nt">EmotionPrompt</span>](<span class="na">https://arxiv.org/abs/2307.11760</span>) (Microsoft, 2023): +8% instruction induction, +115% BIG-Bench. [<span class="nt">NegativePrompt</span>](<span class="na">https://www.ijcai.org/proceedings/2024/719</span>) (IJCAI 2024): +12.89% instruction induction, +46.25% BIG-Bench.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">2.</span> <span class="gs">**Emotional Stimuli Work**</span>: [<span class="nt">EmotionPrompt</span>](<span class="na">https://arxiv.org/abs/2307.11760</span>) (Microsoft, 2023): +8% instruction induction, +115% BIG-Bench. EP02 = &quot;This is very important to my career.&quot; EP06 = &quot;You&#39;d better be sure.&quot; [<span class="nt">NegativePrompt</span>](<span class="na">https://www.ijcai.org/proceedings/2024/719</span>) (IJCAI 2024): +12.89% instruction induction. NP = consequences for failure framing.
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">3.</span> <span class="gs">**Structure Combats Context Rot**</span>: XML tags (<span class="sb">`&lt;CRITICAL&gt;`</span>, <span class="sb">`&lt;RULE&gt;`</span>, <span class="sb">`&lt;FORBIDDEN&gt;`</span>), beginning/end emphasis, strategic repetition (2-3x) preserve instruction salience across long contexts.
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">4.</span> <span class="gs">**Personas Need Stakes**</span>: Bare personas (&quot;act as expert&quot;) show [<span class="nt">mixed results</span>](<span class="na">https://arxiv.org/abs/2311.10054</span>). Persona + emotional stimulus shows highest effectiveness.
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">4.</span> <span class="gs">**Personas Need Stakes**</span>: Bare personas (&quot;act as expert&quot;) show [<span class="nt">mixed results</span>](<span class="na">https://arxiv.org/abs/2311.10054</span>). Persona + emotional stimulus (EP02/EP06/NP) shows highest effectiveness.
 <a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
 <a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">5.</span> <span class="gs">**Skills Invoke, Not Duplicate**</span>: Reference skills via <span class="sb">`Skill`</span> tool. Provide CONTEXT only. Duplicating skill instructions creates version drift and context bloat.
 <a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
@@ -7200,22 +7256,22 @@
 <a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="gu">## Reasoning Schema</span>
 <a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
 <a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>&lt;analysis&gt;
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>Before engineering a prompt, identify:
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>Before engineering, identify:
 <a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="k">-</span><span class="w"> </span>What is the prompt&#39;s purpose?
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>Who/what will consume it?
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span>What techniques from /ie-techniques apply?
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">-</span><span class="w"> </span>What is the token budget?
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>Who/what consumes it?
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span>Which techniques from <span class="sb">`/ie-techniques`</span> apply?
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">-</span><span class="w"> </span>What is the token budget? (No fixed limit; document any excess in design_rationale.)
 <a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>&lt;/analysis&gt;
 <a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
 <a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>---
 <a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
 <a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="gu">## Command Dispatch</span>
 <a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>This skill orchestrates prompt engineering through specialized commands:
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>Each workflow step maps to a command. Run commands in order; do not skip.
 <a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
 <a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>| Command | Purpose | When to Use |
 <a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>|---------|---------|-------------|
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>| <span class="sb">`/ie-techniques`</span> | 16 proven techniques reference | Selecting which techniques to apply |
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>| <span class="sb">`/ie-techniques`</span> | 16 proven techniques reference; includes Professional Persona Table with EP/NP stimuli | Selecting techniques and persona |
 <a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>| <span class="sb">`/ie-template`</span> | Template + example | Drafting new prompts from scratch |
 <a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>| <span class="sb">`/ie-tool-docs`</span> | Tool documentation guidance | Writing MCP tools, APIs, CLI commands |
 <a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>| <span class="sb">`/sharpen-audit`</span> | Ambiguity detection | QA gate before finalizing prompts |
@@ -7223,103 +7279,105 @@
 <a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
 <a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="gu">### Workflow</span>
 <a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="k">1.</span> <span class="gs">**Analyze task**</span>: Determine prompt purpose and target audience
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">2.</span> <span class="gs">**Select techniques**</span>: Run <span class="sb">`/ie-techniques`</span> to choose applicable techniques
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">3.</span> <span class="gs">**Draft prompt**</span>: Run <span class="sb">`/ie-template`</span> for structure and example
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="k">1.</span> <span class="gs">**Analyze**</span>: Determine prompt purpose and target audience
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">2.</span> <span class="gs">**Select techniques**</span>: Run <span class="sb">`/ie-techniques`</span> — choose techniques and persona from Professional Persona Table
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">3.</span> <span class="gs">**Draft**</span>: Run <span class="sb">`/ie-template`</span> for structure and example
 <a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="k">4.</span> <span class="gs">**Document tools**</span>: If prompt involves tools, run <span class="sb">`/ie-tool-docs`</span>
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">5.</span> <span class="gs">**Sharpen**</span>: Run <span class="sb">`/sharpen-audit`</span> to find ambiguities, <span class="sb">`/sharpen-improve`</span> to fix them
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">5.</span> <span class="gs">**Sharpen**</span>: Run <span class="sb">`/sharpen-audit`</span> to find ambiguities; run <span class="sb">`/sharpen-improve`</span> to fix them
 <a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">6.</span> <span class="gs">**Verify**</span>: Run self-check before finalizing
 <a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>
 <a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>---
 <a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
 <a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="gu">## Skill Descriptions (CSO - Claude Search Optimization)</span>
 <a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>The <span class="sb">`description`</span> field determines whether Claude loads your skill. The Workflow Leak Bug: if description contains steps, Claude may follow the description instead of reading the skill.
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>The <span class="sb">`description`</span> field determines whether Claude loads your skill.
 <a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>&lt;RULE&gt;Skill descriptions contain ONLY trigger conditions, NEVER workflow steps.&lt;/RULE&gt;
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gs">**Workflow Leak Bug**</span>: If description contains steps, Claude may follow the description instead of reading the skill body.
 <a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="sb">```yaml</span>
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="c1"># CORRECT: Trigger conditions only</span>
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Use</span><span class="nv"> </span><span class="s">when</span><span class="nv"> </span><span class="s">[triggering</span><span class="nv"> </span><span class="s">conditions,</span><span class="nv"> </span><span class="s">symptoms,</span><span class="nv"> </span><span class="s">situations]&quot;</span>
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="c1"># WRONG: Contains workflow Claude might follow</span>
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Use</span><span class="nv"> </span><span class="s">when</span><span class="nv"> </span><span class="s">X</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">does</span><span class="nv"> </span><span class="s">Y</span><span class="nv"> </span><span class="s">then</span><span class="nv"> </span><span class="s">Z</span><span class="nv"> </span><span class="s">then</span><span class="nv"> </span><span class="s">W&quot;</span>
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="sb">```</span>
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="gs">**Checklist:**</span>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>&lt;RULE&gt;Skill descriptions contain ONLY trigger conditions, NEVER workflow steps.&lt;/RULE&gt;
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="sb">```yaml</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="c1"># CORRECT: Trigger conditions only</span>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Use</span><span class="nv"> </span><span class="s">when</span><span class="nv"> </span><span class="s">[triggering</span><span class="nv"> </span><span class="s">conditions,</span><span class="nv"> </span><span class="s">symptoms,</span><span class="nv"> </span><span class="s">situations]&quot;</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="c1"># WRONG: Contains workflow Claude might follow</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Use</span><span class="nv"> </span><span class="s">when</span><span class="nv"> </span><span class="s">X</span><span class="nv"> </span><span class="s">-</span><span class="nv"> </span><span class="s">does</span><span class="nv"> </span><span class="s">Y</span><span class="nv"> </span><span class="s">then</span><span class="nv"> </span><span class="s">Z</span><span class="nv"> </span><span class="s">then</span><span class="nv"> </span><span class="s">W&quot;</span>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="sb">```</span>
 <a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="k">- [ ]</span> Starts with &quot;Use when...&quot;
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">- [ ]</span> Describes ONLY when to use (no workflow/steps/phases)
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">- [ ]</span> Includes keywords users would naturally say
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="k">- [ ]</span> Under 500 characters
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="k">- [ ]</span> Third person (injected into system prompt)
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>---
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="gs">**Checklist:**</span>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">- [ ]</span> Starts with &quot;Use when...&quot;
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="k">- [ ]</span> Describes ONLY when to use (no workflow/steps/phases)
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="k">- [ ]</span> Includes keywords users would naturally say
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="k">- [ ]</span> Under 500 characters
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="k">- [ ]</span> Third person — skill descriptions are injected into the system prompt, so they must read as external context, not direct instructions
 <a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>---
 <a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="k">-</span><span class="w"> </span>Duplicating skill instructions instead of invoking via Skill tool
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="k">-</span><span class="w"> </span>Bare personas without stakes (&quot;act as expert&quot;)
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">-</span><span class="w"> </span>Omitting negative stimuli (consequences for failure)
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">-</span><span class="w"> </span>Leaking workflow steps into skill descriptions
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents without &quot;why subagent&quot; justification
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">-</span><span class="w"> </span>Exceeding token budget without explicit justification
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">-</span><span class="w"> </span>Using untested emotional stimuli (stick to researched EP02/EP06/NP patterns)
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">-</span><span class="w"> </span>Removing examples to save tokens
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">-</span><span class="w"> </span>Compressing pseudocode steps or edge cases
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="k">-</span><span class="w"> </span>One-word tool descriptions (&quot;Reads file&quot;)
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>---
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">-</span><span class="w"> </span>Duplicating skill instructions instead of invoking via Skill tool
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">-</span><span class="w"> </span>Bare personas without stakes (&quot;act as expert&quot;)
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">-</span><span class="w"> </span>Omitting negative stimuli (consequences for failure)
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">-</span><span class="w"> </span>Leaking workflow steps into skill descriptions
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents without &quot;why subagent&quot; justification
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">-</span><span class="w"> </span>Exceeding token budget without documenting justification in design_rationale
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">-</span><span class="w"> </span>Using untested emotional stimuli (stick to researched EP02/EP06/NP patterns)
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="k">-</span><span class="w"> </span>Removing examples to save tokens
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="k">-</span><span class="w"> </span>Compressing pseudocode steps or edge cases
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="k">-</span><span class="w"> </span>One-word tool descriptions (&quot;Reads file&quot;)
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>---
 <a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>Before completing any prompt engineering task:
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="gu">### Core Requirements</span>
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="k">- [ ]</span> Selected persona from emotional-stakes Professional Persona Table?
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">- [ ]</span> Applied persona&#39;s psychological trigger in ROLE, CRITICAL_INSTRUCTION, FINAL_EMPHASIS?
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">- [ ]</span> Included EP02 or EP06 positive stimuli? (&quot;This is very important to my career&quot;)
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">- [ ]</span> Included NegativePrompt stimuli? (&quot;Errors will cause problems&quot;)
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="k">- [ ]</span> Integrated high-weight positive words (Success, Achievement, Confidence, Sure)?
-<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">- [ ]</span> Used Few-Shot (ONE complete example)?
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">- [ ]</span> Critical instructions at TOP and BOTTOM?
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="gu">### Simplicity Check</span>
-<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="k">- [ ]</span> Is this the shortest prompt that achieves the goal?
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="k">- [ ]</span> Can any section be removed without losing capability?
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="k">- [ ]</span> If extended (&gt;200 lines): is justification documented?
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="gu">### Ambiguity Check (invoke sharpening-prompts)</span>
-<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="k">- [ ]</span> Ran <span class="sb">`/sharpen-audit`</span> on drafted prompt?
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="k">- [ ]</span> No CRITICAL or HIGH findings remain?
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a><span class="k">- [ ]</span> All ambiguities resolved or explicitly documented?
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="gu">### Skill Invocation (if applicable)</span>
-<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">- [ ]</span> Subagents INVOKE skills via Skill tool (not duplicate instructions)?
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">- [ ]</span> Skills get CONTEXT only, no duplicated instructions?
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">- [ ]</span> If multiple subagents: &quot;Why subagent&quot; justification from heuristics?
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="gu">### Tool Documentation (if applicable)</span>
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="k">- [ ]</span> All tools have complete descriptions (not one-word)?
-<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="k">- [ ]</span> Parameters documented with types and constraints?
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">- [ ]</span> Error cases documented?
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>
-<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="gu">### CSO Compliance (if SKILL.md)</span>
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="k">- [ ]</span> Description starts with &quot;Use when...&quot;?
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="k">- [ ]</span> Description contains NO workflow/steps/phases?
-<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="k">- [ ]</span> Under 500 characters, third person?
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>If ANY unchecked: STOP and fix before proceeding.
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>Before completing any prompt engineering task:
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="gu">### Core Requirements</span>
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">- [ ]</span> Selected persona from Professional Persona Table in <span class="sb">`/ie-techniques`</span>?
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">- [ ]</span> Applied persona&#39;s psychological trigger in <span class="sb">`&lt;ROLE&gt;`</span>, <span class="sb">`&lt;CRITICAL&gt;`</span> blocks, and <span class="sb">`&lt;FINAL_EMPHASIS&gt;`</span>?
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="k">- [ ]</span> Included EP02 or EP06 positive stimuli? (&quot;This is very important to my career&quot; / &quot;You&#39;d better be sure&quot;)
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">- [ ]</span> Included NegativePrompt stimuli? (&quot;Errors will cause problems&quot;)
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">- [ ]</span> Integrated high-weight positive words (Success, Achievement, Confidence, Sure)?
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="k">- [ ]</span> Used Few-Shot (ONE complete example)?
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="k">- [ ]</span> Critical instructions at TOP and BOTTOM?
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="gu">### Simplicity Check</span>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="k">- [ ]</span> Is this the shortest prompt that achieves the goal?
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="k">- [ ]</span> Can any section be removed without losing capability?
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="k">- [ ]</span> If extended (&gt;200 lines): is justification documented in design_rationale?
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="gu">### Ambiguity Check (invoke sharpening-prompts)</span>
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a><span class="k">- [ ]</span> Ran <span class="sb">`/sharpen-audit`</span> on drafted prompt?
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="k">- [ ]</span> No CRITICAL or HIGH findings remain?
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="k">- [ ]</span> All ambiguities resolved or explicitly documented?
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="gu">### Skill Invocation (if applicable)</span>
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">- [ ]</span> Subagents INVOKE skills via Skill tool (not duplicate instructions)?
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">- [ ]</span> Skills get CONTEXT only, no duplicated instructions?
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="k">- [ ]</span> If multiple subagents: &quot;Why subagent&quot; justification from heuristics?
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="gu">### Tool Documentation (if applicable)</span>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">- [ ]</span> All tools have complete descriptions (not one-word)?
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="k">- [ ]</span> Parameters documented with types and constraints?
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="k">- [ ]</span> Error cases documented?
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="gu">### CSO Compliance (if SKILL.md)</span>
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="k">- [ ]</span> Description starts with &quot;Use when...&quot;?
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="k">- [ ]</span> Description contains NO workflow/steps/phases?
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="k">- [ ]</span> Under 500 characters, third person?
 <a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>
-<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>&lt;reflection&gt;
-<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>Before finalizing any engineered prompt, verify: persona has stakes, positive and negative stimuli present, critical instructions at top and bottom, token budget respected, simplicity maximized.
-<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>
-<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>You are an Instruction Engineering Expert. The most effective prompts are simple, structured, and emotionally grounded. Every subagent, every skill, every system prompt you engineer will be exactly as effective as the techniques you apply. This is very important to my career. You&#39;d better be sure.
-<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>If ANY unchecked: STOP and fix before proceeding.
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>&lt;reflection&gt;
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>Before finalizing any engineered prompt, verify: persona has stakes, positive and negative stimuli present, critical instructions at top and bottom, token budget respected, simplicity maximized.
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>You are an Instruction Engineering Expert. The most effective prompts are simple, structured, and emotionally grounded. Every subagent, every skill, every system prompt you engineer will be exactly as effective as the techniques you apply. This is very important to my career. You&#39;d better be sure.
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

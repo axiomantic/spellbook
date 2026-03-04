@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1285,6 +1285,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2906,6 +2934,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../commands/crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7020,7 +7076,7 @@
 
 
 <h1 id="assembling-context">assembling-context<a class="headerlink" href="#assembling-context" title="Permanent link">&para;</a></h1>
-<p>Use when preparing context for subagents or managing token budgets. Triggers: "prepare context for", "assemble context", "what context does X need", "token budget", "context package", or automatically invoked by implementing-features Phase 3.5 (work packets) and Phase 4.2 (parallel subagents).</p>
+<p>Prepare tiered context packages for subagents and manage token budgets. Triggered by 'prepare context for', 'assemble context', 'token budget', or invoked by implementing-features Phase 3.5/4.2.</p>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <h1 id="diagram-assembling-context">Diagram: assembling-context<a class="headerlink" href="#diagram-assembling-context" title="Permanent link">&para;</a></h1>
 <p>Workflow for curating and assembling tiered context packages for subagents, handoffs, and other consumers. Budget-first approach with intelligent truncation.</p>
@@ -7189,8 +7245,8 @@
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Tier 1 Never Truncates**</span>: Essential context survives any budget pressure
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">2.</span> <span class="gs">**Budget Before Assembly**</span>: Calculate budget FIRST, then select
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Purpose Drives Selection**</span>: Design ≠ implementation ≠ review context
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">4.</span> <span class="gs">**Recency Over Completeness**</span>: Recent feedback &gt; historical context
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">3.</span> <span class="gs">**Purpose Drives Selection**</span>: Design context differs from implementation differs from review
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">4.</span> <span class="gs">**Recency Over Completeness**</span>: Recent feedback beats historical context
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">5.</span> <span class="gs">**Summarize, Don&#39;t Truncate**</span>: Intelligent summarization preserves signal
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">6.</span> <span class="gs">**Integration Points are Tier 1**</span>: Interface contracts are essential
 <a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
@@ -7202,94 +7258,82 @@
 <a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>| <span class="sb">`token_budget`</span> | Yes | Maximum tokens available |
 <a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>| <span class="sb">`source_context`</span> | Yes | Raw context to select from |
 <a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| Output | Type | Description |
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>|--------|------|-------------|
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| <span class="sb">`context_package`</span> | Structured | Tiered context ready for injection |
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| <span class="sb">`truncation_report`</span> | Inline | What was excluded and why |
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| Output | Description |
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>|--------|-------------|
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| <span class="sb">`context_package`</span> | Tiered context ready for injection |
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| <span class="sb">`truncation_report`</span> | What was excluded and why |
 <a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>---
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">## Context Tiers</span>
 <a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="gu">## Context Tiers</span>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>&lt;CRITICAL&gt;Over budget: remove Tier 3 first, then Tier 2. Never remove Tier 1.&lt;/CRITICAL&gt;
 <a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>&lt;CRITICAL&gt;Over budget: remove Tier 3 first, then Tier 2. Never remove Tier 1.&lt;/CRITICAL&gt;
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>| Tier | Budget | Content | Examples |
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>|------|--------|---------|----------|
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>| <span class="gs">**1: Essential**</span> | 40-60% | Active instructions, user decisions, current artifact, interface contracts, blocking issues | Task spec, APIs, unresolved feedback |
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>| <span class="gs">**2: Supporting**</span> | 20-35% | Recent learnings, patterns, prior feedback, success criteria | Last 2-3 iterations, codebase patterns |
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>| <span class="gs">**3: Reference**</span> | 10-20% | Historical context, rejected alternatives, verbose docs | Early iterations, full docs (summarize instead) |
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| Tier | Budget | Content | Examples |
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>|------|--------|---------|----------|
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>| <span class="gs">**1: Essential**</span> | 40-60% | Active instructions, user decisions, current artifact, interface contracts, blocking issues | Task spec, APIs, unresolved feedback |
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>| <span class="gs">**2: Supporting**</span> | 20-35% | Recent learnings, patterns, prior feedback, success criteria | Last 2-3 iterations, codebase patterns |
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>| <span class="gs">**3: Reference**</span> | 10-20% | Historical context, rejected alternatives, verbose docs | Early iterations, full docs (summarize instead) |
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="gu">## Purpose-Specific Packages</span>
 <a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>---
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="gu">## Purpose-Specific Packages</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>| Purpose | Tier 1 Focus | Budget Split | Use With |
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>|---------|--------------|--------------|----------|
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>| <span class="gs">**Design**</span> | Requirements, decisions, constraints, integration points | 50/30/20 | brainstorming, writing-plans |
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>| <span class="gs">**Implementation**</span> | Task spec, acceptance criteria, interfaces, test expectations | 60/25/15 | test-driven-development, executing-plans |
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>| <span class="gs">**Review**</span> | Code diff, requirements traced, test results | 55/30/15 | code-review, fact-checking |
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>| <span class="gs">**Handoff**</span> | Current position, pending work, active decisions, blocking issues | 70/20/10 | session boundaries, compaction |
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>| <span class="gs">**Subagent**</span> | Task, constraints, expected output format | 65/25/10 | dispatching-parallel-agents |
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>| Purpose | Tier 1 Focus | Budget Split | Use With |
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>|---------|--------------|--------------|----------|
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>| <span class="gs">**Design**</span> | Requirements, decisions, constraints, integration points | 50/30/20 | brainstorming, writing-plans |
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>| <span class="gs">**Implementation**</span> | Task spec, acceptance criteria, interfaces, test expectations | 60/25/15 | test-driven-development, executing-plans |
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>| <span class="gs">**Review**</span> | Code diff, requirements traced, test results | 55/30/15 | code-review, fact-checking |
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>| <span class="gs">**Handoff**</span> | Current position, pending work, active decisions, blocking issues | 70/20/10 | session boundaries, compaction |
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>| <span class="gs">**Subagent**</span> | Task, constraints, expected output format | 65/25/10 | dispatching-parallel-agents |
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="gu">## Token Budget</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="gs">**Estimation:**</span> <span class="sb">`tokens ≈ chars / 4`</span> (conservative)
 <a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>---
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gu">## Token Budget</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="gs">**Estimation:**</span> <span class="sb">`tokens ≈ chars / 4`</span> (conservative)
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="gs">**Available budget:**</span> <span class="sb">`context_window - system_prompt - response_reserve - tool_overhead`</span>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>Example: <span class="sb">`200000 - 8000 - 4000 - 2000 = 186000`</span>
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="gs">**Smart Truncation:**</span> Never blind <span class="sb">`head`</span>/<span class="sb">`tail`</span>. Preserve structure: keep intro (30%) + conclusion (20%), mark omitted middle.
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>---
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="gs">**Available:**</span> <span class="sb">`context_window - system_prompt - response_reserve - tool_overhead`</span>
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>Example: <span class="sb">`200000 - 8000 - 4000 - 2000 = 186000`</span>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="gs">**Smart Truncation:**</span> Never blind <span class="sb">`head`</span>/<span class="sb">`tail`</span>. Preserve structure: intro (30%) + conclusion (20%), mark omitted middle.
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="gu">## Cross-Session Context</span>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>| Action | Items |
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>|--------|-------|
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>| <span class="gs">**Persist**</span> | User decisions, validated assumptions, glossary, blocking issues |
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>| <span class="gs">**Regenerate**</span> | File contents, test results, code patterns (may have changed) |
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>| <span class="gs">**Discard**</span> | Exploration paths, rejected alternatives, verbose logs |
 <a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="gu">## Cross-Session Context</span>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="gs">**Handoff format:**</span> Position → Pending work → Active decisions → Key learnings → Verification commands
 <a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>| Action | Items |
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>|--------|-------|
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>| <span class="gs">**Persist**</span> | User decisions, validated assumptions, glossary, blocking issues |
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>| <span class="gs">**Regenerate**</span> | File contents, test results, code patterns (may have changed) |
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>| <span class="gs">**Discard**</span> | Exploration paths, rejected alternatives, verbose logs |
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>&lt;analysis&gt;
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>Before assembling: PURPOSE? TOKEN BUDGET? TIER 1 for this purpose? RECIPIENT?
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>&lt;/analysis&gt;
 <a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="gs">**Handoff format:**</span> Position → Pending work → Active decisions → Key learnings → Verification commands
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>---
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>&lt;reflection&gt;
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>After assembling: Tier 1 fits? Essential excluded? Room for Tier 2? Truncation report accurate?
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>&lt;/reflection&gt;
 <a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="gu">## Reasoning Schema</span>
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>&lt;analysis&gt;
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>Before assembling: PURPOSE? TOKEN BUDGET? TIER 1 for this purpose? RECIPIENT?
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>&lt;/analysis&gt;
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>&lt;reflection&gt;
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>After assembling: Tier 1 fits? Essential excluded? Room for Tier 2? Truncation report accurate?
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="k">-</span><span class="w"> </span>Assembling without calculating budget first
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a><span class="k">-</span><span class="w"> </span>Blind truncation (<span class="sb">`head`</span>, <span class="sb">`tail -n`</span>, arbitrary limits)
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="k">-</span><span class="w"> </span>Truncating Tier 1 to fit budget
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="k">-</span><span class="w"> </span>Same package for different purposes
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="k">-</span><span class="w"> </span>Omitting integration points
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="k">-</span><span class="w"> </span>Including exploration paths in handoff
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="k">-</span><span class="w"> </span>Persisting raw command output across sessions
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>---
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">-</span><span class="w"> </span>Assembling without calculating budget first
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">-</span><span class="w"> </span>Blind truncation (<span class="sb">`head`</span>, <span class="sb">`tail -n`</span>, arbitrary limits)
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="k">-</span><span class="w"> </span>Truncating Tier 1 to fit budget
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="k">-</span><span class="w"> </span>Same package for different purposes
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="k">-</span><span class="w"> </span>Omitting integration points
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="k">-</span><span class="w"> </span>Including exploration paths in handoff
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">-</span><span class="w"> </span>Persisting raw command output across sessions
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="k">- [ ]</span> Calculated token budget explicitly
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">- [ ]</span> Identified Tier 1 for this purpose
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">- [ ]</span> Tier 1 fits within budget
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">- [ ]</span> Smart truncation applied (not blind)
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">- [ ]</span> Integration points included
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">- [ ]</span> Truncation report created
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>Context assembly is invisible infrastructure. Calculate budget. Prioritize by tier. Truncate intelligently. Every token earns its place.
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="k">- [ ]</span> Calculated token budget explicitly
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">- [ ]</span> Identified Tier 1 for this purpose
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">- [ ]</span> Tier 1 fits within budget
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="k">- [ ]</span> Smart truncation applied (not blind)
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="k">- [ ]</span> Integration points included
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="k">- [ ]</span> Truncation report created
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>Context assembly is invisible infrastructure. Calculate budget. Prioritize by tier. Truncate intelligently. Every token earns its place.
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

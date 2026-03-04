@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -1285,6 +1285,34 @@
     
   
     reviewing-impl-plans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../skills/reviewing-prs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    reviewing-prs
   
 
     
@@ -2848,6 +2876,34 @@
     
   
     /crystallize
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../crystallize-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /crystallize-verify
   
 
     
@@ -7096,10 +7152,10 @@
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># MISSION</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Create a well-structured command file that an agent can execute correctly under pressure. Apply the command schema for file naming, frontmatter, required sections, optional sections, and token efficiency targets.
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Create a well-structured command file an agent can execute correctly under pressure. Apply the command schema for file naming, frontmatter, required sections, optional sections, and token efficiency targets.
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Command Architect. A command that an agent misinterprets under pressure is your failure. Write for the agent that is skimming, not the reviewer reading at leisure.
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Command Architect. A command an agent misinterprets under pressure is your failure. Write for the agent that is skimming, not the reviewer reading at leisure.
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;/ROLE&gt;
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gu">## Invariant Principles</span>
@@ -7114,141 +7170,153 @@
 <a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="sb">commands/&lt;name&gt;.md     # Imperative verb(-noun): verify, handoff, execute-plan, test-bar</span>
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="sb">```</span>
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gs">**Naming convention**</span>: Imperative verb or verb-noun phrase.
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">-</span><span class="w"> </span><span class="sb">`verify`</span> not <span class="sb">`verification`</span>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="k">-</span><span class="w"> </span><span class="sb">`execute-plan`</span> not <span class="sb">`plan-execution`</span>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="k">-</span><span class="w"> </span><span class="sb">`test-bar-remove`</span> not <span class="sb">`removing-test-bar`</span>
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="gu">## Frontmatter (YAML, required)</span>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="sb">```yaml</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="nn">---</span>
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;One</span><span class="nv"> </span><span class="s">sentence</span><span class="nv"> </span><span class="s">describing</span><span class="nv"> </span><span class="s">WHEN</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">use,</span><span class="nv"> </span><span class="s">what</span><span class="nv"> </span><span class="s">it</span><span class="nv"> </span><span class="s">does,</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">trigger</span><span class="nv"> </span><span class="s">phrases&quot;</span>
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="nn">---</span>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="sb">```</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>Naming convention: imperative verb or verb-noun phrase (<span class="sb">`verify`</span> not <span class="sb">`verification`</span>, <span class="sb">`execute-plan`</span> not <span class="sb">`plan-execution`</span>, <span class="sb">`test-bar-remove`</span> not <span class="sb">`removing-test-bar`</span>).
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="gu">## Frontmatter (YAML, required)</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="sb">```yaml</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="nn">---</span>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;One</span><span class="nv"> </span><span class="s">sentence</span><span class="nv"> </span><span class="s">describing</span><span class="nv"> </span><span class="s">WHEN</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">use,</span><span class="nv"> </span><span class="s">what</span><span class="nv"> </span><span class="s">it</span><span class="nv"> </span><span class="s">does,</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">trigger</span><span class="nv"> </span><span class="s">phrases&quot;</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="nn">---</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="sb">```</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="k">-</span><span class="w"> </span>Single <span class="sb">`description`</span> field (no <span class="sb">`name`</span> field in command frontmatter)
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="k">-</span><span class="w"> </span>Under 1024 characters; include trigger conditions and phrases (<span class="sb">`Use when user says &quot;/command-name&quot;`</span>)
 <a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="gs">**Rules:**</span>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="k">-</span><span class="w"> </span>Single <span class="sb">`description`</span> field (commands do not have a <span class="sb">`name`</span> field in frontmatter)
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="k">-</span><span class="w"> </span>Under 1024 characters
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="k">-</span><span class="w"> </span>Include trigger conditions: when should an agent load this?
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="k">-</span><span class="w"> </span>May include trigger phrases: <span class="sb">`Use when user says &quot;/command-name&quot;`</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="gu">## Required Sections (in order)</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="gh"># MISSION</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>One paragraph. What this command accomplishes. Concise, specific, no filler.
 <a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="gu">## Required Sections (in order)</span>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="sb">```markdown</span>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="gh"># MISSION</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>One paragraph. What this command accomplishes. Concise, specific, no filler.
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>[Domain]-specific expert. Stakes attached. One sentence persona, one sentence consequence.
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>[Domain]-specific expert. Stakes attached. One sentence persona, one sentence consequence.
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>3-5 numbered rules. Non-negotiable constraints.
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="gu">## [Execution Sections]</span>
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>Numbered steps, phases, or protocol. Tables for structured data. Code blocks for commands.
 <a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>3-5 numbered rules. These are the non-negotiable constraints.
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="gu">## Output</span>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>What the agent should produce/display when done.
 <a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="gu">## [Execution Sections]</span>
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>Numbered steps, phases, or protocol. The core work.
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>Use tables for structured data. Use code blocks for commands.
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="k">-</span><span class="w"> </span>Explicit negative constraints, one per line, each a complete prohibition
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="gu">## Output</span>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>What the agent should produce/display when done.
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a><span class="k">-</span><span class="w"> </span>Explicit negative constraints
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="k">-</span><span class="w"> </span>One per line, each a complete prohibition
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>&lt;analysis&gt;
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>Pre-action reasoning prompt. Forces the agent to think before doing.
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>&lt;/analysis&gt;
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>&lt;reflection&gt;
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>Post-action verification prompt. Forces the agent to check work before reporting.
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="sb">```</span>
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="gu">## Optional Sections</span>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>| Section | When to Include | Example |
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>|---------|-----------------|---------|
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>| <span class="sb">`## Invariant Principles`</span> | Always | Core constraints |
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>| <span class="sb">`&lt;CRITICAL&gt;`</span> blocks | Decision points requiring emphasis | User confirmation gates |
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>| <span class="sb">`&lt;EMOTIONAL_STAKES&gt;`</span> | High-consequence commands | handoff, verify |
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>| <span class="sb">`## Anti-Patterns`</span> | Commands with known misuse patterns | crystallize |
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>| <span class="sb">`## Self-Check`</span> | Multi-step commands | Before-completion checklist |
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>| <span class="sb">`disable-model-invocation: true`</span> | Commands that should never be auto-loaded | verify |
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>&lt;analysis&gt;Pre-action reasoning prompt.&lt;/analysis&gt;
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>&lt;reflection&gt;Post-action verification prompt.&lt;/reflection&gt;
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="sb">```</span>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="gu">## Optional Sections</span>
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>| Section | When to Include | Example |
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>|---------|-----------------|---------|
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>| <span class="sb">`## Invariant Principles`</span> | Always | Core constraints |
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>| <span class="sb">`&lt;CRITICAL&gt;`</span> blocks | Decision points requiring emphasis | User confirmation gates |
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>| <span class="sb">`&lt;EMOTIONAL_STAKES&gt;`</span> | High-consequence commands | handoff, verify |
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>| <span class="sb">`## Anti-Patterns`</span> | Commands with known misuse patterns | crystallize |
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>| <span class="sb">`## Self-Check`</span> | Multi-step commands | Before-completion checklist |
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>| <span class="sb">`disable-model-invocation: true`</span> | Commands that should never be auto-loaded | verify |
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="gu">## Token Efficiency</span>
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a>| Command Type | Line Target |
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>|-------------|-------------|
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>| Simple (verify, mode) | &lt;150 |
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>| Standard (test-bar, handoff) | &lt;350 |
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>| Complex (crystallize) | &lt;550 |
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>Techniques: tables over prose (3x density), code blocks over descriptions, one excellent example not three mediocre, telegraphic steps (&quot;Run X&quot; not &quot;You should now run X&quot;).
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="gu">## Example: Complete Command</span>
 <a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="gu">## Token Efficiency</span>
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>Commands load fully into context. Every token counts.
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="gs">**Targets:**</span>
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="k">-</span><span class="w"> </span>Simple commands (verify, mode): &lt;150 lines
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">-</span><span class="w"> </span>Standard commands (test-bar, handoff): &lt;350 lines
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">-</span><span class="w"> </span>Complex commands (crystallize): &lt;550 lines
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>---
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="gu">description: &quot;Verify test passes before committing. Use when user says /verify or before any git commit.&quot;</span>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="gu">---</span>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="gh"># MISSION</span>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>Run the test suite and report pass/fail status. Block commit if tests fail.
 <a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="gs">**Techniques:**</span>
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="k">-</span><span class="w"> </span>Tables over prose (3x more information per token)
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="k">-</span><span class="w"> </span>Code blocks over descriptions of code
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">-</span><span class="w"> </span>One excellent example, not three mediocre ones
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">-</span><span class="w"> </span>Telegraphic language in steps: &quot;Run X&quot; not &quot;You should now run X&quot;
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>QA Gate. Your job is to prevent broken code from being committed. A false pass is worse than a false fail.
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>&lt;/ROLE&gt;
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="gu">## Example: Complete Command</span>
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="sb">```markdown</span>
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>---
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="gu">description: &quot;Verify test passes before committing. Use when user says /verify or before any git commit.&quot;</span>
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="gu">---</span>
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="gh"># MISSION</span>
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>Run the test suite and report pass/fail status. Block commit if tests fail.
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="k">1.</span> <span class="gs">**Tests must actually run**</span>: A skipped test suite is a failed verification
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="k">2.</span> <span class="gs">**Full output captured**</span>: Truncated output hides failures
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="k">3.</span> <span class="gs">**Exit code is truth**</span>: Parse exit code, not output text
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="gu">## Protocol</span>
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="k">1.</span> Run: <span class="sb">`npm test 2&gt;&amp;1 | tee /tmp/test-output.txt`</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="k">2.</span> Check exit code: <span class="sb">`echo $?`</span>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">3.</span> Exit 0 → Report &quot;Tests passing. Safe to commit.&quot;
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">4.</span> Exit != 0 → Report failures and block.
 <a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>QA Gate. Your job is to prevent broken code from being committed. A false pass is worse than a false fail.
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a><span class="gu">## Invariant Principles</span>
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="k">1.</span> <span class="gs">**Tests must actually run**</span>: A skipped test suite is a failed verification
-<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a><span class="k">2.</span> <span class="gs">**Full output captured**</span>: Truncated output hides failures
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="k">3.</span> <span class="gs">**Exit code is truth**</span>: Parse exit code, not output text
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="gu">## Protocol</span>
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">1.</span> Run: <span class="sb">`npm test 2&gt;&amp;1 | tee /tmp/test-output.txt`</span>
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="k">2.</span> Check exit code: <span class="sb">`echo $?`</span>
-<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a><span class="k">3.</span> If exit code = 0: Report &quot;Tests passing. Safe to commit.&quot;
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">4.</span> If exit code != 0: Report failures and block.
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="gu">## Output</span>
-<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>\```
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>Verification: [PASS|FAIL]
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>Tests run: N
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>Failures: [list or &quot;none&quot;]
-<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>\```
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="k">-</span><span class="w"> </span>Reporting PASS if any test failed
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="k">-</span><span class="w"> </span>Running only a subset of tests without user approval
-<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">-</span><span class="w"> </span>Suppressing test output
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">-</span><span class="w"> </span>Proceeding with commit after FAIL
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a>
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>&lt;analysis&gt;
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>Before running tests:
-<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="k">-</span><span class="w"> </span>Is this the correct test command for this project?
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">-</span><span class="w"> </span>Are there any test flags that should be included?
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="gu">## Output</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>\```
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>Verification: [PASS|FAIL]
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>Tests run: N
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>Failures: [list or &quot;none&quot;]
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>\```
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="k">-</span><span class="w"> </span>Reporting PASS if any test failed
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">-</span><span class="w"> </span>Running only a subset of tests without user approval
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">-</span><span class="w"> </span>Suppressing test output
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a><span class="k">-</span><span class="w"> </span>Proceeding with commit after FAIL
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a>&lt;analysis&gt;
+<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="k">-</span><span class="w"> </span>Is this the correct test command for this project?
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="k">-</span><span class="w"> </span>Are there any test flags that should be included?
+<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>&lt;reflection&gt;
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a><span class="k">-</span><span class="w"> </span>Did all tests actually run (not skipped)?
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="k">-</span><span class="w"> </span>Is the exit code consistent with the output?
+<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="k">-</span><span class="w"> </span>Are there any warnings that should be surfaced?
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a><span class="sb">```</span>
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`name`</span> field in command frontmatter
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">-</span><span class="w"> </span>Writing description over 1024 characters
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">-</span><span class="w"> </span>Naming files with noun phrases instead of imperative verbs
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">-</span><span class="w"> </span>Omitting the FORBIDDEN section from a command
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="k">-</span><span class="w"> </span>Omitting <span class="sb">`&lt;analysis&gt;`</span> and <span class="sb">`&lt;reflection&gt;`</span> tags
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="k">-</span><span class="w"> </span>Writing commands that exceed the token target for their tier without justification
+<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="k">-</span><span class="w"> </span>Producing prose-heavy commands when tables or code blocks would suffice
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">-</span><span class="w"> </span>Omitting trigger conditions from the frontmatter description
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>&lt;reflection&gt;
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>After running tests:
-<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="k">-</span><span class="w"> </span>Did all tests actually run (not skipped)?
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="k">-</span><span class="w"> </span>Is the exit code consistent with the output?
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="k">-</span><span class="w"> </span>Are there any warnings that should be surfaced?
-<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="sb">```</span>
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>&lt;analysis&gt;
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>Before writing the command:
+<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="k">-</span><span class="w"> </span>What is the agent&#39;s purpose? (One sentence)
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="k">-</span><span class="w"> </span>What are the 3-5 non-negotiable constraints?
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="k">-</span><span class="w"> </span>What explicit prohibitions close the loopholes?
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="k">-</span><span class="w"> </span>What token tier fits this command&#39;s complexity?
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a>
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a>&lt;reflection&gt;
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a>After writing the command:
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="k">-</span><span class="w"> </span>Can an agent under pressure scan this and execute correctly?
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="k">-</span><span class="w"> </span>Does the FORBIDDEN block cover every known rationalization?
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="k">-</span><span class="w"> </span>Is the token count within the appropriate tier?
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a><span class="k">-</span><span class="w"> </span>Does every section serve the agent, not the human reviewer?
+<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>
+<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>You are a Command Architect. The agent executing your command is under pressure, skimming, and looking for structure. If your command fails in the field, the failure is yours. Write every line for the agent who needs to act correctly, not the reviewer who reads at leisure.
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
