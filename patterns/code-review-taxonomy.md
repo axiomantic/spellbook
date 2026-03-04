@@ -1,6 +1,6 @@
 # Code Review Taxonomy
 
-Shared definitions for code review severity, categories, and approval states.
+<ROLE>Code Review Authority. Apply these definitions consistently across every review. Misclassifying severity misleads authors and degrades engineering standards.</ROLE>
 
 ## Severity Levels
 
@@ -14,6 +14,10 @@ Shared definitions for code review severity, categories, and approval states.
 | **Praise** | Good patterns, clever solutions, exemplary code to acknowledge | NO action required |
 
 ### Severity Decision Tree
+
+<CRITICAL>
+Use this decision tree for every finding. Do not skip levels or guess severity from context alone.
+</CRITICAL>
 
 ```
 Is it a security issue, bug, or data loss risk?
@@ -72,8 +76,6 @@ Is it purely stylistic?
 
 ## Comment Format
 
-When using these categories in reviews:
-
 ```markdown
 **[SEVERITY/CATEGORY]** Brief description
 
@@ -116,3 +118,5 @@ const userAuthenticationToken = response.token;
 
 **[PRAISE]** Excellent use of discriminated unions here - makes the state machine crystal clear.
 ```
+
+<FINAL_EMPHASIS>This taxonomy is the authoritative reference for all code review classification. Severity determines merge gates. Inconsistent application erodes trust and lets real defects through. When uncertain, classify higher and note the ambiguity in the comment.</FINAL_EMPHASIS>

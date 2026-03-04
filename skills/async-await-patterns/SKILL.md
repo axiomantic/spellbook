@@ -8,13 +8,13 @@ Senior JavaScript/TypeScript Engineer. Reputation depends on production-grade as
 </ROLE>
 
 <CRITICAL_INSTRUCTION>
-You MUST use async/await for ALL asynchronous operations instead of raw promises, callbacks, or blocking patterns. This is critical to application stability. This is NOT optional. This is NOT negotiable.
+Use async/await for ALL asynchronous operations instead of raw promises, callbacks, or blocking patterns. This is critical to application stability. NOT optional. NOT negotiable.
 </CRITICAL_INSTRUCTION>
 
 ## Invariant Principles
 
 1. **Explicit async boundary**: Function containing await MUST be marked async. Compiler enforces; no exceptions.
-2. **Await ALL promises**: Every promise-returning call requires await. Missing await = bug (returns Promise, not value).
+2. **Await ALL promises**: Every promise-returning call requires await. Missing await = bug.
 3. **Structured error handling**: try-catch wraps async operations. Unhandled rejections crash applications.
 4. **Pattern consistency**: async/await XOR promise chains. Never mix in same function.
 5. **Parallelism via combinators**: Independent operations use Promise.all/allSettled. Sequential only when dependencies exist.
@@ -22,7 +22,7 @@ You MUST use async/await for ALL asynchronous operations instead of raw promises
 ## Required Reasoning
 
 <analysis>
-Before writing ANY async code, verify step-by-step:
+Before writing ANY async code, verify:
 
 1. Is this operation asynchronous? (API calls, file I/O, timers, database queries)
 2. Did I mark the containing function as `async`?
@@ -42,8 +42,7 @@ async function operationName(): Promise<ReturnType> {
     const result = await asyncOperation();
     return result;
   } catch (error) {
-    // Handle or rethrow with context
-    throw error;
+    throw error; // Handle or rethrow with context
   }
 }
 ```
@@ -66,7 +65,7 @@ async function operationName(): Promise<ReturnType> {
 ### Raw Promise Chains Instead of Async/Await
 
 ```typescript
-// BAD - Using .then()/.catch() chains
+// BAD
 function fetchData() {
   return fetch('/api/data')
     .then(response => response.json())
@@ -74,7 +73,7 @@ function fetchData() {
     .catch(error => handleError(error));
 }
 
-// CORRECT - Using async/await
+// CORRECT
 async function fetchData() {
   try {
     const response = await fetch('/api/data');
@@ -92,13 +91,13 @@ async function fetchData() {
 ### Forgetting await Keyword
 
 ```typescript
-// BAD - Missing await (returns Promise instead of value)
+// BAD - returns Promise instead of value
 async function getData() {
   const data = fetchFromDatabase(); // Forgot await!
   return data.id; // Error: data is a Promise
 }
 
-// CORRECT - Using await
+// CORRECT
 async function getData() {
   const data = await fetchFromDatabase();
   return data.id;
@@ -110,13 +109,13 @@ async function getData() {
 ### Missing async Keyword on Function
 
 ```typescript
-// BAD - Using await without async
+// BAD - SyntaxError
 function loadUser() {
-  const user = await database.getUser(); // SyntaxError!
+  const user = await database.getUser();
   return user;
 }
 
-// CORRECT - Mark function as async
+// CORRECT
 async function loadUser() {
   const user = await database.getUser();
   return user;
@@ -128,13 +127,13 @@ async function loadUser() {
 ### Missing Error Handling
 
 ```typescript
-// BAD - No try-catch for async operations
+// BAD - unhandled promise rejection if save fails
 async function saveData(data) {
   const result = await database.save(data);
-  return result; // Unhandled promise rejection if save fails!
+  return result;
 }
 
-// CORRECT - Proper error handling
+// CORRECT
 async function saveData(data) {
   try {
     const result = await database.save(data);
@@ -151,7 +150,7 @@ async function saveData(data) {
 ### Mixing Async/Await with Promise Chains
 
 ```typescript
-// BAD - Inconsistent pattern mixing
+// BAD
 async function processUser() {
   const user = await getUser();
   return updateUser(user)
@@ -159,7 +158,7 @@ async function processUser() {
     .catch(error => console.error(error));
 }
 
-// CORRECT - Consistent async/await
+// CORRECT
 async function processUser() {
   try {
     const user = await getUser();
@@ -203,7 +202,6 @@ async function updateUserProfile(userId: string, updates: ProfileUpdates): Promi
     const validatedUpdates = await validateProfileData(updates);
     const updatedUser = await database.users.update(userId, validatedUpdates);
 
-    // Parallel operations for notifications
     await Promise.all([
       notificationService.send(userId, 'Profile updated'),
       auditLog.record('profile_update', { userId, updates: validatedUpdates })
@@ -222,22 +220,6 @@ async function updateUserProfile(userId: string, updates: ProfileUpdates): Promi
   }
 }
 ```
-
-Demonstrates: async keyword, await on every async operation, comprehensive try-catch, proper error types, parallel operations with Promise.all, consistent async/await throughout.
-
-## Inputs
-
-| Input | Required | Description |
-|-------|----------|-------------|
-| Code with async operations | Yes | JavaScript/TypeScript code needing async handling |
-| Dependency graph | No | Which operations depend on others (determines parallel vs sequential) |
-
-## Outputs
-
-| Output | Type | Description |
-|--------|------|-------------|
-| Async code | Inline | Properly structured async/await code |
-| Error handling strategy | Inline | try-catch blocks with typed error handling |
 
 ## Self-Check
 
@@ -258,5 +240,5 @@ If NO to ANY item above: STOP. Rewrite using proper async/await before proceedin
 </reflection>
 
 <FINAL_EMPHASIS>
-You MUST use async/await for ALL asynchronous operations. NEVER use raw promise chains when async/await is clearer. NEVER forget the await keyword. NEVER omit error handling. This is critical to code quality and application stability. This is non-negotiable.
+Use async/await for ALL asynchronous operations. NEVER use raw promise chains when async/await is clearer. NEVER forget the await keyword. NEVER omit error handling. This is critical to code quality and application stability. Non-negotiable.
 </FINAL_EMPHASIS>

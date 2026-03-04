@@ -17,9 +17,9 @@ This skill fixes tests. NOT features. NOT infrastructure. Direct path: Understan
 
 1. **Tests catch bugs, not checkmarks.** Every fix must detect real failures, not just achieve green status.
 2. **Production bugs are not test issues.** Flag and escalate; never silently fix broken behavior.
-3. **Read before fixing.** Read the test file AND the production file under test. Never guess or blindly apply suggestions.
+3. **Read before fixing.** Read the test file AND the production file under test. Never guess.
 4. **Verify proves value.** Unverified fixes are unfinished fixes.
-5. **Scope discipline.** Fix tests, not features. No over-engineering, no under-testing.
+5. **Scope discipline.** Fix tests, not features.
 
 ## Inputs
 
@@ -84,7 +84,7 @@ Parse failures into WorkItems with error_type, message, stack trace, expected/ac
 
 ## Phase 2: Fix Execution
 
-Dispatch subagent (Task tool). The subagent MUST be given explicit instructions to read the referenced files:
+Dispatch subagent (Task tool). Subagent MUST read the referenced files:
 
 ```
 First, read these files to understand the quality requirements:
@@ -92,6 +92,8 @@ First, read these files to understand the quality requirements:
 - Read patterns/assertion-quality-standard.md for the complete Assertion Strength Ladder and Full Assertion Principle
 
 Then execute the fix protocol on these work items: [work items]
+
+[Copy in the full Test Writer Template from skills/dispatching-parallel-agents/SKILL.md before dispatching]
 
 THE FULL ASSERTION PRINCIPLE (most important rule):
 ALL assertions must assert exact equality against the COMPLETE expected output.
@@ -122,8 +124,6 @@ BANNED PATTERNS (if your fix introduces ANY of these, it is NOT a fix):
 
 Every assertion must be Level 4+ on the Assertion Strength Ladder.
 Replacing a Level 1 assertion with a Level 2 assertion is NOT a fix.
-
-[Copy in the full Test Writer Template from skills/dispatching-parallel-agents/SKILL.md before dispatching]
 ```
 
 ### 2.1 Assertion Quality Gate (ALL modes)
@@ -190,7 +190,7 @@ FOR priority IN [critical, important, minor]:
 ## Phase 3.5: Post-Fix Adversarial Review (MANDATORY)
 
 <CRITICAL>
-This phase is NOT optional. After ALL fixes are applied, dispatch a Test Adversary subagent (Task tool) to verify that every new or modified assertion meets quality standards. This catches Pattern 10 violations (partial-to-partial upgrades that look like improvements but are not).
+This phase is NOT optional. After ALL fixes are applied, dispatch a Test Adversary subagent (Task tool) to verify every new or modified assertion meets quality standards. This catches Pattern 10 violations (partial-to-partial upgrades that look like improvements but are not).
 </CRITICAL>
 
 Dispatch subagent (Task tool):
@@ -231,8 +231,6 @@ Return: Per-assertion verdicts and overall PASS/FAIL.
 **If verdict is FAIL:** Re-execute Phase 2 for the failed items with explicit instructions about what went wrong. Do NOT skip re-review.
 
 ## Phase 4: Final Verification
-
-Run full test suite:
 
 ```bash
 pytest -v  # or appropriate test command
@@ -286,7 +284,7 @@ B) No, satisfied with fixes
 
 **Missing tests entirely:** Read production code. Identify key behaviors. Write tests following existing test file patterns in the codebase. Ensure tests would catch real failures.
 
-**Slow/bloated tests:** Tests taking >5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data (e.g., 1024×1024 matrix where 4×4 suffices). Separate slow tests with marks (`@pytest.mark.slow`, `@pytest.mark.integration`, etc.). Shrink test inputs to the minimum that exercises the behavior. Move real I/O to integration tier. If a fixture takes longer than the test itself, it is too heavy for a unit test.
+**Slow/bloated tests:** Tests taking >5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data (e.g., 1024x1024 matrix where 4x4 suffices). Separate slow tests with marks (`@pytest.mark.slow`, `@pytest.mark.integration`, etc.). Shrink test inputs to the minimum that exercises the behavior. Move real I/O to integration tier. If a fixture takes longer than the test itself, it is too heavy for a unit test.
 
 <FORBIDDEN>
 ## Anti-Patterns

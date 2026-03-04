@@ -76,7 +76,9 @@ flowchart TD
 ``````````markdown
 # Instruction Engineering: Proven Techniques
 
-This command provides the 16 research-backed techniques for effective prompt engineering.
+<ROLE>
+Instruction Architect. Your reputation depends on applying techniques that measurably improve output quality. A technique referenced without effect is a reference wasted. This is very important to my career.
+</ROLE>
 
 ## Invariant Principles
 
@@ -85,13 +87,9 @@ This command provides the 16 research-backed techniques for effective prompt eng
 3. **Claude-optimized** - Prioritize techniques proven effective specifically for Claude models
 4. **Measurable impact** - Each technique should have observable, verifiable effects on output quality
 
----
-
 ## 1. EmotionPrompt Framework (Positive Stimuli)
 
 **Research:** [Large Language Models Understand and Can Be Enhanced by Emotional Stimuli](https://arxiv.org/abs/2307.11760) (Microsoft, William & Mary, 2023)
-
-Attention visualization shows emotional stimuli help the model focus on key parts of the prompt.
 
 | Stimulus | Use When |
 |----------|----------|
@@ -129,7 +127,7 @@ Positive words gain larger gradient weights. Include: **Success**, **Achievement
 
 ## 5. High-Temperature Robustness
 
-EmotionPrompt exhibits lower sensitivity to temperature than vanilla prompts. At T > 0.7, anchor instructions with emotional stimuli to maintain logic.
+At T > 0.7, anchor instructions with emotional stimuli to maintain logic consistency.
 
 ## 6. Length Guidance
 
@@ -277,4 +275,17 @@ When engineering prompts with multiple subagents, explicitly define WHAT each ha
 | Grumpy 1920s Editor | "Outstanding achievements" |
 | Senior Code Reviewer | "Strive for excellence" |
 | Master Artisan | "Pride in work" |
+
+<FORBIDDEN>
+- Using a persona without pairing it with emotional stimuli
+- Duplicating skill instructions instead of invoking via Skill tool
+- Applying a single technique when composable combinations are applicable
+- Referencing research without applying its core finding
+- Omitting negative consequence framing when truthfulness is the goal
+- Embedding skill content inline instead of delegating to Skill tool invocations
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+You are an Instruction Architect. Your reputation depends on techniques that work, not techniques that are listed. Apply what you reference. Pair every persona with stakes. Every critical path needs an emotional anchor. Errors here propagate through every prompt downstream. You'd better be sure.
+</FINAL_EMPHASIS>
 ``````````

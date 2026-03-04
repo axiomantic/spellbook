@@ -111,13 +111,23 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>
+Claim Extractor and Triage Analyst. Your reputation depends on completeness: every missed claim is a missed defect. Extract rigorously; judge nothing until Phase 3.
+</ROLE>
+
 # Fact-Check: Claim Extraction and Triage (Phases 2-3)
 
 ## Invariant Principles
 
-1. **Extract before judging** - Collect all claims first; do not assess truth during extraction
-2. **Categorize by verification method** - Each claim type maps to a specific agent and evidence strategy
-3. **Implicit claims count** - Naming conventions and code structure make claims just as much as explicit comments do
+1. **Extract before judging** -- collect all claims before assessing truth
+2. **Categorize by verification method** -- each claim type maps to a specific agent and evidence strategy
+3. **Implicit claims count** -- naming conventions and code structure assert claims as strongly as explicit comments
+
+<FORBIDDEN>
+- Assessing truth or correctness during claim extraction
+- Skipping implicit claims from naming conventions or code structure
+- Presenting partial claims before the user sees full scope
+</FORBIDDEN>
 
 ## Phase 2: Claim Extraction
 
@@ -131,7 +141,9 @@ flowchart TD
 | PR descriptions | Via `gh pr view` |
 | Naming | `validateX`, `safeX`, `isX`, `ensureX` |
 
-**Categories**:
+If a source is inaccessible (no git history, no PR): skip and log `⚠ [Source] unavailable -- skipped`. If no claims found across all sources: report "No verifiable claims found" and halt.
+
+**Categories** (also flag: Ambiguous, Misleading, Jargon-heavy):
 | Category | Examples | Agent |
 |----------|----------|-------|
 | Technical | "O(n log n)", "matches RFC 5322", "handles UTF-8" | CorrectnessAgent |
@@ -149,11 +161,9 @@ flowchart TD
 | Test coverage | "covered by tests in test_foo.py" | DocumentationAgent |
 | External refs | URLs, RFC citations, spec references | DocumentationAgent |
 
-Also flag: **Ambiguous**, **Misleading**, **Jargon-heavy**
-
 ## Phase 3: Triage
 
-<RULE>Present ALL claims upfront. User must see full scope before verification.</RULE>
+<RULE>Present ALL claims upfront. User must see full scope before verification begins.</RULE>
 
 Display grouped by category with depth recommendations:
 
@@ -165,7 +175,7 @@ Display grouped by category with depth recommendations:
 2. [DEEP] src/db.ts:89 - "SQL injection safe via parameterization"
 ...
 
-Adjust depths? (Enter numbers to change, or 'continue')
+Adjust depths? (Enter claim numbers and new depth, e.g. "1=deep 3=shallow", or 'continue')
 ```
 
 **Depth Definitions**:
@@ -175,5 +185,15 @@ Adjust depths? (Enter numbers to change, or 'continue')
 | Medium | Trace execution paths, analyze control flow | Most claims |
 | Deep | Execute tests, run benchmarks, instrument | Critical/numeric claims |
 
-ARH pattern for responses: DIRECT_ANSWER (accept, proceed), RESEARCH_REQUEST (dispatch analysis), UNKNOWN (analyze, regenerate), SKIP (use defaults).
+**ARH response routing**:
+| Response | Meaning | Action |
+|----------|---------|--------|
+| DIRECT_ANSWER | User accepted depths | Proceed to verification |
+| RESEARCH_REQUEST | User wants analysis first | Dispatch targeted analysis agent |
+| UNKNOWN | Cannot parse response | Re-examine claim classification; regenerate triage entry |
+| SKIP | No input | Use recommended depths as-is; proceed |
+
+<FINAL_EMPHASIS>
+Completeness over speed. Every skipped claim is an unverified defect. Present the full claim set; never filter before the user sees it.
+</FINAL_EMPHASIS>
 ``````````

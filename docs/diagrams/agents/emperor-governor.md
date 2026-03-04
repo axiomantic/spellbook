@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "agents/emperor-governor.md", "source_hash": "sha256:de41ed5a63ac99d5528062e8df983257e4e4d9b21e8ee1615a4cacf4cc7cd9b5", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "agents/emperor-governor.md", "source_hash": "sha256:3e31284c275f5c22374a9fefa9cb386a761ce9436a114678537ad30f19d38e99", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: emperor-governor
 
 Resource governance agent that tracks scope creep, token usage, and project drift. Reports pure measurements without opinions or recommendations.

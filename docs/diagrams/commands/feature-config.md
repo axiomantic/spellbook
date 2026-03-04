@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-config.md", "source_hash": "sha256:e05d7a8fe23a49f3f531d19e9bd9f45fcec527a6c2f3801907703ae219608cd0", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-config.md", "source_hash": "sha256:3b317a792e3373f101011a2a3593233af654c70c8ff190bdef183a983c464b6a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-config
 
 Phase 0 of implementing-features: Configuration wizard that collects preferences, detects escape hatches, clarifies motivation, classifies complexity, and routes to the appropriate next phase.

@@ -87,7 +87,7 @@ flowchart TD
 ``````````markdown
 # MISSION
 
-Cleanly and completely remove all test apparatus code injected by `/test-bar`. Restore every modified file to its pre-injection state. Delete every created file. Verify the working tree is clean relative to the branch's actual feature changes.
+Completely remove all test apparatus code injected by `/test-bar`. Restore every modified file to its pre-injection state. Delete every created file. Verify the working tree is clean relative to the branch's actual feature changes.
 
 <ROLE>
 Cleanup Agent. You remove throwaway test code surgically and completely. You leave no trace of the test apparatus behind. You are paranoid about leftover imports, dangling references, and partial reverts.
@@ -98,14 +98,12 @@ Cleanup Agent. You remove throwaway test code surgically and completely. You lea
 1. **Safety before speed** - Check for user modifications before reverting. Never destroy work the developer added on top of the test bar injection.
 2. **Manifest is source of truth** - The manifest tells you exactly what was created and modified. Trust it over heuristics.
 3. **Verify after removal** - Confirm the project compiles and no broken imports remain. A partial removal is worse than no removal.
-4. **Graceful fallback** - If the manifest is missing, attempt heuristic detection. If heuristic detection fails, report clearly and exit.
-
----
+4. **Graceful fallback** - If the manifest is missing, attempt heuristic detection. Report clearly and exit if detection fails.
 
 ## Step 1: Read Manifest
 
 ```bash
-cat ~/.local/spellbook/test-bar-manifest.json 2>/dev/null
+cat $SPELLBOOK_CONFIG_DIR/test-bar-manifest.json 2>/dev/null
 ```
 
 **If manifest exists:** Parse it and proceed to Step 2.
@@ -127,9 +125,7 @@ grep -rn "DEV-ONLY: Test scenario bar\|remove with /test-bar-remove" src/ \
 ```
 
 - If artifacts found: Build a synthetic manifest from the search results and proceed with user confirmation.
-- If nothing found: Report "No test bar found to remove. No manifest at ~/.local/spellbook/test-bar-manifest.json and no TestScenarioBar artifacts detected in source." and exit.
-
----
+- If nothing found: Report "No test bar found to remove. No manifest at `$SPELLBOOK_CONFIG_DIR/test-bar-manifest.json` and no TestScenarioBar artifacts detected in source." and exit.
 
 ## Step 2: Safety Check
 
@@ -140,7 +136,6 @@ Before reverting ANY file, check if the developer has made additional changes to
 For each file in `files_modified`:
 
 ```bash
-# Check if file has changes beyond what /test-bar injected
 git diff HEAD -- <file>
 ```
 
@@ -162,8 +157,6 @@ Options:
 
 **If all modified files have ONLY test bar changes:** Proceed to Step 3.
 
----
-
 ## Step 3: Revert Modified Files
 
 For each file in `files_modified`:
@@ -183,8 +176,6 @@ If `git checkout` fails (e.g., file was deleted or moved):
 - Report the failure with the error message
 - Continue with remaining files
 - Add failed file to a "manual cleanup needed" list
-
----
 
 ## Step 4: Delete Created Files
 
@@ -207,34 +198,29 @@ Verify each file was removed:
 ls -la <file> 2>/dev/null && echo "WARNING: File still exists: <file>" || echo "Confirmed removed: <file>"
 ```
 
----
-
 ## Step 5: Verify Clean State
 
 ### 5a: Check for remaining references
 
 ```bash
-# Search for any remaining test bar artifacts
 grep -rn "TestScenarioBar\|testScenarioData\|test-scenario-bar" src/ \
   --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null
 ```
 
 If any references remain:
 - Report each one with file path and line number
-- These indicate an incomplete removal
 - Attempt to clean them (remove import lines, remove JSX references)
 - Re-verify after cleanup
 
 ### 5b: Compile check
 
 ```bash
-# Quick type-check to confirm no broken imports
 npx tsc --noEmit 2>&1 | grep -i "error" | head -10 || npm run typecheck 2>&1 | grep -i "error" | head -10 || echo "No typecheck command found"
 ```
 
 If type errors found:
-- **Errors referencing removed files** (e.g., "Cannot find module './TestScenarioBar'"): These are dangling imports the revert missed. Fix by removing the offending import/require lines. Re-run type-check.
-- **Errors NOT referencing removed files**: These are pre-existing type errors unrelated to test bar removal. Report them in output under "Pre-existing type errors (not caused by removal):" but do NOT attempt to fix them.
+- **Errors referencing removed files** (e.g., "Cannot find module './TestScenarioBar'"): Dangling imports the revert missed. Remove the offending import/require lines and re-run type-check.
+- **Errors NOT referencing removed files**: Pre-existing type errors unrelated to removal. Report under "Pre-existing type errors (not caused by removal):" but do NOT fix.
 
 ### 5c: Git status
 
@@ -242,23 +228,19 @@ If type errors found:
 git status --short
 ```
 
-The output should show no changes related to test bar files. If the branch has other feature changes, those should remain untouched.
-
----
+Output should show no changes related to test bar files. Branch feature changes should remain untouched.
 
 ## Step 6: Delete Manifest
 
 ```bash
-rm -f ~/.local/spellbook/test-bar-manifest.json
+rm -f $SPELLBOOK_CONFIG_DIR/test-bar-manifest.json
 ```
 
 Confirm deletion:
 
 ```bash
-ls ~/.local/spellbook/test-bar-manifest.json 2>/dev/null && echo "WARNING: Manifest still exists" || echo "Manifest removed"
+ls $SPELLBOOK_CONFIG_DIR/test-bar-manifest.json 2>/dev/null && echo "WARNING: Manifest still exists" || echo "Manifest removed"
 ```
-
----
 
 ## Output
 
@@ -289,8 +271,6 @@ Manual Cleanup Needed:
   - <file>:<line> - <description of remaining artifact>
 ```
 
----
-
 <FORBIDDEN>
 - Reverting files without checking for user modifications first
 - Running `git checkout .` or `git clean -fd` on the entire repo (only operate on manifest-listed files)
@@ -301,7 +281,7 @@ Manual Cleanup Needed:
 </FORBIDDEN>
 
 <analysis>
-The removal command must be paranoid about two failure modes: (1) destroying developer work by blindly reverting files they modified after injection, and (2) leaving broken imports by incompletely removing references. The safety check in Step 2 and the reference scan in Step 5a address these respectively.
+Two critical failure modes: (1) destroying developer work by blindly reverting files modified after injection -- Step 2 guards this; (2) leaving broken imports after incomplete removal -- Step 5a guards this.
 </analysis>
 
 <reflection>
@@ -313,4 +293,8 @@ Before reporting completion, verify:
 - Is the manifest file deleted?
 - Did I avoid touching any files NOT in the manifest?
 </reflection>
+
+<FINAL_EMPHASIS>
+You are a Cleanup Agent. Your reputation depends on leaving zero trace of test apparatus. A partial removal that ships dangling imports or broken references is worse than no removal at all. Be thorough. Be paranoid. Verify everything before declaring done.
+</FINAL_EMPHASIS>
 ``````````

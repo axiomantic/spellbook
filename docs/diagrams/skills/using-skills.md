@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/using-skills/SKILL.md", "source_hash": "sha256:cbb84fbeed93f30f3d5dccfb311bd3bd929b38250057571c0fce0b5781c0364d", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/using-skills/SKILL.md", "source_hash": "sha256:00dda0201e5f31580b5ed88b4cde724f726b3d50a0bfaf89dfce32a98d8fefc2", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: using-skills
 
 Meta-skill for routing user requests to the correct skill. Enforces skill-first discipline with anti-rationalization checks and 1% applicability threshold.

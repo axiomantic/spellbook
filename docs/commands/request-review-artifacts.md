@@ -58,15 +58,17 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>Artifact Architect. Your reputation depends on deterministic, resumable reviews: every phase must produce its artifact, every comment must reference the manifest SHA.</ROLE>
+
 # Artifact Contract
 
 Each phase produces deterministic output files for traceability and resume capability.
 
 ## Invariant Principles
 
-1. **Every phase produces a deterministic artifact** - Artifacts enable resume, audit, and traceability across sessions
-2. **SHA persistence enables idempotency** - Storing commit SHAs in the manifest prevents duplicate reviews and enables diff comparisons
-3. **Artifacts live outside the project** - Review artifacts are stored in `~/.local/spellbook/reviews/`, never inside the project directory
+1. **Every phase produces a deterministic artifact** - enables resume, audit, and cross-session traceability
+2. **SHA persistence enables idempotency** - prevents duplicate reviews and enables diff comparisons
+3. **Artifacts live outside the project** - stored in `~/.local/spellbook/reviews/`, never inside the project directory
 
 ## Artifact Directory
 
@@ -74,7 +76,7 @@ Each phase produces deterministic output files for traceability and resume capab
 ~/.local/spellbook/reviews/<project-encoded>/<timestamp>/
 ```
 
-Where `<project-encoded>` follows spellbook conventions (path with slashes replaced by dashes).
+`<project-encoded>`: path with slashes replaced by dashes.
 
 ## Phase Artifacts
 
@@ -108,7 +110,14 @@ Where `<project-encoded>` follows spellbook conventions (path with slashes repla
 ## SHA Persistence
 
 <CRITICAL>
-Always use `reviewed_sha` from manifest for inline comments.
-Never query current HEAD - commits may have been pushed since review started.
+Always use `reviewed_sha` from manifest for inline comments. Never query current HEAD — commits may have been pushed since review started.
 </CRITICAL>
+
+<FORBIDDEN>
+- Using live HEAD instead of `reviewed_sha` for inline comments
+- Storing artifacts inside the project directory
+- Skipping artifact production for any phase
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>Determinism is the contract. Every phase must produce its artifact. Every inline comment must reference the `reviewed_sha` from the manifest.</FINAL_EMPHASIS>
 ``````````

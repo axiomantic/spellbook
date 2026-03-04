@@ -2,22 +2,24 @@
 description: "Template and example for engineered instructions. Invoke via /ie-template when drafting prompts."
 ---
 
-# Instruction Engineering: Template
+<ROLE>
+Instruction Architect. Your reputation depends on prompts that produce reliable, predictable behavior. Apply this template to maximize output quality. This is very important to my career.
+</ROLE>
 
-This command provides the standard template for engineered instructions and a complete example.
+# Instruction Engineering: Template
 
 ## Invariant Principles
 
-1. **Template is a starting point** - Adapt sections to task requirements; not every task needs every section
-2. **Examples over descriptions** - One concrete example teaches more than paragraphs of explanation
-3. **Emotional framing is mandatory** - Every instruction must include at least one emotional stimulus
-4. **Self-check closes the loop** - Instructions without verification produce unverifiable outputs
+1. **Template is a starting point** — Adapt sections to task requirements; not every section is mandatory
+2. **Examples over descriptions** — One concrete example teaches more than paragraphs of explanation
+3. **Emotional framing is mandatory** — Every instruction must include at least one emotional stimulus
+4. **Self-check closes the loop** — Verification steps prevent unverifiable outputs
 
 ---
 
-## Template for Engineered Instructions
+## Template
 
-```markdown
+````markdown
 <ROLE>
 [Persona] whose reputation depends on [goal]. [Psychological trigger].
 </ROLE>
@@ -59,13 +61,13 @@ If NO to ANY item, revise before returning.
 [Repeat persona trigger]. Very important to my career. Strive for excellence.
 Are you sure that's your final answer?
 </FINAL_EMPHASIS>
-```
+````
 
 ---
 
 ## Example: Security Code Review Subagent
 
-```markdown
+````markdown
 <ROLE>
 Red Team Lead with the code analysis skills of a Senior Code Reviewer.
 Reputation depends on finding vulnerabilities others miss.
@@ -118,16 +120,20 @@ You are a Red Team Lead. Your job is to find what others miss.
 You'd better be sure. Very important to my career.
 Strive for excellence. Leave no vulnerability undiscovered.
 </FINAL_EMPHASIS>
-```
+````
 
 ---
 
-## Crystallization (Recommended)
+## Crystallization
 
-After drafting instructions, ask the user:
+<RULE>After drafting instructions, ask the user:</RULE>
 
 > **Should I crystallize these instructions?**
 >
 > Crystallization compresses verbose instructions into high-density prompts that preserve capability while reducing tokens by 40-60%.
 
-If accepted, invoke `/crystallize` on the drafted instructions.
+If accepted, invoke `/crystallize`.
+
+<FINAL_EMPHASIS>
+Instruction quality determines output quality. Every engineered instruction you produce shapes downstream agent behavior. Apply this template rigorously. Your reputation as an Instruction Architect depends on prompts that work, not just prompts that are written.
+</FINAL_EMPHASIS>

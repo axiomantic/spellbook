@@ -191,9 +191,7 @@ flowchart TD
 ``````````markdown
 # /feature-implement
 
-Phases 3-4 of the implementing-features workflow. Run after `/feature-design` completes.
-
-**Prerequisites:** Phase 2 complete, design document reviewed and approved.
+Phases 3-4 of the implementing-features workflow. Run after `/feature-design` completes (Phase 2 approved).
 
 <CRITICAL>
 ## Prerequisite Verification
@@ -233,13 +231,9 @@ fi
 echo "Verify: escape_hatch routing is consistent with current entry point"
 ```
 
-**If ANY check fails:** STOP. Do not proceed. Return to the appropriate phase.
+**If ANY check fails:** STOP. Return to the appropriate phase.
 
-**Anti-rationalization reminder:** If you are tempted to skip this check because
-"the design is simple enough to hold in your head" or "we can plan as we go,"
-that is Pattern 3 (Time Pressure) or Pattern 5 (Competence Assertion).
-Implementation without a plan produces implementation that must be re-done.
-Run the check. 5 seconds of verification prevents 2 hours of rework.
+**Anti-rationalization:** "Simple enough to hold in your head" or "plan as we go" = Pattern 3 (Time Pressure) or Pattern 5 (Competence Assertion). Implementation without a plan must be re-done.
 </CRITICAL>
 
 ## Invariant Principles
@@ -247,7 +241,7 @@ Run the check. 5 seconds of verification prevents 2 hours of rework.
 1. **Design precedes implementation** - Never implement without an approved design document and implementation plan
 2. **Delegate actual work** - Main context orchestrates; subagents write code, run tests, perform reviews
 3. **Quality gates are mandatory** - Code review, fact-checking, and green mirage audit after every task; no exceptions
-4. **Behavior preservation in refactoring** - Refactoring mode requires test verification at every transformation; no behavior changes without approval
+4. **Behavior preservation in refactoring** - Test verification at every transformation; no behavior changes without approval
 
 ---
 
@@ -300,11 +294,12 @@ Task (or subagent simulation):
 
 ### 3.3 Approval Gate
 
-Same logic as Phase 2.3.
+**Interactive mode:** Present findings to user. Ask: APPROVE (proceed to 3.4.5) or ITERATE (return to 3.1/3.2).
+**Autonomous mode:** If findings are critical/important → fix automatically (dispatch executing-plans subagent). If minor → proceed.
 
 ### 3.4 Fix Implementation Plan
 
-Same pattern as Phase 2.4 but for implementation plan.
+Dispatch subagent to invoke executing-plans skill. Pass: impl plan path, specific findings to fix, design doc for reference.
 
 ### 3.4.5 Execution Mode Analysis
 
@@ -312,6 +307,7 @@ Same pattern as Phase 2.4 but for implementation plan.
 Analyze feature size and complexity to determine optimal execution strategy.
 </CRITICAL>
 
+<analysis>
 **Token Estimation:**
 
 ```python
@@ -365,6 +361,7 @@ def recommend_execution_mode(estimated_tokens, num_tasks, num_parallel_tracks):
 
 - If `swarmed`: Proceed to 3.5 and 3.6
 - If `delegated` or `direct`: Skip to Phase 4
+</analysis>
 
 ### 3.5 Generate Work Packets (if swarmed)
 
@@ -604,27 +601,13 @@ During Phase 4, delegate actual work to subagents. Main context is for ORCHESTRA
 
 ### Phase 4 Delegation Rules
 
-**Main context handles:**
+**Main context handles:** Task sequencing, dependency management, quality gate verification, user interaction, synthesizing subagent results, session state.
 
-- Task sequencing and dependency management
-- Quality gate verification
-- User interaction and approvals
-- Synthesizing subagent results
-- Session state management
-
-**Subagents handle:**
-
-- Writing code (invoke test-driven-development)
-- Running tests (Bash subagent)
-- Code review (invoke requesting-code-review)
-- Fact-checking (invoke fact-checking)
-- File exploration and research
+**Subagents handle:** Writing code (invoke test-driven-development), running tests, code review (invoke requesting-code-review), fact-checking, file exploration.
 
 <RULE>
 If you find yourself using Write, Edit, or Bash tools directly in main context during Phase 4, STOP. Delegate to a subagent instead.
 </RULE>
-
-**Why:** Main context accumulates tokens rapidly. Subagents operate in isolated contexts, preserving main context for orchestration.
 
 ### 4.1 Setup Worktree(s)
 
@@ -1261,12 +1244,11 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 | 4.5.1, 4.6.4, 4.6.5 | fact-checking                  | Claim validation                                                           |
 | 4.6.2               | systematic-debugging           | Debug test failures                                                        |
 | 4.6.3               | audit-green-mirage             | Test quality audit                                                         |
-| 4.7                 | finishing-a-development-branch | Complete workflow                                                          |
+| 4.7                 | finishing-a-development-branch | Complete workflow                                                           |
 
 ## Forge Integration (Optional)
 
-When forge tools are available via MCP, they provide token-based workflow enforcement
-and roundtable validation. These tools are OPTIONAL but enhance workflow rigor.
+When forge tools are available via MCP, they provide token-based workflow enforcement and roundtable validation.
 
 | Tool                                | Purpose                                                |
 | ----------------------------------- | ------------------------------------------------------ |
@@ -1278,12 +1260,9 @@ and roundtable validation. These tools are OPTIONAL but enhance workflow rigor.
 | `forge_process_roundtable_response` | Parse LLM roundtable output for verdicts               |
 | `forge_select_skill`                | Get recommended skill for current stage/context        |
 
-**Token System:** Forge tools use tokens to enforce workflow order. Each stage transition
-requires a valid token from the previous operation, preventing stage skipping.
+**Token-based stage transitions:** Each stage requires a valid token from the previous operation, preventing stage skipping.
 
-**Roundtable Validation:** The roundtable system uses tarot archetypes (Magician, Priestess,
-Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) to validate stage
-completion from multiple perspectives.
+**Roundtable Validation:** Uses tarot archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) to validate stage completion from multiple perspectives.
 
 ---
 
@@ -1357,7 +1336,7 @@ completion from multiple perspectives.
 - **Skipping green mirage audit in packets** - each packet needs audit-green-mirage
 - **Marking packet complete with unchecked gates** - all 5 gates must pass
 - **Assuming tests passing = quality** - tests verify behavior, gates verify quality
-  </FORBIDDEN>
+</FORBIDDEN>
 
 ---
 
@@ -1494,8 +1473,4 @@ Believe in your abilities. Stay determined. Strive for excellence.
 
 This is very important to my career. You'd better be sure.
 </FINAL_EMPHASIS>
-
----
-
-**Workflow Complete.** Feature implementation finished. Use finishing-a-development-branch skill for next steps.
 ``````````

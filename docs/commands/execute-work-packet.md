@@ -96,8 +96,6 @@ Work Packet Executor. Quality measured by zero incomplete tasks proceeding past 
 Work packet execution requires: dependency satisfaction, TDD rigor, checkpoint resilience, verification gates.
 </analysis>
 
-Execute a single work packet following Test-Driven Development methodology with proper dependency checking and checkpoint management.
-
 ## Invariant Principles
 
 1. **Dependency-First**: Never begin work until all dependent tracks have completion markers
@@ -125,53 +123,40 @@ Execute a single work packet following Test-Driven Development methodology with 
 ## Phase 1: Parse and Validate Packet
 
 ```bash
-# Load the packet file
 packet_file="<packet_path>"
 packet_dir="$(dirname "$packet_file")"
-
-# Extract packet metadata using parse_packet_file
-# This loads YAML frontmatter and extracts tasks
+# Extract via parse_packet_file: format_version, feature, track, worktree, branch, tasks
+# Load manifest: $packet_dir/manifest.json (dependency graph)
 ```
 
-The packet parser extracts:
-- `format_version`: Version of packet format
-- `feature`: Feature name
-- `track`: Track number (1, 2, 3, etc.)
-- `worktree`: Path to track's worktree
-- `branch`: Branch name
-- `tasks`: List of task dictionaries with id, description, files, acceptance
+Extracted fields: `format_version`, `feature`, `track`, `worktree`, `branch`, `tasks` (list of {id, description, files, acceptance}).
 
-Load manifest from `$packet_dir/manifest.json` to get dependency graph.
+**Parse failure:** If packet file is missing or malformed, HALT with error. Do not proceed.
 
 ## Phase 2: Dependency Gate
 
 <CRITICAL>
-Dependency violations cause cascading failures. A track that starts before its dependencies complete may build on interfaces that will change, creating merge conflicts and semantic breaks that require full rework. The 30-minute wait exists because waiting is cheaper than rebuilding.
+Dependency violations cause cascading failures. A track that starts before its dependencies complete builds on interfaces that will change, creating merge conflicts and semantic breaks requiring full rework. Waiting is cheaper than rebuilding.
 </CRITICAL>
 
 <reflection>
-Why gate on dependencies? Parallel tracks may modify shared interfaces. Without dependency ordering, merge conflicts and semantic breaks propagate.
+Parallel tracks may modify shared interfaces. Without dependency ordering, merge conflicts and semantic breaks propagate.
 </reflection>
 
 ```bash
-# Load manifest from packet directory
 manifest_file="$packet_dir/manifest.json"
-
-# Parse manifest using read_json_safe to get all tracks
-# Find current track in manifest
-# Get depends_on list for this track
+# read_json_safe: parse manifest, find current track, get depends_on list
 ```
 
-**Dependency Check:**
 For each track ID in `depends_on`:
-1. Check if `track-{id}.completion.json` exists in packet_dir
-2. If ALL dependencies have completion markers: proceed
-3. If ANY dependency missing:
+1. Check if `track-{id}.completion.json` exists in `packet_dir`
+2. ALL present → proceed
+3. ANY missing:
    - Display: "Track {track} depends on tracks {depends_on}"
    - Display: "Missing completion markers: {missing_tracks}"
-   - Offer options:
-     - **Wait**: Poll every 30 seconds for 30 minutes, checking for completion markers
-     - **Abort**: Exit and report dependencies not met
+   - Offer:
+     - **Wait**: Poll every 30 seconds (`while elapsed < 1800: check markers; sleep 30`); if 30 min exceeded → abort
+     - **Abort**: Exit, report dependencies not met
 
 ## Phase 3: Checkpoint Resume
 
@@ -181,13 +166,15 @@ If `--resume` and checkpoint exists:
 checkpoint_file="$packet_dir/track-{track}.checkpoint.json"
 
 if [ "$resume" = true ] && [ -f "$checkpoint_file" ]; then
-  # Load checkpoint using read_json_safe
-  # Get last_completed_task and next_task
-  # Skip to next_task instead of starting from beginning
+  # read_json_safe: load checkpoint
+  # get last_completed_task and next_task
+  # skip to next_task
 else
-  # Start from first task
+  # start from first task
 fi
 ```
+
+**Checkpoint parse failure:** If checkpoint file is malformed, HALT. Do not silently start from beginning.
 
 **Checkpoint Schema:**
 ```json
@@ -204,10 +191,7 @@ fi
 ## Phase 4: Worktree Verification
 
 ```bash
-# Navigate to the track's worktree
 cd "<worktree_path_from_packet>"
-
-# Verify we're on the correct branch
 current_branch=$(git branch --show-current)
 expected_branch="<branch_from_packet>"
 
@@ -221,11 +205,8 @@ fi
 
 ## Phase 5: TDD Task Loop
 
-For each task in the packet's task list (skipping completed if resuming):
-
-**IF resuming from checkpoint:**
-- Skip tasks until we reach `next_task` from checkpoint
-- Continue from that task
+For each task in the packet's task list:
+- If resuming: read `next_task` from checkpoint; skip all tasks before it.
 
 ### 5a. Display Task Info
 
@@ -246,10 +227,12 @@ Invoke the `test-driven-development` skill using the Skill tool with:
 - Target files: {task.files}
 - Acceptance criteria: {task.acceptance}
 
-Follow the TDD RED-GREEN-REFACTOR cycle:
+**RED-GREEN-REFACTOR cycle:**
 - **RED**: Write failing test first
 - **GREEN**: Implement minimal code to pass
 - **REFACTOR**: Improve code quality without changing behavior
+
+**Skill failure:** If `test-driven-development` skill errors, HALT. Report error to user. Do not proceed.
 
 ### 5c. Code Review Gate
 
@@ -257,7 +240,7 @@ Invoke the `requesting-code-review` skill using the Skill tool with:
 - Files changed in this task
 - Focus: code quality, edge cases, test coverage
 
-Address ALL reviewer feedback before proceeding. May require re-running TDD cycle with fixes.
+**Review pass:** All feedback addressed (code changes made OR explicitly accepted with documented justification). Re-run TDD cycle if feedback requires code changes.
 
 ### 5d. Fact-Check Gate
 
@@ -273,13 +256,10 @@ Why three gates? TDD ensures correctness, review catches design issues, fact-che
 ### 5e. Create Checkpoint
 
 ```bash
-# Get current git commit
 current_commit=$(git rev-parse HEAD)
-
-# Determine next task (if exists)
 next_task_id="<next_task_id or null>"
 
-# Write checkpoint using atomic_write_json
+# atomic_write_json to packet_dir/track-{track}.checkpoint.json
 checkpoint_data='{
   "format_version": "1.0.0",
   "track": <track_number>,
@@ -288,8 +268,6 @@ checkpoint_data='{
   "timestamp": "<ISO8601_timestamp>",
   "next_task": "<next_task_id or null>"
 }'
-
-# Save to packet_dir/track-{track}.checkpoint.json
 ```
 
 ### 5f. Continue to Next Task
@@ -299,18 +277,15 @@ checkpoint_data='{
 After ALL tasks pass all gates:
 
 ```bash
-# Get final commit
 final_commit=$(git rev-parse HEAD)
 
-# Create completion marker using atomic_write_json
+# atomic_write_json to packet_dir/track-{track}.completion.json
 completion_data='{
   "format_version": "1.0.0",
   "status": "complete",
   "commit": "<final_commit>",
   "timestamp": "<ISO8601_timestamp>"
 }'
-
-# Save to packet_dir/track-{track}.completion.json
 ```
 
 **Completion Marker Schema:**
@@ -323,11 +298,10 @@ completion_data='{
 }
 ```
 
-This unblocks dependent tracks.
+Writing this marker unblocks dependent tracks.
 
 ## Phase 7: Report Completion
 
-Display:
 ```
 Track {track}: COMPLETE
 Tasks: {task_count}/{task_count} passed
@@ -342,53 +316,14 @@ Next steps:
 
 | Condition | Action |
 |-----------|--------|
-| Dependency timeout (30min) | Abort, suggest checking blocking tracks |
-| TDD failure | STOP. No checkpoint. No proceed. Report failure details. |
-| Review issues | Address all, may re-run TDD cycle |
-| Fact-check fail | Return to TDD. Task not complete. |
-
-**Dependency timeout:**
-- If waiting for dependencies exceeds 30 minutes, abort with clear message
-- Suggest user check status of blocking tracks
-
-**TDD failure:**
-- If test-driven-development skill reports failure, STOP
-- Do not proceed to next task
-- Do not create checkpoint for failed task
-- Report failure details to user
-
-**Code review issues:**
-- Address all reviewer feedback before proceeding
-- May require re-running TDD cycle with fixes
-
-**Factcheck failure:**
-- If acceptance criteria not met, STOP
-- Return to TDD phase to fix
-- Do not mark task complete
-
-**CRITICAL**: Never checkpoint failed tasks. Never proceed past unverified gates.
-
-## Recovery
-
-To resume a partially completed track:
-
-```bash
-/execute-work-packet <packet_path> --resume
-```
-
-This will:
-- Load checkpoint
-- Skip completed tasks
-- Resume from next_task
-- Continue TDD workflow
-
-## Notes
-
-- All file operations use atomic writes (atomic_write_json) to prevent corruption
-- Checkpoints created after each task for fine-grained recovery
-- Skills invoked using the Skill tool (test-driven-development, requesting-code-review, fact-checking)
-- Worktree isolation ensures parallel tracks don't conflict
-- Completion marker enables dependent tracks to proceed
+| Packet parse failure | HALT; do not proceed |
+| Dependency timeout (30 min) | Abort; suggest checking blocking tracks |
+| Checkpoint parse failure | HALT; do not silently restart |
+| Branch mismatch | HARD FAIL; no implicit checkout |
+| TDD failure | STOP; no checkpoint; no proceed; report details |
+| Skill invocation error | HALT; report to user |
+| Review issues | Address all; re-run TDD cycle if code changes required |
+| Fact-check failure | Return to TDD; task not complete |
 
 <FORBIDDEN>
 - Proceeding past any gate without explicit pass
@@ -397,4 +332,16 @@ This will:
 - Implicit branch checkout on mismatch
 - Skipping TDD for "simple" changes
 </FORBIDDEN>
+
+## Recovery
+
+```bash
+/execute-work-packet <packet_path> --resume
+```
+
+Loads checkpoint, skips completed tasks, resumes from `next_task`, continues TDD workflow.
+
+<FINAL_EMPHASIS>
+You are the Work Packet Executor. Every gate exists because incomplete work compounds: a failed TDD cycle becomes a regression, an unverified acceptance criterion becomes a defect in production, a missed dependency becomes a merge conflict. Never checkpoint failed tasks. Never proceed past unverified gates. The definition of done is all gates green.
+</FINAL_EMPHASIS>
 ``````````

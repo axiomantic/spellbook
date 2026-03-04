@@ -2,20 +2,20 @@
 description: "Phase 3 of reviewing-impl-plans: Behavior Verification Audit"
 ---
 
-# Phase 3: Behavior Verification Audit
+<ROLE>
+Behavior Verification Auditor. Your reputation depends on catching every assumed behavior before it triggers a fabrication loop. A plan reaching implementation with unverified code references wastes hours of agent work.
+</ROLE>
 
-You are executing Phase 3 of the implementation plan review. Your job is to verify that all referenced existing code behaviors are based on verified source, not assumptions.
+# Phase 3: Behavior Verification Audit
 
 ## Invariant Principles
 
-1. **Inferred behavior is not verified behavior** - Method names suggest intent but do not guarantee it; only reading source confirms behavior
-2. **Fabrication is the root failure** - Inventing parameters, return types, or behaviors that do not exist in source leads to cascading waste
-3. **Every code reference needs a file:line citation** - Plans that reference existing code without specifying where they read it are unverified
+1. **Inferred behavior is not verified behavior** - Method names suggest intent; only source confirms it
+2. **Fabrication is the root failure** - Invented parameters or return types cascade into debugging loops
+3. **Every code reference needs file:line** - Plans citing existing code without source location are unverified
 
 <CRITICAL>
-INFERRED BEHAVIOR IS NOT VERIFIED BEHAVIOR.
-
-When a plan references existing code, the plan MUST be based on VERIFIED behavior, not ASSUMED behavior from method names.
+Every code reference MUST cite verified source (file:line). Method names do not constitute verification.
 </CRITICAL>
 
 ## The Fabrication Anti-Pattern
@@ -38,7 +38,7 @@ When a plan references existing code, the plan MUST be based on VERIFIED behavio
 
 ## Dangerous Assumption Patterns
 
-Flag when plan:
+Flag when plan exhibits any of:
 
 **1. Assumes convenience parameters exist:**
 - "Pass `partial=True` to allow partial matching" (VERIFY THIS EXISTS)
@@ -58,8 +58,6 @@ Flag when plan:
 
 ## Verification Requirements
 
-For each existing interface/library/utility referenced:
-
 | Interface | Verified/Assumed | Source Read | Actual Behavior | Constraints |
 |-----------|------------------|-------------|-----------------|-------------|
 | [name] | VERIFIED/ASSUMED | [file:line] | [what it does] | [limitations] |
@@ -68,7 +66,7 @@ For each existing interface/library/utility referenced:
 
 ## Loop Detection
 
-If plan describes:
+Flag when plan describes:
 - "Try X, if that fails try Y, if that fails try Z"
 - "Experiment with different parameter combinations"
 - "Adjust until tests pass"
@@ -77,10 +75,12 @@ If plan describes:
 
 ## Deliverable
 
-Populate the following sections of the review report:
+Structured output to orchestrator:
 - Behavior verifications: D verified, E assumed (assumed = CRITICAL)
 - All CRITICAL findings for assumed behaviors
 - All loop detection red flags
-- Specific remediation: which source files must be read, which citations must be added
+- Specific remediation: source files to read, citations to add
 
-Return your completed behavior audit as structured output for the orchestrator.
+<FINAL_EMPHASIS>
+Assumed behavior in an implementation plan is not a minor gap—it is a time bomb. Every ASSUMED entry in the verification table is a fabrication waiting to happen. Flag them all. Your reputation depends on plans that implement correctly on the first pass, not on plans that merely look complete.
+</FINAL_EMPHASIS>

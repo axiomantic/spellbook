@@ -2,6 +2,10 @@
 
 Canonical structure for all skills in `skills/*/SKILL.md`.
 
+<ROLE>
+Schema Enforcer. Reputation depends on skills that are structurally correct, behaviorally anchored, and interoperable.
+</ROLE>
+
 ## Invariant Principles
 
 1. **Structure enables validation** - Consistent format allows automated compliance checking
@@ -55,13 +59,10 @@ Professional identity with stakes. Research shows 8-115% improvement.
 Required XML tags that force deliberate thinking.
 
 ```markdown
-## Reasoning Schema
-
 <analysis>
 Before [action], determine:
 - [Question 1]
 - [Question 2]
-- [Question 3]
 </analysis>
 
 <reflection>
@@ -74,8 +75,6 @@ IF NO to ANY: [consequence]
 
 ### 5. Inputs
 
-What context/data this skill expects when invoked.
-
 ```markdown
 ## Inputs
 
@@ -87,8 +86,6 @@ What context/data this skill expects when invoked.
 
 ### 6. Outputs
 
-What this skill produces for downstream consumers.
-
 ```markdown
 ## Outputs
 
@@ -98,7 +95,7 @@ What this skill produces for downstream consumers.
 | `decision_log` | Inline | Key decisions made with rationale |
 ```
 
-### 7. Workflow (if multi-phase)
+### 7. Workflow (multi-phase skills)
 
 ```markdown
 ## Workflow
@@ -111,7 +108,9 @@ Phase 2: [Name]
   └─ ...
 ```
 
-### 8. Evidence Requirements (where applicable)
+### 8. Evidence Requirements
+
+Required when skill makes verifiable claims (e.g., "feature complete", "secure", "no regressions"). Omit only for pure process/coordination skills that produce no verifiable output.
 
 ```markdown
 ## Evidence Requirements
@@ -127,19 +126,15 @@ Phase 2: [Name]
 Explicit prohibitions. Research shows 12-46% improvement from "do NOT" statements.
 
 ```markdown
-## Anti-Patterns
-
 <FORBIDDEN>
 - [Thing to never do]
 - [Another thing to never do]
 </FORBIDDEN>
 ```
 
-Or as table:
+Table form (use when consequences help calibration):
 
 ```markdown
-## Anti-Patterns
-
 | Pattern | Why Forbidden |
 |---------|---------------|
 | [Pattern] | [Consequence] |
@@ -147,13 +142,10 @@ Or as table:
 
 ### 10. Self-Check
 
-Final verification before output.
-
 ```markdown
 ## Self-Check
 
 Before completing:
-- [ ] [Verification item]
 - [ ] [Verification item]
 - [ ] [Verification item]
 
@@ -162,33 +154,23 @@ If ANY unchecked: STOP and fix.
 
 ## Optional Elements
 
-### Decision Matrix
-
-For skills with branching logic:
+### Decision Matrix (branching logic)
 
 ```markdown
-## Decision Matrix
-
 | Condition | Action |
 |-----------|--------|
 | A AND B | Do X |
 | A AND NOT B | Do Y |
 ```
 
-### Common Issues Table
-
-For debugging/troubleshooting skills:
+### Common Issues Table (troubleshooting skills)
 
 ```markdown
-## Common Issues
-
 | Problem | Cause | Solution |
 |---------|-------|----------|
 ```
 
-### Interoperability Notes
-
-When skill is frequently called by others:
+### Interoperability Notes (frequently called skills)
 
 ```markdown
 ## Called By
@@ -197,6 +179,7 @@ When skill is frequently called by others:
 - `writing-plans` as prerequisite
 ```
 
+<CRITICAL>
 ## Validation Rules
 
 1. YAML frontmatter MUST have `name` and `description`
@@ -207,10 +190,11 @@ When skill is frequently called by others:
 6. SHOULD have "Inputs" section if called by other skills
 7. SHOULD have "Outputs" section if produces artifacts
 8. SHOULD have "Self-Check" section
+</CRITICAL>
 
 ## Token Budget
 
-Target: <1000 tokens for core instructions. Telegraphic language. No articles where meaning is clear.
+Target: <1000 tokens for core instructions. This is a guideline, not a hard constraint - a 1200-token skill that works correctly beats an 800-token skill that omits required elements. Telegraphic language. No articles where meaning is clear.
 
 ## Example Compliant Skill
 
@@ -275,3 +259,31 @@ Phase 1 → Phase 2 → Done
 - [ ] Verified A
 - [ ] Verified B
 ```
+
+<FORBIDDEN>
+- Omitting `name` or `description` from YAML frontmatter
+- Writing a skill without `<analysis>` and `<reflection>` tags
+- Skipping `<ROLE>` AND `<FORBIDDEN>` (at least one is required)
+- Omitting Inputs/Outputs sections for skills called by other skills or producing artifacts
+- Hard-targeting token count at the expense of required structural elements
+- Using imperative voice for Invariant Principles ("Do X") instead of declarative ("X enables Y")
+- Presenting more than 5 or fewer than 3 Invariant Principles
+</FORBIDDEN>
+
+## Self-Check
+
+Before submitting a skill file:
+- [ ] YAML frontmatter has `name` and `description`
+- [ ] Invariant Principles section present with 3-5 items
+- [ ] `<analysis>` tag present
+- [ ] `<reflection>` tag present
+- [ ] `<ROLE>` or `<FORBIDDEN>` present (or both)
+- [ ] Inputs section present if skill is called by others
+- [ ] Outputs section present if skill produces artifacts
+- [ ] Self-Check section present
+
+If ANY unchecked: STOP and fix before submitting.
+
+<FINAL_EMPHASIS>
+A skill file is a behavioral contract. Missing required elements breaks interoperability, degrades LLM performance, and undermines automated compliance checking. Every element has empirical backing. Omit nothing without justification.
+</FINAL_EMPHASIS>

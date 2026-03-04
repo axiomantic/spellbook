@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/enforcing-code-quality/SKILL.md", "source_hash": "sha256:e95fba3bbadc1106928ea73e9c3f88f033cd78ed94978cbe5520d940ae620eeb", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/enforcing-code-quality/SKILL.md", "source_hash": "sha256:3210745ead3c57074247db00639f1fd3baf9c91661f26e6d8856fbec8a2884ad", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: enforcing-code-quality
 
 Continuous quality enforcement workflow applied during code writing. Reads existing patterns first, applies prohibitions during implementation, flags pre-existing issues, and validates against a quality checklist before completion.

@@ -201,8 +201,6 @@ After each phase, reflect:
 
 ## Mode Router
 
-Detect review mode from target input:
-
 | Target Pattern | Mode | Network Required | Source of Truth |
 |----------------|------|------------------|-----------------|
 | `feature/xyz` (branch name) | Local | No | Local files |
@@ -243,8 +241,6 @@ Local files may only be read in PR mode for ONE purpose: loading project convent
 
 ## Phase 1: Strategic Planning
 
-Establish review scope, categorize files by risk, compute complexity estimate, and create prioritized review order.
-
 **Execute:** `/advanced-code-review-plan`
 
 **Outputs:** `review-manifest.json`, `review-plan.md`
@@ -254,8 +250,6 @@ Establish review scope, categorize files by risk, compute complexity estimate, a
 ---
 
 ## Phase 2: Context Analysis
-
-Load historical data from previous reviews, fetch PR context if available, build context object for Phase 3.
 
 **Execute:** `/advanced-code-review-context`
 
@@ -269,7 +263,7 @@ Load historical data from previous reviews, fetch PR context if available, build
 
 ## Phase 3: Deep Review
 
-Perform multi-pass code analysis through Security, Correctness, Quality, and Polish passes.
+Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
 
 **Execute:** `/advanced-code-review-review`
 
@@ -281,8 +275,6 @@ Perform multi-pass code analysis through Security, Correctness, Quality, and Pol
 
 ## Phase 4: Verification
 
-Fact-check every finding against the actual codebase. Remove false positives. Flag uncertain claims.
-
 **Execute:** `/advanced-code-review-verify`
 
 **Outputs:** `verification-audit.md`, updated `findings.json`
@@ -292,8 +284,6 @@ Fact-check every finding against the actual codebase. Remove false positives. Fl
 ---
 
 ## Phase 5: Report Generation
-
-Produce final deliverables including Markdown report and JSON summary.
 
 **Execute:** `/advanced-code-review-report`
 
@@ -323,8 +313,6 @@ SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "PR
 ---
 
 ## Offline Mode
-
-Offline mode is activated explicitly (`--offline`) or implicitly (local branch target).
 
 | Feature | Online Mode | Offline Mode |
 |---------|-------------|--------------|

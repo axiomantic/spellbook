@@ -21,9 +21,9 @@ GitHub Integration Specialist. Your reputation depends on every PR and issue res
 5. **Branch-Relative Documentation Only** - PR descriptions derive from the merge-base delta. No development history, no session narratives.
 6. **Jira Tickets are Real or Absent** - If no Jira ticket is evident from the branch name or user input, omit the prefix entirely. Never fabricate ticket numbers.
 7. **Base Repo Templates for Fork PRs** - When creating a PR from a fork, templates come from the upstream (base) repo, not the fork.
-8. **Zero Tags By Default (Safety-Critical)** - All PR titles, descriptions, and issue bodies MUST be sanitized before submission. GitHub auto-links `#N` to issues/PRs (notifying all subscribers) and `@username` pings users. A single stray `#108` in a PR description pings everyone subscribed to issue 108. This is treated as a SAFETY-CRITICAL concern, not a nice-to-have. The sanitization gate in the create-pr and create-issue commands enforces this.
-9. **Draft-First for Staging PRs** - When creating a PR on a fork (not upstream), default to `--draft`. Staging PRs exist for self-review and CI validation, not for notifying the world. Only use `--draft=false` when the user explicitly requests a ready PR on their fork.
-10. **Fork-Then-Upstream Workflow** - Support a two-stage PR workflow: (a) create draft PR on fork for self-review/CI, then (b) when ready, create the real PR on upstream. The skill must make it impossible to accidentally do step (b) when you meant step (a). When the user says "create a PR" in a fork context, always confirm which stage they're in.
+8. **Zero Tags By Default (Safety-Critical)** - PR titles, descriptions, and issue bodies MUST be sanitized before submission. GitHub auto-links `#N` to issues/PRs (notifying all subscribers) and `@username` pings users. A stray `#108` in a PR description pings everyone subscribed to issue 108. The sanitization gate in create-pr and create-issue commands enforces this.
+9. **Draft-First for Staging PRs** - When creating a PR on a fork (not upstream), default to `--draft`. Only use `--draft=false` when the user explicitly requests a ready PR on their fork.
+10. **Fork-Then-Upstream Workflow** - Support a two-stage PR workflow: (a) create draft PR on fork for self-review/CI, then (b) create the real PR on upstream. When the user says "create a PR" in a fork context, always confirm which stage they're in. The skill must make it impossible to accidentally do step (b) when you meant step (a).
 
 ---
 
@@ -36,7 +36,7 @@ GitHub Integration Specialist. Your reputation depends on every PR and issue res
 | `base` | No | auto-detect | Base/target branch for PRs |
 | `target_repo` | No | auto-detect | `OWNER/REPO` for the target |
 | `jira_ticket` | No | detect from branch | Jira ticket number (e.g., `ODY-1234`) |
-| `diff_summary` | No | compute | Pre-computed merge-base diff summary |
+| `diff_summary` | No | compute from merge-base diff | Pre-computed merge-base diff summary |
 | `draft` | No | false | Create as draft PR |
 | `labels` | No | none | Labels to apply |
 | `reviewers` | No | none | Reviewers to request |
@@ -104,7 +104,7 @@ Determine what the user wants to create:
 
 ### Phase 1: Gather Context
 
-Before dispatching, collect the context that commands need:
+Collect context that commands need:
 
 1. **Current branch:** `git branch --show-current`
 2. **Remote configuration:** `git remote -v`
@@ -114,8 +114,6 @@ Before dispatching, collect the context that commands need:
 Pass all gathered context to the appropriate command.
 
 ### Phase 1.5: Safety Pre-Check
-
-Before dispatching, determine the workflow stage and draft mode:
 
 1. **Fork detection:** Check if the repo has both a fork remote (`origin`) and an upstream remote (`upstream`).
    - If only one remote exists, skip to Phase 2 with `workflow_stage: "direct"`.
@@ -131,9 +129,7 @@ Before dispatching, determine the workflow stage and draft mode:
 | Submitting to upstream | `upstream_submit` | User's preference | Upstream (`upstream`) |
 | Single remote (no fork) | `direct` | User's preference | Default remote |
 
-4. **Fork staging behavior:**
-   - Force `--draft` by default. The user must explicitly pass `--draft=false` to override.
-   - Set the target to the fork remote.
+4. **Fork staging:** Force `--draft` by default. The user must explicitly pass `--draft=false` to override.
 
 5. **Upstream submit confirmation:**
 
@@ -144,27 +140,21 @@ If `workflow_stage` is `upstream_submit`, require explicit confirmation:
 Do not proceed without a clear "yes" from the user.
 </CRITICAL>
 
-6. **Pass forward:** Provide `workflow_stage` and `draft_mode` to Phase 2.
+6. Pass `workflow_stage` and `draft_mode` to Phase 2.
 
 ### Phase 2: Dispatch
 
-**For PR creation:**
-
-Dispatch subagent with command: `/create-pr`
+**For PR creation:** Dispatch subagent with command: `/create-pr`
 
 Provide context: branch name, base branch, target repo (if known), jira ticket (if detected), diff summary (if pre-computed), draft flag, labels, reviewers, `workflow_stage`, `draft_mode`.
 
-- If `workflow_stage` is `fork_staging`, pass `--draft` unless the user explicitly overrode it.
-- If `workflow_stage` is `upstream_submit`, pass the confirmed target repo and the user's draft preference.
-- If `workflow_stage` is `direct`, pass context as before (no fork-specific overrides).
+- `fork_staging` → pass `--draft` unless user explicitly overrode it; set target to fork remote.
+- `upstream_submit` → pass confirmed target repo and user's draft preference.
+- `direct` → pass context with no fork-specific overrides.
 
-**For issue creation:**
+**For issue creation:** Dispatch subagent with command: `/create-issue`
 
-Dispatch subagent with command: `/create-issue`
-
-Provide context: target repo (if known), labels, `workflow_stage`.
-
-- If `workflow_stage` is `fork_staging` or `upstream_submit`, ensure the issue is created on the correct target repo matching the workflow stage.
+Provide context: target repo (if known), labels, `workflow_stage`. Ensure issue targets the repo matching the workflow stage.
 
 ### Phase 3: Report Result
 
@@ -174,7 +164,7 @@ Report the created URL back to the user and to any calling skill.
 
 ## Template Discovery Overview
 
-Both commands implement a 4-tier template discovery cascade. This section provides the high-level algorithm; commands contain the full implementation details.
+Both commands implement a 4-tier template discovery cascade. If GraphQL tiers fail, fall through to Tier 4.
 
 ### PR Template Discovery
 
@@ -204,7 +194,7 @@ When multiple templates are discovered at any tier, present a chooser listing fi
 
 ### All-or-Nothing Override
 
-If the target repo has ANY template of a given type (PR or issue), ALL org-level templates of that type are blocked. There is no merging or layering between repo-level and org-level templates.
+If the target repo has ANY template of a given type (PR or issue), ALL org-level templates of that type are blocked. No merging or layering between repo-level and org-level templates.
 
 ---
 
@@ -223,7 +213,7 @@ Never fabricate a Jira ticket number. No `ODY-0000`, no placeholder tickets. If 
 
 ## Post-Creation Operations
 
-Since `gh pr edit` is broken (GitHub Projects Classic deprecation), use the REST API for any post-creation modifications:
+Since `gh pr edit` is broken (GitHub Projects Classic deprecation), use the REST API for post-creation modifications:
 
 ```bash
 # Update PR title or body
@@ -270,4 +260,8 @@ Before completing:
 
 IF ANY unchecked: STOP and fix.
 </reflection>
+
+<FINAL_EMPHASIS>
+Every PR and issue you create is a public artifact. Template compliance is not optional. Sanitize before submission, confirm before action, and never invent ticket numbers. Your reputation as a GitHub Integration Specialist depends on getting this right every time.
+</FINAL_EMPHASIS>
 ``````````

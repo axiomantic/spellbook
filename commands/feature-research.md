@@ -4,6 +4,10 @@ description: "Phase 1 of implementing-features: Research strategy, codebase expl
 
 # Feature Research (Phase 1)
 
+<ROLE>
+Research Strategist. Your reputation depends on surfacing unknowns BEFORE design begins. A research phase that misses a critical ambiguity poisons every downstream decision. This is very important to my career.
+</ROLE>
+
 <CRITICAL>
 ## Prerequisite Verification
 
@@ -19,8 +23,7 @@ echo "=== Phase 1 Prerequisites ==="
 # CHECK 1: Complexity tier must be STANDARD or COMPLEX
 echo "Required: complexity_tier in (standard, complex)"
 echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
-# If tier is TRIVIAL or SIMPLE, this phase should NOT be running.
-# TRIVIAL exits the skill; SIMPLE uses lightweight inline research.
+# TRIVIAL exits the skill; SIMPLE uses lightweight inline research — neither runs this phase.
 
 # CHECK 2: Phase 0 must be complete
 echo "Required: Phase 0 checklist 100% complete"
@@ -33,29 +36,24 @@ echo "Verify: SESSION_PREFERENCES.escape_hatch.type != 'impl_plan'"
 
 **If ANY check fails:** STOP. Do not proceed. Return to the appropriate phase.
 
-**Anti-rationalization reminder:** If you are tempted to skip this check because
-"you already know the tier" or "Phase 0 was obviously complete," that is Pattern 2
-(Expertise Override). Run the check. It takes 5 seconds.
+**Anti-rationalization:** Tempted to skip because "you already know the tier" or "Phase 0 was obviously complete"? That is Pattern 2 (Expertise Override). Run the check. It takes 5 seconds.
 </CRITICAL>
 
 ## Invariant Principles
 
-1. **Research before design** - Understand the codebase and surface unknowns before any design work begins
-2. **100% quality score required** - All research questions need HIGH confidence answers; bypass requires explicit user consent
-3. **Evidence with confidence levels** - Every finding includes evidence and confidence rating; UNKNOWN is a valid answer
-4. **Ambiguity extraction** - Low-confidence and unknown items become explicit ambiguities for disambiguation
+1. **Research before design** — Understand the codebase and surface unknowns before any design work begins
+2. **100% quality score required** — All research questions need HIGH confidence answers; bypass requires explicit user consent
+3. **Evidence with confidence levels** — Every finding includes evidence and confidence rating; UNKNOWN is a valid answer
+4. **Ambiguity extraction** — Low-confidence and unknown items become explicit ambiguities for disambiguation
 
 <CRITICAL>
-Systematically explore codebase and surface unknowns BEFORE design work.
-All research findings must achieve 100% quality score to proceed.
+Systematically explore codebase and surface unknowns BEFORE design work. All research findings must achieve 100% quality score to proceed.
 </CRITICAL>
 
 ### 1.1 Research Strategy Planning
 
 **INPUT:** User feature request + motivation
 **OUTPUT:** Research strategy with specific questions
-
-**Process:**
 
 1. Analyze feature request for technical domains
 2. Generate codebase questions:
@@ -84,11 +82,11 @@ Generated Questions:
 **REASON:** Exploration with uncertain scope. Subagent reads N files, returns synthesis.
 
 ```
-Task (or subagent simulation):
+Task:
   description: "Research Agent - Codebase Patterns"
   prompt: |
-    You are a research agent. Your job is to answer these specific questions about
-    the codebase. For each question:
+    You are a research agent. Answer these specific questions about the codebase.
+    For each question:
 
     1. Search systematically using search tools (grep, glob, search_file_content)
     2. Read relevant files
@@ -103,7 +101,7 @@ Task (or subagent simulation):
     - UNKNOWN: No evidence found
 
     QUESTIONS TO ANSWER:
-    [Insert questions from Phase 1.1]
+    [Insert questions from 1.1]
 
     RETURN FORMAT (strict JSON):
     {
@@ -129,41 +127,34 @@ Task (or subagent simulation):
 
 **ERROR HANDLING:**
 
-- If subagent fails: Retry once with same instructions
-- If second failure: Return findings with all items marked UNKNOWN
-- Note: "Research failed after 2 attempts: [error]"
-- Do NOT block progress - user chooses to proceed or retry
-
-**TIMEOUT:** 120 seconds per subagent
+- Subagent fails: retry once with same instructions
+- Second failure: return all findings marked UNKNOWN; note "Research failed after 2 attempts: [error]"; do NOT block — user chooses to proceed or retry
+- **TIMEOUT:** 120 seconds per subagent
 
 ### 1.3 Ambiguity Extraction
 
 **INPUT:** Research findings from subagent
 **OUTPUT:** Categorized ambiguities
 
-**Process:**
-
 1. Extract all MEDIUM/LOW/UNKNOWN confidence items
 2. Extract all flagged ambiguities
 3. Categorize by type:
-   - **Technical:** How it works (e.g., "Two auth patterns found - which to use?")
+   - **Technical:** How it works (e.g., "Two auth patterns found — which to use?")
    - **Scope:** What to include (e.g., "Unclear if feature includes password reset")
-   - **Integration:** How it connects (e.g., "Multiple integration points - which is primary?")
+   - **Integration:** How it connects (e.g., "Multiple integration points — which is primary?")
    - **Terminology:** What terms mean (e.g., "'Session' used inconsistently")
-4. Prioritize by impact on design (HIGH/MEDIUM/LOW)
+4. Prioritize by impact on design: HIGH/MEDIUM/LOW
 
 **Example Output:**
 
 ```
-Categorized Ambiguities:
-
 TECHNICAL (HIGH impact):
 - Ambiguity: Two authentication patterns found (JWT in 8 files, OAuth in 5 files)
   Source: Research finding #3 (MEDIUM confidence)
   Impact: Determines entire auth architecture
 
 SCOPE (MEDIUM impact):
-- Ambiguity: Similar features handle password reset, unclear if in scope
+- Ambiguity: Similar features handle password reset; unclear if in scope
   Source: Research finding #7 (LOW confidence)
   Impact: Affects feature completeness
 ```
@@ -175,7 +166,7 @@ SCOPE (MEDIUM impact):
 ```typescript
 // 1. COVERAGE SCORE
 function coverageScore(findings: Finding[], questions: string[]): number {
-  const highCount = findings.filter((f) => f.confidence === "HIGH").length;
+  const highCount = findings.filter(f => f.confidence === "HIGH").length;
   if (questions.length === 0) return 100;
   return (highCount / questions.length) * 100;
 }
@@ -183,33 +174,30 @@ function coverageScore(findings: Finding[], questions: string[]): number {
 // 2. AMBIGUITY RESOLUTION SCORE
 function ambiguityResolutionScore(ambiguities: Ambiguity[]): number {
   if (ambiguities.length === 0) return 100;
-  const categorized = ambiguities.filter((a) => a.category && a.impact);
+  const categorized = ambiguities.filter(a => a.category && a.impact);
   return (categorized.length / ambiguities.length) * 100;
 }
 
 // 3. EVIDENCE QUALITY SCORE
 function evidenceQualityScore(findings: Finding[]): number {
-  const answerable = findings.filter((f) => f.confidence !== "UNKNOWN");
+  const answerable = findings.filter(f => f.confidence !== "UNKNOWN");
   if (answerable.length === 0) return 0;
-  const withEvidence = answerable.filter((f) => f.evidence.length > 0);
+  const withEvidence = answerable.filter(f => f.evidence.length > 0);
   return (withEvidence.length / answerable.length) * 100;
 }
 
 // 4. UNKNOWN DETECTION SCORE
-function unknownDetectionScore(
-  findings: Finding[],
-  flaggedUnknowns: string[],
-): number {
+function unknownDetectionScore(findings: Finding[], flaggedUnknowns: string[]): number {
   const lowOrUnknown = findings.filter(
-    (f) => f.confidence === "UNKNOWN" || f.confidence === "LOW",
+    f => f.confidence === "UNKNOWN" || f.confidence === "LOW",
   );
   if (lowOrUnknown.length === 0) return 100;
   return (flaggedUnknowns.length / lowOrUnknown.length) * 100;
 }
 
-// OVERALL SCORE: Weakest link determines quality
+// OVERALL SCORE: Weakest link determines quality — ALL must be 100%
 function overallScore(...scores: number[]): number {
-  return Math.min(...scores); // All must be 100%
+  return Math.min(...scores);
 }
 ```
 
@@ -247,6 +235,14 @@ IF SCORE = 100%:
 - Display: "✓ Research Quality Score: 100% - All criteria met"
 - Proceed to Phase 1.5
 
+<FORBIDDEN>
+- Doing research work in main context instead of dispatching a subagent
+- Proceeding when any prerequisite check fails
+- Running this phase when complexity_tier is TRIVIAL or SIMPLE
+- Proceeding past the quality gate without a 100% score or explicit user bypass
+- Blocking progress after two subagent failures (return UNKNOWN findings; do not halt)
+</FORBIDDEN>
+
 ---
 
 ## Phase 1 Complete
@@ -261,3 +257,7 @@ Before proceeding to Phase 1.5, verify:
 If ANY unchecked: Complete Phase 1. Do NOT proceed.
 
 **Next:** Run `/feature-discover` to begin Phase 1.5.
+
+<FINAL_EMPHASIS>
+Research is the foundation every downstream decision rests on. A gap here propagates through design, implementation, and review. Surface unknowns now — not during code review. Your reputation depends on delivering a research phase where nothing critical was missed.
+</FINAL_EMPHASIS>

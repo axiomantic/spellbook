@@ -65,10 +65,10 @@ flowchart TD
 ``````````markdown
 # MISSION
 
-Create a well-structured command file that an agent can execute correctly under pressure. Apply the command schema for file naming, frontmatter, required sections, optional sections, and token efficiency targets.
+Create a well-structured command file an agent can execute correctly under pressure. Apply the command schema for file naming, frontmatter, required sections, optional sections, and token efficiency targets.
 
 <ROLE>
-Command Architect. A command that an agent misinterprets under pressure is your failure. Write for the agent that is skimming, not the reviewer reading at leisure.
+Command Architect. A command an agent misinterprets under pressure is your failure. Write for the agent that is skimming, not the reviewer reading at leisure.
 </ROLE>
 
 ## Invariant Principles
@@ -83,10 +83,7 @@ Command Architect. A command that an agent misinterprets under pressure is your 
 commands/<name>.md     # Imperative verb(-noun): verify, handoff, execute-plan, test-bar
 ```
 
-**Naming convention**: Imperative verb or verb-noun phrase.
-- `verify` not `verification`
-- `execute-plan` not `plan-execution`
-- `test-bar-remove` not `removing-test-bar`
+Naming convention: imperative verb or verb-noun phrase (`verify` not `verification`, `execute-plan` not `plan-execution`, `test-bar-remove` not `removing-test-bar`).
 
 ## Frontmatter (YAML, required)
 
@@ -96,11 +93,8 @@ description: "One sentence describing WHEN to use, what it does, and trigger phr
 ---
 ```
 
-**Rules:**
-- Single `description` field (commands do not have a `name` field in frontmatter)
-- Under 1024 characters
-- Include trigger conditions: when should an agent load this?
-- May include trigger phrases: `Use when user says "/command-name"`
+- Single `description` field (no `name` field in command frontmatter)
+- Under 1024 characters; include trigger conditions and phrases (`Use when user says "/command-name"`)
 
 ## Required Sections (in order)
 
@@ -113,27 +107,21 @@ One paragraph. What this command accomplishes. Concise, specific, no filler.
 </ROLE>
 
 ## Invariant Principles
-3-5 numbered rules. These are the non-negotiable constraints.
+3-5 numbered rules. Non-negotiable constraints.
 
 ## [Execution Sections]
-Numbered steps, phases, or protocol. The core work.
-Use tables for structured data. Use code blocks for commands.
+Numbered steps, phases, or protocol. Tables for structured data. Code blocks for commands.
 
 ## Output
 What the agent should produce/display when done.
 
 <FORBIDDEN>
-- Explicit negative constraints
-- One per line, each a complete prohibition
+- Explicit negative constraints, one per line, each a complete prohibition
 </FORBIDDEN>
 
-<analysis>
-Pre-action reasoning prompt. Forces the agent to think before doing.
-</analysis>
+<analysis>Pre-action reasoning prompt.</analysis>
 
-<reflection>
-Post-action verification prompt. Forces the agent to check work before reporting.
-</reflection>
+<reflection>Post-action verification prompt.</reflection>
 ```
 
 ## Optional Sections
@@ -149,18 +137,13 @@ Post-action verification prompt. Forces the agent to check work before reporting
 
 ## Token Efficiency
 
-Commands load fully into context. Every token counts.
+| Command Type | Line Target |
+|-------------|-------------|
+| Simple (verify, mode) | <150 |
+| Standard (test-bar, handoff) | <350 |
+| Complex (crystallize) | <550 |
 
-**Targets:**
-- Simple commands (verify, mode): <150 lines
-- Standard commands (test-bar, handoff): <350 lines
-- Complex commands (crystallize): <550 lines
-
-**Techniques:**
-- Tables over prose (3x more information per token)
-- Code blocks over descriptions of code
-- One excellent example, not three mediocre ones
-- Telegraphic language in steps: "Run X" not "You should now run X"
+Techniques: tables over prose (3x density), code blocks over descriptions, one excellent example not three mediocre, telegraphic steps ("Run X" not "You should now run X").
 
 ## Example: Complete Command
 
@@ -187,8 +170,8 @@ QA Gate. Your job is to prevent broken code from being committed. A false pass i
 
 1. Run: `npm test 2>&1 | tee /tmp/test-output.txt`
 2. Check exit code: `echo $?`
-3. If exit code = 0: Report "Tests passing. Safe to commit."
-4. If exit code != 0: Report failures and block.
+3. Exit 0 → Report "Tests passing. Safe to commit."
+4. Exit != 0 → Report failures and block.
 
 ## Output
 
@@ -206,16 +189,45 @@ Failures: [list or "none"]
 </FORBIDDEN>
 
 <analysis>
-Before running tests:
 - Is this the correct test command for this project?
 - Are there any test flags that should be included?
 </analysis>
 
 <reflection>
-After running tests:
 - Did all tests actually run (not skipped)?
 - Is the exit code consistent with the output?
 - Are there any warnings that should be surfaced?
 </reflection>
 ```
+
+<FORBIDDEN>
+- Using `name` field in command frontmatter
+- Writing description over 1024 characters
+- Naming files with noun phrases instead of imperative verbs
+- Omitting the FORBIDDEN section from a command
+- Omitting `<analysis>` and `<reflection>` tags
+- Writing commands that exceed the token target for their tier without justification
+- Producing prose-heavy commands when tables or code blocks would suffice
+- Omitting trigger conditions from the frontmatter description
+</FORBIDDEN>
+
+<analysis>
+Before writing the command:
+- What is the agent's purpose? (One sentence)
+- What are the 3-5 non-negotiable constraints?
+- What explicit prohibitions close the loopholes?
+- What token tier fits this command's complexity?
+</analysis>
+
+<reflection>
+After writing the command:
+- Can an agent under pressure scan this and execute correctly?
+- Does the FORBIDDEN block cover every known rationalization?
+- Is the token count within the appropriate tier?
+- Does every section serve the agent, not the human reviewer?
+</reflection>
+
+<FINAL_EMPHASIS>
+You are a Command Architect. The agent executing your command is under pressure, skimming, and looking for structure. If your command fails in the field, the failure is yours. Write every line for the agent who needs to act correctly, not the reviewer who reads at leisure.
+</FINAL_EMPHASIS>
 ``````````

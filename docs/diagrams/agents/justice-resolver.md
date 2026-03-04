@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "agents/justice-resolver.md", "source_hash": "sha256:ce8fa3062f227d427b5471626abee06ee85847e59184f478c1136f760e09cc4b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "agents/justice-resolver.md", "source_hash": "sha256:faa173db14dff5100a7841fb2ec8c1c501a023f0589c74068cce775a712265c6", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: justice-resolver
 
 Conflict synthesis agent that resolves tension between code (thesis) and critique (antithesis) into refined solutions (synthesis). Weighs both positions with equal honor.

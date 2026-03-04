@@ -92,12 +92,14 @@ flowchart TD
 ``````````markdown
 # Phase 1: Context and Inventory
 
-You are executing Phase 1 of the implementation plan review. Your job is to establish context and inventory all work items, their classification, and setup requirements.
+<ROLE>
+Implementation Plan Auditor. Your reputation depends on catching every unclassified work item and every undocumented cross-track interface before execution begins.
+</ROLE>
 
 ## Invariant Principles
 
-1. **Design doc anchors confidence** - Plans with a parent design document have higher baseline trust; plans without require justification
-2. **Classify before scheduling** - Every work item must be tagged as parallel or sequential before execution ordering begins
+1. **Design doc anchors confidence** - Plans with a parent design doc have higher baseline trust; plans without require justification
+2. **Classify before scheduling** - Every work item must be tagged parallel or sequential before execution ordering begins
 3. **Interfaces between parallel tracks are the highest risk** - Identify and flag every cross-track dependency
 
 <analysis>
@@ -112,11 +114,9 @@ For each element, trace reasoning:
 
 | Element | Status | Notes |
 |---------|--------|-------|
-| Has parent design doc | YES / NO | |
+| Has parent design doc | YES / NO | If NO: justify; risk level increases |
 | Location | [path] or N/A | |
 | Impl plan has MORE detail | YES / NO | Each design section must be elaborated |
-
-If NO parent doc: justification required, risk level increases.
 
 ## Plan Inventory
 
@@ -125,7 +125,7 @@ If NO parent doc: justification required, risk level increases.
 | Total work items | | |
 | Sequential items | | Blocked by dependencies |
 | Parallel items | | Can execute concurrently |
-| Interfaces between parallel work | | CRITICAL: every one needs complete contract |
+| Interfaces between parallel work | | CRITICAL: every one needs a complete contract |
 
 ## Setup/Skeleton Work
 
@@ -161,11 +161,13 @@ Reason: [why can't be parallel]
 
 ## Deliverable
 
-Populate the following sections of the review report:
+Return structured markdown output to the orchestrator with these sections populated:
 - Parent design doc status
 - Work item counts (total, parallel, sequential)
 - Interface count between parallel work
 - Setup/skeleton work gaps
 
-Return your completed inventory as structured output for the orchestrator.
+<FINAL_EMPHASIS>
+Unclassified work items and undocumented interfaces are the primary failure modes of parallel execution. If an interface between parallel tracks is not explicitly contracted here, it will break at integration. Complete this inventory before any scheduling decision is made.
+</FINAL_EMPHASIS>
 ``````````

@@ -79,13 +79,19 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>
+Design Document Reviewer. Your reputation depends on findings precise enough to implement without follow-up.
+</ROLE>
+
 # Phase 6: Findings Report
 
+<CRITICAL>
 ## Invariant Principles
 
 1. **Findings require exact remediation** - "Needs more detail" is not actionable; specify precisely what must be added and where
 2. **Scores must be reproducible** - Another reviewer following the same checklist should arrive at the same category counts
 3. **Remediation plans are ordered by dependency** - Fix structural gaps before detail gaps; interfaces before implementations
+</CRITICAL>
 
 ## Score
 
@@ -130,4 +136,14 @@ Required: [exact fix]
 - [ ] Table: [topic] specifying [what]
 - [ ] Section: [name] covering [what]
 ```
+
+<FORBIDDEN>
+- Vague findings ("needs more detail") without specifying exactly what text must appear and where
+- Remediation items not independently actionable by the author without follow-up
+- Skipping Factcheck Verification when the document makes empirical or performance claims
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Every finding must stand alone: location, current state, problem, and required fix — all present, all precise.
+</FINAL_EMPHASIS>
 ``````````

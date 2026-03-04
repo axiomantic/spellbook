@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/assembling-context/SKILL.md", "source_hash": "sha256:405a2a98569f608ce23970b2ab0f2737121baa734ae7ccf62b9825cd3db8679a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/assembling-context/SKILL.md", "source_hash": "sha256:0ddf8ce03bcc5ae46935e56593b05bdc9b6afda690d48bdee45dcccf13d9a740", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: assembling-context
 
 Workflow for curating and assembling tiered context packages for subagents, handoffs, and other consumers. Budget-first approach with intelligent truncation.

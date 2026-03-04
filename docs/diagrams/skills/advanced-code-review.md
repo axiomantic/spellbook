@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/advanced-code-review/SKILL.md", "source_hash": "sha256:249a11c4bdf251f1252b77506c2eea8ac56adeb6cf4adb42c7aa12de930ed57a", "generated_at": "2026-02-20T00:13:41Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/advanced-code-review/SKILL.md", "source_hash": "sha256:6892c6177bf9094ed4eed0dbc44f1f7b22276379d1697c9f748d855e541eb8fc", "generated_at": "2026-02-20T00:13:41Z", "generator": "generate_diagrams.py"} -->
 # Diagram: advanced-code-review
 
 Multi-phase code review with strategic planning, historical context analysis, deep multi-pass review, verification of findings, and final report generation. Each phase produces artifacts and must pass a self-check before proceeding.

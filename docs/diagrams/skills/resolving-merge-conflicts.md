@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/resolving-merge-conflicts/SKILL.md", "source_hash": "sha256:58f8ab125df4ff9e40a28241599e78ab2df250d0a8fdb4e08fff2c34249cfa0b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/resolving-merge-conflicts/SKILL.md", "source_hash": "sha256:76165b3102d76d421b0a833a4de13fa5cd2f125e9b4618cb82d790197cf19bae", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: resolving-merge-conflicts
 
 Resolve git merge conflicts through mandatory 3-way analysis and synthesis, never selecting ours/theirs, preserving both branches' intent.

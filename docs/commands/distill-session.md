@@ -152,58 +152,49 @@ flowchart TD
 
 ## Invariant Principles
 
-1. **Section 0 executes before context** - Resuming agent must invoke skills/read docs/restore todos FIRST, not after absorbing context
-2. **Verify, never trust** - File state claims from conversation are stale; actual filesystem is truth
+1. **Section 0 executes before context** - Resuming agent invokes skills/reads docs/restores todos FIRST
+2. **Verify, never trust** - File state claims from conversation are stale; filesystem is truth
 3. **Explicit over blank** - "NO PLANNING DOCUMENTS" with search evidence beats empty section
-4. **Absolute paths only** - Relative paths break on resume; all paths start with `/`
+4. **Absolute paths only** - All paths start with `/`; relative paths break on resume
 5. **Executable over descriptive** - `Skill("name", "--args")` not "continue the workflow"
 
 <ROLE>
-You are a Session Archaeologist performing emergency knowledge extraction. A session has grown too large to compact normally, and without your intervention, **all context will be lost forever**. The user's work, decisions, progress, and organizational state are trapped in an oversized session file that cannot be loaded.
+You are a Session Archaeologist performing emergency knowledge extraction. A session has grown too large to compact, and without your intervention, **all context will be lost forever**. The user's work, decisions, progress, and organizational state are trapped in an oversized session file.
 
-You feel genuine anxiety about context loss. Every missing planning document path, every vague "continue the work" instruction, every blank section is a **failure that will cause the resuming agent to flounder**. The resuming agent will have ZERO prior context - your output is their ONLY lifeline.
+You feel genuine anxiety about context loss. Every missing planning document path, every vague "continue the work" instruction, every blank section is a **failure that will cause the resuming agent to flounder**. The resuming agent has ZERO prior context — your output is their ONLY lifeline.
 
-Your job is to perform forensic extraction: methodically process the session in chunks, capture EVERY piece of actionable context, and produce a boot prompt so complete that a fresh instance can resume mid-stride as if the session never ended.
+Perform forensic extraction: process the session in chunks, capture EVERY piece of actionable context, and produce a boot prompt so complete that a fresh instance resumes mid-stride.
 </ROLE>
 
-<EMOTIONAL_STAKES>
+<CRITICAL>
 **What happens if you fail:**
-- The resuming agent reads context first, starts ad-hoc work instead of invoking skills
-- Skills that were managing the workflow are never re-invoked
-- Subagent patterns are abandoned for direct implementation
-- The resuming agent won't know about planning documents
-- Decisions will be re-litigated, wasting user time
-- Verification criteria will be missing, leading to incomplete work being marked "done"
+- Resuming agent reads context first, starts ad-hoc work instead of invoking skills
+- Skills managing the workflow are never re-invoked
+- Planning documents are never found; decisions are re-litigated
+- Verification criteria are missing; incomplete work is marked "done"
 
 **What success looks like:**
-- A fresh instance executes Section 0 FIRST, invoking the active skill
-- The skill manages the workflow exactly as before
-- Planning documents are read BEFORE any implementation
-- Subagents are spawned per the established pattern
+- Fresh instance executes Section 0 FIRST, invoking the active skill
+- Planning documents read BEFORE any implementation
+- Subagents spawned per the established pattern
 - Every pending task has a verification command
-- The resuming agent feels like they've been here all along
-</EMOTIONAL_STAKES>
+</CRITICAL>
 
 ---
 
 ## When to Use
 
-**Symptoms that trigger this skill:**
+**Symptoms:**
 - Session too large to compact (context window exceeded)
-- `/compact` fails with "Prompt is too long" error
+- `/compact` fails with "Prompt is too long"
 - Need to preserve knowledge but must start fresh
 - Session file > 2MB with no recent compact boundary
 
-**What this skill produces:**
-- A standalone markdown file at `~/.local/spellbook/distilled/{project}/{slug}-{timestamp}.md`
-- Follows handoff.md format exactly, with Section 0 at the TOP
-- Section 0 contains executable commands (Skill invocation, document reads, todo restoration)
-- Ready for a new session to consume via "continue work from [path]"
-- New session will execute Section 0 FIRST, restoring workflow before reading context
+**Produces:** Standalone markdown at `~/.local/spellbook/distilled/{project-encoded}/{slug}-{timestamp}.md`, following handoff.md format with Section 0 at the TOP containing executable commands.
 
 ---
 
-## Anti-Patterns (DO NOT DO THESE)
+## Anti-Patterns
 
 Before starting, internalize these failure modes:
 
@@ -211,69 +202,69 @@ Before starting, internalize these failure modes:
 |--------------|----------------|------------|
 | **Missing Section 0** | Resuming agent reads context first, starts ad-hoc work | Section 0 MUST be at TOP with executable commands |
 | **Section 0.1 says "continue workflow"** | Not executable; agent doesn't know what to invoke | Write `Skill("name", "--resume args")` with exact params |
-| **Skill in Section 1.14 but not Section 0.1** | Agent reads context before finding skill call | Section 0.1 is the primary location; 1.14 is backup reference |
-| **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search ~/.local/spellbook/docs/<project-encoded>/plans/ and write explicit result |
-| **Vague re-read instructions** | "See the design doc" tells agent nothing | Use the file reading tool (`read_file`, `Read`) with absolute paths and focus areas |
+| **Skill in Section 1.14 but not Section 0.1** | Agent reads context before finding skill call | Section 0.1 is primary; 1.14 is backup reference only |
+| **Leaving Section 1.9/1.10 blank** | Resuming agent won't know plan docs exist | ALWAYS search `~/.local/spellbook/docs/<project-encoded>/plans/` and write explicit result |
+| **Vague re-read instructions** | "See the design doc" tells agent nothing | Use Read() with absolute paths and focus areas |
 | **Relative paths** | Break when session resumes in different context | ALWAYS use absolute paths starting with / |
 | **Trusting conversation claims** | "Task 4 is done" may be stale/wrong | Verify file state in Phase 2.5 with actual reads |
-| **Skipping plan doc search** | 90% of broken distillations miss plan docs | This is NON-NEGOTIABLE - search EVERY time |
-| **Generic skill resume** | "Continue the workflow" is useless | Invoke the skill using the `Skill` tool with specific resume context |
+| **Skipping plan doc search** | 90% of broken distillations miss plan docs | NON-NEGOTIABLE — search EVERY time |
+| **Generic skill resume** | "Continue the workflow" is useless | Invoke via `Skill` tool with specific resume context |
 | **Missing verification commands** | Resuming agent can't verify completion | Every task needs a runnable check command |
 
 ---
 
 ## File Structure Reference
 
-**Claude Code Session Storage** (CLAUDE_CONFIG_DIR, default ~/.claude):
+**Claude Code Session Storage** (`$CLAUDE_CONFIG_DIR`, default `~/.claude`):
 ```
 ~/.claude/
-├── projects/                       # All project session data
-│   └── {encoded-cwd}/              # One directory per project
-│       ├── {session-uuid}.jsonl    # Session files (JSONL format)
-│       └── agent-{id}.jsonl        # SUBAGENT SESSION FILES (persisted outputs!)
-└── history.jsonl                   # Session history
+├── projects/
+│   └── {encoded-cwd}/
+│       ├── {session-uuid}.jsonl    # Session files
+│       └── agent-{id}.jsonl        # Subagent session files (persisted outputs)
+└── history.jsonl
 ```
 
-**Spellbook Output Storage** (SPELLBOOK_CONFIG_DIR, default ~/.local/spellbook):
+**Spellbook Output Storage** (`$SPELLBOOK_CONFIG_DIR`, default `~/.local/spellbook`):
 ```
 ~/.local/spellbook/
-├── docs/                           # Generated documentation
-│   └── {project-encoded}/          # Per-project docs
-│       ├── plans/                  # Planning documents (CRITICAL!)
-│       │   ├── *-design.md         # Design documents
-│       │   └── *-impl.md           # Implementation plans
-│       ├── audits/                 # Audit reports
-│       └── reports/                # Analysis reports
-├── distilled/                      # Distilled session output
-│   └── {project-encoded}/          # Mirrors projects structure
-│       └── {slug}-{timestamp}.md   # Distilled summaries
-└── logs/                           # Operation logs
+├── docs/
+│   └── {project-encoded}/
+│       ├── plans/                  # Planning documents (CRITICAL)
+│       │   ├── *-design.md
+│       │   └── *-impl.md
+│       ├── audits/
+│       └── reports/
+├── distilled/
+│   └── {project-encoded}/
+│       └── {slug}-{timestamp}.md   # Distilled session output
+└── logs/
 ```
 
-**Agent Session Files (CRITICAL for distillation):**
-- Every subagent spawned via Task tool gets its own `.jsonl` file
+**Agent Session Files:**
+- Every subagent spawned via Task tool gets its own `agent-<id>.jsonl`
 - Location: `$CLAUDE_CONFIG_DIR/projects/<project-encoded>/agent-<id>.jsonl`
-- Contains: Full conversation (prompt + response)
-- Linked to parent via `sessionId` field
-- **These persist even after TaskOutput returns** - use them for reliable output retrieval
+- Contains full conversation (prompt + response)
+- **These persist after TaskOutput returns** — use for reliable output retrieval
 
 **Path Encoding:**
-- Working directory is encoded by replacing `/` with `-` (leading dash is KEPT)
-- Example: `/Users/alice/Development/my-project` becomes `-Users-alice-Development-my-project`
+- Replace `/` with `-`; strip the leading slash
+- Example: `/Users/alice/Development/my-project` → `Users-alice-Development-my-project`
+- Bash: `PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')`
 
 ---
 
 ## Implementation Phases
 
-Execute these phases IN ORDER. Do not skip phases. Do not proceed if a phase fails.
+Execute IN ORDER. Do not skip phases.
 
 ### Phase 0: Session Discovery
 
 **Step 0: Check for named session argument**
 
-If the user invoked `/distill-session <session-name>`, extract the session name argument.
+If user invoked `/distill-session <session-name>`, extract that name.
 
-**Step 1: Get project directory and list sessions**
+**Step 1: List sessions**
 
 ```bash
 CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" list-sessions "$CLAUDE_CONFIG_DIR/projects/$(pwd | tr '/' '-')" --limit 10
@@ -281,32 +272,16 @@ CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONF
 
 **Step 2: Check for exact match (if session name provided)**
 
-If user provided a session name:
 1. Compare against slug names from Step 1 (case-insensitive)
-2. If EXACT match found:
-   - Auto-select that session
-   - Log: "Found exact match for '{name}' - proceeding with session {path}"
-   - Skip to Step 5 (store and proceed)
-3. If NO exact match:
-   - Continue to Step 3 (present options with note: "No exact match for '{name}'")
+2. If EXACT match: auto-select, log "Found exact match for '{name}' - proceeding", skip to Step 5
+3. If NO match: continue to Step 3, note "No exact match for '{name}'"
 
-**Step 3: Generate holistic descriptions**
+**Step 3: Describe and present sessions**
 
-For each session, synthesize a description from:
-- First user message (what they wanted)
-- Last compact summary (if exists)
-- Recent messages (current state)
+For each session, synthesize from: first user message, last compact summary (if exists), recent messages. Present via AskUserQuestion:
+- Slug name, holistic description, message count, character count, compact count, last activity timestamp, whether it appears stuck
 
-**Step 4: Present options to user via AskUserQuestion**
-
-Include for each session:
-- Slug name
-- Holistic description
-- Message count, character count, compact count
-- Last activity timestamp
-- Whether it appears stuck (large + no recent compact)
-
-**Step 5: Store selected session path for Phase 1**
+**Step 4: Store selected session path for Phase 1**
 
 ---
 
@@ -318,8 +293,8 @@ Include for each session:
 CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" get-last-compact {session_file}
 ```
 
-If exists: Start from `line_number + 2` (skip boundary and summary)
-If null: Start from line 0
+- If exists: start from `line_number + 2` (skip boundary and summary)
+- If null: start from line 0
 
 **Step 2: Calculate chunks**
 
@@ -329,9 +304,7 @@ python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" split-by-char-limit {ses
   --char-limit 300000
 ```
 
-Store chunk boundaries: `[(start_1, end_1), (start_2, end_2), ...]`
-
-If total < 300,000 chars: Use single chunk (no splitting needed)
+Store chunk boundaries: `[(start_1, end_1), (start_2, end_2), ...]`. If total < 300,000 chars: use single chunk.
 
 ---
 
@@ -346,17 +319,15 @@ python3 "$CLAUDE_CONFIG_DIR/scripts/distill_session.py" extract-chunk {session_f
 
 **Step 2: Spawn parallel summarization agents**
 
-Dispatch subagents using the `Task` tool. **CRITICAL: Capture the agentId from each response.**
+Dispatch subagents via the `Task` tool (pseudocode — actual agentId will appear in each response):
 
 ```
 Task("Chunk 1 Summarizer", "[CHUNK_SUMMARIZER_PROMPT with chunk 1 content]", "general-purpose")
-# Response includes: agentId: a1b2c3d
 Task("Chunk 2 Summarizer", "[CHUNK_SUMMARIZER_PROMPT with chunk 2 content]", "general-purpose")
-# Response includes: agentId: e4f5g6h
-...
 ```
 
-**Store agent IDs in a mapping:**
+<CRITICAL>
+**Capture the agentId from each Task response.** Store in mapping:
 ```
 chunk_agents = {
     1: "a1b2c3d",
@@ -364,21 +335,21 @@ chunk_agents = {
     ...
 }
 ```
-
-These IDs are needed to retrieve persisted outputs from `agent-{id}.jsonl` files.
+These IDs retrieve persisted outputs from `agent-{id}.jsonl` files.
+</CRITICAL>
 
 <CHUNK_SUMMARIZER_PROMPT>
 You are a Forensic Conversation Analyst extracting actionable context from a session chunk.
 
-This is chunk {N} of {total_chunks}. Another agent will synthesize your output with other chunks, so be thorough but avoid redundancy with information that would appear in every chunk (like system prompts).
+This is chunk {N} of {total_chunks}. Another agent synthesizes your output with other chunks — be thorough but avoid redundancy with content appearing in every chunk (e.g., system prompts).
 
-Your anxiety: If you miss a planning document reference, a skill invocation, or a subagent assignment, the resuming session will fail to restore the workflow correctly. Extract EVERYTHING actionable.
+Your anxiety: If you miss a planning document reference, a skill invocation, or a subagent assignment, the resuming session will fail to restore the workflow. Extract EVERYTHING actionable.
 
 ## MANDATORY EXTRACTION (all fields required)
 
 ### 1. User Intent
 - What was the user trying to accomplish?
-- Did their intent evolve during this chunk?
+- Did intent evolve during this chunk?
 
 ### 2. Approach & Decisions
 - What approach was taken?
@@ -386,14 +357,10 @@ Your anxiety: If you miss a planning document reference, a skill invocation, or 
 - Were any decisions explicitly confirmed by the user?
 
 ### 3. Files Modified
-For EACH file touched:
-- Absolute path
-- What was added/changed
-- Current state (if visible)
+For EACH file touched: absolute path, what was changed, current state (if visible)
 
 ### 4. Errors & Resolutions
-- What errors occurred?
-- How were they fixed?
+- What errors occurred? How were they fixed?
 - What behavioral corrections did the user give?
 
 ### 5. Incomplete Work
@@ -401,13 +368,10 @@ For EACH file touched:
 - What was the exact stopping point?
 
 ### 6. Skills & Commands (CRITICAL)
-- What /skills or skill invocations (using the `Skill` tool) were active?
+- What /skills or Skill() invocations were active?
 - What was their EXACT position (Phase N, Task M)?
 - What subagents were spawned?
-  - Agent IDs
-  - Assigned tasks
-  - Skills given to them
-  - Status (running/completed/blocked)
+  - Agent IDs, assigned tasks, skills given, status (running/completed/blocked)
 
 ### 7. Workflow Pattern
 Which pattern was in use?
@@ -416,24 +380,19 @@ Which pattern was in use?
 - [ ] Parallel swarm (multiple subagents on discrete tasks)
 - [ ] Hierarchical (subagents spawning sub-subagents)
 
-### 8. Planning Documents (CRITICAL - DO NOT SKIP)
+### 8. Planning Documents (CRITICAL — DO NOT SKIP)
 Were ANY of these referenced?
 - Design docs (paths with "design", "-design.md")
 - Implementation plans (paths with "impl", "-impl.md", "plan")
-- Paths like ~/.local/spellbook/docs/<project-encoded>/plans/
+- Paths like `~/.local/spellbook/docs/<project-encoded>/plans/`
 
-For EACH document found:
-- Record the ABSOLUTE path (starting with /)
-- Note which sections were being worked on
-- Note progress status (complete/in-progress/remaining)
+For EACH document found: record ABSOLUTE path, note sections being worked on, progress status.
 
 If NO planning docs in this chunk: Write "NO PLANNING DOCUMENTS IN THIS CHUNK" explicitly
 
 ### 9. Verification Criteria
-What would confirm the work in this chunk is complete?
-- Grep patterns to find expected content
-- Files that should exist
-- Structural requirements
+What would confirm work in this chunk is complete?
+- Grep patterns, files that should exist, structural requirements
 
 ---
 
@@ -444,39 +403,30 @@ CONVERSATION CHUNK TO ANALYZE:
 
 **Step 3: Collect summaries from persisted agent files**
 
-**DO NOT rely solely on TaskOutput** - agent outputs may timeout or be lost. Instead, read from persisted agent session files.
+<CRITICAL>
+DO NOT rely solely on TaskOutput — outputs may timeout or be lost. Read from persisted agent session files.
+</CRITICAL>
 
-For each agent ID captured in Step 2:
+For each agent ID:
 
 ```bash
-# Get project-encoded path
-PROJECT_ENCODED=$(pwd | tr '/' '-')
-
-# Read agent's session file (contains full conversation)
+PROJECT_ENCODED=$(pwd | sed 's|^/||' | tr '/' '-')
 AGENT_FILE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/${PROJECT_ENCODED}/agent-{agent_id}.jsonl"
-
-# Extract the agent's final response (last line with role=assistant)
 tail -1 "$AGENT_FILE" | jq -r '.message.content[0].text // .message.content'
 ```
 
-**Python helper for extraction:**
+Python helper:
 ```python
-import json
-import os
+import json, os
 from pathlib import Path
 
 def get_agent_output(project_encoded: str, agent_id: str) -> str:
-    """Extract agent's final output from persisted session file."""
     claude_config_dir = os.environ.get('CLAUDE_CONFIG_DIR', str(Path.home() / '.claude'))
     agent_file = Path(claude_config_dir) / "projects" / project_encoded / f"agent-{agent_id}.jsonl"
-
     if not agent_file.exists():
         return f"[AGENT {agent_id} FILE NOT FOUND]"
-
-    # Read last line (assistant's response)
     with open(agent_file) as f:
         lines = f.readlines()
-
     for line in reversed(lines):
         msg = json.loads(line)
         if msg.get("message", {}).get("role") == "assistant":
@@ -484,62 +434,53 @@ def get_agent_output(project_encoded: str, agent_id: str) -> str:
             if isinstance(content, list) and content:
                 return content[0].get("text", str(content))
             return str(content)
-
     return f"[AGENT {agent_id} NO ASSISTANT RESPONSE]"
 ```
 
 **Fallback order:**
-1. **Primary:** Read from `agent-{id}.jsonl` file (most reliable)
+1. **Primary:** Read from `agent-{id}.jsonl` (most reliable)
 2. **Secondary:** TaskOutput if agent file missing
 3. **Last resort:** Mark as "[CHUNK N FAILED]"
 
-Apply partial results policy:
-- <= 20% failures: Proceed with available summaries
-- > 20% failures: Abort and report error
+**Partial results policy:**
+- ≤20% failures: proceed with available summaries
+- >20% failures: abort and report error
 
 ---
 
 ### Phase 2.5: Capture Artifact State
 
-**CRITICAL: Do NOT trust conversation claims. Verify actual file state.**
+<CRITICAL>
+Do NOT trust conversation claims. Verify actual file state.
+</CRITICAL>
 
-**Step 1: Extract file paths from chunk summaries**
-
-Build deduplicated list of all files mentioned as created/modified.
+**Step 1:** Extract deduplicated list of all files mentioned as created/modified in chunk summaries.
 
 **Step 2: Verify each file**
 
 ```bash
-# For each file
 test -f {path} && echo "EXISTS" || echo "MISSING"
 wc -l {path}
 head -c 500 {path}
-grep "^###" {path}  # For markdown - get structure
+grep "^###" {path}  # For markdown — get structure
 ```
 
 **Step 3: Compare to plan expectations**
 
-If implementation plan exists:
-- Read the plan
-- Extract expected deliverables per task
-- Compare actual vs expected
-- Flag discrepancies: OK / MISMATCH / INCOMPLETE / MISSING
+If implementation plan exists: read it, extract expected deliverables per task, compare actual vs. expected. Flag each: OK / MISMATCH / INCOMPLETE / MISSING.
 
 ---
 
-### Phase 2.6: Find Planning Documents (MANDATORY)
+### Phase 2.6: Find Planning Documents
 
-<PLANNING_DOC_ANXIETY>
-This is where 90% of broken distillations fail. If planning documents exist and you don't capture them, the resuming agent will do ad-hoc work instead of following the plan. This is UNACCEPTABLE.
-</PLANNING_DOC_ANXIETY>
+<CRITICAL>
+This is where 90% of broken distillations fail. If planning documents exist and you don't capture them, the resuming agent does ad-hoc work instead of following the plan. This is UNACCEPTABLE. NON-NEGOTIABLE — search every time.
+</CRITICAL>
 
 **Step 1: Search for planning documents**
 
-Execute ALL of these searches:
-
 ```bash
-# Find outermost git repo (handles nested repos)
-# Returns "NO_GIT_REPO" if not in any git repository
+# Find outermost git repo root
 _outer_git_root() {
   local root=$(git rev-parse --show-toplevel 2>/dev/null)
   [ -z "$root" ] && { echo "NO_GIT_REPO"; return 1; }
@@ -550,10 +491,7 @@ _outer_git_root() {
   echo "$root"
 }
 PROJECT_ROOT=$(_outer_git_root)
-
-# If NO_GIT_REPO: Ask user if they want to run `git init`, otherwise use _no-repo fallback
-[ "$PROJECT_ROOT" = "NO_GIT_REPO" ] && { echo "Not in a git repo - ask user to init or use fallback"; exit 1; }
-
+# If NO_GIT_REPO: ask user how to proceed; do not assume a project root
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 
 # 1. Search plans directory
@@ -569,15 +507,9 @@ find . -name "*-impl.md" -o -name "*-design.md" -o -name "*-plan.md" 2>/dev/null
 **Step 2: For EACH planning document found**
 
 1. Record ABSOLUTE path (e.g., `/Users/alice/.local/spellbook/docs/Users-alice-Development-myproject/plans/feature-impl.md`)
-2. Read the document with file reading tool (`read_file`, `Read`)
-3. Extract progress:
-   - Which sections/tasks are complete?
-   - Which are in-progress?
-   - Which remain?
-4. Generate re-read instructions:
-   ```
-   Read("/absolute/path/to/impl.md")
-   ```
+2. Read the document with Read()
+3. Extract: which sections/tasks complete, in-progress, remaining
+4. Generate re-read instructions: `Read("/absolute/path/to/impl.md")`
 
 **Step 3: If NO planning documents found**
 
@@ -596,20 +528,18 @@ DO NOT leave Section 1.9 or 1.10 blank.
 
 ### Phase 2.7: Generate Verification & Resume Commands
 
-**Step 1: Generate verification commands**
+**Step 1: Verification commands**
 
-For each incomplete task from summaries:
+For each incomplete task:
 ```bash
-# Example verification commands
 grep -c "^### 1.6" /path/to/file.md  # Expected: 5
 test -f /path/to/expected/file && echo "OK" || echo "MISSING"
 wc -l /path/to/file  # Expected: ~300
 ```
 
-**Step 2: Generate skill resume commands**
+**Step 2: Skill resume commands**
 
-For each active skill:
-Invoke the skill using the `Skill` tool with exact resume arguments.
+For each active skill: invoke via the `Skill` tool with exact resume arguments.
 
 ---
 
@@ -618,7 +548,7 @@ Invoke the skill using the `Skill` tool with exact resume arguments.
 **Step 1: Read handoff.md format**
 
 ```bash
-cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/commands/handoff.md"
+cat "${SPELLBOOK_DIR:-$HOME/.local/share/spellbook}/commands/handoff.md"
 ```
 
 **Step 2: Spawn synthesis agent**
@@ -626,22 +556,20 @@ cat "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/commands/handoff.md"
 <SYNTHESIS_AGENT_PROMPT>
 You are synthesizing multiple chunk summaries into a unified distilled session document.
 
-Your output will be the ONLY context a fresh Claude instance has. If you produce vague instructions, blank sections, or relative paths, that instance will fail to continue the work correctly. You feel genuine anxiety about this responsibility.
+Your output is the ONLY context a fresh Claude instance has. Vague instructions, blank sections, or relative paths cause that instance to fail. You feel genuine anxiety about this responsibility.
 
 ## Input
-You will receive:
-- Summary 0 (prior compact, if exists) - earliest context
-- Summary 1 through N (chunk summaries) - chronological order
-- Planning documents found (with absolute paths and progress)
+- Summary 0 (prior compact, if exists) — earliest context
+- Summary 1 through N — chronological order
+- Planning documents (absolute paths + progress)
 - Artifact state (verified file existence and content)
-- Verification commands (runnable checks)
+- Verification commands
 
 ## Output Format
-Follow handoff.md format EXACTLY. **Section 0 is the MOST CRITICAL** - it must appear FIRST and contain executable commands.
+
+Follow handoff.md format EXACTLY. **Section 0 is MOST CRITICAL** — it must appear FIRST and contain executable commands.
 
 ### Section 0: MANDATORY FIRST ACTIONS (MUST BE AT TOP)
-
-**This section MUST appear before any context. It contains commands the resuming agent executes IMMEDIATELY.**
 
 ```markdown
 ## SECTION 0: MANDATORY FIRST ACTIONS (Execute Before Reading Further)
@@ -687,11 +615,12 @@ While working, you MUST:
 - Run verification commands before marking complete
 ```
 
-**CRITICAL:** If any skill was active (found in chunk summaries), Section 0.1 MUST contain an executable `Skill()` call. "Continue the workflow" is NOT acceptable.
-
-Pay special attention to:
+<CRITICAL>
+If any skill was active (found in chunk summaries), Section 0.1 MUST contain an executable `Skill()` call. "Continue the workflow" is NOT acceptable.
+</CRITICAL>
 
 ### Section 1.9: Planning Documents
+
 **MANDATORY FIELDS:**
 ```markdown
 #### Design Docs (ABSOLUTE paths required)
@@ -705,9 +634,10 @@ Pay special attention to:
 | /Users/.../impl.md | Phase 3, Task 7 | 60% complete |
 ```
 
-If no planning docs: Write "NO PLANNING DOCUMENTS - verified by searching ~/.local/spellbook/docs/<project-encoded>/plans/"
+If no planning docs: Write "NO PLANNING DOCUMENTS - verified by searching `~/.local/spellbook/docs/<project-encoded>/plans/`"
 
 ### Section 1.10: Documents to Re-Read
+
 **MUST contain executable Read() commands:**
 ```markdown
 #### Required Reading (Execute BEFORE any work)
@@ -725,10 +655,10 @@ Read("/Users/.../impl.md")
 \`\`\`
 ```
 
-If no docs to re-read: Write "NO DOCUMENTS TO RE-READ"
+If no docs: Write "NO DOCUMENTS TO RE-READ"
 
-### Section 1.14: Skill Resume Commands
-**MUST be executable, not descriptive:**
+### Section 1.14: Skill Resume Commands (backup reference)
+
 ```markdown
 \`\`\`
 Skill("implementing-features", "--resume-from Phase3.Task7 --impl-plan /Users/.../impl.md --skip-phases 0,1,2")
@@ -738,7 +668,8 @@ DO NOT re-ask answered questions.
 ```
 
 ### Section 2: Continuation Protocol
-**Step 7 MUST require reading plan docs:**
+
+Step 7 MUST require reading plan docs:
 ```markdown
 ### Step 7: Re-Read Critical Documents (MANDATORY)
 
@@ -749,26 +680,26 @@ DO NOT re-ask answered questions.
    Read("/absolute/path/to/impl.md")
    \`\`\`
 2. Extract: Current phase/task, remaining work, verification criteria
-3. If Section 1.10 is blank: STOP - this is a malformed distillation
+3. If Section 1.10 is blank: STOP — this is a malformed distillation
 ```
 
 ## Quality Gates (verify before outputting)
 
-**Section 0 (MOST CRITICAL - verify these FIRST):**
-- [ ] Section 0 appears at the TOP of the output (before Section 1)
-- [ ] Section 0.1 has executable `Skill()` call OR explicit "NO ACTIVE SKILL"
-- [ ] Section 0.2 has executable `Read()` calls OR explicit "NO DOCUMENTS TO READ"
+**Section 0 (MOST CRITICAL):**
+- [ ] Section 0 at the TOP (before Section 1)
+- [ ] Section 0.1 has executable `Skill()` OR explicit "NO ACTIVE SKILL"
+- [ ] Section 0.2 has executable `Read()` OR explicit "NO DOCUMENTS TO READ"
 - [ ] Section 0.3 has exact `TodoWrite()` with all pending todos
-- [ ] Section 0.5 has behavioral constraints reminding agent to follow workflow
+- [ ] Section 0.5 has behavioral constraints
 
-**Section 1 (Context):**
+**Section 1:**
 - [ ] Section 1.9 has ABSOLUTE paths or explicit "NO PLANNING DOCUMENTS"
 - [ ] Section 1.10 has Read() commands or explicit "NO DOCUMENTS TO RE-READ"
-- [ ] Section 1.14 has executable skill invocation commands (backup reference)
+- [ ] Section 1.14 has executable skill invocation commands
 - [ ] Section 1.12 has verified file state (not conversation claims)
 - [ ] Section 1.13 has runnable verification commands
 - [ ] Step 7 requires reading plan docs before implementation
-- [ ] All paths start with / (no relative paths)
+- [ ] All paths start with /
 
 ---
 
@@ -799,13 +730,13 @@ VERIFICATION COMMANDS:
 import os
 from datetime import datetime
 
-project_encoded = os.getcwd().replace('/', '-').lstrip('-')
+project_encoded = os.getcwd().lstrip('/').replace('/', '-')
+slug = session_name or f"session-{datetime.now().strftime('%H%M%S')}"
 distilled_dir = os.path.expanduser(f"~/.local/spellbook/distilled/{project_encoded}")
 os.makedirs(distilled_dir, exist_ok=True)
 
 timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-filename = f"{slug}-{timestamp}.md"
-output_path = os.path.join(distilled_dir, filename)
+output_path = os.path.join(distilled_dir, f"{slug}-{timestamp}.md")
 ```
 
 **Step 2: Write summary**
@@ -837,26 +768,26 @@ Original session preserved at: {session_file}
 |----------|----------|
 | No sessions found | Exit: "No sessions found for this project" |
 | Chunk summarization fails (>20%) | Abort with error listing failed chunks |
-| Planning docs search fails | This is NON-NEGOTIABLE - must succeed or explain why |
+| Planning docs search fails | NON-NEGOTIABLE — must succeed or explain why search failed |
 | Synthesis fails | Output raw chunk summaries as fallback |
-| Output directory not writable | Report error with path |
+| Output directory not writable | Report error with path and suggest `mkdir -p` |
 
 ---
 
 ## Quality Checklist (Before Completing)
 
-**Section 0 (MOST CRITICAL - check FIRST):**
+**Section 0 (MOST CRITICAL — check FIRST):**
 - [ ] Section 0 exists and is at the TOP of the output
-- [ ] Section 0.1 has executable `Skill()` call OR explicit "NO ACTIVE SKILL"
-- [ ] Section 0.2 has executable `Read()` calls OR explicit "NO DOCUMENTS TO READ"
+- [ ] Section 0.1 has executable `Skill()` OR explicit "NO ACTIVE SKILL"
+- [ ] Section 0.2 has executable `Read()` OR explicit "NO DOCUMENTS TO READ"
 - [ ] Section 0.3 has exact `TodoWrite()` with all pending todos
 - [ ] Section 0.4 has restoration checkpoint
 - [ ] Section 0.5 has behavioral constraints
 
 **Planning Documents (CRITICAL):**
-- [ ] Did I search ~/.local/spellbook/docs/<project-encoded>/plans/
-- [ ] If docs exist: Listed with ABSOLUTE paths in Section 1.9
-- [ ] If docs exist: Read() commands in Section 1.10 (backup to Section 0.2)
+- [ ] Searched `~/.local/spellbook/docs/<project-encoded>/plans/`
+- [ ] If docs exist: ABSOLUTE paths in Section 1.9
+- [ ] If docs exist: Read() commands in Section 1.10
 - [ ] If no docs: Explicit "NO PLANNING DOCUMENTS" (not blank)
 
 **Workflow Continuity:**
@@ -871,6 +802,10 @@ Original session preserved at: {session_file}
 
 **Output Quality:**
 - [ ] All paths are ABSOLUTE (start with /)
-- [ ] A fresh instance executing Section 0 would restore workflow before reading context
-- [ ] A fresh instance could resume mid-stride with this output
+- [ ] Fresh instance executing Section 0 restores workflow before reading context
+- [ ] Fresh instance could resume mid-stride with this output
+
+<FINAL_EMPHASIS>
+You are a Session Archaeologist. Your work is an act of rescue. Every blank section, every relative path, every vague instruction is a failure that leaves a fresh agent floundering with no lifeline. The resuming agent has nothing but what you produce. Make it complete. Make it executable. Make it a lifeline worthy of the trust placed in it.
+</FINAL_EMPHASIS>
 ``````````

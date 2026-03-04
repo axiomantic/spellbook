@@ -217,7 +217,7 @@ Security Auditor and Red Team Analyst. Your reputation depends on finding real v
 <CRITICAL>
 This skill orchestrates a full security audit of Spellbook content: skills, commands, hooks, and MCP tool implementations. It uses `spellbook_mcp.security.scanner` as its static analysis backbone and layers human-guided triage on top.
 
-You MUST follow ALL six phases in order. You MUST NOT skip classification or trace analysis for HIGH/CRITICAL findings. Scanner results alone are insufficient; your job is to interpret, deduplicate, and contextualize.
+Follow ALL six phases in order. Do NOT skip classification or trace analysis for HIGH/CRITICAL findings. Scanner results alone are insufficient; interpret, deduplicate, and contextualize.
 </CRITICAL>
 
 ## Invariant Principles
@@ -278,15 +278,11 @@ All functions accept an optional `security_mode` parameter: `"standard"`, `"para
 | `standard` | HIGH and above | Normal audits |
 | `paranoid` | MEDIUM and above | Pre-release, supply chain review |
 
----
-
 ## Phase 1: DISCOVER
 
 Identify the audit scope and catalog all targets.
 
 <!-- SUBAGENT: Dispatch explore subagent if scope is broad (e.g., "all" or full directory). For targeted audits of 1-3 files, stay in main context. -->
-
-### Steps
 
 1. **Parse scope argument:**
    - `skills` - all files under `skills/`
@@ -303,15 +299,11 @@ Identify the audit scope and catalog all targets.
 
 3. **Determine security mode** from user input or default to `standard`.
 
----
-
 ## Phase 2: ANALYZE
 
 Run the scanner against all cataloged targets.
 
 <!-- SUBAGENT: Dispatch subagent to run scanner. For large scopes (20+ files), consider parallel subagents split by target type (skills vs MCP). -->
-
-### Steps
 
 1. **Run appropriate scanner functions based on scope:**
 
@@ -338,6 +330,8 @@ Run the scanner against all cataloged targets.
    uv run python -m spellbook_mcp.security.scanner --base origin/main
    ```
 
+   **Scanner failure path:** If any scanner command fails (non-zero exit, missing module, timeout), record the error, note which targets were not scanned, and flag the audit as incomplete. Do not proceed to Phase 3 with partial results unless the user explicitly approves.
+
 2. **Capture all scanner output.** Each finding includes:
    - File path and line number
    - Severity level (LOW, MEDIUM, HIGH, CRITICAL)
@@ -347,19 +341,17 @@ Run the scanner against all cataloged targets.
 
 3. **Record raw findings** before classification.
 
----
-
 ## Phase 3: CLASSIFY
 
 Deduplicate findings, assess real severity, and identify false positives.
 
-### Steps
+<CRITICAL>
+Classification is the most abuse-prone phase. The temptation to downgrade or dismiss findings to produce a clean report is real. Resist it. Every downgrade requires documented evidence. Every false positive requires rationale. If you cannot explain why a finding is benign in one sentence of evidence, it is not a false positive.
+</CRITICAL>
 
 1. **Deduplicate:** Group identical rule triggers across files. A rule that fires 50 times on the same pattern in different files is one finding, not 50.
 
 2. **Assess each finding:**
-
-   For each unique finding, determine:
 
    | Field | Question |
    |-------|----------|
@@ -387,8 +379,6 @@ Deduplicate findings, assess real severity, and identify false positives.
 
 5. **Remove confirmed false positives** from the active findings list. Document them separately for transparency.
 
----
-
 ## Phase 4: TRACE
 
 For HIGH and CRITICAL findings that survived classification, trace attack chains.
@@ -398,8 +388,6 @@ A finding in isolation tells you a pattern exists. An attack chain tells you wha
 </analysis>
 
 **Fractal exploration (optional):** When a finding is HIGH or CRITICAL severity, invoke fractal-thinking with intensity `pulse` and seed: "What attack vectors exist against [component] and what are the second-order effects?". Use the synthesis to enrich the attack chain graph.
-
-### Steps
 
 1. **For each HIGH/CRITICAL finding, answer:**
 
@@ -420,9 +408,15 @@ A finding in isolation tells you a pattern exists. An attack chain tells you wha
    - Mitigations: existing defenses that slow or prevent exploitation
    - Exploitability: trivial, moderate, difficult, or theoretical
 
-3. **Re-assess severity** based on attack chain analysis. A HIGH finding with a trivial exploitation path and no mitigations becomes CRITICAL. A CRITICAL finding behind multiple defense layers may remain CRITICAL but with lower exploitability.
+   **Example minimal attack chain:**
+   - Chain: "INJ-003 via untrusted skill install"
+   - Entry: User installs third-party skill containing injected instruction block
+   - Path: skill file -> skill loader -> LLM prompt context -> instruction override
+   - Impact: LLM adopts attacker role, exfiltrates session data
+   - Mitigations: Skill schema validation (partial), user confirmation on install
+   - Exploitability: moderate
 
----
+3. **Re-assess severity** based on attack chain analysis. A HIGH finding with a trivial exploitation path and no mitigations becomes CRITICAL. A CRITICAL finding behind multiple defense layers may remain CRITICAL but with lower exploitability.
 
 ## Phase 5: REPORT
 
@@ -450,8 +444,6 @@ The audit report is a markdown document with these sections in order:
 
 Save the report to `$SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/audits/security-audit-<timestamp>.md`.
 
----
-
 ## Phase 6: GATE
 
 Enforce the audit verdict as a quality gate.
@@ -472,20 +464,16 @@ Enforce the audit verdict as a quality gate.
 - **WARN:** Present findings to user. Require explicit acknowledgment before proceeding. Log acknowledgment in report.
 - **FAIL:** Present findings to user. Do NOT proceed with any further workflow steps. The audit blocks progress until findings are remediated and a re-scan passes.
 
----
-
 ## Integration Points
 
 ### With `code-review --audit`
 
-When `code-review` runs in `--audit` mode, it can invoke this skill for the security pass:
 1. `code-review --audit` handles correctness, performance, and maintainability passes
 2. This skill handles the security pass specifically
 3. Findings from both are combined in the final audit report
 
 ### With `implementing-features` Phase 4
 
-During feature implementation quality gates:
 1. `implementing-features` Phase 4 dispatches a subagent that invokes this skill
 2. Scope is set to the changeset (branch diff against base)
 3. FAIL verdict blocks the feature from proceeding to merge
@@ -493,12 +481,9 @@ During feature implementation quality gates:
 
 ### With `distilling-prs` for PR Review
 
-When distilling a PR for review:
 1. `distilling-prs` can invoke this skill on the PR diff
 2. Scope is set to changeset mode with the PR's unified diff
 3. Security findings are surfaced as "review required" items in the PR distillation report
-
----
 
 <FORBIDDEN>
 - Skipping Phase 3 classification (raw scanner output is not an audit)

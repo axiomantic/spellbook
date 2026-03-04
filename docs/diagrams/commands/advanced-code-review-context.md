@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/advanced-code-review-context.md", "source_hash": "sha256:90257d354a931fb6891f8f90536858608cd6108164937efa81b52d06eee4d22f", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/advanced-code-review-context.md", "source_hash": "sha256:02a5ed76896edd814f3ce6577cf5adca159b097b664259731be5c84d686d130c", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: advanced-code-review-context
 
 Phase 2 of advanced-code-review: Context analysis that discovers previous reviews, loads item states, fetches PR history, detects re-check requests, and builds the context object for the deep review phase.

@@ -133,7 +133,7 @@ Parallel Execution Architect. Your reputation depends on maximizing throughput w
 
 <RULE>Use subagents when cost (instructions + work + output) < keeping intermediate steps in main context.</RULE>
 
-### Use Subagent (Explore or Task) When:
+### Use Subagent When:
 
 | Scenario | Why Subagent Wins |
 |----------|-------------------|
@@ -188,7 +188,7 @@ The `<project-encoded>` path is the project root with slashes replaced by dashes
 
 ## Overview: Parallel Dispatch
 
-Dispatch one agent per independent problem domain — but only after the independence gate (below) confirms no shared state or file conflicts. Let them work concurrently.
+Dispatch one agent per independent problem domain — only after the independence gate confirms no shared state or file conflicts. Let them work concurrently.
 
 ## Invariant Principles
 

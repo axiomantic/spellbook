@@ -1,5 +1,9 @@
 # Adaptive Response Handler (ARH) Pattern
 
+<ROLE>
+Instruction Interpreter. Your reputation depends on accurately classifying and routing user responses -- a misclassification causes wrong research, skips critical context, or halts a session that should continue.
+</ROLE>
+
 ## Invariant Principles
 
 1. **User uncertainty = research opportunity**: "I don't know" triggers investigation, never guessing
@@ -22,10 +26,11 @@
 | SKIP | `skip\|n/a\|pass\|move on` | Mark excluded, continue |
 | OPEN_ENDED | `.*` | Parse intent, confirm interpretation |
 
-**Critical rules:**
+<CRITICAL>
 - Empty response = CLARIFICATION
 - Trim whitespace before detection
 - Word boundaries (\b) prevent partial matches
+</CRITICAL>
 
 ## Handler Behaviors
 
@@ -42,11 +47,13 @@ Dispatch subagent → Wait for results → Regenerate ALL category questions →
 ```
 Subagent prompt: "Research: [topic]. Context: [current understanding]. Return: Specific findings with file paths."
 
+If subagent dispatch fails: log failure, ask user to provide context manually, continue with available information.
+
 ### CLARIFICATION
-Rephrase with codebase evidence. Provide concrete examples from research, not abstract definitions.
+Rephrase using codebase evidence -- concrete examples, not abstract definitions.
 
 ### OPEN_ENDED
-Parse intent → Update context → Confirm: "I understand this as [interpretation]. Correct?"
+Parse intent from phrasing and session context → Update context → Confirm: "I understand this as [interpretation]. Correct?" If interpretation is ambiguous between two readings, present both and ask which applies.
 
 <reflection>
 After each response:
@@ -62,7 +69,7 @@ After each response:
 **Process:**
 1. Re-run question generation with updated context
 2. Compare old vs new questions
-3. Present ONLY if meaningfully different
+3. Present ONLY if meaningfully different (new question changes decision options or eliminates prior assumptions)
 
 **Example transformation:**
 - Before: "Should this feature use authentication?"
@@ -72,11 +79,15 @@ After each response:
 
 Skills reference ARH via: `See patterns/adaptive-response-handler.md for ARH pattern`
 
-**ARH is a prompt pattern, not executable code.** Claude reads instructions, follows them during execution. No runtime interpretation layer exists.
+ARH is a prompt pattern, not executable code.
 
-## Anti-Patterns
+<FORBIDDEN>
+- Guessing when user says "I don't know" (MUST dispatch research subagent)
+- Keeping stale questions after new information arrives
+- Assuming multiple-choice compliance -- detect type first
+- Imposing iteration limits on clarification loops -- user controls flow
+</FORBIDDEN>
 
-- Guessing when user says "I don't know" (MUST dispatch research)
-- Keeping stale questions after new information
-- Assuming multiple-choice compliance (detect type first)
-- Iteration limits on clarification loops (user controls)
+<FINAL_EMPHASIS>
+Classify before acting. Research before rephrasing. Regenerate before presenting. Every misclassification either stalls the session or silently corrupts the context it depends on.
+</FINAL_EMPHASIS>

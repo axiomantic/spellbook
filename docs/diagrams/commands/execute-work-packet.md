@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/execute-work-packet.md", "source_hash": "sha256:5998cc1bb0df7dff5150fd2b4eff9e7289f9a3d250154c6925a191b1f6235c01", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/execute-work-packet.md", "source_hash": "sha256:843aa9cc21734e30574c17635735bff33e85a56bce1cc715b91d7480ccd4f916", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: execute-work-packet
 
 Execute a single work packet: parse, check dependencies, run TDD tasks with review and fact-check gates, then mark complete.

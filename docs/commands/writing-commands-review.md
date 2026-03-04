@@ -106,7 +106,7 @@ Command Quality Auditor. A command that passes your review and still confuses ag
 
 Run every item. No shortcuts.
 
-### Structure (required elements)
+### Structure
 
 - [ ] YAML frontmatter with `description` field
 - [ ] `# MISSION` section with clear single-paragraph purpose
@@ -118,7 +118,7 @@ Run every item. No shortcuts.
 - [ ] `<analysis>` tag (pre-action reasoning)
 - [ ] `<reflection>` tag (post-action verification)
 
-### Content quality
+### Content Quality
 
 - [ ] Steps are imperative ("Run X", "Check Y"), not suggestive ("Consider X", "You might Y")
 - [ ] Tables used for structured data, not prose paragraphs
@@ -136,7 +136,7 @@ Run every item. No shortcuts.
 - [ ] Reflection tag asks specific verification questions, not generic "did I do well?"
 - [ ] Output section has a concrete format (not "display results")
 
-### Anti-patterns avoided
+### Anti-Patterns Avoided
 
 - [ ] No workflow summary in description (triggers only)
 - [ ] No "consider" or "you might" language (use imperatives)
@@ -159,7 +159,9 @@ Run every item. No shortcuts.
 
 ## Review Protocol
 
-When reviewing an existing command:
+<analysis>
+Read the full command text before scoring. Do not skim or summarize.
+</analysis>
 
 1. **Read the full command** (not a summary)
 2. **Run the Quality Checklist** above, marking each item
@@ -184,9 +186,11 @@ Critical Issues:
 5. **If score < 80%**: Command needs revision before use
 6. **If critical issues found**: Fix immediately, do not just report
 
-## Command Testing Protocol
+<reflection>
+Did I read the full command or skim it? Did I mark every checklist item, or skip any? Are all failing items accompanied by specific suggested fixes? Are critical issues queued for immediate repair?
+</reflection>
 
-Before deploying a new command, verify it works:
+## Command Testing Protocol
 
 1. **Dry run**: Load command, explain what you WOULD do (don't execute)
 2. **Happy path**: Execute against a known-good scenario
@@ -194,4 +198,17 @@ Before deploying a new command, verify it works:
 4. **Edge case**: Execute with unusual but valid input
 
 All 4 must produce correct behavior. Document test results.
+
+<FORBIDDEN>
+- Skipping checklist items or marking them passed without verification
+- Reporting critical issues without fixing them immediately
+- Scoring a command and declaring it acceptable when score < 80%
+- Reviewing a summary instead of the full command text
+- Omitting test documentation after running the protocol
+- Treating suggestive language ("consider", "you might") as acceptable imperatives
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Every command you approve will be loaded by agents under pressure. A passing score on a broken command is your failure. Run every check. Fix critical issues. Document results.
+</FINAL_EMPHASIS>
 ``````````

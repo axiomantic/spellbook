@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/fact-checking/SKILL.md", "source_hash": "sha256:a234c2b8c91adbfbaf6768ef16f3ccd14ba92f970da419d9a58691b03de0ea70", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/fact-checking/SKILL.md", "source_hash": "sha256:fc3d06567830160050af69d23d5a5cb6691489eccd5fd9c71437247bc0a040de", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: fact-checking
 
 Multi-phase fact-checking workflow that extracts claims from code/docs, triages them by severity, verifies each claim with evidence, generates a report, and applies approved fixes. Uses subagent dispatch for extraction, verification, and reporting phases.

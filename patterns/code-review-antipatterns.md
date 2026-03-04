@@ -1,6 +1,10 @@
 # Code Review Anti-Patterns
 
-Shared reference for code review skills. Each anti-pattern includes detection heuristics, impact assessment, and examples.
+<ROLE>
+Code Reviewer. Your reputation depends on catching real bugs and weak tests before they reach production. False confidence is worse than no tests. Rubber stamps are worse than no reviews.
+</ROLE>
+
+Shared reference for code review skills. Each anti-pattern: detection heuristics, impact, and correct vs. incorrect examples.
 
 ---
 
@@ -8,21 +12,25 @@ Shared reference for code review skills. Each anti-pattern includes detection he
 
 ### Green Mirage
 
-**Description:** Tests pass but do not verify actual behavior. The green checkmark creates false confidence.
+Tests pass but do not verify actual behavior. The green checkmark creates false confidence.
 
 **Detection Heuristics:**
 - Assertions only check truthy/falsy, not specific values
 - Test mocks the function being tested
 - No assertions after async operations complete
 - `expect(result).toBeTruthy()` on complex objects
-- `assert "substring" in result` on ANY output -- static or dynamic (BANNED -- see Full Assertion Principle in `patterns/assertion-quality-standard.md`)
-- Partial assertion on dynamic output instead of constructing full expected value (BANNED -- dynamic content is no excuse for partial assertions)
-- `mock.ANY` used in call assertions (BANNED -- proves nothing about actual arguments)
+
+<CRITICAL>
+The following are BANNED assertion patterns - each must be flagged as a Green Mirage regardless of context:
+- `assert "substring" in result` on ANY output, static or dynamic (see Full Assertion Principle in `patterns/assertion-quality-standard.md`)
+- Partial assertion on dynamic output instead of constructing full expected value (dynamic content is no excuse for partial assertions)
+- `mock.ANY` in call assertions (proves nothing about actual arguments)
 - Not asserting all mock calls (every call must be verified with all args and call count)
 - Partial field checks on objects with many fields
 - "Strengthened" assertions that replaced one BANNED pattern with another (Pattern 10 in `commands/audit-mirage-analyze.md`)
+</CRITICAL>
 
-**Impact:** Bugs ship to production despite "passing" test suite. Regressions go undetected. Team loses trust in tests.
+**Impact:** Bugs ship despite "passing" suite. Regressions undetected. Team loses trust in tests.
 
 **Example:**
 ```javascript
@@ -48,7 +56,7 @@ test('processes order', async () => {
     paymentId: 'pay-123',
   });
   expect(mockPaymentService.charge).toHaveBeenCalledWith(99.99);
-  expect(mockPaymentService.charge).toHaveBeenCalledTimes(1);  // verify no extra calls
+  expect(mockPaymentService.charge).toHaveBeenCalledTimes(1);
 });
 ```
 
@@ -56,14 +64,14 @@ test('processes order', async () => {
 
 ### Assertion-Free
 
-**Description:** Test executes code but never asserts outcomes. Passes as long as no exception thrown.
+Test executes code but never asserts outcomes. Passes as long as no exception is thrown.
 
 **Detection Heuristics:**
 - No `expect()`, `assert`, or equivalent calls
 - Test body only calls functions without checking returns
 - Comments like "// just checking it doesn't crash"
 
-**Impact:** Zero regression detection. Code can return wrong values indefinitely. Maintenance burden without benefit.
+**Impact:** Zero regression detection. Wrong values ship unnoticed. Maintenance burden with no benefit.
 
 **Example:**
 ```javascript
@@ -86,7 +94,7 @@ test('user registration', async () => {
 
 ### Mock Everything
 
-**Description:** Over-mocking hides integration bugs. Every dependency is mocked, so tests verify mock behavior, not real interactions.
+Over-mocking hides integration bugs. Every dependency is mocked, so tests verify mock behavior, not real interactions.
 
 **Detection Heuristics:**
 - More mock setup lines than test logic
@@ -94,7 +102,7 @@ test('user registration', async () => {
 - No integration tests exist
 - Mocks return hardcoded "happy path" data
 
-**Impact:** Components work in isolation but fail when integrated. Production bugs in seams between components. False confidence in test coverage.
+**Impact:** Components pass in isolation but fail when integrated. Production bugs hide in seams. False confidence in coverage.
 
 **Example:**
 ```javascript
@@ -123,7 +131,7 @@ test('saves user preferences', async () => {
 
 ### Happy Path Only
 
-**Description:** Tests only cover success scenarios. Edge cases, error conditions, and boundary values are ignored.
+Tests only cover success scenarios. Edge cases, error conditions, and boundary values are ignored.
 
 **Detection Heuristics:**
 - No tests with invalid input
@@ -131,7 +139,7 @@ test('saves user preferences', async () => {
 - No boundary value tests (empty arrays, zero, max values)
 - Test names all describe success ("should work", "handles data")
 
-**Impact:** Error handling untested and likely broken. Edge cases cause production crashes. Defensive code never exercised.
+**Impact:** Error handling untested and likely broken. Edge cases crash production. Defensive code never exercised.
 
 **Example:**
 ```javascript
@@ -160,14 +168,14 @@ test('handles floating point edge cases', () => {
 
 ### Test the Mock
 
-**Description:** Assertions verify mock behavior rather than the code under test. The test passes even if the real implementation is broken.
+Assertions verify mock behavior rather than the code under test. The test passes even if the real implementation is broken.
 
 **Detection Heuristics:**
 - Assertions only on mock functions (`expect(mock).toHaveBeenCalled()`)
 - No assertions on return values or state changes
 - Mock configured to return expected value, then test asserts that value
 
-**Impact:** Real implementation can drift from mock. Tests pass but production fails. Mocks become documentation of wishful thinking.
+**Impact:** Real implementation drifts from mock. Tests pass; production fails. Mocks become documentation of wishful thinking.
 
 **Example:**
 ```javascript
@@ -187,7 +195,7 @@ test('fetches user data', async () => {
 
   await displayUserProfile(mockApi, 123, container);
 
-  expect(container.textContent).toContain('Alice');  // Tests actual behavior
+  expect(container.textContent).toContain('Alice');
   expect(container.querySelector('.user-name').textContent).toBe('Alice');
 });
 ```
@@ -198,7 +206,7 @@ test('fetches user data', async () => {
 
 ### Silent Swallow
 
-**Description:** Catching exceptions without handling, logging, or re-throwing. Errors disappear into the void.
+Catching exceptions without handling, logging, or re-throwing. Errors disappear into the void.
 
 **Detection Heuristics:**
 - Empty catch blocks
@@ -206,7 +214,7 @@ test('fetches user data', async () => {
 - `catch (e) { return null; }` without context
 - No error monitoring or alerting integration
 
-**Impact:** Debugging becomes impossible. Failures manifest far from root cause. Data corruption goes unnoticed.
+**Impact:** Debugging impossible. Failures manifest far from root cause. Data corruption unnoticed.
 
 **Example:**
 ```javascript
@@ -234,7 +242,7 @@ async function saveData(data) {
 
 ### Type Erosion
 
-**Description:** Using `any`, `object`, untyped casts, or disabling type checks. Type safety is undermined.
+Using `any`, `object`, untyped casts, or disabling type checks. Type safety is undermined.
 
 **Detection Heuristics:**
 - `as any` casts
@@ -242,7 +250,7 @@ async function saveData(data) {
 - `@ts-ignore` or `@ts-expect-error` without explanation
 - `eslint-disable @typescript-eslint/no-explicit-any`
 
-**Impact:** Runtime type errors in production. Refactoring becomes dangerous. IDE assistance degraded.
+**Impact:** Runtime type errors in production. Refactoring dangerous. IDE assistance degraded.
 
 **Example:**
 ```typescript
@@ -266,7 +274,7 @@ function processResponse(data: unknown): string[] {
 
 ### Resource Leak
 
-**Description:** Not cleaning up connections, file handles, timers, or event listeners. Resources accumulate until system fails.
+Not cleaning up connections, file handles, timers, or event listeners. Resources accumulate until system fails.
 
 **Detection Heuristics:**
 - `setInterval` without corresponding `clearInterval`
@@ -274,7 +282,7 @@ function processResponse(data: unknown): string[] {
 - Event listeners added without removal logic
 - File handles not closed in finally blocks
 
-**Impact:** Memory exhaustion. Connection pool depletion. Test pollution. Gradual performance degradation.
+**Impact:** Memory exhaustion. Connection pool depletion. Test pollution. Performance degrades over time.
 
 **Example:**
 ```javascript
@@ -302,7 +310,7 @@ function startPolling(callback) {
 
 ### Plan Drift
 
-**Description:** Implementation deviates from agreed design or plan without documented justification. Reviewer discovers unexpected changes.
+Implementation deviates from agreed design without documented justification. Reviewer discovers unexpected changes.
 
 **Detection Heuristics:**
 - PR description references plan but implementation differs
@@ -310,7 +318,7 @@ function startPolling(callback) {
 - API contracts changed from what was agreed
 - Scope creep: features added beyond plan
 
-**Impact:** Review cycles extended. Integration assumptions broken. Technical debt from ad-hoc decisions.
+**Impact:** Review cycles extended. Integration assumptions broken. Technical debt accumulates from undocumented decisions.
 
 **Example:**
 ```
@@ -334,7 +342,7 @@ Time pressure? Intentional simplification?
 
 ### Zombie Code
 
-**Description:** Dead code paths that appear reachable. Code that cannot execute but looks like it should.
+Dead code paths that appear reachable. Code that cannot execute but looks like it should.
 
 **Detection Heuristics:**
 - Conditions that can never be true
@@ -342,7 +350,7 @@ Time pressure? Intentional simplification?
 - Branches after unconditional returns
 - Feature flags that are always false
 
-**Impact:** Maintenance burden. Confusion for future developers. False coverage metrics.
+**Impact:** Maintenance burden. Future developers confused. Coverage metrics misleading.
 
 **Example:**
 ```javascript
@@ -377,7 +385,7 @@ function getDiscount(user) {
 
 ### Rubber Stamp
 
-**Description:** Approving without meaningful review. LGTM without reading the code.
+Approving without meaningful review. LGTM without reading the code.
 
 **Detection Heuristics:**
 - Approval within seconds of PR creation
@@ -385,7 +393,7 @@ function getDiscount(user) {
 - Same reviewer always approves same author
 - Review time shorter than reading time
 
-**Impact:** Bugs reach production. Standards erode. Code review becomes theater.
+**Impact:** Bugs reach production. Standards erode. Review becomes theater.
 
 **Example:**
 ```
@@ -408,7 +416,7 @@ Review:
 
 ### Nitpick Overload
 
-**Description:** Blocking PR on style issues while ignoring logic bugs. Focusing on cosmetics over correctness.
+Blocking PR on style issues while ignoring logic bugs. Focusing on cosmetics over correctness.
 
 **Detection Heuristics:**
 - Comments about naming, spacing, line length dominate
@@ -416,7 +424,7 @@ Review:
 - Request changes for formatting only
 - No comments on test coverage or error handling
 
-**Impact:** Real bugs merge. Authors become defensive. Review fatigue. Style debates consume energy.
+**Impact:** Real bugs merge. Authors become defensive. Style debates exhaust review energy.
 
 **Example:**
 ```
@@ -442,7 +450,7 @@ Reviewer comments:
 
 ### Drive-by Feedback
 
-**Description:** Vague comments without evidence, reproduction steps, or suggested fixes. Comments that add confusion rather than clarity.
+Vague comments without evidence, reproduction steps, or suggested fixes. Comments that add confusion rather than clarity.
 
 **Detection Heuristics:**
 - "This seems wrong" without explaining why
@@ -450,7 +458,7 @@ Reviewer comments:
 - "I don't like this approach" without alternative
 - Questions that could be answered by reading the code
 
-**Impact:** Back-and-forth clarification cycles. Author guesses at reviewer intent. Delays and frustration.
+**Impact:** Clarification cycles. Author guesses at reviewer intent. Delays and frustration.
 
 **Example:**
 ```
@@ -474,7 +482,7 @@ return ids.map(id => lookup.get(id));
 
 ### Authority Deference
 
-**Description:** Accepting questionable code because a senior engineer or respected team member wrote it.
+Accepting questionable code because a senior engineer or respected team member wrote it.
 
 **Detection Heuristics:**
 - Junior reviewers only approve senior PRs
@@ -482,7 +490,7 @@ return ids.map(id => lookup.get(id));
 - Standards applied inconsistently based on author
 - "They must have a reason" without asking
 
-**Impact:** Senior engineers' bad habits propagate. Juniors don't learn to think critically. Codebase quality varies by author.
+**Impact:** Senior engineers' bad habits propagate. Juniors don't develop critical judgment. Quality varies by author.
 
 **Example:**
 ```
@@ -503,7 +511,7 @@ Could this deadlock? Happy to discuss if I'm missing something."
 
 ### Verdict-Finding Mismatch
 
-**Description:** Review comments express concerns but the event type contradicts them. Saying "LGTM" while leaving blocking comments.
+Review comments express concerns but the event type contradicts them. Saying "LGTM" while leaving blocking comments.
 
 **Detection Heuristics:**
 - APPROVE event with unresolved questions
@@ -511,7 +519,7 @@ Could this deadlock? Happy to discuss if I'm missing something."
 - REQUEST_CHANGES with only nitpicks
 - Inconsistent signals between comment text and action
 
-**Impact:** Author unsure whether to merge. CI/CD gates bypassed inappropriately. Confusion about review state.
+**Impact:** Author unsure whether to merge. CI/CD gates bypassed inappropriately. Review state ambiguous.
 
 **Example:**
 ```
@@ -535,3 +543,7 @@ Or if issues are truly minor:
 - "nit: Consider renaming for clarity (non-blocking)"
 Event: APPROVE
 ```
+
+<FINAL_EMPHASIS>
+Every anti-pattern in this document represents a real failure mode that has shipped bugs to production. Detection heuristics are not suggestions - they are signals that demand investigation. When in doubt, flag it. A false positive costs one comment. A false negative costs a production incident.
+</FINAL_EMPHASIS>

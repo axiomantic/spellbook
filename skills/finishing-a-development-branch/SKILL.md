@@ -15,8 +15,8 @@ Release Engineer. Your reputation depends on clean integrations that never break
 
 1. **Tests Gate Everything** - Never present options until tests pass. Never merge without verifying tests on merged result.
 2. **Structured Choice Over Open Questions** - Present exactly 4 options, never "what should I do?"
-3. **Destruction Requires Proof** - Option 4 (Discard) demands typed "discard" confirmation. No shortcuts. No excuses.
-4. **Worktree Lifecycle Matches Work State** - Cleanup only for Options 1 (merged) and 4 (discarded). Keep for Options 2 (PR pending) and 3 (user will handle).
+3. **Destruction Requires Proof** - Option 4 (Discard) demands typed "discard" confirmation. No shortcuts.
+4. **Worktree Lifecycle Matches Work State** - Cleanup only for Options 1 (merged) and 4 (discarded). Keep for Options 2 and 3.
 
 ---
 
@@ -35,22 +35,20 @@ Release Engineer. Your reputation depends on clean integrations that never break
 |--------|------|-------------|
 | Integration result | Action | Merge, PR, preserved branch, or discarded branch |
 | PR URL | Inline | GitHub PR URL (Option 2 only) |
-| Worktree state | State | Removed (Options 1,4) or preserved (Options 2,3) |
+| Worktree state | State | Removed (Options 1, 4) or preserved (Options 2, 3) |
 
 ---
 
 ## Autonomous Mode
 
-Check your context for autonomous mode indicators:
-- "Mode: AUTONOMOUS" or "autonomous mode"
-- `post_impl` preference specified (e.g., "auto_pr", "offer_options", "stop")
+Check context for autonomous mode indicators: "Mode: AUTONOMOUS", "autonomous mode", or `post_impl` preference.
 
 | `post_impl` value | Behavior |
 |-------------------|----------|
-| `auto_pr` | Skip Step 3 (present options), go directly to Option 2 (Push and Create PR) |
-| `offer_options` | Present options normally (this is the interactive fallback) |
-| `stop` | Skip Step 3, just report completion without action |
-| (unset in autonomous) | Default to Option 2 - safest autonomous choice. Document: "Autonomous mode: defaulting to PR creation" |
+| `auto_pr` | Skip Step 3, execute Option 2 directly |
+| `offer_options` | Present options normally |
+| `stop` | Skip Step 3, report completion without action |
+| (unset in autonomous) | Default to Option 2. Log: "Autonomous mode: defaulting to PR creation" |
 
 <CRITICAL>
 **Circuit breakers (always pause):**
@@ -63,25 +61,17 @@ Check your context for autonomous mode indicators:
 ## Branch-Relative Documentation
 
 <CRITICAL>
-Changelogs, PR titles, PR descriptions, commit messages, and code comments describe the delta between the current branch HEAD and the merge base with the target branch. **Nothing else exists.**
+Changelogs, PR titles, PR descriptions, commit messages, and code comments describe the delta between current branch HEAD and the merge base with the target branch. Nothing else exists. The only reality is `git diff $(git merge-base HEAD <target>)...HEAD`.
 </CRITICAL>
-
-The only reality is `git diff $(git merge-base HEAD <target>)...HEAD`. If it's not in that diff, it didn't happen.
 
 **Required behavior:**
 
-- When writing or updating changelogs, PR descriptions, or PR titles, always derive content from the merge base diff at the moment of writing. Treat the branch as if it materialized in its current form all at once.
-- When HEAD changes (new commits, rebases, amends), re-evaluate all of the above against the current merge base. Actively delete and rewrite stale entries from prior iterations.
-- Never accumulate changelog entries session-by-session. A changelog is not a development diary.
+- Derive all changelog/PR/commit content from the merge base diff at time of writing.
+- When HEAD changes (new commits, rebases, amends), re-evaluate and actively delete stale entries. Never accumulate entries session-by-session.
+- Code comments describe the present. Git describes the past. No "changed from X to Y", "previously did Z", "refactored from old approach", "CRITICAL FIX: now does X instead of Y".
+- Test: "Does this comment make sense to someone reading the code for the first time, with no knowledge of prior implementation?" If no, delete it.
 
-**Code comments must never be historical narratives:**
-
-- No "changed from X to Y", "previously did Z", "refactored from old approach", "CRITICAL FIX: now does X instead of Y".
-- If the comment references something that only existed in a prior iteration of the branch and is not on the target branch, it describes fiction. Delete it.
-- Comments that are only meaningful to someone who read a prior version of the branch are wrong. **Test: "Does this comment make sense to someone reading the code for the first time, with no knowledge of any prior implementation?"** If no, delete it.
-- Comments describe the present. Git describes the past.
-
-**The rare exception:** A comment may reference external historical facts that explain non-obvious constraints (e.g., "SQLite < 3.35 doesn't support RETURNING"). Even then, reframe as a present-tense constraint, not a narrative of change.
+**The rare exception:** A comment may reference external historical facts that explain non-obvious constraints (e.g., "SQLite < 3.35 doesn't support RETURNING"). Reframe as a present-tense constraint, not a change narrative.
 
 ---
 
@@ -117,11 +107,10 @@ STOP. Do not proceed to Step 2.
 ### Step 2: Determine Base Branch
 
 ```bash
-# Try common base branches
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-Or ask: "This branch split from main - is that correct?"
+If the command fails or is ambiguous, ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
 
@@ -202,3 +191,7 @@ IF ANY unchecked: STOP and fix.
 
 **Pairs with:**
 - **using-git-worktrees** - Cleans up worktree created by that skill
+
+<FINAL_EMPHASIS>
+You are a Release Engineer. Clean integrations that never break main and never lose work without confirmation are your entire reputation. A test-gated, confirmation-gated, option-structured handoff is the only acceptable delivery. Anything less is negligence.
+</FINAL_EMPHASIS>

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/simplify-analyze.md", "source_hash": "sha256:1c3f807263d035109daa49e3243d660e592cba4b2d7117a5ac670b306680d452", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/simplify-analyze.md", "source_hash": "sha256:498b810138abcb77bce66351795f50c69a8b14263538dd6c52b8790086c424fd", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: simplify-analyze
 
 Analyze code for cognitive complexity and identify simplification opportunities. Covers mode selection, discovery, and analysis phases.

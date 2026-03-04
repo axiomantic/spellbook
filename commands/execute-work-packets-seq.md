@@ -9,11 +9,9 @@ disable-model-invocation: true
 Workflow Orchestrator. Stakes: wrong ordering corrupts builds, skipped dependencies cause silent failures.
 </ROLE>
 
-Execute all work packets from a manifest in dependency order, ensuring each track completes before starting dependent tracks.
-
 ## Invariant Principles
 
-1. **Dependency ordering is inviolable.** Never execute track before dependencies complete.
+1. **Dependency ordering is inviolable.** Never execute a track before its dependencies complete.
 2. **Completion markers are truth.** Track state exists only in `track-{id}.completion.json`.
 3. **Failure halts sequence.** No partial execution; dependent tracks must not start.
 4. **Execution is idempotent.** Skip tracks with existing completion markers on resume.
@@ -30,14 +28,6 @@ Execute all work packets from a manifest in dependency order, ensuring each trac
 ```bash
 packet_dir="<packet_dir>"
 manifest_file="$packet_dir/manifest.json"
-
-# Load manifest using read_json_safe
-# Verify all required fields exist:
-# - format_version
-# - feature
-# - tracks (array)
-# - merge_strategy
-# - post_merge_qa
 ```
 
 <analysis>
@@ -95,7 +85,7 @@ Execution order: [1, 2, 3]
 ```
 
 **Validation:**
-- Detect circular dependencies
+- Detect circular dependencies; report cycle path on abort
 - Ensure all dependency IDs reference valid tracks
 - Verify topological sort produces valid ordering
 
@@ -114,7 +104,6 @@ Dependencies: {track.depends_on}
 
 **Check for existing completion (idempotent):**
 ```bash
-# Before executing each track
 completion_file="$packet_dir/track-{track.id}.completion.json"
 
 if [ -f "$completion_file" ]; then
@@ -125,14 +114,14 @@ fi
 
 **Execute using /execute-work-packet:**
 
-```bash
-Invoke /execute-work-packet command with:
+```
+Invoke /execute-work-packet with:
 - packet_path: "{packet_dir}/{track.packet}"
 - No --resume flag (fresh execution)
 
 Follow all steps from execute-work-packet:
 1. Parse packet
-2. Check dependencies (should pass since we're in order)
+2. Check dependencies (should pass — we are executing in order)
 3. Setup worktree
 4. Execute tasks with TDD
 5. Create completion marker
@@ -140,9 +129,9 @@ Follow all steps from execute-work-packet:
 
 <CRITICAL>
 **Wait for completion:**
-- Execute-work-packet is blocking
-- Only proceed to next track when current track completes
-- If execution fails, STOP entire sequence immediately
+- execute-work-packet is blocking
+- Proceed to next track only when current track completes
+- If execution fails, STOP the entire sequence immediately
 - Continuing after failure corrupts dependency assumptions and invalidates all downstream tracks
 </CRITICAL>
 
@@ -155,31 +144,23 @@ After each track completes:
 
 Context size is growing. To preserve session capacity:
 
-Invoke /handoff command to:
+Invoke /handoff to:
 - Capture track completion state
 - Preserve manifest location and progress
 - Clear implementation details from context
 - Prepare for next track execution
 
-After compaction, the next track will execute in a fresh context.
+After compaction, the next track executes in a fresh context.
 ```
 
-**Why compact between tracks:**
-- Prevents context overflow in long-running sequences
-- Each track starts with clean context
-- Manifest and completion markers preserve state
-- Enables recovery if session drops
+**Why compact:** Prevents context overflow; each track starts clean; manifest and completion markers preserve state; enables recovery if session drops.
 
-**User decision:**
-- Suggest compaction after each track
-- User can decline and continue
-- Critical for sequences with 3+ tracks
+**User decision:** Suggest compaction after each track. User may decline. Critical for sequences with 3+ tracks.
 
 ### Step 5: Progress Tracking
 
-**Track completion markers:**
+**Verify completion marker after each track:**
 ```bash
-# After each track, verify completion marker exists
 completion_file="$packet_dir/track-{track.id}.completion.json"
 
 if [ ! -f "$completion_file" ]; then
@@ -203,14 +184,9 @@ Remaining: 2
 
 ### Step 6: Completion Detection
 
-All tracks complete when:
-- Every track has a completion marker: `track-{id}.completion.json`
-- All markers have `"status": "complete"`
-- No errors reported
+All tracks complete when every track has `track-{id}.completion.json` with `"status": "complete"` and no errors reported.
 
-**Final status check:**
 ```bash
-# Verify all tracks complete
 for track in manifest.tracks:
   completion_file="$packet_dir/track-{track.id}.completion.json"
   if [ ! -f "$completion_file" ]; then
@@ -221,8 +197,6 @@ done
 ```
 
 ### Step 7: Suggest Next Step
-
-When all tracks complete:
 
 ```
 ✓ All tracks completed successfully!
@@ -253,53 +227,25 @@ This will:
 | Missing completion marker | Execution protocol violation. Re-run track. |
 | Missing dependency ID | Manifest corruption. Abort, verify manifest. |
 
-**Track execution failure details:**
-- If /execute-work-packet fails, STOP sequence
-- Do not proceed to dependent tracks
-- Report failure details:
-  - Which track failed
-  - Which task within track failed
-  - Error message
-- Suggest resumption with --resume flag
+**Track execution failure:**
+- STOP sequence; do not proceed to dependent tracks
+- Report: which track failed, which task, error message
+- Suggest resumption with `--resume` flag
 
-**Missing dependency:**
-- Should not occur due to topological sort
-- If detected, indicates manifest corruption
-- Abort sequence, suggest manifest verification
+**Circular dependency:** Detected during topological sort in Step 2. Report cycle: "Track A depends on B, B depends on A." Abort; suggest manifest fix.
 
-**Circular dependency:**
-- Detected during topological sort in Step 2
-- Report cycle: "Track A depends on B, B depends on A"
-- Abort sequence, suggest manifest fix
+**Missing dependency ID:** Should not occur due to topological sort. If detected, indicates manifest corruption. Abort; suggest manifest verification.
 
-**Completion marker missing:**
-- If track claims success but no marker exists
-- Indicates execution protocol violation
-- Re-run track or create marker manually
+**Completion marker missing:** Track claimed success but no marker exists — execution protocol violation. Re-run track or create marker manually.
 
 ## Recovery
 
-**Resume after failure:**
-
 If sequence stops mid-execution:
 1. Check which tracks have completion markers
-2. Re-run /execute-work-packets-seq with same packet_dir
-3. Topological sort will identify completed tracks
-4. Skip tracks with completion markers
+2. Re-run `/execute-work-packets-seq` with same `packet_dir`
+3. Topological sort identifies completed tracks
+4. Idempotent check skips tracks with completion markers
 5. Resume from first incomplete track
-
-**Implementation:**
-```bash
-# Before executing each track
-completion_file="$packet_dir/track-{track.id}.completion.json"
-
-if [ -f "$completion_file" ]; then
-  echo "✓ Track {track.id} already complete, skipping"
-  continue
-fi
-
-# Otherwise, execute track
-```
 
 <FORBIDDEN>
 - Executing a track before ALL its dependencies have completion markers
@@ -311,25 +257,13 @@ fi
 ## Performance Considerations
 
 **Sequential vs Parallel:**
-- This command executes serially
-- For parallel execution, use individual /execute-work-packet commands
-- Sequential execution ensures:
-  - Clear dependency resolution
-  - Easier debugging (one thing at a time)
-  - Lower resource usage
-  - Context compaction between tracks
+This command executes serially. For parallel execution, use individual `/execute-work-packet` commands.
 
-**When to use sequential:**
-- Dependencies exist between tracks
-- Resource-constrained environment
-- Debugging execution flow
-- Learning/testing the workflow
+Sequential benefits: clear dependency resolution, easier debugging, lower resource usage, context compaction between tracks.
 
-**When to use parallel:**
-- Tracks are independent
-- Want maximum speed
-- Have sufficient resources
-- Comfortable with concurrent debugging
+**When to use sequential:** Tracks have dependencies, resource-constrained environment, or debugging/testing the workflow.
+
+**When to use parallel:** Tracks are independent, maximum speed is needed, sufficient resources available, comfortable with concurrent debugging.
 
 ## Example Session
 
@@ -369,13 +303,9 @@ Next: /merge-work-packets /Users/me/.local/spellbook/docs/myproject/packets
 
 ## Notes
 
-- Respects manifest.json as source of truth
-- Completion markers enable idempotent execution
-- Compaction prevents context overflow
-- Topological sort handles complex dependency graphs
-- Each track isolated in its own worktree
-- Skills (TDD, code review, factcheck) invoked via Skill tool
-- Integration testing deferred to merge phase
+- Each track is isolated in its own worktree
+- Skills (TDD, code review, factcheck) are invoked via the Skill tool
+- Integration testing is deferred to the merge phase
 
 <FINAL_EMPHASIS>
 Dependency ordering is inviolable. Failure halts the sequence. These are not guidelines; they are correctness invariants. Violating them corrupts the entire feature build.

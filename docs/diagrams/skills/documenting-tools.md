@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/documenting-tools/SKILL.md", "source_hash": "sha256:b9fe5353ac3fc41f327286818b0f45f6221956824e7dec4ff6fb80cbd49df3f0", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/documenting-tools/SKILL.md", "source_hash": "sha256:e196c4c93c733c9d27aeb37262f601a9790b12617bf91a1853659150b0a7a713", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: documenting-tools
 
 Workflow for producing LLM-quality tool documentation. Ensures every tool has purpose, parameters, error cases, and examples documented to prevent model misuse.

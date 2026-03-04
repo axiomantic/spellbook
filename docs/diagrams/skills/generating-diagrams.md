@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/generating-diagrams/SKILL.md", "source_hash": "sha256:c3bd69756c37deeb63e9e084a179f0603cb1fde7fb6dadc04f5eb0036d90e6e5", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/generating-diagrams/SKILL.md", "source_hash": "sha256:ffb918ad7600d8869ad7c02649e7e198ca2f5756a991624dc811a45e4511de3b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: generating-diagrams
 
 Workflow for the generating-diagrams skill. A 4-phase process: Analysis (identify subject, scope traversal, select format, plan decomposition), Content Extraction (systematic depth-first traversal with completeness check), Diagram Generation (code generation, legend, cross-reference table), and Verification (syntax, renderability, completeness). Incomplete results loop back to extraction.

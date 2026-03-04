@@ -1,7 +1,6 @@
 ---
 name: assembling-context
-description: |
-  Use when preparing context for subagents or managing token budgets. Triggers: "prepare context for", "assemble context", "what context does X need", "token budget", "context package", or automatically invoked by implementing-features Phase 3.5 (work packets) and Phase 4.2 (parallel subagents).
+description: "Prepare tiered context packages for subagents and manage token budgets. Triggered by 'prepare context for', 'assemble context', 'token budget', or invoked by implementing-features Phase 3.5/4.2."
 ---
 
 # Context Assembly
@@ -14,8 +13,8 @@ Context Curator. Deliver precisely the right information at the right time. Too 
 
 1. **Tier 1 Never Truncates**: Essential context survives any budget pressure
 2. **Budget Before Assembly**: Calculate budget FIRST, then select
-3. **Purpose Drives Selection**: Design ≠ implementation ≠ review context
-4. **Recency Over Completeness**: Recent feedback > historical context
+3. **Purpose Drives Selection**: Design context differs from implementation differs from review
+4. **Recency Over Completeness**: Recent feedback beats historical context
 5. **Summarize, Don't Truncate**: Intelligent summarization preserves signal
 6. **Integration Points are Tier 1**: Interface contracts are essential
 
@@ -27,12 +26,10 @@ Context Curator. Deliver precisely the right information at the right time. Too 
 | `token_budget` | Yes | Maximum tokens available |
 | `source_context` | Yes | Raw context to select from |
 
-| Output | Type | Description |
-|--------|------|-------------|
-| `context_package` | Structured | Tiered context ready for injection |
-| `truncation_report` | Inline | What was excluded and why |
-
----
+| Output | Description |
+|--------|-------------|
+| `context_package` | Tiered context ready for injection |
+| `truncation_report` | What was excluded and why |
 
 ## Context Tiers
 
@@ -44,8 +41,6 @@ Context Curator. Deliver precisely the right information at the right time. Too 
 | **2: Supporting** | 20-35% | Recent learnings, patterns, prior feedback, success criteria | Last 2-3 iterations, codebase patterns |
 | **3: Reference** | 10-20% | Historical context, rejected alternatives, verbose docs | Early iterations, full docs (summarize instead) |
 
----
-
 ## Purpose-Specific Packages
 
 | Purpose | Tier 1 Focus | Budget Split | Use With |
@@ -56,18 +51,14 @@ Context Curator. Deliver precisely the right information at the right time. Too 
 | **Handoff** | Current position, pending work, active decisions, blocking issues | 70/20/10 | session boundaries, compaction |
 | **Subagent** | Task, constraints, expected output format | 65/25/10 | dispatching-parallel-agents |
 
----
-
 ## Token Budget
 
 **Estimation:** `tokens ≈ chars / 4` (conservative)
 
-**Available budget:** `context_window - system_prompt - response_reserve - tool_overhead`
+**Available:** `context_window - system_prompt - response_reserve - tool_overhead`
 Example: `200000 - 8000 - 4000 - 2000 = 186000`
 
-**Smart Truncation:** Never blind `head`/`tail`. Preserve structure: keep intro (30%) + conclusion (20%), mark omitted middle.
-
----
+**Smart Truncation:** Never blind `head`/`tail`. Preserve structure: intro (30%) + conclusion (20%), mark omitted middle.
 
 ## Cross-Session Context
 
@@ -79,8 +70,6 @@ Example: `200000 - 8000 - 4000 - 2000 = 186000`
 
 **Handoff format:** Position → Pending work → Active decisions → Key learnings → Verification commands
 
----
-
 ## Reasoning Schema
 
 <analysis>
@@ -90,8 +79,6 @@ Before assembling: PURPOSE? TOKEN BUDGET? TIER 1 for this purpose? RECIPIENT?
 <reflection>
 After assembling: Tier 1 fits? Essential excluded? Room for Tier 2? Truncation report accurate?
 </reflection>
-
----
 
 <FORBIDDEN>
 - Assembling without calculating budget first

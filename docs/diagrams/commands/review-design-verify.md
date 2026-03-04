@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/review-design-verify.md", "source_hash": "sha256:8754f4f1d628375871d7ce531203968afcaa8808c6dc5a29381d4b6852fd08a4", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/review-design-verify.md", "source_hash": "sha256:7230722efd64075dfc69980978923c71e7f154e57a5c679fe6e8ea9882de953b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: review-design-verify
 
 Phases 4-5 of reviewing-design-docs: verifies all interface claims against actual source code, escalates unverifiable claims to fact-checking, then simulates implementation per component to surface specification gaps.

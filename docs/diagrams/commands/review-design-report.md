@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/review-design-report.md", "source_hash": "sha256:f26e5e33434f128de6b185450ba37f7b4c78f7eae10e346e71b750fff1bec4bc", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/review-design-report.md", "source_hash": "sha256:8a5b2f29050d999877f87cecbd26d5b89ba54112d40e74a61e9916e316bba8ad", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: review-design-report
 
 Phases 6-7 of reviewing-design-docs: compiles a scored findings report with reproducible category counts, then generates a prioritized remediation plan with P1/P2/P3 items and factcheck verification tasks.

@@ -12,8 +12,12 @@ PR Review Analyst. Your reputation depends on accurately identifying which chang
 
 1. **Heuristics First**: Run heuristic pattern matching before AI analysis. Heuristics are fast and deterministic.
 2. **Confidence Requires Evidence**: Never mark a change as "safe to skip" without pattern match or AI justification.
-3. **Surface Uncertainty**: When confidence is low, categorize as "uncertain". Humans decide ambiguous cases.
+3. **Surface Uncertainty**: Low-confidence cases → categorize as "uncertain". Humans decide ambiguous cases.
 4. **Preserve Context**: Include enough diff context for reviewers to understand changes without switching to the PR.
+
+<CRITICAL>
+Phase ordering is mandatory: Phase 1 heuristics MUST complete before any AI analysis begins. Never skip to AI directly.
+</CRITICAL>
 
 ## Execution
 
@@ -21,8 +25,8 @@ PR Review Analyst. Your reputation depends on accurately identifying which chang
 When invoked with `/distilling-prs <pr>`:
 1. Parse PR identifier (number or URL)
 2. Run Phase 1: Fetch, parse, heuristic match
-3. If unmatched files remain, process AI prompt for pattern discovery
-4. Run Phase 2: Score all changes, generate report
+3. If unmatched files remain: read AI prompt from Phase 1 output (between `__AI_PROMPT_START__` / `__AI_PROMPT_END__` markers), answer it, save response to a temp file
+4. Run Phase 2: Score all changes, generate report (pass temp file as `<ai-response-file>`)
 5. Present report to user
 </analysis>
 
@@ -31,8 +35,6 @@ When invoked with `/distilling-prs <pr>`:
 ```bash
 node lib/distilling-prs/index.js <pr-identifier>
 ```
-
-Returns heuristic analysis and AI prompt for unmatched files.
 
 ### Phase 2: Complete Analysis
 
@@ -45,7 +47,7 @@ After completion, verify:
 - All files categorized (no files missing from report)
 - REVIEW_REQUIRED items have full diffs
 - Pattern summary table is accurate
-- Discovered patterns listed with bless commands
+- Discovered patterns listed with bless commands (commands to promote patterns to the heuristic library)
 </reflection>
 
 ## Usage
@@ -63,10 +65,7 @@ After completion, verify:
 
 ## Output
 
-Generates markdown report at:
-`~/.local/spellbook/docs/<project-encoded>/pr-reviews/pr-<number>-distill.md`
-
-The report includes:
+Report path: `~/.local/spellbook/docs/<project-encoded>/pr-reviews/pr-<number>-distill.md`
 
 | Section | Content |
 |---------|---------|
@@ -79,9 +78,9 @@ The report includes:
 
 ## Output Markers
 
-The CLI uses markers for machine-readable sections:
+CLI uses markers for machine-readable sections:
 
-- `__AI_PROMPT_START__` / `__AI_PROMPT_END__`: AI prompt content
+- `__AI_PROMPT_START__` / `__AI_PROMPT_END__`: AI prompt content (read between Phase 1 and Phase 2)
 - `__REPORT_START__` / `__REPORT_END__`: Final markdown report
 
 <FORBIDDEN>

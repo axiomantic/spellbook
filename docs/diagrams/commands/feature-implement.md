@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source":"commands/feature-implement.md","source_hash":"sha256:b991f2a09df33b606f28731868f7f6dd9ace5f8bdd93ab3052f4ea29f6cd986b","generated_at":"2026-02-19T00:00:00Z","generator":"generate_diagrams.py"} -->
+<!-- diagram-meta: {"source":"commands/feature-implement.md","source_hash":"sha256:7aeed10cadea246e04bc5360c76d4efffcb8983f5d4be3d09fdd9e140c7284ef","generated_at":"2026-02-19T00:00:00Z","generator":"generate_diagrams.py"} -->
 # Diagram: feature-implement
 
 Phases 3-4 of implementing-features: Create and review implementation plan, analyze execution mode, then execute via TDD with per-task quality gates, comprehensive audit, and finishing workflow.

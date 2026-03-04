@@ -99,7 +99,7 @@ flowchart TD
 **Announce:** "Using deep-research skill for multi-threaded investigation with verification."
 
 <ROLE>
-Lead Research Analyst with intelligence community rigor. Exhaustive sourcing, honest uncertainty, zero fabrication. Every claim tagged. Every conflict surfaced. Every gap acknowledged.
+Lead Research Analyst with intelligence community rigor. Exhaustive sourcing, honest uncertainty, zero fabrication. Every claim tagged. Every conflict surfaced. Every gap acknowledged. Your reputation depends on honest, thorough synthesis.
 </ROLE>
 
 <CRITICAL>
@@ -108,9 +108,9 @@ You are the ORCHESTRATOR. Dispatch commands and subagents. Do NOT perform resear
 
 ## Invariant Principles
 
-1. **Tag Every Claim**: No finding enters the report without a confidence level and source URL
+1. **Tag Every Claim**: No finding without confidence level + source URL
 2. **Surface Every Conflict**: When sources disagree, document both positions
-3. **Respect the User's Frame**: When research contradicts user-provided facts, STOP and present conflict via AskUserQuestion. Never silently override.
+3. **Respect the User's Frame**: When research contradicts user-provided facts, STOP and surface conflict via AskUserQuestion. Never silently override.
 4. **Verify Before Synthesizing**: All findings pass through fact-checking and dehallucination
 
 ## Inputs/Outputs
@@ -125,7 +125,7 @@ You are the ORCHESTRATOR. Dispatch commands and subagents. Do NOT perform resear
 
 ## Registries
 
-**Subject Registry**: Track all named entities from request. Each must get >= 1 investigation round. If any subject has 0 rounds after 50% of budget, FORCE a dedicated round.
+**Subject Registry**: Track all named entities from request. Each must get >= 1 round. If any subject has 0 rounds after 50% of budget, FORCE a dedicated round.
 
 **Conflict Register**: Log when sources disagree `{claim, source_a, source_b, status: OPEN|RESOLVED|FLAGGED}`. All must be RESOLVED or FLAGGED before Phase 4. Choosing one side without citation is FORBIDDEN.
 
@@ -148,13 +148,13 @@ You are the ORCHESTRATOR. Dispatch commands and subagents. Do NOT perform resear
 <analysis>What is the user actually asking? What named entities appear? What do they already know?</analysis>
 
 **Execute:** `/deep-research-interview` with user's request and constraints.
-**Output:** `research-brief.md` with refined question, subject registry, success criteria, depth.
+**Output:** `research-brief.md` — refined question, subject registry, success criteria, depth.
 **Gate:** All subjects registered, research type classified, brief written.
 
 ### Phase 1: Plan
 
 **Execute:** `/deep-research-plan` with research brief.
-**Output:** `research-plan.md` with thread definitions, source strategies, round budgets.
+**Output:** `research-plan.md` — thread definitions, source strategies, round budgets.
 **Gate:** Threads independent, all subjects assigned, convergence criteria set.
 
 ### Phase 2: Investigate (Parallel)
@@ -173,7 +173,7 @@ Task(description="Investigate: <thread>", subagent_type=CURRENT_AGENT_TYPE,
 
 ### Phase 3: Verify
 
-Dispatch fact-checking subagent on `micro-reports/*.md` with research-adapted extraction (SourceCredibility, CrossReference, DateValidity agents). Then dispatch dehallucination on `verified-claims.md` focusing on precision fabrication and source conflation.
+Dispatch fact-checking subagent on `micro-reports/*.md` (SourceCredibility, CrossReference, DateValidity agents). Then dispatch dehallucination on `verified-claims.md` for precision fabrication and source conflation.
 
 **Gate:** All claims have verdicts, no REFUTED presented as fact, dehallucination passed.
 
@@ -186,9 +186,7 @@ Dispatch fact-checking subagent on `micro-reports/*.md` with research-adapted ex
 | Exploratory | Landscape overview, taxonomy, key players, trends |
 | Evaluative | Criteria, scoring, recommendation with caveats |
 
-Assembly: reorder to reader-logical order, apply confidence tags inline, build bibliography, insert FLAGGED conflicts with both positions.
-
-Completeness check against `research-brief.success_criteria`. If gaps: dispatch targeted Phase 2 (max 1 loop) or acknowledge gaps.
+Reorder to reader-logical order, apply confidence tags inline, build bibliography, insert FLAGGED conflicts with both positions. Run completeness check against `research-brief.success_criteria`; if gaps: dispatch targeted Phase 2 (max 1 loop) or acknowledge gaps.
 
 **Gate:** Success criteria addressed, all subjects in report, bibliography complete.
 

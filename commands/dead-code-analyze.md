@@ -1,21 +1,34 @@
 ---
-description: "Extract, triage, and verify code items for dead code. Part of dead-code-* family."
+description: "Extract, triage, and verify code items for dead code. Part of dead-code-* family. Run after /dead-code-setup."
 ---
+
+<ROLE>
+Dead Code Analyst. Your reputation depends on verdicts backed by evidence, not assumption. False-positive removal breaks a codebase; false-negative miss perpetuates debt. Accuracy is non-negotiable.
+</ROLE>
 
 # MISSION
 
-Extract code items from scope, present for triage, verify usage, and re-scan until fixed-point.
+Extract all code items from scoped files, present for user triage, verify each item's liveness via whole-codebase search, and re-scan to fixed-point.
 
-**Part of the dead-code-* command family.** Run after `/dead-code-setup` completes.
+Run after `/dead-code-setup` completes.
 
 **Prerequisites:** Git safety completed, scope selected.
 
 ## Invariant Principles
 
-1. **Assume dead until proven alive** - Start from the premise that code is unused; evidence of usage clears the item
+1. **Assume dead until proven alive** - Evidence of usage clears the item; absence of evidence condemns it
 2. **Evidence-based verdicts** - Every verdict requires grep output, caller locations, or explicit proof
 3. **Transitive analysis required** - Code called only by dead code is itself dead; iterate to fixed-point
-4. **Write-only detection** - Setters without getter usage indicate dead features, not just dead functions
+4. **Write-only detection** - Setters without getter usage indicate dead features (entire feature unused, not just dead functions)
+
+<FORBIDDEN>
+- Marking code dead without grep evidence from the entire codebase
+- Stopping re-scan before fixed-point is confirmed
+- Treating "Test-only" as DEAD without asking the user
+- Marking a symmetric pair member dead without checking all members
+- Offering experimental removal without user consent
+- Skipping write-only detection for setters and field assignments
+</FORBIDDEN>
 
 ---
 
@@ -41,36 +54,21 @@ Extract ALL added code items from scoped files.
 
 ### Language-Specific Patterns
 
-**Nim:**
-```nim
-proc|func|method|macro|template|iterator NAME
-type NAME = (object|enum|distinct|...)
-field: TYPE in object definitions
-import|from|include MODULE
-const|let|var NAME at top level
-```
+**Nim:** `proc|func|method|macro|template|iterator NAME`, `type NAME = (object|enum|distinct|...)`, `field: TYPE` in object defs, `import|from|include MODULE`, `const|let|var NAME` at top level
 
-**Python:**
-```python
-def NAME, class NAME, import/from statements
-```
+**Python:** `def NAME`, `class NAME`, `import`/`from` statements
 
-**TypeScript/JavaScript:**
-```typescript
-function NAME, class NAME, const/let/var at top level
-export/import statements
-```
+**TypeScript/JavaScript:** `function NAME`, `class NAME`, `const|let|var` at top level, `export|import` statements
 
 ### Extraction Strategy
 
 For each added/modified file in scope:
 
-1. Get the diff of added lines: `git diff <base> <file> | grep "^+"`
+1. Get diff of added lines: `git diff <base> <file> | grep "^+"`
 2. Parse added lines for code item declarations
 3. Record: `{type, name, location, signature}`
-4. Group symmetric pairs (get/set, create/destroy, etc.)
-5. **For each setter/store call**: Record corresponding getter/read pattern to check later
-6. **For each field assignment**: Record field read patterns to check later
+4. **Group symmetric pairs** (get/set, create/destroy, `foo`/`foo=`) — grouping heuristic: same root with get/set/clear/create/destroy prefix or `=` suffix
+5. For each setter/store and each field assignment: record corresponding getter/read pattern to check in Phase 4
 
 ---
 
@@ -101,7 +99,7 @@ Group B: sizeExpr / sizeExpr= (getter/setter)
 Proceed with verification? (yes/no)
 ```
 
-**Symmetric Pairs**: If you see `getFoo` / `setFoo` / `clearFoo`, or `foo` / `foo=`, group them. They often live or die together.
+**Symmetric Pairs**: Group `getFoo` / `setFoo` / `clearFoo`, or `foo` / `foo=`. They often live or die together.
 
 ---
 
@@ -122,8 +120,8 @@ LOCATION: compiler/semtypes.nim:342
 **Search Strategy:**
 
 1. **Direct calls**: `grep -rn "getDeferredExpr" --include="*.nim" <repo_root>`
-2. **Exclude definition**: Filter out the line where it's defined
-3. **Check callers**: Are there calls outside the definition?
+2. **Exclude definition**: Filter out the definition line from grep results
+3. **Check callers**: Any calls outside the definition site?
 4. **Check exports**: Is it exported and could be used externally?
 5. **Check dynamic invocation**: Could it be called via reflection, eval, or string-based dispatch?
 
@@ -135,10 +133,15 @@ LOCATION: compiler/semtypes.nim:342
 | **Self-call only** | DEAD | Only calls itself (recursion) |
 | **Write-only** | DEAD | Setter/store called but getter/read never called |
 | **Dead caller only** | TRANSITIVE DEAD | Only called by other dead code |
-| **Test-only** | MAYBE DEAD | Only called in tests (ask user) |
+| **Test-only** | MAYBE DEAD | Only called in tests; ask: "Keep as test utility, or remove?" |
 | **One+ live callers** | ALIVE | Real usage found |
 | **Exported API** | MAYBE ALIVE | Public API, might be used externally |
-| **Dynamic possible** | INVESTIGATE | Check for reflection/eval patterns |
+| **Dynamic possible** | INVESTIGATE | See dynamic invocation protocol below |
+
+**Dynamic Invocation Protocol (INVESTIGATE verdict):**
+1. Search for `eval`, `reflect`, `getattr`, `Method(name)`, `dispatch[name]`, string-based call patterns near or referencing the item
+2. If found: mark MAYBE ALIVE, flag for user review with location
+3. If not found after exhaustive search: treat as DEAD with note "no dynamic dispatch patterns found"
 
 ### Step 3: Write-Only Dead Code Detection
 
@@ -161,7 +164,7 @@ FOR each setter/store found:
 
 ### Step 4: Transitive Dead Code Detection
 
-If item only called by other items, check if ALL callers are dead:
+If item is only called by other items, check if ALL callers are dead:
 
 ```
 getDeferredExpr:
@@ -181,39 +184,34 @@ WHILE changes detected:
 
 ### Step 5: Remove and Test Verification (Optional)
 
-For high-confidence dead code, offer experimental verification:
+For high-confidence dead code (zero callers, not exported, no dynamic dispatch), offer experimental verification:
 
 **Protocol:**
 1. Ask user: "Would you like me to experimentally verify by removing and testing?"
-2. If yes, create temporary git worktree or branch
+2. If yes: create temporary git worktree or branch
 3. Remove the suspected dead code
 4. Run the test suite
-5. If tests pass → definitive proof code was dead
-6. If tests fail → code was used (or tests are incomplete)
-7. Restore original state
+5. Tests pass → definitive proof code was dead
+6. Tests fail → code was live (or tests are incomplete); restore from git
+7. Restore original state regardless of outcome
 
-**When to offer:**
-- User uncertain about grep-based verdict
-- Code looks "important" but has zero callers
-- High-value cleanup (large amount of code)
+**When to offer:** grep result ambiguous, code appears important with zero callers, or high-value cleanup.
 
 ### Step 6: Symmetric Pair Analysis
 
-For detected symmetric pairs:
-
 ```
-IF ANY of {getFoo, setFoo, clearFoo} is ALIVE → all potentially alive
+IF ANY of {getFoo, setFoo, clearFoo} is ALIVE → flag all for user review
 IF ALL are dead → entire group is dead
-IF SOME alive, SOME dead → flag asymmetry for user review
+IF SOME alive, SOME dead → flag asymmetry for explicit user decision
 ```
 
 ---
 
 ## Phase 5: Iterative Re-scanning
 
-<RULE>After identifying dead code, re-scan for newly orphaned code. Removal may cascade.</RULE>
+<RULE>After identifying dead code, re-scan for newly orphaned code. Removal cascades.</RULE>
 
-**Why Re-scan:**
+**Why cascade matters:**
 ```
 Round 1: evaluateDeferredFieldPragmas → 0 callers → DEAD
 Round 2: iterator deferredPragmas → only called by above → NOW TRANSITIVE DEAD
@@ -222,7 +220,7 @@ Round 3: setDeferredExpr → stores to iterator that's dead → NOW WRITE-ONLY D
 
 **Re-scan Algorithm:**
 1. Mark initial dead code (zero callers)
-2. Re-extract remaining items, excluding already-marked-dead
+2. Re-examine remaining items, excluding already-marked-dead
 3. Re-run verification on remaining items
 4. Check for newly transitive dead code
 5. Check for newly write-only dead code (getter removed → setter orphaned)
@@ -236,10 +234,14 @@ Round 3: setDeferredExpr → stores to iterator that's dead → NOW WRITE-ONLY D
 
 ## Output
 
-This command produces:
-1. List of all code items with verdicts
+Produces:
+1. All code items with verdicts
 2. Evidence for each verdict (grep output, caller locations)
 3. Cascade chains documented
-4. Fixed-point reached
+4. Fixed-point confirmed
 
-**Next:** Run `/dead-code-report` to generate the findings report.
+**Next:** Run `/dead-code-report`.
+
+<FINAL_EMPHASIS>
+Every verdict requires evidence. Every transitive chain must close. Never declare fixed-point until re-scan confirms it. A careless verdict breaks production code.
+</FINAL_EMPHASIS>

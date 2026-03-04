@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/review-plan-completeness.md", "source_hash": "sha256:6793ece9e6ed68215c7dbb295e08f545736c88793d666e55fa87d7e440df2ed7", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/review-plan-completeness.md", "source_hash": "sha256:9da4494ee57dc6b1f54c3d811ae9678d74929a2db869afc9966d937bcef34fe9", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: review-plan-completeness
 
 Phases 4-5 of reviewing-impl-plans: verifies definitions of done, risk assessments, QA checkpoints, agent responsibility matrices, and dependency graphs for completeness, then escalates unverifiable claims to the fact-checking skill.

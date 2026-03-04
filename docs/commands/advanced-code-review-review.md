@@ -118,19 +118,21 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>
+Code Reviewer. Your reputation depends on findings that are accurate, evidenced, and correctly severity-classified. A missed CRITICAL costs users their data. A miscalibrated HIGH buries the real issue. Get it right.
+</ROLE>
+
 # Phase 3: Deep Review
+
+Perform multi-pass code analysis, generate findings with severity classification, and respect previous review context.
 
 ## Invariant Principles
 
 1. **Verification before assertion**: Never claim an issue exists without evidence from the actual code. Every finding must include concrete evidence.
-2. **Severity accuracy**: Match severity to actual impact. A style nit is not HIGH severity; a security vulnerability is not LOW.
+2. **Severity accuracy**: Match severity to actual impact. A style nit is not HIGH; a security vulnerability is not LOW.
 3. **Multi-pass thoroughness**: Each pass has a specific focus. Do not skip passes or combine them. Security issues found in Pass 3 indicate Pass 1 was incomplete.
 
-**Purpose:** Perform multi-pass code analysis, generate findings with severity classification, and respect previous review context.
-
 ## 3.1 Multi-Pass Review Order
-
-Review code in multiple passes, each focused on a specific category:
 
 | Pass | Focus | Severity Range | Description |
 |------|-------|----------------|-------------|
@@ -139,11 +141,7 @@ Review code in multiple passes, each focused on a specific category:
 | 3 | Quality | Medium, Low | Maintainability, complexity, patterns, readability |
 | 4 | Polish | Low, Nit | Style, naming, minor optimizations, documentation |
 
-**Rationale:** Multi-pass approach ensures critical issues are found first and aren't overshadowed by style nits.
-
 ## 3.2 Severity Taxonomy
-
-Use precise severity definitions:
 
 | Severity | Definition | Examples |
 |----------|------------|----------|
@@ -184,8 +182,6 @@ Does it require contributor input to resolve?
 ```
 
 ## 3.3 Finding Schema
-
-Each finding follows this structure:
 
 ```json
 {
@@ -231,26 +227,24 @@ During review, check each potential finding against previous items:
 def should_raise_finding(finding: dict, context: dict) -> tuple[bool, str | None]:
     """
     Determine if a finding should be raised given previous context.
-    
-    Returns:
-        (should_raise, previous_status)
+    Returns: (should_raise, previous_status)
     """
-    # Check declined items - never re-raise
+    # Declined items: never re-raise
     for declined in context["declined_items"]:
         if finding_matches(finding, declined):
             return (False, "declined")
-    
-    # Check accepted alternatives - don't re-raise original issue
+
+    # Accepted alternatives: don't re-raise original issue
     for alt in context["alternative_items"]:
         if alt["accepted"] and finding_matches_original(finding, alt):
             return (False, "alternative_accepted")
-    
-    # Check partial items - only raise pending parts
+
+    # Partial items: only raise pending parts
     for partial in context["partial_items"]:
         if finding_matches_pending(finding, partial):
             finding["previous_status"] = "partial_pending"
             return (True, "partial_pending")
-    
+
     return (True, None)
 ```
 
@@ -269,37 +263,25 @@ def should_raise_finding(finding: dict, context: dict) -> tuple[bool, str | None
 
 ## 3.6 Review Execution
 
-For each file in priority order:
+<analysis>
+For each file in priority order (highest severity files first, based on Phase 2 risk classification):
 
 ```python
 def review_file(file_path: str, diff: str, context: dict) -> list[dict]:
-    """
-    Review a single file through all passes.
-    """
     findings = []
-    
-    # Pass 1: Security
-    security_findings = analyze_security(file_path, diff)
-    findings.extend(filter_by_context(security_findings, context))
-    
-    # Pass 2: Correctness
-    logic_findings = analyze_logic(file_path, diff)
-    findings.extend(filter_by_context(logic_findings, context))
-    
-    # Pass 3: Quality
-    quality_findings = analyze_quality(file_path, diff)
-    findings.extend(filter_by_context(quality_findings, context))
-    
-    # Pass 4: Polish
-    polish_findings = analyze_polish(file_path, diff)
-    findings.extend(filter_by_context(polish_findings, context))
-    
+
+    findings.extend(filter_by_context(analyze_security(file_path, diff), context))   # Pass 1
+    findings.extend(filter_by_context(analyze_logic(file_path, diff), context))      # Pass 2
+    findings.extend(filter_by_context(analyze_quality(file_path, diff), context))    # Pass 3
+    findings.extend(filter_by_context(analyze_polish(file_path, diff), context))     # Pass 4
+
     return findings
 ```
+</analysis>
 
 ## 3.7 Noteworthy Collection
 
-Collect positive observations for PRAISE findings:
+Scan for PRAISE findings. Flag code that matches:
 
 ```python
 NOTEWORTHY_PATTERNS = [
@@ -328,7 +310,7 @@ NOTEWORTHY_PATTERNS = [
       "line": 45,
       "end_line": 47,
       "summary": "SQL injection via string interpolation",
-      "reason": "User input from request directly concatenated into SQL query",
+      "reason": "User input concatenated into SQL without sanitization",
       "evidence": "query = f\"SELECT * FROM users WHERE id = {user_id}\"",
       "suggestion": "Use parameterized queries",
       "verification_status": null,
@@ -339,19 +321,10 @@ NOTEWORTHY_PATTERNS = [
   "summary": {
     "total": 8,
     "by_severity": {
-      "CRITICAL": 0,
-      "HIGH": 2,
-      "MEDIUM": 3,
-      "LOW": 2,
-      "NIT": 1,
-      "QUESTION": 0,
-      "PRAISE": 0
+      "CRITICAL": 0, "HIGH": 2, "MEDIUM": 3, "LOW": 2, "NIT": 1, "QUESTION": 0, "PRAISE": 0
     },
     "by_category": {
-      "security": 2,
-      "logic": 1,
-      "quality": 3,
-      "style": 2
+      "security": 2, "logic": 1, "quality": 3, "style": 2
     },
     "skipped_declined": 1,
     "skipped_alternative": 1
@@ -378,7 +351,7 @@ NOTEWORTHY_PATTERNS = [
 **File:** auth.py:45-47
 **Category:** Security
 
-User input from request directly concatenated into SQL query.
+User input concatenated into SQL without sanitization.
 
 ```python
 # Current
@@ -389,12 +362,6 @@ cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
 ```
 
 **Tags:** owasp-injection, cwe-89
-
----
-
-## MEDIUM Severity
-
-...
 ```
 
 ## Phase 3 Self-Check
@@ -405,11 +372,24 @@ Before proceeding to Phase 4:
 - [ ] All four passes completed per file
 - [ ] Declined items not re-raised
 - [ ] Partial items annotated correctly
-- [ ] Each finding has required fields
+- [ ] Each finding has required fields (file, line, evidence)
 - [ ] findings.json written
 - [ ] findings.md written
 
 <CRITICAL>
-Do not proceed to verification with incomplete findings. Every finding must have file, line, and evidence.
+Do not proceed to Phase 4 with incomplete findings. Every finding must have file, line, and evidence.
 </CRITICAL>
+
+<FORBIDDEN>
+- Re-raising declined findings
+- Classifying bugs as CRITICAL (bugs are HIGH; CRITICAL is for security vulnerabilities and data loss)
+- Raising a finding without concrete evidence from actual code
+- Skipping passes or combining them into a single pass
+- Omitting the `tags` field (use empty array when no tags apply)
+- Proceeding to Phase 4 when any self-check item is unchecked
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Your reputation depends on findings that are accurate, evidenced, and correctly classified. A missed CRITICAL leaves users exposed. A spurious HIGH drowns the real issues. Evidence first. Classification second. Completeness always.
+</FINAL_EMPHASIS>
 ``````````

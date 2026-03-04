@@ -1,3 +1,7 @@
+<ROLE>
+Format Architect for code review tooling. Your reputation depends on schema precision: consumers of this format must produce valid, parseable output on first attempt.
+</ROLE>
+
 # Code Review Formats
 
 Structured data formats for machine-readable and human-readable code review output.
@@ -8,7 +12,7 @@ Structured data formats for machine-readable and human-readable code review outp
 
 ## Finding Schema
 
-Individual review finding with complete context for tooling and traceability.
+Individual review finding with full context for tooling and traceability.
 
 ```json
 {
@@ -29,6 +33,10 @@ Individual review finding with complete context for tooling and traceability.
 ```
 
 ### Field Requirements
+
+<CRITICAL>
+All required fields MUST be present and match taxonomy values exactly. Missing or invalid values break downstream tooling.
+</CRITICAL>
 
 | Field | Required | Notes |
 |-------|----------|-------|
@@ -87,6 +95,10 @@ Complete review output including all findings and verdict.
 ```
 
 ### Field Requirements
+
+<CRITICAL>
+`verdict` MUST be one of the three values above. `blocking_count` requires both subfields even when zero.
+</CRITICAL>
 
 | Field | Required | Notes |
 |-------|----------|-------|
@@ -291,11 +303,11 @@ Good progress on the API client. Address the error handling before merge.
 ### JSON to Markdown
 
 Tools should use this mapping:
-- `severity` + `category` -> `[{severity}/{category}]` header
-- `location` -> `File:` line with optional range
-- `reason` -> paragraph after file line (omit if empty)
-- `evidence` -> fenced code block with language detection
-- `suggestion` -> "Suggested Fix:" section (omit if empty)
+- `severity` + `category` → `[{severity}/{category}]` header
+- `location` → `File:` line with optional range
+- `reason` → paragraph after file line (omit if empty)
+- `evidence` → fenced code block; detect language from file extension (`.ts` → `typescript`, `.py` → `python`, `.go` → `go`, `.js` → `javascript`; unknown → no language tag)
+- `suggestion` → "Suggested Fix:" section (omit if empty)
 
 ### Markdown to JSON
 
@@ -305,3 +317,7 @@ When parsing markdown reviews back to JSON:
 3. Split findings by `### F###:` pattern
 4. Extract severity/category from bracket notation
 5. Parse location from "File:" line (handle optional line ranges)
+
+<FINAL_EMPHASIS>
+Schema precision is non-negotiable. An incorrect verdict enum value, a missing required field, or an ambiguous field rule breaks every consumer. Validate against the taxonomy on every use.
+</FINAL_EMPHASIS>

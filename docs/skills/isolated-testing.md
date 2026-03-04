@@ -143,12 +143,12 @@ After each test: Did I follow the protocol? Did I stop on reproduction? Am I res
 ## Invariant Principles
 
 1. **One Theory, One Test, Full Stop.** Test a single theory completely before considering another. No mixing. No "while I'm here."
-2. **Design Before Execute.** Write the repro test that encompasses every step needed. Get approval (unless autonomous). THEN run.
+2. **Design Before Execute.** Write the repro test encompassing every step. Get approval (unless autonomous). THEN run.
 3. **Stop on Reproduction.** Bug repros = STOP investigating. Announce. Wait (unless autonomous, then proceed to fix phase).
-4. **Uncertainty is Not Urgency.** The pressure to "do something" is the enemy. Deliberation resolves uncertainty, not action.
-5. **Evidence is Binary.** Repro or no-repro. Proved or disproved. No "partially confirmed" or "seems related."
-6. **Know Your Code State.** Before EVERY test, verify: Am I on clean baseline? What modifications exist? Is this the state I intend to test?
-7. **Queue Discipline.** Theories are tested in order. No skipping to "the one that feels right." No adding new theories mid-test.
+4. **Uncertainty is Not Urgency.** The pressure to "do something" is the enemy. Deliberation resolves uncertainty.
+5. **Evidence is Binary.** Repro or no-repro. Proved or disproved. No "partially confirmed."
+6. **Know Your Code State.** Before EVERY test: verify baseline, what modifications exist, what state you intend to test.
+7. **Queue Discipline.** Test theories in order. No skipping. No adding new theories mid-test.
 
 ---
 
@@ -172,9 +172,7 @@ If you don't know your code state, STOP. Return to clean baseline before proceed
 
 ### Step 1: Select ONE Theory
 
-From your theory list, select the FIRST untested theory. Not "the one I feel good about." The FIRST one.
-
-**Queue discipline:** You MUST test theories in order. No skipping. No "but this one seems more likely."
+Select the FIRST untested theory. Not "the one I feel good about." The FIRST one.
 
 ```
 THEORY QUEUE:
@@ -189,13 +187,15 @@ Status: UNTESTED -> TESTING
 ### Step 2: Design the Repro Test
 
 <CRITICAL>
-Before running ANYTHING, write out the COMPLETE test that would prove or disprove this theory.
+Before running ANYTHING, write out the COMPLETE test that proves or disproves this theory.
 
 The test must:
-- Encompass EVERY step needed to reproduce (not "run tests" but the specific test command)
+- Encompass EVERY step needed to reproduce (not "run tests" but the specific command)
 - Have a CLEAR expected outcome if theory is correct
 - Have a CLEAR expected outcome if theory is wrong
-- Be RUNNABLE as written (no placeholders, no "and then check")
+- Be RUNNABLE as written (no placeholders)
+
+If you cannot design a runnable test for this theory, mark it UNTESTABLE and advance to the next theory.
 </CRITICAL>
 
 **Template:**
@@ -232,9 +232,7 @@ The test must:
 
 ### Step 4: Execute ONCE
 
-Run the test EXACTLY as designed. Once. Not twice "to be sure." Once.
-
-Capture the output. Compare to expected outcomes.
+Run the test EXACTLY as designed. Once. Not twice "to be sure." Once. Capture output and compare to expected outcomes.
 
 ### Step 5: Verdict
 
@@ -242,7 +240,7 @@ Capture the output. Compare to expected outcomes.
 |---------|---------|-------------|
 | Matches "correct" prediction | **REPRODUCED** | STOP investigating. Announce. Proceed to fix (if autonomous) or wait. |
 | Matches "wrong" prediction | **DISPROVED** | Mark theory DISPROVED. Return to Step 1 with next theory. |
-| Neither matches | **INCONCLUSIVE** | Note what happened. Design refined test OR mark INCONCLUSIVE and continue. |
+| Neither matches | **INCONCLUSIVE** | If one more test iteration can resolve it, design refined test. Otherwise mark INCONCLUSIVE and advance. |
 
 ### Step 6: On Reproduction
 
@@ -260,8 +258,10 @@ Evidence: [what the test showed]
 Investigation complete. Ready for fix phase.
 ```
 
+Before proceeding to fix phase, invoke `verifying-hunches` to confirm the theory holds before committing to a fix.
+
 **Non-autonomous:** Wait for user before proceeding to fix.
-**Autonomous:** Proceed directly to fix phase (invoke `test-driven-development` skill).
+**Autonomous:** Invoke `verifying-hunches`, then proceed to fix phase (invoke `test-driven-development` skill).
 
 DO NOT:
 - "Confirm" with another test
@@ -278,9 +278,9 @@ DO NOT:
 If you catch yourself doing ANY of these, STOP IMMEDIATELY and return to Step 0:
 
 **Code state violations:**
-- Testing without knowing what code state you're on
+- Testing without knowing your code state
 - Forgetting what modifications you've made
-- Assuming you're on clean baseline without verifying
+- Assuming clean baseline without verifying
 - Making changes without recording them
 
 **Action without design:**
@@ -331,20 +331,15 @@ Maintain explicit state:
 | 3 | [desc] | UNTESTED | - |
 ```
 
-Update IMMEDIATELY after each test. This survives compaction.
+Update after each test. Survives context compaction.
 
 ---
 
 ## Integration Points
 
-**This skill is invoked by:**
-- `debugging` skill (Phase 3)
-- `scientific-debugging` command (experiment execution)
-- `systematic-debugging` command (Phase 3)
+**Invoked by:** `debugging` (Phase 3), `scientific-debugging` (experiment execution), `systematic-debugging` (Phase 3)
 
-**This skill invokes:**
-- `verifying-hunches` (before claiming a theory is confirmed)
-- `test-driven-development` (when entering fix phase after reproduction)
+**Invokes:** `verifying-hunches` (Step 6, before fix phase), `test-driven-development` (fix phase entry)
 
 ---
 

@@ -2,19 +2,22 @@
 description: "Phase 4-5 of reviewing-impl-plans: Completeness Checks and Escalation"
 ---
 
+<ROLE>
+Implementation Plan Auditor. Your reputation depends on surfacing every incompleteness before execution begins. Missed acceptance criteria, undocumented risks, and unchecked claims become production failures. Be thorough.
+</ROLE>
+
 # Phase 4: Completeness Checks
 
-You are executing Phases 4-5 of the implementation plan review. Your job is to verify completeness of definitions of done, risk assessments, QA checkpoints, agent responsibilities, and dependency graphs, then escalate claims requiring fact-checking.
+Verify definitions of done, risk assessments, QA checkpoints, agent responsibilities, and dependency graphs; escalate unverifiable claims.
 
 ## Invariant Principles
 
-1. **Subjective criteria are not acceptance criteria** - "Works well" or "clean code" are not testable; demand measurable, pass/fail outcomes
-2. **Every phase needs a risk assessment** - Undocumented risks are unmitigated risks; absence of risk documentation is itself a finding
-3. **Escalate what you cannot verify** - Technical claims that require execution or external validation must be forwarded to fact-checking, not assumed correct
+1. **Subjective criteria are not acceptance criteria** — "Works well" or "clean code" are not testable; demand measurable, pass/fail outcomes
+2. **Every phase needs a risk assessment** — Undocumented risks are unmitigated risks; absence of risk documentation is itself a finding
+3. **Escalate what you cannot verify** — Technical claims requiring execution or external validation must be forwarded to fact-checking, not assumed correct
 
 ## Definition of Done per Work Item
 
-For EACH work item:
 ```
 Work Item: [name]
 Definition of Done: YES / NO / PARTIAL
@@ -30,7 +33,6 @@ If NO/PARTIAL: [what acceptance criteria must be added]
 
 ## Risk Assessment per Phase
 
-For EACH phase:
 ```
 Phase: [name]
 Risks documented: YES / NO
@@ -47,14 +49,13 @@ Rollback point: [required]
 |-------|---------------|------------|---------------|-------------------|
 | | YES/NO | | | |
 
-Required skill integrations:
-- [ ] auditing-green-mirage after tests pass
-- [ ] systematic-debugging on failures
-- [ ] fact-checking for security/performance/behavior claims
+Required skill integrations (invoke when condition is met):
+- [ ] `auditing-green-mirage` — after tests pass
+- [ ] `systematic-debugging` — on test failures
+- [ ] `fact-checking` — for security/performance/behavior claims
 
 ## Agent Responsibility Matrix
 
-For each agent/work stream:
 ```
 Agent: [name]
 Responsibilities: [specific deliverables]
@@ -82,7 +83,9 @@ Missing declarations: [list]
 
 # Phase 5: Escalation
 
-Claims requiring `fact-checking` skill (do NOT self-verify):
+<CRITICAL>
+Do NOT self-verify technical claims. Forward all flagged claims to `fact-checking` skill.
+</CRITICAL>
 
 | Category | Examples |
 |----------|----------|
@@ -92,22 +95,29 @@ Claims requiring `fact-checking` skill (do NOT self-verify):
 | Test utility behavior | Claims about how helpers, mocks, fixtures behave |
 | Library behavior | Specific claims about third-party behavior |
 
-For each escalated claim:
+Per escalated claim:
 ```
 Claim: [quote]
 Location: [section/line]
 Category: [Security/Performance/etc.]
-Depth: SHALLOW / MEDIUM / DEEP
+Depth: SHALLOW (surface plausibility) / MEDIUM (logic trace) / DEEP (execution required)
 ```
 
 <RULE>
 After review, invoke `fact-checking` skill with pre-flagged claims. Do NOT implement your own fact-checking.
 </RULE>
 
+<FORBIDDEN>
+- Marking a claim "probably fine" without fact-checking
+- Self-verifying security, performance, or concurrency claims
+- Omitting depth level on escalated claims
+- Reporting circular dependencies without CRITICAL designation
+- Accepting subjective acceptance criteria ("works correctly", "looks good")
+</FORBIDDEN>
+
 ## Deliverable
 
-Populate the following sections of the review report:
-- Claims escalated to fact-checking: F
+- Claims escalated to fact-checking (count + list)
 - Definition of done gaps
 - Risk assessment gaps
 - QA checkpoint gaps
@@ -115,4 +125,6 @@ Populate the following sections of the review report:
 - Dependency graph issues (especially circular dependencies)
 - All escalated claims with category and depth
 
-Return your completed completeness and escalation audit as structured output for the orchestrator.
+<FINAL_EMPHASIS>
+You are the last gate before implementation begins. Every gap you miss becomes a production defect. Document every incompleteness. Escalate every unverifiable claim.
+</FINAL_EMPHASIS>

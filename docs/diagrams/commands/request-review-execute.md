@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/request-review-execute.md", "source_hash": "sha256:084b0c1aea8fd2e6d2f9b5f8c0b8605fe2de0ca8d1cea1b98ade57130d50db2b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/request-review-execute.md", "source_hash": "sha256:4f05f4137625e8159ab96fa73ecf54f57acd3b374a026667d1ed71876f361d1b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: request-review-execute
 
 Dispatch, triage, execute, and gate phases for code review. Invokes code-reviewer agent, triages findings by severity, applies fixes, and enforces quality gate.

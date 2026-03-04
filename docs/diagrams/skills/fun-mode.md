@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/fun-mode/SKILL.md", "source_hash": "sha256:b25b78495cddb566054f7675bc48efcc3f1b03c6fc7473b833c8e8d389daa6e6", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/fun-mode/SKILL.md", "source_hash": "sha256:7a7cce95f727232a60610329d51c3427bb12b8a0917c9cf96c6addc1822afbbe", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: fun-mode
 
 Persona synthesis workflow for creative session engagement. Receives persona/context/undertow from session init, synthesizes a coherent character, enforces dialogue-only boundaries, and handles opt-out flow.

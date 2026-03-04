@@ -40,7 +40,7 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 
 | Flag | Mode | Command File |
 |------|------|-------------|
-| `--self`, `-s`, (default) | Pre-PR self-review | (inline below) |
+| `--self`, `-s`, (default: no flag given) | Pre-PR self-review | (inline below) |
 | `--feedback`, `-f` | Process received feedback | `code-review-feedback` |
 | `--give <target>` | Review someone else's code | `code-review-give` |
 | `--audit [scope]` | Multi-pass deep-dive | (inline below) |
@@ -58,9 +58,7 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 | `pr_match_patterns(files, root)` | Heuristic pre-filtering |
 | `pr_files(pr_result)` | Extract file list |
 
-**Principle:** MCP tools for read/analyze. `gh` CLI for write operations (posting reviews, replies).
-
-**Fallback:** MCP unavailable -> gh CLI -> local diff -> manual paste.
+MCP tools for read/analyze. `gh` CLI for write operations (posting reviews, replies). Fallback: MCP unavailable -> gh CLI -> local diff -> manual paste.
 
 ---
 
@@ -74,6 +72,9 @@ Self-review finds what you missed. Assume bugs exist. Hunt them.
 1. Get diff: `git diff $(git merge-base origin/main HEAD)..HEAD`
 2. Multi-pass: Logic > Integration > Security > Style
 3. Generate findings with severity, file:line, description
+
+Example finding: `src/auth/login.py:42 [Critical] Token written to log — data exposure risk`
+
 4. Gate: Critical=FAIL, Important=WARN, Minor only=PASS
 
 ---
@@ -84,7 +85,7 @@ Scopes: (none)=branch changes, file.py, dir/, security, all
 
 **Passes:** Correctness > Security > Performance > Maintainability > Edge Cases
 
-Output: Executive Summary, findings by category, Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
+Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
 
 ---
 
@@ -103,3 +104,7 @@ Output: Executive Summary, findings by category, Risk Assessment (LOW/MEDIUM/HIG
 - [ ] All findings have file:line
 - [ ] Severity based on impact, not effort
 - [ ] Output matches mode spec
+
+<FINAL_EMPHASIS>
+Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
+</FINAL_EMPHASIS>

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/pr-distill.md", "source_hash": "sha256:4698c598d62fe2b0e6b6913a6c51943d5615a44131231cc13bf14aa560858555", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/pr-distill.md", "source_hash": "sha256:fcdf15a2df30c33e730a593ab75156ad9f2dd7cef3d24a3391fc4d053a1d90ea", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: pr-distill
 
 Analyze a PR and generate a review distillation report. Runs heuristic pattern matching first, then AI analysis for unmatched files.

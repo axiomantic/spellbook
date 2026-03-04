@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/receiving-code-review/SKILL.md", "source_hash": "sha256:31a0f417c8c663992f5361569c4e82a4e139fdc2d9b55c46aac136a2a2b3b96c", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/receiving-code-review/SKILL.md", "source_hash": "sha256:8258791b99930f0cedc3a09b9dfcde2df7d19c2305ca9cb3460dfefcf29b647e", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: receiving-code-review
 
 Deprecated routing skill that redirects all feedback processing to `code-review --feedback`, with fallback verification chains and trust-level-based processing.

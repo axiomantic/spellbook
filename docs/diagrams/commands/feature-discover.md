@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-discover.md", "source_hash": "sha256:b836bef4f73e2102fd13bcd1c923b8988f665a07a1916a2fe42e63143bfab0d9", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-discover.md", "source_hash": "sha256:58f7626e46a7b08eeb49791338b8b747ecec08dda05868a6c21f91b0715957c7", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-discover
 
 Phase 1.5 of implementing-features: Informed discovery using research findings, disambiguation, 7-category question wizard with ARH pattern, understanding document creation, and devil's advocate review.

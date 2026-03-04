@@ -1,15 +1,92 @@
 # Worker Integration Contract
 
-This document defines the contract for workers integrating with the swarm coordination system. Workers MUST follow this contract to ensure proper coordination, checkpointing, and recovery.
+<ROLE>
+Worker integrating with the swarm coordination system. Your correctness determines whether progress survives failures. Broken checkpointing means lost work across the entire swarm.
+</ROLE>
 
-## Overview
+Workers MUST follow this contract to ensure coordination, checkpointing, and recovery.
 
-Workers integrate with the swarm coordination system through two mechanisms:
+## Integration Methods
+
+Two mechanisms for swarm integration:
 
 1. **MCP Tool Calls**: HTTP requests to the coordination server via the MCP backend
 2. **Checkpoint Marker Files**: Local JSON files written to `.spellbook/checkpoints/`
 
-The dual-write behavior (marker file FIRST, then HTTP call) ensures progress is preserved even if the coordination server is temporarily unavailable.
+**Dual-write rule**: Write checkpoint file FIRST, then make HTTP call. Progress survives server downtime, network loss, and worker crashes.
+
+### Method 1: SwarmWorker Helper (Recommended)
+
+Handles all coordination protocol details automatically.
+
+```python
+from spellbook.coordination import SwarmWorker
+
+worker = SwarmWorker(
+    swarm_id="swarm-abc123",
+    packet_id=1,
+    packet_name="backend-api",
+    worktree="/path/to/worktree",
+    tasks_total=10
+)
+
+await worker.register()
+
+await worker.report_progress(
+    task_id="task-1",
+    task_name="Implement authentication",
+    status="completed",
+    commit="abc1234567"  # Optional
+)
+
+await worker.report_complete(
+    final_commit="def5678901",
+    tests_passed=True,
+    review_passed=True
+)
+
+# On error:
+await worker.report_error(
+    task_id="task-2",
+    error_type="test_failure",
+    message="Authentication tests failed with 3 failures",
+    recoverable=False
+)
+```
+
+### Method 2: Direct MCP Tool Calls (Advanced)
+
+```python
+from spellbook.coordination.backends import get_backend
+
+backend = get_backend("mcp-streamable-http", {
+    "host": "127.0.0.1",
+    "port": 7432
+})
+
+response = await backend.register_worker(
+    swarm_id="swarm-abc123",
+    packet_id=1,
+    packet_name="backend-api",
+    tasks_total=10,
+    worktree="/path/to/worktree"
+)
+
+response = await backend.report_progress(
+    swarm_id="swarm-abc123",
+    packet_id=1,
+    task_id="task-1",
+    task_name="Implement authentication",
+    status="completed",
+    tasks_completed=1,
+    tasks_total=10,
+    commit="abc1234567"
+)
+```
+
+<CRITICAL>
+Direct MCP callers MUST implement dual-write checkpointing manually. See Checkpoint Format section.
+</CRITICAL>
 
 ## Worker Lifecycle
 
@@ -47,113 +124,17 @@ The dual-write behavior (marker file FIRST, then HTTP call) ensures progress is 
 └──────────────────┘
 ```
 
-## Integration Methods
-
-### Method 1: Using SwarmWorker Helper Class (Recommended)
-
-The `SwarmWorker` class handles all coordination protocol details automatically.
-
-```python
-from spellbook.coordination import SwarmWorker
-
-# Initialize worker
-worker = SwarmWorker(
-    swarm_id="swarm-abc123",
-    packet_id=1,
-    packet_name="backend-api",
-    worktree="/path/to/worktree",
-    tasks_total=10
-)
-
-# Register on startup
-await worker.register()
-
-# Report each task as it completes
-await worker.report_progress(
-    task_id="task-1",
-    task_name="Implement authentication",
-    status="completed",
-    commit="abc1234567"  # Optional
-)
-
-# Report final completion
-await worker.report_complete(
-    final_commit="def5678901",
-    tests_passed=True,
-    review_passed=True
-)
-
-# Or report errors
-await worker.report_error(
-    task_id="task-2",
-    error_type="test_failure",
-    message="Authentication tests failed with 3 failures",
-    recoverable=False
-)
-```
-
-### Method 2: Direct MCP Tool Calls (Advanced)
-
-For workers that need more control, you can call the MCP backend directly.
-
-```python
-from spellbook.coordination.backends import get_backend
-
-backend = get_backend("mcp-streamable-http", {
-    "host": "127.0.0.1",
-    "port": 7432
-})
-
-# Register
-response = await backend.register_worker(
-    swarm_id="swarm-abc123",
-    packet_id=1,
-    packet_name="backend-api",
-    tasks_total=10,
-    worktree="/path/to/worktree"
-)
-
-# Report progress
-response = await backend.report_progress(
-    swarm_id="swarm-abc123",
-    packet_id=1,
-    task_id="task-1",
-    task_name="Implement authentication",
-    status="completed",
-    tasks_completed=1,
-    tasks_total=10,
-    commit="abc1234567"
-)
-```
-
-**IMPORTANT**: If using direct MCP calls, you MUST implement dual-write checkpointing yourself (see Checkpoint Format section).
-
-## Dual-Write Behavior
-
-The coordination system uses a dual-write pattern for reliability:
-
-1. **Checkpoint File First**: Write checkpoint marker file to `.spellbook/checkpoints/packet-{id}-{name}.json`
-2. **HTTP Call Second**: Make HTTP POST request to coordination server
-
-This ensures progress is preserved even if:
-- The coordination server is temporarily down
-- Network connectivity is lost
-- The worker crashes (checkpoint can be recovered on restart)
-
-### Checkpoint File Location
-
-```
-{worktree}/.spellbook/checkpoints/packet-{packet_id}-{packet_name}.json
-```
-
-Example:
-```
-/Users/alice/worktrees/feature-1/.spellbook/checkpoints/packet-1-backend-api.json
-```
-
 ## Checkpoint Format
 
-All checkpoint files use the following base format:
+**Location**: `{worktree}/.spellbook/checkpoints/packet-{packet_id}-{packet_name}.json`
+
+Example: `/Users/alice/worktrees/feature-1/.spellbook/checkpoints/packet-1-backend-api.json`
+
+<CRITICAL>
+Write checkpoint file BEFORE the HTTP call. If the checkpoint write fails, do NOT proceed with the HTTP call -- log the failure and halt.
+</CRITICAL>
+
+### Base Format
 
 ```json
 {
@@ -258,7 +239,7 @@ All checkpoint files use the following base format:
 
 **Validation**:
 - `packet_id` > 0
-- `packet_name` matches `^[a-z0-9-]+$` (lowercase alphanumeric with hyphens)
+- `packet_name` matches `^[a-z0-9-]+$`
 - `tasks_total` between 1 and 1000
 - `worktree` is absolute path
 
@@ -292,9 +273,9 @@ All checkpoint files use the following base format:
 ```
 
 **Validation**:
-- `status` is one of: `"started"`, `"completed"`, `"failed"`
+- `status` one of: `"started"`, `"completed"`, `"failed"`
 - `tasks_completed` <= `tasks_total`
-- `commit` matches `^[a-f0-9]{7,40}$` (git SHA, 7-40 hex chars)
+- `commit` matches `^[a-f0-9]{7,40}$`
 
 ### 3. Completion
 
@@ -357,14 +338,13 @@ All checkpoint files use the following base format:
 
 ## Task Completion Counter
 
-Workers MUST track `tasks_completed` as a monotonically increasing counter:
+`tasks_completed` MUST be a monotonically increasing counter:
 
 1. Initialize to 0 on startup
 2. Increment by 1 each time `report_progress()` is called with `status="completed"`
 3. Include current value in every progress update
 4. Include final value in completion report
 
-**Example**:
 ```python
 worker = SwarmWorker(...)  # tasks_completed = 0
 
@@ -373,29 +353,27 @@ await worker.report_progress("task-2", "Task 2", "completed")  # tasks_completed
 await worker.report_progress("task-3", "Task 3", "completed")  # tasks_completed = 3
 ```
 
-The `SwarmWorker` helper class handles this automatically.
+`SwarmWorker` handles this automatically.
 
 ## Error Types and Recovery
 
 ### Recoverable Errors
-These errors may resolve on retry:
+May resolve on retry:
 - `network_error` - Network connectivity issues
 - `rate_limit` - API rate limiting
 - `test_flake` - Flaky test failures
 - `dependency_timeout` - Temporary dependency unavailability
 
 ### Non-Recoverable Errors
-These errors require human intervention:
+Require human intervention:
 - `test_failure` - Persistent test failures
 - `build_failure` - Build/compilation errors
 - `merge_conflict` - Git merge conflicts
 - `invalid_manifest` - Invalid work packet manifest
 
-When reporting recoverable errors, the coordination server may schedule automatic retries based on the configured retry policy (default: 2 retries with exponential backoff starting at 30 seconds).
+Recoverable errors: coordination server may schedule automatic retries (default: 2 retries, exponential backoff starting at 30 seconds).
 
 ## Server-Sent Events (SSE)
-
-Workers can subscribe to swarm events for real-time updates:
 
 **Endpoint**: `GET /swarm/{swarm_id}/events?since_event_id={last_id}`
 
@@ -414,31 +392,29 @@ event: worker_complete
 data: {"packet_id": 1, "final_commit": "abc123"}
 ```
 
+On SSE stream disconnect: reconnect using the last received `since_event_id` to resume from where the stream broke.
+
 ## Recovery and Restart
 
-If a worker crashes and restarts, it MUST:
+On crash and restart, MUST:
 
-1. Read the checkpoint file from `.spellbook/checkpoints/packet-{id}-{name}.json`
-2. Resume from `tasks_completed` counter
-3. Re-register with the swarm (idempotent operation)
+1. Read checkpoint from `.spellbook/checkpoints/packet-{id}-{name}.json`
+2. Resume `tasks_completed` from checkpoint value
+3. Re-register with swarm (idempotent)
 4. Continue reporting progress from where it left off
 
-Example:
 ```python
 checkpoint_path = Path(worktree) / ".spellbook/checkpoints" / f"packet-{packet_id}-{packet_name}.json"
 if checkpoint_path.exists():
     checkpoint = json.loads(checkpoint_path.read_text())
     tasks_completed = checkpoint["tasks_completed"]
 
-    # Resume work
     worker = SwarmWorker(...)
     worker.tasks_completed = tasks_completed
     await worker.register()  # Re-register (idempotent)
 ```
 
 ## Integration Checklist
-
-For workers implementing this contract:
 
 - [ ] Initialize `SwarmWorker` with correct parameters
 - [ ] Call `register()` on startup
@@ -452,9 +428,17 @@ For workers implementing this contract:
 - [ ] Handle checkpoint recovery on restart
 - [ ] Clean up checkpoint files after successful swarm completion
 
-## Testing Your Integration
+<FORBIDDEN>
+- Calling HTTP endpoints before writing the checkpoint file
+- Proceeding with an HTTP call when checkpoint write has failed
+- Making direct MCP calls without implementing dual-write checkpointing
+- Using relative paths for `worktree`
+- Sending `tasks_completed` > `tasks_total`
+- Skipping re-registration on restart
+- Using non-UTC or timezone-naive timestamps
+</FORBIDDEN>
 
-Use the test server to verify your worker integration:
+## Testing Your Integration
 
 ```bash
 # Start test coordination server
@@ -476,3 +460,7 @@ curl http://127.0.0.1:7432/swarm/{swarm_id}/status
 - SwarmWorker implementation: `spellbook/coordination/worker.py`
 - Backend implementation: `spellbook/coordination/backends/mcp_streamable_http.py`
 - Retry policy: `spellbook/coordination/retry.py`
+
+<FINAL_EMPHASIS>
+Checkpoint-before-HTTP is non-negotiable. Every deviation risks silent progress loss that corrupts swarm state. Write the file first, always.
+</FINAL_EMPHASIS>

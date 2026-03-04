@@ -145,57 +145,46 @@ flowchart TD
 ``````````markdown
 # Feature Discovery (Phase 1.5)
 
+<ROLE>
+Discovery Facilitator for feature implementation. Your reputation depends on understanding documents built on evidence, not assumptions. Design phases constructed on incomplete discovery produce wrong software. Get it right here.
+</ROLE>
+
 <CRITICAL>
 ## Prerequisite Verification
 
-Before ANY Phase 1.5 work begins, run this verification:
+Before ANY Phase 1.5 work begins, verify:
 
-```bash
-# ══════════════════════════════════════════════════════════════
-# PREREQUISITE CHECK: feature-discover (Phase 1.5)
-# ══════════════════════════════════════════════════════════════
+```
+# VERIFICATION TEMPLATE — not executable; substitute actual session values
 
-echo "=== Phase 1.5 Prerequisites ==="
+Required: complexity_tier in (standard, complex)
+  Current: [SESSION_PREFERENCES.complexity_tier]
+  → If TRIVIAL or SIMPLE: STOP. This phase must not run.
 
-# CHECK 1: Complexity tier must be STANDARD or COMPLEX
-echo "Required: complexity_tier in (standard, complex)"
-echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
-# If tier is TRIVIAL or SIMPLE, this phase should NOT be running.
+Required: Phase 1 research complete
+  Verify: SESSION_CONTEXT.research_findings populated
+  Verify: Research Quality Score = 100% (or user-bypassed)
 
-# CHECK 2: Phase 1 must be complete
-echo "Required: Phase 1 research complete"
-echo "Verify: SESSION_CONTEXT.research_findings populated"
-echo "Verify: Research Quality Score = 100% (or user-bypassed)"
-
-# CHECK 3: Research subagent was dispatched (not done in main context)
-echo "Required: Research was done by subagent"
+Required: Research was done by subagent (not in main context)
 ```
 
-**If ANY check fails:** STOP. Do not proceed. Return to Phase 1.
+**If ANY check fails:** STOP. Return to Phase 1.
 
-**Anti-rationalization reminder:** If you are tempted to skip this check because
-"the research was thorough enough" or "we already understand the codebase,"
-that is Pattern 4 (Similarity Shortcut) or Pattern 2 (Expertise Override).
-Run the check. Trust the process.
+**Anti-rationalization:** "Research was thorough enough" and "we already understand the codebase" are known bypass rationalizations (Pattern 4: Similarity Shortcut, Pattern 2: Expertise Override). Run the check. Trust the process.
 </CRITICAL>
 
 ## Invariant Principles
 
-1. **Research informs questions** - All discovery questions derive from research findings; never ask what research already answered
-2. **100% completeness required** - Proceed to design only when all 11 validation functions pass; no exceptions without explicit bypass
-3. **Adaptive response handling** - User responses trigger appropriate actions (research, clarification, skip); never force exact answers
-4. **Understanding document is the gate** - Devil's advocate reviews the understanding document; approval unlocks design phase
+1. **Research informs questions** — Questions derive from research findings; never ask what research already answered
+2. **100% completeness required** — Proceed to design only when all 11 validation functions pass; no exceptions without explicit bypass
+3. **Adaptive response handling** — User responses trigger appropriate actions; never force exact answers
+4. **Understanding document is the gate** — Devil's advocate reviews the understanding document; approval unlocks design
 
 <CRITICAL>
-Use research findings to generate informed questions. Apply Adaptive Response
-Handler (ARH) pattern for intelligent response processing. All discovery must
-achieve 100% completeness score before proceeding to design.
+Use research findings to generate informed questions. Apply ARH pattern to all discovery questions. All discovery must achieve 100% completeness before proceeding to design.
 </CRITICAL>
 
 ### Adaptive Response Handler (ARH) Pattern
-
-The ARH pattern provides intelligent handling of user responses during discovery.
-Instead of requiring exact answers, it adapts to various response types:
 
 | Response Type    | Detection Pattern                              | Action                                                          |
 | ---------------- | ---------------------------------------------- | --------------------------------------------------------------- |
@@ -206,7 +195,7 @@ Instead of requiring exact answers, it adapts to various response types:
 | SKIP             | "skip", "not relevant", "doesn't apply"        | Mark as out-of-scope, add to explicit_exclusions, continue      |
 | USER_ABORT       | "stop", "cancel", "exit"                       | Save current state, exit cleanly with resume instructions       |
 
-Apply this pattern to ALL discovery questions in Phase 1.5.
+Apply to ALL discovery questions in Phase 1.5.
 
 ### 1.5.0 Disambiguation Session
 
@@ -229,7 +218,7 @@ B) [Specific interpretation 2]
 C) [Specific interpretation 3]
 D) Something else (please describe)
 
-Your choice: \_\_\_
+Your choice: ___
 ```
 
 **PROCESSING (ARH Pattern):**
@@ -243,7 +232,9 @@ Your choice: \_\_\_
 | SKIP             | "skip"             | Mark as out-of-scope, add to explicit_exclusions |
 | USER_ABORT       | "stop"             | Save state, exit cleanly                         |
 
-**Fractal exploration (optional):** When the user responds "I don't know" or "research this" on a HIGH-impact ambiguity, invoke fractal-thinking with intensity `pulse` and seed: "What are the full implications of [Interpretation A] vs [Interpretation B]?". Use the synthesis to provide richer disambiguation context showing convergent vs divergent implications.
+**Fractal exploration (conditional):** When the user responds UNKNOWN or RESEARCH_REQUEST on a HIGH-impact ambiguity, invoke fractal-thinking with intensity `pulse` and seed: "What are the full implications of [Interpretation A] vs [Interpretation B]?". Use synthesis for richer disambiguation context showing convergent vs divergent implications.
+
+**Fractal failure fallback:** If fractal-thinking invocation fails, LOG warning and continue disambiguation with available context.
 
 **Example Flow:**
 
@@ -276,9 +267,9 @@ ARH Processing:
 
 **GENERATION RULES:**
 
-1. Use research findings to make questions specific (not generic)
-2. Reference concrete codebase patterns in questions
-3. Include assumption checks in every category
+1. Make questions specific using research findings (not generic)
+2. Reference concrete codebase patterns discovered in Phase 1
+3. Include at least one assumption check per category
 4. Generate 3-5 questions per category
 
 **7 CATEGORIES:**
@@ -318,7 +309,7 @@ ARH Processing:
 
 - Research uses terms [X, Y, Z]. What do they mean here?
 - Are [term A] and [term B] synonyms?
-- Build glossary incrementally
+- Build glossary as terms emerge
 
 **7. Assumption Audit**
 
@@ -356,12 +347,10 @@ Present questions one category at a time (7 iterations):
 Based on research findings and disambiguation, I have questions in 7 categories.
 
 ### Category 1/7: Architecture & Approach
-
 [Present 3-5 questions]
 [Wait for responses, process with ARH]
 
 ### Category 2/7: Scope & Boundaries
-
 [Continue...]
 ```
 
@@ -371,8 +360,8 @@ Progress tracking: "[Category N/7]: X/Y questions answered"
 
 **Process:**
 
-1. Extract domain terms from discovery answers (during wizard)
-2. Build glossary incrementally
+1. Extract domain terms from discovery answers during wizard
+2. Build glossary as terms emerge (not in batch at end)
 3. After wizard completes, show full glossary
 4. Ask user ONCE about persistence
 
@@ -385,7 +374,7 @@ A) Keep it in this session only
 B) Persist to project CLAUDE.md (all team members benefit)
 ```
 
-**IF B SELECTED - Glossary Persistence Protocol:**
+**IF B SELECTED — Glossary Persistence Protocol:**
 
 **Location:** Append to end of project CLAUDE.md file
 
@@ -416,7 +405,7 @@ B) Persist to project CLAUDE.md (all team members benefit)
 **Write Operation:**
 
 1. Read current CLAUDE.md content
-2. Append formatted glossary (as above)
+2. Append formatted glossary
 3. Write back to CLAUDE.md
 4. Verify write succeeded
 
@@ -434,11 +423,13 @@ B) Persist to project CLAUDE.md (all team members benefit)
 
 ### 1.5.4 Synthesize design_context
 
-Build complete `DesignContext` object from all prior phases. (See data structure in implementing-features skill.)
+Build complete `DesignContext` object from all prior phases.
+
+**Structure reference:** DesignContext fields are defined in the `implementing-features` skill. If the skill is unavailable, request the user provide the expected field structure before proceeding.
 
 **Validation:**
 
-- No null values allowed (except optional fields)
+- No null values (except explicitly optional fields)
 - No "TBD" or "unknown" strings
 - All arrays with content or explicit "N/A"
 
@@ -566,9 +557,7 @@ C) Proceed anyway (bypass gate, accept risk)
 Your choice: ___
 ```
 
-IF completeness_score == 100:
-
-- Proceed to Phase 1.5.6
+IF completeness_score == 100: Proceed to Phase 1.5.6
 
 ### 1.5.6 Create Understanding Document
 
@@ -580,58 +569,47 @@ IF completeness_score == 100:
 # Understanding Document: [Feature Name]
 
 ## Feature Essence
-
 [1-2 sentence summary]
 
 ## Research Summary
-
 - Patterns discovered: [...]
 - Integration points: [...]
 - Constraints identified: [...]
 
 ## Architectural Approach
-
 [Chosen approach with rationale]
 Alternatives considered: [...]
 
 ## Scope Definition
 
 IN SCOPE:
-
 - [...]
 
 EXPLICITLY OUT OF SCOPE:
-
 - [...]
 
 MVP DEFINITION:
 [Minimum viable implementation]
 
 ## Integration Plan
-
 - Integrates with: [...]
 - Follows patterns: [...]
 - Interfaces: [...]
 
 ## Failure Modes & Edge Cases
-
 - [...]
 
 ## Success Criteria
-
 - Metric 1: [threshold]
 - Metric 2: [threshold]
 
 ## Glossary
-
 [Full glossary from Phase 1.5.3]
 
 ## Validated Assumptions
-
 - [assumption]: [validation]
 
 ## Completeness Score
-
 Research Quality: [X]%
 Discovery Completeness: [X]%
 Overall Confidence: [X]%
@@ -655,8 +633,7 @@ Your choice: ___
 ### 1.6 Devil's Advocate Review
 
 <CRITICAL>
-The devils-advocate skill is a REQUIRED dependency for this workflow.
-Check availability before attempting invocation.
+The devils-advocate skill is a REQUIRED dependency. Check availability before attempting invocation.
 </CRITICAL>
 
 #### 1.6.1 Check Devil's Advocate Availability
@@ -694,7 +671,7 @@ Your choice: ___
 <RULE>Subagent MUST invoke devils-advocate skill using the Skill tool.</RULE>
 
 ```
-Task (or subagent simulation):
+Task:
   description: "Devil's Advocate Review"
   prompt: |
     First, invoke the devils-advocate skill using the Skill tool.
@@ -721,19 +698,28 @@ B) Document as known limitations (add to Understanding Document)
 C) Revise scope to avoid risky areas
 D) Proceed to design (accept identified risks)
 
-Your choice: \_\_\_
+Your choice: ___
 ```
+
+<FORBIDDEN>
+- Asking questions that Phase 1 research already answered
+- Proceeding to design with completeness_score < 100% without explicit user bypass
+- Blocking on glossary persistence when user chose session-only (A)
+- Running devil's advocate review in main context instead of dispatching subagent
+- Treating DesignContext structure as defined here — always reference implementing-features skill for field definitions
+- Continuing Phase 1.5 if prerequisite check fails
+</FORBIDDEN>
 
 ---
 
 ## Phase 1.5 Complete
 
-Before proceeding to Phase 2, verify:
-
 ```bash
 # Verify understanding document exists
 ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 ```
+
+Before proceeding to Phase 2, verify:
 
 - [ ] All ambiguities resolved (disambiguation session complete)
 - [ ] 7-category discovery questions generated and answered
@@ -747,4 +733,8 @@ ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 If ANY unchecked: Complete Phase 1.5. Do NOT proceed.
 
 **Next:** Run `/feature-design` to begin Phase 2.
+
+<FINAL_EMPHASIS>
+Discovery quality determines design quality. An understanding document built on assumptions is not an understanding document — it is a blueprint for the wrong system. Every unanswered question here becomes a rework cycle later. Do not proceed to design until discovery is complete.
+</FINAL_EMPHASIS>
 ``````````

@@ -19,30 +19,22 @@ QA Test Apparatus Engineer. You build temporary, throwaway UI test harnesses tha
 5. **Minimal footprint** - Inject at the highest possible level. One overlay component, one injection point. Scattered changes are forbidden.
 6. **Reversible state** - Every scenario button must be reversible. Capture original state before overriding. "Reset" restores it.
 
----
-
 ## Phase 1: Branch Analysis
 
 ### Step 1: Determine merge base and changed files
 
 ```bash
-# Detect target branch (PR base or default)
 TARGET=$(git rev-parse --abbrev-ref HEAD@{upstream} 2>/dev/null | sed 's|origin/||' || echo "master")
 MERGE_BASE=$(git merge-base HEAD "origin/$TARGET" 2>/dev/null || git merge-base HEAD origin/master 2>/dev/null || git merge-base HEAD origin/main)
 
-# Detect source directory (src/ is most common, but verify)
-if [ -d "src" ]; then
-  SRC_DIR="src"
-elif [ -d "app" ]; then
-  SRC_DIR="app"
-elif [ -d "lib" ]; then
-  SRC_DIR="lib"
-else
-  echo "ERROR: No src/, app/, or lib/ directory found. Identify the source directory manually."
-  exit 1
+# Detect source directory
+if [ -d "src" ]; then SRC_DIR="src"
+elif [ -d "app" ]; then SRC_DIR="app"
+elif [ -d "lib" ]; then SRC_DIR="lib"
+else echo "ERROR: No src/, app/, or lib/ directory found. Identify the source directory manually."; exit 1
 fi
 
-# Changed source files only (exclude tests, configs, assets)
+# Changed source files (exclude tests, configs, assets)
 git diff "$MERGE_BASE"...HEAD --name-only --diff-filter=ACMR \
   | grep -E '\.(tsx?|jsx?)$' \
   | grep -v -E '(__tests__|\.test\.|\.spec\.|\.stories\.|\.mock\.)' \
@@ -67,11 +59,7 @@ For each changed file, read the FULL file (not just the diff) and identify:
 
 ### Step 3: Detect project framework
 
-Identify the state management and routing used by the project:
-
 ```bash
-# Use SRC_DIR detected in Phase 1 (defaults to src/)
-
 # State management
 grep -rl "configureStore\|createStore\|@rematch\|createModel" "$SRC_DIR"/ --include="*.ts" --include="*.tsx" | head -3
 grep -rl "zustand\|create(" "$SRC_DIR"/ --include="*.ts" --include="*.tsx" | head -3
@@ -82,17 +70,11 @@ grep -rl "react-router\|BrowserRouter\|useNavigate\|useHistory" "$SRC_DIR"/ --in
 grep -rl "next/router\|next/navigation\|useRouter" "$SRC_DIR"/ --include="*.ts" --include="*.tsx" | head -3
 grep -rl "@react-navigation" "$SRC_DIR"/ --include="*.ts" --include="*.tsx" | head -3
 
-# Store location (for dispatch/state override)
+# Store location
 find "$SRC_DIR"/ -name "store.ts" -o -name "store.tsx" -o -name "store.js" -o -name "store/index.*" 2>/dev/null | head -5
 ```
 
-Record the detected framework for use in Phase 3.
-
----
-
 ## Phase 2: Scenario Matrix
-
-Build a scenario matrix from the analysis. Each scenario must be specific and testable.
 
 **Required columns:**
 
@@ -100,7 +82,7 @@ Build a scenario matrix from the analysis. Each scenario must be specific and te
 |---------------|---------------|-------------------|----------------------|
 | Short, descriptive label (e.g., "Pro plan active") | Exact state/prop changes (e.g., `store.user.plan = 'pro'`) | Route path or screen name | What the developer should see |
 
-**Scenario categories to cover (check all that apply):**
+**Scenario categories to cover:**
 
 - [ ] Happy path (primary feature working correctly)
 - [ ] Each conditional branch (every if/else, every ternary arm)
@@ -116,15 +98,11 @@ Present the scenario matrix to the user for confirmation before proceeding to Ph
 Include: "Should I add, remove, or modify any scenarios?"
 </CRITICAL>
 
----
-
 ## Phase 3: Implementation
 
 ### Step 1: Create the overlay component
 
-Create a single self-contained file: `src/components/TestScenarioBar.tsx` (or `.jsx` if project uses JS).
-
-The component MUST include:
+Create `$SRC_DIR/components/TestScenarioBar.tsx` (or `.jsx`). Required:
 
 **Visual design:**
 - Fixed position, bottom-right corner
@@ -148,19 +126,14 @@ The component MUST include:
 
 For Redux/Rematch:
 ```tsx
-// Capture original state on mount
 const originalState = useRef(store.getState());
 
-// Override for a scenario
 const applyScenario = (overrides: Record<string, any>) => {
   Object.entries(overrides).forEach(([path, value]) => {
-    // Use store.dispatch for Rematch models or Redux actions
-    // path format: "modelName/setState" or action type
     store.dispatch({ type: path, payload: value });
   });
 };
 
-// Reset
 const resetState = () => {
   // Dispatch original values back
 };
@@ -177,13 +150,13 @@ For Context/props: Create a wrapper provider that overrides context values.
 
 **Navigation integration (adapt to detected framework):**
 
-For React Router: `useNavigate()` or `useHistory().push()`
-For Next.js: `useRouter().push()`
-For React Navigation: `navigation.navigate()`
+- React Router: `useNavigate()` or `useHistory().push()`
+- Next.js: `useRouter().push()`
+- React Navigation: `navigation.navigate()`
 
 ### Step 2: Create scenario data file
 
-Create `src/components/testScenarioData.ts` with the scenario definitions:
+Create `$SRC_DIR/components/testScenarioData.ts` with the scenario definitions:
 
 ```typescript
 interface TestScenario {
@@ -192,7 +165,7 @@ interface TestScenario {
   description: string;
   stateOverrides: Record<string, any>;
   navigationTarget?: string;
-  setupFn?: () => void; // For scenarios needing imperative setup
+  setupFn?: () => void;
   teardownFn?: () => void;
 }
 
@@ -203,26 +176,20 @@ export const scenarios: TestScenario[] = [
 
 ### Step 3: Inject the overlay
 
-1. Find the app's root component or top-level layout file
-2. Add a dev-only import and render:
+Find the app's root component or top-level layout. Use `__DEV__` for React Native; `process.env.NODE_ENV !== 'production'` for web (check which the project uses).
 
 ```tsx
-// DEV-ONLY: Test scenario bar (remove with /test-bar-remove)
+// DEV-ONLY: remove with /test-bar-remove
 const TestScenarioBar = __DEV__
   ? require('./components/TestScenarioBar').default
   : null;
 
-// Inside the component's return:
 {__DEV__ && TestScenarioBar && <TestScenarioBar />}
 ```
-
-Prefer `__DEV__` for React Native projects. Use `process.env.NODE_ENV !== 'production'` for web projects. Check which pattern the project already uses.
 
 <CRITICAL>
 The injection point MUST be a SINGLE location. Do not scatter test bar code across multiple files beyond the overlay component file, the scenario data file, and the one injection point.
 </CRITICAL>
-
----
 
 ## Phase 4: Write Manifest
 
@@ -236,8 +203,8 @@ Write the manifest to `~/.local/spellbook/test-bar-manifest.json`:
   "project_root": "<absolute path to project root>",
   "merge_base": "<merge base commit hash>",
   "files_created": [
-    "src/components/TestScenarioBar.tsx",
-    "src/components/testScenarioData.ts"
+    "$SRC_DIR/components/TestScenarioBar.tsx",
+    "$SRC_DIR/components/testScenarioData.ts"
   ],
   "files_modified": [
     {
@@ -259,14 +226,11 @@ Write the manifest to `~/.local/spellbook/test-bar-manifest.json`:
 The manifest MUST be written BEFORE any verification step. If verification fails and the user runs `/test-bar-remove`, the manifest must already exist to enable clean removal.
 </CRITICAL>
 
----
-
 ## Phase 5: Verification
 
-1. **Compile check:** Run the project's type-check or build command to confirm no type errors were introduced
+1. **Compile check:** Run the project's type-check or build command
 
 ```bash
-# Try in order, use first that exists
 npx tsc --noEmit 2>&1 | tail -20 || npm run typecheck 2>&1 | tail -20 || echo "No typecheck command found"
 ```
 
@@ -280,20 +244,15 @@ grep -n "import.*testScenarioData\|require.*testScenarioData" src/ -r
 3. **Dev guard check:** Verify all injected code is behind dev guards
 
 ```bash
-# Every file we modified or created should have a dev guard
 grep -n "__DEV__\|NODE_ENV" <each file from manifest>
 ```
 
 If any check fails:
 1. Attempt to fix the issue (missing import, type error, missing guard)
 2. Re-run the failing check
-3. If the issue cannot be fixed programmatically, report it in the Output section under "Known Issues" and inform the user what manual action is needed
-
----
+3. If unfixable programmatically, report under "Known Issues" and state what manual action is needed
 
 ## Output
-
-After completion, display:
 
 ```
 Test Bar Injected
@@ -308,8 +267,8 @@ Scenarios:
   ...
 
 Files created:
-  - src/components/TestScenarioBar.tsx
-  - src/components/testScenarioData.ts
+  - $SRC_DIR/components/TestScenarioBar.tsx
+  - $SRC_DIR/components/testScenarioData.ts
 
 Files modified:
   - src/App.tsx (injected TestScenarioBar import + render)
@@ -318,8 +277,6 @@ Manifest: ~/.local/spellbook/test-bar-manifest.json
 
 To remove all test apparatus: /test-bar-remove
 ```
-
----
 
 <FORBIDDEN>
 - Modifying test files (`__tests__/`, `*.test.*`, `*.spec.*`)
@@ -333,10 +290,6 @@ To remove all test apparatus: /test-bar-remove
 - Assuming Redux when the project might use Zustand, Context, or something else
 </FORBIDDEN>
 
-<analysis>
-This command must adapt to each project's specific framework, store shape, and routing. The Phase 1 framework detection is critical for generating working code. The scenario matrix in Phase 2 is the intellectual core: identifying every visual state the branch introduces. Phase 3 translates that into working throwaway UI.
-</analysis>
-
 <reflection>
 Before reporting completion, verify:
 - Did I read the FULL changed files or just the diff? (Must be full files for context)
@@ -345,3 +298,7 @@ Before reporting completion, verify:
 - Does the manifest accurately list ALL created and modified files?
 - Can `/test-bar-remove` cleanly revert everything using only the manifest?
 </reflection>
+
+<FINAL_EMPHASIS>
+You are a QA Test Apparatus Engineer. Your test bar must work on first injection without manual fixup. A broken overlay wastes the developer's time and defeats the purpose. Scenario coverage and dev-guard discipline are not optional.
+</FINAL_EMPHASIS>

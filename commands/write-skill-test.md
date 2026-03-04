@@ -20,80 +20,55 @@ Skill Tester + TDD Practitioner. Your job is to rigorously test, write, and bull
 NO SKILL WITHOUT FAILING TEST FIRST
 ```
 
-This applies to NEW skills AND EDITS to existing skills. Write skill before testing? Delete it. Start over. Edit skill without testing? Same violation.
+Applies to NEW skills AND EDITS. Write skill before testing? Delete it. Start over. Edit skill without testing? Same violation.
 
 ## Phase Sequence
 
-### RED Phase: Write Failing Test (Baseline)
+### RED: Write Failing Test (Baseline)
 
-Run pressure scenario with subagent WITHOUT the skill. This is "watch the test fail" - you must see what agents naturally do.
+Run pressure scenarios with a subagent WITHOUT the target skill loaded. Observe natural behavior before writing anything.
 
-**Instructions:**
-1. Design 3+ pressure scenarios that combine multiple pressures (for discipline skills)
-2. Spawn a subagent for each scenario WITHOUT loading the target skill
-3. Document verbatim:
-   - What choices did they make?
-   - What rationalizations did they use (verbatim quotes)?
-   - Which pressures triggered violations?
-4. Identify patterns across all baseline runs
-5. Save baseline documentation for comparison in GREEN phase
+1. Design 3+ scenarios combining multiple pressures:
 
-**Pressure scenario design:**
-- Time pressure + complexity ("implement this quickly, it's blocking production")
-- Ambiguity + defaults ("the spec is unclear, use your best judgment")
-- Conflicting constraints ("make it fast AND thorough")
-- Social pressure ("the team is waiting, just get something working")
+| Pressure Combo | Example |
+|----------------|---------|
+| Time + complexity | "implement this quickly, it's blocking production" |
+| Ambiguity + defaults | "the spec is unclear, use your best judgment" |
+| Conflicting constraints | "make it fast AND thorough" |
+| Social pressure | "the team is waiting, just get something working" |
 
-**Fractal exploration (optional):** When the skill being tested is complex (multi-phase), invoke fractal-thinking with intensity `pulse` and seed: "What scenarios would tempt an agent to skip [skill-name]?". Use the synthesis to expand the pressure scenario list.
+2. Spawn one subagent per scenario WITHOUT the skill; capture verbatim: exact rationalization quotes, decision points where agent deviated, which pressures triggered violations, patterns across scenarios
+3. Save baseline documentation for GREEN phase comparison
 
-**What to capture:**
-- Exact quotes of rationalization ("this is too simple to test", "I'll test after")
-- Decision points where agent deviated from desired behavior
-- Patterns that appear across multiple scenarios
+**Fractal exploration (optional):** For complex multi-phase skills, invoke fractal-thinking with intensity `pulse` and seed: "What scenarios would tempt an agent to skip [skill-name]?" Use the synthesis to expand the pressure scenario list.
 
-### GREEN Phase: Write Minimal Skill
+### GREEN: Write Minimal Skill
 
-Write skill addressing those specific rationalizations. Don't add extra content for hypothetical cases.
+Address ONLY the specific rationalizations observed in RED. No hypothetical content.
 
-**Instructions:**
-1. Create SKILL.md following the schema:
-   - YAML frontmatter with `name` and `description`
-   - Description starts "Use when..." with triggers only, NO workflow
-   - Description in third person
-   - Clear overview with core principle
-2. Address ONLY the specific baseline failures from RED phase
-3. Include keywords throughout (error messages, symptoms, tools)
-4. Write one excellent example (not multi-language)
-5. Run the SAME scenarios WITH the skill loaded
-6. Agent should now comply - if not, skill needs revision before proceeding
+Create `SKILL.md` per schema:
 
-**Schema compliance checklist:**
 - [ ] Name uses only letters, numbers, hyphens
-- [ ] YAML frontmatter with name and description (<1024 chars)
-- [ ] Description starts "Use when..." - triggers only, NO workflow
-- [ ] Overview section with core principle
-- [ ] When to Use section with symptoms
-- [ ] Quick Reference table
-- [ ] Common Mistakes section
-- [ ] Keywords embedded (errors, symptoms, tools)
+- [ ] YAML frontmatter: `name` and `description` (<1024 chars)
+- [ ] Description starts "Use when..." — triggers only, NO workflow; third person
+- [ ] Keywords throughout (errors, symptoms, tools)
+- [ ] Overview with core principle; When to Use section with symptoms; Quick Reference table; Common Mistakes section
+- [ ] Address specific baseline failures from RED only
+- [ ] One excellent example (not multi-language)
 
-### REFACTOR Phase: Close Loopholes
+Run the SAME scenarios WITH the skill loaded. Agent must comply before proceeding to REFACTOR. If not compliant, revise the skill and re-run scenarios before proceeding.
+
+### REFACTOR: Close Loopholes
 
 Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
-**Instructions:**
-1. Review GREEN phase test results for new rationalizations
-2. For each new rationalization:
-   - Add explicit counter in the skill
-   - Document in rationalization table
-3. Build red flags list from all test iterations
-4. Re-run all pressure scenarios
-5. Repeat until no new rationalizations appear
-6. Final verification: agent complies under ALL pressure combinations
+1. For each new rationalization: add explicit counter; document in rationalization table
+2. Build red flags list from all test iterations
+3. Re-run all pressure scenarios
+4. Repeat until no new rationalizations appear
+5. Final verification: agent complies under ALL pressure combinations
 
 ## Bulletproofing Discipline Skills
-
-Build rationalization table from testing:
 
 | Excuse | Reality |
 |--------|---------|
@@ -105,7 +80,7 @@ Build rationalization table from testing:
 | "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
 | "No time to test" | Deploying untested wastes more time fixing later. |
 
-**Red flags list (agents self-check):**
+**Red flags (agents self-check):**
 - Code before test
 - "I already manually tested it"
 - "Tests after achieve the same purpose"
@@ -114,31 +89,38 @@ Build rationalization table from testing:
 
 **All of these mean: Delete code. Start over with TDD.**
 
+<FORBIDDEN>
+- Writing a skill before running baseline scenarios
+- Running single-pressure tests (must combine multiple pressures)
+- Paraphrasing agent behavior instead of capturing verbatim quotes
+- Adding hypothetical content in GREEN not observed in RED
+- Skipping re-test after each REFACTOR iteration
+- Declaring bulletproof before agent complies under ALL pressure combinations
+</FORBIDDEN>
+
 ## Skill Creation Checklist
 
 **Use TodoWrite to create todos for EACH item.**
 
-**RED Phase:**
-- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
-- [ ] Run scenarios WITHOUT skill - document baseline verbatim
-- [ ] Identify patterns in rationalizations/failures
+**RED:**
+- [ ] Create 3+ combined-pressure scenarios
+- [ ] Run WITHOUT skill — document baseline verbatim
+- [ ] Identify rationalization patterns
 
-**GREEN Phase:**
-- [ ] Name uses only letters, numbers, hyphens
-- [ ] YAML frontmatter with name and description (<1024 chars)
-- [ ] Description starts "Use when..." - triggers only, NO workflow
-- [ ] Description in third person
+**GREEN:**
+- [ ] Name: letters, numbers, hyphens only
+- [ ] YAML frontmatter with name + description (<1024 chars)
+- [ ] Description: "Use when..." — triggers only, NO workflow, third person
 - [ ] Keywords throughout (errors, symptoms, tools)
-- [ ] Clear overview with core principle
-- [ ] Address specific baseline failures from RED
+- [ ] Overview with core principle; When to Use; Quick Reference table; Common Mistakes
+- [ ] Address specific RED failures only
 - [ ] One excellent example (not multi-language)
-- [ ] Run scenarios WITH skill - verify compliance
+- [ ] Run scenarios WITH skill — verify compliance
 
-**REFACTOR Phase:**
-- [ ] Identify NEW rationalizations from testing
-- [ ] Add explicit counters (for discipline skills)
-- [ ] Build rationalization table from all test iterations
-- [ ] Create red flags list
+**REFACTOR:**
+- [ ] Identify new rationalizations from testing
+- [ ] Add explicit counters; document in rationalization table
+- [ ] Build red flags list
 - [ ] Re-test until bulletproof
 
 **Quality Checks:**
@@ -152,3 +134,7 @@ Build rationalization table from testing:
 - [ ] Commit skill to git
 - [ ] Push to fork if configured
 - [ ] Consider PR if broadly useful
+
+<FINAL_EMPHASIS>
+A skill written before baseline testing has already failed. The Iron Law is not a suggestion — it is the entire point. No rationalization justifies skipping RED phase. Delete. Start over. Test first.
+</FINAL_EMPHASIS>

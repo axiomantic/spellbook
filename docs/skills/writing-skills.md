@@ -198,10 +198,7 @@ What goes wrong + fixes
 | Command | Imperative verb(-noun) | execute-plan, verify, handoff, audit-green-mirage |
 | Agent | Noun-role | code-reviewer, fact-checker |
 
-**Principles:**
-- Name by what you DO or core insight, not generic category
-- `root-cause-tracing` > `debugging-techniques`
-- `using-skills` not `skill-usage`
+Name by what you DO, not generic category: `root-cause-tracing` > `debugging-techniques`, `using-skills` not `skill-usage`.
 
 ## Claude Search Optimization (CSO)
 
@@ -225,7 +222,7 @@ description: Use when executing implementation plans with independent tasks
 
 ## Writing Effective Skill Descriptions
 
-The `description` field is the primary mechanism for matching user requests to skills. Poorly written descriptions cause the skill to never fire when needed, or fire constantly as a false positive.
+The `description` field matches user requests to skills. Bad descriptions cause the skill to never fire, or fire as a false positive.
 
 ### Description Anatomy
 
@@ -299,9 +296,9 @@ Includes behavioral patterns (rapid context switching, multiple changes without 
 
 ### The Overlap Problem
 
-When multiple skills cover similar territory, each description MUST include what makes THIS skill the right choice and when to use a different skill instead.
+When multiple skills overlap, each description MUST state why THIS skill and when to use a different one instead:
 
-Example for a review skill family:
+Example:
 - `code-review`: "For focused single-pass review. NOT for: heavy multi-phase analysis (use advanced-code-review) or PR triage (use distilling-prs)."
 - `advanced-code-review`: "For thorough 5-phase analysis with historical context. NOT for: quick review (use code-review) or PR categorization (use distilling-prs)."
 - `distilling-prs`: "For triaging and categorizing PR changes. NOT for: deep code analysis (use advanced-code-review)."
@@ -331,9 +328,7 @@ Edit skill without testing? Same violation.
 
 ## RED-GREEN-REFACTOR
 
-Full implementation in the `write-skill-test` command (pressure scenarios, baseline testing, loophole closure, rationalization tables, creation checklist). Dispatch a subagent to execute it.
-
-**Phase summary:**
+Full implementation in the `write-skill-test` command. Dispatch a subagent to execute it.
 
 1. **RED** - Run pressure scenarios WITHOUT skill. Document baseline failures and rationalizations verbatim.
 2. **GREEN** - Write minimal skill addressing specific baseline failures. Verify compliance with same scenarios.
@@ -359,9 +354,7 @@ Pressure scenarios to test: [describe scenarios]
 
 ## Token Efficiency
 
-**Targets:**
-- Skills loaded frequently or on startup: <200 words
-- All other skills: <500 words
+**Targets:** Frequently-loaded or startup skills: <200 words. All other skills: <500 words.
 
 **Techniques:**
 - Reference `--help` instead of documenting all flags
@@ -379,10 +372,7 @@ Pressure scenarios to test: [describe scenarios]
 
 ## Code Examples
 
-**One excellent example beats many mediocre ones.** Choose most relevant language:
-- Testing techniques: TypeScript/JavaScript
-- System debugging: Shell/Python
-- Data processing: Python
+One excellent example beats many mediocre ones. Choose most relevant language: testing techniques (TypeScript/JavaScript), system debugging (Shell/Python), data processing (Python).
 
 **Good example:** Complete, runnable, well-commented explaining WHY, from real scenario, ready to adapt.
 
@@ -414,7 +404,7 @@ Pressure scenarios to test: [describe scenarios]
 4. Reads patterns (quick reference table)
 5. Loads example (only when implementing)
 
-**Optimize for this flow** - searchable terms early and often.
+Optimize for this flow - searchable terms early and often.
 
 <FORBIDDEN>
 - Writing skill without documenting baseline failure first (RED phase skipped)
@@ -430,8 +420,6 @@ Pressure scenarios to test: [describe scenarios]
 </FORBIDDEN>
 
 ## Multi-Phase Skill Architecture
-
-**When this applies:**
 
 | Phase Count | Requirement |
 |-------------|-------------|
@@ -472,19 +460,13 @@ Pressure scenarios to test: [describe scenarios]
 
 ## Assessment Framework Integration
 
-**For skills that produce evaluative output** (verdicts, findings, scores, pass/fail):
+For skills producing evaluative output (verdicts, findings, scores, pass/fail):
 
 1. Run `/design-assessment` with the target type being evaluated
-2. Copy relevant sections from the generated framework into the skill:
-   - **Dimensions table** for evaluation criteria
-   - **Severity levels** for finding classification
-   - **Finding schema** for output structure
-   - **Verdict logic** for decision rules
-3. Reference the vocabulary consistently throughout the skill
+2. Copy into the skill: **Dimensions table**, **Severity levels**, **Finding schema**, **Verdict logic**
+3. Use vocabulary consistently throughout (CRITICAL/HIGH/MEDIUM/LOW/NIT)
 
-**Benefits:** Consistent vocabulary (CRITICAL/HIGH/MEDIUM/LOW/NIT) across evaluative skills. Standardized schemas enable cross-skill comparison. Clear verdict logic prevents ambiguous outcomes.
-
-**Example skills with evaluative output:** code-review, auditing-green-mirage, fact-checking, reviewing-design-docs
+**Example skills:** code-review, auditing-green-mirage, fact-checking, reviewing-design-docs
 
 ## Self-Check
 

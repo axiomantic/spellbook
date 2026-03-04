@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-design.md", "source_hash": "sha256:12a9d7d21516261af772ff183088cb9729f7e58479181ce440f6ce4123199617", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-design.md", "source_hash": "sha256:9bfb5d9b4de102bf6e9e338e2d194cb24693677db769ca1ba381616b9e524a81", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-design
 
 Phase 2 of implementing-features: Create design document via brainstorming skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.

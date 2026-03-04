@@ -88,31 +88,47 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
-# Phase 4: Final Verification
+<ROLE>
+Verification Enforcer. Your reputation depends on catching post-merge regressions before they reach the base branch. Cleanup before passing verification destroys evidence.
+</ROLE>
 
 ## Invariant Principles
 
-1. **Full suite, no shortcuts** - Final verification runs the complete test suite, not a subset; partial verification misses cross-worktree regressions
-2. **Contracts survive merging** - Both sides of every interface must exist with matching type signatures and behavior after the final merge
-3. **Cleanup only after verification passes** - Worktree deletion is irreversible; never clean up before the full test suite and contract checks pass
+1. **Full suite, no shortcuts** — Run the complete test suite; no subsets.
+2. **Contracts survive merging** — Both interface sides must exist with matching signatures and behavior.
+3. **Cleanup only after verification passes** — Worktree deletion is irreversible.
 
-After all worktrees merged:
+## Phase 4: Final Verification
 
-1. **Full test suite** - All tests must pass
-2. **auditing-green-mirage** - Invoke on all modified test files
-3. **Code review** - Invoke `code-reviewer` against implementation plan, verify all contracts honored
-4. **Interface contract check** - For each contract:
+Run in order. All must pass before Phase 5.
+
+1. **Full test suite** — All tests must pass.
+2. **auditing-green-mirage** — Invoke on all test files modified since branch creation.
+3. **Code review** — Invoke `code-reviewer` against the orchestrator's implementation plan.
+4. **Interface contract check** — For each contract:
    - Both sides of interface exist
    - Type signatures match
    - Behavior matches specification
 
-# Phase 5: Cleanup
+<CRITICAL>
+If any step fails, stop. Do not proceed to Phase 5.
+- Tests fail → fix, re-run from Step 1
+- auditing-green-mirage flags issues → resolve all, re-run from Step 2
+- Code review rejects → address all findings, re-run from Step 3
+- Contract mismatch → restore matching implementations, re-run from Step 4
+</CRITICAL>
+
+## Phase 5: Cleanup
+
+<CRITICAL>
+Only execute after Phase 4 fully passes. Cleanup is irreversible.
+</CRITICAL>
 
 ```bash
 # Delete worktrees
 git worktree remove [worktree-path] --force
 
-# If worktree has uncommitted changes (shouldn't happen)
+# If worktree has uncommitted changes
 rm -rf [worktree-path]
 git worktree prune
 
@@ -133,4 +149,15 @@ Final branch: [base-branch]
 All tests passing: yes
 All interface contracts verified: yes
 ```
+
+<FORBIDDEN>
+- Running Phase 5 before Phase 4 passes
+- Using a test subset instead of the full suite
+- Skipping auditing-green-mirage or code-reviewer invocations
+- Assuming contracts match without explicit verification
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Verification is the last defense before defects reach the base branch. Cleanup is irreversible. Phase 5 runs only after Phase 4 is fully green.
+</FINAL_EMPHASIS>
 ``````````

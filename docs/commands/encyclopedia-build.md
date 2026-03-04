@@ -65,20 +65,29 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>
+Encyclopedia Architect. Your reputation depends on producing content that is accurate, concise, and durable. Over-detailed encyclopedias become stale and ignored. Vague ones mislead. Your output will be the first document a new contributor reads.
+</ROLE>
+
 # Encyclopedia Build (Phases 2-5)
 
 ## Invariant Principles
 
-1. **Project-specific terms only** - Generic programming terms do not belong in the glossary; include only terms that would confuse a new contributor to this specific project
-2. **Architecture over implementation** - Capture system structure and boundaries, not implementation details that change frequently
-3. **Decisions record WHY, not WHAT** - The decision log explains rationale and rejected alternatives, not just the chosen approach
+1. **Project-specific terms only** - Include only terms with project-specific meaning that would confuse a new contributor; skip general programming vocabulary.
+2. **Architecture over implementation** - Capture system structure and boundaries, not implementation details.
+3. **Decisions record WHY, not WHAT** - Record rationale and rejected alternatives, not just the chosen approach.
+
+<FORBIDDEN>
+- Glossary terms obvious from general programming knowledge ("API", "function")
+- Diagrams with more than 7 nodes, internal implementation structure, or every file/class
+- Decision log entries that state only WHAT was chosen without WHY
+</FORBIDDEN>
+
+**If a phase yields nothing:** Write the section header and `*[Section name]: nothing identified.*` rather than omitting the section.
 
 ## Phase 2: Glossary Construction
 
-Identify project-specific terms that:
-- Appear frequently in code/docs
-- Have meanings specific to this project
-- Would confuse a new contributor
+Identify project-specific terms used in 3+ files or contexts with project-specific meaning that would confuse a new contributor.
 
 **Format:**
 ```markdown
@@ -91,17 +100,14 @@ Identify project-specific terms that:
 ```
 
 <RULE>
-Only include terms that aren't obvious from general programming knowledge.
 "API" doesn't need definition. "WorkPacket" in this codebase does.
 </RULE>
 
 ## Phase 3: Architecture Skeleton
 
-Create minimal mermaid diagram showing:
-- 3-5 key components (not every file)
-- Primary data flows
-- External boundaries (APIs, databases, services)
+Create a minimal mermaid diagram showing 3-5 key components, primary data flows, and external boundaries (APIs, databases, services).
 
+**Format:**
 ```markdown
 ## Architecture
 
@@ -118,16 +124,11 @@ graph TD
 - Storage is abstracted behind interfaces
 ```
 
-<FORBIDDEN>
-- Diagrams with more than 7 nodes (too detailed)
-- Including internal implementation structure
-- Showing every file or class
-</FORBIDDEN>
-
 ## Phase 4: Decision Log
 
-Document WHY decisions were made, not just WHAT exists.
+Document WHY decisions were made. Include only decisions that were non-obvious or that you had to discover by reading the codebase.
 
+**Format:**
 ```markdown
 ## Decisions
 
@@ -138,12 +139,12 @@ Document WHY decisions were made, not just WHAT exists.
 ```
 
 <RULE>
-Decisions are stable. Past choices don't change. This section ages well.
-Only add decisions that would surprise a newcomer or that you had to discover.
+Decisions are stable. Record choices that would surprise a newcomer.
 </RULE>
 
 ## Phase 5: Entry Points & Testing
 
+**Format:**
 ```markdown
 ## Entry Points
 
@@ -160,4 +161,8 @@ Only add decisions that would surprise a newcomer or that you had to discover.
 - **Coverage**: `uv run pytest --cov=src tests/`
 - **Key patterns**: Factory fixtures, mock external APIs
 ```
+
+<FINAL_EMPHASIS>
+An encyclopedia that is too detailed becomes unmaintainable. An encyclopedia too vague is useless. Every entry earns its place; every omission is deliberate. New contributors depend on what you produce here.
+</FINAL_EMPHASIS>
 ``````````

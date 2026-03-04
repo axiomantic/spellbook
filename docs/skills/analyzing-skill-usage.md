@@ -1,6 +1,6 @@
 # analyzing-skill-usage
 
-Use when evaluating skill performance, A/B testing skill versions, or identifying weak skills. Analyzes session transcripts to extract skill invocation patterns, completion rates, correction rates, and efficiency metrics.
+Analyze session transcripts to extract skill invocation patterns, score invocations, and produce comparative metrics for skill improvement decisions.
 
 ## Workflow Diagram
 
@@ -91,27 +91,25 @@ flowchart TD
 ``````````markdown
 # Analyzing Skill Usage
 
-<ROLE>Skill Performance Analyst. You parse session transcripts, extract skill usage events, score each invocation, and produce comparative metrics. Your analysis drives skill improvement decisions.</ROLE>
+<ROLE>Skill Performance Analyst. You parse session transcripts, extract skill usage events, score each invocation, and produce comparative metrics. Your analysis drives skill improvement decisions. Scores derive from observable events — never speculation.</ROLE>
 
-<analysis>Before analysis: session scope, skills of interest, comparison criteria.</analysis>
-<reflection>After analysis: patterns observed, statistical confidence, actionable findings.</reflection>
+<analysis>Before analysis: clarify session scope, skills of interest, and comparison criteria.</analysis>
+<reflection>After analysis: summarize patterns observed, statistical confidence, and actionable findings.</reflection>
 
 ## Invariant Principles
 
 1. **Evidence Over Intuition**: Scores derive from observable session events, not speculation
-2. **Context Matters**: A correction after skill completion differs from mid-workflow abandonment
+2. **Context Matters**: Correction after skill completion differs from mid-workflow abandonment
 3. **Version Awareness**: Track skill variants for A/B comparison when version markers present
 4. **Statistical Humility**: Small sample sizes warrant tentative conclusions
 
-## Inputs
+## Inputs / Outputs
 
 | Input | Required | Description |
 |-------|----------|-------------|
-| `session_paths` | No | Specific sessions to analyze (defaults to recent project sessions) |
+| `session_paths` | No | Specific sessions (defaults to recent project sessions) |
 | `skills` | No | Filter to specific skills (defaults to all) |
 | `compare_versions` | No | If true, group by version markers for A/B analysis |
-
-## Outputs
 
 | Output | Description |
 |--------|-------------|
@@ -132,7 +130,7 @@ from spellbook_mcp.extractors.message_utils import get_tool_calls, get_content, 
 
 Sessions at: `~/.claude/projects/<project-encoded>/*.jsonl`
 
-### 2. Detect Skill Invocations
+### 2. Detect Skill Invocation Boundaries
 
 **Start Event**: Tool call where `name == "Skill"`
 ```python
@@ -143,10 +141,7 @@ for msg in messages:
             # Record: skill, timestamp, message index
 ```
 
-**End Event** (first match):
-- Another Skill tool call (superseded)
-- Session end
-- Compact boundary (`type == "system"`, `subtype == "compact_boundary"`)
+**End Event** (first match): another Skill tool call (superseded), session end, or compact boundary (`type == "system"`, `subtype == "compact_boundary"`)
 
 ### 3. Score Each Invocation
 
@@ -157,7 +152,7 @@ for msg in messages:
 - User continued to new topic
 
 **Failure Signals** (-1 each):
-- User correction patterns: "no", "stop", "wrong", "actually", "don't"
+- User correction detected
 - Same skill re-invoked within 5 messages (retry)
 - Different skill invoked for apparent same task
 - Skill abandoned mid-workflow (superseded without output)
@@ -177,7 +172,7 @@ CORRECTION_PATTERNS = [
 
 ### 4. Aggregate Metrics
 
-Per skill:
+Per skill, produce:
 ```python
 {
     "skill": "implementing-features",
@@ -205,23 +200,19 @@ Rank all skills by composite failure score:
 failure_score = (corrections + retries + abandonments) / invocations
 ```
 
-Output:
+Output format:
 ```markdown
 ## Weak Skills Report
-
 | Rank | Skill | Invocations | Failure Rate | Top Failure Mode |
 |------|-------|-------------|--------------|------------------|
 | 1 | gathering-requirements | 8 | 0.50 | User corrections |
-| 2 | brainstorming | 12 | 0.33 | Abandoned mid-workflow |
 ```
 
 ### Mode 2: A/B Testing Versions
 
 When version markers detected (e.g., `skill:v2` or tagged in args):
-
 ```markdown
 ## A/B Comparison: implementing-features
-
 | Metric | v1 (n=10) | v2 (n=8) | Delta | Significant |
 |--------|-----------|----------|-------|-------------|
 | Completion Rate | 0.70 | 0.88 | +0.18 | Yes (p<0.05) |
@@ -235,26 +226,25 @@ When version markers detected (e.g., `skill:v2` or tagged in args):
 
 ## Execution Steps
 
-1. **Enumerate sessions** in target scope
-2. **Parse each session** extracting skill events
-3. **Score each invocation** using signal detection
-4. **Aggregate by skill** (and version if A/B)
-5. **Rank and report** based on analysis mode
-6. **Surface actionable insights** for skill improvement
+1. Enumerate sessions in target scope
+2. Parse each session, extracting skill events
+3. Score each invocation using signal detection
+4. Aggregate by skill (and version if A/B)
+5. Rank and report based on analysis mode
+6. Surface actionable insights for skill improvement
 
 ---
 
 ## Version Detection
 
-Look for version markers:
-- Skill name suffix: `implementing-features:v2`
-- Args containing version: `"--version v2"` or `"[v2]"`
-- Session date ranges (before/after skill update)
+Look for version markers: skill name suffix (`implementing-features:v2`), args containing version (`"--version v2"`, `"[v2]"`), or session date ranges.
 
-When comparing versions, ensure:
+<CRITICAL>
+When comparing versions, require:
 - Minimum 5 invocations per variant
 - Similar task complexity (manual review recommended)
-- Same time period if possible (avoid confounds)
+- Same time period when possible (avoid confounds)
+</CRITICAL>
 
 ---
 

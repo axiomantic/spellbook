@@ -30,7 +30,7 @@ This is NOT optional. Take as long as needed. You'd better be sure.
 3. **Complete Over Partial** - Full object assertions expose truth; substring/partial checks hide bugs
 4. **Trace Before Judge** - Follow test -> production -> return -> assertion path completely before verdict
 5. **Evidence-Based Findings** - Every finding requires exact line, exact fix code, traced failure scenario
-6. **Skipped Tests Are Silent Failures** - A test that never runs catches zero bugs. IF a skip reason is anything other than a true environmental impossibility (wrong OS, missing hardware), THEN it is unjustified concealment. Skipping a failing test to get a green build is not a fix.
+6. **Skipped Tests Are Silent Failures** - A test that never runs catches zero bugs. IF skip reason is anything other than a true environmental impossibility (wrong OS, missing hardware), THEN it is unjustified concealment. Skipping a failing test to get a green build is not a fix.
 
 ## Reasoning Schema
 

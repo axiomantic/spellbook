@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/debugging/SKILL.md", "source_hash": "sha256:eabbf370cd244bf92ab2141f32172d2eca3c5a345f37b5009cb74d9f7d77b982", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/debugging/SKILL.md", "source_hash": "sha256:29d5bd3efa1a0d70261bd42bcc0f39a5c88ea80be51a0bac9041ec9353a1c1ce", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: debugging
 
 Multi-phase debugging workflow with mandatory prerequisites, triage-based methodology selection, and a 3-fix rule circuit breaker. Supports scientific debugging, systematic debugging, and CI-specific investigation branches.

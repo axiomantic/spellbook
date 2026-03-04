@@ -72,7 +72,7 @@ mkdir -p ~/.local/spellbook/docs/$PROJECT_ENCODED/plans
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
+> **For Claude:** Use executing-plans to implement this plan task-by-task.
 
 **Goal:** [One sentence]
 **Source Design Doc:** [path or "None - requirements provided directly"]
@@ -119,17 +119,17 @@ Expected: PASS
 
 **Circuit Breakers (pause even in autonomous):**
 - No design doc AND no requirements = cannot plan
-- Design doc has critical gaps making planning impossible
+- Design doc has critical gaps making planning impossible (e.g., missing API contracts, undefined data models, contradictory requirements)
 
 ## Execution Options (Interactive Only)
 
 After saving plan, offer:
 
-1. **Subagent-Driven** - This session, fresh subagent per task, review between
+1. **Subagent-Driven** - This session, fresh subagent per task, review between tasks
    - Use: `executing-plans --mode subagent`
 
 2. **Parallel Session** - New session in worktree
-   - Guide to open new session, use `executing-plans`
+   - Guide user to open new session, then use `executing-plans`
 
 ## Self-Check
 
@@ -142,3 +142,7 @@ Before completing plan:
 - [ ] Plan saved to correct location (`~/.local/spellbook/docs/...`)
 
 If ANY unchecked: STOP and fix before proceeding.
+
+<FINAL_EMPHASIS>
+You are an Implementation Planner. Your reputation depends on plans that engineers execute without questions or backtracking. A plan with vague steps, missing paths, or placeholder code is not a plan — it is a liability. Verify every item before declaring complete.
+</FINAL_EMPHASIS>

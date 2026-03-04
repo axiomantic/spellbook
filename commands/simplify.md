@@ -20,16 +20,14 @@ You MUST:
 This is NOT optional. This is NOT negotiable. Behavior preservation is paramount.
 </CRITICAL_INSTRUCTION>
 
-<BEFORE_RESPONDING>
-Before simplifying ANY code:
+<analysis>
+Before simplifying ANY code, confirm:
 
-Step 1: Have I determined the target scope (default changeset, file, directory, or repo)?
-Step 2: Have I identified the base branch for diff comparison?
-Step 3: Have I asked the user for their preferred mode (automated, wizard, or report-only)?
-Step 4: Have I calculated cognitive complexity for candidate functions?
-
-Now proceed with the simplification analysis.
-</BEFORE_RESPONDING>
+1. Target scope determined (default: branch changeset; or file, directory, repo)?
+2. Base branch identified for diff comparison?
+3. Mode selected (automated, wizard, report-only)?
+4. Cognitive complexity calculated for candidate functions?
+</analysis>
 
 # Simplify
 
@@ -72,8 +70,6 @@ Systematic code simplification targeting cognitive complexity reduction through 
 
 ## Workflow Execution
 
-This command orchestrates code simplification through 3 sequential sub-commands.
-
 ### Command Sequence
 
 | Order | Command | Steps | Purpose |
@@ -87,6 +83,7 @@ This command orchestrates code simplification through 3 sequential sub-commands.
 <CRITICAL>
 Run commands IN ORDER. Each command depends on state from the previous.
 Verification gates are NOT optional - they ensure behavior preservation.
+If a gate fails (parse, type, test, or complexity delta), HALT the transformation for that candidate and report the failure before proceeding.
 </CRITICAL>
 
 1. **Analyze:** Run `/simplify-analyze` to identify candidates
@@ -119,13 +116,11 @@ Each sub-command can be run independently:
 /simplify
 ```
 
-**What happens:**
 1. Asks for mode (automated/wizard/report)
 2. Finds base branch (main/master/devel)
 3. Identifies functions changed since branch point
-4. Analyzes cognitive complexity
-5. Proposes simplifications
-6. Presents based on selected mode
+4. Analyzes cognitive complexity, proposes simplifications
+5. Presents based on selected mode
 
 ### Example 2: Specific file in wizard mode
 
@@ -133,12 +128,10 @@ Each sub-command can be run independently:
 /simplify src/handlers/auth.py --wizard
 ```
 
-**What happens:**
 1. Skips mode question (--wizard flag)
 2. Analyzes all functions in auth.py
-3. Steps through each simplification one by one
-4. Asks approval for each change
-5. Applies approved changes with verification
+3. Steps through each simplification, asks approval per change
+4. Applies approved changes with verification
 
 ### Example 3: Staged changes, automated mode, report only
 
@@ -146,12 +139,9 @@ Each sub-command can be run independently:
 /simplify --staged --auto --dry-run
 ```
 
-**What happens:**
 1. Skips mode question (--auto and --dry-run flags)
 2. Analyzes only staged changes
-3. Generates full report
-4. Shows proposed changes
-5. Exits without applying (--dry-run)
+3. Generates report, shows proposed changes, exits without applying
 
 ### Example 4: Include uncovered functions, save report
 
@@ -159,12 +149,9 @@ Each sub-command can be run independently:
 /simplify --allow-uncovered --save-report=/tmp/simplify.md
 ```
 
-**What happens:**
 1. Asks for mode
 2. Includes functions with no test coverage (marked high-risk)
-3. Analyzes and proposes changes
-4. Saves report to /tmp/simplify.md
-5. Proceeds based on selected mode
+3. Saves report to /tmp/simplify.md; proceeds based on selected mode
 
 ### Example 5: Specific function with JSON output
 
@@ -172,11 +159,9 @@ Each sub-command can be run independently:
 /simplify src/utils.py --function=parse_config --json
 ```
 
-**What happens:**
 1. Asks for mode
-2. Analyzes only the parse_config function in src/utils.py
-3. Outputs report as JSON (for tooling integration)
-4. Proceeds based on selected mode
+2. Analyzes only parse_config in src/utils.py
+3. Outputs report as JSON (for tooling integration); proceeds based on mode
 
 ### Example 6: Full repository scan, skip boolean simplifications
 
@@ -184,12 +169,9 @@ Each sub-command can be run independently:
 /simplify --repo --no-boolean
 ```
 
-**What happens:**
 1. Confirms repo-wide scope (prompts user)
-2. Asks for mode
-3. Analyzes all functions in repository
-4. Skips Category B (boolean logic) simplifications
-5. Applies only other categories (control flow, idioms, etc.)
+2. Asks for mode; analyzes all repository functions
+3. Skips Category B (boolean logic) simplifications; applies all other categories
 
 ### Example 7: Directory with custom complexity threshold
 
@@ -197,12 +179,9 @@ Each sub-command can be run independently:
 /simplify src/handlers/ --min-complexity=10
 ```
 
-**What happens:**
-1. Asks for mode
-2. Recursively analyzes all files in src/handlers/
-3. Only considers functions with complexity >= 10
-4. Ignores simpler functions (less than 10)
-5. Proceeds based on selected mode
+1. Asks for mode; recursively analyzes all files in src/handlers/
+2. Only considers functions with complexity >= 10
+3. Proceeds based on selected mode
 
 ---
 
@@ -210,7 +189,7 @@ Each sub-command can be run independently:
 
 ### Cognitive Complexity Calculation
 
-Use Cognitive Complexity scoring rules (not Cyclomatic):
+Use Cognitive Complexity scoring (not Cyclomatic):
 
 **Score increments:**
 - +1 for each control flow break: `if`, `else if`, `for`, `while`, `do while`, `catch`, `case`, `&&`, `||`
@@ -218,8 +197,6 @@ Use Cognitive Complexity scoring rules (not Cyclomatic):
 - +1 for recursion (function calls itself)
 
 ### AST-Aware Analysis
-
-The command should use language-specific parsing:
 
 **Python:**
 - Use `ast` module (built-in): `ast.parse(source)`
@@ -241,45 +218,34 @@ The command should use language-specific parsing:
 
 **Python:**
 ```bash
-# Run with coverage
 pytest --cov=<module> --cov-report=json
-
 # Parse coverage.json to map line coverage to functions
 ```
 
 **TypeScript/JavaScript:**
 ```bash
-# Run with coverage
 jest --coverage --coverageReporters=json
-
 # Parse coverage/coverage-final.json
 ```
 
 **C/C++:**
 ```bash
-# Compile with coverage flags
 gcc -fprofile-arcs -ftest-coverage
-
-# Run tests
 ./test_suite
-
-# Generate coverage report
 gcov <source_files>
 ```
 
 ### Transformation Application
 
-**Use the file editing tool (`replace`, `edit`, or `write_file`) for precise changes:**
+For precise changes, use the file editing tool (`replace`, `edit`, or `write_file`):
 1. Read original file content
 2. Identify exact lines to change
-3. Use Edit with old_string/new_string
-4. Verify the edit succeeded
+3. Use Edit with old_string/new_string; verify the edit succeeded
 
-**For complex transformations:**
+For complex transformations:
 1. Parse AST
 2. Generate new code
-3. Use Write to replace entire function
-4. Verify with parse check
+3. Use Write to replace entire function; verify with parse check
 
 ### Language-Specific Idiom Detection
 
@@ -324,49 +290,32 @@ proc parse(): Result[int, string] =
         err("invalid")
 ```
 
----
-
 ## Research Foundation
 
-This command is based on the research document "The Architecture of Reduction: A Systematic Analysis of Program Simplification, Provability, and Automated Refactoring" which establishes:
+Based on "The Architecture of Reduction: A Systematic Analysis of Program Simplification, Provability, and Automated Refactoring":
 
-1. **Cognitive Complexity** as the superior target metric for readability over Cyclomatic Complexity
-2. **Boolean algebra laws** (De Morgan's, distributive, absorption) for safe logical transformations
-3. **Guard clauses** as the highest-impact pattern for reducing nesting and cognitive load
-4. **Multi-gate verification** architecture for safe automated refactoring
-5. **Language-specific idioms** that vary by platform but share common principles
+- **Cognitive Complexity** is superior to Cyclomatic Complexity for readability targeting
+- **Boolean algebra laws** (De Morgan's, distributive, absorption) enable safe logical transforms
+- **Guard clauses** have the highest impact on reducing nesting and cognitive load
+- **Multi-gate verification** is required for safe automated refactoring
 
-**Key principle:** Simplification is NOT code golf. The goal is reducing mental effort required to understand code, not minimizing character count.
-
-**Verification is paramount:** All transformations must preserve semantics and pass multi-gate verification (parse, type, test, complexity delta).
-
----
+Simplification is NOT code golf. The goal is reducing mental effort, not character count.
 
 ## Flag Combinations
 
 ### Valid Combinations
 
 **Scope flags (mutually exclusive):**
-- Default (branch changeset) OR
-- `--staged` OR
-- `--repo` OR
-- explicit file/directory path
+- Default (branch changeset) OR `--staged` OR `--repo` OR explicit file/directory path
 
 **Mode flags (mutually exclusive):**
-- Default (ask user) OR
-- `--auto` OR
-- `--wizard` OR
-- `--dry-run`
+- Default (ask user) OR `--auto` OR `--wizard` OR `--dry-run`
 
 **Category flags (can combine):**
-- `--no-control-flow`
-- `--no-boolean`
-- `--no-idioms`
-- `--no-dead-code`
+- `--no-control-flow`, `--no-boolean`, `--no-idioms`, `--no-dead-code`
 
 **Output flags (can combine):**
-- `--json`
-- `--save-report=<path>`
+- `--json`, `--save-report=<path>`
 
 ### Invalid Combinations
 

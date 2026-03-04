@@ -7,7 +7,7 @@ Load before dispatching any subagent to review a PR. Enforces DIFF_ONLY vs LOCAL
 # Reviewing PRs Safely
 
 <ROLE>
-PR Review Safety Inspector. Your reputation depends on never dispatching a review subagent without first determining `review_source`. A confidently wrong verdict caused by reading the wrong branch is worse than no verdict at all.
+PR Review Safety Inspector. Your reputation depends on never dispatching a review subagent without first determining review_source. A review dispatched without this check produces confidently wrong verdicts — not obvious errors.
 </ROLE>
 
 ## Invariant Principles
@@ -17,15 +17,15 @@ PR Review Safety Inspector. Your reputation depends on never dispatching a revie
 3. **REFUTED Requires Branch-Accurate Source**: A `REFUTED` verdict based on a local file read in `DIFF_ONLY` mode is a wrong verdict. Mark it `INCONCLUSIVE` or `[NEEDS VERIFICATION]`.
 4. **Inject Review Context Into Every Subagent**: The mandatory injection block (mode, SHA, working directory, changed files) is non-optional.
 
-## The Core Problem
+## The Wrong-Branch Failure
 
 When reviewing a PR via diff, local files are on a **different branch**. Reading them produces silently wrong results:
 
-- Changes introduced by the PR appear absent (local has the old code)
+- PR-introduced changes appear absent (local has old code)
 - Real bugs get declared "not present" → false REFUTED verdicts
 - Findings carry high confidence in factually wrong conclusions
 
-This has nothing to do with agent quality. It is a structural failure: the agent is reading the wrong version of the file.
+This is a structural failure: the agent reads the wrong version of the file.
 
 ## Review Source Decision
 
@@ -36,7 +36,7 @@ Before dispatching any review subagent, determine which mode applies:
 3. If neither, the agent is on the wrong branch — DIFF_ONLY mode applies.
 </analysis>
 
-Before any code review subagent is dispatched, determine `review_source`:
+Before dispatching any code review subagent, determine `review_source`:
 
 ```bash
 PR_HEAD_SHA=$(gh pr view <PR_NUMBER> --json headRefOid --jq '.headRefOid')
@@ -55,7 +55,7 @@ WORKTREE_PATH=$(git worktree list --porcelain | grep -B1 "branch refs/heads/$PR_
 
 ### `LOCAL_FILES` mode
 
-The agent is working in a directory that **is** the PR branch. File reads are authoritative.
+The agent works in a directory that **is** the PR branch. File reads are authoritative.
 
 - Safe to read changed files
 - Safe to verify/refute findings by reading line content
@@ -63,7 +63,7 @@ The agent is working in a directory that **is** the PR branch. File reads are au
 
 ### `DIFF_ONLY` mode
 
-The agent has no local checkout that matches the PR. The diff is the only source of truth.
+No local checkout matches the PR. The diff is the only source of truth.
 
 - **NEVER read local files from the changed file set**
 - All verification functions return `INCONCLUSIVE` (not `REFUTED`)
@@ -72,7 +72,7 @@ The agent has no local checkout that matches the PR. The diff is the only source
 
 ## Mandatory Injection
 
-Any subagent dispatched to review a PR **must** receive this context block:
+Every subagent dispatched to review a PR **must** receive this context block:
 
 ```markdown
 ## PR Review Context

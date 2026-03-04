@@ -240,7 +240,7 @@ If the subject spans multiple types, produce separate diagrams for each concern 
 
 **1.2 Scope the Traversal**
 
-Define boundaries BEFORE reading source material. Confirm with user before traversal. If operating autonomously, use default depth.
+Define boundaries BEFORE reading source material. Confirm with user; in autonomous mode, use default depth.
 
 ```
 ROOT: [starting entity/file/process]
@@ -277,9 +277,11 @@ Each level's diagrams must use consistent node IDs so cross-references are unamb
 
 ### Phase 2: Content Extraction
 
-**2.1 Systematic Traversal Protocol**
+<CRITICAL>
+Phase 2 traversal is mandatory. Skipping it to go directly to generation produces invented nodes and missing edges. There are no shortcuts here.
+</CRITICAL>
 
-Execute a depth-first traversal:
+**2.1 Systematic Traversal Protocol**
 
 ```
 QUEUE = [ROOT]
@@ -403,7 +405,6 @@ For decomposed diagrams, produce a table mapping node IDs to their detail diagra
 
 **4.3 Completeness Check**
 
-Compare diagram against source material:
 - Every file/section in scope has corresponding nodes
 - Every conditional branch from source appears as a labeled edge
 - Every skill/subagent invocation is represented

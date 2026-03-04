@@ -92,7 +92,6 @@ When invoked with `/distilling-prs-bless <pattern-id>`:
 After blessing:
 - Verify pattern appears in config file
 - Confirm future distillations will recognize pattern
-- Pattern will increase confidence for matching changes
 </reflection>
 
 ## Usage
@@ -135,7 +134,6 @@ Blessed patterns stored in:
 ## Notes
 
 - Pattern IDs come from "Discovered Patterns" section of distillation reports
-- Blessing is project-specific and persists across sessions
 - To remove a blessed pattern, manually edit the config file
 
 <FORBIDDEN>
@@ -144,4 +142,8 @@ Blessed patterns stored in:
 - Overwriting existing patterns without warning
 - Blessing built-in patterns (they're already recognized)
 </FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Blessed patterns persist and affect all future distillations. Never bless without user confirmation, never skip validation, never overwrite silently.
+</FINAL_EMPHASIS>
 ``````````

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "agents/chariot-implementer.md", "source_hash": "sha256:fe844b19b5451c8a73b313ce792bd1fd48cc6269b1c9aeaeb53f97b7bca81e41", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "agents/chariot-implementer.md", "source_hash": "sha256:7e1cc4136d9db33721c0f229eb13f5ac64de55d86e353575ad1a53cb5d925279", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: chariot-implementer
 
 Focused implementation agent that executes specifications with absolute precision. Drives implementation forward without deviation, mapping every line of code to a requirement.

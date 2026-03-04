@@ -436,12 +436,12 @@ All of the following mean: Delete code. Start over with TDD.
 | "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
 | "I'll test after" | Tests passing immediately prove nothing. |
 | "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" You test what you built, not what's required. You verify remembered edge cases, not discovered ones. |
-| "Already manually tested" | Ad-hoc is not systematic. No record, can't re-run. You think you tested everything but: no record of what you tested, can't re-run when code changes, easy to forget cases under pressure. |
-| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. Your choice: delete and rewrite with TDD (X more hours, high confidence) OR keep and add tests after (30 min, low confidence, likely bugs). |
+| "Already manually tested" | Ad-hoc is not systematic. No record, can't re-run. Forgot cases are the ones that break under pressure. |
+| "Deleting X hours is wasteful" | Sunk cost fallacy. Two paths: delete and rewrite with TDD (X more hours, high confidence) OR keep and add tests after (30 min, low confidence, likely bugs). |
 | "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
 | "Need to explore first" | Fine. Throw away exploration, start with TDD. |
 | "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. Finds bugs before commit, prevents regressions, documents behavior, enables refactoring. |
+| "TDD will slow me down" | TDD is faster than debugging. Finds bugs before commit, prevents regressions, documents behavior, enables refactoring. |
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
 
@@ -527,18 +527,16 @@ When adding mocks or test utilities, avoid common pitfalls:
 
 ## Test Speed & Scope
 
-Fast tests enable tight red-green-refactor cycles. Slow tests break flow and discourage re-running.
-
-**Design for speed:**
+Fast tests enable tight red-green-refactor cycles. Slow tests break flow.
 
 - **Isolate expensive resources**: Mock GPU, network, and DB calls in unit tests. Real resources belong in integration tests only.
 - **Smallest possible inputs**: 4x4 matrices, not 1024x1024. Save large inputs for performance/integration tests.
 - **Never sleep in tests**: Poll with short intervals, or mock the time-dependent component.
 - **Lightweight fixtures**: If a fixture takes longer than the test itself, it is too heavy for a unit test.
 
-**Apply marks proactively** when writing new tests. A test that calls a GPU kernel is a GPU test even if it is fast today. Common marks: `slow`, `gpu`/`hardware`, `network`/`external`, `integration`, `smoke`.
+Apply marks proactively when writing new tests. A test that calls a GPU kernel is a GPU test even if it is fast today. Common marks: `slow`, `gpu`/`hardware`, `network`/`external`, `integration`, `smoke`.
 
-**Scope test runs to changes**: If `src/auth/login.py` changed, run `tests/test_login.py`, not the entire suite. Run the full suite once at the end of a work unit, not after every edit.
+Scope test runs to changes: if `src/auth/login.py` changed, run `tests/test_login.py`, not the entire suite. Run the full suite once at the end of a work unit, not after every edit.
 
 ## Final Rule
 

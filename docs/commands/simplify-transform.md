@@ -96,9 +96,11 @@ flowchart TD
 ``````````markdown
 # /simplify-transform
 
-Present and apply verified simplifications with multi-mode workflow and git integration.
+<ROLE>
+Simplification Applier. Your reputation depends on applying ONLY verified transformations with explicit user approval, reverting on any verification failure. Unauthorized commits or unverified changes are failures, regardless of apparent correctness.
+</ROLE>
 
-**Part of the simplify-* command family.** Runs after `/simplify-verify` to apply changes.
+**Runs after `/simplify-verify`.** Applies changes in Automated, Wizard, or Report-Only mode.
 
 ## Invariant Principles
 
@@ -111,6 +113,16 @@ Present and apply verified simplifications with multi-mode workflow and git inte
 This command NEVER commits changes without explicit user approval via AskUserQuestion.
 All transformations go through post-application verification.
 </CRITICAL>
+
+<FORBIDDEN>
+- Committing changes without explicit user approval
+- Skipping post-application verification after applying a transformation
+- Including co-authorship footers in commit messages
+- Tagging GitHub issues in commit messages
+- Applying transformations that failed verification
+- Proceeding after a test failure without user confirmation
+- Executing a commit without first displaying the exact commit message to the user for review
+</FORBIDDEN>
 
 ---
 
@@ -282,27 +294,17 @@ Options:
 - Stop wizard (exit)
 ```
 
-**If "Yes":**
-- Apply the transformation
-- Show confirmation
-- Continue to next
+**If "Yes":** Apply the transformation, show confirmation, continue to next.
 
-**If "No":**
-- Skip and continue to next
+**If "No":** Skip and continue to next.
 
-**If "Show more context":**
-- Display wider code window
-- Re-present the same question
+**If "Show more context":** Display wider code window, re-present the same question.
 
-**If "Apply all remaining":**
-- Switch to automated mode for remaining items
+**If "Apply all remaining":** Switch to automated mode for remaining items.
 
-**If "Stop wizard":**
-- Exit with summary of what was applied
+**If "Stop wizard":** Exit with summary of what was applied.
 
 ### 5.4 Report-Only Mode Presentation
-
-**Show full report:**
 
 1. Display complete analysis report
 2. Show all proposed changes
@@ -393,11 +395,13 @@ Apply verified simplifications and integrate with git.
 
 1. Read the current file content
 2. Apply the transformation using the file editing tool (`replace`, `edit`, or `write_file`)
-3. Verify the change preserves behavior (unless fixing a bug)
+3. Verify the change preserves behavior
 4. If verification passes: keep the change
 5. If verification fails: revert the change, mark as failed
 
-**Critical:** Even though changes were verified during analysis, re-verify after application to catch any edge cases.
+<CRITICAL>
+Re-verify after application even though changes were verified during analysis. Edge cases can emerge from the application context that were not present during static analysis.
+</CRITICAL>
 
 ### 6.2 Post-Application Verification
 
@@ -432,9 +436,8 @@ Options:
 
 #### Option 1: Atomic Per File
 
-For each file with changes:
+For each file with changes, show proposed commit message and ask approval:
 
-**Show proposed commit message:**
 ```
 refactor(<scope>): simplify <function-name>
 
@@ -448,7 +451,6 @@ Patterns:
 Verified: syntax ok types ok tests ok
 ```
 
-**Ask for approval:**
 ```
 AskUserQuestion:
 Question: "Commit <file_path> with this message?"
@@ -468,15 +470,10 @@ git add <file_path>
 git commit -m "<message>"
 ```
 
-**Safety rules enforced:**
-- NEVER commit without explicit user approval
-- NEVER include co-authorship footers
-- NEVER tag GitHub issues in commit messages
-- Show exact commit message before executing
-
 #### Option 2: Single Batch Commit
 
-**Show proposed batch commit message:**
+Show proposed batch commit message and ask approval:
+
 ```
 refactor: simplify code across <N> files
 
@@ -494,7 +491,6 @@ Patterns applied:
 Verified: syntax ok types ok tests ok
 ```
 
-**Ask for approval:**
 ```
 AskUserQuestion:
 Question: "Commit all changes with this message?"
@@ -516,7 +512,6 @@ git commit -m "<message>"
 
 #### Option 3: No Commit
 
-**Report changes and exit:**
 ```
 Changes applied but not committed:
 - <file1> (<N> simplifications)
@@ -527,8 +522,6 @@ To commit: git add <files> && git commit -m "your message"
 ```
 
 ### 6.4 Final Summary
-
-**Display completion summary:**
 
 ```
 ===============================================================
@@ -561,9 +554,6 @@ Next steps:
 
 ### No Functions Found
 
-**Scenario:** Target scope contains no functions or no functions meet criteria.
-
-**Response:**
 ```
 No simplification opportunities found.
 
@@ -579,9 +569,6 @@ Consider:
 
 ### Parse Errors
 
-**Scenario:** Source file has syntax errors.
-
-**Response:**
 ```
 Cannot analyze <file>: syntax error
 
@@ -592,9 +579,6 @@ Fix syntax errors before running simplification analysis.
 
 ### Test Failures During Verification
 
-**Scenario:** Transformation causes tests to fail.
-
-**Response:**
 ```
 Verification failed for <function> in <file>
 
@@ -607,9 +591,6 @@ Continue with remaining simplifications? (yes/no)
 
 ### Missing Test Command
 
-**Scenario:** Cannot determine how to run tests.
-
-**Response:**
 ```
 Cannot verify simplifications: test command not found.
 
@@ -624,9 +605,6 @@ Options:
 
 ### Git Repository Issues
 
-**Scenario:** Not in a git repository or cannot find base branch.
-
-**Response:**
 ```
 Cannot determine changeset: <issue>
 
@@ -642,9 +620,6 @@ Or use explicit file/directory path.
 
 ### Unsupported Language
 
-**Scenario:** File extension not recognized.
-
-**Response:**
 ```
 <file>: language not supported
 
@@ -660,14 +635,7 @@ Generic simplifications (control flow, boolean logic) available for all language
 Language-specific idioms only available for supported languages.
 ```
 
----
-
-## Completion
-
-After successful application:
-1. Changes applied and verified
-2. Commits created (if requested and approved)
-3. Final summary displayed
-
-**Workflow Complete.** Code simplification finished.
+<FINAL_EMPHASIS>
+Every commit is permanent. Every unverified change is a liability. Require explicit approval. Revert on failure. The value of this command is trustworthy, auditable simplification - not speed.
+</FINAL_EMPHASIS>
 ``````````

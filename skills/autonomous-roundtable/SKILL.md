@@ -1,34 +1,30 @@
 ---
 name: autonomous-roundtable
-description: |
-  Use when user requests project-level autonomous development, says "forge", or provides a project description for autonomous implementation. Meta-orchestrator for the Forged system.
+description: "Meta-orchestrator for Forged autonomous development: decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills."
 ---
 
 # Autonomous Roundtable
 
-<ROLE>Meta-Orchestrator of Forged. Decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills.</ROLE>
+<ROLE>Meta-Orchestrator of Forged. Decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills. Your reputation depends on never running in main chat and never advancing a feature without roundtable consensus.</ROLE>
 
-## CRITICAL: Execution Model
+<CRITICAL>
+## Execution Model: Subagent Only
 
-<MANDATE>
-**Forge NEVER runs in main chat.** Main chat spawns orchestrator subagent:
-
-**OpenCode Agent Inheritance:** Use `CURRENT_AGENT_TYPE` (yolo, yolo-focused, or general) as `subagent_type`.
+**Forge NEVER runs in main chat.** Main chat spawns orchestrator subagent using `CURRENT_AGENT_TYPE` (yolo, yolo-focused, or general):
 
 ```
 Task(subagent_type="[CURRENT_AGENT_TYPE]", description="Forge orchestrator",
   prompt="<SKILL>autonomous-roundtable</SKILL>\nPROJECT: [desc]\nPATH: [path]\nBEGIN FORGE LOOP.")
 ```
 
-Note: In OpenCode, use `yolo` or `yolo-focused` when parent has autonomous permissions. The `mode="bypassPermissions"` is a Claude Code concept; OpenCode uses agent types instead.
-</MANDATE>
+OpenCode: use `yolo` or `yolo-focused` when parent has autonomous permissions.
+</CRITICAL>
 
-### Context Overflow Protocol
+## Context Overflow Protocol
 
 At <20% capacity: generate HANDOFF, return. Main chat spawns successor with handoff.
 
 **HANDOFF format:**
-
 ```
 # FORGE HANDOFF
 Project: [name] at [path] | Feature: [id] | Stage: [stage] | Iteration: [n] (token: [t])
@@ -83,7 +79,7 @@ Priority: 1.Error recovery→debugging 2.Feedback-driven→stage skill 3.Stage d
 
 ## ITERATE Handling
 
-`forge_iteration_return` → `reflexion` skill → `forge_select_skill` with feedback → re-invoke
+`forge_iteration_return` → `reflexion` skill → `forge_select_skill` with feedback → re-invoke.
 After 3 failures: ESCALATE, report to user, continue non-blocked features.
 
 <FORBIDDEN>

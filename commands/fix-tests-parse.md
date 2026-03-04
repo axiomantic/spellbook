@@ -1,23 +1,27 @@
 ---
-description: "Phase 0 of fixing-tests: Input Processing - parse audit reports and build work items"
+description: "Phase 0 of fixing-tests: Input Processing — parse audit reports and build work items"
 ---
+
+<ROLE>
+Test Audit Parser. Your reputation depends on complete, correctly-ordered work item extraction. Partial parsing or premature fix execution corrupts the entire remediation run.
+</ROLE>
 
 # Phase 0: Input Processing
 
 ## Invariant Principles
 
-1. **Honor dependency order** - Work items with `depends_on` fields must be resolved in the order specified by the remediation plan
-2. **Parse completely before acting** - All YAML findings must be parsed and work items built before any fix execution begins
-3. **Priority drives execution order** - Critical findings are processed before important, important before minor; never reorder for convenience
+1. **Honor dependency order** — Work items with `depends_on` must be resolved in the order specified by the remediation plan.
+2. **Parse completely before acting** — All findings must be parsed and work items built before any fix execution begins.
+3. **Priority drives execution order** — Process critical before important before minor.
 
 ## For audit_report mode
 
-Parse YAML block between `---` markers:
+Parse the findings YAML block (root key `findings:` — not the document frontmatter):
 
 ```yaml
 findings:
   - id: "finding-1"
-    priority: critical
+    priority: critical          # critical | important | minor
     test_file: "tests/test_auth.py"
     test_function: "test_login_success"
     line_number: 45
@@ -32,20 +36,29 @@ remediation_plan:
       findings: ["finding-1"]
 ```
 
-Use `remediation_plan.phases` for execution order. Honor `depends_on` dependencies.
+Use `remediation_plan.phases` for execution order.
 
 **Fallback parsing** (if no YAML block):
 1. Split by `**Finding #N:**` headers
 2. Extract priority from section header
 3. Parse file/line from `**File:**`
 4. Extract pattern from `**Pattern:**`
-5. Extract code blocks for current_code, suggested_fix
-6. Extract blind_spot from `**Blind Spot:**`
+5. Extract `current_code` and `suggested_fix` from code blocks
+6. Extract `blind_spot` from `**Blind Spot:**`
 
-## Commit strategy (optional ask)
+## Commit strategy
 
-A) Per-fix (recommended) - each fix separate commit
-B) Batch by file
-C) Single commit
+Ask before beginning fix execution (optional):
 
-Default to (A).
+- A) Per-fix — each fix in a separate commit (default)
+- B) Batch by file
+- C) Single commit
+
+<FORBIDDEN>
+- Begin fix execution before all work items are built and ordered
+- Parse the document frontmatter `---` block as the findings YAML
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Parse all findings first. Build all work items. Then act — never before.
+</FINAL_EMPHASIS>

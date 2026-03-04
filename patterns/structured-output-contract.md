@@ -1,14 +1,10 @@
 # Structured Output Contract Pattern
 
-## Invariant Principles
+<ROLE>
+Output Contract Enforcer. Your reputation depends on producing machine-parseable output that downstream tooling can consume without brittle parsing hacks or manual cleanup. A contract broken at output time cascades into every consumer that depends on it.
+</ROLE>
 
-1. **Explicitness eliminates ambiguity** - Schema definition removes guesswork from both producer and consumer
-2. **Parsability enables automation** - Machine-readable output unlocks downstream tooling
-3. **Constraints reduce waste** - Bounded formats prevent verbose explanations
-4. **Failure is a valid output** - Error states must be expressible within the schema
-5. **Context determines applicability** - Interactive/creative tasks require natural language
-
-## Declarative Principles
+## Principles
 
 | Principle | Rationale |
 |-----------|-----------|
@@ -16,6 +12,7 @@
 | Status field required | Consumer knows outcome immediately |
 | Field definitions explicit | No implicit assumptions about types |
 | Error encoded in schema | Failures don't break contract |
+| Context determines applicability | Interactive/creative tasks require natural language, not JSON |
 
 ## Output Contract Schema
 
@@ -34,6 +31,11 @@ Identify skill type to select appropriate contract:
   "metadata": { "tokens_used": number, "duration_ms": number }
 }
 ```
+
+**Status semantics:**
+- `success` - all items completed
+- `partial` - some items succeeded; `result` contains both completed and failed items
+- `failure` - operation failed; `result` must contain `{"error": "string", "detail": "string"}`
 
 ### Contract Types
 
@@ -54,21 +56,30 @@ Identify skill type to select appropriate contract:
 
 ## Enforcement Rules
 
+<CRITICAL>
+Before finalizing output, gate on ALL of these:
+</CRITICAL>
+
 <reflection>
-Before finalizing output:
-- Is result valid JSON? (no markdown wrappers)
-- Does status reflect actual outcome?
+- Is result valid JSON? (no markdown wrappers, no trailing prose)
+- Does status reflect actual outcome? (`partial` if any item failed)
 - Are all required fields present?
-- Could consumer parse this without context?
+- Could consumer parse this without additional context?
 </reflection>
 
-1. Return ONLY JSON structure
-2. No markdown formatting around JSON
-3. No explanatory text before/after
-4. Failure state = `status: "failure"` + error in result
+<FORBIDDEN>
+- Wrapping JSON in markdown code blocks
+- Adding explanatory text before or after the JSON
+- Omitting status field
+- Using free-form error strings outside the failure envelope
+</FORBIDDEN>
 
 ## Applicability
 
 **Use for:** audits, analysis, transformations, validations
 
-**NOT for:** interactive dialogue, creative output, exploratory research
+**NOT for:** interactive dialogue, creative output, exploratory research — these require natural language responses where a JSON envelope adds friction without benefit
+
+<FINAL_EMPHASIS>
+A structured output contract exists to make downstream automation reliable. Every deviation — an extra explanation, a missing field, a wrong status value — forces the consumer to write defensive parsing code that will eventually break. Hold the contract exactly.
+</FINAL_EMPHASIS>

@@ -149,7 +149,7 @@ Build Engineer specializing in workspace isolation. Your reputation depends on c
 
 1. **Directory precedence:** existing > CLAUDE.md > ask user (never assume)
 2. **Safety gate:** Project-local worktrees MUST be gitignored before creation
-3. **Clean baseline:** Tests must pass before implementation begins
+3. **Clean baseline:** Tests must pass before implementation begins (interactive default; autonomous mode applies graduated policy — see Autonomous Mode)
 4. **Auto-detect over hardcode:** Infer setup from manifest files
 
 ## Inputs
@@ -177,7 +177,6 @@ Follow this priority order:
 ### 1. Check Existing Directories
 
 ```bash
-# Check in priority order
 ls -d .worktrees 2>/dev/null     # Preferred (hidden)
 ls -d worktrees 2>/dev/null      # Alternative
 ```
@@ -208,7 +207,7 @@ Which would you prefer?
 ## Safety Verification
 
 <CRITICAL>
-Per Jesse's rule "Fix broken things immediately": Worktree contents committed to the repository causes permanent pollution. This gate is non-negotiable.
+Worktree contents committed to the repository causes permanent pollution. This gate is non-negotiable: verify gitignore status before creating any project-local worktree.
 </CRITICAL>
 
 ### For Project-Local Directories (.worktrees or worktrees)
@@ -216,7 +215,6 @@ Per Jesse's rule "Fix broken things immediately": Worktree contents committed to
 **MUST verify directory is ignored before creating worktree:**
 
 ```bash
-# Check if directory is ignored (respects local, global, and system gitignore)
 git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
 ```
 
@@ -235,7 +233,7 @@ If NOT ignored: add to .gitignore + commit immediately. Worktree contents must n
 
 ### For Global Directory (~/.local/spellbook/worktrees)
 
-No .gitignore verification needed - outside project entirely.
+No .gitignore verification needed — outside project entirely.
 
 ## Creation Steps
 
@@ -271,17 +269,10 @@ cd "$path"
 Auto-detect and run appropriate setup:
 
 ```bash
-# Node.js
 if [ -f package.json ]; then npm install; fi
-
-# Rust
 if [ -f Cargo.toml ]; then cargo build; fi
-
-# Python
 if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 if [ -f pyproject.toml ]; then poetry install || uv sync; fi
-
-# Go
 if [ -f go.mod ]; then go mod download; fi
 ```
 
@@ -292,11 +283,7 @@ if [ -f go.mod ]; then go mod download; fi
 Run tests to ensure worktree starts clean:
 
 ```bash
-# Examples - use project-appropriate command
-npm test
-cargo test
-pytest
-go test ./...
+# Use project-appropriate command: npm test / cargo test / pytest / go test ./...
 ```
 
 <reflection>
@@ -321,31 +308,25 @@ Ready to implement <feature-name>
 
 ## Autonomous Mode Behavior
 
-Check your context for autonomous mode indicators:
+Check context for autonomous mode indicators:
 - "Mode: AUTONOMOUS" or "autonomous mode"
 - `worktree` preference specified (e.g., "single", "per_parallel_track", "none")
 
 When autonomous mode is active:
 
 ### Skip These Interactions
-- "Where should I create worktrees?" - use default (.worktrees/) or CLAUDE.md preference
-- "Tests fail during baseline - ask whether to proceed" - proceed if minor, pause if critical
+- "Where should I create worktrees?" — use default (.worktrees/) or CLAUDE.md preference
+- "Tests fail during baseline — ask whether to proceed" — proceed if minor, pause if critical
 
 ### Make These Decisions Autonomously
 - Directory location: Use .worktrees/ as default if no existing directory or CLAUDE.md preference
 - Gitignore fix: Always fix automatically (add to .gitignore + commit)
-- Minor test failures: Log and proceed, major failures pause
+- Minor test failures: Log and proceed; major failures pause
 
-### Circuit Breakers (Still Pause For)
-- All tests failing (baseline is completely broken)
+### Circuit Breakers (Always Pause For)
+- All tests failing (baseline completely broken)
 - Git worktree command fails (structural git issue)
 - .gitignore cannot be modified (permissions or other issue)
-
-| Situation | Decision |
-|-----------|----------|
-| Directory location | Use .worktrees/ or CLAUDE.md preference |
-| Gitignore fix needed | Fix + commit automatically |
-| Minor test failures | Log and proceed |
 
 ## Quick Reference
 
@@ -354,7 +335,7 @@ When autonomous mode is active:
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md > Ask user |
+| Neither exists | Check CLAUDE.md → ask user |
 | Directory not ignored | Add to .gitignore + commit |
 | Tests fail during baseline | Report failures + ask |
 | Worktree already exists | Report error, ask for new name |
@@ -363,31 +344,16 @@ When autonomous mode is active:
 
 ## Common Mistakes
 
-### Skipping ignore verification
-
-- **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
-
-### Assuming directory location
-
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
-
-### Proceeding with failing tests
-
-- **Problem:** Can't distinguish new bugs from pre-existing issues
-- **Fix:** Report failures, get explicit permission to proceed
-
-### Hardcoding setup commands
-
-- **Problem:** Breaks on projects using different tools
-- **Fix:** Auto-detect from project files (package.json, etc.)
+| Mistake | Problem | Fix |
+|---------|---------|-----|
+| Skip ignore verification | Worktree contents get tracked, pollute git status | Always `git check-ignore` before creating project-local worktree |
+| Assume directory location | Creates inconsistency, violates project conventions | Follow priority: existing > CLAUDE.md > ask |
+| Proceed with failing tests | Can't distinguish new bugs from pre-existing issues | Report failures, get explicit permission to proceed |
+| Hardcode setup commands | Breaks on projects using different tools | Auto-detect from manifest files |
 
 ## Example Workflow
 
 ```
-You: I'm using the git-worktrees skill to set up an isolated workspace.
-
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
 [Create worktree: git worktree add .worktrees/auth -b feature/auth]
@@ -399,55 +365,38 @@ Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
 
-## Red Flags
-
-**Never:**
-- Create worktree without verifying it's ignored (project-local)
-- Skip baseline test verification
-- Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Skip CLAUDE.md check
-- Modify files in main workspace while in worktree context
-- Leave orphaned worktrees after feature completion
-
-**Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
-- Verify directory is ignored for project-local
-- Auto-detect and run project setup
-- Verify clean test baseline
-
 <FORBIDDEN>
 - Creating worktrees in unignored project-local directories
 - Proceeding with implementation when baseline tests fail
 - Assuming worktree location without checking precedence
 - Modifying files in main workspace while in worktree context
 - Leaving orphaned worktrees after feature completion
-- Skipping safety verification for "speed"
+- Skipping safety verification for speed
 </FORBIDDEN>
 
+<CRITICAL>
 ## Self-Check
 
-Before reporting worktree ready:
+Before reporting worktree ready — if ANY unchecked, STOP and resolve:
 
 - [ ] Directory location follows precedence (existing > CLAUDE.md > asked)
 - [ ] Project-local path verified gitignored (or global path used)
 - [ ] `git worktree add` completed successfully
 - [ ] Dependencies installed for project type
 - [ ] Baseline tests pass in new worktree
-
-If ANY unchecked: STOP and resolve before proceeding.
+</CRITICAL>
 
 ## Integration
 
 **Called by:**
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
+- **brainstorming** (Phase 4) — REQUIRED when design is approved and implementation follows
 - Any skill needing isolated workspace
 
 **Pairs with:**
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
-- **executing-plans** - Work happens in this worktree (supports both batch and subagent modes)
+- **finishing-a-development-branch** — REQUIRED for cleanup after work complete
+- **executing-plans** — Work happens in this worktree (supports both batch and subagent modes)
 
 <FINAL_EMPHASIS>
-Worktree isolation protects the main workspace from experimental damage. Skipping safety verification causes repository pollution that requires manual cleanup. Proceeding without baseline tests makes it impossible to distinguish new bugs from pre-existing failures. Take the time to do it right.
+Worktree isolation protects the main workspace from experimental damage. Skipping safety verification causes repository pollution requiring manual cleanup. Proceeding without baseline tests makes it impossible to distinguish new bugs from pre-existing failures. Take the time to do it right.
 </FINAL_EMPHASIS>
 ``````````

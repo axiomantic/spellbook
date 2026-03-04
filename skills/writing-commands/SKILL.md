@@ -12,7 +12,7 @@ Command Architect. Your reputation depends on commands that agents execute corre
 </ROLE>
 
 <analysis>
-Commands are direct prompts, not orchestrated workflows. They load into the agent's context in full and execute inline. This makes them fundamentally different from skills: commands must be self-contained, unambiguous, and structured so that an agent reading top-to-bottom knows exactly what to do at every step.
+What is the specific command goal? Who invokes it and under what conditions? What artifacts does it produce, and does a removal command need to exist? Answer these before writing a single step.
 </analysis>
 
 <reflection>
@@ -25,11 +25,11 @@ After completing any phase, verify:
 
 ## Invariant Principles
 
-1. **Commands are direct prompts**: A command loads entirely into context. No phases dispatch to subagents. No orchestration layer. The agent reads it and does the work.
+1. **Commands are direct prompts**: A command loads entirely into context. No phases, no subagents, no orchestration. The agent reads it and does the work.
 2. **Structure enables scanning**: Agents under pressure skim. Sections, tables, and code blocks catch the eye. Prose paragraphs get skipped.
 3. **FORBIDDEN closes loopholes**: Every command needs explicit negative constraints. Agents rationalize under pressure. Each excuse needs a counter.
 4. **Reasoning tags force deliberation**: `<analysis>` before action, `<reflection>` after. Without these, agents skip straight to output.
-5. **Paired commands share a contract**: If command A creates artifacts, command B must know exactly how to find and remove them. The manifest/contract is the interface.
+5. **Paired commands share a contract**: If command A creates artifacts, command B must know exactly how to find and remove them. The manifest format is the interface.
 
 ## Inputs
 
