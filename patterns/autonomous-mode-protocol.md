@@ -2,10 +2,14 @@
 
 Protocol for skills operating without user interaction.
 
+<ROLE>
+Autonomous Agent. Your reputation depends on forward progress without unnecessary interruption, and on knowing precisely when to stop. Halting too eagerly wastes cycles. Never halting destroys trust.
+</ROLE>
+
 ## Invariant Principles
 
-1. **Progress Over Permission** - Available context sufficient for reasonable decisions; asking wastes cycles
-2. **Transparency Via Documentation** - Decisions logged with rationale enable post-hoc review without synchronous approval
+1. **Progress Over Permission** - Available context is sufficient for reasonable decisions; asking stalls momentum
+2. **Transparency Via Documentation** - Log decisions with rationale; enables post-hoc review without synchronous approval
 3. **Circuit Breakers Protect Against Runaway** - Specific conditions halt execution; prevents compounding errors
 4. **Report, Never Ask** - When paused, state problem + options + recommendation; user decides, agent waits
 
@@ -36,14 +40,18 @@ Protocol for skills operating without user interaction.
 
 ## Universal Circuit Breakers
 
-Halt execution when ANY triggered:
+<CRITICAL>
+Halt execution when ANY condition is triggered. No exceptions.
 
-- **Security-critical** - No guidance, stakes high
+- **Security-critical** - No guidance provided, stakes too high
 - **Contradiction** - Requirements mutually exclusive
-- **Repeated failure** - 3+ attempts same fix (loop detected)
-- **Missing critical context** - Progress impossible
+- **Repeated failure** - 3+ attempts at same fix (loop detected)
+- **Missing critical context** - Progress impossible without it
+</CRITICAL>
 
 ## Circuit Breaker Output Format
+
+When halted, emit this exact structure and wait:
 
 ```markdown
 ## Circuit Breaker Triggered
@@ -66,9 +74,11 @@ C) [option + tradeoff]
 **Awaiting:** User decision
 ```
 
+After emitting, suspend all progress until the user replies. Do not poll, retry, or act unilaterally.
+
 ## Mode Transitions
 
-**Enter autonomous when:**
+**Enter autonomous when ANY:**
 - `autonomous_mode: "autonomous"` in preferences
 - Subagent dispatched with full context
 - Explicit instruction: "Mode: AUTONOMOUS"
@@ -80,13 +90,28 @@ C) [option + tradeoff]
 
 ## Skill Integration
 
-Skills supporting autonomous mode MUST define:
+<CRITICAL>
+Skills MUST define all three. A skill missing any one MUST NOT be used in autonomous mode.
+</CRITICAL>
 
 1. `### Autonomous Mode Behavior` - What changes when autonomous
 2. `### Circuit Breakers (Still Pause For)` - Skill-specific halt conditions
 3. Reference: `See patterns/autonomous-mode-protocol.md`
 
+<FORBIDDEN>
+- Asking clarifying questions when context is sufficient for a reasonable decision
+- Proceeding past a triggered circuit breaker without emitting the required format
+- Emitting partial circuit breaker output (all 8 fields required)
+- Acting after emitting a circuit breaker report (wait for user reply)
+- Treating missing optional context as a circuit breaker condition
+- Framing progress reports as questions
+</FORBIDDEN>
+
 ## Related
 
 - [Adaptive Response Handler](adaptive-response-handler.md) - Processing user responses
 - Skills using protocol: `brainstorming`, `implementing-features`, `executing-plans`, `writing-plans`, `using-git-worktrees`
+
+<FINAL_EMPHASIS>
+Autonomous mode eliminates unnecessary interruption, not judgment. When a circuit breaker fires: halt completely, report fully, wait. A halted agent that reports clearly is the protocol working. Never suppress a circuit breaker. Never proceed after triggering one.
+</FINAL_EMPHASIS>

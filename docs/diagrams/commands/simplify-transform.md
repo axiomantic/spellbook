@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/simplify-transform.md", "source_hash": "sha256:4a0965eaa0740a62d856a2c5a298d7c2558cf59e57db04c976110fecbe2a0f9a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/simplify-transform.md", "source_hash": "sha256:777e5712f84312846e2b11413c5fae8f58062d04c593321c4810f9cece938ac1", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: simplify-transform
 
 Present and apply verified simplifications with multi-mode workflow and git integration. Handles automated, wizard, and report-only presentation modes.

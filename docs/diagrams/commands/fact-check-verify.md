@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/fact-check-verify.md", "source_hash": "sha256:50be20233595da4dc242fb06196d0440e1f00b4e9fd242ae135821c39c04acf6", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/fact-check-verify.md", "source_hash": "sha256:c3769c5ea37747bc20a5d4ed1b209d51984971550d72600155ef07201ea0b1da", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: fact-check-verify
 
 Perform parallel verification of extracted claims using specialized agents, check AgentDB for prior findings, produce evidence-backed verdicts, and store results for future sessions.

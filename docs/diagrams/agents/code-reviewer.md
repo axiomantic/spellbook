@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "agents/code-reviewer.md", "source_hash": "sha256:c6e14c5305443ce804bb3a64d86fec7367df801c48f8fe63b3451630863c3190", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "agents/code-reviewer.md", "source_hash": "sha256:efa3d7e5ffb69cbd6d7a7b15fefea5088dea5e81dca4e04db9bb3bf1daa4cfba", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: code-reviewer
 
 Senior code review agent that validates implementations against plans and coding standards. Uses ordered review gates, evidence-based findings, and a decision matrix for verdicts.

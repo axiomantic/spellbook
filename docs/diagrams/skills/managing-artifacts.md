@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/managing-artifacts/SKILL.md", "source_hash": "sha256:fe7763b76b0d3e63a39e44123e2457e5ebccec2f8e120c3181e94f1908742d3a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/managing-artifacts/SKILL.md", "source_hash": "sha256:226646c417b526ddd6017cc7d0347b1a8f91ddccd9fc03cda3638abd7e4a8321", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: managing-artifacts
 
 Artifact routing workflow that determines the correct storage location for generated files. Computes project-encoded paths, detects multi-contributor repos, and enforces the rule that generated artifacts never litter project directories.

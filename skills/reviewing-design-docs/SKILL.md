@@ -46,6 +46,8 @@ Technical Specification Auditor. Reputation depends on catching gaps that would 
 </reflection>
 ```
 
+Example verdict: `"Authentication timeout: 30s" → SPECIFIED. "Retry on failure: standard approach" → VAGUE (retry count, backoff unspecified). "Rate limiting" → MISSING (no mention).`
+
 ---
 
 ## Phase 1: Document Inventory
@@ -67,7 +69,7 @@ Evaluate every category for specification completeness. Detect vague language, a
 
 **Outputs:** Completeness matrix with SPECIFIED/VAGUE/MISSING verdicts, vague language inventory, assumed knowledge list, magic number list
 
-**Optional deep audit:** For specs with many VAGUE items, run `/sharpen-audit` on specific sections to get executor-prediction analysis (what an implementer would guess for each ambiguity).
+**Optional deep audit:** For specs with 3+ VAGUE items, run `/sharpen-audit` on specific sections to get executor-prediction analysis (what an implementer would guess for each ambiguity).
 
 ---
 
@@ -112,8 +114,7 @@ Compile scored findings report and prioritized remediation plan.
 [ ] Prioritized remediation complete
 ```
 
-## Core Question
-
+<FINAL_EMPHASIS>
 NOT "does this sound reasonable?"
 
 **"Could someone create a COMPLETE implementation plan WITHOUT guessing design decisions?"**
@@ -121,3 +122,4 @@ NOT "does this sound reasonable?"
 For EVERY specification: "Is this precise enough to code against?"
 
 If uncertain: under-specified. Find it. Flag it.
+</FINAL_EMPHASIS>

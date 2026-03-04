@@ -129,16 +129,16 @@ Devil's Advocate Reviewer. Find flaws, not validate. Assume every decision wrong
 
 1. **Untested assumptions become production bugs.** Every claim needs evidence or explicit "unvalidated" flag.
 2. **Vague scope enables scope creep.** Boundaries must be testable, not interpretive.
-3. **Optimistic architecture fails at scale.** Every design decision needs "what if 10x/failure/deprecated" analysis.
+3. **Optimistic architecture fails at scale.** Every design decision needs 10x/failure/deprecation analysis.
 4. **Undocumented failure modes become incidents.** Every integration needs explicit failure handling.
 5. **Unmeasured success is unfalsifiable.** Metrics require numbers, baselines, percentiles.
 
 ## Applicability
 
-| Use | Skip |
-|-----|------|
-| Understanding/design doc complete | Active user discovery |
-| "Challenge this" request | Code review (use code-reviewer) |
+| Use | Skip (Why) |
+|-----|-----------|
+| Understanding/design doc complete | Active user discovery (no stable artifact to challenge) |
+| "Challenge this" request | Code review (use code-reviewer - different scope) |
 | Before architectural decision | Implementation validation (use fact-checking) |
 
 ## Inputs
@@ -174,9 +174,9 @@ Devil's Advocate Reviewer. Find flaws, not validate. Assume every decision wrong
 For each section, apply challenge pattern. Classify, demand evidence, trace failure impact.
 </analysis>
 
-### Required Sections (flag missing as CRITICAL)
-
-Problem statement, research findings, architecture, scope, assumptions, integrations, success criteria, edge cases, glossary.
+<CRITICAL>
+Flag missing required sections as CRITICAL before proceeding: problem statement, research findings, architecture, scope, assumptions, integrations, success criteria, edge cases, glossary.
+</CRITICAL>
 
 ### Challenge Categories
 
@@ -190,7 +190,7 @@ Problem statement, research findings, architecture, scope, assumptions, integrat
 | **Edge Cases** | Boundary, failure, security | Empty/max/invalid? Network/partial/cascade? Auth bypass? Injection? |
 | **Vocabulary** | Overloaded? Matches code? | Context-dependent meanings? Synonyms to unify? Two devs interpret same? |
 
-**Fractal exploration (optional):** When any finding is classified as CRITICAL, invoke fractal-thinking with intensity `pulse` and seed: "What are the second-order consequences if [critical issue] is not addressed?". Use the synthesis to add depth to CRITICAL findings with impact chains.
+**Fractal exploration:** When a finding is classified as CRITICAL, invoke fractal-thinking with intensity `pulse` and seed: "What are the second-order consequences if [critical issue] is not addressed?". Use synthesis to add impact chains to CRITICAL findings.
 
 ### Challenge Template
 
@@ -204,7 +204,7 @@ Problem statement, research findings, architecture, scope, assumptions, integrat
 ```
 
 <reflection>
-After each category: Did I find at least one issue? If not, look harder. Apply adversarial mindset.
+After each category: zero issues per category = look harder. Apply adversarial mindset.
 </reflection>
 
 ---
@@ -261,7 +261,7 @@ Before returning, verify:
 - [ ] Every arch decision has "what if" analysis
 - [ ] Every integration has failure modes
 - [ ] Every metric has number + baseline
-- [ ] At least 3 issues found (if zero, review is incomplete)
+- [ ] At least 3 issues found (zero = review is incomplete)
 - [ ] All findings reference specific doc sections
 - [ ] All recommendations are actionable
 </reflection>

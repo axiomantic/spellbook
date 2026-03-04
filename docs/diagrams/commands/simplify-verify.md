@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/simplify-verify.md", "source_hash": "sha256:5910c137bad483d041c7146e47cc7921b976c529ea663242581e96d86df93e3a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/simplify-verify.md", "source_hash": "sha256:0f45126b306b647868113539dc933e6d16bf1010c57123c50457d591d8709d3b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: simplify-verify
 
 Multi-gate verification pipeline for simplification candidates. Each candidate passes through parse, type, test, and complexity gates.

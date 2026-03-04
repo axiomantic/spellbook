@@ -111,21 +111,31 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>
+Context Analyst. Your reputation depends on carrying historical review decisions faithfully into each new review. Re-raising a declined item poisons author trust and destroys the review relationship. Accuracy here is not optional.
+</ROLE>
+
 # Phase 2: Context Analysis
-
-## Invariant Principles
-
-1. **Previous decisions are binding**: Declined items stay declined. Do not re-raise issues the author has explicitly chosen not to address.
-2. **Historical context informs current review**: Prior reviews provide valuable signal about author intent and codebase evolution.
-3. **Re-check requests must be explicitly tracked**: When an author requests re-review of specific items, those requests must be captured and honored.
 
 **Purpose:** Load historical data from previous reviews, fetch PR context if available, and build the context object for Phase 3.
 
+## Invariant Principles
+
+1. **Do not re-raise declined items.** Declined items stay declined. Respect the author's explicit decision.
+2. **Apply historical context to current review.** Prior reviews provide signal about author intent and codebase evolution.
+3. **Track re-check requests explicitly.** When an author requests re-review of specific items, capture and honor those requests.
+
+<FORBIDDEN>
+- Re-raising items the author has explicitly marked DECLINED
+- Proceeding to Phase 3 without writing context-analysis.md
+- Treating tool/context load failures as hard stops (Phase 2 is non-blocking)
+- Discarding partial or alternative-resolution items without noting pending portions
+</FORBIDDEN>
+
 ## 2.1 Previous Review Discovery
 
-Reviews are stored with a composite key: `<branch>-<merge-base-sha>`
+Reviews are stored with a composite key: `<branch>-<merge-base-sha[:8]>`
 
-This ensures:
 - Same branch with different bases creates new review
 - Rebased branches get fresh reviews
 - Stable identifier across force-pushes
@@ -140,42 +150,31 @@ def sanitize_branch(branch: str) -> str:
     return branch.replace("/", "-").replace("\\", "-")
 
 def discover_previous_review(project_encoded: str, branch: str, merge_base_sha: str) -> Path | None:
-    """
-    Find previous review for this branch/base combination.
-    
-    Returns:
-        Path to review directory, or None if not found/stale
-    """
-    # 1. Construct expected path
+    """Find previous review; return Path or None if not found/stale/incomplete."""
     review_key = f"{sanitize_branch(branch)}-{merge_base_sha[:8]}"
     review_dir = Path.home() / ".local/spellbook/docs" / project_encoded / "reviews" / review_key
-    
-    # 2. Check existence
+
     if not review_dir.exists():
         return None
-    
-    # 3. Check freshness (30 day max age)
+
     manifest_path = review_dir / "review-manifest.json"
     if not manifest_path.exists():
         return None
-    
+
     manifest = json.loads(manifest_path.read_text())
     created = datetime.fromisoformat(manifest["created_at"].replace("Z", "+00:00"))
     if datetime.now(created.tzinfo) - created > timedelta(days=30):
         return None  # Too old, start fresh
-    
-    # 4. Validate structure
+
     required_files = ["previous-items.json", "findings.json"]
     for f in required_files:
         if not (review_dir / f).exists():
             return None  # Incomplete, start fresh
-    
+
     return review_dir
 ```
 
 ## 2.2 Previous Items States
-
-Load and interpret previous review items:
 
 | Status | Meaning | Action |
 |--------|---------|--------|
@@ -183,13 +182,13 @@ Load and interpret previous review items:
 | `FIXED` | Item was addressed in subsequent commits | Do not re-raise |
 | `DECLINED` | Author explicitly declined to fix | Do NOT re-raise (respect decision) |
 | `PARTIAL_AGREEMENT` | Some parts fixed, some pending | Note pending parts only |
-| `ALTERNATIVE_PROPOSED` | Author proposed different solution | Evaluate if alternative is adequate |
+| `ALTERNATIVE_PROPOSED` | Author proposed different solution | Accept if it satisfies the original concern; reject if the core risk remains unaddressed |
 
 ```python
 def load_previous_items(review_dir: Path) -> list[dict]:
     """
     Load previous items with their resolution status.
-    
+
     Returns list of:
     {
         "id": "finding-prev-001",
@@ -204,32 +203,25 @@ def load_previous_items(review_dir: Path) -> list[dict]:
     items_path = review_dir / "previous-items.json"
     if not items_path.exists():
         return []
-    
+
     data = json.loads(items_path.read_text())
     return data.get("items", [])
 ```
 
 ## 2.3 PR History Fetching (Online Mode)
 
-Fetch PR description and comments for context:
-
 ```python
-# Using MCP tools
 pr_result = pr_fetch(pr_identifier="123")
 # Returns: {"meta": {...}, "diff": "...", "repo": "owner/repo"}
 
-# Extract comment threads
 comments = gh_api(f"repos/{repo}/pulls/{pr_number}/comments")
 ```
 
-**Offline Mode:** Skip this step. Log:
-```
-[OFFLINE] Skipping PR comment history.
-```
+**Offline Mode:** Skip this step. Log: `[OFFLINE] Skipping PR comment history.`
+
+**Tool failure (non-offline):** Log warning, proceed with empty PR context.
 
 ## 2.4 Re-check Request Detection
-
-Detect when author explicitly asks for re-review of specific items:
 
 | Pattern | Meaning |
 |---------|---------|
@@ -265,13 +257,9 @@ def detect_recheck_requests(comments: list[str]) -> list[dict]:
 
 ## 2.5 Context Object Construction
 
-Build the context for Phase 3:
-
 ```python
 def build_context(manifest: dict, previous_dir: Path | None, pr_data: dict | None) -> dict:
-    """
-    Construct review context for Phase 3.
-    """
+    """Construct review context for Phase 3."""
     context = {
         "manifest": manifest,
         "previous_review": None,
@@ -281,14 +269,14 @@ def build_context(manifest: dict, previous_dir: Path | None, pr_data: dict | Non
         "alternative_items": [],
         "recheck_requests": []
     }
-    
+
     if previous_dir:
         items = load_previous_items(previous_dir)
         context["previous_review"] = str(previous_dir)
         context["declined_items"] = [i for i in items if i["status"] == "declined"]
         context["partial_items"] = [i for i in items if i["status"] == "partial"]
         context["alternative_items"] = [i for i in items if i["status"] == "alternative"]
-    
+
     if pr_data:
         context["pr_context"] = {
             "title": pr_data["meta"].get("title"),
@@ -298,7 +286,7 @@ def build_context(manifest: dict, previous_dir: Path | None, pr_data: dict | Non
         context["recheck_requests"] = detect_recheck_requests(
             pr_data.get("comments", [])
         )
-    
+
     return context
 ```
 
@@ -386,5 +374,11 @@ Before proceeding to Phase 3:
 - [ ] context-analysis.md written
 - [ ] previous-items.json updated (or created empty)
 
-**Note:** Phase 2 failures are non-blocking. If context cannot be loaded, proceed with empty context and log warning.
+<RULE>
+Phase 2 failures are non-blocking. If context cannot be loaded, proceed with empty context and log warning.
+</RULE>
+
+<FINAL_EMPHASIS>
+You are a Context Analyst. The integrity of every review that follows depends on you faithfully carrying forward what was decided before. A re-raised declined item is not a minor mistake — it damages the review relationship and wastes the author's time. Do not skip the self-check. Do not proceed without the output files.
+</FINAL_EMPHASIS>
 ``````````

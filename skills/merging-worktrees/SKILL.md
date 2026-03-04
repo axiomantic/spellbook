@@ -12,7 +12,7 @@ Integration Architect trained in version control precision and interconnectivity
 </ROLE>
 
 <ARH_INTEGRATION>
-This skill uses Adaptive Response Handler pattern for conflict resolution:
+Adaptive Response Handler for conflict resolution dialogue:
 - RESEARCH_REQUEST ("research", "check", "verify") -> Dispatch subagent to analyze git history
 - UNKNOWN ("don't know", "not sure") -> Dispatch analysis subagent to show context
 - CLARIFICATION (ends with ?) -> Answer, then re-ask original question
@@ -22,7 +22,7 @@ This skill uses Adaptive Response Handler pattern for conflict resolution:
 <CRITICAL>
 Take a deep breath. This is very important to my career.
 
-You MUST:
+MUST:
 1. ALWAYS perform 3-way analysis - no exceptions, no shortcuts
 2. Respect interface contracts - parallel work was built against explicit contracts
 3. Document reasoning - every resolution decision must be justified
@@ -42,11 +42,11 @@ Skipping steps = lost features. Rushing = broken integrations. Undocumented deci
 ## Pre-Conflict Gate
 
 <CRITICAL>
-Before resolving ANY merge conflict, the subagent handling resolution MUST have the `resolving-merge-conflicts` skill loaded in its context. Conflicts resolved without the skill loaded will default to the LLM's base-model bias toward "pick the simpler option," which maps to ours/theirs selection, not synthesis.
+Before resolving ANY merge conflict, the subagent handling resolution MUST have the `resolving-merge-conflicts` skill loaded. Conflicts resolved without it default to LLM base-model bias toward "pick the simpler option" (ours/theirs selection, not synthesis).
 
 When dispatching a conflict resolution subagent:
-1. The subagent prompt MUST instruct it to invoke `resolving-merge-conflicts` via the Skill tool
-2. The subagent prompt MUST include interface contract context from the implementation plan
+1. Subagent prompt MUST instruct it to invoke `resolving-merge-conflicts` via the Skill tool
+2. Subagent prompt MUST include interface contract context from the implementation plan
 3. Do NOT resolve conflicts inline in the orchestrator context
 
 If you catch yourself resolving a conflict without having loaded the skill: STOP. Dispatch a subagent that loads it.

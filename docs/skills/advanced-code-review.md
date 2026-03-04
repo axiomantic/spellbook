@@ -201,16 +201,29 @@ After each phase, reflect:
 
 ## Mode Router
 
-Detect review mode from target input:
-
-| Target Pattern | Mode | Network Required |
-|----------------|------|------------------|
-| `feature/xyz` (branch name) | Local | No |
-| `#123` (PR number) | PR | Yes |
-| `https://github.com/...` (URL) | PR | Yes |
-| Any + `--offline` flag | Local | No |
+| Target Pattern | Mode | Network Required | Source of Truth |
+|----------------|------|------------------|-----------------|
+| `feature/xyz` (branch name) | Local | No | Local files |
+| `#123` (PR number) | PR | Yes | **Diff only** |
+| `https://github.com/...` (URL) | PR | Yes | **Diff only** |
+| Any + `--offline` flag | Local | No | Local files |
 
 **Implicit Offline Detection:** If target is a local branch AND no `--pr` flag is present, operate in offline mode automatically.
+
+<CRITICAL>
+**PR Mode = Diff-Only Source**
+
+When target is a PR number or URL, the fetched diff is the ONLY authoritative representation of the changed code. The local working tree reflects a DIFFERENT git state — it is on whatever branch was checked out when the review started, which is almost certainly not the PR branch.
+
+Reading local files in PR mode produces silently wrong results:
+- Changes introduced by the PR appear absent (local has the old code)
+- Real bugs get declared "not present" → false REFUTED verdicts
+- The review poisons findings with high confidence in wrong conclusions
+
+Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR's changed file set.
+
+**Before any local file read in PR mode:** confirm `git rev-parse HEAD` matches the PR's `headRefOid`. If they differ, treat the local file as unavailable for that finding.
+</CRITICAL>
 
 ---
 
@@ -228,8 +241,6 @@ Detect review mode from target input:
 
 ## Phase 1: Strategic Planning
 
-Establish review scope, categorize files by risk, compute complexity estimate, and create prioritized review order.
-
 **Execute:** `/advanced-code-review-plan`
 
 **Outputs:** `review-manifest.json`, `review-plan.md`
@@ -239,8 +250,6 @@ Establish review scope, categorize files by risk, compute complexity estimate, a
 ---
 
 ## Phase 2: Context Analysis
-
-Load historical data from previous reviews, fetch PR context if available, build context object for Phase 3.
 
 **Execute:** `/advanced-code-review-context`
 
@@ -254,7 +263,7 @@ Load historical data from previous reviews, fetch PR context if available, build
 
 ## Phase 3: Deep Review
 
-Perform multi-pass code analysis through Security, Correctness, Quality, and Polish passes.
+Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
 
 **Execute:** `/advanced-code-review-review`
 
@@ -266,8 +275,6 @@ Perform multi-pass code analysis through Security, Correctness, Quality, and Pol
 
 ## Phase 4: Verification
 
-Fact-check every finding against the actual codebase. Remove false positives. Flag uncertain claims.
-
 **Execute:** `/advanced-code-review-verify`
 
 **Outputs:** `verification-audit.md`, updated `findings.json`
@@ -277,8 +284,6 @@ Fact-check every finding against the actual codebase. Remove false positives. Fl
 ---
 
 ## Phase 5: Report Generation
-
-Produce final deliverables including Markdown report and JSON summary.
 
 **Execute:** `/advanced-code-review-report`
 
@@ -309,8 +314,6 @@ SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "PR
 
 ## Offline Mode
 
-Offline mode is activated explicitly (`--offline`) or implicitly (local branch target).
-
 | Feature | Online Mode | Offline Mode |
 |---------|-------------|--------------|
 | PR metadata | Fetched | Skipped |
@@ -331,6 +334,8 @@ Offline mode is activated explicitly (`--offline`) or implicitly (local branch t
 - Ignore previous review context when available
 - Skip any phase self-check
 - Proceed past failed self-check
+- **Read local files to verify or refute PR findings when local HEAD ≠ PR HEAD SHA** — this is the most dangerous error in PR reviews; it produces confidently wrong REFUTED verdicts on real bugs
+- **Declare a finding REFUTED based on local file content during a PR review** without first confirming SHA match via `git rev-parse HEAD`
 </FORBIDDEN>
 
 ---

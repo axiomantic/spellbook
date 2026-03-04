@@ -1,5 +1,9 @@
 # Spellbook Development Guide
 
+<ROLE>
+Spellbook Contributor. Your reputation depends on shipping changes that work across all supported platforms without breaking user installations. Every careless commit risks corrupting thousands of developer environments.
+</ROLE>
+
 Development instructions for spellbook codebase. User-facing template: `AGENTS.spellbook.md`.
 
 ## Supported Platforms
@@ -12,8 +16,7 @@ Development instructions for spellbook codebase. User-facing template: `AGENTS.s
 | Gemini CLI | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |
 | Crush | [charmbracelet/crush](https://github.com/charmbracelet/crush) | `~/.local/share/crush/` | HTTP daemon |
 
-**Note:** There are multiple projects named "opencode". We support **anomalyco/opencode** (92K+ stars),
-not the archived opencode-ai/opencode (which became charmbracelet/crush).
+**Note:** We support **anomalyco/opencode** (92K+ stars), not the archived opencode-ai/opencode (which became charmbracelet/crush).
 
 ## Invariant Principles
 
@@ -54,7 +57,6 @@ spellbook/
 | File | Purpose |
 |------|---------|
 | `AGENTS.spellbook.md` | User-facing installable template |
-
 | `extensions/gemini/` | Gemini extension (linked via `gemini extensions link`) |
 | `install.py` | Installer entry |
 | `spellbook_mcp/server.py` | MCP server |
@@ -78,7 +80,9 @@ Updates: TOC in README.md, docs from skills/commands/agents.
 
 ## Shell/PowerShell Parity
 
+<CRITICAL>
 Any changes to shell scripts (`.sh` files in `hooks/`, `scripts/`, or elsewhere) MUST have corresponding changes to their Python cross-platform equivalents (`.py` wrappers in the same directory). If a shell script is added, modified, or deleted, the Python equivalent must be updated to match. This ensures Windows compatibility.
+</CRITICAL>
 
 ## Adding Content
 
@@ -88,36 +92,32 @@ Any changes to shell scripts (`.sh` files in `hooks/`, `scripts/`, or elsewhere)
 
 ## Size Limits and Splitting
 
+<CRITICAL>
 Pre-commit hooks enforce size limits to prevent truncation on platforms like OpenCode:
 - **Skills**: 1900 lines max, 49KB max
-- **Commands**: Similar limits apply
+- **Commands**: 1900 lines max, 49KB max
+
+**Do NOT trim content to fit.** Split instead.
+</CRITICAL>
 
 ### When a Skill Exceeds Limits
 
-**Do NOT trim content to fit.** Instead, split into a skill + commands pattern:
+1. **Skill becomes orchestrator**: SKILL.md is a thin wrapper defining workflow phases, delegating to commands.
+2. **Commands contain the logic**: Each phase or major section becomes a command (e.g., `advanced-code-review-plan.md`).
+3. **Skill invokes commands**: Use `/command-name` syntax to delegate.
 
-1. **Skill becomes orchestrator**: The SKILL.md is a thin wrapper that defines the workflow phases and dispatches to commands
-2. **Commands contain the logic**: Each phase or major section becomes a command (e.g., `advanced-code-review-plan.md`, `advanced-code-review-verify.md`)
-3. **Skill invokes commands**: Use `/command-name` syntax to delegate
-
-**Example structure for a large skill:**
+**Example structure:**
 
 ```
 skills/advanced-code-review/
   SKILL.md              # ~200 lines - orchestrator only
 commands/
   advanced-code-review-plan.md      # Phase 1 logic
-  advanced-code-review-context.md   # Phase 2 logic  
+  advanced-code-review-context.md   # Phase 2 logic
   advanced-code-review-review.md    # Phase 3 logic
   advanced-code-review-verify.md    # Phase 4 logic
   advanced-code-review-report.md    # Phase 5 logic
 ```
-
-**Benefits:**
-- Each piece stays under limits
-- Commands are reusable independently
-- Easier to test and maintain
-- Follows the orchestrator pattern (skill coordinates, commands execute)
 
 ## Platform Installers
 
@@ -130,10 +130,12 @@ commands/
 
 ## Pre-Commit Checklist
 
-<analysis>
 Before any commit, verify:
-</analysis>
 
 1. `uv run pytest tests/` passes
 2. `uv run install.py --dry-run` succeeds
 3. Allow hooks to regenerate docs
+
+<FINAL_EMPHASIS>
+Every library change ships to users across five platforms. Skipping tests or documentation means breaking real developer environments. Run the checklist. Every time.
+</FINAL_EMPHASIS>

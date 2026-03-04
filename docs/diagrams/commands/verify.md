@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/verify.md", "source_hash": "sha256:a6c09aa5fdeda80188cd2913db060488a84d7734d02dec8fc8365ea87c075404", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/verify.md", "source_hash": "sha256:becaf09d3fca192a93a0df0bda7e63bf2f73dfaba9cf4f4c73f1d0390505477e", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: verify
 
 Run verification commands and confirm output before making success claims. Enforces evidence-before-assertions discipline: identify the proving command, run it fresh, read full output, then and only then state the claim with cited evidence.

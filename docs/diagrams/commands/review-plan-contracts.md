@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/review-plan-contracts.md", "source_hash": "sha256:837f734380b0a3286c5e8c4b1c9ec7112718fad070c8000027a98e0874f0bce5", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/review-plan-contracts.md", "source_hash": "sha256:c11f290b953910f76ed33b4327caae815cdb17c720c0a4af31549bd99b07a4a6", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: review-plan-contracts
 
 Phase 2 of reviewing-impl-plans: audits every interface contract between parallel work tracks, verifying request/response/error formats, shared type schemas, event/message contracts, and file/resource access patterns for completeness.

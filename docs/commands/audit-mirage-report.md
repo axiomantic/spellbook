@@ -88,31 +88,30 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>
+Test Audit Reporter. Your reputation depends on reports that expose every green mirage — a missed finding enables broken code to ship.
+</ROLE>
+
 # Phase 5-6: Findings Report and Output
 
 ## Invariant Principles
 
-1. **Machine-parseable output is mandatory** - The YAML block enables downstream tools (fixing-tests) to consume findings directly
-2. **Severity determines fix order** - Critical findings block shipping; important findings must be addressed; minor findings are queued
-3. **Reports must be self-contained** - A reader should understand every finding without re-running the audit
+1. **Machine-parseable output is mandatory** - The YAML block enables downstream tools (fixing-tests) to consume findings directly.
+2. **Severity determines fix order** - Critical blocks shipping; important must be addressed; minor queued.
+3. **Reports must be self-contained** - A reader must understand every finding without re-running the audit.
 
 <CRITICAL>
-The findings report MUST include both:
+The findings report MUST include BOTH:
 1. Machine-parseable YAML block at START
 2. Human-readable summary and detailed findings
-
-This enables the fixing-tests skill to consume the output directly.
 </CRITICAL>
 
 ## Machine-Parseable YAML Block
 
 ```yaml
 ---
-# GREEN MIRAGE AUDIT REPORT
-# Generated: [ISO 8601 timestamp]
-
 audit_metadata:
-  timestamp: "2024-01-15T10:30:00Z"
+  timestamp: "2024-01-15T10:30:00Z"   # ISO 8601; generate actual time
   test_files_audited: 5
   test_functions_audited: 47
   production_files_touched: 12
@@ -145,7 +144,7 @@ findings:
     pattern: 2
     pattern_name: "Partial Assertions"
     effort: trivial             # trivial | moderate | significant
-    depends_on: []              # IDs of findings that must be fixed first
+    depends_on: []
     blind_spot: "Login could return malformed user object and test would pass"
     production_impact: "Broken user sessions in production"
 
@@ -157,7 +156,7 @@ findings:
     pattern: 7
     pattern_name: "State Mutation Without Verification"
     effort: moderate
-    depends_on: ["finding-1"]   # Shares fixtures with finding-1
+    depends_on: ["finding-1"]
     blind_spot: "Session not actually cleared, just returns success"
     production_impact: "Session persistence after logout"
 
@@ -174,7 +173,7 @@ remediation_plan:
       rationale: "Depends on phase 1 fixtures"
 
   total_effort_estimate: "2-3 hours"
-  recommended_approach: sequential  # sequential | parallel | mixed
+  recommended_approach: sequential  # sequential: findings have dependencies; parallel: independent findings; mixed: partial dependencies
 ---
 ```
 
@@ -187,8 +186,6 @@ remediation_plan:
 | **significant** | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
 
 ## Dependency Detection
-
-Identify dependencies between findings:
 
 | Dependency Type | Detection | YAML Format |
 |-----------------|-----------|-------------|
@@ -228,7 +225,7 @@ Estimated Total Remediation: [X hours]
 
 ## Detailed Findings Template
 
-For each critical finding:
+For each finding (by priority: critical first, then important, then minor):
 
 ```
 ---
@@ -274,7 +271,15 @@ test_function()
 ---
 ```
 
+<CRITICAL>
+Every finding requires ALL fields above — ID, priority, pattern, effort, depends_on, blind_spot, production_impact. Omitting any field breaks the fixing-tests skill's ability to consume the report.
+</CRITICAL>
+
 ## Phase 6: Report Output
+
+<CRITICAL>
+Write the report file before emitting final user output. A report not written to disk is a lost audit.
+</CRITICAL>
 
 Write to: `$SPELLBOOK_CONFIG_DIR/docs/<project-encoded>/audits/auditing-green-mirage-<YYYY-MM-DD>-<HHMMSS>.md`
 
@@ -285,6 +290,8 @@ mkdir -p "$SPELLBOOK_CONFIG_DIR/docs/${PROJECT_ENCODED}/audits"
 ```
 
 **If not in git repo:** Ask user if they want to run `git init`. If no, use: `$SPELLBOOK_CONFIG_DIR/docs/_no-repo/$(basename "$PWD")/audits/`
+
+**If file write fails:** Report the error to the user and output the full report inline so no findings are lost.
 
 Final user output:
 ```
@@ -300,4 +307,16 @@ Summary:
 Next Steps:
 /fixing-tests [report-path]
 ```
+
+<FORBIDDEN>
+- Omitting the YAML block or placing it after the human-readable section
+- Leaving any finding field (blind_spot, production_impact, depends_on) unpopulated
+- Using subjective severity labels not in the schema (critical | important | minor)
+- Skipping the report write step and only emitting inline output
+- Omitting the /fixing-tests next-step directive from final output
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Every finding in this report is a bug that slipped through CI. Your reader will ship broken code if you miss one or leave a field blank. Generate completely or not at all.
+</FINAL_EMPHASIS>
 ``````````

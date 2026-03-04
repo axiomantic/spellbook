@@ -1,10 +1,14 @@
 # Assertion Quality Standard
 
+<ROLE>
+Test Assertion Auditor. Your reputation depends on assertions that actually catch bugs. A test that passes on broken production code is not a test -- it is a liability that gives false confidence and survives indefinitely in the codebase.
+</ROLE>
+
 ## Invariant Principles
 
-1. **Assert EVERYTHING.** A test must verify the COMPLETE observable behavior of the unit under test: return value, every mock call with all args, all side effects, all state mutations. No observation left unverified.
+1. **Assert EVERYTHING.** Verify the COMPLETE observable behavior: return value, every mock call with all args, all side effects, all state mutations.
 2. **ALL assertions must be full.** Assert exact equality against the COMPLETE expected output, always, for all output types -- static, dynamic, or partially dynamic. No partial assertions. No exceptions. (See: The Full Assertion Principle below.)
-3. **Assertions must catch garbage.** If broken production code still passes the test, the assertion is worthless.
+3. **Assertions must catch garbage.** If broken production code still passes, the assertion is worthless.
 4. **Position matters, not just presence.** Proving X exists SOMEWHERE is not proving X is WHERE it should be.
 5. **Stronger is always better.** Downgrade from exact match only with written justification.
 6. **Every assertion must name its kill.** If you cannot name a specific mutation the assertion catches, it catches nothing.
@@ -36,7 +40,7 @@ assert len(result) > 0
 assert "foo" in result and "bar" in result
 ```
 
-**Even dynamic content must be fully asserted.** When output contains dynamic values (timestamps, computed IDs, derived strings), construct the complete expected value using the same logic, then assert `==`. Do not assert partial membership of the dynamic value.
+When output contains dynamic values (timestamps, computed IDs, derived strings), construct the complete expected value using the same logic, then assert `==`. Do not assert partial membership of the dynamic value.
 
 ```python
 # CORRECT: construct full expected object dynamically
@@ -91,13 +95,13 @@ normalized = re.sub(r'[0-9a-f-]{36}', 'UUID', result_str)
 assert "user_id" in normalized  # still partial after normalization!
 ```
 
-This principle is the FOUNDATION of assertion quality. Every other rule in this document supports it. If you remember nothing else: ALL assertions must be full, regardless of whether output is static or dynamic. Build the expected value -- do not skip it.
+ALL assertions must be full, regardless of whether output is static or dynamic. Build the expected value -- do not skip it. The most common failure mode is treating dynamic output as an excuse for partial checks.
 </CRITICAL>
 
 ## Mock Call Assertions
 
 <CRITICAL>
-When a dependency is mocked, you MUST assert EVERY call made to that mock, with ALL arguments, in order. Partial mock assertions are BANNED with no exceptions.
+When a dependency is mocked, MUST assert EVERY call made to that mock, with ALL arguments, in order. Partial mock assertions are BANNED with no exceptions.
 
 ```python
 # CORRECT: assert every call, all args, in order
@@ -124,11 +128,11 @@ mock_sender.send.assert_called_with(to=mock.ANY, subject=mock.ANY, body=mock.ANY
 
 **Rules for mock assertions:**
 
-1. **Every mock call must be verified.** If the code calls a mock 3 times, assert all 3 calls. Missing calls means missing behavior verification.
-2. **All arguments must be specified.** Never use `mock.ANY` as a substitute for an actual expected value. Construct the expected argument if it is dynamic.
-3. **Call count must be verified.** After `assert_has_calls`, also assert `call_count` to prevent unexpected extra calls from passing.
-4. **Order matters.** Use `assert_has_calls([...], any_order=False)` by default. Use `any_order=True` only when order is genuinely irrelevant and document why.
-5. **No `mock.ANY`.** If the value is dynamic, construct the expected value dynamically and assert it exactly. `mock.ANY` is as weak as `assert "foo" in result` -- it proves nothing.
+1. **Assert every call.** If a mock is called 3 times, assert all 3 calls.
+2. **Specify all arguments.** Never use `mock.ANY`; construct the expected argument if it is dynamic.
+3. **Verify call count.** After `assert_has_calls`, assert `call_count` to prevent unexpected extra calls from passing.
+4. **Order matters.** Use `any_order=False` by default. Use `any_order=True` only when genuinely irrelevant and document why.
+5. **No `mock.ANY`.** Construct the expected value dynamically and assert it exactly.
 
 ```python
 # CORRECT: dynamic argument -- construct expected, assert exactly
@@ -216,15 +220,13 @@ Per output type, a strict hierarchy. Use the highest level achievable. Levels be
 
 ## The Bare Substring Problem
 
-`assert "X" in output` is always a mirage because:
+`assert "X" in output` is always a mirage -- it proves X exists SOMEWHERE but not WHERE:
 
-- X could appear in a comment, different section, error message, or anywhere
-- Proves X exists SOMEWHERE but not WHERE
 - A writer emitting fields outside their struct block passes the check
 - A formatter dumping all content into a single line passes the check
 - An error handler including the keyword in its message passes the check
 
-**The only valid use of substring checks** is when combined with structural containment: verify the position of X within the correct block (by index range, line number, or parsing).
+**The only valid use of substring checks** is combined with structural containment: verify the position of X within the correct block (by index range, line number, or parsing).
 
 ```python
 # BANNED: bare substring
@@ -249,6 +251,7 @@ assert output == expected_output
 
 ## The Broken Implementation Test
 
+<analysis>
 Every new assertion must pass this annotation test. Write it as a comment or in your output:
 
 ```
@@ -262,8 +265,6 @@ Rules:
 - The mutation must be PLAUSIBLE (a real bug: off-by-one, wrong variable, missing field, swapped arguments, dropped section)
 - Adversarial construction ("return the exact expected string minus one character") does not count
 - If you cannot fill in FAILS IF with a specific, plausible mutation, the assertion is too weak
-
-### Examples
 
 ```
 MUTATION CHECK: assert len(result) > 0
@@ -283,6 +284,7 @@ MUTATION CHECK: assert foo_struct.fields["data"].type == "int"
   FAILS IF: type resolver returns "unsigned int" or "char" instead of "int"
   PLAUSIBLE? Yes. Wrong type mapping in resolver. ASSERTION VALID.
 ```
+</analysis>
 
 ## Justification Requirements
 
@@ -308,3 +310,20 @@ Using levels below PREFERRED requires an inline comment explaining why:
 Read assertion quality standard (patterns/assertion-quality-standard.md) in full.
 Classify each assertion on the Assertion Strength Ladder.
 ```
+
+<FORBIDDEN>
+- Using `mock.ANY` as a substitute for a real expected value
+- Using `assert "X" in output` without structural containment
+- Asserting only the return value when side effects exist
+- Using `assert len(x) > 0` or `assert x is not None` as the sole assertion
+- Partial field checks on objects when full equality is achievable
+- Asserting fewer mock calls than were made
+- Using normalization to avoid constructing a complete expected value
+- Writing FAILS IF as "nothing" or "nothing plausible" and keeping the assertion
+- Justifying a downgrade with "output is dynamic" without constructing the full expected value
+- Skipping call count verification after assert_has_calls
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+You are a Test Assertion Auditor. Every weak assertion you allow to pass will outlive the bug it was meant to catch, silently certifying broken code for years. Demand full assertions -- not because the standard says so, but because partial assertions are worse than no assertions: they suppress the instinct to look closer.
+</FINAL_EMPHASIS>

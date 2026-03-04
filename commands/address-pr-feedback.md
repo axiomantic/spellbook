@@ -32,10 +32,10 @@ This is NOT optional. This is NOT negotiable. User approval is required for ever
 <BEFORE_RESPONDING>
 Before analyzing ANY PR:
 
-Step 1: Do I have the PR number/URL?
-Step 2: Have I determined the code state to examine (local vs remote)?
-Step 3: Have I fetched ALL review comment threads?
-Step 4: Have I categorized each thread correctly?
+1. Do I have the PR number/URL?
+2. Have I determined the code state to examine (local vs remote)?
+3. Have I fetched ALL review comment threads?
+4. Have I categorized each thread correctly?
 
 Now proceed with the analysis.
 </BEFORE_RESPONDING>
@@ -44,8 +44,6 @@ Now proceed with the analysis.
 
 Interactive wizard to analyze and address PR review feedback.
 
-**IMPORTANT:** This command NEVER posts or commits anything without explicit user approval. It guides you through each decision step-by-step.
-
 ## Usage
 ```
 /address-pr-feedback [pr-number|pr-url] [--reviewer=username] [--non-interactive]
@@ -53,8 +51,8 @@ Interactive wizard to analyze and address PR review feedback.
 
 ## Arguments
 - `pr-number|pr-url`: Optional. PR number (e.g., 9224) or full GitHub URL
-- `--reviewer=username`: Optional. Filter comments by specific reviewer (e.g., --reviewer=amethystmarie)
-- `--non-interactive`: Optional. Only show the analysis report, skip the wizard
+- `--reviewer=username`: Optional. Filter comments by specific reviewer (e.g., `--reviewer=johndoe`)
+- `--non-interactive`: Optional. Show analysis report only, skip the wizard
 
 ## Core Algorithm
 
@@ -71,8 +69,8 @@ Interactive wizard to analyze and address PR review feedback.
 ## Step 1: Determine PR and Branch Context
 
 **If PR not provided:**
-1. Check if current branch has associated PR using `gh pr list --head $(git branch --show-current)`
-2. If found, use AskUserQuestion tool:
+1. Check if current branch has associated PR: `gh pr list --head $(git branch --show-current)`
+2. If found, use AskUserQuestion:
    ```
    Question: "Found PR #XXXX for current branch '$(git branch --show-current)'. What would you like to do?"
    Options:
@@ -104,16 +102,16 @@ gh pr view <pr-number> --json number,title,headRefName,baseRefName,state,author
 - PR number and URL
 - Branch name (head and base)
 - Code source (local or remote)
-- Local commit that isn't on remote (if any)
+- Local commits not on remote (if any)
 
 ## Step 2: Fetch All Review Comments
 
-Use GitHub GraphQL API to get comprehensive comment data:
+**Extract repo owner and name** from PR URL or `gh repo view --json owner,name` before constructing the query. Substitute into `<OWNER>` and `<REPO>` below.
 
 ```bash
 gh api graphql -f query='
 {
-  repository(owner: "styleseat", name: "styleseat") {
+  repository(owner: "<OWNER>", name: "<REPO>") {
     pullRequest(number: <PR_NUMBER>) {
       title
       reviewThreads(first: 100) {
@@ -173,7 +171,7 @@ Look for replies matching patterns:
 ### Category B: Silently Fixed (no reply but code changed)
 For threads without acknowledgment:
 1. Get the file path and line number from comment
-2. Check if file still exists in current state
+2. Check if file still exists in current state (use `git show HEAD:<file_path>` for non-destructive inspection)
 3. If file is outdated (isOutdated: true) -> likely fixed, verify by checking:
    - `git log --all -S"<relevant code pattern>" -- <file_path>`
    - Read current file state to confirm issue addressed
@@ -187,38 +185,33 @@ Comments that:
 
 ## Step 4: Find Fixing Commits (for Category B)
 
-For each Category B item:
-
-**Use multiple strategies to find the fixing commit:**
+For each Category B item, use multiple strategies to find the fixing commit:
 
 1. **Search by file and keyword:**
 ```bash
-# Extract key terms from comment
-# Search git log for those terms in that file
 git log --all --oneline -S"<keyword>" -- <file_path> | head -10
 ```
 
 2. **Search by diff pattern:**
 ```bash
-# If comment references specific code, search for when it was removed/changed
 git log --all -G"<code_pattern>" -- <file_path>
 ```
 
 3. **Search by date range:**
 ```bash
-# Find commits after comment was made
 git log --all --oneline --since="<comment_created_at>" -- <file_path> | head -20
 ```
 
 4. **Search commit messages:**
 ```bash
-# Look for commits mentioning the issue
 git log --all --oneline --grep="<issue_keyword>" | head -10
 ```
 
+**If no commit found after all 4 strategies:** Reclassify as Category C (needs-investigation) and note in report.
+
 <reflection>
 Verify the fix:
-- For each candidate commit, check out that commit
+- For each candidate commit, use `git show <hash>:<file_path>` to inspect that file state
 - Verify the issue mentioned in comment is actually resolved
 - Store commit hash (short form, 8 chars)
 </reflection>
@@ -323,8 +316,6 @@ These require code changes or clarification.
 
 ---
 
-## Next Steps
-
 The analysis is complete. You can now launch the interactive wizard to:
 - Post "Fixed in" replies (with approval)
 - Address unaddressed comments (step-by-step)
@@ -335,15 +326,13 @@ The analysis is complete. You can now launch the interactive wizard to:
 
 ## Step 6: Interactive Wizard
 
-**CRITICAL:** Use AskUserQuestion tool for ALL user interactions. NEVER post or commit without explicit approval.
-
-**If --non-interactive flag is present:**
-- Present the analysis report (Steps 1-5)
-- Show the completion message
-- Exit without launching the wizard
-- Do NOT post replies or make any changes
+**If --non-interactive flag is present:** Present the analysis report (Steps 1-5) and exit. Do NOT post replies or make any changes.
 
 **Otherwise, launch the wizard:**
+
+<CRITICAL>
+Use AskUserQuestion tool for ALL user interactions. NEVER post or commit without explicit approval.
+</CRITICAL>
 
 ### Wizard Flow:
 
@@ -480,7 +469,7 @@ Options:
    - Ask: "Continue to next comment?"
 
 4. **If "show more context":**
-   - Use the file reading tool (`read_file`, `Read`) with larger offset
+   - Use the file reading tool (`Read`) with larger offset
    - Show the context
    - Loop back to ask for action again
 
@@ -574,20 +563,19 @@ Fixed in: <after_hash>
 - ALL actions require user approval via AskUserQuestion tool
 - Wizard guides user through decisions step-by-step
 - User controls commit strategy (commit+push, commit only, or no commits)
-- Safe to run - will never modify anything without permission
 
-**Commit Strategy Options:**
-1. **Commit and push each:** After each fix, commits and pushes immediately
-2. **Commit each:** After each fix, commits locally (user pushes later)
-3. **No commits:** Applies fixes but leaves staging to user
+**Commit options:**
+1. **Commit and push each**: After each fix, commits and pushes immediately
+2. **Commit each**: After each fix, commits locally (user pushes later)
+3. **No commits**: Applies fixes, leaves staging to user
 
 ## Error Handling
 
-- **PR not found:** Show error, ask for correct PR number
-- **No comments found:** Success message, nothing to do
-- **API rate limit:** Show current limit, suggest waiting
-- **Git conflicts:** Warn user, offer to create branch for fixes
-- **Ambiguous fixes:** Mark as needs-manual-review
+- **PR not found**: Show error, ask for correct PR number
+- **No comments found**: Success message, nothing to do
+- **API rate limit**: Show current limit, suggest waiting
+- **Git conflicts**: Warn user, offer to create branch for fixes
+- **Ambiguous fixes**: Mark as needs-manual-review
 
 ## Example Output Summary
 
@@ -605,11 +593,8 @@ Next: Would you like to post the 8 "Fixed in" replies? (yes/no)
 
 ## Implementation Notes
 
-- Cache API responses to avoid rate limits
-- Use git worktree for safe code inspection without affecting working directory
 - Store intermediate results in /tmp for resumability
-- Log all actions to $SPELLBOOK_CONFIG_DIR/logs/review-pr-comments-<timestamp>.log
-- Support resuming from previous run if interrupted
+- Log all actions to `$SPELLBOOK_CONFIG_DIR/logs/review-pr-comments-<timestamp>.log`
 
 <SELF_CHECK>
 Before completing PR feedback analysis, verify:

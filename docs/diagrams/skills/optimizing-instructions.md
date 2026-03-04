@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/optimizing-instructions/SKILL.md", "source_hash": "sha256:add0cee415819c2666629f8e41dd531612c17ed5736b6bbe5b2c674292b5f853", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/optimizing-instructions/SKILL.md", "source_hash": "sha256:fb1fe4c62b5fc8ad0109b1676dc2585cca14691f4fe8677939687bec2684c102", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: optimizing-instructions
 
 Optimize instruction files for token efficiency while preserving all capabilities, with a verification protocol to prevent capability regression.

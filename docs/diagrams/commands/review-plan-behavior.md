@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/review-plan-behavior.md", "source_hash": "sha256:38d97cc5aa51f4ab12e5d664204f53f233cbbfbb36db50842d416f1b3ca2fe8a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/review-plan-behavior.md", "source_hash": "sha256:0c3357a2a88075138f42012c9685a356362b7f0a74490474463618d7ce421d1b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: review-plan-behavior
 
 Phase 3 of reviewing-impl-plans: audits every code reference in the plan to ensure behaviors are verified from source rather than assumed from method names, flags the fabrication anti-pattern, and detects trial-and-error loop indicators.

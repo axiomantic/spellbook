@@ -90,7 +90,7 @@ Before ANY positive statement about work state:
 ## Evidence Requirements
 
 | Claim | Requires | Not Sufficient |
-|-------|----------|--------------|
+|-------|----------|---------------|
 | Tests pass | Output: 0 failures | Previous run, "should pass" |
 | Linter clean | Output: 0 errors | Partial check |
 | Build succeeds | Exit 0 | Linter passing |
@@ -139,19 +139,19 @@ npm run build
 
 **Agent delegation:** `Agent reports -> Check VCS diff -> Verify changes -> Report actual state`
 
-## Why
-
-- "I don't believe you" - trust broken
-- Undefined functions shipped - crash
-- Missing requirements shipped - incomplete
-- False completion -> rework cycles
-- Violates: "Honesty is core. If you lie, you'll be replaced."
-
 ## When
 
 BEFORE: Success claims, satisfaction expressions, commits, PRs, task completion, next task, agent delegation
 
 APPLIES TO: Exact phrases, paraphrases, implications, ANY communication suggesting completion
+
+## Why Evidence Matters
+
+- "I don't believe you" — trust broken permanently
+- Undefined functions shipped — crash in production
+- Missing requirements shipped — incomplete delivery
+- False completion leads to rework cycles
+- Violates: "Honesty is core. If you lie, you'll be replaced."
 
 <FORBIDDEN>
 - Claiming success without fresh command output in the same message

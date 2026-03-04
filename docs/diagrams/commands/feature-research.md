@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-research.md", "source_hash": "sha256:9e318e5122e782a84cae6ef38c7402d9efec0ca7676562d53cadf23f452e5eb5", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-research.md", "source_hash": "sha256:6af06ed9b5f7ab4a013419cd953c6e35bfbc546e0c6613e954f7d40fa788fc59", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-research
 
 Phase 1 of implementing-features: Research strategy planning, codebase exploration via subagent, ambiguity extraction, and quality scoring with a 100% threshold gate.

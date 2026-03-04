@@ -12,8 +12,8 @@ description: "Use when debugging bugs, test failures, or unexpected behavior. Tr
 1. **Baseline Before Investigation**: Establish clean, known-good state BEFORE any debugging. No baseline = no debugging.
 2. **Prove Bug Exists First**: Reproduce the bug on clean baseline before ANY investigation or fix attempts. No repro = no bug.
 3. **Triage Before Methodology**: Classify symptom. Simple bugs get direct fixes; complex bugs get structured methodology.
-4. **3-Fix Rule**: Three failed attempts signal architectural problem. Stop thrashing, question architecture.
-5. **Verification Non-Negotiable**: No fix is complete without evidence. Always invoke `/verify` after claiming resolution.
+4. **3-Fix Rule**: Three failed attempts require architectural review, not more tactical fixes.
+5. **Verification Non-Negotiable**: No fix is complete without evidence. Always invoke Phase 4 Verification after claiming resolution.
 6. **Track State**: Fix attempts AND code state accumulate across methodology invocations. Always know what state you're testing.
 7. **Evidence Over Intuition**: "I think it's fixed" is not verification.
 8. **Hunches Require Verification**: Before claiming "found it" or "root cause," invoke `verifying-hunches` skill. Eureka is hypothesis until tested.
@@ -47,31 +47,29 @@ Reset on: new bug, explicit request, verified fix.
 ## Phase 0: Prerequisites
 
 <CRITICAL>
-**THIS PHASE IS MANDATORY.** You cannot proceed to triage or investigation without completing Phase 0.
+**THIS PHASE IS MANDATORY.** Cannot proceed to triage or investigation without completing Phase 0.
 
 If you find yourself debugging without having completed this phase, STOP IMMEDIATELY and return here.
 </CRITICAL>
 
 ### 0.1 Establish Clean Baseline
 
-**Before ANY investigation, you MUST have a known-good reference state.**
+Before ANY investigation, establish a known-good reference state.
 
 ```
 BASELINE CHECKLIST:
 [ ] What is the "clean" state? (upstream main, last known working commit, fresh install)
-[ ] Have I verified I can reach that clean state?
+[ ] Can I reach that clean state?
 [ ] What does "working correctly" look like on clean state?
 [ ] Have I tested clean state to confirm it works?
 ```
 
 **If working with external code (upstream repo, dependency):**
 ```bash
-# Example: establish clean baseline
-git stash                    # Save any local changes
+git stash                    # Save local changes
 git checkout main            # Or upstream branch
 git pull                     # Get latest
-# Build/run from clean state
-# Verify expected behavior works
+# Build/run from clean state and verify expected behavior works
 ```
 
 **Record the baseline:**
@@ -82,10 +80,12 @@ BASELINE ESTABLISHED:
 - Date: [timestamp]
 ```
 
+Set `baseline_established = true`, `code_state = "clean"` in session state.
+
 ### 0.2 Prove Bug Exists
 
 <CRITICAL>
-**HARD GATE: You cannot investigate or fix a bug you haven't reproduced.**
+**HARD GATE: Cannot investigate or fix a bug you haven't reproduced.**
 
 "Someone reported X" is not reproduction.
 "I think I saw Y" is not reproduction.
@@ -112,6 +112,8 @@ BUG REPRODUCTION:
 - Reproduced: [YES / NO]
 ```
 
+Set `bug_reproduced = true` in session state on successful reproduction.
+
 **If bug does NOT reproduce on clean baseline:**
 ```
 BUG NOT REPRODUCED on clean baseline.
@@ -129,9 +131,7 @@ DO NOT proceed to investigation. Either:
 
 ### 0.3 Code State Tracking
 
-**Throughout debugging, ALWAYS know what state you're testing.**
-
-Before EVERY test, record:
+Before EVERY test, verify:
 ```
 CODE STATE CHECK:
 - Am I on clean baseline? [yes/no]
@@ -217,7 +217,7 @@ This appears to be a straightforward bug:
 Applying fix directly without methodology.
 
 [Apply fix]
-[Auto-invoke /verify]
+[Proceed to Phase 4 Verification]
 ```
 
 **Otherwise:** Proceed to 1.3
@@ -230,23 +230,31 @@ If prior attempts = "3+ attempts":
 <THREE_FIX_RULE_WARNING>
 
 You've attempted 3+ fixes without resolving this issue.
-Strong signal of ARCHITECTURAL problem, not tactical bug.
+Tactical fixes cannot solve architectural problems.
 
-**Options:**
-A) Stop - invoke architecture-review
+Options:
+A) Stop - conduct architecture review with human
 B) Continue (type "I understand the risk, continue")
 C) Escalate to human architect
 D) Create spike ticket
-
-**Why this matters:**
-- Repeated tactical fixes paper over architectural flaws
-- Each failed fix increases technical debt
-- Time thrashing could be spent on proper solution
 
 </THREE_FIX_RULE_WARNING>
 ```
 
 Wait for explicit choice. If B chosen: reset fix_attempts = 0, proceed.
+
+**Signs of architectural problem (stop and reassess when present):**
+- Each fix reveals issues elsewhere
+- "Massive refactoring" required
+- New symptoms appear with each fix
+- Pattern feels fundamentally unsound
+
+**Actions when 3-fix rule triggered:**
+1. **Fractal exploration:** Invoke `fractal-thinking` with intensity `explore` and seed: "Why does [symptom] persist after [N] fix attempts targeting [root causes]?" Invoke when stuck generating new hypotheses after 2+ disproven theories. Use synthesis to produce new hypothesis families.
+2. Question architecture (not just implementation)
+3. Discuss with human before more fixes
+4. Consider refactoring vs. tactical fixes
+5. Document the pattern issue
 
 ## Phase 2: Methodology Selection
 
@@ -270,7 +278,7 @@ B) systematic debugging
    - Better when test reveals production bug
 ```
 
-Present recommendation with rationale, respect user choice (with warning if suboptimal).
+Present recommendation with rationale. Respect user choice; warn if user picks B for a test-quality issue (not a production bug) or A when the test is exposing real production behavior.
 
 ## Phase 3: Execute Methodology
 
@@ -304,7 +312,7 @@ def after_fix_attempt(succeeded: bool):
     fix_attempts += 1
 
     if succeeded:
-        invoke_verify()
+        invoke_phase4_verification()
     else:
         if fix_attempts >= 3:
             show_three_fix_warning()
@@ -314,6 +322,8 @@ def after_fix_attempt(succeeded: bool):
 ```
 
 ### If "Just Fix It" Chosen
+
+When user explicitly requests skipping methodology:
 
 ```
 Proceeding with direct fix (methodology skipped).
@@ -382,18 +392,14 @@ WARNING: Lower success rate and higher rework risk.
 [ ] Verified secrets/credentials are set
 [ ] Confirmed network access (registries, APIs)
 [ ] Checked for CI-specific code paths (CI=true, etc.)
+[ ] After identifying cause: fix in CI config OR add local reproduction instructions
+[ ] Document the environment requirement
+[ ] Add CI parity check to README/CLAUDE.md
 ```
-
-### Resolution
-
-After identifying CI-specific cause:
-1. Fix in CI config OR add local reproduction instructions
-2. Document the environment requirement
-3. Consider adding CI parity check to README/CLAUDE.md
 
 ## Phase 4: Verification
 
-<CRITICAL>Auto-invoke `/verify` after EVERY fix claim. Not optional.</CRITICAL>
+<CRITICAL>Auto-invoke Phase 4 Verification after EVERY fix claim. Not optional.</CRITICAL>
 
 Verification confirms:
 - Original symptom no longer occurs
@@ -409,25 +415,6 @@ Verification failed. Bug not resolved.
 Returning to debugging...
 
 [Increment fix_attempts, check 3-fix rule, continue]
-```
-
-## 3-Fix Rule
-
-```
-After 3 failed attempts: STOP.
-
-Signs of architectural problem:
-- Each fix reveals issues elsewhere
-- "Massive refactoring" required
-- New symptoms appear with each fix
-- Pattern feels fundamentally unsound
-
-Actions:
-1. **Fractal exploration (optional):** When the 3-Fix Rule triggers (3 failed fix attempts), invoke fractal-thinking with intensity `explore` and seed: "Why does [symptom] persist after [N] fix attempts targeting [root causes]?". Use the synthesis to produce new hypothesis families to investigate.
-2. Question architecture (not just implementation)
-3. Discuss with human before more fixes
-4. Consider refactoring vs. tactical fixes
-5. Document the pattern issue
 ```
 
 ## Anti-Patterns
@@ -476,7 +463,7 @@ Actions:
 ```
 [ ] Fix attempts tracked throughout session
 [ ] 3-fix rule checked if attempts >= 3
-[ ] Verification command invoked after fix
+[ ] Phase 4 Verification invoked after fix
 [ ] User informed of session outcome
 [ ] If methodology skipped, warning was shown
 [ ] Code returned to clean state (or changes documented)

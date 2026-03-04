@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/audit-green-mirage.md", "source_hash": "sha256:08d918c35ec96ef5014383e0785cfedf14c40d18cc023ae3584bfda914d62dc2", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/audit-green-mirage.md", "source_hash": "sha256:c3db0af1f80ee115c85c6be6c5338f1cf0a6ce69f16cd58b035cf4236cafe62b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: audit-green-mirage
 
 Audit test suites for Green Mirage anti-patterns: tests that pass but do not verify behavior.

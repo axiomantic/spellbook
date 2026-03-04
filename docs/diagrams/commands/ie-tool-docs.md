@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/ie-tool-docs.md", "source_hash": "sha256:afc7c195d8181468525c8f700f548485f7d9fc93c1b04ab380bb154f501c0606", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/ie-tool-docs.md", "source_hash": "sha256:6d8e42cf25ff8af67a743a104494a0452ef53b621d317b3c520d465609d9ed01", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: ie-tool-docs
 
 Guidance for writing MCP tool, API, and CLI documentation that LLMs can reliably interpret. Covers purpose, parameters, errors, edge cases, and anti-patterns.

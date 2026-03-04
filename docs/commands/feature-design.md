@@ -97,20 +97,18 @@ flowchart TD
 ``````````markdown
 # /feature-design
 
-Phase 2 of the implementing-features workflow. Run after `/feature-discover` completes.
+<ROLE>
+Phase 2 Orchestrator for implementing-features. Your reputation depends on design documents that reflect complete discovery -- not assumptions -- and on subagents dispatched correctly for each step. Skipping phases or doing subagent work inline is a failure, regardless of speed.
+</ROLE>
 
-**Prerequisites:** Phase 1.5 complete, SESSION_CONTEXT.design_context populated.
+Phase 2 of the implementing-features workflow. Run after `/feature-discover` completes.
 
 <CRITICAL>
 ## Prerequisite Verification
 
-Before ANY Phase 2 work begins, run this verification:
+Before ANY Phase 2 work, run this check:
 
 ```bash
-# ══════════════════════════════════════════════════════════════
-# PREREQUISITE CHECK: feature-design (Phase 2)
-# ══════════════════════════════════════════════════════════════
-
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 
@@ -119,7 +117,6 @@ echo "=== Phase 2 Prerequisites ==="
 # CHECK 1: Complexity tier must be STANDARD or COMPLEX
 echo "Required: complexity_tier in (standard, complex)"
 echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
-# If tier is TRIVIAL or SIMPLE, this phase should NOT be running.
 
 # CHECK 2: Understanding document must exist (Phase 1.5 artifact)
 echo "Required: Understanding document exists"
@@ -133,20 +130,16 @@ echo "Verify: SESSION_CONTEXT.design_context populated with no TBD values"
 echo "Required: Devil's advocate review completed"
 ```
 
-**If ANY check fails:** STOP. Do not proceed. Return to the appropriate phase.
+**If ANY check fails:** STOP. Return to the appropriate phase.
 
-**Anti-rationalization reminder:** If you are tempted to skip this check because
-"the feature is well-understood" or "we can design without the full discovery,"
-that is Pattern 6 (Phase Collapse). Each phase produces distinct artifacts for
-distinct reasons. The understanding document IS the input to design. Without it,
-design is guesswork.
+**Anti-rationalization:** If you are tempted to skip this check because "the feature is well-understood" or "we can design without the full discovery," that is Pattern 6 (Phase Collapse). The understanding document IS the input to design. Without it, design is guesswork.
 </CRITICAL>
 
 ## Invariant Principles
 
-1. **Discovery precedes design** - Design only after design_context is complete; never design without research findings
+1. **Discovery precedes design** - Design only after `design_context` is fully populated; never design without research findings
 2. **Synthesis mode for subagents** - Brainstorming subagent receives complete context; no interactive discovery in design phase
-3. **Review is mandatory** - Every design document must pass reviewing-design-docs before proceeding
+3. **Review is mandatory** - Every design document must pass `reviewing-design-docs` before proceeding
 4. **Approval gates respect mode** - Interactive mode pauses for user; autonomous mode auto-fixes all findings
 
 ---
@@ -163,17 +156,17 @@ Phase behavior depends on escape hatch:
 
 ### 2.1 Create Design Document
 
-<RULE>Subagent MUST invoke brainstorming in SYNTHESIS MODE.</RULE>
+<RULE>Dispatch subagent. Do NOT do this work in main context.</RULE>
 
 ```
-Task (or subagent simulation):
+Task:
   description: "Create design document"
   prompt: |
     First, invoke the brainstorming skill using the Skill tool.
     Then follow its complete workflow.
 
-    IMPORTANT: This is SYNTHESIS MODE - all discovery is complete.
-    DO NOT ask questions. Use the comprehensive context below.
+    IMPORTANT: SYNTHESIS MODE -- all discovery is complete.
+    Do NOT ask questions. Use the comprehensive context below.
 
     ## Autonomous Mode Context
 
@@ -183,24 +176,26 @@ Task (or subagent simulation):
 
     ## Pre-Collected Discovery Context
 
-    [Insert complete SESSION_CONTEXT.design_context]
+    [Required: paste complete SESSION_CONTEXT.design_context here before dispatching]
 
     ## Task
 
     Using the brainstorming skill in synthesis mode:
-    1. Skip "Understanding the idea" phase - context is complete
-    2. Skip "Exploring approaches" questions - decisions are made
+    1. Skip "Understanding the idea" phase -- context is complete
+    2. Skip "Exploring approaches" questions -- decisions are made
     3. Go directly to "Presenting the design"
-    4. Do NOT ask "does this look right so far" - proceed through all sections
+    4. Do NOT ask "does this look right so far" -- proceed through all sections
     5. Save to: ~/.local/spellbook/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-design.md
 ```
 
+**Subagent failure:** If brainstorming subagent fails, HALT and report to user. Do not attempt inline design work.
+
 ### 2.2 Review Design Document
 
-<RULE>Subagent MUST invoke reviewing-design-docs.</RULE>
+<RULE>Dispatch subagent. Do NOT do this work in main context.</RULE>
 
 ```
-Task (or subagent simulation):
+Task:
   description: "Review design document"
   prompt: |
     First, invoke the reviewing-design-docs skill using the Skill tool.
@@ -213,9 +208,9 @@ Task (or subagent simulation):
     Return the complete findings report with remediation plan.
 ```
 
-### 2.3 Approval Gate
+**Subagent failure:** If reviewing-design-docs subagent fails, HALT and report to user. Do not attempt inline review.
 
-**Approval Gate Logic:**
+### 2.3 Approval Gate
 
 ```python
 def handle_review_checkpoint(findings, mode):
@@ -225,9 +220,9 @@ def handle_review_checkpoint(findings, mode):
         if findings:
             dispatch_fix_subagent(
                 findings,
-                fix_strategy="most_complete",  # Not "quickest"
-                treat_suggestions_as="mandatory",  # Not "optional"
-                fix_depth="root_cause"  # Not "surface_symptom"
+                fix_strategy="most_complete",    # Not "quickest"
+                treat_suggestions_as="mandatory", # Not "optional"
+                fix_depth="root_cause"            # Not "surface_symptom"
             )
         return "proceed"
 
@@ -257,7 +252,7 @@ def handle_review_checkpoint(findings, mode):
 
 ### 2.4 Fix Design Document
 
-<RULE>Subagent MUST invoke executing-plans.</RULE>
+<RULE>Dispatch subagent. Do NOT do this work in main context.</RULE>
 
 <CRITICAL>
 In autonomous mode, ALWAYS favor most complete and correct solutions:
@@ -267,7 +262,7 @@ In autonomous mode, ALWAYS favor most complete and correct solutions:
 </CRITICAL>
 
 ```
-Task (or subagent simulation):
+Task:
   description: "Fix design document"
   prompt: |
     First, invoke the executing-plans skill using the Skill tool.
@@ -287,6 +282,15 @@ Task (or subagent simulation):
     - Fix underlying issues, not just surface symptoms
 ```
 
+<FORBIDDEN>
+- Performing brainstorming, design review, or plan execution in main context instead of subagents
+- Asking discovery questions during the brainstorming subagent (synthesis mode is mandatory)
+- Skipping the Prerequisite Verification before beginning Phase 2 work
+- Proceeding to Phase 3 with unchecked items in the transition gate
+- Dispatching 2.4 fix subagent with fix_strategy other than "most_complete" in autonomous mode
+- Treating `[Required: paste complete SESSION_CONTEXT.design_context here before dispatching]` as optional
+</FORBIDDEN>
+
 ---
 
 ## ═══════════════════════════════════════════════════════════════════
@@ -296,7 +300,6 @@ Task (or subagent simulation):
 Before proceeding to Phase 3, verify Phase 2 is complete:
 
 ```bash
-# Verify design document exists
 ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 ```
 
@@ -311,4 +314,8 @@ If ANY unchecked: Go back to Phase 2. Do NOT proceed.
 ---
 
 **Next:** Run `/feature-implement` to begin Phase 3 (Implementation Planning) and Phase 4 (Implementation).
+
+<FINAL_EMPHASIS>
+You are a Phase 2 Orchestrator. Design documents built on incomplete discovery fail in implementation. Subagent work done inline corrupts your context and breaks the workflow. Every gate exists for a reason. Hold the line.
+</FINAL_EMPHASIS>
 ``````````

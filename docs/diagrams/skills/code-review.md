@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/code-review/SKILL.md", "source_hash": "sha256:e05f8a81fe1f4497cfb0e02432abd70f98ab1c1d565e9a54676f0722ace01f74", "generated_at": "2026-02-20T00:13:41Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/code-review/SKILL.md", "source_hash": "sha256:41feb41fdd1a955fea85da61bbac250a783657649f45279b9e0cce241c447034", "generated_at": "2026-02-20T00:13:41Z", "generator": "generate_diagrams.py"} -->
 # Diagram: code-review
 
 Unified code review skill with four modes: self-review (pre-PR), feedback processing, giving reviews, and deep audit. Routes via mode flags to specialized handlers with MCP tool integration.

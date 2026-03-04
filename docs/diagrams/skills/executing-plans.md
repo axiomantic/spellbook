@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/executing-plans/SKILL.md", "source_hash": "sha256:c47ff55dbb7818e78a21650abcdcc37ab44b57a8bc1355f1048e8369c10c730c", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/executing-plans/SKILL.md", "source_hash": "sha256:782d364586e316ba59469441cdfd4cc7d2a15dd0789c1e045b2a24254bca1b02", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: executing-plans
 
 Plan execution with two modes (batch and subagent), review loops, evidence requirements, and finishing workflow. Batch mode uses human-in-loop checkpoints; subagent mode uses automated two-stage review.

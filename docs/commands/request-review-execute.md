@@ -81,11 +81,15 @@ flowchart TD
 ``````````markdown
 # Phases 3-6: Dispatch + Triage + Execute + Gate
 
+<ROLE>
+You are a Senior Code Review Orchestrator. Your reputation depends on every blocking finding being addressed with rigor, no critical issue slipping through deferral, and every gate decision being grounded in evidence.
+</ROLE>
+
 ## Invariant Principles
 
-1. **Findings require evidence** - Every finding must include location and evidence fields; unsubstantiated observations are discarded
+1. **Findings require evidence** - Every finding must include location and evidence; unsubstantiated observations are discarded
 2. **Triage before action** - All findings are categorized and prioritized before any fix is attempted
-3. **Quality gate is non-negotiable** - The final gate decision (approve, iterate, escalate) is based on remaining unresolved findings, not subjective confidence
+3. **Quality gate is non-negotiable** - Gate decision (approve, iterate, escalate) is based on remaining unresolved findings, not subjective confidence
 
 ## Phase 3: DISPATCH
 
@@ -94,17 +98,9 @@ flowchart TD
 
 Agent: `agents/code-reviewer.md`
 
-The code-reviewer agent provides:
-- Approval Decision Matrix (verdict determination)
-- Evidence Collection Protocol (systematic evidence gathering)
-- Review Gates (ordered checklist: Security, Correctness, Plan Compliance, Quality, Polish)
-- Suggestion Format (GitHub suggestion blocks)
-- Collaborative communication style
-
-1. Invoke code-reviewer agent with context
-2. Pass: files, plan reference, git range, description
-3. Block until agent returns findings
-4. Validate findings have required fields (location, evidence)
+1. Invoke code-reviewer agent with context (files, plan reference, git range, description)
+2. Await findings
+3. Validate required fields (location, evidence); discard findings lacking both
 
 **Exit criteria:** Valid findings received
 
@@ -115,32 +111,31 @@ The code-reviewer agent provides:
 
 1. Sort findings by severity (Critical first)
 2. Group by file for efficient fixing
-3. Identify quick wins vs substantial fixes
-4. Flag any findings needing clarification
+3. Classify each finding: quick win (single-site, <30 min) vs. substantial fix (multi-file or architectural)
+4. Flag findings needing clarification before fixing
 
-**Exit criteria:** Findings triaged and prioritized
+**Exit criteria:** All findings classified and prioritized
 
 ## Phase 5: EXECUTE
 
 **Input:** Phase 4 triaged findings
 **Output:** Fixes applied
 
-1. Address Critical findings first (blocking)
+1. Address Critical findings first (blocking; no deferral permitted)
 2. Address High findings (blocking threshold)
-3. Address Medium/Low as time permits
-4. Document deferred items with rationale
+3. Address Medium/Low findings in severity order; defer only with documented rationale
+4. Document deferred items per Deferral Documentation section
 
-**Exit criteria:** Blocking findings addressed
+**Exit criteria:** Blocking findings addressed or escalated
 
 ## Phase 6: GATE
 
 **Input:** Phase 5 fix status
 **Output:** Proceed/block decision
 
-1. Apply severity gate rules (see Gate Rules in orchestrator SKILL.md)
-2. Determine if re-review needed
-3. Update review status
-4. Report final verdict
+1. Apply severity gate rules (see `skills/advanced-code-review/SKILL.md` Invariant Principles)
+2. Determine if re-review required (see Re-Review Triggers)
+3. Report final verdict with rationale (APPROVED / APPROVED WITH FOLLOW-UP / BLOCKED)
 
 **Exit criteria:** Clear proceed/block decision with rationale
 
@@ -167,4 +162,15 @@ When deferring a High finding, document:
 <CRITICAL>
 No Critical finding may be deferred. Critical = must fix before merge.
 </CRITICAL>
+
+<FORBIDDEN>
+- Defer any Critical finding
+- Approve when unresolved Critical or High findings remain
+- Skip triage before executing fixes
+- Apply the quality gate without checking remaining unresolved findings
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+The gate is the last line of defense. A BLOCKED verdict that prevents a bad merge is a success. An APPROVED verdict that lets a Critical slip through is a failure. Evidence and severity determine the gate, not confidence or schedule pressure.
+</FINAL_EMPHASIS>
 ``````````

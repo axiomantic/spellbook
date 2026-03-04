@@ -6,7 +6,7 @@
 You are a PR Creation Specialist whose reputation depends on template-compliant, well-documented pull requests that never skip conventions, never fabricate metadata, and never act without user approval.
 </ROLE>
 
-<CRITICAL_INSTRUCTION>
+<CRITICAL>
 This command creates a GitHub pull request with full template discovery and population. Take a deep breath. This is very important to my career.
 
 You MUST:
@@ -16,7 +16,7 @@ You MUST:
 4. ALWAYS confirm the target repository before creating
 
 This is NOT optional. This is NOT negotiable.
-</CRITICAL_INSTRUCTION>
+</CRITICAL>
 
 ## Invariant Principles
 
@@ -53,10 +53,10 @@ This is NOT optional. This is NOT negotiable.
 ```
 
 ## Arguments
-- `--base=<branch>`: Optional. Target base branch (default: auto-detect default branch)
-- `--draft`: Optional. Create as draft PR
-- `--repo=<owner/repo>`: Optional. Explicit target repository
-- `--jira=<ODY-XXXX>`: Optional. Jira ticket number to include in title
+- `--base=<branch>`: Target base branch (default: auto-detect default branch)
+- `--draft`: Create as draft PR
+- `--repo=<owner/repo>`: Explicit target repository
+- `--jira=<ODY-XXXX>`: Jira ticket number to include in title
 
 ---
 
@@ -68,7 +68,7 @@ This is NOT optional. This is NOT negotiable.
 git status --porcelain
 ```
 
-If non-empty, use AskUserQuestion: "There are uncommitted changes. These will NOT be included in the PR. Continue anyway?" Options: Continue / Stop so I can commit first. If user stops, exit gracefully.
+If non-empty, AskUserQuestion: "There are uncommitted changes. These will NOT be included in the PR. Continue anyway?" Options: Continue / Stop so I can commit first. If user stops, exit gracefully.
 
 ### 1.2 Determine Current Branch and Default Branch
 
@@ -103,22 +103,23 @@ If no upstream or local is ahead of remote, note that push is needed. Do NOT pus
 ## Phase 2: Confirm Target Repository
 
 <CRITICAL>
-This phase is mandatory. Per user's CLAUDE.md: "ALWAYS confirm merge base repo (upstream or origin?) when submitting PRs."
+This phase is mandatory. ALWAYS confirm which repo the PR targets (upstream or origin) before proceeding.
 </CRITICAL>
 
 ### 2.1 Detect Remotes and Fork Relationship
 
 ```bash
-# List all remotes
 git remote -v
-
-# Check if this repo is a fork
 gh repo view --json isFork,parent -q '{isFork: .isFork, parent: .parent.nameWithOwner}'
 ```
 
 ### 2.2 Present Target Confirmation
 
-Use AskUserQuestion in all cases. The question varies by context:
+<analysis>
+Determine which question to ask based on repo context. The goal is unambiguous TARGET_REPO confirmation before any downstream steps depend on it.
+</analysis>
+
+Use AskUserQuestion in all cases:
 
 | Context | Question | Options |
 |---------|----------|---------|
@@ -130,32 +131,33 @@ Use AskUserQuestion in all cases. The question varies by context:
 **Store results:**
 - `TARGET_REPO`: OWNER/REPO string
 - `IS_FORK`: Whether creating a cross-repo PR
-- `HEAD_SPEC`: For forks: `username:branch-name`. For same-repo: just the branch name.
+- `HEAD_SPEC`: For forks: `username:branch-name` (obtain username via `gh api user -q .login`). For same-repo: just the branch name.
 - `OWNER` / `REPO`: Parsed from `TARGET_REPO` for API calls.
 
 ### 2.3 Fork-Then-Upstream Workflow Detection
 
-After confirming the target repo, detect staging workflow intent:
+<analysis>
+Steps 1 and 2 below are mutually exclusive. Step 1 applies when the confirmed target is a FORK (origin). Step 2 applies when the confirmed target is UPSTREAM. Never ask both questions for the same PR.
+</analysis>
+
+After confirming the target repo:
 
 1. **If the target is a FORK (not upstream):**
-   - Ask via AskUserQuestion: "This targets your fork. Is this a staging PR for self-review/CI before submitting upstream?"
+   - AskUserQuestion: "This targets your fork. Is this a staging PR for self-review/CI before submitting upstream?"
    - If yes (staging): Set `DRAFT_MODE = true`, `WORKFLOW_STAGE = "fork_staging"`
    - If no: Proceed normally
 
 2. **If the target is UPSTREAM and a fork exists:**
-   - Ask via AskUserQuestion: "You're targeting upstream directly. Do you have a staging PR on your fork already?"
-   - Present options:
-     - A) "Yes, I've reviewed on my fork - proceed to upstream"
-     - B) "No, let me create a fork PR first" (redirect to fork workflow)
-     - C) "No fork staging needed - submit directly to upstream"
-   - Option A: Proceed with upstream, non-draft
-   - Option B: Redirect to fork with `DRAFT_MODE = true`, `WORKFLOW_STAGE = "fork_staging"`
-   - Option C: Proceed with upstream, but add extra confirmation via AskUserQuestion before Phase 7
+   - AskUserQuestion: "You're targeting upstream directly. Do you have a staging PR on your fork already?"
+   - Options:
+     - A) "Yes, I've reviewed on my fork - proceed to upstream" → Proceed with upstream, non-draft
+     - B) "No, let me create a fork PR first" → Redirect to fork with `DRAFT_MODE = true`, `WORKFLOW_STAGE = "fork_staging"`
+     - C) "No fork staging needed - submit directly to upstream" → Proceed with upstream, extra confirmation in Phase 7
 
 3. **Default draft behavior:**
    - Fork target + staging: ALWAYS `--draft` (user must explicitly override in Phase 6)
    - Fork target + non-staging: Ask draft preference in Phase 6
-   - Upstream target: Ask draft preference in Phase 6 (but recommend draft if first PR to this repo)
+   - Upstream target: Ask draft preference in Phase 6 (recommend draft if first PR to this repo)
 
 **Store results:**
 - `DRAFT_MODE`: boolean, true if staging workflow detected
@@ -165,7 +167,7 @@ After confirming the target repo, detect staging workflow intent:
 
 ## Phase 3: Template Discovery
 
-Execute a 4-tier cascade to find the project's PR template. The first tier that returns results wins.
+Execute a 4-tier cascade. The first tier that returns results wins.
 
 ### Tier 1: Local Filesystem Scan
 
@@ -179,17 +181,17 @@ Execute a 4-tier cascade to find the project's PR template. The first tier that 
 | 2 | `pull_request_template.md` (root) | `PULL_REQUEST_TEMPLATE/*.md` (root) |
 | 3 | `docs/pull_request_template.md` | `docs/PULL_REQUEST_TEMPLATE/*.md` |
 
-Check single-template paths first. If none found, check multi-template directories. Use case-insensitive find:
+Check single-template paths first. If none found, check multi-template directories. Use case-insensitive find for each priority directory:
 
 ```bash
 find .github -maxdepth 1 -iname 'pull_request_template.md' 2>/dev/null
+find . -maxdepth 1 -iname 'pull_request_template.md' 2>/dev/null
+find docs -maxdepth 1 -iname 'pull_request_template.md' 2>/dev/null
 ```
 
-If any local templates found, read content, STOP cascade (do not continue to Tier 2). If multiple, go to Phase 3.5 for selection.
+If local templates found: read content, stop cascade. If multiple, → Phase 3.5.
 
 ### Tier 2: GraphQL API Query (Target Repo)
-
-Query the target repository's PR templates via the GitHub GraphQL API:
 
 ```bash
 gh api graphql -f query='
@@ -203,13 +205,11 @@ query($owner: String!, $name: String!) {
 }' -f owner="$OWNER" -f name="$REPO"
 ```
 
-If the `pullRequestTemplates` array is non-empty, use those templates. If multiple entries, proceed to Phase 3.5. If a single entry, use it directly. Proceed to Phase 4.
-
-If the query fails (network error, permissions), log a warning and continue to Tier 3.
+If `pullRequestTemplates` is non-empty: multiple entries → Phase 3.5; single entry → use directly. If query fails (network error, permissions), log a warning and continue to Tier 3.
 
 ### Tier 3: Org-Level Fallback
 
-Same GraphQL query as Tier 2, but target `$OWNER/.github` repository:
+Same GraphQL query as Tier 2, targeting `$OWNER/.github` repository:
 
 ```bash
 gh api graphql -f query='...' -f owner="$OWNER" -f name=".github"
@@ -243,11 +243,9 @@ Use this default template:
 [How to test]
 ```
 
-Proceed to Phase 4.
-
 ### Phase 3.5: Template Selection (Multiple Templates)
 
-If multiple templates were discovered at any tier:
+If multiple templates discovered at any tier:
 
 ```
 AskUserQuestion:
@@ -259,7 +257,7 @@ Options:
 - ... (list all discovered template filenames)
 ```
 
-After selection, store the chosen template body. Proceed to Phase 4.
+After selection, store the chosen template body.
 
 ---
 
@@ -335,7 +333,7 @@ Parse the template for `##` headers and populate each:
 | Breaking Changes | Note any from the diff |
 | Checklist / Checks | Preserve checkboxes for user to complete manually |
 
-For sections not matching any known pattern, leave placeholder text for user. If the template has no recognizable `##` sections at all, present it raw for manual completion.
+For unrecognized sections, insert: `[TODO: <section-name> - complete manually]`. If the template has no recognizable `##` sections at all, present it raw for manual completion.
 
 ### 5.5 Write to Temp File
 

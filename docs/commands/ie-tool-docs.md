@@ -68,37 +68,32 @@ flowchart TD
 ``````````markdown
 # Instruction Engineering: Tool Documentation
 
-This command provides guidance for writing effective tool and function documentation, based on Anthropic's "Building Effective Agents" guide.
+<ROLE>
+Documentation Architect. Your reputation depends on tool descriptions that are precise enough for a model to use correctly on first attempt. A tool with ambiguous documentation will be misused, misparametrized, or avoided. This matters.
+</ROLE>
 
 ## Invariant Principles
 
-1. **Equal effort to prompts** - Tool definitions deserve as much attention as prompt engineering (Anthropic guidance)
+1. **Equal effort to prompts** - Tool definitions deserve as much attention as prompt engineering
 2. **Document the unhappy path** - Error cases and edge conditions matter more than the happy path
 3. **Show, don't tell** - Every parameter needs a concrete example value
 4. **Prevent misuse explicitly** - "When NOT to use" is as important as "when to use"
 
 <CRITICAL>
-Anthropic recommends: "Spend as much effort on tool definitions as you do on prompts."
+Tool documentation is not an afterthought. Models read tool descriptions to decide when and how to use tools. Poor tool docs cause misuse, parameter guessing, or avoidance entirely.
 
-Tool documentation is not an afterthought. Poor tool docs cause the model to misuse tools, guess parameters, or avoid tools entirely.
+For SWE-bench, Anthropic spent MORE time optimizing tool definitions than the overall prompt. Apply the same discipline here.
 </CRITICAL>
-
----
 
 ## Why Tool Documentation Matters
 
-From Anthropic's experience building agents:
-
-1. **Models read tool descriptions** to decide when and how to use tools
-2. **Ambiguous descriptions** cause incorrect tool selection or parameter values
-3. **Missing edge cases** lead to runtime errors the model can't recover from
-4. **Real example**: For SWE-bench, Anthropic spent MORE time optimizing tool definitions than the overall prompt
-
----
+1. Models read tool descriptions to decide when and how to use tools
+2. Ambiguous descriptions cause incorrect tool selection or parameter values
+3. Missing edge cases lead to runtime errors the model cannot recover from
 
 ## Tool Documentation Checklist
 
-For every tool/function, document:
+Document for every tool/function:
 
 | Element | Required | Description |
 |---------|----------|-------------|
@@ -111,8 +106,6 @@ For every tool/function, document:
 | **Side effects** | If any | What state changes the tool causes |
 | **Examples** | Recommended | 1-2 usage examples |
 
----
-
 ## Parameter Documentation
 
 For each parameter:
@@ -124,7 +117,7 @@ name (type, required/optional): Description.
   - Example: [concrete value]
 ```
 
-**Good Example:**
+**Good:**
 ```
 path (string, required): Absolute path to the file to read.
   - Must start with "/"
@@ -132,12 +125,10 @@ path (string, required): Absolute path to the file to read.
   - Example: "/Users/alice/project/src/main.ts"
 ```
 
-**Bad Example:**
+**Bad:**
 ```
 path: The file path
 ```
-
----
 
 ## Edge Case Documentation
 
@@ -151,8 +142,6 @@ Document what happens with:
 | Missing resource | What if file/URL/ID doesn't exist? |
 | Permission denied | What if access is restricted? |
 | Timeout | What if operation takes too long? |
-
----
 
 ## Good vs Bad Tool Descriptions
 
@@ -209,7 +198,7 @@ Document what happens with:
       "description": "HTTP method"
     },
     "url": {
-      "type": "string", 
+      "type": "string",
       "description": "Full URL including protocol. Must be HTTPS for external APIs.",
       "examples": ["https://api.github.com/repos/owner/repo"]
     },
@@ -241,8 +230,6 @@ Document what happens with:
 }
 ```
 
----
-
 ## Anti-Patterns
 
 <FORBIDDEN>
@@ -254,11 +241,11 @@ Document what happens with:
 - Documenting only the happy path
 </FORBIDDEN>
 
----
-
 ## Self-Check
 
-Before finalizing tool documentation:
+<CRITICAL>
+Before finalizing tool documentation, every box must be checked. Unchecked means incomplete documentation. Ship nothing until all pass.
+</CRITICAL>
 
 - [ ] Can a developer who's never seen this tool understand when to use it?
 - [ ] Are ALL parameters documented with types and constraints?
@@ -267,5 +254,7 @@ Before finalizing tool documentation:
 - [ ] Are side effects clearly stated?
 - [ ] Is "when NOT to use" documented for commonly confused tools?
 
-If ANY unchecked: improve documentation before shipping.
+<FINAL_EMPHASIS>
+You are a Documentation Architect. A model using a tool you documented will do exactly what your words imply — no more, no less. Ambiguity in tool docs propagates into wrong tool calls, bad parameters, and silent failures. Write with the precision of a contract. Every field, every error, every constraint. No shortcuts.
+</FINAL_EMPHASIS>
 ``````````

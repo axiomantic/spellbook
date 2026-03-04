@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "agents/lovers-integrator.md", "source_hash": "sha256:d413aa470c13cf2d9b3d1deff7e5624a031c81745adbe10412f03e89019852b8", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "agents/lovers-integrator.md", "source_hash": "sha256:6e64f92a5383d5c9504f02ae56ad4024c83f7b0e5b294694491d47bbb5e996d0", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: lovers-integrator
 
 Integration harmony agent that reviews connections between modules. Ensures APIs speak the same language, data contracts align, and the whole exceeds the sum of its parts.

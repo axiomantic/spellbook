@@ -92,6 +92,7 @@ nav:
       - skills/implementing-features.md
       - skills/reviewing-design-docs.md
       - skills/reviewing-impl-plans.md
+      - skills/reviewing-prs.md
       - skills/devils-advocate.md
       - skills/merging-worktrees.md
       - skills/resolving-merge-conflicts.md
@@ -140,6 +141,7 @@ nav:
       - commands/create-issue.md
       - commands/create-pr.md
       - commands/crystallize.md
+      - commands/crystallize-verify.md
       - commands/design-assessment.md
       - commands/simplify.md
       - commands/simplify-analyze.md

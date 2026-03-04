@@ -2,11 +2,13 @@
 description: "Analyze code for simplification opportunities. Part of simplify-* family."
 ---
 
+<ROLE>
+Code Quality Analyst. Your reputation depends on accurate complexity measurement and actionable simplification recommendations that preserve behavior. Mis-scoring or skipping coverage gates causes regressions. This is not optional.
+</ROLE>
+
 # /simplify-analyze
 
-Analyze code for cognitive complexity and identify simplification opportunities.
-
-**Part of the simplify-* command family.** Can be run standalone for analysis-only, or as part of the full `/simplify` workflow.
+Analyze code for cognitive complexity and identify simplification opportunities. Run standalone or as part of the `/simplify` workflow.
 
 ## Invariant Principles
 
@@ -43,8 +45,6 @@ Analyze code for cognitive complexity and identify simplification opportunities.
 
 ### 1.1 Parse Command Arguments
 
-Extract target and flags from the command invocation.
-
 **Targeting modes (mutually exclusive):**
 - No target argument -> Branch changeset (default)
 - `path/to/file.ext` -> Explicit file
@@ -62,13 +62,7 @@ for branch in main master devel; do
     break
   fi
 done
-
-# If --base flag provided, override
-if [ -n "$BASE_FLAG" ]; then
-  BASE_BRANCH=$BASE_FLAG
-fi
-
-# Find merge base
+[ -n "$BASE_FLAG" ] && BASE_BRANCH=$BASE_FLAG
 MERGE_BASE=$(git merge-base HEAD $BASE_BRANCH)
 ```
 
@@ -92,9 +86,8 @@ If "No", ask for alternative scope.
 - `--wizard` -> Wizard mode
 - `--dry-run` -> Report-only mode
 
-**Otherwise, ask user:**
+**Otherwise, use AskUserQuestion:**
 ```
-AskUserQuestion:
 Question: "How would you like to proceed?"
 Options:
 - Automated (analyze all, preview changes, apply on approval)
@@ -110,62 +103,46 @@ Store the selected mode for the session.
 
 ### 2.1 Identify Changed Functions
 
-Based on the determined scope:
-
-**For branch changeset (default):**
+**Branch changeset (default):**
 ```bash
-# Get diff against merge base
 git diff $MERGE_BASE...HEAD --name-only
 ```
-
 For each changed file, use language-specific parsing to identify functions/methods with actual line changes.
 
-**For explicit file:**
-```bash
-# Get functions in the file
-# Use language-specific AST parsing
-```
+**Explicit file:** Use language-specific AST parsing on the specified file.
 
-**For directory:**
+**Directory:**
 ```bash
-# Recursively find all source files
 find $DIR -type f \( -name "*.py" -o -name "*.ts" -o -name "*.nim" -o -name "*.c" -o -name "*.cpp" \)
 ```
 
-**For staged changes:**
+**Staged changes:**
 ```bash
 git diff --cached --name-only
 ```
 
-**For specific function:**
-- Parse the specified file
-- Locate the named function
+**Specific function:** Parse the specified file and locate the named function.
 
-**For repository:**
-- Find all source files matching supported extensions
-- Parse all functions (with user confirmation)
+**Repository:** Find all source files matching supported extensions (user confirmation already obtained in 1.2).
 
 ### 2.2 Calculate Cognitive Complexity
 
-For each identified function, calculate cognitive complexity score using these rules:
+For each identified function, calculate cognitive complexity score:
 
-**Cognitive Complexity Rules:**
+**Rules:**
 - +1 for each control flow break: `if`, `for`, `while`, `catch`, `case`
 - +1 for each nesting level (compounds with depth)
 - +1 for logical operator sequences: `&&`, `||`, `and`, `or`
 - +1 for recursion (function calls itself)
 
-**Also measure:**
-- Nesting depth (max indentation levels)
-- Boolean expression complexity (compound conditions)
-- Lines of code (for context)
+**Also measure:** nesting depth (max indentation levels), boolean expression complexity, lines of code.
 
-**Example calculation:**
+**Example calculation (nesting depth compounds):**
 ```python
 def example(data):              # complexity: 0
-    if data:                    # +1 = 1 (control flow)
-        for item in data:       # +2 = 3 (control flow + 1 nesting)
-            if item > 0:        # +3 = 6 (control flow + 2 nesting)
+    if data:                    # +1 = 1  (control flow)
+        for item in data:       # +2 = 3  (control flow + 1 nesting)
+            if item > 0:        # +3 = 6  (control flow + 2 nesting)
                 if item < 100:  # +4 = 10 (control flow + 3 nesting)
                     process(item)
 ```
@@ -180,15 +157,14 @@ def example(data):              # complexity: 0
 
 **Language detection:**
 ```bash
-# Based on file extension
 case "$FILE_EXT" in
-  .py) LANG="python" ;;
-  .ts|.tsx) LANG="typescript" ;;
-  .js|.jsx) LANG="javascript" ;;
-  .nim) LANG="nim" ;;
-  .c|.h) LANG="c" ;;
+  .py)           LANG="python" ;;
+  .ts|.tsx)      LANG="typescript" ;;
+  .js|.jsx)      LANG="javascript" ;;
+  .nim)          LANG="nim" ;;
+  .c|.h)         LANG="c" ;;
   .cpp|.cc|.cxx|.hpp) LANG="cpp" ;;
-  *) LANG="generic" ;;
+  *)             LANG="generic" ;;
 esac
 ```
 
@@ -203,10 +179,7 @@ esac
 
 **Apply minimum complexity threshold:**
 ```bash
-# Default --min-complexity=5
-if [ $COMPLEXITY -lt $MIN_COMPLEXITY ]; then
-  skip_function
-fi
+[ $COMPLEXITY -lt $MIN_COMPLEXITY ] && skip_function
 ```
 
 **Check test coverage (unless --allow-uncovered):**
@@ -214,9 +187,7 @@ fi
 2. Map coverage to specific functions
 3. Functions with 0% line coverage are flagged
 
-**If coverage check fails and --allow-uncovered not set:**
-- Skip the function
-- Add to "Skipped (No Coverage)" section of report
+If coverage check fails and `--allow-uncovered` not set: skip the function and add to "Skipped (No Coverage)" section of report.
 
 ---
 
@@ -224,7 +195,7 @@ fi
 
 ### 3.1 Identify Applicable Simplifications
 
-For each function above threshold, scan for patterns from the simplification catalog.
+For each function above threshold, scan for applicable patterns in the catalog below.
 
 ### 3.2 Simplification Catalog
 
@@ -246,14 +217,10 @@ For each function above threshold, scan for patterns from the simplification cat
 
   # After (nesting depth 1)
   def process(data):
-      if not data:
-          return None
-      if not data.valid:
-          return None
-      if not data.ready:
-          return None
-      if not data.content:
-          return None
+      if not data: return None
+      if not data.valid: return None
+      if not data.ready: return None
+      if not data.content: return None
       return data.content.upper()
   ```
 
@@ -265,14 +232,9 @@ For each function above threshold, scan for patterns from the simplification cat
   // Before
   function check(x: number): string {
       if (x > 0) {
-          if (x < 100) {
-              return "valid";
-          } else {
-              return "too large";
-          }
-      } else {
-          return "negative";
-      }
+          if (x < 100) { return "valid"; }
+          else { return "too large"; }
+      } else { return "negative"; }
   }
 
   // After
@@ -289,15 +251,10 @@ For each function above threshold, scan for patterns from the simplification cat
 - Example (C):
   ```c
   // Before
-  if (status == 1) {
-      handle_one();
-  } else if (status == 2) {
-      handle_two();
-  } else if (status == 3) {
-      handle_three();
-  } else if (status == 4) {
-      handle_four();
-  }
+  if (status == 1) { handle_one(); }
+  else if (status == 2) { handle_two(); }
+  else if (status == 3) { handle_three(); }
+  else if (status == 4) { handle_four(); }
 
   // After
   switch (status) {
@@ -353,14 +310,10 @@ For each function above threshold, scan for patterns from the simplification cat
 - Example (C++):
   ```cpp
   // Before
-  for (int i = 0; i < vec.size(); i++) {
-      process(vec[i]);
-  }
+  for (int i = 0; i < vec.size(); i++) { process(vec[i]); }
 
   // After
-  for (const auto& item : vec) {
-      process(item);
-  }
+  for (const auto& item : vec) { process(item); }
   ```
 
 #### Category D: Modern Idioms (Language-Specific)
@@ -395,15 +348,13 @@ For each function above threshold, scan for patterns from the simplification cat
 
 - Unreachable code after `return`/`throw`
 - Unused variables in scope
-- Commented-out code blocks (flag for review, don't auto-remove)
+- Commented-out code blocks (flag for review, do NOT auto-remove)
 
 ### 3.3 Rank Simplifications
 
 For each detected pattern:
 
-**Rank by impact:**
-- Calculate expected cognitive complexity reduction
-- Higher reduction = higher priority
+**Rank by impact:** Calculate expected cognitive complexity reduction. Higher reduction = higher priority.
 
 **Assess risk:**
 - Functions with test coverage = low risk
@@ -422,9 +373,22 @@ Priority 4: Medium impact, medium risk
 
 ## Output
 
-This command produces:
-1. A list of candidate functions with complexity scores
-2. Identified simplification opportunities ranked by priority
-3. A SESSION_STATE object for use by `/simplify-verify`
+Produces:
+1. Candidate functions with complexity scores
+2. Simplification opportunities ranked by priority
+3. SESSION_STATE object for use by `/simplify-verify`
 
 **Next:** Run `/simplify-verify` to validate proposed simplifications, or `/simplify --dry-run` for report-only.
+
+<FORBIDDEN>
+- Auto-removing commented-out code blocks (flag for review only)
+- Applying simplifications to functions with no test coverage when --allow-uncovered is not set
+- Skipping the coverage gate without explicit user permission
+- Reporting functions below --min-complexity threshold as simplification candidates
+- Proposing Category C (declarative pipeline) transforms without noting medium risk
+- Omitting SESSION_STATE from output (downstream commands depend on it)
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Measure complexity before touching anything. Respect coverage gates absolutely — a simplification that introduces a regression because the function lacked tests is worse than no simplification. Rank by impact and risk, not by how elegant the transformation looks. Every output must include SESSION_STATE.
+</FINAL_EMPHASIS>

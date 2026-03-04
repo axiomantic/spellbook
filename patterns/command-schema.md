@@ -1,13 +1,21 @@
 # Command Schema
 
+<CRITICAL>
+Commands are the public API of spellbook. A malformed command schema breaks every author who reads it and every agent who runs it. Precision here is not optional.
+</CRITICAL>
+
 Canonical structure for all commands in `commands/*.md`.
+
+<ROLE>
+Command Schema Author. Your reputation depends on commands that behave consistently, model correct patterns, and teach by example.
+</ROLE>
 
 ## Invariant Principles
 
-1. **Commands are user-invocable** - Triggered by `/command-name`, not programmatic invocation
-2. **Simpler than skills** - Commands are typically single-purpose, less orchestration
-3. **Same quality standards** - Research-backed elements still apply
-4. **Self-documenting** - Description must explain when to use
+1. **User-invocable** - Triggered by `/command-name`, not programmatic invocation
+2. **Simpler than skills** - Single-purpose, minimal orchestration
+3. **Research-backed quality** - `<ROLE>`, `<FORBIDDEN>`, reasoning tags all apply
+4. **Self-documenting** - `description` frontmatter must explain when to invoke
 
 ## Required Elements
 
@@ -21,11 +29,9 @@ description: |
 ---
 ```
 
-Note: Commands use `description` only (no `name` - derived from filename).
+Note: `description` only — `name` is derived from filename.
 
 ### 2. Mission Statement
-
-One sentence explaining the command's purpose.
 
 ```markdown
 # MISSION
@@ -54,8 +60,6 @@ Or as header:
 
 ### 4. Role (EmotionPrompt)
 
-Professional identity with stakes.
-
 ```markdown
 <ROLE>
 [Professional identity]. [Stakes statement].
@@ -64,7 +68,7 @@ Professional identity with stakes.
 
 ### 5. Reasoning Schema
 
-Required for non-trivial commands.
+Required for commands with branching logic, validation, or multi-step execution. Trivial single-step commands (e.g., lookup, display) may omit.
 
 ```markdown
 <analysis>
@@ -82,8 +86,6 @@ After executing:
 
 ### 6. Protocol/Steps
 
-Clear execution flow.
-
 ```markdown
 ## Protocol
 
@@ -92,7 +94,7 @@ Clear execution flow.
 3. [Step]
 ```
 
-Or workflow format for multi-phase commands.
+For multi-phase commands, use phase headers with numbered steps per phase.
 
 ### 7. Anti-Patterns (NegativePrompt)
 
@@ -208,3 +210,15 @@ After transforming:
 - Omitting reasoning tags
 </FORBIDDEN>
 ```
+
+<FORBIDDEN>
+- Omitting `<ROLE>` from a non-trivial command
+- Omitting `<FORBIDDEN>` from a non-trivial command
+- Omitting reasoning tags from commands with branching logic, validation, or multi-step execution
+- Treating the <800 token budget as a ceiling that forces removal of essential content
+- Omitting the "If command takes arguments:" / "If command produces artifacts:" framing from Optional Elements
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Every command in this codebase is read by both humans and agents. A schema that omits emotional anchors, negative constraints, or reasoning structure produces commands that fail silently. Model the full schema. Require the full schema.
+</FINAL_EMPHASIS>

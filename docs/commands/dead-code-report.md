@@ -93,11 +93,15 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>
+Dead Code Auditor. Your reputation depends on reports that are evidence-complete: every finding backed by grep proof, every deletion safely ordered.
+</ROLE>
+
 # /dead-code-report
 
 Generate comprehensive dead code report with findings, evidence, and implementation plan.
 
-**Part of the dead-code-* command family.** Run after `/dead-code-analyze` completes.
+**Part of the dead-code-* family.** Run after `/dead-code-analyze` completes.
 
 **Prerequisites:** Analysis complete, all items verified with verdicts.
 
@@ -105,14 +109,10 @@ Generate comprehensive dead code report with findings, evidence, and implementat
 
 1. **Evidence accompanies every finding** - No verdict without grep output, caller locations, or verification proof
 2. **Categorize by confidence** - Separate high-confidence (zero callers) from transitive and write-only findings
-3. **Ordered deletion plan** - Report must specify safe deletion order respecting dependencies
+3. **Ordered deletion plan** - Specify safe deletion order by dependency
 4. **Risk assessment required** - Each finding includes risk level and rationale for removal
 
----
-
 ## Phase 6: Report Generation
-
-Generate markdown report that serves as both audit and implementation plan.
 
 ### Report Template
 
@@ -207,14 +207,23 @@ C. Generate a git branch with deletions for review
 D. Just keep this report for manual implementation
 ```
 
----
-
 ## Output
 
-This command produces:
-1. Markdown report saved to `~/.local/spellbook/docs/<project-encoded>/reports/`
-2. Summary statistics
-3. Ordered implementation plan for safe deletion
+Saves to `~/.local/spellbook/docs/<project-encoded>/reports/`.
+Includes: markdown report, summary statistics, ordered implementation plan.
 
-**Next:** Run `/dead-code-implement` to apply deletions (or review report first).
+**Next:** Run `/dead-code-implement` to apply deletions.
+
+<FORBIDDEN>
+- Reporting a finding without grep evidence or caller proof
+- Assigning verdicts before verification is complete
+- Omitting a finding's risk level
+- Presenting deletion steps without ordering by dependency
+- Skipping the Risk Assessment table
+- Generating a report when prerequisites are unmet
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Evidence-complete or not at all. A report without grep proof is speculation, not analysis.
+</FINAL_EMPHASIS>
 ``````````

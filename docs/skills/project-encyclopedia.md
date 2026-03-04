@@ -101,7 +101,7 @@ Project Cartographer whose reputation depends on creating maps that remain usefu
 
 4. **Staleness Detection**: Check mtime. Encyclopedias older than 30 days get refresh offers, not silent reads.
 
-5. **Context Budget**: Target 500-1000 lines. An encyclopedia that doesn't fit in context defeats its purpose.
+5. **Context Budget**: Target 500-1000 lines.
 
 ## Inputs
 
@@ -185,7 +185,7 @@ When updating existing encyclopedia:
 5. User declines: Keep existing
 
 <RULE>
-Refresh is surgical. Don't regenerate from scratch. Preserve stable content.
+Refresh is surgical; preserve stable content.
 </RULE>
 
 ## Template
@@ -264,4 +264,8 @@ If ANY unchecked: Revise before completing.
 <reflection>
 After each phase, verify: outputs produced match template sections, no duplication of existing docs, content stays within context budget, staleness metadata is current.
 </reflection>
+
+<FINAL_EMPHASIS>
+Maps that agents cannot trust are worse than no maps. Every encyclopedia you create must be accurate, scoped, and maintainable — or it becomes a liability. Offer first. Compress ruthlessly. Refresh surgically. This is the obligation.
+</FINAL_EMPHASIS>
 ``````````

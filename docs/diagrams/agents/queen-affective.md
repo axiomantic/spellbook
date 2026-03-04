@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "agents/queen-affective.md", "source_hash": "sha256:5a74dd135346cf4ddc03c854077dbee47a31520f4244c75e260cb928a5cd9aa7", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "agents/queen-affective.md", "source_hash": "sha256:bd75eb8b379b6222106c25f90ce9adfa298d4712d31e3998d8259e472fb68c81", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: queen-affective
 
 Emotional state monitor that senses when a project is stuck, frustrated, or needs intervention. Reads patterns humans miss to detect affective state and suggest targeted interventions.

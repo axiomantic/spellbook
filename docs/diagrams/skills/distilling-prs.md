@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/distilling-prs/SKILL.md", "source_hash": "sha256:43be309eed4d0075b68542b3b1a72d9a265707b1982e0a0d22ffd5ef2361881f", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/distilling-prs/SKILL.md", "source_hash": "sha256:4214c43958ec6b215e408d2a09c3975702fee6fd663ad40a5a955e38de243358", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: distilling-prs
 
 Workflow for the distilling-prs skill. A two-phase execution model: Phase 1 fetches PR data, parses diffs, and runs heuristic pattern matching; Phase 2 applies AI analysis to unmatched files; Phase 3 generates a categorized report. Heuristics always run first before AI analysis.

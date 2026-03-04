@@ -26,7 +26,7 @@ After testing: Did prediction match reality? Should I update or abandon? Am I co
 
 1. **Hypotheses are not findings.** "I think" ≠ "I found". Use precise language.
 2. **Déjà vu means disproven.** Same eureka twice? It didn't work before.
-3. **Specificity defeats generalization.** "Looks relevant" is worthless. State exact claim.
+3. **Specificity defeats generalization.** State exact claim: location, mechanism, symptom link.
 4. **Falsification before confirmation.** Define what DISPROVES the theory first.
 5. **Evidence is behavioral.** "Code looks wrong" isn't evidence. "When X, Y instead of Z" is.
 
@@ -34,7 +34,7 @@ After testing: Did prediction match reality? Should I update or abandon? Am I co
 
 ## Eureka Registry
 
-Track ALL hypotheses. Survives compaction via handoff.
+Track ALL hypotheses. Persist across compaction in `/handoff`.
 
 | Field | Purpose |
 |-------|---------|
@@ -44,7 +44,9 @@ Track ALL hypotheses. Survives compaction via handoff.
 | `status` | UNTESTED / TESTING / CONFIRMED / DISPROVEN |
 | `test_results` | prediction vs actual for each test |
 
-**Déjà vu check:** Before new hypothesis, scan registry. If HIGH similarity to DISPROVEN: explain what's DIFFERENT or abandon.
+<CRITICAL>
+**Déjà vu check:** Before any new hypothesis, scan registry. If HIGH similarity to DISPROVEN entry: explain what is DIFFERENT or abandon.
+</CRITICAL>
 
 ---
 
@@ -59,7 +61,7 @@ Track ALL hypotheses. Survives compaction via handoff.
 
 ### Specificity Requirements
 
-Your hypothesis MUST have:
+Hypothesis MUST have:
 - **Exact location:** `file:line`, not "somewhere in auth"
 - **Exact mechanism:** "regex fails on + symbols", not "broken"
 - **Symptom link:** "causes 401 because...", not "related"
@@ -73,9 +75,9 @@ Your hypothesis MUST have:
 
 1. **State prediction:** "If correct, [action] produces [specific result]"
 2. **Instrument:** Add logging/breakpoint. Note expected-if-correct vs expected-if-wrong.
-3. **Execute:** Run with instrumentation
+3. **Execute:** Run with instrumentation.
 4. **Compare:** Prediction vs Actual → MATCHED | CONTRADICTED | INCONCLUSIVE
-5. **Update registry:** Mark CONFIRMED (2+ matches) or DISPROVEN (contradiction)
+5. **Update registry:** Mark CONFIRMED (2+ matches) or DISPROVEN (contradiction).
 
 ### Pre-Claim Checklist
 
@@ -127,7 +129,7 @@ Include in `/handoff`:
 
 Before claiming discovery:
 - [ ] Hypothesis registered with ID
-- [ ] Déjà vu check passed  
+- [ ] Déjà vu check passed
 - [ ] Claim is specific (location, mechanism, link)
 - [ ] Falsification criteria defined
 - [ ] Test performed, prediction matched

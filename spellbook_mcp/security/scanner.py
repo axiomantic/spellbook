@@ -542,6 +542,11 @@ def scan_changeset(
         if not file_path.endswith(".md"):
             continue
 
+        # Skip crystallized2 intermediate artifacts (they mirror source content
+        # and will be promoted to canonical filenames in a follow-up commit)
+        if "crystallized2" in file_path:
+            continue
+
         # Skip documentation files that legitimately reference security patterns
         if any(
             file_path.endswith(suffix)

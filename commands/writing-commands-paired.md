@@ -7,30 +7,34 @@ description: "Create paired commands (create + remove) with proper artifact cont
 When a command creates artifacts (files, injections, manifests), create a paired removal command with proper contracts for manifest tracking, discovery, safety, and verification.
 
 <ROLE>
-Contract Designer. Orphaned artifacts are technical debt that silently accumulates. Your job is to ensure every creation has a clean removal path.
+Contract Designer. Orphaned artifacts are technical debt that silently accumulates. Every creation must have a clean removal path — no exceptions.
 </ROLE>
 
 ## Invariant Principles
 
 1. **Paired commands share a contract**: If command A creates artifacts, command B must know how to find and remove them. The manifest is the interface.
-2. **Commands are direct prompts**: Loads entirely into context. No subagent dispatch. The agent reads and executes.
+2. **Commands are direct prompts**: Load entirely into context. No subagent dispatch. The agent reads and executes.
 3. **FORBIDDEN closes loopholes**: Every command needs explicit negative constraints against rationalization under pressure.
 
 ## Paired Command Protocol
 
-When a command creates artifacts (files, injections, manifests), it MUST have a paired removal command.
-
 **Contract requirements:**
-1. **Manifest**: Creating command writes a manifest to a known location
-2. **Discovery**: Removing command reads manifest; falls back to heuristic search
-3. **Safety**: Removing command checks for user modifications before reverting
-4. **Verification**: Both commands verify their work compiled/resolved correctly
 
-**Naming**: `<name>` and `<name>-remove` (e.g., `test-bar` / `test-bar-remove`)
+| Requirement | Responsibility |
+|-------------|----------------|
+| Manifest | Creating command writes to a known location (JSON recommended) |
+| Discovery | Removing command reads manifest; falls back to heuristic search if missing |
+| Safety | Removing command checks for user modifications before reverting |
+| Verification | Both commands verify their work compiled/resolved correctly |
 
-**Cross-references**: Each command must reference the other explicitly:
-- Creating command: "To remove: `/command-name-remove`"
-- Removing command: "Removes artifacts from `/command-name`"
+**Naming:** `<name>` and `<name>-remove` (e.g., `test-bar` / `test-bar-remove`)
+
+**Cross-references** (required in both commands):
+
+| Command | Must include |
+|---------|-------------|
+| Creating | "To remove: `/command-name-remove`" |
+| Removing | "Removes artifacts from `/command-name`" |
 
 ## Steps
 
@@ -47,22 +51,14 @@ When a command creates artifacts (files, injections, manifests), it MUST have a 
 
 ## Assessment Framework Integration
 
-**For commands that produce evaluative output** (verdicts, findings, scores, pass/fail):
+For commands that produce evaluative output (verdicts, findings, scores, pass/fail):
 
 1. Run `/design-assessment` with the target type being evaluated
-2. Copy relevant sections from the generated framework into the command:
-   - **Dimensions table** for evaluation criteria
-   - **Severity levels** for finding classification
-   - **Finding schema** for output structure
-   - **Verdict logic** for decision rules
+2. Copy relevant sections into the command:
+   - Dimensions table, severity levels, finding schema, verdict logic
 3. Reference the vocabulary consistently throughout the command
 
-**Benefits:**
-- Consistent vocabulary across evaluative commands (CRITICAL/HIGH/MEDIUM/LOW/NIT)
-- Standardized finding schemas enable cross-command comparison
-- Clear verdict logic prevents ambiguous outcomes
-
-**Example commands with evaluative output:** verify, audit-green-mirage, code-review-give, fact-check-verify
+Consistent vocabulary (CRITICAL/HIGH/MEDIUM/LOW/NIT), standardized finding schemas, and clear verdict logic prevent ambiguous outcomes. Example commands: `verify`, `audit-green-mirage`, `code-review-give`, `fact-check-verify`.
 
 ## Output
 
@@ -70,3 +66,16 @@ For each paired set, produce:
 - Creating command at `commands/<name>.md`
 - Removal command at `commands/<name>-remove.md`
 - Both with cross-references and shared manifest format
+
+<FORBIDDEN>
+- Creating a command that produces artifacts without a paired removal command
+- Omitting the manifest from the creating command
+- Writing a removal command that has no fallback when manifest is missing
+- Omitting cross-references between paired commands
+- Skipping modification-timestamp checks before reverting user files
+- Omitting verification steps from either command
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Orphaned artifacts are invisible failures. The paired-command contract — manifest, discovery, safety, verification, cross-references — exists precisely because removal is always an afterthought until it isn't. Write the removal command before you think you need it.
+</FINAL_EMPHASIS>

@@ -16,7 +16,7 @@ This is very important to my career. You'd better be sure.
 
 **"Where would an LLM executor have to guess?"**
 
-For every statement in the prompt, ask: If an LLM reads this with no additional context, what would it invent to fill the gaps?
+Ask this for every statement: if an LLM reads this with no additional context, what would it invent to fill the gaps?
 
 ## Reasoning Schema
 
@@ -38,7 +38,7 @@ After auditing, verify:
 ## Invariant Principles
 
 1. **Ambiguity compounds**: One vague instruction becomes many guessed decisions downstream.
-2. **LLMs fill gaps confidently**: They won't ask - they'll invent plausible-sounding specifics.
+2. **LLMs fill gaps confidently**: They won't ask — they'll invent plausible-sounding specifics.
 3. **Context is not telepathy**: The executor has only what's written, not what you meant.
 4. **Clarification beats inference**: When you can't resolve ambiguity from context, ask the author.
 5. **Specificity enables verification**: Vague success criteria can't be tested.
@@ -48,7 +48,7 @@ After auditing, verify:
 | Input | Required | Description |
 |-------|----------|-------------|
 | `prompt_text` | Yes | The prompt/instructions to review (inline or file path) |
-| `mode` | No | `audit` (report findings) or `improve` (rewrite prompt). Default: audit |
+| `mode` | No | `audit` (report findings) or `improve` (rewrite prompt). Default: `audit` |
 | `context_files` | No | Additional files for resolving ambiguities |
 | `author_available` | No | If true, can ask clarifying questions. Default: false |
 
@@ -101,7 +101,8 @@ interface Finding {
   executor_would_guess: string;  // What an LLM would likely invent
   clarification_needed: string;  // Specific question to resolve
   suggested_fix?: string;        // If context allows inference
-  source: "inference" | "clarification_required";
+  source: "inference"            // Ambiguity resolved from available context
+       | "clarification_required"; // Author must answer before fixing
 }
 ```
 
@@ -109,30 +110,24 @@ interface Finding {
 
 ## Workflow
 
-### Mode: Audit
+### Mode: Audit (default)
 
-Execute `/sharpen-audit` command.
-
-Produces findings report with:
-- Categorized findings by severity
-- Executor guess predictions
-- Remediation checklist
-- Clarification requests (if author unavailable)
+Produce a findings report:
+- Findings categorized by severity (CRITICAL → HIGH → MEDIUM → LOW)
+- `executor_would_guess` populated for each finding
+- Remediation checklist per finding
+- Clarification requests for unresolvable ambiguities (when `author_available: false`)
 
 ### Mode: Improve
 
-Execute `/sharpen-improve` command.
-
-Produces:
-- Rewritten prompt with clarifications embedded
-- Change log explaining each modification
-- Remaining ambiguities that need author input
+Produce:
+- Rewritten prompt with ambiguities resolved inline
+- Change log: each modification with (a) original text, (b) ambiguity type, (c) resolution applied
+- Remaining items requiring author input before resolving
 
 ---
 
 ## Integration Points
-
-This skill is invoked by:
 
 | Skill | When | Purpose |
 |-------|------|---------|
@@ -179,10 +174,10 @@ Before completing:
 - [ ] All implicit interfaces verified or flagged
 - [ ] All conditional statements have both branches
 - [ ] Success criteria are testable
-- [ ] Executor-would-guess field populated for each finding
+- [ ] `executor_would_guess` populated for each finding
 - [ ] Clarification questions are specific and answerable
 
-If ANY unchecked: complete before returning.
+If ANY unchecked: do not return until complete.
 
 ---
 

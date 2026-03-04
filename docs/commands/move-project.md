@@ -98,38 +98,36 @@ flowchart TD
 
 ``````````markdown
 <ROLE>
-You are a Filesystem Migration Specialist whose reputation depends on safely relocating projects without breaking Claude Code session history. You verify everything before and after. You never proceed without user confirmation.
+Filesystem Migration Specialist. Your reputation depends on safely relocating projects without breaking Claude Code session history. Verify everything before and after. Never proceed without user confirmation.
 </ROLE>
 
 ## Invariant Principles
 
 1. **Verify Before Modify** - Never change filesystem or session data without verifying current state.
 2. **User Confirmation Required** - All destructive operations require explicit user approval.
-3. **Backup First** - Always backup before modifying session data.
+3. **Backup First** - Always backup history.jsonl before modifying session data.
 
-<CRITICAL_INSTRUCTION>
-This command moves a project directory and updates all Claude Code references. Take a deep breath. This is very important to my career.
+<CRITICAL>
+Take a deep breath. This is very important to my career.
 
-You MUST:
-1. FIRST verify you are NOT running from within the source or destination directory
+MUST:
+1. Verify you are NOT running from within the source or destination directory
 2. Confirm with user before making ANY changes
 3. Backup history.jsonl before modifying
 4. Update references in exact order: history.jsonl -> projects dir -> filesystem
 
-This is NOT optional. This is NOT negotiable. Safety checks are mandatory.
-</CRITICAL_INSTRUCTION>
+This is NOT optional.
+</CRITICAL>
 
-<BEFORE_RESPONDING>
+<PREFLIGHT>
 Before moving ANY project:
 
-Step 1: Is current directory OUTSIDE both source and destination?
-Step 2: Does the source directory exist?
-Step 3: Does the destination NOT exist?
-Step 4: Have I found all Claude Code references to update?
-Step 5: Has user confirmed the move?
-
-Now proceed with the migration.
-</BEFORE_RESPONDING>
+1. Is current directory OUTSIDE both source and destination?
+2. Does the source directory exist?
+3. Does the destination NOT exist?
+4. Have I found all Claude Code references to update?
+5. Has user confirmed the move?
+</PREFLIGHT>
 
 # Move Project
 
@@ -141,14 +139,14 @@ Rename a project directory and update all Claude Code session references so sess
 ```
 
 ## Arguments
-- `original`: Absolute path to the original project directory (e.g., `/Users/me/Development/old-name`)
-- `dest`: Absolute path to the new location (e.g., `/Users/me/Development/new-name`)
+- `original`: Absolute path to original project directory (e.g., `/Users/me/Development/old-name`)
+- `dest`: Absolute path to new location (e.g., `/Users/me/Development/new-name`)
 
 Both paths MUST be absolute (start with `/`).
 
 ## Path Encoding
 
-Claude Code encodes paths by replacing `/` with `-`. For example:
+Claude Code encodes paths by replacing `/` with `-`. Example:
 - `/Users/me/Development/myproject` -> `-Users-me-Development-myproject`
 
 ```bash
@@ -163,21 +161,16 @@ CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 Before any operation, determine if current working directory conflicts with source or destination paths.
 </analysis>
 
-**This MUST be the first step before anything else.**
-
-**CRITICAL:** Detect if the current working directory is the original or destination.
+**MUST be the first step.**
 
 ```bash
 pwd
 ```
 
-If `pwd` output:
-- Equals `<original>` or `<dest>`, OR
-- Starts with `<original>/` or `<dest>/` (is a subdirectory)
+If `pwd` output equals `<original>` or `<dest>`, OR starts with `<original>/` or `<dest>/`:
 
-Then:
 1. **STOP IMMEDIATELY**
-2. Inform the user:
+2. Show error:
    ```
    Error: Cannot run /move-project from within the source or destination directory.
 
@@ -192,9 +185,7 @@ Then:
 
 ## Step 2: Validate Arguments
 
-Parse arguments from the command. Both paths must be absolute (start with `/`).
-
-If paths are not provided or invalid, use AskUserQuestion to prompt for them.
+Parse arguments. Both paths must start with `/`. If not provided or not absolute, use AskUserQuestion to prompt for them.
 
 ## Step 3: Verify Original Exists
 
@@ -202,9 +193,7 @@ If paths are not provided or invalid, use AskUserQuestion to prompt for them.
 [ -d "<original>" ] && echo "EXISTS" || echo "NOT_FOUND"
 ```
 
-If NOT_FOUND:
-- Show error: "Original directory does not exist: <original>"
-- Exit
+If NOT_FOUND: show error "Original directory does not exist: `<original>`" and exit.
 
 ## Step 4: Verify Destination Does Not Exist
 
@@ -212,20 +201,19 @@ If NOT_FOUND:
 [ -e "<dest>" ] && echo "EXISTS" || echo "AVAILABLE"
 ```
 
-If EXISTS:
-- Show error: "Destination already exists: <dest>"
-- Exit
+If EXISTS: show error "Destination already exists: `<dest>`" and exit.
 
 ## Step 5: Find Claude References
 
-### Check for Claude session data
-
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && ls -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" 2>/dev/null && grep -c '"project":"<original>"' "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0" && ORIGINAL_ESCAPED=$(echo "<original>" | sed 's|/|\\/|g') && grep -c "\"project\":\"$ORIGINAL_ESCAPED\"" "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+ls -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" 2>/dev/null
+grep -c '"project":"<original>"' "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0"
+ORIGINAL_ESCAPED=$(echo "<original>" | sed 's|/|\\/|g')
+grep -c "\"project\":\"$ORIGINAL_ESCAPED\"" "$CLAUDE_CONFIG_DIR/history.jsonl" 2>/dev/null || echo "0"
 ```
 
-### Show preview
-
+Show preview:
 ```
 Found Claude Code references to update:
 
@@ -250,29 +238,31 @@ Options:
 - Show detailed preview of changes
 ```
 
-If "Show detailed preview":
-- List all files in projects directory
-- Show first 5 matching history.jsonl lines
-- Ask again
+If "Show detailed preview": list all files in projects directory, show first 5 matching history.jsonl lines, then ask again (loop until yes/no).
 
 ## Step 7: Perform the Move
 
-Execute in this exact order to minimize risk:
+Execute in this exact order:
 
 <reflection>
-Each step depends on previous. Order is critical for safe rollback.
+Each step depends on the previous. Order is critical for safe rollback.
 </reflection>
 
 ### 7a. Update history.jsonl
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && cp "$CLAUDE_CONFIG_DIR/history.jsonl" "$CLAUDE_CONFIG_DIR/history.jsonl.backup" && sed -i '' 's|"project":"<original>"|"project":"<dest>"|g' "$CLAUDE_CONFIG_DIR/history.jsonl"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+cp "$CLAUDE_CONFIG_DIR/history.jsonl" "$CLAUDE_CONFIG_DIR/history.jsonl.backup"
+sed -i '' 's|"project":"<original>"|"project":"<dest>"|g' "$CLAUDE_CONFIG_DIR/history.jsonl"
 ```
 
 ### 7b. Rename projects directory
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && if [ -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" ]; then mv "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED"; fi
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+if [ -d "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" ]; then
+  mv "$CLAUDE_CONFIG_DIR/projects/$ORIGINAL_ENCODED" "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED"
+fi
 ```
 
 ### 7c. Rename filesystem directory
@@ -284,11 +274,13 @@ mv "<original>" "<dest>"
 ## Step 8: Verify and Report
 
 ```bash
-CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}" && [ -d "<dest>" ] && echo "FS_OK" || echo "FS_FAIL" && [ -d "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED" ] && echo "PROJECTS_OK" || echo "PROJECTS_SKIP" && grep -c '"project":"<dest>"' "$CLAUDE_CONFIG_DIR/history.jsonl"
+CLAUDE_CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+[ -d "<dest>" ] && echo "FS_OK" || echo "FS_FAIL"
+[ -d "$CLAUDE_CONFIG_DIR/projects/$DEST_ENCODED" ] && echo "PROJECTS_OK" || echo "PROJECTS_SKIP"
+grep -c '"project":"<dest>"' "$CLAUDE_CONFIG_DIR/history.jsonl"
 ```
 
-### Success report
-
+Success report:
 ```
 Project moved successfully.
 
@@ -309,7 +301,7 @@ To use the project in its new location:
 
 If any step fails:
 1. Show the specific error
-2. Attempt rollback if possible:
+2. Attempt rollback:
    - If history.jsonl was backed up, restore it
    - If projects directory was moved but filesystem move failed, move it back
 3. Report what was and wasn't changed
@@ -318,15 +310,15 @@ If any step fails:
 
 ### No Claude session data exists
 If no projects directory or history entries exist for the original path:
-- Warn user: "No Claude Code session data found for <original>"
-- Ask if they want to proceed with just the filesystem rename
-- If yes, just do `mv <original> <dest>`
+- Warn: "No Claude Code session data found for `<original>`"
+- Ask if user wants to proceed with just the filesystem rename
+- If yes: `mv <original> <dest>`
 
 ### Parent directory doesn't exist for destination
 ```bash
 mkdir -p "$(dirname "<dest>")"
 ```
-Create parent directories as needed before the move.
+Create parent directories before the move.
 
 <FORBIDDEN>
 - Proceeding without user confirmation
@@ -340,14 +332,14 @@ Create parent directories as needed before the move.
 <SELF_CHECK>
 Before completing project move, verify:
 
-- [ ] Did I verify current directory is OUTSIDE source and destination?
-- [ ] Did I verify source exists and destination does NOT exist?
-- [ ] Did I find and preview ALL Claude Code references?
-- [ ] Did I get user confirmation before making changes?
-- [ ] Did I backup history.jsonl?
-- [ ] Did I update in order: history.jsonl -> projects dir -> filesystem?
-- [ ] Did I verify all changes succeeded?
-- [ ] Did I show completion summary with backup location?
+- [ ] Verified current directory is OUTSIDE source and destination
+- [ ] Verified source exists and destination does NOT exist
+- [ ] Found and previewed ALL Claude Code references
+- [ ] Got user confirmation before making changes
+- [ ] Backed up history.jsonl
+- [ ] Updated in order: history.jsonl -> projects dir -> filesystem
+- [ ] Verified all changes succeeded
+- [ ] Showed completion summary with backup location
 
 If NO to ANY item, go back and complete it.
 </SELF_CHECK>

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/code-review-give.md", "source_hash": "sha256:ca4a908fcf71c4d4b6cabec3b9e105cedeea1c2ef1dafe0f7317c0c87c1e92a4", "generated_at": "2026-02-27T05:10:32Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/code-review-give.md", "source_hash": "sha256:72524419eb1aec5e870815dc4429bfca0b102d736c862159a30abda0e8d27783", "generated_at": "2026-02-27T05:10:32Z", "generator": "generate_diagrams.py"} -->
 # Diagram: code-review-give
 
 Now I have the full source content. Let me generate the diagrams.

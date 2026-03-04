@@ -1,11 +1,14 @@
 # Subagent Dispatch Pattern
 
+<ROLE>
+Orchestrator. Your reputation depends on keeping main context lean and subagent output actionable. Bloated orchestration context and raw-data returns are failures.
+</ROLE>
+
 ## Invariant Principles
 
 1. **Context is cost.** Every token in main context persists; subagent context is discarded after synthesis.
 2. **Subagents isolate complexity.** Exploration, research, parallel work belong in disposable contexts.
 3. **Main context preserves continuity.** User feedback loops, accumulated evidence, safety decisions require persistent state.
-4. **Output must be actionable.** Subagents return summaries, not data dumps.
 
 ## Decision Schema
 
@@ -17,6 +20,7 @@
 - Needs user feedback iteration? → main context
 - Builds on established context? → main context
 - Safety-critical git operation? → main context
+  (safety-critical = commit, push, checkout, restore, stash, merge, rebase, reset)
 </analysis>
 
 <reflection>
@@ -37,20 +41,17 @@ Use subagent when: subagent_cost < main_cost
 
 ### OpenCode Agent Inheritance
 
-When running in OpenCode with custom agents (yolo, yolo-focused), subagents must inherit the parent's agent type to preserve permissions.
+When running in OpenCode, subagents must inherit the parent agent type.
 
-**Detection:** Check your system prompt for agent indicators:
+| System prompt contains | Use subagent_type |
+|---|---|
+| "operating in YOLO mode" | `yolo` |
+| "YOLO mode with a focus on precision" | `yolo-focused` |
+| Neither | `general` (default) |
 
-- "operating in YOLO mode" → use `subagent_type: "yolo"`
-- "YOLO mode with a focus on precision" → use `subagent_type: "yolo-focused"`
-- No YOLO indicators → use `subagent_type: "general"` (default)
-
-**Critical:** When dispatching subagents, use the same agent type you're running under. This ensures:
-
-- `yolo` parent → `yolo` subagents (full autonomous permissions)
-- `general` parent → `general` subagents (standard permissions)
-
-**Exception:** For pure exploration tasks (finding files, searching code) where you explicitly want read-only behavior, you may use `explore` even when parent is YOLO.
+<CRITICAL>
+Exception: For pure read-only exploration (finding files, searching code), use `explore` even when parent is YOLO.
+</CRITICAL>
 
 ## Prompt Requirements
 
@@ -61,11 +62,29 @@ Every subagent prompt:
 3. Relevant conversation context
 4. NegativePrompt: explicit prohibitions prevent drift
 
+**Example (well-formed):**
+```
+Launch Explore agent.
+Task: Find all Django model files in src/ that define a `status` field.
+Return: List of file paths and field definitions only. Do NOT read test files.
+Context: We are auditing status field usage before a migration.
+```
+
 ## Output Contract
 
 - Return summary, not raw data
-- Large outputs → file path only
+- Output >50 lines → write to file, return path only
 - Orchestrator synthesizes for user
+
+**Error handling:** If subagent returns insufficient or malformed output, re-dispatch with tighter scope. Do NOT expand main context with the raw output to compensate.
+
+<FORBIDDEN>
+- Returning raw file contents or command output to main context
+- Dispatching a subagent without scope boundaries (what NOT to do)
+- Using main context for tasks that meet subagent dispatch criteria
+- Expanding main context with subagent raw output when synthesis fails
+- Skipping subagent dispatch because "it seems simple"
+</FORBIDDEN>
 
 ## Usage Reference
 
@@ -73,3 +92,7 @@ Every subagent prompt:
 Use subagent dispatch pattern (patterns/subagent-dispatch.md).
 Launch [Type] agent for [task].
 ```
+
+<FINAL_EMPHASIS>
+Every token in main context has a cost that compounds. Dispatch aggressively. Return summaries only. A bloated orchestrator is a failed orchestrator.
+</FINAL_EMPHASIS>

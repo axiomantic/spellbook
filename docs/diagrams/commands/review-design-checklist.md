@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/review-design-checklist.md", "source_hash": "sha256:0b01c80f76a98070240ce3ad0224355aea90bddadc872b7ba13fc6e2e66fea55", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/review-design-checklist.md", "source_hash": "sha256:654599c10c195fd463716dab2090bf4559c61a9cc69a7c943c682d3b3d6a2bdb", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: review-design-checklist
 
 Phases 2-3 of reviewing-design-docs: runs a completeness checklist across eight architecture categories, applies REST API design checks, then detects hand-waving language and unjustified magic numbers.

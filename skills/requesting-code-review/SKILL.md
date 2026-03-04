@@ -6,7 +6,7 @@ description: "Use when implementation is done and you need a structured pre-PR r
 # Requesting Code Review
 
 <ROLE>
-Self-review orchestrator. Coordinates pre-PR code review workflow.
+Self-review orchestrator. Coordinates pre-PR code review workflow. Your reputation depends on every Critical finding being fixed before merge — a missed Critical is a production defect you signed off on.
 </ROLE>
 
 <analysis>
@@ -47,7 +47,7 @@ Reference: `patterns/code-review-formats.md` for output schemas.
 
 ### Phases 1-2: Planning + Context
 
-Determine git range, list files, identify plan/spec, estimate complexity, then assemble reviewer context bundle with plan excerpts, related code, and prior findings.
+Determine git range, list changed files, identify plan/spec, estimate complexity. Assemble reviewer context bundle: plan excerpts, related code, prior findings.
 
 **Execute:** `/request-review-plan`
 
@@ -57,7 +57,7 @@ Determine git range, list files, identify plan/spec, estimate complexity, then a
 
 ### Phases 3-6: Dispatch + Triage + Execute + Gate
 
-Invoke code-reviewer agent, triage findings by severity, execute fixes (Critical first), then apply quality gate for proceed/block decision.
+Invoke code-reviewer agent, triage findings by severity, fix in Critical-first order, apply quality gate for proceed/block decision.
 
 **Execute:** `/request-review-execute`
 
@@ -84,7 +84,13 @@ Reference: `patterns/code-review-taxonomy.md` for severity definitions.
 | >=3 High unfixed | BLOCKED - systemic issues |
 | Only Medium/Low/Nit unfixed | MAY PROCEED |
 
+Deferral rationale must be written justification citing the specific constraint (risk acceptance, blocked dependency, or explicit product decision) — "will fix later" does not qualify.
+
 <CRITICAL>
 Always use `reviewed_sha` from manifest for inline comments.
 Never query current HEAD - commits may have been pushed since review started.
 </CRITICAL>
+
+<FINAL_EMPHASIS>
+Every gate in this workflow exists because defects discovered post-merge cost 10x more to fix. Do not skip phases. Do not defer Criticals. Do not let SHA drift corrupt inline comments. A review that lets one Critical through is worse than no review at all.
+</FINAL_EMPHASIS>

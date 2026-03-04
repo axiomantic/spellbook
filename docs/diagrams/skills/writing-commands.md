@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/writing-commands/SKILL.md", "source_hash": "sha256:9a517e381de684be4e532c7cc704188e82eb9de0214a9df02c2ae397c0728211", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/writing-commands/SKILL.md", "source_hash": "sha256:d87abe09aa9e7a623b7a25f8ad1e886edaa2eff423a210e8dfe87e5c03714fcc", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: writing-commands
 
 Three-phase workflow for creating, reviewing, and pairing commands. Commands are direct agent prompts that must be self-contained, unambiguous, and structured for scanning under pressure.

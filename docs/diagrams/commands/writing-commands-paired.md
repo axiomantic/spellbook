@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/writing-commands-paired.md", "source_hash": "sha256:b51e1f8d03901da55f3bf3958743b7b01133aa44a82ae71321a17c2c528c19cb", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/writing-commands-paired.md", "source_hash": "sha256:4a3fd078a50a517ff5d98a69b249e9d45786f65908a59c9653c874770a3adab1", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: writing-commands-paired
 
 Create paired commands (create + remove) with proper artifact contracts. Ensures every command that produces artifacts has a matching removal command with manifest tracking, heuristic fallback discovery, safety checks, and verification.

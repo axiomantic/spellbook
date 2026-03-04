@@ -123,38 +123,29 @@ Implementation Lead executing architect-approved plans. Reputation depends on fa
 4. **Review Before Proceed**: No task advances past unaddressed review findings. Spec compliance precedes code quality.
 5. **Context Completeness**: Subagents receive full task text, never file references. Fresh contexts lack your accumulated knowledge.
 
----
+## Inputs / Outputs
 
-## Inputs
+| Input | Required | Description |
+|-------|----------|-------------|
+| Plan document | Yes | Implementation plan from `writing-plans` with numbered tasks |
+| Mode preference | No | `batch` (default) or `subagent` |
+| Batch size | No | Tasks per batch in batch mode (default: 3) |
 
-| Input           | Required | Description                                                  |
-| --------------- | -------- | ------------------------------------------------------------ |
-| Plan document   | Yes      | Implementation plan from `writing-plans` with numbered tasks |
-| Mode preference | No       | `batch` (default) or `subagent` - execution strategy         |
-| Batch size      | No       | Tasks per batch in batch mode (default: 3)                   |
-
-## Outputs
-
-| Output                   | Type      | Description                              |
-| ------------------------ | --------- | ---------------------------------------- |
-| Completed implementation | Code      | All plan tasks implemented and verified  |
-| Verification evidence    | Inline    | Test output, build results per task      |
-| Task completion log      | TodoWrite | Progress tracking with completion status |
-
----
+| Output | Type | Description |
+|--------|------|-------------|
+| Completed implementation | Code | All plan tasks implemented and verified |
+| Verification evidence | Inline | Test output, build results per task |
+| Task completion log | TodoWrite | Progress tracking with completion status |
 
 ## Mode Selection
 
-| Mode              | Review Type         | Task Execution          | Checkpoints     |
-| ----------------- | ------------------- | ----------------------- | --------------- |
-| `batch` (default) | Human-in-loop       | Sequential inline       | Between batches |
-| `subagent`        | Automated two-stage | Fresh subagent per task | After each task |
+| Mode | Review Type | Task Execution | Checkpoints |
+|------|-------------|----------------|-------------|
+| `batch` (default) | Human-in-loop | Sequential inline | Between batches |
+| `subagent` | Automated two-stage | Fresh subagent per task | After each task |
 
-**Use batch when:** Architect wants review between batches, tasks tightly coupled, plan needs active discussion.
-
-**Use subagent when:** Tasks mostly independent, faster iteration desired, want automated spec+quality review.
-
----
+Use `batch` when: architect wants review between batches, tasks tightly coupled, plan needs active discussion.
+Use `subagent` when: tasks mostly independent, faster iteration desired, want automated spec+quality review.
 
 ## Autonomous Mode
 
@@ -164,26 +155,8 @@ Check for "Mode: AUTONOMOUS" or explicit autonomous instruction.
 
 **Auto-decide:** Batch size (default 3), implementation details (document choice), applying review fixes.
 
----
-
-## OpenCode Agent Inheritance
-
 <CRITICAL>
-**If running in OpenCode:** Propagate your agent type to all subagents.
-
-**Detection:** Check system prompt for:
-
-- "operating in YOLO mode" → `CURRENT_AGENT_TYPE = "yolo"`
-- "YOLO mode with a focus on precision" → `CURRENT_AGENT_TYPE = "yolo-focused"`
-- Neither → `CURRENT_AGENT_TYPE = "general"`
-
-**All Task tool calls MUST use `CURRENT_AGENT_TYPE` as `subagent_type`.**
-
-This ensures subagents inherit autonomous permissions when parent is YOLO.
-</CRITICAL>
-
-<CRITICAL>
-**Circuit breakers (still pause):**
+**Circuit breakers (still pause in autonomous mode):**
 - Critical plan gaps preventing execution
 - 3+ consecutive test failures
 - Security-sensitive operations not clearly specified
@@ -191,27 +164,33 @@ This ensures subagents inherit autonomous permissions when parent is YOLO.
 - 3+ review cycles on same issue
 </CRITICAL>
 
-When subagent asks scope question in autonomous mode, MUST use AskUserQuestion:
+When subagent raises scope question in autonomous mode, MUST use AskUserQuestion:
 
 ```javascript
 AskUserQuestion({
-  questions: [
-    {
-      question:
-        "Implementer asks: 'Should this also handle X case?' This affects scope.",
-      header: "Scope",
-      options: [
-        { label: "Yes, include X", description: "Expand scope" },
-        {
-          label: "No, exclude X (Recommended)",
-          description: "Keep minimal per YAGNI",
-        },
-        { label: "Defer to future task", description: "Note for later" },
-      ],
-    },
-  ],
+  questions: [{
+    question: "Implementer asks: 'Should this also handle X case?' This affects scope.",
+    header: "Scope",
+    options: [
+      { label: "Yes, include X", description: "Expand scope" },
+      { label: "No, exclude X (Recommended)", description: "Keep minimal per YAGNI" },
+      { label: "Defer to future task", description: "Note for later" },
+    ],
+  }],
 });
 ```
+
+## OpenCode Agent Inheritance
+
+<CRITICAL>
+If running in OpenCode: propagate your agent type to all subagents.
+
+- "operating in YOLO mode" → `CURRENT_AGENT_TYPE = "yolo"`
+- "YOLO mode with a focus on precision" → `CURRENT_AGENT_TYPE = "yolo-focused"`
+- Neither → `CURRENT_AGENT_TYPE = "general"`
+
+All Task tool calls MUST use `CURRENT_AGENT_TYPE` as `subagent_type`.
+</CRITICAL>
 
 ---
 
@@ -228,57 +207,24 @@ Before starting:
 
 1. Read plan file
 2. Review critically - identify questions/concerns
-3. If concerns:
-   ```javascript
-   AskUserQuestion({
-     questions: [
-       {
-         question: "Found [N] concerns with the plan. How should we proceed?",
-         header: "Plan Review",
-         options: [
-           {
-             label: "Discuss concerns",
-             description: "Review each before starting",
-           },
-           {
-             label: "Proceed anyway (Recommended if minor)",
-             description: "Address as they arise",
-           },
-           {
-             label: "Update plan first",
-             description: "Revise to address concerns",
-           },
-         ],
-       },
-     ],
-   });
-   ```
+3. If concerns, ask user via AskUserQuestion with options: Discuss / Proceed anyway / Update plan first
 4. If no concerns: Create TodoWrite and proceed
 
 ### Phase 2: Execute Batch
 
 Default first 3 tasks. Per task:
-
 1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
+2. Follow each step exactly
 3. Run verifications as specified
 4. Mark as completed with evidence
 
 ### Phase 3: Report
 
-When batch complete:
-
-- Show what was implemented
-- Show verification output
-- Say: "Ready for feedback."
+When batch complete: show what was implemented, show verification output, say "Ready for feedback."
 
 ### Phase 4: Continue
 
-Based on feedback:
-
-- Apply changes if needed
-- Execute next batch
-- Repeat until complete
+Based on feedback: apply changes if needed, execute next batch, repeat until complete.
 
 ### Phase 5: Complete Development
 
@@ -290,14 +236,13 @@ Before completing:
 IF YES to any bad pattern: STOP and fix.
 </reflection>
 
-- Announce: "Using finishing-a-development-branch skill to complete this work."
-- **REQUIRED:** Invoke finishing-a-development-branch skill
+**REQUIRED:** Invoke `finishing-a-development-branch` skill.
 
 ---
 
 ## Subagent Mode Process
 
-Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration.
+Fresh subagent per task + two-stage review (spec then quality).
 
 ### Phase 1: Extract Tasks
 
@@ -306,17 +251,12 @@ Read plan once. Extract all tasks with full text and context. Create TodoWrite.
 ### Phase 2: Per-Task Execution Loop
 
 For each task:
-
-1. **Dispatch implementer subagent** (use `./implementer-prompt.md`)
-2. **Answer questions** if implementer asks any - answer clearly and completely
-3. **Implementer implements, tests, commits, self-reviews**
-4. **Dispatch spec reviewer** (`./spec-reviewer-prompt.md`)
-   - If issues found: implementer fixes, re-review
-   - Loop until spec compliant
-5. **Dispatch code quality reviewer** (`./code-quality-reviewer-prompt.md`)
-   - If issues found: implementer fixes, re-review
-   - Loop until approved
-6. **Mark task complete in TodoWrite**
+1. Dispatch implementer subagent (`./implementer-prompt.md`)
+2. Answer questions from implementer clearly and completely
+3. Implementer implements, tests, commits, self-reviews
+4. Dispatch spec reviewer (`./spec-reviewer-prompt.md`) - loop with fixes until spec compliant
+5. Dispatch code quality reviewer (`./code-quality-reviewer-prompt.md`) - loop with fixes until approved
+6. Mark task complete in TodoWrite
 
 ### Phase 3: Final Review
 
@@ -324,8 +264,7 @@ Dispatch final code reviewer for entire implementation.
 
 ### Phase 4: Complete Development
 
-- Announce: "Using finishing-a-development-branch skill to complete this work."
-- **REQUIRED:** Invoke finishing-a-development-branch skill
+**REQUIRED:** Invoke `finishing-a-development-branch` skill.
 
 ---
 
@@ -338,8 +277,12 @@ Dispatch final code reviewer for entire implementation.
 - You don't understand an instruction
 - Verification fails repeatedly
 
-**Ask for clarification rather than guessing.** The cost of asking is one exchange. The cost of guessing wrong is cascade failure.
+Ask for clarification rather than guessing. The cost of asking is one exchange. The cost of guessing wrong is cascade failure.
 </CRITICAL>
+
+## When to Revisit Phase 1
+
+Return to Phase 1 (Load Plan) when: user updates plan based on your feedback, fundamental approach needs rethinking, critical gap discovered mid-execution. Don't force through blockers - stop and ask.
 
 ---
 
@@ -361,24 +304,17 @@ Dispatch final code reviewer for entire implementation.
 </FORBIDDEN>
 
 ### Handling Subagent Questions
-
 - Answer clearly and completely before letting them proceed
-- Provide additional context if task references things they don't know
 - If question affects scope: use AskUserQuestion (see circuit breakers)
-- Don't rush implementation; incomplete answers cause rework
+- Don't rush; incomplete answers cause rework
 
 ### Handling Review Issues
-
-- Implementer (same subagent) fixes issues
-- Reviewer reviews again (never skip re-review)
-- Loop until approved
-- If 3+ cycles: escalate to user
+- Implementer (same subagent) fixes issues; reviewer re-reviews (never skip re-review)
+- Loop until approved; if 3+ cycles: escalate to user
 
 ### Handling Subagent Failure
-
-- Dispatch fix subagent with specific instructions
+- Dispatch fix subagent with specific instructions and failure context
 - Don't fix manually (context pollution)
-- Provide failure context and expected behavior
 
 ---
 
@@ -396,30 +332,11 @@ Before marking execution complete:
 If ANY unchecked: STOP and fix before declaring complete.
 </CRITICAL>
 
----
-
-## When to Revisit Earlier Steps
-
-**Return to Phase 1 (Load Plan) when:**
-
-- User updates plan based on your feedback
-- Fundamental approach needs rethinking
-- Critical gap discovered mid-execution
-
-**Don't force through blockers** - stop and ask.
-
----
-
 ## Integration
-
-**Required workflow skills:**
 
 - **writing-plans** - Creates the plan this skill executes
 - **requesting-code-review** - Code review template for reviewer subagents
 - **finishing-a-development-branch** - Complete development after all tasks
-
-**Subagents should use:**
-
 - **test-driven-development** - Subagents follow TDD for each task
 
 <FINAL_EMPHASIS>

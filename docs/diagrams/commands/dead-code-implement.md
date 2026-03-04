@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/dead-code-implement.md", "source_hash": "sha256:005fb23b1d7fa379efad4f0446f4f572baecea95cdd9df2111c4cd4bb698fc98", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/dead-code-implement.md", "source_hash": "sha256:a81bc96b405b9c1157bd5832dabe230c79418305659cf0c17f0912162a88318b", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: dead-code-implement
 
 Apply dead code deletions with user approval, dependency ordering, and incremental verification.

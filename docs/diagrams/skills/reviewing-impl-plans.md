@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/reviewing-impl-plans/SKILL.md", "source_hash": "sha256:787ae767b7192af1a899f9b9eff284d44752edcd1c413b69c28c5079b05ef83d", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/reviewing-impl-plans/SKILL.md", "source_hash": "sha256:c56383df142cb11a64eed97418abb75aa8c0cfaa20ee886c83a91fde2c10c436", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: reviewing-impl-plans
 
 Reviews implementation plans before execution, auditing interface contracts between parallel work streams, verifying behavior references against source code, and checking completeness. Dispatches subagents for each phase and assembles a prioritized remediation report.

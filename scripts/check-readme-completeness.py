@@ -34,10 +34,10 @@ def main():
     readme_content = readme_path.read_text(encoding="utf-8")
     mkdocs_content = mkdocs_path.read_text(encoding="utf-8") if mkdocs_path.exists() else ""
 
-    # Find all commands (exclude files starting with underscore)
+    # Find all commands (exclude files starting with underscore or crystallized2)
     commands = []
     for cmd_file in commands_dir.glob("*.md"):
-        if not cmd_file.name.startswith("_"):
+        if not cmd_file.name.startswith("_") and "crystallized2" not in cmd_file.name:
             commands.append(cmd_file.stem)
 
     # Find all skills (directories with SKILL.md, exclude underscore prefix)
@@ -48,11 +48,11 @@ def main():
             if skill_file.exists():
                 skills.append(skill_dir.name)
 
-    # Find all agents (exclude files starting with underscore)
+    # Find all agents (exclude files starting with underscore or crystallized2)
     agents = []
     if agents_dir.exists():
         for agent_file in agents_dir.glob("*.md"):
-            if not agent_file.name.startswith("_"):
+            if not agent_file.name.startswith("_") and "crystallized2" not in agent_file.name:
                 agents.append(agent_file.stem)
 
     # Check for issues

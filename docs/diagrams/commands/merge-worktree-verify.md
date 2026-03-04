@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/merge-worktree-verify.md", "source_hash": "sha256:2c91cbac9638ebb1c0dc5508f0b67d03103b4b0ca185606ac4faa15bfb8bfbec", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/merge-worktree-verify.md", "source_hash": "sha256:352ddf5d701b072e48e9670888bc429a902eae091cd2f4a79746ed6cf5d3cf95", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: merge-worktree-verify
 
 Phases 4-5 of merging-worktrees: runs the full test suite, audits test quality with green-mirage detection, verifies all interface contracts survive merging, performs code review against the implementation plan, then cleans up worktrees and branches.

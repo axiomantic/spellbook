@@ -23,6 +23,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/create-issue](create-issue.md) | Create a GitHub issue with proper template discovery and population | spellbook |
 | [/create-pr](create-pr.md) | Create a pull request with proper template discovery and population | spellbook |
 | [/crystallize](crystallize.md) | Transform verbose SOPs into high-performance agentic prompts via principled comp... | spellbook |
+| [/crystallize-verify](crystallize-verify.md) | Adversarial review of a crystallized document against its original. Use when cry... | spellbook |
 | [/dead-code-analyze](dead-code-analyze.md) | Extract, triage, and verify code items for dead code. Part of dead-code-* family... | spellbook |
 | [/dead-code-implement](dead-code-implement.md) | Implement dead code deletions with user approval. Part of dead-code-* family. | spellbook |
 | [/dead-code-report](dead-code-report.md) | Generate dead code findings report with implementation plan. Part of dead-code-*... | spellbook |
@@ -35,7 +36,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/encyclopedia-build](encyclopedia-build.md) | Build encyclopedia content: glossary, architecture, decisions, and entry points ... | spellbook |
 | [/encyclopedia-validate](encyclopedia-validate.md) | Assemble and validate encyclopedia, write to output path (Phase 6) | spellbook |
 | [/execute-plan](execute-plan.md) | Execute implementation plans with structured review checkpoints. Use when you ha... | [superpowers](https://github.com/obra/superpowers) |
-| [/execute-work-packet](execute-work-packet.md) | Execute a single work packet - read packet, check dependencies, run tasks via TD... | spellbook |
+| [/execute-work-packet](execute-work-packet.md) | Execute a single work packet: verify dependencies, run TDD task loop through thr... | spellbook |
 | [/execute-work-packets-seq](execute-work-packets-seq.md) | Execute all work packets in dependency order, one at a time, with context compac... | spellbook |
 | [/fact-check-extract](fact-check-extract.md) | Phases 2-3 of fact-checking: Claim Extraction and Triage | spellbook |
 | [/fact-check-report](fact-check-report.md) | Phases 6-7 of fact-checking: Report Generation and Learning | spellbook |
@@ -48,7 +49,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/finish-branch-cleanup](finish-branch-cleanup.md) | Step 5 of finishing-a-development-branch: Worktree cleanup for Options 1, 2, and... | spellbook |
 | [/finish-branch-execute](finish-branch-execute.md) | Step 4 of finishing-a-development-branch: Execute chosen integration option (mer... | spellbook |
 | [/fix-tests-execute](fix-tests-execute.md) | Phase 2 of fixing-tests: Fix Execution - investigate, classify, fix, verify, and... | spellbook |
-| [/fix-tests-parse](fix-tests-parse.md) | Phase 0 of fixing-tests: Input Processing - parse audit reports and build work i... | spellbook |
+| [/fix-tests-parse](fix-tests-parse.md) | Phase 0 of fixing-tests: Input Processing — parse audit reports and build work i... | spellbook |
 | [/fractal-think-harvest](fractal-think-harvest.md) | Phase 3 of fractal-thinking: Read completed graph, verify synthesis, format Frac... | spellbook |
 | [/fractal-think-seed](fractal-think-seed.md) | Seed phase of fractal-thinking: Create graph and generate seed sub-questions | spellbook |
 | [/fractal-think-work](fractal-think-work.md) | Phase 2 of fractal-thinking: Dispatch workers that execute the recursive fractal... | spellbook |
@@ -59,7 +60,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/merge-work-packets](merge-work-packets.md) | Verify all tracks complete, invoke merging-worktrees, run QA gates, report final... | spellbook |
 | [/merge-worktree-execute](merge-worktree-execute.md) | Phase 2: Sequential Round Merging - merge worktrees in dependency order with tes... | spellbook |
 | [/merge-worktree-resolve](merge-worktree-resolve.md) | Phase 3: Conflict Resolution - delegate to resolving-merge-conflicts with interf... | spellbook |
-| [/merge-worktree-verify](merge-worktree-verify.md) | Phases 4-5: Final Verification and Cleanup - run full test suite, verify contrac... | spellbook |
+| [/merge-worktree-verify](merge-worktree-verify.md) | Phases 4-5: Final Verification and Cleanup — run full test suite, verify contrac... | spellbook |
 | [/mode](mode.md) | Switch session mode between fun, tarot, or off | spellbook |
 | [/move-project](move-project.md) | Move project: relocate directory and update Claude Code session references safel... | spellbook |
 | [/pr-distill](pr-distill.md) | Analyze a PR and generate a review distillation report that categorizes changes ... | spellbook |

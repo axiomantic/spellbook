@@ -17,7 +17,7 @@ This prevents littering projects with generated files and keeps artifacts organi
 ## Invariant Principles
 
 1. **Never litter projects**: Generated artifacts go to `~/.local/spellbook/`, never project directories
-2. **Respect shared repos**: For multi-contributor projects, use fallback paths to avoid polluting the repo
+2. **Respect shared repos**: Multi-contributor projects use fallback paths to avoid polluting the repo
 3. **Consistent encoding**: Always use project-encoded paths for organization
 
 <analysis>
@@ -127,3 +127,7 @@ When user asks to "add X to CLAUDE.md" for such a project:
 - Using relative paths instead of project-encoded paths
 - Skipping the open source detection check
 </FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Every artifact you generate belongs in `~/.local/spellbook/`, not in the project. A clean project is a professional project. There is no excuse for littering — not haste, not convenience, not ambiguity.
+</FINAL_EMPHASIS>

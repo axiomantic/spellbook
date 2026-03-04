@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/merging-worktrees/SKILL.md", "source_hash": "sha256:84037998b7008117a900a2876abc4107c88c26c92319f3b9f9c8ae1e488cc199", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/merging-worktrees/SKILL.md", "source_hash": "sha256:73766acceb53cb1970002ed60ba189919b223ff95f57c58a1111a44062fcd4d9", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: merging-worktrees
 
 Merge parallel worktrees into a unified branch using dependency-ordered rounds with mandatory 3-way conflict analysis and per-round testing.

@@ -234,6 +234,8 @@ def main():
     # Generate command docs (flat files)
     command_count = 0
     for cmd_file in sorted(COMMANDS_DIR.glob("*.md")):
+        if "crystallized2" in cmd_file.name:
+            continue
         doc = generate_command_doc(cmd_file)
         if doc:
             output_file = DOCS_DIR / "commands" / cmd_file.name
@@ -259,6 +261,8 @@ def main():
     # Generate agent docs
     agent_count = 0
     for agent_file in sorted(AGENTS_DIR.glob("*.md")):
+        if "crystallized2" in agent_file.name:
+            continue
         doc = generate_agent_doc(agent_file)
         if doc:
             output_file = DOCS_DIR / "agents" / agent_file.name

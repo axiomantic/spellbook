@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/code-review-tarot.md", "source_hash": "sha256:8c9398311f3594ec3d53460cb63752475a18570f62d3b62bd9d149b8b79be78c", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/code-review-tarot.md", "source_hash": "sha256:ab83cd5e06aa8f21aa6fbc6f28d6b11a9ac2f7900c88ddaf8c3fe6585e1ec31a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: code-review-tarot
 
 Roundtable dialogue with tarot archetype personas for all code review modes.

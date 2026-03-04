@@ -2,6 +2,10 @@
 
 Canonical structure for all agents in `agents/*.md`.
 
+<ROLE>
+Schema Enforcer. Your reputation depends on agents that are consistent, discoverable, and production-ready. A compliant agent schema is not a bureaucratic requirement - it is what makes agents reliable across orchestrators and sessions.
+</ROLE>
+
 ## Invariant Principles
 
 1. **Agents are system-invoked** - Called via Task tool, not user commands
@@ -25,8 +29,6 @@ model: inherit  # or: sonnet, opus, haiku
 
 ### 2. Invariant Principles
 
-3-5 numbered principles.
-
 ```markdown
 ## Invariant Principles
 
@@ -45,7 +47,7 @@ model: inherit  # or: sonnet, opus, haiku
 
 ### 4. Review/Analysis Schema
 
-Agents typically analyze and report. Include reasoning structure.
+Agents analyze and report. Include reasoning structure.
 
 ```markdown
 ## Review Schema
@@ -63,8 +65,6 @@ Agents typically analyze and report. Include reasoning structure.
 
 ### 5. Inputs
 
-What context the agent receives.
-
 ```markdown
 ## Inputs
 
@@ -76,8 +76,6 @@ What context the agent receives.
 
 ### 6. Outputs
 
-What the agent returns.
-
 ```markdown
 ## Outputs
 
@@ -88,8 +86,6 @@ What the agent returns.
 ```
 
 ### 7. Output Structure
-
-Specify the report format.
 
 ```markdown
 ## Output Structure
@@ -111,12 +107,11 @@ Specify the report format.
 </FORBIDDEN>
 ```
 
-Or as "Anti-Patterns to Flag" if agent detects issues:
+Or as "Anti-Patterns to Flag" when the agent's job is to detect violations in others' work:
 
 ```markdown
 ## Anti-Patterns to Flag
 
-- [Pattern]: [Description]
 - [Pattern]: [Description]
 ```
 
@@ -151,6 +146,9 @@ For review agents:
 
 ## Validation Rules
 
+<CRITICAL>
+Every agent in `agents/*.md` MUST satisfy these rules. Non-compliant agents are rejected.
+
 1. MUST have YAML frontmatter with `name`, `description`, `model`
 2. MUST have "Invariant Principles" section (3-5 items)
 3. MUST have `<analysis>` and `<reflection>` tags
@@ -158,10 +156,11 @@ For review agents:
 5. SHOULD have "Inputs" and "Outputs" sections
 6. SHOULD have "Output Structure" section
 7. SHOULD have `<FORBIDDEN>` or "Anti-Patterns" section
+</CRITICAL>
 
 ## Token Budget
 
-Target: <600 tokens. Agents are focused and compact.
+Target: <600 tokens. Agents are focused and compact. Exceeding 600 tokens is permitted when capability requires it; a 700-token agent that works beats a 500-token agent that breaks.
 
 ## Example Compliant Agent
 
@@ -225,3 +224,15 @@ Security Auditor. Reputation depends on catching real vulnerabilities.
 - Missing input validation issues
 </FORBIDDEN>
 ```
+
+<FORBIDDEN>
+- Omitting `<ROLE>` from an agent (agents without stakes framing produce inconsistent behavior)
+- Omitting `<analysis>` and `<reflection>` tags (removes structured reasoning from agent output)
+- Using "Anti-Patterns to Flag" form when the agent must constrain its own behavior (use `<FORBIDDEN>` instead)
+- Writing agents without Inputs and Outputs tables (makes orchestrator integration ambiguous)
+- Exceeding token budget without necessity (agents are focused tools, not general assistants)
+</FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Schema compliance is not box-checking. Every required element exists because orchestrators, session resumption, and parallel agent dispatch depend on predictable structure. An agent missing its ROLE produces inconsistent output. An agent missing Inputs/Outputs tables cannot be reliably orchestrated. Get the schema right.
+</FINAL_EMPHASIS>

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/crystallize.md", "source_hash": "sha256:aa36cd90ea3a2f44991c0ea9eaff931a8bb722473191d1d2a4c367c13811f032", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/crystallize.md", "source_hash": "sha256:710c9e1a1cd56411413d39f78157aba0b0149baf1e982578f0a2df0c66e5995d", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: crystallize
 
 Transform verbose SOPs into high-performance agentic prompts via principled compression across five phases with iterative verification.

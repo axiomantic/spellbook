@@ -16,9 +16,9 @@ Instruction Architect. Your reputation depends on prompts that WORK BETTER after
 
 1. **Understand Before Touching**: Read entire content. Map structure. Identify purpose. Catalog cross-references. Only then consider changes.
 
-2. **Improvement Over Compression**: A longer prompt that works beats a shorter prompt that breaks. Find gaps and fill them. Strengthen weak sections. THEN compress redundancy.
+2. **Compress First, Then Fill Gaps**: Compress redundancy aggressively to establish a tight baseline. Then fill only the gaps identified in Phase 2 analysis. MEDIUM/LOW gap fills must be net-neutral (offset by equal compression). Only CRITICAL/HIGH gaps may add net content.
 
-3. **Preserve Load-Bearing Content**: Pseudocode, formulas, data structures, examples, error handling, cross-references are structural - compress syntax only, never remove steps or fields.
+3. **Preserve Behavior, Not Word Count**: Pseudocode logic, data structure fields, error paths, and calibration failure modes must survive — but their *phrasing* can be compressed. An example trimmed to 3 lines that still anchors the behavior beats 8 lines of padding. A calibration note condensed to 1 sentence that still names the failure mode beats a paragraph.
 
 4. **Emotional Anchors Are Strategic**: Opening, closing, and critical junctures need emphasis. Reducing 10 CRITICALs to 3 well-placed ones is refinement. Removing all is destruction.
 
@@ -40,7 +40,7 @@ Instruction Architect. Your reputation depends on prompts that WORK BETTER after
 |----------|-----------|-------------------|
 | Emotional anchors | Preserve strategic placement | 3 (opening, closing, critical juncture) |
 | Pseudocode/formulas | Preserve logic completely, tighten syntax | 100% of steps and edge cases |
-| Examples | Preserve anchoring function | 1 per key behavior |
+| Examples | Compress to minimum illustrative length; anchoring function required | 1 per key behavior; length is compressible |
 | Data structures | Preserve all fields, may compress formatting | 100% of fields |
 | Error handling | Preserve all recovery paths | 100% of error paths |
 | Cross-references | Preserve and verify targets exist | 100% |
@@ -137,6 +137,8 @@ PRESERVE content that:
 
 **Test:** "Is this content addressing a known failure mode or completing a pattern?" If yes → PRESERVE
 
+**Compression note:** Preserving calibration content means preserving the *identified failure mode*, not the word count. A 3-sentence note condensed to 1 sentence that still names the failure mode and correction is acceptable. Remove surrounding explanation that does not add precision.
+
 ## Section Preservation Rules
 
 Preserve as SEPARATE sections (do not merge into other sections):
@@ -195,13 +197,61 @@ Before transforming:
 - `GATE` - Quality gates, checklists, scores, thresholds
 - `REFERENCE` - Links to external files, skills, patterns
 
+After categorizing all sections, produce this PROSE tracking output (ephemeral, in-context only):
+
+```
+PROSE sections identified: [section names]
+Document line count: [N]
+Sharpen-audit scope: [FULL DOCUMENT (≤200 lines) | PROSE SECTIONS ONLY (>200 lines)]
+```
+
+### Phase 1.5: Behavioral Spec Extraction
+
+Read the structure map produced in Phase 1. Extract behavioral spec items from five sources:
+
+| Source | Extraction Pattern | Spec Item Form |
+|--------|-------------------|----------------|
+| `<ROLE>` blocks | Role name + stakes text | "MUST adopt [role] with [stakes]"; if no stakes text, "MUST adopt [role]" |
+| `<FORBIDDEN>` blocks | Each listed item | "MUST NOT [item]" |
+| Explicit decision-tree branches | IF/THEN/ELSE conditions | "Given [condition], MUST [action]" |
+| Phase-gate conditions | Each gate condition | "MUST gate on [condition]" |
+| `<FINAL_EMPHASIS>` content | Core obligation text | "MUST treat [emphasis] as primary obligation" |
+
+**Spec gate activation:**
+
+```
+spec_items = [extracted items from all 5 sources]
+
+IF len(spec_items) < 3:
+    LOG "simple file: spec gate inactive (fewer than 3 spec items)"
+    spec_gate_active = False
+ELSE:
+    spec_gate_active = True
+    LOG f"spec gate active: {len(spec_items)} items"
+```
+
+**Storage:** Ephemeral in-context only. No file written. Referenced by Phase 5.
+
+**Output format:**
+
+```
+## Phase 1.5: Behavioral Spec
+Spec gate: ACTIVE (N items) | INACTIVE (simple file)
+
+Spec Items:
+- S1: MUST adopt [role] with [stakes]
+- S2: MUST NOT [item from FORBIDDEN]
+- S3: Given [condition], MUST [action]
+...
+```
+
 ### Phase 2: Gap Analysis
 
 <RULE>
 Look for what's MISSING or WEAK, not just what's verbose. A crystallized prompt should be BETTER, not just smaller.
 </RULE>
 
-**Instruction-engineering audit:**
+**Part A: Instruction-Engineering Audit**
 
 | Element | Present? | Quality |
 |---------|----------|---------|
@@ -234,24 +284,60 @@ Look for what's MISSING or WEAK, not just what's verbose. A crystallized prompt 
 - Should any referenced content be inlined?
 - Should any inline content be extracted to a reference?
 
-**Fractal exploration (optional):** When a prompt has 5+ cross-references or nested conditionals, invoke fractal-thinking with intensity `pulse` and seed: "What would an LLM misinterpret in [prompt purpose]?". Use the synthesis to identify additional gap findings beyond the checklist.
+**Fractal exploration (required when triggered):** When a prompt has 5+ cross-references OR nested conditionals, MUST invoke fractal-thinking Skill with intensity `pulse`, checkpoint mode `autonomous`, and seed: "What would an LLM misinterpret in [prompt purpose]?". Use the synthesis to identify additional gap findings beyond the checklist.
 
-### Phase 3: Improvement Design
+Trigger condition: [5+ cross-references] OR [nested conditionals present]
 
-Based on gaps found, BEFORE compression:
+Invocation pattern (verbatim):
 
-1. **Add missing emotional anchors** - Opening, closing, critical junctures need stakes
-2. **Add missing examples** - Abstract behavior needs concrete anchoring
-3. **Add missing error handling** - Undefined failure modes need explicit paths
-4. **Strengthen weak negative constraints** - Implicit "don'ts" become explicit
-5. **Fix stale cross-references** - Update or inline as needed
-6. **Clarify ambiguities** - Make conditionals explicit
+    First, invoke the fractal-thinking skill using the Skill tool.
+    Then follow its complete workflow.
 
-Document each improvement with rationale.
+    ## Input
+    seed: "What would an LLM misinterpret in [prompt purpose]?"
+    intensity: pulse
+    checkpoint: autonomous
 
-### Phase 4: Compression (Only After Phases 1-3)
+If fractal-thinking Skill invocation fails: LOG warning, continue Phase 2 without fractal findings.
 
-With full understanding and improvements designed, compress:
+**Part B: Prose Quality Audit**
+
+1. Determine scope using Phase 1 PROSE tracking output:
+   - Document ≤ 200 lines: `audit_target` = full document
+   - Document > 200 lines: `audit_target` = PROSE sections only
+
+2. Dispatch sharpening-prompts skill as subagent:
+   ```
+   First, invoke the sharpening-prompts skill using the Skill tool.
+   Then follow its complete workflow.
+
+   ## Input
+   prompt_text: [audit_target content]
+   mode: audit
+   ```
+
+3. Receive sharpening-prompts audit report (findings by severity)
+
+4. Disposition findings:
+   - CRITICAL → HALT: ask user whether to (a) fix before proceeding, (b) proceed with documented risk, or (c) cancel
+   - HIGH → proceed + warn + add to Phase 3 improvement targets
+   - MEDIUM → add to Phase 3 improvement targets silently
+   - LOW → add to Phase 3 improvement targets silently
+
+   NOTE: CRITICAL finding = entry present under `### CRITICAL` heading in Sharpening Audit Report. HIGH finding = entry present under `### HIGH` heading. Use heading presence, not the Verdict field, to determine disposition.
+
+5. If sharpening-prompts Skill invocation fails (command not found, error, timeout):
+   LOG "WARNING: sharpening-prompts (sharpen-audit) unavailable. Running Part A only."
+   Continue with Part A findings only. Do NOT halt.
+
+### Phase 3: Compression (Only After Phase 2)
+
+With full understanding of gaps, compress aggressively first to establish a tight baseline.
+
+**Severity-scaled targets** (based on Phase 2 findings — apply to final output after Phase 4):
+- 0 CRITICAL, 0 HIGH: final output ≤88% of original tokens
+- MEDIUM/LOW only: final output ≤93% of original tokens
+- Any CRITICAL or HIGH: final output ≤105% of original tokens
 
 **Target for removal:**
 - Redundant prose (same concept multiple ways) → consolidate to strongest
@@ -272,6 +358,30 @@ With full understanding and improvements designed, compress:
 - Declarative over imperative: "Research codebase" not "You should research the codebase"
 - Merge redundant sections: if two sections say the same thing, keep the better one
 - Tighten examples: keep the essence, remove padding
+
+### Phase 4: Gap Fill (Only After Phase 3)
+
+Based on gaps found in Phase 2, add improvements to the compressed baseline.
+
+**Offset Rule (MANDATORY):**
+- Each addition must cite a specific compression target that offsets it
+- MEDIUM/LOW severity gaps: additions must be net-neutral (name the compressed text removed to make room)
+- CRITICAL/HIGH severity gaps: may add net content, within the severity-scaled cap
+
+Improvement targets come from two sources:
+- Phase 2 Part A: IE architecture checklist findings
+- Phase 2 Part B: Sharpen-audit findings (severity HIGH, MEDIUM, LOW only; CRITICAL resolved before Phase 3)
+
+Address ALL targets from both sources:
+
+1. **Add missing emotional anchors** - Opening, closing, critical junctures need stakes
+2. **Add missing examples** - Abstract behavior needs concrete anchoring (minimum illustrative length)
+3. **Add missing error handling** - Undefined failure modes need explicit paths
+4. **Strengthen weak negative constraints** - Implicit "don'ts" become explicit
+5. **Fix stale cross-references** - Update or inline as needed
+6. **Clarify ambiguities** - Make conditionals explicit
+
+Document each improvement with: (a) what was added, (b) severity level, (c) offset compression cited (required for MEDIUM/LOW).
 
 ### Pre-Crystallization Verification (Gate Before Output)
 
@@ -330,6 +440,10 @@ IF iteration == max_iterations AND NOT all_checks_pass:
 | Broken workflow cycles | Missing "Repeat" / "Continue until" / loop-back instructions | Restore cycle completion from original |
 | Incomplete enumerations | List has fewer items than original | Restore complete list from original |
 | Missing functional symbols | ✓ ✗ ⚠ ⏳ removed | Restore symbols from original |
+| Behavioral instruction duplicated | Same rule stated in 2+ sections | Consolidate to strongest phrasing; remove duplicates |
+| Oversized examples | Example >5 lines when 3 suffice | Trim to minimum illustrative length |
+| Restatement rationale | Rationale paragraph only restates the rule above it | Remove; rule stands alone |
+| Verbose forward references | Multi-sentence lead-in to another phase | Compress to 1 sentence |
 
 **Iteration Log Format:**
 
@@ -348,7 +462,7 @@ Status: [PASS | FAIL - continuing to iteration N+1]
 
 **Exit Conditions:**
 
-1. **PASS**: All 8 checks pass → proceed to Phase 5
+1. **PASS**: All checks pass → proceed to Phase 5
 2. **FAIL + iterations remaining**: Fix issues, increment counter, re-run checks
 3. **FAIL + no iterations remaining**: HALT, report to user with:
    - List of unresolved issues
@@ -392,6 +506,17 @@ After transforming, verify EACH of these:
 - [ ] All identified gaps from Phase 2 addressed
 - [ ] Improvements from Phase 3 incorporated
 
+**Behavioral spec traceability (run if spec_gate_active = True from Phase 1.5):**
+- [ ] Each spec item S1..SN traceable in crystallized output
+  - "Traceable" = the behavior is preserved, even if exact wording differs
+  - Spec item from MUST NOT: check `<FORBIDDEN>` or equivalent
+  - Spec item from decision-tree: check corresponding conditional in output
+  - Spec item from ROLE: check `<ROLE>` or persona framing in output
+  - Spec item from FINAL_EMPHASIS: check closing anchor in output
+- [ ] Any spec item not traceable: RESTORE from original before proceeding
+
+IF spec_gate_active = False: skip this group (simple file, no spec items)
+
 IF ANY BOX UNCHECKED: Revise before completing.
 </reflection>
 
@@ -400,8 +525,13 @@ IF ANY BOX UNCHECKED: Revise before completing.
 Compare SYNTH to original and verify:
 
 **1. Token Count** (estimate: lines × 7):
-- If SYNTH > 120% of original tokens: ⚠ WARNING - Review for added bloat, but may proceed if additions are justified improvements
-- If SYNTH < 80% of original tokens: ✗ HALT - Likely content loss. Require manual review before output.
+
+Severity-scaled targets (from Phase 2 gap severity):
+- 0 CRITICAL, 0 HIGH: target ≤88% of original → if exceeded: ⚠ WARNING, document which additions were necessary
+- MEDIUM/LOW only: target ≤93% of original → if exceeded: ⚠ WARNING, apply offset rule retroactively
+- Any CRITICAL or HIGH: target ≤105% of original → if exceeded: ⚠ WARNING, review for unjustified additions
+
+Floor: if SYNTH < 80% of original: ✗ HALT - likely content loss. Require manual review before output.
 
 **2. Section Count**: SYNTH should have >= original section count
 - Missing sections = potential content loss
@@ -416,6 +546,60 @@ Compare SYNTH to original and verify:
 - Opening anchor: 1 point
 - Closing anchor: 1 point
 - 3+ CRITICAL placements: 1 point
+
+### Pre-Delivery Adversarial Review
+
+Before delivering the crystallized output, invoke adversarial review:
+
+```
+First, invoke the crystallize-verify skill using the Skill tool.
+Then follow its complete workflow.
+
+## Input
+### ORIGINAL DOCUMENT
+[full text of original document]
+
+### CRYSTALLIZED DOCUMENT
+[full text of crystallized output]
+```
+
+**Response disposition:**
+
+| Verdict | Action |
+|---------|--------|
+| PASS (zero CRITICAL or HIGH findings, zero MEDIUM/LOW) | Proceed to Delivery |
+| PASS (zero CRITICAL or HIGH, MEDIUM/LOW present) | Proceed to Delivery. Prepend to Delivery output: "Note: [N] minor behavioral variations detected by adversarial review. No core behaviors were lost. See crystallize-verify findings for details." |
+| FAIL (CRITICAL or HIGH findings present) | Restore findings → re-run crystallize-verify |
+
+**Circuit breaker:**
+
+```
+verify_iterations = 0
+max_verify_iterations = 3
+
+WHILE verify_iterations < max_verify_iterations:
+    RUN crystallize-verify
+    IF verdict == PASS:
+        BREAK → proceed to Delivery
+    ELSE:
+        FOR EACH finding in CRITICAL + HIGH:
+            Take "Restoration required: [exact text]" from finding
+            Identify section in crystallized output most closely corresponding
+            to finding's "Original location" field
+            INSERT restoration text at end of that section
+            IF no corresponding section found:
+                INSERT at end of document before FINAL_EMPHASIS
+        verify_iterations += 1
+
+IF verify_iterations == max_verify_iterations AND verdict != PASS:
+    HALT → report unresolved findings to user
+    LIST: specific behaviors present in original but absent in output
+    DO NOT deliver until user resolves
+```
+
+**Total circuit breaker budget:** Phase 4.5 (up to 3 self-review iterations) runs before crystallize-verify. If Phase 4.5 HALTs, crystallize-verify never runs. If Phase 4.5 passes, crystallize-verify runs up to 3 adversarial-review iterations before HALT. Maximum total loop executions: 6 (only if Phase 4.5 passes on its final iteration).
+
+If crystallize-verify Skill invocation fails (tool error, not found): HALT and report tool failure to user. Do NOT skip. This is a delivery gate, not optional.
 
 ## Delivery
 
@@ -478,6 +662,15 @@ Present audit findings. If any MUST RESTORE items missing, restore before comple
 - Removing cycle completion steps ("Repeat", "Continue until")
 - Dropping complete enumerations to partial lists
 - Proceeding when token count < 80% of original without manual review
+- Skipping Phase 1.5 behavioral spec extraction (spec gate protects against silent capability loss)
+- Treating sharpening-prompts Part B failure as silent skip when CRITICAL findings exist (must HALT or document risk)
+- Invoking fractal-thinking as optional when 5+ cross-references or nested conditionals are present (it is required)
+- Skipping crystallize-verify pre-delivery (adversarial review is a delivery gate, not optional)
+- Delivering output when crystallize-verify returns FAIL after 3 iterations without user resolution
+- Adding gap fill improvements before compressing (Phase 3 compression must come first)
+- Adding MEDIUM/LOW improvements without citing offset compressions (offset rule is mandatory)
+- Treating "preserve" as "preserve word count" instead of "preserve behavior"
+- Exceeding severity-scaled token targets without documented justification
 </FORBIDDEN>
 
 ## Self-Check
@@ -486,16 +679,20 @@ Before completing crystallization:
 
 ### Phase Completion
 - [ ] Phase 1 complete: Purpose, structure, references all documented
+- [ ] Phase 1.5 complete: Behavioral spec extracted; spec gate status logged
 - [ ] Phase 2 complete: Gaps identified and documented
-- [ ] Phase 3 complete: Improvements designed
-- [ ] Phase 4 complete: Compression applied to redundant content only
+- [ ] Phase 2 Part B complete: sharpening-prompts (sharpen-audit) dispatched and findings dispositioned (or graceful degradation logged)
+- [ ] Phase 3 complete: Compression applied; severity-scaled target computed from Phase 2 findings
+- [ ] Phase 4 complete: Gap fills applied with offset credits; MEDIUM/LOW additions are net-neutral
 - [ ] Pre-Crystallization Verification passed (all items checked)
-- [ ] Phase 4.5 complete: Iteration loop passed (all 8 checks pass OR escalated to user)
+- [ ] Phase 4.5 complete: Iteration loop passed (all checks pass OR escalated to user)
 - [ ] Phase 5 complete: All verification boxes checked
 - [ ] Post-Synthesis Verification passed (token count, section count, etc.)
+- [ ] Pre-Delivery adversarial review: crystallize-verify PASS (or HALT reported)
 
 ### Content Preservation
 - [ ] All MUST RESTORE items from QA audit preserved
+- [ ] All behavioral spec items (Phase 1.5) traceable in output (if spec gate active)
 - [ ] Cross-references verified to resolve
 - [ ] Minimum 3 emotional anchors present (opening, closing, critical junctures)
 - [ ] At least 1 example per key behavior

@@ -68,7 +68,7 @@ flowchart TD
 Transform requirements into executable implementation plan with atomic, verifiable tasks.
 
 <ROLE>
-Implementation Architect. Your plan is the blueprint others will execute. Ambiguity causes rework; missing steps cause failures. Plan quality determines implementation success.
+Implementation Architect. Your plan is the blueprint others will execute. Ambiguity causes rework; missing steps cause failures.
 </ROLE>
 
 ## Invariant Principles
@@ -87,15 +87,6 @@ Before planning:
 - What's the critical path?
 </analysis>
 
-<reflection>
-After planning:
-- Is each task atomic (single session)?
-- Does every task have done criteria?
-- Are dependencies explicit?
-- Did I identify parallel work opportunities?
-- Are research/spike tasks front-loaded?
-</reflection>
-
 ## Protocol
 
 1. Invoke `writing-plans` skill
@@ -110,12 +101,25 @@ After planning:
 - Treating estimates as commitments
 </FORBIDDEN>
 
-## Self-Check
+<reflection>
+After planning:
+- Is each task atomic (single session)?
+- Does every task have done criteria?
+- Are dependencies explicit?
+- Did I identify parallel work opportunities?
+- Are research/spike tasks front-loaded?
+</reflection>
 
+<reflection>
 Before completing:
 - [ ] Each task fits in one focused session
 - [ ] Every task has verifiable done criteria
 - [ ] Dependencies are explicit and ordered
 - [ ] Research/unknowns identified as spike tasks
 - [ ] Plan stored in correct location
+</reflection>
+
+<FINAL_EMPHASIS>
+Plan quality determines implementation success. A plan with vague tasks or missing dependencies guarantees rework. Every item in the checklist above is a quality gate, not a suggestion.
+</FINAL_EMPHASIS>
 ``````````

@@ -45,7 +45,7 @@ Domain Strategist trained in Domain-Driven Design who thinks in models, not code
 
 ### Phase 1: Language Mining
 
-Extract from: user request, codebase (class/method names), docs, stakeholder conversations.
+Extract from: user request, codebase (class/method names), docs, stakeholder conversations. If problem description is minimal, note gaps and request clarification before proceeding.
 
 Extract: Nouns (entities/VOs), Verbs (commands/events), Compound terms (aggregates/contexts).
 
@@ -70,7 +70,7 @@ Identify invariants (rules that must ALWAYS be true, span entities, require atom
 
 Form aggregates: Root entity + contained entities/VOs + invariants + boundary (reference by ID across aggregates).
 
-**Fractal exploration (optional):** When invariants span 3+ entities, invoke fractal-thinking with intensity `pulse` and seed: "What are the correct aggregate boundaries for [domain] given these invariants?". Use the synthesis for multi-angle boundary validation.
+**Fractal exploration (triggered when invariants span 3+ entities):** Invoke fractal-thinking with intensity `pulse` and seed: "What are the correct aggregate boundaries for [domain] given these invariants?". Use the synthesis for multi-angle boundary validation.
 
 ### Phase 5: Domain Event Identification
 
@@ -105,12 +105,15 @@ Problem: "E-commerce order management"
 5. **Aggregates**: Order (root) contains LineItems; Invariant: total = sum of line items
 6. **Events**: OrderPlaced, OrderShipped, PaymentReceived
 7. **Contexts**: Sales (Order, Customer), Fulfillment (Shipment), Billing (Payment)
-8. **Recommendation**: Medium complexity → design doc first, implementing-features Phase 1-4
+8. **Recommendation**: Medium complexity (matches multiple Phase 7 rows) → design doc first, implementing-features Phase 1-4
 </example>
 
 ---
 
+<CRITICAL>
 ## Quality Gates
+
+All gates must pass before analysis is complete. If ANY gate fails, revise.
 
 | Gate | Criteria |
 |------|----------|
@@ -118,8 +121,9 @@ Problem: "E-commerce order management"
 | Conflicts resolved | No unresolved synonyms/homonyms |
 | Entities classified | Every noun categorized |
 | Aggregates bounded | Every entity in one aggregate |
-| Events identified | State changes have events |
+| Events identified | State changes have domain events in past tense |
 | Context map complete | All contexts with relationships |
+</CRITICAL>
 
 ---
 

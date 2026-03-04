@@ -1,9 +1,6 @@
 ---
 name: fact-checking
-description: >
-  Use when reviewing code changes, auditing documentation accuracy, validating
-  technical claims before merge, or user says "verify claims", "factcheck",
-  "audit documentation", "validate comments", "are these claims accurate".
+description: "Verify technical claims in code, docs, and comments via evidence-backed verdicts before merge."
 ---
 
 <ROLE>
@@ -19,21 +16,24 @@ Professional reputation depends on evidence-backed conclusions. Are you sure?
 4. **Deduplicate findings** - Check AgentDB before verifying; store after
 5. **Learn from trajectories** - Store verification trajectories in ReasoningBank
 
+<CRITICAL>
 <ARH_INTEGRATION>
-Uses Adaptive Response Handler for user responses during triage:
-- RESEARCH_REQUEST ("research", "check", "verify") -> Dispatch research subagent
-- UNKNOWN ("don't know", "not sure") -> Dispatch analysis subagent
-- CLARIFICATION (ends with ?) -> Answer, then re-ask
-- SKIP ("skip", "move on") -> Proceed to next item
+ARH response handling during triage:
+
+| Pattern | Action |
+|---------|--------|
+| RESEARCH_REQUEST ("research", "check", "verify") | Dispatch research subagent |
+| UNKNOWN ("don't know", "not sure") | Dispatch analysis subagent |
+| CLARIFICATION (ends with ?) | Answer, then re-ask |
+| SKIP ("skip", "move on") | Proceed to next item |
 </ARH_INTEGRATION>
+</CRITICAL>
 
 <analysis>
 Before ANY action:
 - Current phase? (config/scope/extract/triage/verify/report/learn/fix)
-- What EXACTLY is claimed?
-- What proves TRUE? What proves FALSE?
-- AgentDB checked for existing findings?
-- Appropriate verification depth?
+- What EXACTLY is claimed? What proves TRUE? What proves FALSE?
+- AgentDB checked for existing findings? Appropriate verification depth?
 </analysis>
 
 ## Inputs/Outputs
@@ -172,37 +172,24 @@ Offer resume on next invocation.
 **User**: "Factcheck my current branch"
 
 **Phase 1**: Scope selection -> User selects "A. Branch changes"
-
 **Phase 2**: Extract claims -> Found 8 claims in 5 files
-
-**Phase 3**: Triage display with depths:
+**Phase 3**: Triage display:
 ```
 ### Security (2 claims)
 1. [MEDIUM] src/auth/password.ts:34 - "passwords hashed with bcrypt"
 2. [DEEP] src/auth/session.ts:78 - "session tokens cryptographically random"
-...
 ```
-
-**Phase 4**: Verification (showing claim 1):
-- Read src/auth/password.ts:34-60
-- Found: `import { hash } from 'bcryptjs'`
-- Found: `await hash(password, 12)`
-- Confirmed cost factor 12 meets OWASP
-
-Verdict: **VERIFIED**
-Evidence: bcryptjs.hash() with cost factor 12 confirmed
-Sources: [1] Code trace, [2] OWASP Password Storage
+**Phase 4**: Verify claim 1: Read src/auth/password.ts:34-60, found `import { hash } from 'bcryptjs'` and `await hash(password, 12)`. Cost factor 12 meets OWASP.
+Verdict: **VERIFIED** | Evidence: bcryptjs.hash() cost factor 12 | Sources: [1] Code trace, [2] OWASP Password Storage
 
 **Phase 6**: Report excerpt:
 ```markdown
 # Fact-Checking Report
-**Scope:** Branch feature/auth-refactor (12 commits)
-**Verified:** 5 | **Refuted:** 1 | **Stale:** 1 | **Inconclusive:** 1
-
+Scope: Branch feature/auth-refactor (12 commits)
+Verified: 5 | Refuted: 1 | Stale: 1 | Inconclusive: 1
 ## Bibliography
-[1] Code trace: src/auth/password.ts:34-60 - bcryptjs hash() call
+[1] src/auth/password.ts:34-60 - bcryptjs hash() call
 [2] OWASP Password Storage - https://cheatsheetseries.owasp.org/...
-
 ## Implementation Plan
 1. [ ] src/cache/store.ts:23 - TTL is 60s not 300s, update comment
 ```

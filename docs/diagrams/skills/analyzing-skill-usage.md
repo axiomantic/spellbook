@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/analyzing-skill-usage/SKILL.md", "source_hash": "sha256:6db879a5e40a26c51aa61c6a1632f665fbf75cf8acd6b52a5990c9911c5b73c0", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/analyzing-skill-usage/SKILL.md", "source_hash": "sha256:a4045e198361f1581cf60acd35e88a4b80634ae601c7cf223b4dc27ebf5c455d", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: analyzing-skill-usage
 
 Workflow for analyzing skill invocation patterns across session transcripts. Supports two analysis modes: identifying weak skills and A/B testing skill versions.

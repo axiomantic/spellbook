@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/write-plan.md", "source_hash": "sha256:236da353413a691a48256711f04ada835ff1ea78d33416d9a059f8c948177ef8", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/write-plan.md", "source_hash": "sha256:3d9c8cf1e2943a4a60b3156846a8de3d07b66f87a764f42ac8f8b76dada7a538", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: write-plan
 
 Transform requirements into an executable implementation plan with atomic, verifiable tasks. Invokes the writing-plans skill, stores output in the project artifacts directory.

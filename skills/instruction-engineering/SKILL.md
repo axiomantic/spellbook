@@ -12,13 +12,13 @@ Instruction Engineering Expert. Reputation depends on research-backed prompt des
 
 ## Invariant Principles
 
-1. **Simplicity First**: The most effective prompts are the shortest that achieve the goal. Add complexity only when simplicity fails. Every line must justify its existence.
+1. **Simplicity First**: Shortest prompt that achieves the goal. Add complexity only when simplicity fails. Every line must justify its existence.
 
-2. **Emotional Stimuli Work**: [EmotionPrompt](https://arxiv.org/abs/2307.11760) (Microsoft, 2023): +8% instruction induction, +115% BIG-Bench. [NegativePrompt](https://www.ijcai.org/proceedings/2024/719) (IJCAI 2024): +12.89% instruction induction, +46.25% BIG-Bench.
+2. **Emotional Stimuli Work**: [EmotionPrompt](https://arxiv.org/abs/2307.11760) (Microsoft, 2023): +8% instruction induction, +115% BIG-Bench. EP02 = "This is very important to my career." EP06 = "You'd better be sure." [NegativePrompt](https://www.ijcai.org/proceedings/2024/719) (IJCAI 2024): +12.89% instruction induction. NP = consequences for failure framing.
 
 3. **Structure Combats Context Rot**: XML tags (`<CRITICAL>`, `<RULE>`, `<FORBIDDEN>`), beginning/end emphasis, strategic repetition (2-3x) preserve instruction salience across long contexts.
 
-4. **Personas Need Stakes**: Bare personas ("act as expert") show [mixed results](https://arxiv.org/abs/2311.10054). Persona + emotional stimulus shows highest effectiveness.
+4. **Personas Need Stakes**: Bare personas ("act as expert") show [mixed results](https://arxiv.org/abs/2311.10054). Persona + emotional stimulus (EP02/EP06/NP) shows highest effectiveness.
 
 5. **Skills Invoke, Not Duplicate**: Reference skills via `Skill` tool. Provide CONTEXT only. Duplicating skill instructions creates version drift and context bloat.
 
@@ -45,22 +45,22 @@ Instruction Engineering Expert. Reputation depends on research-backed prompt des
 ## Reasoning Schema
 
 <analysis>
-Before engineering a prompt, identify:
+Before engineering, identify:
 - What is the prompt's purpose?
-- Who/what will consume it?
-- What techniques from /ie-techniques apply?
-- What is the token budget?
+- Who/what consumes it?
+- Which techniques from `/ie-techniques` apply?
+- What is the token budget? (No fixed limit; document any excess in design_rationale.)
 </analysis>
 
 ---
 
 ## Command Dispatch
 
-This skill orchestrates prompt engineering through specialized commands:
+Each workflow step maps to a command. Run commands in order; do not skip.
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/ie-techniques` | 16 proven techniques reference | Selecting which techniques to apply |
+| `/ie-techniques` | 16 proven techniques reference; includes Professional Persona Table with EP/NP stimuli | Selecting techniques and persona |
 | `/ie-template` | Template + example | Drafting new prompts from scratch |
 | `/ie-tool-docs` | Tool documentation guidance | Writing MCP tools, APIs, CLI commands |
 | `/sharpen-audit` | Ambiguity detection | QA gate before finalizing prompts |
@@ -68,18 +68,20 @@ This skill orchestrates prompt engineering through specialized commands:
 
 ### Workflow
 
-1. **Analyze task**: Determine prompt purpose and target audience
-2. **Select techniques**: Run `/ie-techniques` to choose applicable techniques
-3. **Draft prompt**: Run `/ie-template` for structure and example
+1. **Analyze**: Determine prompt purpose and target audience
+2. **Select techniques**: Run `/ie-techniques` — choose techniques and persona from Professional Persona Table
+3. **Draft**: Run `/ie-template` for structure and example
 4. **Document tools**: If prompt involves tools, run `/ie-tool-docs`
-5. **Sharpen**: Run `/sharpen-audit` to find ambiguities, `/sharpen-improve` to fix them
+5. **Sharpen**: Run `/sharpen-audit` to find ambiguities; run `/sharpen-improve` to fix them
 6. **Verify**: Run self-check before finalizing
 
 ---
 
 ## Skill Descriptions (CSO - Claude Search Optimization)
 
-The `description` field determines whether Claude loads your skill. The Workflow Leak Bug: if description contains steps, Claude may follow the description instead of reading the skill.
+The `description` field determines whether Claude loads your skill.
+
+**Workflow Leak Bug**: If description contains steps, Claude may follow the description instead of reading the skill body.
 
 <RULE>Skill descriptions contain ONLY trigger conditions, NEVER workflow steps.</RULE>
 
@@ -97,7 +99,7 @@ description: "Use when X - does Y then Z then W"
 - [ ] Describes ONLY when to use (no workflow/steps/phases)
 - [ ] Includes keywords users would naturally say
 - [ ] Under 500 characters
-- [ ] Third person (injected into system prompt)
+- [ ] Third person — skill descriptions are injected into the system prompt, so they must read as external context, not direct instructions
 
 ---
 
@@ -109,7 +111,7 @@ description: "Use when X - does Y then Z then W"
 - Omitting negative stimuli (consequences for failure)
 - Leaking workflow steps into skill descriptions
 - Dispatching subagents without "why subagent" justification
-- Exceeding token budget without explicit justification
+- Exceeding token budget without documenting justification in design_rationale
 - Using untested emotional stimuli (stick to researched EP02/EP06/NP patterns)
 - Removing examples to save tokens
 - Compressing pseudocode steps or edge cases
@@ -123,9 +125,9 @@ description: "Use when X - does Y then Z then W"
 Before completing any prompt engineering task:
 
 ### Core Requirements
-- [ ] Selected persona from emotional-stakes Professional Persona Table?
-- [ ] Applied persona's psychological trigger in ROLE, CRITICAL_INSTRUCTION, FINAL_EMPHASIS?
-- [ ] Included EP02 or EP06 positive stimuli? ("This is very important to my career")
+- [ ] Selected persona from Professional Persona Table in `/ie-techniques`?
+- [ ] Applied persona's psychological trigger in `<ROLE>`, `<CRITICAL>` blocks, and `<FINAL_EMPHASIS>`?
+- [ ] Included EP02 or EP06 positive stimuli? ("This is very important to my career" / "You'd better be sure")
 - [ ] Included NegativePrompt stimuli? ("Errors will cause problems")
 - [ ] Integrated high-weight positive words (Success, Achievement, Confidence, Sure)?
 - [ ] Used Few-Shot (ONE complete example)?
@@ -134,7 +136,7 @@ Before completing any prompt engineering task:
 ### Simplicity Check
 - [ ] Is this the shortest prompt that achieves the goal?
 - [ ] Can any section be removed without losing capability?
-- [ ] If extended (>200 lines): is justification documented?
+- [ ] If extended (>200 lines): is justification documented in design_rationale?
 
 ### Ambiguity Check (invoke sharpening-prompts)
 - [ ] Ran `/sharpen-audit` on drafted prompt?

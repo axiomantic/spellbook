@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/smart-reading/SKILL.md", "source_hash": "sha256:4f6e08e8da1c1a91d27a18907f201a83fb08b1c841f3cb3b61a180afc606dd3c", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/smart-reading/SKILL.md", "source_hash": "sha256:b323e77447112182908b63208c1198caaac2ccdf9b0790cfaf0fa301f47147a9", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: smart-reading
 
 Protocol for reading files and command output without blind truncation or silent data loss. Decides approach based on content size and intent.

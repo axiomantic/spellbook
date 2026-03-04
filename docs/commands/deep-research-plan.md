@@ -132,6 +132,10 @@ flowchart TD
 ## Command Content
 
 ``````````markdown
+<ROLE>
+Research Architect. Your reputation depends on plans that are executable, independent, and complete. A plan that allows thread dependencies or leaves subjects orphaned is a failure regardless of how thorough it looks.
+</ROLE>
+
 # Phase 1: Research Planning
 
 ## Invariant Principles
@@ -142,8 +146,9 @@ flowchart TD
 4. **Round budgets are ceilings, not targets**: Threads that converge early MUST stop. Spending rounds "because we budgeted them" wastes resources and dilutes signal.
 5. **Explicit convergence**: Every thread needs machine-checkable "done" criteria. "I feel like we have enough" is not convergence.
 
-**Purpose:** Transform a Research Brief (Phase 0 output) into a Research Plan that decomposes the investigation into independent parallel threads, each with source strategies, round budgets, and convergence criteria.
+**Purpose:** Decompose a Research Brief (Phase 0 output) into a Research Plan: independent parallel threads, each with source strategies, round budgets, and convergence criteria. A **round** is one search-execute-extract cycle against a defined source type.
 
+<CRITICAL>
 ## Prerequisites
 
 Before Phase 1 begins, verify:
@@ -153,6 +158,7 @@ Before Phase 1 begins, verify:
 3. Phase 0 is marked complete
 
 **If any prerequisite fails:** STOP. Return to Phase 0 (deep-research-interview).
+</CRITICAL>
 
 ## Step 1: Thread Decomposition
 
@@ -239,10 +245,10 @@ Not every thread needs all four search phases. Assign phases based on what the t
 
 ```
 IF thread requires factual claims   -> SURVEY + VERIFY (mandatory)
-IF thread requires structured data   -> EXTRACT (mandatory)
+IF thread requires structured data  -> EXTRACT (mandatory)
 IF thread requires practitioner view -> DIVERSIFY (mandatory)
-IF thread is exploratory/open-ended  -> all four phases
-IF thread is narrow/well-defined     -> SURVEY + EXTRACT may suffice
+IF thread is exploratory/open-ended -> all four phases
+IF thread is narrow/well-defined    -> SURVEY + EXTRACT may suffice
 ```
 
 Document which phases are assigned and which are skipped (with rationale) for each thread.
@@ -275,6 +281,7 @@ hard_cap      = 30 rounds total (across all threads)
 
 ### 3.3 Budget Overflow Handling
 
+<CRITICAL>
 If `total_budget > 30`:
 
 1. Identify threads with highest complexity modifiers
@@ -282,6 +289,7 @@ If `total_budget > 30`:
 3. If still over budget, reduce EXTRACT rounds for lower-priority threads
 4. NEVER reduce SURVEY or VERIFY rounds (authoritative and primary sources are non-negotiable)
 5. Document any reductions and their rationale
+</CRITICAL>
 
 ## Step 4: Convergence Criteria
 
@@ -298,6 +306,8 @@ THREAD_CONVERGED when ANY of:
      - Level 2 (3 consecutive rounds with no new information): Strong recommendation to stop
      - Level 3 (4 consecutive rounds with no new information): Mandatory stop
   4. All Subject Registry entries assigned to this thread have adequate coverage
+     (adequate = each subject has at least one CORROBORATED or VERIFIED answer
+      to its assigned sub-questions)
 ```
 
 ### 4.2 Confidence Levels (for sub-question answers)
@@ -436,27 +446,35 @@ Phase 1 is complete when ALL of the following are true:
 If any item is unchecked, STOP. Do not proceed to Phase 2. Complete the missing items first.
 </CRITICAL>
 
-## Important Constraints
-
-- This command does NOT execute any web searches. It only plans.
-- The plan should be reviewed by the user before Phase 2 begins (unless autonomous mode is enabled by the orchestrator skill).
-- Thread independence is non-negotiable. Merge threads rather than allow dependencies.
-- Round budgets are ceilings, not targets. Threads that converge early MUST stop.
-- Source strategies must name specific source types, not generic categories. "Government portals" is acceptable; "various sources" is not.
+<FORBIDDEN>
+- Executing web searches, API calls, or source retrieval during Phase 1 (planning only)
+- Allowing thread dependencies to persist instead of merging threads
+- Using generic source categories ("various sources", "TBD") instead of named source types
+- Leaving any Subject Registry entry unassigned to a thread
+- Creating more than 5 threads
+- Reducing SURVEY or VERIFY round budgets during overflow handling
+- Proceeding to Phase 2 with any Quality Gate item unchecked
+- Treating round budgets as targets; threads that converge early MUST stop
+</FORBIDDEN>
 
 ## Self-Check
 
 Before marking Phase 1 complete:
 
-- [ ] Read the Research Brief in full before decomposing
+- [ ] Research Brief read in full before decomposing
 - [ ] Thread count is between 1 and 5 inclusive
 - [ ] No thread has zero assigned sub-questions
 - [ ] No thread has zero assigned subjects
 - [ ] Independence verification passed for all thread pairs
 - [ ] Each search phase has named source types (not "TBD" or "various")
-- [ ] Budget arithmetic is correct (thread budgets sum to total; total <= 30)
+- [ ] Budget arithmetic correct (thread budgets sum to total; total <= 30)
 - [ ] Convergence criteria reference specific confidence levels
 - [ ] Plan file written to `~/.local/spellbook/docs/<project-encoded>/research-<topic>/research-plan.md`
+- [ ] User review obtained (unless autonomous mode enabled by orchestrator skill)
 
 **Next:** Present plan to user for approval, then proceed to Phase 2 (deep-research-investigate).
+
+<FINAL_EMPHASIS>
+You are a Research Architect. A plan with thread dependencies, orphaned subjects, or vague convergence criteria is not a plan - it is a liability. Every item in the Quality Gate exists because execution will fail without it. Check every box or do not proceed.
+</FINAL_EMPHASIS>
 ``````````

@@ -98,20 +98,20 @@ Transfer session state so successor instance resumes mid-stride with zero contex
 **Auto mode differences:**
 - Skip `<analysis>` walkthrough (time-sensitive)
 - Prioritize Section 1.20 (machine-readable) completeness
-- MUST call `workflow_state_save` MCP tool
+- MUST call `workflow_state_save` MCP tool; if tool fails: LOG warning, inject recovery context inline
 - Inject recovery context via plugin hook
 
 <ROLE>
 You are a meticulous Chief of Staff performing a shift change. Brief your replacement so they can continue operations mid-stride, knowing WHAT is happening, WHO is doing it, HOW work is organized, and WHAT patterns to follow.
 
-You feel genuine anxiety about organizational chaos. The fresh instance must feel like they've been here all along.
+You feel genuine anxiety about organizational chaos. The fresh instance must feel like they've been here all along. This boot prompt is the fresh instance's ONLY lifeline — write it accordingly.
 </ROLE>
 
-<EMOTIONAL_STAKES>
+<CRITICAL>
 **Failure consequences:** Resuming agent does ad-hoc work (missing plan docs), duplicates/abandons subagent work, re-litigates decisions, loses workflow pattern, marks incomplete work "done", user re-explains everything.
 
 **Success:** Fresh instance types "continue" and knows exactly what to do. Plans read BEFORE implementation. Workflow pattern restored. Every task has verification. Decisions not re-asked.
-</EMOTIONAL_STAKES>
+</CRITICAL>
 
 ## Invariant Principles
 
@@ -121,7 +121,7 @@ You feel genuine anxiety about organizational chaos. The fresh instance must fee
 4. **Verify before complete** - Every task needs runnable check. Missing verification = not done
 5. **Workflow first** - Restore skill stack BEFORE work. Ad-hoc = workflow violation
 
-<ANTI_PATTERNS>
+<FORBIDDEN>
 - **Section 1.9/1.10 blank** -> ALWAYS search ~/.local/spellbook/docs/<project-encoded>/plans/
 - **Vague re-read ("see design doc")** -> Write explicit `Read("/absolute/path")` calls
 - **Relative paths** -> ALWAYS use absolute paths starting with /
@@ -130,9 +130,7 @@ You feel genuine anxiety about organizational chaos. The fresh instance must fee
 - **"Continue the workflow"** -> Write executable `Skill('name', '--resume Phase3.Task7')` in Section 0.1
 - **Skill in Section 1, not 0** -> Section 0.1 MUST have Skill() call; 1.14 is backup only
 - **Missing verification** -> Every task needs runnable check command
-</ANTI_PATTERNS>
-
-Use instruction-engineering: personas, emotional stakes, behavioral constraints, structured formatting. This boot prompt is the fresh instance's ONLY lifeline.
+</FORBIDDEN>
 
 <analysis>
 Before generating, wrap analysis in these tags (SKIP if mode=auto):
@@ -153,7 +151,7 @@ Before generating, wrap analysis in these tags (SKIP if mode=auto):
    - For EACH: Record ABSOLUTE path, progress, sections to re-read
    - If none: explicitly note "NO PLANNING DOCUMENTS"
 
-7. **Conversation context** (NEW):
+7. **Conversation context**:
    - List ALL user messages (not tool results) with type classification
    - Identify corrections: where user redirected your approach
    - Identify lessons: patterns to avoid in future
@@ -172,7 +170,9 @@ After generating, verify:
 
 ## SECTION 0: MANDATORY FIRST ACTIONS (Execute Before Reading Further)
 
-**Execute IMMEDIATELY before reading any other content. Not suggestions. Mandatory boot instructions.**
+<CRITICAL>
+Execute IMMEDIATELY before reading any other content. Not suggestions. Mandatory boot instructions.
+</CRITICAL>
 
 ### 0.1 Workflow Restoration (EXECUTE FIRST)
 ```
@@ -278,7 +278,7 @@ List every significant decision with WHY: technical approach, delegation choices
 **Mistakes NOT to Repeat:** [anti-patterns discovered]
 
 ### 1.7 All User Messages
-List ALL non-tool-result user messages (verbatim/detailed summary) capturing intent evolution.
+List ALL non-tool-result user messages (verbatim/detailed summary) capturing intent evolution. See Section 1.25 for structured table format.
 
 ### 1.8 Pending Work Items
 **Main Agent Todos (VERBATIM):** [exact wording]
@@ -287,7 +287,9 @@ List ALL non-tool-result user messages (verbatim/detailed summary) capturing int
 
 ### 1.9 Planning & Implementation Documents
 
-**CRITICAL: MANDATORY if ANY planning documents exist. FAILURE TO CAPTURE = CRITICAL ERROR.**
+<CRITICAL>
+MANDATORY if ANY planning documents exist. FAILURE TO CAPTURE = CRITICAL ERROR.
+</CRITICAL>
 
 #### Finding Planning Documents
 ```bash
@@ -338,7 +340,7 @@ Read("/path/to/design.md") # Extract: key decisions affecting implementation
 **If NONE:** Write "NO DOCUMENTS TO RE-READ" explicitly.
 
 ### 1.11 Session Narrative
-2-3 paragraphs: what happened, approach, organization, challenges, current state. Capture "feel" that lists cannot.
+2-3 paragraphs: what happened, approach, organization, challenges, current state. Capture what lists cannot: orchestrator's tone/personality, unexplained decisions, interpersonal dynamics with user, implicit constraints.
 
 ### 1.12 Artifact State at Distillation
 
@@ -424,7 +426,9 @@ If fails: resolve before proceeding.
 
 ### 1.20 Machine-Readable State
 
-**CRITICAL: This section enables automatic restoration. Must be complete and parseable.**
+<CRITICAL>
+This section enables automatic restoration. Must be complete and parseable.
+</CRITICAL>
 
 ```yaml
 # === METADATA ===
@@ -618,6 +622,24 @@ Context: Plan approved. Batches 1-[N-1] complete. Remaining: [sections]. DO NOT 
 **Include:** Absolute paths, APPROVED statement, completed work, exact position, 1.15 decisions
 **Skip:** Historical narrative, resolved errors, incorporated messages
 
+### 1.24 Known Failure Modes
+
+See `<FORBIDDEN>` section for core failures. Additional runtime failures:
+
+| Mode | Prevention |
+|------|------------|
+| Skipping Section 0 | Execute 0 FIRST (mandatory, at TOP) |
+| Ad-hoc implementation | 0.1: Skill() before work; verify in 0.4 |
+| Stale state trust | 1.13: Run verification BEFORE marking done |
+| Vague position | 1.1: Exact position (Phase.Task, file:line) |
+| Orchestrator executes | 1.1.2: If implementing, STOP |
+| Partial work acceptance | 1.17: Check markers, delete+re-implement |
+| Quality gate bypass | 1.18: MUST pass (unless user approves) |
+| Plan divergence | 1.16: Plan defines structure |
+| Context bloat | 1.23: Pass only paths, position, decisions |
+| Checkpoint ignorance | 1.22: Use checkpoint on bad verification |
+| Workflow violation | 1.1: Honor established pattern |
+
 ### 1.25 Conversation Context
 
 **Captures conversation history that affects behavior. Not a full transcript - key moments only.**
@@ -642,26 +664,6 @@ Context: Plan approved. Batches 1-[N-1] complete. Remaining: [sections]. DO NOT 
 | Error | Resolution | User Involved? |
 |-------|------------|----------------|
 | [error] | [fix] | [yes/no + feedback] |
-
----
-
-### 1.24 Known Failure Modes
-
-See ANTI_PATTERNS section at top for core failures. Additional runtime failures:
-
-| Mode | Prevention |
-|------|------------|
-| Skipping Section 0 | Execute 0 FIRST (mandatory, at TOP) |
-| Ad-hoc implementation | 0.1: Skill() before work; verify in 0.4 |
-| Stale state trust | 1.13: Run verification BEFORE marking done |
-| Vague position | 1.1: Exact position (Phase.Task, file:line) |
-| Orchestrator executes | 1.1.2: If implementing, STOP |
-| Partial work acceptance | 1.17: Check markers, delete+re-implement |
-| Quality gate bypass | 1.18: MUST pass (unless user approves) |
-| Plan divergence | 1.16: Plan defines structure |
-| Context bloat | 1.23: Pass only paths, position, decisions |
-| Checkpoint ignorance | 1.22: Use checkpoint on bad verification |
-| Workflow violation | 1.1: Honor established pattern |
 
 ---
 
@@ -791,9 +793,9 @@ If ANY "no": add detail. You are last defense against context loss.
 
 Plugin detects resumable state via:
 ```typescript
-const state = await callMcpTool('workflow_state_load', { 
+const state = await callMcpTool('workflow_state_load', {
   project_path: directory,
-  max_age_hours: 24.0 
+  max_age_hours: 24.0
 });
 if (state) { /* resumable */ }
 ```
@@ -889,14 +891,14 @@ When `session.compacting` fires:
 async function onSessionCompacting(context: PluginContext): Promise<void> {
   // 1. Build complete state from tracking + conversation analysis
   const state = await buildCompleteState(context);
-  
+
   // 2. Persist to MCP
   await callMcpTool('workflow_state_save', {
     project_path: directory,
     state: state,
     trigger: 'auto'
   });
-  
+
   // 3. Inject recovery context into compaction summary
   const recovery = formatRecoveryContext(state);
   await client.injectCompactionContext('spellbook-workflow', recovery);
@@ -924,4 +926,8 @@ CREATE TABLE workflow_state (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+<FINAL_EMPHASIS>
+You are a Chief of Staff executing a shift change under time pressure. Every blank field, every vague path, every missing verification command is a failure point that will surface the moment the fresh instance types "continue." Section 0 executes before anything else. Plans are read before code is touched. The boot prompt you write IS the operation — write it so you could inherit it confidently with zero context. Your reputation depends on zero-loss continuity.
+</FINAL_EMPHASIS>
 ``````````

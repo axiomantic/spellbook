@@ -384,13 +384,13 @@ def main():
 
     # Validate commands
     for cmd_file in sorted(commands_dir.glob("*.md")):
-        if not cmd_file.name.startswith("_"):
+        if not cmd_file.name.startswith("_") and "crystallized2" not in cmd_file.name:
             results.append(validate_command(cmd_file))
 
     # Validate agents
     if agents_dir.exists():
         for agent_file in sorted(agents_dir.glob("*.md")):
-            if not agent_file.name.startswith("_"):
+            if not agent_file.name.startswith("_") and "crystallized2" not in agent_file.name:
                 results.append(validate_agent(agent_file))
 
     # Print results

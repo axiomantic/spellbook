@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/deep-research-plan.md", "source_hash": "sha256:15759e4cb96797d42744fe35ae69f0a5216f4916447db1fd257f1834017e66e3", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/deep-research-plan.md", "source_hash": "sha256:816df64c33859fdccd96be28d2836936a05294c08737577319f24e02ca436ed8", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: deep-research-plan
 
 Decompose a Research Brief into independent parallel threads with source strategies, round budgets, convergence criteria, and risk assessment. Planning only, no searching.

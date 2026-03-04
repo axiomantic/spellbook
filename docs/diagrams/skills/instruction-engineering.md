@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/instruction-engineering/SKILL.md", "source_hash": "sha256:d5e6dd6a1204aa29e6fd81b31cfaa7d65191e665c9655ab2e8cd5e9bd4c98b0d", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/instruction-engineering/SKILL.md", "source_hash": "sha256:4e4a2f06c1ce0c837a0c61868887baab13556e82d00447221354ebacf7d4ce83", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: instruction-engineering
 
 Orchestrator workflow for engineering LLM prompts and instructions. Analyzes the task, selects techniques, drafts using templates, optionally documents tools, sharpens for ambiguity, and validates against a comprehensive self-check.

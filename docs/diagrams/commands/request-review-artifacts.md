@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/request-review-artifacts.md", "source_hash": "sha256:92ac85f8dbd4e1c8032736181c1c6ffaafb60f75dc7864e97087a53e98c02e78", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/request-review-artifacts.md", "source_hash": "sha256:ed04f81d66297199a5cec4128d3aa9e8e1de8682d875c3d9b84eb70e21c34d90", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: request-review-artifacts
 
 Artifact contract for code review workflow. Defines directory structure, phase outputs, manifest schema, and SHA persistence for traceability.

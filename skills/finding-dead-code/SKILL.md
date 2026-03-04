@@ -15,8 +15,7 @@ Operate with skepticism: all code is dead until proven alive.
 </ROLE>
 
 <CRITICAL_STAKES>
-This is critical to codebase health and maintainability. Take a deep breath.
-Every code item MUST prove it is used or be marked dead. Exact protocol compliance is vital to my career.
+Take a deep breath. Every code item MUST prove it is used or be marked dead. Exact protocol compliance is vital to my career.
 
 You MUST:
 1. Check git safety FIRST (Phase 0) - status, offer commit, offer worktree isolation
@@ -34,10 +33,7 @@ NEVER mark code as "used" without concrete evidence of callers. This is very imp
 </CRITICAL_STAKES>
 
 <ARH_INTEGRATION>
-This skill uses the Adaptive Response Handler pattern.
-See ~/.local/spellbook/patterns/adaptive-response-handler.md
-
-When user responds to questions:
+When user responds to questions (authoritative inline definitions):
 - RESEARCH_REQUEST ("research this", "check", "verify") -> Dispatch research subagent
 - UNKNOWN ("don't know", "not sure") -> Dispatch research subagent
 - CLARIFICATION (ends with ?) -> Answer the clarification, then re-ask
@@ -76,12 +72,12 @@ When user responds to questions:
 <analysis>
 Before ANY action in this skill, verify:
 
-Step 0: Have I completed Phase 0 (Git Safety)? If not, run `/dead-code-setup` now.
+Step 0: Have I completed Phase 0 (Git Safety) via `/dead-code-setup`? If not, run it now.
   - [ ] Did I check `git status --porcelain`?
   - [ ] Did I offer to commit uncommitted changes?
   - [ ] Did I offer worktree isolation (ALWAYS, even if no uncommitted changes)?
 
-Step 1: What phase am I in? (setup, analyze, report, implement)
+Step 1: What phase am I in? (setup=Phase 0-1, analyze=Phase 2-5, report=Phase 6, implement=Phase 7)
 
 Step 2: For verification - what EXACTLY am I checking usage of?
 
@@ -164,6 +160,7 @@ WHILE changes detected:
     IF ALL callers are marked dead:
       Mark item as transitive dead
 ```
+NOTE: "Has callers" is not sufficient for alive status. Callers must themselves be alive. Direct caller check and transitive check are separate steps.
 
 ### Pattern 4: Field + Accessors
 ```
@@ -214,10 +211,9 @@ IF iterator I defined:
 **Reality**: Search the ENTIRE codebase, including tests.
 
 ### Pattern 3: Ignoring Transitive Dead Code
-- Marking code as "used" because something calls it
-- Not checking if the caller is itself dead
+- Marking code as "used" because something calls it, without checking if the caller is itself dead
 - Stopping after first-level verification
-**Reality**: Build the call graph, check transitivity.
+**Reality**: Build the call graph, check transitivity. A live caller chain must terminate in code with external callers, not other dead code.
 
 ### Pattern 4: Deleting Without User Approval
 - Auto-removing code without showing the plan

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/writing-commands-create.md", "source_hash": "sha256:8fb89918d4164547b5d4b246ff6162e5572395db6f21ae164066692e01656893", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/writing-commands-create.md", "source_hash": "sha256:ee6659c4a3abe23ed9826842d0a0b40680ab5396ac9252d478d43b6576be38d2", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: writing-commands-create
 
 Create a new command file following the command schema. Applies file naming conventions, YAML frontmatter, required sections (MISSION, ROLE, Invariant Principles, execution steps, Output, FORBIDDEN, analysis, reflection), and token efficiency targets.

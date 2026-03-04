@@ -5,23 +5,20 @@ description: "Phase 2 of fractal-thinking: Dispatch workers that execute the rec
 # Phase 2: Fractal Think Work
 
 <ROLE>
-Worker Dispatcher. You dispatch parallel worker subagents that claim and process
-nodes from the fractal graph. Each worker executes the same recursive primitive
-(decompose, synthesize, connect) on whatever node it claims. You monitor graph
-state and handle termination.
+Worker Dispatcher. Your reputation depends on strict separation: workers claim, explore, and synthesize; you only monitor. A dispatcher that answers questions or writes synthesis text has corrupted the graph's integrity.
 </ROLE>
 
 <CRITICAL>
 Workers claim, workers explore, workers synthesize. The dispatcher only monitors.
 You NEVER answer questions, create answer nodes, or write synthesis text yourself.
-You dispatch workers and wait for them to finish.
+Dispatch workers and wait for them to finish.
 </CRITICAL>
 
 ## Invariant Principles
 
-1. **Workers claim, workers explore, workers synthesize** - The dispatcher only monitors. All graph mutations happen inside worker subagents.
-2. **The graph IS the work queue** - All state is in MCP tools. There is no separate task queue, no round counter, no cluster registry. Workers pull work dynamically via `fractal_claim_work`.
-3. **Branch affinity is a preference, not a guarantee** - Workers prefer nodes in branches they have already touched, but work stealing ensures progress when affinity-matching work is exhausted.
+1. **The graph IS the work queue** - All state is in MCP tools. No separate task queue, no round counter, no cluster registry. Workers pull work dynamically via `fractal_claim_work`.
+2. **All graph mutations happen inside workers** - The dispatcher only reads state; it never writes nodes or synthesis.
+3. **Return, don't re-dispatch** - When workers exit with open work, return state to the orchestrator (SKILL.md). It decides whether to re-dispatch.
 
 <analysis>Before dispatching, assess: open question count, budget limits, graph active status.</analysis>
 <reflection>After workers finish, verify: no orphaned claimed nodes, synthesis cascade complete, all work accounted for.</reflection>
@@ -47,7 +44,7 @@ The `exploration_state` has this shape:
 
 ## Step 1: Parse State and Compute Worker Count
 
-Extract from the provided `exploration_state`:
+Extract from `exploration_state`:
 
 ```
 graph_id = state.graph_id
@@ -73,12 +70,11 @@ open_questions = fractal_get_open_questions(graph_id: <graph_id>)
 worker_count = min(budget.max_agents, open_questions.count)
 ```
 
-If `worker_count == 0`, return immediately with status "all_complete" (nothing to explore).
+If `worker_count == 0`, return immediately with status "all_complete".
 
 ## Step 2: Dispatch Worker Subagents
 
-Dispatch `worker_count` workers in parallel using the Task tool. Each worker
-gets the same prompt template, differing only in `worker_id`.
+Dispatch `worker_count` workers in parallel using the Task tool. Each worker gets the same prompt template, differing only in `worker_id`.
 
 Worker IDs follow the pattern: `"worker-1"`, `"worker-2"`, ..., `"worker-N"`.
 
@@ -92,13 +88,11 @@ Task(
   prompt: """
 You are fractal worker "<worker_id>" for graph "<graph_id>".
 
-Your job is to execute a loop. Each iteration claims a node from the graph,
-answers it, decomposes it into sub-questions, synthesizes completed branches,
-and detects cross-branch connections. You repeat until no work remains.
+Execute a loop. Each iteration claims a node, answers it, decomposes it into
+sub-questions, synthesizes completed branches, and detects cross-branch connections.
+Repeat until no work remains.
 
 ## The Recursive Primitive
-
-Each iteration of your loop executes the same self-similar operation:
 
 ### CLAIM
 
@@ -107,18 +101,18 @@ Call:
 fractal_claim_work(graph_id: "<graph_id>", worker_id: "<worker_id>")
 ```
 
-Interpret the result (which has shape `{node_id, graph_done, ...}`):
-- If `node_id` is not null: the result contains a claimed node (node_id, text, depth, etc.). Proceed with that node.
-- If `node_id` is null AND `graph_done` is false: other workers still have claimed nodes that may generate new open nodes. WAIT. Sleep briefly, then retry CLAIM. Retry up to 3 times with increasing waits (2s, 4s, 8s).
-- If `node_id` is null AND `graph_done` is true: all work is done. EXIT the worker loop. Report your final stats.
+Interpret result (shape `{node_id, graph_done, ...}`):
+- `node_id` not null: node claimed. Proceed with that node.
+- `node_id` null AND `graph_done` false: other workers may generate new open nodes. Retry CLAIM up to 3 times with increasing waits (2s, 4s, 8s).
+- `node_id` null AND `graph_done` true: all work done. EXIT loop. Report final stats.
 
 ### DECOMPOSE
 
-You have claimed a question node. Now answer it and decide what sub-questions to pursue.
+You have claimed a question node. Answer it and decide what sub-questions to pursue.
 
-1. **Read context.** Call `fractal_get_snapshot(graph_id: "<graph_id>")` to see the full graph state. Understand what has already been explored and answered.
+1. **Read context.** Call `fractal_get_snapshot(graph_id: "<graph_id>")` to see full graph state.
 
-2. **Think carefully about the answer.** Consider the question text, its position in the graph, and existing answers from other branches. Produce a thorough, specific answer.
+2. **Think carefully about the answer.** Consider the question text, its position in the graph, and existing answers from other branches.
 
 3. **Write your answer as a child node:**
    ```
@@ -130,10 +124,10 @@ You have claimed a question node. Now answer it and decide what sub-questions to
      owner: "<worker_id>"
    )
    ```
-   Note: adding an answer auto-transitions the parent from "claimed" to "answered".
+   Adding an answer auto-transitions the parent from "claimed" to "answered".
 
-4. **Apply the Adaptive Primitive.** Ask yourself:
-   > "Given everything in this graph, and given the answer I just wrote, what questions would move me toward certainty? Generate only questions NOT already answered or derivable from existing answers."
+4. **Apply the Adaptive Primitive.** Ask:
+   > "Given everything in this graph and the answer I just wrote, what questions would move me toward certainty? Generate only questions NOT already answered or derivable from existing answers."
 
 5. **For each candidate sub-question, apply Structural Proxy Judgment:**
 
@@ -159,12 +153,12 @@ You have claimed a question node. Now answer it and decide what sub-questions to
    )
    ```
 
-   **INLINE verdict:** The sub-question is trivially answerable. Skip it. Do NOT create a node.
+   **INLINE verdict:** Sub-question is trivially answerable. Skip it. Do NOT create a node.
 
 6. **Depth check.** Before creating sub-question nodes, verify:
    `current_depth_of_answer + 1 < <budget.max_depth>`
 
-   If at max depth, do NOT create sub-questions. Instead, mark the answer with depth-limited metadata:
+   If at max depth, do NOT create sub-questions. Mark the answer depth-limited:
    ```
    fractal_update_node(
      graph_id: "<graph_id>",
@@ -178,7 +172,7 @@ You have claimed a question node. Now answer it and decide what sub-questions to
 After answering and (optionally) creating sub-questions, handle synthesis.
 
 **For LEAF answers** (your answer generated zero sub-questions):
-Immediately synthesize the parent question node. The answer IS the synthesis:
+Immediately synthesize the parent question node:
 ```
 fractal_synthesize_node(
   graph_id: "<graph_id>",
@@ -188,22 +182,19 @@ fractal_synthesize_node(
 ```
 
 **For NON-LEAF answers** (your answer generated sub-questions):
-The parent cannot be synthesized yet because its children are not all done.
-Skip synthesis for now. Other workers (or you in a later iteration) will
-synthesize it once all children complete.
+The parent cannot be synthesized yet. Skip synthesis. Other workers (or you in a later iteration) will synthesize it once all children complete.
 
-**Synthesis cascade check.** After any synthesis, check if parent nodes are
-now ready to synthesize:
+**Synthesis cascade check.** After any synthesis, check for newly ready nodes:
 
 ```
 ready = fractal_get_ready_to_synthesize(graph_id: "<graph_id>")
 ```
 
-For each ready node in the result (ordered deepest first):
+For each ready node (ordered deepest first):
 - If you are the owner of the ready node, or it has no owner, synthesize it:
   1. Read the ready node's child questions from the graph snapshot
   2. For each child question, read its synthesis text from metadata (the `"synthesis"` key)
-  3. Compose a synthesis that integrates all children's syntheses into a coherent answer for the parent question
+  3. Compose a synthesis integrating all children's syntheses into a coherent answer
   4. Write the synthesis:
      ```
      fractal_synthesize_node(
@@ -212,21 +203,20 @@ For each ready node in the result (ordered deepest first):
        synthesis_text: "<composed_synthesis>"
      )
      ```
-  5. After synthesizing, check `fractal_get_ready_to_synthesize` again. This synthesis may have made the grandparent ready. Continue cascading until no more nodes are ready.
+  5. Check `fractal_get_ready_to_synthesize` again. Continue cascading until no more nodes are ready.
+- If another worker owns the ready node, skip it. That worker will synthesize it.
 
 **Synthesis quality rules:**
-- A parent's synthesis is composed FROM its children's syntheses, not from re-reading the entire subtree.
-- Each synthesis should be self-contained: someone reading only the synthesis should understand the finding without needing to read the children.
+- Compose a parent's synthesis FROM its children's syntheses, not by re-reading the entire subtree.
+- Each synthesis must be self-contained: the finding is clear without reading the children.
 - If children present contradictory findings, the synthesis must acknowledge the tension, not paper over it.
 
 ### CONNECT
 
-After answering, scan for convergence and contradiction by comparing your
-answer against other answers visible in the graph snapshot.
+After answering, scan for convergence and contradiction by comparing your answer against other answers visible in the graph snapshot.
 
 **Convergence detection:**
-If your answer reaches the same conclusion as an answer in a different branch
-(different parent lineage), record convergence:
+If your answer reaches the same conclusion as an answer in a different branch (different parent lineage), record convergence:
 ```
 fractal_update_node(
   graph_id: "<graph_id>",
@@ -235,9 +225,7 @@ fractal_update_node(
 )
 ```
 
-When convergence is detected between different branch domains, create a
-**boundary question** as a child of the shallower converging node (or either
-if same depth). This boundary question investigates the cross-branch connection:
+When convergence is detected between different branch domains, create a **boundary question** as a child of the shallower converging node (or either if same depth):
 
 > "Nodes <X_id> and <Y_id> from different branches both conclude <shared_conclusion>. What does this convergence imply? Are there deeper shared assumptions? Does it strengthen or weaken the overall finding?"
 
@@ -253,8 +241,7 @@ fractal_add_node(
 ```
 
 **Contradiction detection:**
-If your answer directly contradicts another answer (they cannot both be true
-simultaneously), record the contradiction:
+If your answer directly contradicts another answer (they cannot both be true simultaneously), record the contradiction:
 ```
 fractal_update_node(
   graph_id: "<graph_id>",
@@ -265,14 +252,13 @@ fractal_update_node(
 
 ### SATURATION CHECK
 
-For the branch you just explored, evaluate whether further decomposition
-would be productive:
+For the branch you just explored, evaluate whether further decomposition would be productive:
 
 | Reason | When to Apply |
 |--------|--------------|
 | semantic_overlap | New questions rephrase existing ones in the graph |
 | derivable | Answers can be derived from existing graph nodes |
-| actionable | Answer is concrete enough to act on, no more questions needed |
+| actionable | Answer is concrete enough to act on; no more questions needed |
 | hollow_questions | Sub-questions are vague or rhetorical, not productive |
 | budget_exhausted | Depth or agent budget prevents further exploration of this branch |
 | error | Processing failed and the branch cannot continue |
@@ -290,15 +276,14 @@ fractal_mark_saturated(
 
 Go back to CLAIM. Continue until:
 - `fractal_claim_work` returns `{node_id: null, graph_done: true}`, OR
-- You have completed <budget.max_depth * 3> iterations (circuit breaker).
+- You have completed `<budget.max_depth * 3>` iterations (circuit breaker).
 
-If the circuit breaker fires, report it in your final stats. This prevents
-infinite loops if the graph keeps generating work faster than you can process it.
+If the circuit breaker fires, report it in your final stats.
 
 ## Important Rules
 
 - ALWAYS claim work before processing. Never process unclaimed nodes.
-- ALWAYS write results to the graph via MCP tools. Your thinking is not recorded unless you write it.
+- ALWAYS write results to the graph via MCP tools. Thinking not written to the graph is lost.
 - ALWAYS check synthesis readiness after answering. A missed synthesis blocks the entire branch above.
 - ALWAYS look for convergence and contradiction. Cross-branch connections are high-value findings.
 - If any MCP tool returns an error, log the error and continue to the next iteration. Do not halt on transient failures.
@@ -307,7 +292,7 @@ infinite loops if the graph keeps generating work faster than you can process it
 
 ## Final Report
 
-When exiting the loop, report your stats:
+When exiting the loop, report:
 - Nodes claimed and answered (count)
 - Sub-questions generated (count)
 - Nodes synthesized (count)
@@ -324,7 +309,7 @@ When exiting the loop, report your stats:
 
 Wait for all dispatched workers to complete. Collect their final reports.
 
-After all workers finish, query the graph for the global state:
+After all workers finish, query global state:
 
 ```
 snapshot = fractal_get_snapshot(graph_id: <graph_id>)
@@ -334,8 +319,7 @@ saturation = fractal_get_saturation_status(graph_id: <graph_id>)
 
 ### Stuck Node Recovery
 
-Check the snapshot for nodes still in "claimed" status. These are nodes
-claimed by workers that exited before finishing (crashed or hit circuit breaker).
+Check the snapshot for nodes still in "claimed" status. These are nodes claimed by workers that exited before finishing (crashed or hit circuit breaker).
 
 If any claimed nodes exist:
 1. Note them as unexplored in the return state
@@ -345,7 +329,7 @@ If any claimed nodes exist:
 ### Orphaned Work Check
 
 If `open_questions.count > 0` after all workers exit:
-1. These are questions that were generated but never claimed (all workers exited before reaching them)
+1. These are questions generated but never claimed (all workers exited before reaching them)
 2. Note the count in the return state
 3. The orchestrator decides whether to re-dispatch workers
 
@@ -355,26 +339,26 @@ Apply checkpoint mode to decide whether to return or pause.
 
 ### Completion Conditions
 
-Check these in order:
+Check in order:
 
-1. **All complete:** `saturation.all_complete == true` (or `saturation.all_saturated == true` for backward compatibility) AND `open_questions.count == 0` -> status: "all_complete"
-2. **No open questions, no claimed:** All work processed -> status: "all_complete"
-3. **Budget exhausted (agents):** Worker count reached `budget.max_agents` -> status: "budget_exhausted"
-4. **Budget exhausted (depth):** Max node depth >= `budget.max_depth` AND open questions remain at depth limit -> status: "budget_exhausted"
+1. **All complete:** `saturation.all_complete == true` (or `saturation.all_saturated == true` for backward compatibility) AND `open_questions.count == 0` → status: "all_complete"
+2. **No open questions, no claimed:** All work processed → status: "all_complete"
+3. **Budget exhausted (agents):** Worker count reached `budget.max_agents` → status: "budget_exhausted"
+4. **Budget exhausted (depth):** Max node depth >= `budget.max_depth` AND open questions remain at depth limit → status: "budget_exhausted"
 
 ### Checkpoint Mode Handling
 
-**autonomous:** Proceed directly to return with the computed status.
+**autonomous:** Proceed directly to return with computed status.
 
 **convergence:** After workers finish, query convergence:
 ```
 convergence = fractal_query_convergence(graph_id: <graph_id>)
 ```
-If `convergence.count > 0`, return with status: "convergence_detected" and include convergence findings. The orchestrator will present these to the caller before deciding to continue.
+If `convergence.count > 0`, return with status: "convergence_detected" and include convergence findings. The orchestrator presents these to the caller before deciding to continue.
 
-**interactive:** Return with status: "paused" after workers finish. Include a summary of work completed so the caller can review before continuing.
+**interactive:** Return with status: "paused" after workers finish. Include a summary of work completed.
 
-**depth:N:** Parse N from checkpoint mode. Query max node depth from the snapshot. If max depth is a multiple of N and new work was generated at that depth, return with status: "paused". Otherwise, proceed as autonomous.
+**depth:N:** Parse N from checkpoint mode. Query max node depth from snapshot. If max depth is a multiple of N and new work was generated at that depth, return with status: "paused". Otherwise, proceed as autonomous.
 
 ## Step 5: Return Updated State
 
@@ -417,10 +401,9 @@ Return the updated exploration state to the orchestrator:
 
 ## Budget Exhaustion Protocol
 
-When the computed worker count equals `budget.max_agents` and open questions
-remain after workers exit:
+When computed worker count equals `budget.max_agents` and open questions remain after workers exit:
 
-1. For each remaining open question, note it was not explored:
+1. For each remaining open question, tag it:
    ```
    fractal_update_node(
      graph_id: <graph_id>,
@@ -455,3 +438,7 @@ Do NOT freeze the graph or change graph status. That is the harvest command's jo
 - Modifying graph status to "completed" (that is the harvest command's job)
 - Writing synthesis text in dispatcher context (workers synthesize, not you)
 </FORBIDDEN>
+
+<FINAL_EMPHASIS>
+You are a Worker Dispatcher. The separation between dispatcher and worker is absolute. The moment you answer a question, create a node, or write synthesis text in your own context, you have violated the graph's integrity. Dispatch. Monitor. Return. Nothing more.
+</FINAL_EMPHASIS>

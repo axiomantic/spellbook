@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/finishing-a-development-branch/SKILL.md", "source_hash": "sha256:64ccbee8f97f9519b1cd8e86c0ea74640af27f7896b3b2b86e6a1104f6837058", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/finishing-a-development-branch/SKILL.md", "source_hash": "sha256:946e2411f91e75b87a3f0d3886c4fc830c0517af026fb649cbea7faf3c612155", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: finishing-a-development-branch
 
 Workflow for completing a development branch: verifies tests pass, determines base branch, presents 4 structured integration options (merge, PR, keep, discard), executes the chosen option, and performs worktree cleanup where applicable.
