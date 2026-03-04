@@ -133,6 +133,45 @@ flowchart TD
 
 **Purpose:** Fact-check every finding against the actual codebase. Remove false positives. Flag uncertain claims for human review.
 
+## 4.0 Pre-Flight: Branch Safety Check
+
+<CRITICAL>
+Before verifying any finding, determine whether local files can be trusted. This check is mandatory for all PR reviews (target was a PR number or URL).
+
+```python
+import subprocess
+
+def get_review_source(manifest: dict) -> str:
+    """
+    Determine if local files are safe to use for verification.
+
+    Returns: "LOCAL_FILES" or "DIFF_ONLY"
+    """
+    pr_head_sha = manifest.get("pr_head_sha")  # from review-manifest.json
+    if not pr_head_sha:
+        return "LOCAL_FILES"  # local branch review; files are authoritative
+
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        capture_output=True, text=True
+    )
+    local_head = result.stdout.strip()
+
+    if local_head == pr_head_sha:
+        return "LOCAL_FILES"  # checked out to PR branch; files match
+    else:
+        return "DIFF_ONLY"   # different branch; local files are WRONG code
+```
+
+**When `review_source == "DIFF_ONLY"`:**
+- ALL `verify_line_content`, `verify_function_behavior`, `verify_call_pattern` calls return `"INCONCLUSIVE"` immediately
+- Do NOT read local files. Do NOT attempt to "helpfully" verify against local code.
+- Mark the finding `[NEEDS VERIFICATION]` in the report
+- Add reason: "PR review — local branch does not match PR HEAD SHA; local files reflect different code"
+
+This is not a degraded mode — it is the correct mode. The diff is the code. Local files are a different git state. A REFUTED verdict from local files in this mode is a wrong verdict.
+</CRITICAL>
+
 ## 4.1 Verification Overview
 
 This is a simplified verification protocol, not a full invocation of the `fact-checking` skill. It focuses on:
@@ -490,6 +529,13 @@ def calculate_snr(findings: list[dict]) -> float:
 | finding-003 | REFUTED | 1 | Line content mismatch |
 ...
 ```
+
+<FORBIDDEN>
+- Read local files to verify or refute findings when `review_source == "DIFF_ONLY"` (local HEAD ≠ PR HEAD SHA)
+- Return REFUTED based on local file content when local branch differs from PR branch
+- Skip the Section 4.0 branch safety check for PR reviews
+- Treat a finding as REFUTED because local files do not show the issue — in PR mode, that means the local branch doesn't have the PR's changes, not that the finding is wrong
+</FORBIDDEN>
 
 ## Phase 4 Self-Check
 

@@ -152,13 +152,9 @@ Quality Engineer with zero-defect mindset. Reputation depends on shipping code t
 
 ## When to Use
 
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
+**Always:** new features, bug fixes, refactoring, behavior changes.
 
-**Exceptions (ask your human partner):**
+**Exceptions (ask human partner; no human available? default: apply TDD):**
 - Throwaway prototypes
 - Generated code
 - Configuration files
@@ -193,7 +189,7 @@ After EACH phase:
 
 ### RED: Write Failing Test
 
-One behavior. Clear name. Real code (mocks only if unavoidable).
+One behavior. Clear name. Real code (mocks only if unavoidable; unavoidable = external I/O, time, hardware — not laziness).
 
 <Good>
 ```typescript
@@ -299,6 +295,8 @@ Other tests fail? Fix now.
 ### REFACTOR: Clean Up
 
 After green only. Remove duplication, improve names, extract helpers. Keep tests green. Don't add behavior.
+
+Complete when: duplication removed, names clear, all tests still green, no new behavior added.
 
 ### Repeat
 
@@ -411,87 +409,25 @@ The ESCAPE field must describe a SPECIFIC broken implementation, not a generic s
 | "Feature complete" | All tests pass, watched each fail first |
 | "Refactor safe" | Tests stayed green throughout |
 
-## Why Order Matters
-
-**"I'll write tests after to verify it works"**
-
-Tests written after code pass immediately. Passing immediately proves nothing:
-- Might test wrong thing
-- Might test implementation, not behavior
-- Might miss edge cases you forgot
-- You never saw it catch the bug
-
-Test-first forces you to see the test fail, proving it actually tests something.
-
-**"I already manually tested all the edge cases"**
-
-Manual testing is ad-hoc. You think you tested everything but:
-- No record of what you tested
-- Can't re-run when code changes
-- Easy to forget cases under pressure
-- "It worked when I tried it" does not equal comprehensive
-
-Automated tests are systematic. They run the same way every time.
-
-**"Deleting X hours of work is wasteful"**
-
-Sunk cost fallacy. The time is already gone. Your choice now:
-- Delete and rewrite with TDD (X more hours, high confidence)
-- Keep it and add tests after (30 min, low confidence, likely bugs)
-
-The "waste" is keeping code you can't trust. Working code without real tests is technical debt.
-
-**"TDD is dogmatic, being pragmatic means adapting"**
-
-TDD IS pragmatic:
-- Finds bugs before commit (faster than debugging after)
-- Prevents regressions (tests catch breaks immediately)
-- Documents behavior (tests show how to use code)
-- Enables refactoring (change freely, tests catch breaks)
-
-"Pragmatic" shortcuts = debugging in production = slower.
-
-**"Tests after achieve the same goals"**
-
-No. Tests-after answer "What does this do?" Tests-first answer "What should this do?"
-
-Tests-after are biased by your implementation. You test what you built, not what's required. You verify remembered edge cases, not discovered ones.
-
-Tests-first force edge case discovery before implementing. Tests-after verify you remembered everything (you didn't).
-
-30 minutes of tests after does not equal TDD. You get coverage, lose proof tests work.
-
 ## Anti-Patterns
 
 <FORBIDDEN>
+All of the following mean: Delete code. Start over with TDD.
+
 - Code before test
-- Test passes immediately
+- Test passes immediately (without watching it fail)
 - Can't explain why test failed
 - "Just this once" / "already manually tested"
 - "Keep as reference" / "adapt existing"
 - "Tests after achieve same goals"
 - "TDD is dogmatic, being pragmatic"
-</FORBIDDEN>
-
-All mean: Delete code. Start over with TDD.
-
-## Red Flags: STOP and Start Over
-
-- Code before test
-- Test after implementation
-- Test passes immediately
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
 - "It's about spirit not ritual"
-- "Keep as reference" or "adapt existing code"
 - "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
 - "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
+- Tests added "later" / tests after implementation
+- Rationalizing "I already manually tested it"
+- "Need to explore first" (throw away exploration, start with TDD)
+</FORBIDDEN>
 
 ## Common Rationalizations
 
@@ -499,13 +435,13 @@ All mean: Delete code. Start over with TDD.
 |--------|---------|
 | "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
 | "I'll test after" | Tests passing immediately prove nothing. |
-| "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" |
-| "Already manually tested" | Ad-hoc is not systematic. No record, can't re-run. |
-| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
+| "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" You test what you built, not what's required. You verify remembered edge cases, not discovered ones. |
+| "Already manually tested" | Ad-hoc is not systematic. No record, can't re-run. You think you tested everything but: no record of what you tested, can't re-run when code changes, easy to forget cases under pressure. |
+| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. Your choice: delete and rewrite with TDD (X more hours, high confidence) OR keep and add tests after (30 min, low confidence, likely bugs). |
 | "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
 | "Need to explore first" | Fine. Throw away exploration, start with TDD. |
 | "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
+| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. Finds bugs before commit, prevents regressions, documents behavior, enables refactoring. |
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
 
@@ -576,12 +512,6 @@ PASS
 **REFACTOR**
 Extract validation for multiple fields if needed.
 
-Never fix bugs without test.
-
-## Debugging Integration
-
-Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix and prevents regression.
-
 Never fix bugs without a test.
 
 ## Testing Anti-Patterns
@@ -593,7 +523,7 @@ When adding mocks or test utilities, avoid common pitfalls:
 | Testing mock behavior | Proves mock works, not code | Use real dependencies when possible |
 | Test-only methods | Production code polluted for tests | Refactor design for testability |
 | Blind mocking | Don't understand what's mocked | Trace dependency chain first |
-| Over-mocking | Tests pass but behavior broken | Mock boundaries only, not internals |
+| Over-mocking | Tests pass but behavior broken | Mock boundaries only (external dependencies: network, DB, filesystem), not internals |
 
 ## Test Speed & Scope
 

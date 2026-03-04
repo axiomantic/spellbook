@@ -171,9 +171,9 @@ This skill fixes tests. NOT features. NOT infrastructure. Direct path: Understan
 
 ## Invariant Principles
 
-1. **Tests catch bugs, not checkmarks.** Every fix must detect real failures, not just pass.
-2. **Production bugs are not test issues.** Flag and escalate; never silently "fix" broken behavior.
-3. **Read before fixing.** Never guess at code structure or blindly apply suggestions.
+1. **Tests catch bugs, not checkmarks.** Every fix must detect real failures, not just achieve green status.
+2. **Production bugs are not test issues.** Flag and escalate; never silently fix broken behavior.
+3. **Read before fixing.** Read the test file AND the production file under test. Never guess or blindly apply suggestions.
 4. **Verify proves value.** Unverified fixes are unfinished fixes.
 5. **Scope discipline.** Fix tests, not features. No over-engineering, no under-testing.
 
@@ -226,7 +226,7 @@ Before each phase, identify: inputs available, gaps in understanding, classifica
 
 ## Phase 0: Input Processing
 
-Dispatch subagent with `/fix-tests-parse` command. Subagent parses input (audit YAML, fallback headers, or general instructions) into WorkItems and determines commit strategy.
+Dispatch subagent (Task tool) with `/fix-tests-parse` command. Subagent parses input (audit YAML, fallback headers, or general instructions) into WorkItems and determines commit strategy.
 
 ## Phase 1: Discovery (run_and_fix only)
 
@@ -236,11 +236,11 @@ Skip for audit_report/general_instructions modes.
 pytest --tb=short 2>&1 || npm test 2>&1 || cargo test 2>&1
 ```
 
-Parse failures into WorkItems with error_type, message, stack trace, expected/actual.
+Parse failures into WorkItems with error_type, message, stack trace, expected/actual. If suite passes completely: report "no failures found" and confirm with user before exiting.
 
 ## Phase 2: Fix Execution
 
-Dispatch subagent with the following prompt structure. The subagent MUST be given explicit instructions to read the referenced files:
+Dispatch subagent (Task tool). The subagent MUST be given explicit instructions to read the referenced files:
 
 ```
 First, read these files to understand the quality requirements:
@@ -279,10 +279,10 @@ BANNED PATTERNS (if your fix introduces ANY of these, it is NOT a fix):
 Every assertion must be Level 4+ on the Assertion Strength Ladder.
 Replacing a Level 1 assertion with a Level 2 assertion is NOT a fix.
 
-[Append Test Writer Template from dispatching-parallel-agents/SKILL.md]
+[Copy in the full Test Writer Template from skills/dispatching-parallel-agents/SKILL.md before dispatching]
 ```
 
-### Assertion Quality Gate (ALL modes)
+### 2.1 Assertion Quality Gate (ALL modes)
 
 <CRITICAL>
 Every fix, regardless of input mode, must pass the Assertion Strength Ladder check before being marked complete. This is NOT limited to audit_report mode.
@@ -296,7 +296,7 @@ Every fix, regardless of input mode, must pass the Assertion Strength Ladder che
 6. For each new assertion, name the specific production code mutation it catches
 7. If you cannot name a mutation, the assertion is too weak; strengthen it
 
-### 2.3 Production Bug Protocol
+### 2.2 Production Bug Protocol
 
 <CRITICAL>
 If investigation reveals production bug:
@@ -346,15 +346,15 @@ FOR priority IN [critical, important, minor]:
 ## Phase 3.5: Post-Fix Adversarial Review (MANDATORY)
 
 <CRITICAL>
-This phase is NOT optional. After ALL fixes are applied, dispatch a Test Adversary subagent to verify that every new or modified assertion actually meets quality standards. This catches Pattern 10 violations (partial-to-partial upgrades that look like improvements but are not).
+This phase is NOT optional. After ALL fixes are applied, dispatch a Test Adversary subagent (Task tool) to verify that every new or modified assertion meets quality standards. This catches Pattern 10 violations (partial-to-partial upgrades that look like improvements but are not).
 </CRITICAL>
 
-Dispatch subagent with the following prompt:
+Dispatch subagent (Task tool):
 
 ```
 First, read these files to understand the quality requirements:
 - Read patterns/assertion-quality-standard.md (especially The Full Assertion Principle)
-- Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md
+- Copy in the full Test Adversary Template from skills/dispatching-parallel-agents/SKILL.md
 
 ROLE: Test Adversary. Your job is to BREAK the new/modified test assertions.
 
@@ -438,11 +438,11 @@ B) No, satisfied with fixes
 
 **Flaky tests:** Identify non-determinism source (time, random, ordering, external state). Mock or control it. Use deterministic waits, not sleep-and-hope.
 
-**Implementation-coupled tests:** Identify BEHAVIOR test should verify. Rewrite to test through public interface. Remove internal mocking.
+**Implementation-coupled tests:** Identify the BEHAVIOR the test should verify. Rewrite to test through the public interface. Remove mocks of the unit under test's own internals; do not remove mocks of external services.
 
-**Missing tests entirely:** Read production code. Identify key behaviors. Write tests following codebase patterns. Ensure tests would catch real failures.
+**Missing tests entirely:** Read production code. Identify key behaviors. Write tests following existing test file patterns in the codebase. Ensure tests would catch real failures.
 
-**Slow/bloated tests:** Tests taking >5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data. Separate slow tests with marks (`@pytest.mark.slow`, `@pytest.mark.integration`, etc.) to preserve fast feedback on core functionality. Move real I/O to integration tier. Shrink test inputs to the minimum that exercises the behavior. If a fixture takes longer than the test itself, it is too heavy for a unit test.
+**Slow/bloated tests:** Tests taking >5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data (e.g., 1024×1024 matrix where 4×4 suffices). Separate slow tests with marks (`@pytest.mark.slow`, `@pytest.mark.integration`, etc.). Shrink test inputs to the minimum that exercises the behavior. Move real I/O to integration tier. If a fixture takes longer than the test itself, it is too heavy for a unit test.
 
 <FORBIDDEN>
 ## Anti-Patterns

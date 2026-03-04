@@ -206,12 +206,29 @@ Target formats: `123` (PR#), `owner/repo#123`, URL, branch-name
 
 ## Step 0: Load Project Conventions
 
+<CRITICAL>
+**PR Reviews = Diff-Only Analysis**
+
+When reviewing a PR (target is a PR number, URL, or fetched diff), the diff is the authoritative code. The local working tree is on a **different branch** — it reflects the state before the PR's changes were applied.
+
+**NEVER read local files that appear in the PR's changed file set.** The local version is the old code. Reading it will cause you to:
+- Declare bugs "not present" when the PR introduces them (producing false REFUTED verdicts)
+- Miss new behavior entirely because you're reading the pre-change version
+- Produce findings with high confidence that are factually wrong
+
+Local files are safe to read ONLY when:
+1. The file is **not** in the PR's changed file list, AND
+2. You are reading it for convention context only (not to verify PR behavior)
+
+If you are unsure whether a file is changed by the PR, treat it as changed and use the diff instead.
+</CRITICAL>
+
 Before reviewing any code, load project context:
 
 1. Read `CLAUDE.md` and/or `.claude/CLAUDE.md` if present in the repo root
 2. Read `pyproject.toml`, `setup.cfg`, `.eslintrc`, `biome.json`, or equivalent style config
 3. Check for `docs/code-review-instructions.md` or `.github/code-review-instructions.md`
-4. Sample 1-2 sibling files adjacent to changed files to discover actual naming, style, and structural conventions
+4. Sample 1-2 sibling files adjacent to changed files to discover actual naming, style, and structural conventions — **only read files NOT changed by this PR**
 
 <analysis>
 What conventions does this project enforce? Are there linting rules, type-checking requirements,
@@ -333,5 +350,6 @@ After completing the review:
 - If async/threading code was present, did I run the concurrency pass?
 - Did I reconcile all prior feedback items?
 - Are my severity ratings honest (impact-based, not effort-based)?
+- **Did I avoid reading local files that appear in the PR's changed file set?** Any finding that says a bug "does not exist" based on a local file read is wrong if the local branch is not the PR branch.
 </reflection>
 ``````````

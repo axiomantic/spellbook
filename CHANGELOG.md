@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-03-04
+
+### Added
+- **Crystallized v2 outputs** - All skills, commands, patterns, agents, and root documents (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.codex/spellbook-bootstrap.md`, `spellbook_mcp/coordination/WORKER_CONTRACT.md`) crystallized to v2 format. Each output verified by adversarial gap analysis before acceptance. FAIL verdicts (CRITICAL or HIGH findings) trigger source-level fixes before the crystallized output is accepted.
+- **`skills/reviewing-prs`** - New skill: safe PR review protocol that detects whether the reviewing agent is working in the PR branch (`LOCAL_FILES` mode) or needs a diff-only context block (`DIFF_ONLY` mode), with mandatory injection template for subagent dispatch.
+
+### Changed
+- **Crystallize pipeline: compress-first ordering** (`commands/crystallize.md`) - Phase 3 now compresses aggressively first to establish a tight baseline before filling gaps. Previously, improvement design preceded compression, producing net-additive outputs. MEDIUM/LOW gap fills must be net-neutral (offset by equal compression); only CRITICAL/HIGH gaps may add net content.
+- **Crystallize calibration preservation rule** (`commands/crystallize.md`) - Preserving calibration content means preserving the identified failure mode and correction, not the word count. A 3-sentence note condensed to 1 sentence that still names the failure mode is acceptable.
+- **TDD skill sharpened** (`skills/test-driven-development/SKILL.md`) - Exceptions block clarifies "no human available? default: apply TDD". Mock rationale expanded: "unavoidable = external I/O, time, hardware -- not laziness". REFACTOR completion criteria added.
+- **Multiple skills compressed and tightened** - `skills/advanced-code-review`, `skills/auditing-green-mirage`, `skills/debugging`, `skills/dispatching-parallel-agents`, `skills/fixing-tests`, `skills/generating-diagrams`, `skills/implementing-features`, `skills/writing-skills`, `commands/advanced-code-review-verify`, `commands/code-review-give`.
+
 ## [0.18.0] - 2026-03-02
 
 ### Added

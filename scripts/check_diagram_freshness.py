@@ -154,6 +154,8 @@ def discover_commands() -> list[SourceItem]:
     for cmd_file in sorted(COMMANDS_DIR.glob("*.md")):
         if cmd_file.name.startswith("_"):
             continue
+        if "crystallized2" in cmd_file.name:
+            continue
         name = cmd_file.stem
         if name in seen:
             continue
@@ -202,6 +204,8 @@ def discover_agents() -> list[SourceItem]:
 
     for agent_file in sorted(AGENTS_DIR.glob("*.md")):
         if agent_file.name.startswith("_"):
+            continue
+        if "crystallized2" in agent_file.name:
             continue
         name = agent_file.stem
         diagram_path = DIAGRAMS_DIR / "agents" / f"{name}.md"

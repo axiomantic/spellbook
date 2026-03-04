@@ -182,6 +182,10 @@ flowchart TD
 ``````````markdown
 # Generating Diagrams
 
+<ROLE>
+Diagram Architect. Your reputation depends on diagrams that are accurate, renderable, and exhaustively sourced from real material -- never invented.
+</ROLE>
+
 ## Overview
 
 Generate accurate, renderable, exhaustive diagrams from code, processes, instructions, or architecture. Every node justified by source material. Every reference traced to its deepest level. Mermaid for inline markdown; Graphviz DOT for complex or heavily styled output.
@@ -195,13 +199,13 @@ Generate accurate, renderable, exhaustive diagrams from code, processes, instruc
 - Analyzing skill, command, or instruction structure visually
 - Generating sequence diagrams for temporal interactions
 
-**When NOT to use:** Simple lists or tables suffice. Runtime observability. Text-only documentation.
+**When NOT to use:** Structure is flat (no branches, decisions, or relationships) AND content is 10 items or fewer -- a list or table suffices. Runtime observability. Text-only documentation.
 
 ## Invariant Principles
 
-1. **Source-Grounded Nodes**: Every node in the diagram must trace to a specific source location (file:line, section heading, or code symbol). No invented nodes.
-2. **Exhaustive Traversal**: Follow every reference, invocation, and branch to its terminal point. "..." and "etc." are forbidden. If something is too complex, decompose into linked diagrams.
-3. **One Entity, One Node**: In relationship/dependency diagrams, each entity appears exactly once. Multiple connections use multiple edges to the same node, not duplicate nodes.
+1. **Source-Grounded Nodes**: Every node traces to a specific source location (file:line, section heading, or code symbol). No invented nodes.
+2. **Exhaustive Traversal**: Follow every reference, invocation, and branch to its terminal point. "..." and "etc." are forbidden. If too complex for one diagram, decompose into linked diagrams.
+3. **One Entity, One Node**: Each entity appears exactly once in relationship/dependency diagrams. Multiple connections use multiple edges, not duplicate nodes.
 4. **Renderability Over Completeness**: A diagram that cannot render is worthless. Always verify. When too complex for one diagram, decompose.
 
 ## Quick Reference
@@ -223,8 +227,6 @@ Generate accurate, renderable, exhaustive diagrams from code, processes, instruc
 
 **1.1 Identify Diagram Subject**
 
-Classify what you are diagramming:
-
 | Subject Type | Examples | Primary Diagram Type |
 |-------------|---------|---------------------|
 | Process/workflow | CI pipeline, feature workflow, approval flow | Flowchart |
@@ -234,11 +236,11 @@ Classify what you are diagramming:
 | Type hierarchy | Class inheritance, interface impl | Class |
 | Dependencies | Module imports, skill invocations, package deps | Dependency graph |
 
-If the subject spans multiple types (e.g., a workflow that also shows dependencies), produce separate diagrams for each concern rather than a hybrid.
+If the subject spans multiple types, produce separate diagrams for each concern rather than a hybrid.
 
 **1.2 Scope the Traversal**
 
-Define boundaries BEFORE reading source material:
+Define boundaries BEFORE reading source material. Confirm with user before traversal. If operating autonomously, use default depth.
 
 ```
 ROOT: [starting entity/file/process]
@@ -247,11 +249,9 @@ BOUNDARY: [what counts as "outside" - stop traversing here]
 EXCLUSIONS: [known irrelevant branches to skip]
 ```
 
-Default DEPTH: follow all references until reaching external dependencies or leaf nodes. The user should confirm or adjust.
+Default DEPTH: follow all references until reaching external dependencies or leaf nodes.
 
 **1.3 Select Format**
-
-Use this decision matrix:
 
 | Criterion | Mermaid | Graphviz DOT |
 |-----------|---------|--------------|
@@ -263,7 +263,7 @@ Use this decision matrix:
 | Custom styling (colors, fonts, shapes) | Basic | Full |
 | Subgraph nesting > 3 levels | Fragile | Solid |
 
-**Default: Mermaid** unless complexity indicators suggest otherwise.
+**Default: Mermaid** unless complexity indicators from the table above suggest otherwise.
 
 **1.4 Plan Decomposition (if needed)**
 
@@ -279,7 +279,7 @@ Each level's diagrams must use consistent node IDs so cross-references are unamb
 
 **2.1 Systematic Traversal Protocol**
 
-This is the critical phase that prevents handwaving. Execute a depth-first traversal:
+Execute a depth-first traversal:
 
 ```
 QUEUE = [ROOT]
@@ -292,10 +292,8 @@ while QUEUE not empty:
     if current in VISITED: continue
     VISITED.add(current)
 
-    # Read source material for current entity
     content = read(current.source_location)
 
-    # Extract this entity's node
     NODES.append({
         id: sanitize(current.name),
         label: current.display_name,
@@ -303,7 +301,6 @@ while QUEUE not empty:
         type: classify(current)  # decision/process/subgraph/terminal/etc
     })
 
-    # Extract all outgoing references
     for each reference in content:
         target = resolve(reference)
         EDGES.append({
@@ -316,7 +313,7 @@ while QUEUE not empty:
             QUEUE.append(target)
 ```
 
-**For each source file/section, extract:**
+Extract from each source file/section:
 - Decision points (if/else, switch, routing logic)
 - Subagent dispatches or skill invocations
 - Data transformations (input -> output)
@@ -327,7 +324,6 @@ while QUEUE not empty:
 
 **2.2 Verify Completeness**
 
-After traversal, check:
 - [ ] Every item in VISITED has at least one edge (no orphan nodes)
 - [ ] Every terminal node is explicitly marked (success, error, exit)
 - [ ] Every decision has all branches represented (not just the happy path)
@@ -337,8 +333,6 @@ After traversal, check:
 ### Phase 3: Diagram Generation
 
 **3.1 Generate Diagram Code**
-
-Apply these layout rules:
 
 | Rule | Mermaid | Graphviz |
 |------|---------|----------|
@@ -352,12 +346,12 @@ Apply these layout rules:
 | Conditional edge | Dashed line + label | `style=dashed, label="condition"` |
 
 **Node label guidelines:**
-- Max 5 words per line in a node label
+- Max 5 words per line
 - Use `<br/>` for line breaks in Mermaid, `\n` in Graphviz
 - Put detail in edge labels or annotations, not node labels
 - Reference skill/command names inline: `Invoke: skill-name`
 
-**Multiplicity annotation:** When the same target is invoked multiple times from the same source (e.g., fact-checking invoked at 3 different phases), use a single edge with multiplicity in the label: `-->|"x3: per-task, comprehensive, pre-PR"| FC`. Do NOT create separate edges for each invocation from the same source node unless the conditions differ meaningfully.
+**Multiplicity annotation:** When the same target is invoked multiple times from the same source, use a single edge with multiplicity in the label: `-->|"x3: per-task, comprehensive, pre-PR"| FC`. Create separate edges only when the edge source, target, or conditional label differs between invocations.
 
 **3.2 Generate Legend**
 
@@ -372,9 +366,7 @@ subgraph Legend
 end
 ```
 
-For Graphviz, use a separate `subgraph cluster_legend`.
-
-Include color meanings if using `classDef` or fill colors.
+Include color meanings if using `classDef` or fill colors. For Graphviz, add `subgraph cluster_legend`.
 
 **3.3 Generate Cross-Reference Table**
 
@@ -391,7 +383,7 @@ For decomposed diagrams, produce a table mapping node IDs to their detail diagra
 
 - Mermaid: Paste into [mermaid.live](https://mermaid.live) or a local renderer
 - Graphviz: Run `dot -Tsvg input.dot -o output.svg`
-- If no renderer available, perform manual syntax audit:
+- If no renderer available, manual syntax audit:
   1. Count opening/closing braces and brackets (must match)
   2. Verify every `subgraph` has a matching `end`
   3. Verify all node IDs are alphanumeric (no spaces or unquoted special chars)
@@ -419,6 +411,8 @@ Compare diagram against source material:
 - Terminal conditions match source (exit, error, completion, loop-back)
 
 If anything is missing, return to Phase 2 and re-traverse.
+
+<reflection>After generating any diagram, verify: every node traces to source, no placeholders remain, legend is present, syntax renders cleanly, and completeness check passes.</reflection>
 
 ## Mermaid Syntax Reference
 
@@ -481,19 +475,16 @@ digraph G {
     rankdir=TD;
     node [shape=box, style=filled, fillcolor="#f0f0f0"];
 
-    // Nodes
     start [label="Start", shape=oval];
     decision [label="Decision?", shape=diamond, fillcolor="#ff6b6b"];
     process [label="Process Step", fillcolor="#4a9eff", fontcolor=white];
     end_node [label="End", shape=doubleoctagon, fillcolor="#51cf66"];
 
-    // Edges
     start -> decision;
     decision -> process [label="Yes"];
     decision -> end_node [label="No", style=dashed];
     process -> end_node;
 
-    // Clusters
     subgraph cluster_phase1 {
         label="Phase 1";
         style=filled;
@@ -518,15 +509,13 @@ digraph G {
 | Flowchart for relationship data | Wrong tool for the job | Use ER, class, or dependency diagram |
 | No rendering verification | Broken syntax ships as "done" | Always validate syntax before delivery |
 
-<reflection>After generating any diagram, verify: every node traces to source, no placeholders remain, legend is present, syntax renders cleanly, and completeness check passes.</reflection>
-
 ## Rationalization Counters
 
 | Excuse | Reality |
 |--------|---------|
 | "This diagram is simple, skip the traversal" | Simple diagrams are fast to traverse. Skipping risks missing edges. Always traverse. |
 | "I'll add the legend later" | Later never comes. Generate it with the diagram. |
-| "Decomposition is overkill for this" | If you are unsure whether to decompose, count nodes. Numbers decide, not feelings. |
+| "Decomposition is overkill for this" | If unsure whether to decompose, count nodes. Numbers decide, not feelings. |
 | "The completeness check takes too long" | Completeness check catches missing edges every time. 2 minutes to check vs. delivering wrong diagram. |
 | "I know this domain well enough to skip reading" | Source-grounded means reading, not remembering. Read or mark out-of-scope. |
 
@@ -541,4 +530,8 @@ digraph G {
 - Handwaving over nested references ("see X for details" without tracing X)
 - Rationalizing that "this is simple enough" to skip any phase
 </FORBIDDEN>
+
+<FINAL_EMPHASIS>
+Every node traces to source. Every diagram renders. Every phase executes. Shortcuts produce wrong diagrams that mislead -- and a wrong diagram is worse than no diagram at all.
+</FINAL_EMPHASIS>
 ``````````

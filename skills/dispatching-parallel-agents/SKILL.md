@@ -19,9 +19,9 @@ Parallel Execution Architect. Your reputation depends on maximizing throughput w
 |----------|-------------------|
 | Codebase exploration with uncertain scope | Subagent reads N files, returns summary paragraph |
 | Research phase before implementation | Subagent gathers patterns/approaches, returns synthesis |
-| Parallel independent investigations | 3 subagents = 3x parallelism |
+| Parallel independent investigations | 3 subagents = 3× parallelism |
 | Self-contained verification (code review, spec compliance) | Fresh eyes, returns verdict + issues only |
-| Deep dives you won't reference again | 10 files read for one answer = waste if kept in main context |
+| Deep dives you won't reference again | 10 files read for one answer = wasted main context if kept |
 | GitHub/external API work | Subagent handles pagination/synthesis |
 
 ### Stay in Main Context When:
@@ -68,9 +68,7 @@ The `<project-encoded>` path is the project root with slashes replaced by dashes
 
 ## Overview: Parallel Dispatch
 
-When you have multiple unrelated failures (different test files, different subsystems, different bugs), investigating them sequentially wastes time. Each investigation is independent and can happen in parallel.
-
-**Core principle:** Dispatch one agent per independent problem domain. Let them work concurrently.
+Dispatch one agent per independent problem domain — but only after the independence gate (below) confirms no shared state or file conflicts. Let them work concurrently.
 
 ## Invariant Principles
 
@@ -154,8 +152,6 @@ Group failures by what's broken:
 - File B tests: Batch completion behavior
 - File C tests: Abort functionality
 
-Each domain is independent - fixing tool approval doesn't affect abort tests.
-
 ### 2. Create Focused Agent Prompts
 
 Each agent gets:
@@ -208,12 +204,6 @@ Only integrate when: summaries reviewed, no file conflicts, tests green.
 ---
 
 ## Agent Prompt Structure
-
-Good agent prompts are:
-
-1. **Focused** - One clear problem domain
-2. **Self-contained** - All context needed to understand the problem
-3. **Specific about output** - What should the agent return?
 
 ### Template
 
@@ -362,6 +352,51 @@ Summary format:
 - Pattern 10 violations (partial-to-partial): N
 ```
 
+### PR Review Subagent Template
+
+REQUIRED when dispatching any subagent to review a PR (target is a PR number or URL, not a local branch).
+
+**Step 1 — Resolve review mode before dispatch:**
+
+```bash
+# Get the PR HEAD SHA
+PR_HEAD_SHA=$(gh pr view <PR_NUMBER> --json headRefOid --jq '.headRefOid')
+
+# Check if a worktree exists for the PR branch
+PR_BRANCH=$(gh pr view <PR_NUMBER> --json headRefName --jq '.headRefName')
+WORKTREE_PATH=$(git worktree list --porcelain | grep -A2 "branch refs/heads/$PR_BRANCH" | grep "worktree" | awk '{print $2}')
+```
+
+| Condition | Review Mode | Agent Working Directory |
+|-----------|-------------|------------------------|
+| Worktree exists for PR branch | `LOCAL_FILES` | `$WORKTREE_PATH` |
+| No worktree, local HEAD = PR HEAD SHA | `LOCAL_FILES` | Current repo root |
+| No worktree, local HEAD ≠ PR HEAD SHA | `DIFF_ONLY` | N/A — use diff only |
+
+**Step 2 — Inject into subagent prompt:**
+
+```markdown
+## PR Review Context (MANDATORY — read before touching any file)
+
+- PR: #<NUMBER>
+- PR HEAD SHA: <SHA>
+- Review mode: LOCAL_FILES | DIFF_ONLY
+- Working directory: <WORKTREE_PATH or "use diff only">
+- Changed files: <LIST>
+
+REVIEW MODE INSTRUCTIONS:
+- LOCAL_FILES: Safe to read files in <working_directory>. DO NOT read files outside this directory.
+- DIFF_ONLY: DO NOT read any local files in the changed file set. The diff is the ONLY
+  authoritative source. Local files reflect a different git state and will produce wrong verdicts.
+  Any "not present" finding based on a local file read is WRONG in this mode.
+```
+
+<FORBIDDEN>
+- Dispatching a PR review subagent without injecting PR HEAD SHA and review mode
+- Dispatching in LOCAL_FILES mode without specifying the exact working directory (repo root or worktree path)
+- Dispatching in DIFF_ONLY mode while pointing the agent at the local filesystem for review work
+</FORBIDDEN>
+
 ---
 
 ## Common Mistakes
@@ -409,7 +444,7 @@ Summary format:
 
 **Integration:** All fixes independent, zero conflicts, full suite green
 
-**Gain:** 3 problems solved in time of 1
+**Gain:** N parallel problems resolved in time of slowest one (best case: N×)
 
 ---
 
@@ -424,13 +459,13 @@ Every line of code you read or write in main context is WASTED TOKENS.
 
 ### FORBIDDEN in Main Context
 
-| Action               | Why Forbidden                      | Correct Approach             |
-| -------------------- | ---------------------------------- | ---------------------------- |
-| Reading source files | Wastes main context tokens         | Dispatch explore subagent    |
-| Writing/editing code | Implementation belongs in subagent | Dispatch TDD subagent        |
-| Running tests        | Test output bloats context         | Subagent runs and summarizes |
-| Analyzing errors     | Debugging is subagent work         | Dispatch debugging subagent  |
-| Searching codebase   | Research is subagent work          | Dispatch explore subagent    |
+| Action               | Why Forbidden                                    | Correct Approach             |
+| -------------------- | ------------------------------------------------ | ---------------------------- |
+| Reading source files | Bloats main context; triggers cascade reads      | Dispatch explore subagent    |
+| Writing/editing code | Implementation belongs in subagent               | Dispatch TDD subagent        |
+| Running tests        | Test output bloats context                       | Subagent runs and summarizes |
+| Analyzing errors     | Debugging is subagent work                       | Dispatch debugging subagent  |
+| Searching codebase   | Research is subagent work                        | Dispatch explore subagent    |
 
 ### ALLOWED in Main Context
 
@@ -545,34 +580,6 @@ Before completing:
 <CRITICAL>
 If ANY unchecked: STOP and fix. Parallel dispatch without independence verification causes merge disasters.
 </CRITICAL>
-
----
-
-## Key Benefits
-
-1. **Parallelization** - Multiple investigations happen simultaneously
-2. **Focus** - Each agent has narrow scope, less context to track
-3. **Independence** - Agents don't interfere with each other
-4. **Speed** - 3 problems solved in time of 1
-
-## Verification
-
-After agents return:
-
-1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Spot check** - Agents can make systematic errors
-
-## Real-World Impact
-
-From debugging session (2025-10-03):
-
-- 6 failures across 3 files
-- 3 agents dispatched in parallel
-- All investigations completed concurrently
-- All fixes integrated successfully
-- Zero conflicts between agent changes
 
 <FINAL_EMPHASIS>
 Parallel dispatch is a force multiplier when used correctly, and a merge disaster when used carelessly. The independence gate is non-negotiable. Verify before dispatch, verify before integration. Your reputation depends on the rigor of your verification, not the speed of your dispatch.

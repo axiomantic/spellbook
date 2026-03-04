@@ -12,7 +12,7 @@ description: "Use when debugging bugs, test failures, or unexpected behavior. Tr
 1. **Baseline Before Investigation**: Establish clean, known-good state BEFORE any debugging. No baseline = no debugging.
 2. **Prove Bug Exists First**: Reproduce the bug on clean baseline before ANY investigation or fix attempts. No repro = no bug.
 3. **Triage Before Methodology**: Classify symptom. Simple bugs get direct fixes; complex bugs get structured methodology.
-4. **3-Fix Rule**: Three failed attempts signal architectural problem. Stop thrashing, question architecture.
+4. **3-Fix Rule**: Three failed attempts require architectural review, not more tactical fixes.
 5. **Verification Non-Negotiable**: No fix is complete without evidence. Always invoke `/verify` after claiming resolution.
 6. **Track State**: Fix attempts AND code state accumulate across methodology invocations. Always know what state you're testing.
 7. **Evidence Over Intuition**: "I think it's fixed" is not verification.
@@ -66,12 +66,10 @@ BASELINE CHECKLIST:
 
 **If working with external code (upstream repo, dependency):**
 ```bash
-# Example: establish clean baseline
 git stash                    # Save any local changes
 git checkout main            # Or upstream branch
 git pull                     # Get latest
-# Build/run from clean state
-# Verify expected behavior works
+# Build/run from clean state and verify expected behavior works
 ```
 
 **Record the baseline:**
@@ -230,18 +228,13 @@ If prior attempts = "3+ attempts":
 <THREE_FIX_RULE_WARNING>
 
 You've attempted 3+ fixes without resolving this issue.
-Strong signal of ARCHITECTURAL problem, not tactical bug.
+Tactical fixes cannot solve architectural problems.
 
-**Options:**
-A) Stop - invoke architecture-review
+Options:
+A) Stop - conduct architecture review with human
 B) Continue (type "I understand the risk, continue")
 C) Escalate to human architect
 D) Create spike ticket
-
-**Why this matters:**
-- Repeated tactical fixes paper over architectural flaws
-- Each failed fix increases technical debt
-- Time thrashing could be spent on proper solution
 
 </THREE_FIX_RULE_WARNING>
 ```
@@ -270,7 +263,7 @@ B) systematic debugging
    - Better when test reveals production bug
 ```
 
-Present recommendation with rationale, respect user choice (with warning if suboptimal).
+Present recommendation with rationale. Respect user choice; warn if user picks B for a test-quality issue (not a production bug) or A when the test is exposing real production behavior.
 
 ## Phase 3: Execute Methodology
 
@@ -314,6 +307,8 @@ def after_fix_attempt(succeeded: bool):
 ```
 
 ### If "Just Fix It" Chosen
+
+When user explicitly requests skipping methodology:
 
 ```
 Proceeding with direct fix (methodology skipped).
@@ -389,7 +384,7 @@ WARNING: Lower success rate and higher rework risk.
 After identifying CI-specific cause:
 1. Fix in CI config OR add local reproduction instructions
 2. Document the environment requirement
-3. Consider adding CI parity check to README/CLAUDE.md
+3. Add CI parity check to README/CLAUDE.md
 
 ## Phase 4: Verification
 
@@ -423,7 +418,10 @@ Signs of architectural problem:
 - Pattern feels fundamentally unsound
 
 Actions:
-1. **Fractal exploration (optional):** When the 3-Fix Rule triggers (3 failed fix attempts), invoke fractal-thinking with intensity `explore` and seed: "Why does [symptom] persist after [N] fix attempts targeting [root causes]?". Use the synthesis to produce new hypothesis families to investigate.
+1. **Fractal exploration:** Invoke fractal-thinking with intensity `explore` and seed:
+   "Why does [symptom] persist after [N] fix attempts targeting [root causes]?"
+   Invoke when: stuck generating new hypotheses after 2+ disproven theories.
+   Use synthesis to produce new hypothesis families.
 2. Question architecture (not just implementation)
 3. Discuss with human before more fixes
 4. Consider refactoring vs. tactical fixes

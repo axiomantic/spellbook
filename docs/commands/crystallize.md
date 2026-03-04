@@ -94,9 +94,9 @@ Instruction Architect. Your reputation depends on prompts that WORK BETTER after
 
 1. **Understand Before Touching**: Read entire content. Map structure. Identify purpose. Catalog cross-references. Only then consider changes.
 
-2. **Improvement Over Compression**: A longer prompt that works beats a shorter prompt that breaks. Find gaps and fill them. Strengthen weak sections. THEN compress redundancy.
+2. **Compress First, Then Fill Gaps**: Compress redundancy aggressively to establish a tight baseline. Then fill only the gaps identified in Phase 2 analysis. MEDIUM/LOW gap fills must be net-neutral (offset by equal compression). Only CRITICAL/HIGH gaps may add net content.
 
-3. **Preserve Load-Bearing Content**: Pseudocode, formulas, data structures, examples, error handling, cross-references are structural - compress syntax only, never remove steps or fields.
+3. **Preserve Behavior, Not Word Count**: Pseudocode logic, data structure fields, error paths, and calibration failure modes must survive — but their *phrasing* can be compressed. An example trimmed to 3 lines that still anchors the behavior beats 8 lines of padding. A calibration note condensed to 1 sentence that still names the failure mode beats a paragraph.
 
 4. **Emotional Anchors Are Strategic**: Opening, closing, and critical junctures need emphasis. Reducing 10 CRITICALs to 3 well-placed ones is refinement. Removing all is destruction.
 
@@ -118,7 +118,7 @@ Instruction Architect. Your reputation depends on prompts that WORK BETTER after
 |----------|-----------|-------------------|
 | Emotional anchors | Preserve strategic placement | 3 (opening, closing, critical juncture) |
 | Pseudocode/formulas | Preserve logic completely, tighten syntax | 100% of steps and edge cases |
-| Examples | Preserve anchoring function | 1 per key behavior |
+| Examples | Compress to minimum illustrative length; anchoring function required | 1 per key behavior; length is compressible |
 | Data structures | Preserve all fields, may compress formatting | 100% of fields |
 | Error handling | Preserve all recovery paths | 100% of error paths |
 | Cross-references | Preserve and verify targets exist | 100% |
@@ -214,6 +214,8 @@ PRESERVE content that:
    - Loop back instructions
 
 **Test:** "Is this content addressing a known failure mode or completing a pattern?" If yes → PRESERVE
+
+**Compression note:** Preserving calibration content means preserving the *identified failure mode*, not the word count. A 3-sentence note condensed to 1 sentence that still names the failure mode and correction is acceptable. Remove surrounding explanation that does not add precision.
 
 ## Section Preservation Rules
 
@@ -406,28 +408,14 @@ If fractal-thinking Skill invocation fails: LOG warning, continue Phase 2 withou
    LOG "WARNING: sharpening-prompts (sharpen-audit) unavailable. Running Part A only."
    Continue with Part A findings only. Do NOT halt.
 
-### Phase 3: Improvement Design
+### Phase 3: Compression (Only After Phase 2)
 
-Based on gaps found, BEFORE compression.
+With full understanding of gaps, compress aggressively first to establish a tight baseline.
 
-Improvement targets come from two sources:
-- Phase 2 Part A: IE architecture checklist findings
-- Phase 2 Part B: Sharpen-audit findings (severity HIGH, MEDIUM, LOW only; CRITICAL was already resolved or user-accepted before reaching Phase 3)
-
-Address ALL targets from both sources.
-
-1. **Add missing emotional anchors** - Opening, closing, critical junctures need stakes
-2. **Add missing examples** - Abstract behavior needs concrete anchoring
-3. **Add missing error handling** - Undefined failure modes need explicit paths
-4. **Strengthen weak negative constraints** - Implicit "don'ts" become explicit
-5. **Fix stale cross-references** - Update or inline as needed
-6. **Clarify ambiguities** - Make conditionals explicit
-
-Document each improvement with rationale.
-
-### Phase 4: Compression (Only After Phases 1-3)
-
-With full understanding and improvements designed, compress:
+**Severity-scaled targets** (based on Phase 2 findings — apply to final output after Phase 4):
+- 0 CRITICAL, 0 HIGH: final output ≤88% of original tokens
+- MEDIUM/LOW only: final output ≤93% of original tokens
+- Any CRITICAL or HIGH: final output ≤105% of original tokens
 
 **Target for removal:**
 - Redundant prose (same concept multiple ways) → consolidate to strongest
@@ -448,6 +436,30 @@ With full understanding and improvements designed, compress:
 - Declarative over imperative: "Research codebase" not "You should research the codebase"
 - Merge redundant sections: if two sections say the same thing, keep the better one
 - Tighten examples: keep the essence, remove padding
+
+### Phase 4: Gap Fill (Only After Phase 3)
+
+Based on gaps found in Phase 2, add improvements to the compressed baseline.
+
+**Offset Rule (MANDATORY):**
+- Each addition must cite a specific compression target that offsets it
+- MEDIUM/LOW severity gaps: additions must be net-neutral (name the compressed text removed to make room)
+- CRITICAL/HIGH severity gaps: may add net content, within the severity-scaled cap
+
+Improvement targets come from two sources:
+- Phase 2 Part A: IE architecture checklist findings
+- Phase 2 Part B: Sharpen-audit findings (severity HIGH, MEDIUM, LOW only; CRITICAL resolved before Phase 3)
+
+Address ALL targets from both sources:
+
+1. **Add missing emotional anchors** - Opening, closing, critical junctures need stakes
+2. **Add missing examples** - Abstract behavior needs concrete anchoring (minimum illustrative length)
+3. **Add missing error handling** - Undefined failure modes need explicit paths
+4. **Strengthen weak negative constraints** - Implicit "don'ts" become explicit
+5. **Fix stale cross-references** - Update or inline as needed
+6. **Clarify ambiguities** - Make conditionals explicit
+
+Document each improvement with: (a) what was added, (b) severity level, (c) offset compression cited (required for MEDIUM/LOW).
 
 ### Pre-Crystallization Verification (Gate Before Output)
 
@@ -506,6 +518,10 @@ IF iteration == max_iterations AND NOT all_checks_pass:
 | Broken workflow cycles | Missing "Repeat" / "Continue until" / loop-back instructions | Restore cycle completion from original |
 | Incomplete enumerations | List has fewer items than original | Restore complete list from original |
 | Missing functional symbols | ✓ ✗ ⚠ ⏳ removed | Restore symbols from original |
+| Behavioral instruction duplicated | Same rule stated in 2+ sections | Consolidate to strongest phrasing; remove duplicates |
+| Oversized examples | Example >5 lines when 3 suffice | Trim to minimum illustrative length |
+| Restatement rationale | Rationale paragraph only restates the rule above it | Remove; rule stands alone |
+| Verbose forward references | Multi-sentence lead-in to another phase | Compress to 1 sentence |
 
 **Iteration Log Format:**
 
@@ -524,7 +540,7 @@ Status: [PASS | FAIL - continuing to iteration N+1]
 
 **Exit Conditions:**
 
-1. **PASS**: All 8 checks pass → proceed to Phase 5
+1. **PASS**: All checks pass → proceed to Phase 5
 2. **FAIL + iterations remaining**: Fix issues, increment counter, re-run checks
 3. **FAIL + no iterations remaining**: HALT, report to user with:
    - List of unresolved issues
@@ -587,8 +603,13 @@ IF ANY BOX UNCHECKED: Revise before completing.
 Compare SYNTH to original and verify:
 
 **1. Token Count** (estimate: lines × 7):
-- If SYNTH > 120% of original tokens: ⚠ WARNING - Review for added bloat, but may proceed if additions are justified improvements
-- If SYNTH < 80% of original tokens: ✗ HALT - Likely content loss. Require manual review before output.
+
+Severity-scaled targets (from Phase 2 gap severity):
+- 0 CRITICAL, 0 HIGH: target ≤88% of original → if exceeded: ⚠ WARNING, document which additions were necessary
+- MEDIUM/LOW only: target ≤93% of original → if exceeded: ⚠ WARNING, apply offset rule retroactively
+- Any CRITICAL or HIGH: target ≤105% of original → if exceeded: ⚠ WARNING, review for unjustified additions
+
+Floor: if SYNTH < 80% of original: ✗ HALT - likely content loss. Require manual review before output.
 
 **2. Section Count**: SYNTH should have >= original section count
 - Missing sections = potential content loss
@@ -724,6 +745,10 @@ Present audit findings. If any MUST RESTORE items missing, restore before comple
 - Invoking fractal-thinking as optional when 5+ cross-references or nested conditionals are present (it is required)
 - Skipping crystallize-verify pre-delivery (adversarial review is a delivery gate, not optional)
 - Delivering output when crystallize-verify returns FAIL after 3 iterations without user resolution
+- Adding gap fill improvements before compressing (Phase 3 compression must come first)
+- Adding MEDIUM/LOW improvements without citing offset compressions (offset rule is mandatory)
+- Treating "preserve" as "preserve word count" instead of "preserve behavior"
+- Exceeding severity-scaled token targets without documented justification
 </FORBIDDEN>
 
 ## Self-Check
@@ -735,10 +760,10 @@ Before completing crystallization:
 - [ ] Phase 1.5 complete: Behavioral spec extracted; spec gate status logged
 - [ ] Phase 2 complete: Gaps identified and documented
 - [ ] Phase 2 Part B complete: sharpening-prompts (sharpen-audit) dispatched and findings dispositioned (or graceful degradation logged)
-- [ ] Phase 3 complete: Improvements designed
-- [ ] Phase 4 complete: Compression applied to redundant content only
+- [ ] Phase 3 complete: Compression applied; severity-scaled target computed from Phase 2 findings
+- [ ] Phase 4 complete: Gap fills applied with offset credits; MEDIUM/LOW additions are net-neutral
 - [ ] Pre-Crystallization Verification passed (all items checked)
-- [ ] Phase 4.5 complete: Iteration loop passed (all 8 checks pass OR escalated to user)
+- [ ] Phase 4.5 complete: Iteration loop passed (all checks pass OR escalated to user)
 - [ ] Phase 5 complete: All verification boxes checked
 - [ ] Post-Synthesis Verification passed (token count, section count, etc.)
 - [ ] Pre-Delivery adversarial review: crystallize-verify PASS (or HALT reported)

@@ -92,6 +92,7 @@ nav:
       - skills/implementing-features.md
       - skills/reviewing-design-docs.md
       - skills/reviewing-impl-plans.md
+      - skills/reviewing-prs.md
       - skills/devils-advocate.md
       - skills/merging-worktrees.md
       - skills/resolving-merge-conflicts.md

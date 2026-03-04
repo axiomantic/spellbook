@@ -119,7 +119,7 @@ Skill creation = TDD for documentation. Baseline failure reveals what agents act
 
 1. **No Skill Without Failing Test**: Run scenario WITHOUT skill first. Document baseline failures verbatim. Same as code TDD.
 2. **Description Triggers, Not Summarizes**: Description = when to load, never workflow summary. Workflow in description causes agents to skip body.
-3. **One Excellent Example Beats Many**: Single complete, runnable example in relevant language. You port well.
+3. **One Excellent Example Beats Many**: Single complete, runnable example in relevant language.
 4. **Keywords Enable Discovery**: Error messages, symptoms, synonyms throughout. Future Claude must FIND this.
 5. **Close Every Loophole Explicitly**: Agents rationalize under pressure. Each excuse needs explicit counter.
 
@@ -225,11 +225,9 @@ description: Use when executing implementation plans with independent tasks
 
 ## Writing Effective Skill Descriptions
 
-The `description` field in SKILL.md frontmatter is the primary mechanism for matching user requests to skills. The LLM reads all descriptions and selects the best match. A poorly written description means the skill never fires when it should, or fires when it shouldn't.
+The `description` field is the primary mechanism for matching user requests to skills. Poorly written descriptions cause the skill to never fire when needed, or fire constantly as a false positive.
 
 ### Description Anatomy
-
-A good description has four parts:
 
 1. **Situation** (1 sentence): When this skill applies
 2. **Trigger phrases** (3-10 phrases): Natural language that users actually say
@@ -244,7 +242,7 @@ Descriptions must contain the words users actually say, not abstract description
 BAD: "Use when debugging bugs or unexpected behavior"
 GOOD: "Use when debugging bugs, test failures, or unexpected behavior. Triggers: 'why isn't this working', 'this is broken', 'getting an error', 'stopped working', 'regression', 'crash', 'flaky test', or when user pastes a stack trace."
 
-The BAD version describes the situation abstractly. The GOOD version includes the actual words users type when they need debugging help. Users say "this is broken" far more often than "I need to debug."
+Users say "this is broken" far more often than "I need to debug." Write for the words they use, not the situation you observe.
 </CRITICAL>
 
 ### Checklist for Every Description
@@ -256,31 +254,31 @@ The BAD version describes the situation abstractly. The GOOD version includes th
 - [ ] **Avoids being too broad** ("Use when writing code" matches everything) or too narrow ("Use only during Phase 2.1 of the Forged workflow")
 - [ ] **No internal jargon** that only spellbook developers would know
 
-### Model Descriptions (from the library)
+### Model Descriptions
 
-**Best: `verifying-hunches`** -- Comprehensive trigger list drawn from natural speech:
+**`verifying-hunches`** -- Natural speech triggers:
 ```
 "Use when about to claim discovery during debugging. Triggers: 'I found', 'this is the issue',
 'root cause', 'smoking gun', 'aha', 'got it', 'the fix is', 'should fix', 'this will fix'.
 Also invoked by debugging before any root cause claim."
 ```
-Why it works: 20+ trigger phrases covering both excited discovery ("aha!", "got it") and confident claims ("root cause", "the fix is"). Notes auto-invocation path. Narrow enough to avoid false positives.
+Covers excited discovery ("aha!", "got it") and confident claims ("root cause", "the fix is"). Notes auto-invocation path. Narrow enough to avoid false positives.
 
-**Best: `implementing-features`** -- Clear scope with anti-triggers:
+**`implementing-features`** -- Scope with anti-triggers:
 ```
 "Use when building, creating, or adding functionality. Triggers: 'implement X', 'build Y',
 'add feature Z', 'Would be great to...', 'I want to...', 'We need...'.
 NOT for: bug fixes, pure research, or questions about existing code."
 ```
-Why it works: Covers both direct commands ("implement X") and wish-phrasing ("Would be great to..."). The "NOT for" section prevents false matches on debugging or research requests.
+Covers direct commands ("implement X") and wish-phrasing ("Would be great to..."). "NOT for" section prevents false matches on debugging or research.
 
-**Best: `isolated-testing`** -- Behavioral triggers beyond just words:
+**`isolated-testing`** -- Behavioral triggers:
 ```
 "Use when testing theories during debugging, or when chaos is detected.
 Triggers: 'let me try', 'maybe if I', 'quick test', rapid context switching,
 multiple changes without isolation."
 ```
-Why it works: Includes behavioral patterns (rapid context switching, multiple changes without isolation) that the LLM can detect in its own actions, not just user text.
+Includes behavioral patterns (rapid context switching, multiple changes without isolation) detectable in LLM's own actions, not just user text.
 
 ### Common Description Anti-Patterns
 
@@ -295,16 +293,13 @@ Why it works: Includes behavioral patterns (rapid context switching, multiple ch
 
 ### System-Triggered vs. User-Triggered Skills
 
-Some skills are invoked by system events or other skills, not by users:
 - **System-only** (e.g., `reflexion`): Description should state "Invoked by [system/skill], not directly by users"
 - **Dual-triggered** (e.g., `tarot-mode`): Description should cover both the system trigger AND user-facing triggers
 - **User-only** (e.g., `debugging`): Description should focus entirely on user phrasings
 
 ### The Overlap Problem
 
-When multiple skills cover similar territory (e.g., 4 review skills), each description MUST include:
-1. What makes THIS skill the right choice
-2. When to use a DIFFERENT skill instead
+When multiple skills cover similar territory, each description MUST include what makes THIS skill the right choice and when to use a different skill instead.
 
 Example for a review skill family:
 - `code-review`: "For focused single-pass review. NOT for: heavy multi-phase analysis (use advanced-code-review) or PR triage (use distilling-prs)."
@@ -330,11 +325,13 @@ Edit skill without testing? Same violation.
 - Don't keep untested changes as "reference"
 - Don't "adapt" while running tests
 - Delete means delete
+
+**If GREEN phase fails** (behavior unchanged after verification): The skill is not addressing the actual failure mode. Document what the agent did, identify the gap, revise, and re-run GREEN. After 2 revisions without change, switch to a discipline-style approach with explicit pressure scenarios and rationalization counters.
 </reflection>
 
 ## RED-GREEN-REFACTOR
 
-The full RED-GREEN-REFACTOR implementation (pressure scenarios, baseline testing, skill writing, loophole closure, rationalization tables, red flags, and creation checklist) is in the `write-skill-test` command. Dispatch a subagent to execute it.
+Full implementation in the `write-skill-test` command (pressure scenarios, baseline testing, loophole closure, rationalization tables, creation checklist). Dispatch a subagent to execute it.
 
 **Phase summary:**
 
@@ -363,9 +360,8 @@ Pressure scenarios to test: [describe scenarios]
 ## Token Efficiency
 
 **Targets:**
-- Getting-started skills: <150 words
-- Frequently-loaded skills: <200 words
-- Other skills: <500 words
+- Skills loaded frequently or on startup: <200 words
+- All other skills: <500 words
 
 **Techniques:**
 - Reference `--help` instead of documenting all flags
@@ -383,9 +379,7 @@ Pressure scenarios to test: [describe scenarios]
 
 ## Code Examples
 
-**One excellent example beats many mediocre ones.**
-
-Choose most relevant language:
+**One excellent example beats many mediocre ones.** Choose most relevant language:
 - Testing techniques: TypeScript/JavaScript
 - System debugging: Shell/Python
 - Data processing: Python
@@ -414,8 +408,6 @@ Choose most relevant language:
 
 ## Discovery Workflow
 
-How future Claude finds your skill:
-
 1. Encounters problem ("tests are flaky")
 2. Finds SKILL (description matches)
 3. Scans overview (is this relevant?)
@@ -438,8 +430,6 @@ How future Claude finds your skill:
 </FORBIDDEN>
 
 ## Multi-Phase Skill Architecture
-
-Skills with multiple phases face a structural decision: what belongs in the orchestrator SKILL.md versus phase commands invoked by subagents?
 
 **When this applies:**
 
@@ -492,10 +482,7 @@ Skills with multiple phases face a structural decision: what belongs in the orch
    - **Verdict logic** for decision rules
 3. Reference the vocabulary consistently throughout the skill
 
-**Benefits:**
-- Consistent vocabulary across evaluative skills (CRITICAL/HIGH/MEDIUM/LOW/NIT)
-- Standardized finding schemas enable cross-skill comparison
-- Clear verdict logic prevents ambiguous outcomes
+**Benefits:** Consistent vocabulary (CRITICAL/HIGH/MEDIUM/LOW/NIT) across evaluative skills. Standardized schemas enable cross-skill comparison. Clear verdict logic prevents ambiguous outcomes.
 
 **Example skills with evaluative output:** code-review, auditing-green-mirage, fact-checking, reviewing-design-docs
 
@@ -507,7 +494,7 @@ Before completing:
 - [ ] Description starts "Use when..." and contains only triggers
 - [ ] YAML frontmatter has `name` and `description`
 - [ ] Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
-- [ ] Token budget met: <500 words core instructions
+- [ ] Token budget met: <500 words core instructions (<200 words for frequently-loaded skills)
 - [ ] Multi-phase architecture: 3+ phase skills separate orchestrator from phase commands
 - [ ] No workflow summary in description
 - [ ] Rationalization table built (for discipline skills)

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source":"skills/auditing-green-mirage/SKILL.md","source_hash":"sha256:52095ab8067f589ba0ae69c7c26453265d0cc5495051369b067bf334dd0827d3","generated_at":"2026-03-02T19:07:13Z","generator":"generate_diagrams.py"} -->
+<!-- diagram-meta: {"source":"skills/auditing-green-mirage/SKILL.md","source_hash":"sha256:57e4360ba93b34fe5c0d41ce384a240fee5a691a3cb7da8348f7efc747e3e75a","generated_at":"2026-03-02T19:07:13Z","generator":"generate_diagrams.py"} -->
 # Diagram: auditing-green-mirage
 
 Now I have all the source material. Let me construct the diagrams.
