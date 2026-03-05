@@ -461,7 +461,8 @@ class TestNotificationHookStructure:
     def test_validates_tool_use_id(self, hook_name):
         """Must validate tool_use_id against path traversal."""
         content = _read_ps1(hook_name)
-        assert ".." in content or "path traversal" in content.lower(), (
+        # The PS1 hooks use regex '\.\.' to match literal '..' in tool_use_id
+        assert r"\.\." in content or ".." in content or "path traversal" in content.lower(), (
             f"{hook_name}.ps1 missing tool_use_id path traversal validation"
         )
 
