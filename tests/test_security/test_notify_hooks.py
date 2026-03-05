@@ -65,9 +65,9 @@ class TestNotifyHookExecutability:
     def test_sh_is_executable(self):
         assert os.access(NOTIFY_HOOK_SCRIPT, os.X_OK)
 
-    def test_py_is_executable(self):
-        py_script = NOTIFY_HOOK_SCRIPT.replace(".sh", ".py")
-        assert os.access(py_script, os.X_OK)
+    def test_ps1_exists(self):
+        ps1_script = NOTIFY_HOOK_SCRIPT.replace(".sh", ".ps1")
+        assert os.path.isfile(ps1_script)
 
 
 class TestNotifyHookBehavior:
@@ -340,7 +340,7 @@ class TestNotifyHookRegistration:
             result = _get_hook_path_for_platform(
                 "$SPELLBOOK_DIR/hooks/notify-on-complete.sh"
             )
-        assert result == "$SPELLBOOK_DIR/hooks/notify-on-complete.py"
+        assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/notify-on-complete.ps1"
 
     def test_platform_transform_unix(self):
         from installer.components.hooks import _get_hook_path_for_platform
