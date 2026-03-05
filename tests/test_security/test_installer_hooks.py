@@ -81,6 +81,26 @@ def _get_hook_command(hook_entry):
     return hook_entry.get("command", "")
 
 
+def _expected_command(prefix, script_name):
+    """Return the expected hook command string for the current platform.
+
+    On Windows, hooks use PowerShell dispatch with .ps1 extension.
+    On Unix, hooks use the .sh path directly.
+
+    Args:
+        prefix: The path prefix (e.g. "$SPELLBOOK_DIR" or an expanded path).
+        script_name: The script basename without extension (e.g. "bash-gate").
+    """
+    if sys.platform == "win32":
+        return f"powershell -ExecutionPolicy Bypass -File {prefix}/hooks/{script_name}.ps1"
+    return f"{prefix}/hooks/{script_name}.sh"
+
+
+def _expected_ext():
+    """Return the expected hook script extension for the current platform."""
+    return ".ps1" if sys.platform == "win32" else ".sh"
+
+
 # --- HOOK_DEFINITIONS tests ---
 
 
@@ -244,7 +264,7 @@ class TestInstallHooks:
         assert bash_entry is not None
         assert len(bash_entry["hooks"]) == 1
         assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        assert bash_entry["hooks"][0]["command"] == _expected_command("$SPELLBOOK_DIR", "bash-gate")
 
     def test_spawn_hook_entry_correct(self, tmp_path):
         """The spawn_claude_session hook entry should have correct matcher and hook path."""
@@ -263,7 +283,7 @@ class TestInstallHooks:
         assert spawn_entry is not None
         assert len(spawn_entry["hooks"]) == 1
         assert spawn_entry["hooks"][0]["type"] == "command"
-        assert spawn_entry["hooks"][0]["command"] == "$SPELLBOOK_DIR/hooks/spawn-guard.sh"
+        assert spawn_entry["hooks"][0]["command"] == _expected_command("$SPELLBOOK_DIR", "spawn-guard")
 
     def test_state_sanitize_hook_entry_correct(self, tmp_path):
         """The state-sanitize hook should be in PreToolUse with timeout."""
@@ -284,7 +304,7 @@ class TestInstallHooks:
         assert len(state_entry["hooks"]) == 1
         hook = state_entry["hooks"][0]
         assert hook["type"] == "command"
-        assert hook["command"] == "$SPELLBOOK_DIR/hooks/state-sanitize.sh"
+        assert hook["command"] == _expected_command("$SPELLBOOK_DIR", "state-sanitize")
         assert hook["timeout"] == 15
 
     def test_audit_log_hook_entry_correct(self, tmp_path):
@@ -298,9 +318,10 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entry = post_tool_use[0]
+        ext = _expected_ext()
         audit_hook = next(
             (h for h in post_entry["hooks"]
-             if isinstance(h, dict) and h.get("command", "").endswith("audit-log.sh")),
+             if isinstance(h, dict) and _get_hook_path(h).endswith(f"audit-log{ext}")),
             None,
         )
         assert audit_hook is not None
@@ -319,9 +340,10 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entry = post_tool_use[0]
+        ext = _expected_ext()
         canary_hook = next(
             (h for h in post_entry["hooks"]
-             if isinstance(h, dict) and h.get("command", "").endswith("canary-check.sh")),
+             if isinstance(h, dict) and _get_hook_path(h).endswith(f"canary-check{ext}")),
             None,
         )
         assert canary_hook is not None
@@ -436,10 +458,11 @@ class TestInstallHooks:
         assert "/usr/local/bin/my-post-hook.sh" in hooks_list
         # Spellbook hooks added
         commands = [
-            h["command"] for h in hooks_list if isinstance(h, dict) and "command" in h
+            _get_hook_path(h) for h in hooks_list if isinstance(h, dict) and "command" in h
         ]
-        assert "$SPELLBOOK_DIR/hooks/audit-log.sh" in commands
-        assert "$SPELLBOOK_DIR/hooks/canary-check.sh" in commands
+        ext = _expected_ext()
+        assert any(c.endswith(f"audit-log{ext}") for c in commands)
+        assert any(c.endswith(f"canary-check{ext}") for c in commands)
 
     def test_idempotent_no_duplicates(self, tmp_path):
         """Running install_hooks twice should not create duplicate entries."""
@@ -499,12 +522,13 @@ class TestInstallHooks:
         bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
         # The hook list should contain the spellbook path as an object (platform-appropriate extension)
+        ext = _expected_ext()
         spellbook_hooks = [
             h for h in bash_entries[0]["hooks"]
-            if isinstance(h, dict) and h.get("command", "").endswith("bash-gate.sh")
+            if isinstance(h, dict) and _get_hook_path(h).endswith(f"bash-gate{ext}")
         ]
         assert len(spellbook_hooks) == 1
-        assert spellbook_hooks[0]["command"] == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        assert spellbook_hooks[0]["command"] == _expected_command("$SPELLBOOK_DIR", "bash-gate")
 
     def test_merges_hooks_into_existing_matcher(self, tmp_path):
         """If a user has their own Bash hook, spellbook adds its hook to the same entry's hooks list."""
@@ -533,9 +557,10 @@ class TestInstallHooks:
         # Both hooks should be in the list (user's string hook + spellbook's object hook)
         hooks_list = bash_entries[0]["hooks"]
         assert "/usr/local/bin/my-bash-hook.sh" in hooks_list
+        ext = _expected_ext()
         spellbook_hooks = [
             h for h in hooks_list
-            if isinstance(h, dict) and h.get("command", "").endswith("bash-gate.sh")
+            if isinstance(h, dict) and _get_hook_path(h).endswith(f"bash-gate{ext}")
         ]
         assert len(spellbook_hooks) == 1
 
@@ -936,7 +961,7 @@ class TestClaudeCodeInstallerHookIntegration:
         # Verify specific hook paths are expanded
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
-        expected_path = f"{spellbook_dir}/hooks/bash-gate.sh"
+        expected_path = _expected_command(str(spellbook_dir), "bash-gate")
         assert len(bash_entry["hooks"]) == 1
         assert bash_entry["hooks"][0]["type"] == "command"
         assert bash_entry["hooks"][0]["command"] == expected_path
@@ -1055,7 +1080,7 @@ class TestInstallHooksWithSpellbookDir:
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         assert len(bash_entry["hooks"]) == 1
         assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == f"{spellbook_dir}/hooks/bash-gate.sh"
+        assert bash_entry["hooks"][0]["command"] == _expected_command(str(spellbook_dir), "bash-gate")
 
     def test_expanded_dict_hook_correct(self, tmp_path):
         spellbook_dir = _make_spellbook_dir(tmp_path)
@@ -1068,11 +1093,12 @@ class TestInstallHooksWithSpellbookDir:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entry = post_tool_use[0]
+        ext = _expected_ext()
         audit_hook = next(
             h for h in post_entry["hooks"]
-            if isinstance(h, dict) and h.get("command", "").endswith("audit-log.sh")
+            if isinstance(h, dict) and _get_hook_path(h).endswith(f"audit-log{ext}")
         )
-        assert audit_hook["command"] == f"{spellbook_dir}/hooks/audit-log.sh"
+        assert audit_hook["command"] == _expected_command(str(spellbook_dir), "audit-log")
         assert audit_hook["async"] is True
         assert audit_hook["timeout"] == 10
 
@@ -1119,7 +1145,7 @@ class TestInstallHooksWithSpellbookDir:
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         assert len(bash_entry["hooks"]) == 1
         assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == f"{spellbook_dir}/hooks/bash-gate.sh"
+        assert bash_entry["hooks"][0]["command"] == _expected_command(str(spellbook_dir), "bash-gate")
 
     def test_preserves_user_hooks_with_expanded_paths(self, tmp_path):
         """User hooks should be preserved when installing with expanded paths."""
@@ -1142,10 +1168,10 @@ class TestInstallHooksWithSpellbookDir:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         assert "/usr/local/bin/my-bash-hook.sh" in bash_entry["hooks"]
-        expanded_path = f"{spellbook_dir}/hooks/bash-gate.sh"
+        expected_cmd = _expected_command(str(spellbook_dir), "bash-gate")
         spellbook_hooks = [
             h for h in bash_entry["hooks"]
-            if isinstance(h, dict) and h.get("command") == expanded_path
+            if isinstance(h, dict) and h.get("command") == expected_cmd
         ]
         assert len(spellbook_hooks) == 1
 
@@ -1543,8 +1569,8 @@ class TestTwoTierPathResolution:
         import installer.components.hooks as hooks_mod
         assert not hasattr(hooks_mod, "_SHELL_TO_NIM_BINARY")
 
-    def test_install_hooks_produces_sh_paths_on_unix(self, tmp_path):
-        """install_hooks on Unix should produce .sh hook paths (no nim_available arg)."""
+    def test_install_hooks_produces_platform_appropriate_paths(self, tmp_path):
+        """install_hooks should produce platform-appropriate hook paths (no nim/bin/, no .py)."""
         settings_path = tmp_path / "settings.json"
         spellbook_dir = _make_spellbook_dir(tmp_path)
 
@@ -1560,12 +1586,15 @@ class TestTwoTierPathResolution:
                     cmd = _get_hook_command(hook)
                     all_commands.append(cmd)
 
-        # All commands should end with .sh on Unix (no nim/bin/, no .py)
+        ext = _expected_ext()
+        # All hook paths should use the platform-appropriate extension (no nim/bin/, no .py)
         for cmd in all_commands:
-            normalized = cmd.replace("\\", "/")
+            # Extract the actual file path (handles PowerShell wrapper on Windows)
+            path = _get_hook_path(cmd)
+            normalized = path.replace("\\", "/")
             assert "/nim/bin/" not in normalized, f"Nim path found: {cmd}"
             assert not normalized.endswith(".py"), f".py path found: {cmd}"
-            assert normalized.endswith(".sh"), f"Non-.sh path found: {cmd}"
+            assert normalized.endswith(ext), f"Expected {ext} path, found: {cmd}"
 
 
 # --- Legacy hook detection and cleanup tests ---
