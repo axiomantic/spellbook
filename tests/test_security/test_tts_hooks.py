@@ -60,9 +60,9 @@ class TestTimerStartExecutability:
     def test_sh_is_executable(self):
         assert os.access(TIMER_START_SCRIPT, os.X_OK)
 
-    def test_py_is_executable(self):
-        py_script = TIMER_START_SCRIPT.replace(".sh", ".py")
-        assert os.access(py_script, os.X_OK)
+    def test_ps1_exists(self):
+        ps1_script = TIMER_START_SCRIPT.replace(".sh", ".ps1")
+        assert os.path.isfile(ps1_script)
 
 
 class TestTimerStartBehavior:
@@ -106,9 +106,9 @@ class TestTtsNotifyExecutability:
     def test_sh_is_executable(self):
         assert os.access(TTS_NOTIFY_SCRIPT, os.X_OK)
 
-    def test_py_is_executable(self):
-        py_script = TTS_NOTIFY_SCRIPT.replace(".sh", ".py")
-        assert os.access(py_script, os.X_OK)
+    def test_ps1_exists(self):
+        ps1_script = TTS_NOTIFY_SCRIPT.replace(".sh", ".ps1")
+        assert os.path.isfile(ps1_script)
 
 
 class TestTtsNotifyBehavior:
@@ -299,7 +299,7 @@ class TestHookRegistration:
         from installer.components.hooks import _get_hook_path_for_platform
         with patch("sys.platform", "win32"):
             result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/tts-timer-start.sh")
-        assert result == "$SPELLBOOK_DIR/hooks/tts-timer-start.py"
+        assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-timer-start.ps1"
 
     def test_platform_transform_unix(self):
         from installer.components.hooks import _get_hook_path_for_platform
