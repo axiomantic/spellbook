@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PowerShell hooks** - 10 new `.ps1` hooks mirroring every `.sh` hook for native Windows support. Security hooks are fail-closed (exit 2 on error); audit, notification, and compaction hooks are fail-open (exit 0 on error).
 - **Legacy hook cleanup** - `_cleanup_legacy_hooks()` automatically removes stale Nim binary and `.py` wrapper entries from `settings.json` during install, preventing conflicts with the new hook paths.
 
+## [0.21.0] - 2026-03-05
+
+### Added
+- **Skill Opportunity Awareness** (`AGENTS.spellbook.md`) - Agents now self-monitor for reusable patterns during work and suggest skill, command, or agent candidates at natural pause points. Includes subagent observation convention (`## Skill Observations` output section) for bubbling up discoveries from subagents to the orchestrator.
+
 ## [0.20.0] - 2026-03-05
 
 ### Added
