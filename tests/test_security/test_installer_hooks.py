@@ -16,6 +16,9 @@ Tier 2 (PreToolUse + PostToolUse):
 TTS (PreToolUse + PostToolUse):
   - (catch-all, no matcher) -> tts-timer-start.sh (PreToolUse, async: true, timeout: 5)
   - (catch-all, no matcher) -> tts-notify.sh (PostToolUse, async: true, timeout: 15)
+
+Notification (PostToolUse):
+  - (catch-all, no matcher) -> notify-on-complete.sh (PostToolUse, async: true, timeout: 10)
 """
 
 import json
@@ -137,7 +140,7 @@ class TestHookDefinitions:
 
     def test_post_tool_use_has_audit_and_canary_hooks(self):
         post_hooks = HOOK_DEFINITIONS["PostToolUse"]
-        assert len(post_hooks) == 2  # audit/canary matcher + tts-notify matcher
+        assert len(post_hooks) == 2  # audit/canary matcher + notify/tts catch-all
         entry = post_hooks[0]
         assert entry["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
         assert len(entry["hooks"]) == 2
@@ -226,7 +229,7 @@ class TestInstallHooks:
         assert len(post_tool_use[0]["hooks"]) == 2
         # Catch-all entry: matcher key is omitted (not ".*")
         assert "matcher" not in post_tool_use[1]
-        assert len(post_tool_use[1]["hooks"]) == 1
+        assert len(post_tool_use[1]["hooks"]) == 2  # notify-on-complete + tts-notify
 
     def test_bash_hook_entry_correct(self, tmp_path):
         """The Bash hook entry should have correct matcher and hook path."""
@@ -615,8 +618,8 @@ class TestInstallHooks:
         assert result.action == "installed"
         assert result.component == "hooks"
 
-    def test_total_hook_count_is_seven(self, tmp_path):
-        """All 7 hooks should be installed: 4 PreToolUse + 3 PostToolUse."""
+    def test_total_hook_count_is_eight(self, tmp_path):
+        """All 8 hooks should be installed: 4 PreToolUse + 4 PostToolUse."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -629,7 +632,7 @@ class TestInstallHooks:
         for phase in ["PreToolUse", "PostToolUse"]:
             for entry in settings["hooks"].get(phase, []):
                 total_hooks += len(entry["hooks"])
-        assert total_hooks == 7
+        assert total_hooks == 8
 
     def test_upgrades_old_string_format_spellbook_hooks(self, tmp_path):
         """Old string-format spellbook hooks should be replaced cleanly on reinstall."""
@@ -650,11 +653,11 @@ class TestInstallHooks:
         install_hooks(settings_path, dry_run=False)
 
         settings = _read_settings(settings_path)
-        # Should now have all 7 hooks across both phases
+        # Should now have all 8 hooks across both phases
         pre = settings["hooks"]["PreToolUse"]
         post = settings["hooks"]["PostToolUse"]
         assert len(pre) == 4  # Bash, spawn, state-sanitize, tts-timer-start
-        assert len(post) == 2  # audit/canary matcher + tts-notify matcher
+        assert len(post) == 2  # audit/canary matcher + notify/tts catch-all
         assert len(post[0]["hooks"]) == 2
 
 
@@ -868,8 +871,8 @@ class TestClaudeCodeInstallerHookIntegration:
         assert len(hook_results) == 1
         assert hook_results[0].success
 
-    def test_install_registers_all_seven_hooks(self, tmp_path):
-        """Full installer should register all 7 hooks (4 PreToolUse + 3 PostToolUse)."""
+    def test_install_registers_all_eight_hooks(self, tmp_path):
+        """Full installer should register all 8 hooks (4 PreToolUse + 4 PostToolUse)."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = self._make_installer_spellbook_dir(tmp_path)
@@ -889,7 +892,7 @@ class TestClaudeCodeInstallerHookIntegration:
         for phase in ["PreToolUse", "PostToolUse"]:
             for entry in settings["hooks"].get(phase, []):
                 total_hooks += len(entry["hooks"])
-        assert total_hooks == 7
+        assert total_hooks == 8
 
     def test_uninstall_removes_hooks(self, tmp_path):
         """Full uninstaller should remove security hooks from settings.json."""
@@ -1463,7 +1466,8 @@ class TestNimPathResolution:
         expected = {
             "tts-timer-start.sh", "bash-gate.sh", "spawn-guard.sh",
             "state-sanitize.sh", "audit-log.sh", "canary-check.sh",
-            "tts-notify.sh", "pre-compact-save.sh", "post-compact-recover.sh",
+            "tts-notify.sh", "notify-on-complete.sh",
+            "pre-compact-save.sh", "post-compact-recover.sh",
         }
         assert set(_SHELL_TO_NIM_BINARY.keys()) == expected
 
@@ -1512,7 +1516,7 @@ class TestInstallerNimIntegration:
 
         # Normalize path separators for cross-platform comparison
         nim_commands = [c for c in all_commands if "/nim/bin/" in c.replace("\\", "/")]
-        assert len(nim_commands) == 9, f"Expected 9 Nim paths, got {len(nim_commands)}: {nim_commands}"
+        assert len(nim_commands) == 10, f"Expected 10 Nim paths, got {len(nim_commands)}: {nim_commands}"
 
     def test_install_hooks_without_nim_keeps_shell_paths(self, tmp_path):
         """When nim_available=False, hook paths should point to .sh files."""
