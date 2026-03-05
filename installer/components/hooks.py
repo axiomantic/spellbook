@@ -199,11 +199,18 @@ class HookResult:
 def _get_hook_path(hook: Union[str, Dict[str, Any]]) -> str:
     """Extract the command path from a hook entry.
 
-    Handles both plain string hooks and object-format hooks with a 'command' key.
+    Handles plain string hooks, object-format hooks with a 'command' key,
+    and PowerShell invocation wrappers (extracts path after '-File').
     """
     if isinstance(hook, str):
-        return hook
-    return hook.get("command", "")
+        path = hook
+    else:
+        path = hook.get("command", "")
+    # Extract path from PowerShell invocation wrapper
+    ps_prefix = "powershell -ExecutionPolicy Bypass -File "
+    if path.startswith(ps_prefix):
+        path = path[len(ps_prefix):]
+    return path
 
 
 def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional[Path] = None) -> bool:

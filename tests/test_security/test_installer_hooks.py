@@ -30,6 +30,7 @@ from unittest.mock import patch
 from installer.components.hooks import (
     HOOK_DEFINITIONS,
     _expand_spellbook_dir,
+    _get_hook_path,
     _get_hook_path_for_platform,
     _is_spellbook_hook,
     install_hooks,
@@ -1415,6 +1416,105 @@ class TestLegacyCatchallMigration:
         assert any("/usr/local/bin/my-catchall-hook.sh" in s for s in hook_strs)
         # Spellbook hook should be present (possibly updated)
         assert any("tts-timer-start" in s for s in hook_strs)
+
+
+# --- PowerShell command format path extraction tests ---
+
+
+class TestGetHookPathPowerShellExtraction:
+    """_get_hook_path() must extract the file path from PowerShell invocation wrappers."""
+
+    def test_extracts_path_from_powershell_string_hook(self):
+        """Plain string hook with PS prefix should return just the .ps1 path."""
+        hook = "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1"
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.ps1"
+
+    def test_extracts_path_from_powershell_dict_hook(self):
+        """Dict hook with PS command should return just the .ps1 path."""
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1",
+        }
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.ps1"
+
+    def test_sh_path_unchanged(self):
+        """Non-PowerShell .sh path should pass through unchanged."""
+        hook = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+
+    def test_dict_sh_path_unchanged(self):
+        """Dict hook with .sh command should pass through unchanged."""
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh"}
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+
+    def test_empty_command_returns_empty(self):
+        """Dict hook without command key should return empty string."""
+        hook = {"type": "command"}
+        result = _get_hook_path(hook)
+        assert result == ""
+
+    def test_nim_binary_path_unchanged(self):
+        """Legacy Nim binary path should pass through (no PS prefix)."""
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"}
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"
+
+    def test_expanded_powershell_path(self):
+        """Expanded absolute path in PS wrapper should be extracted."""
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File /home/user/spellbook/hooks/bash-gate.ps1",
+        }
+        result = _get_hook_path(hook)
+        assert result == "/home/user/spellbook/hooks/bash-gate.ps1"
+
+
+class TestIsSpellbookHookWithPowerShell:
+    """_is_spellbook_hook() must recognize PowerShell-wrapped spellbook hooks."""
+
+    def test_recognizes_ps_wrapped_dollar_prefix(self):
+        """PS-wrapped hook with $SPELLBOOK_DIR should be recognized."""
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1",
+        }
+        assert _is_spellbook_hook(hook) is True
+
+    def test_recognizes_ps_wrapped_expanded_path(self, tmp_path):
+        """PS-wrapped hook with expanded path should be recognized when spellbook_dir given."""
+        spellbook_dir = tmp_path / "spellbook"
+        hook = {
+            "type": "command",
+            "command": f"powershell -ExecutionPolicy Bypass -File {spellbook_dir}/hooks/bash-gate.ps1",
+        }
+        assert _is_spellbook_hook(hook, spellbook_dir=spellbook_dir) is True
+
+    def test_sh_hook_still_recognized(self):
+        """Plain .sh hook should still be recognized (unchanged behavior)."""
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh"}
+        assert _is_spellbook_hook(hook) is True
+
+    def test_nim_binary_still_recognized(self):
+        """Legacy Nim binary path should still be recognized."""
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"}
+        assert _is_spellbook_hook(hook) is True
+
+    def test_user_hook_not_recognized(self):
+        """Non-spellbook hook should not be recognized."""
+        hook = {"type": "command", "command": "/usr/local/bin/my-hook.sh"}
+        assert _is_spellbook_hook(hook) is False
+
+    def test_ps_wrapped_non_spellbook_not_recognized(self):
+        """PS-wrapped non-spellbook hook should not be recognized."""
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File /usr/local/bin/my-hook.ps1",
+        }
+        assert _is_spellbook_hook(hook) is False
 
 
 # --- Two-tier hook path resolution tests ---
