@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List
 
 from ..components.context_files import generate_claude_context
-from ..components.hooks import _SHELL_TO_NIM_BINARY, install_hooks, uninstall_hooks
+from ..components.hooks import install_hooks, uninstall_hooks
 from ..components.mcp import (
     check_claude_cli_available,
     get_spellbook_server_url,
@@ -410,7 +410,6 @@ class ClaudeCodeInstaller(PlatformInstaller):
         hook_result = install_hooks(
             settings_path,
             spellbook_dir=self.spellbook_dir,
-            nim_available=nim_available,
             dry_run=self.dry_run,
         )
         results.append(
