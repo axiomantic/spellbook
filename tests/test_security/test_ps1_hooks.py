@@ -514,6 +514,23 @@ class TestTtsTimerStartPs1:
             f"tts-timer-start.ps1 tool_use_id validation incorrect, got: {line}"
         )
 
+    def test_validates_tool_use_id_path_traversal(self):
+        """Must validate tool_use_id against path traversal."""
+        lines = _read_ps1_lines("tts-timer-start")
+        validation_lines = [
+            l.strip() for l in lines if r"\.\." in l and "match" in l.lower()
+        ]
+        assert len(validation_lines) >= 1, (
+            "tts-timer-start.ps1 missing tool_use_id path traversal validation"
+        )
+        validation_text = " ".join(validation_lines)
+        assert r"[\\\\/]" in validation_text, (
+            "tts-timer-start.ps1 path traversal validation missing slash check"
+        )
+        assert r"\s" in validation_text, (
+            "tts-timer-start.ps1 path traversal validation missing whitespace check"
+        )
+
     def test_uses_temp_path(self):
         """Must use system temp directory."""
         lines = _read_ps1_lines("tts-timer-start")
@@ -618,7 +635,7 @@ class TestNotificationHookStructure:
         )
         # Verify the validation pattern includes slash and whitespace checks too
         validation_text = " ".join(validation_lines)
-        assert r"[/\\]" in validation_text, (
+        assert r"[\\\\/]" in validation_text, (
             f"{hook_name}.ps1 path traversal validation missing slash check"
         )
         assert r"\s" in validation_text, (

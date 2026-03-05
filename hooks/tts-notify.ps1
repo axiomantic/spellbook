@@ -22,7 +22,7 @@ try {
     if (-not $toolUseId) { exit 0 }
 
     # Validate tool_use_id against path traversal
-    if ($toolUseId -match '[/\\]' -or $toolUseId -match '\.\.' -or $toolUseId -match '\s') {
+    if ($toolUseId -match '[\\\\/]' -or $toolUseId -match '\.\.' -or $toolUseId -match '\s') {
         exit 0
     }
 

@@ -12,6 +12,11 @@ try {
     $toolUseId = $data.tool_use_id
     if (-not $toolUseId) { exit 0 }
 
+    # Validate tool_use_id against path traversal
+    if ($toolUseId -match '[\\\\/]' -or $toolUseId -match '\.\.' -or $toolUseId -match '\s') {
+        exit 0
+    }
+
     $now = [int][double]::Parse(
         (New-TimeSpan -Start (Get-Date "1970-01-01") -End (Get-Date).ToUniversalTime()).TotalSeconds.ToString("F0")
     )

@@ -25,7 +25,7 @@ try {
     if ($toolName -in $blacklist) { exit 0 }
 
     # Validate tool_use_id
-    if (-not $toolUseId -or $toolUseId -match '[/\\]' -or $toolUseId -match '\.\.' -or $toolUseId -match '\s') {
+    if (-not $toolUseId -or $toolUseId -match '[\\\\/]' -or $toolUseId -match '\.\.' -or $toolUseId -match '\s') {
         exit 0
     }
 
