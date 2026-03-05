@@ -237,6 +237,64 @@ def _is_spellbook_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional
     return False
 
 
+def _is_legacy_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional[Path] = None) -> bool:
+    """Check if a hook is a legacy format that should be cleaned up.
+
+    Detects:
+    - Nim binary paths (contain /hooks/nim/bin/)
+    - Python wrapper hooks (.py files in the spellbook hooks directory)
+
+    Does NOT match current .sh or .ps1 hooks.
+    """
+    path = _get_hook_path(hook)
+    normalized = path.replace("\\", "/")
+
+    # Nim binary paths (either $SPELLBOOK_DIR or expanded)
+    if "/hooks/nim/bin/" in normalized:
+        return True
+
+    # Python wrapper hooks with $SPELLBOOK_DIR prefix
+    if normalized.startswith(_SPELLBOOK_HOOK_PREFIX) and normalized.endswith(".py"):
+        return True
+
+    # Python wrapper hooks with expanded absolute path
+    if spellbook_dir is not None:
+        expanded_prefix = str(spellbook_dir).replace("\\", "/") + "/hooks/"
+        if normalized.startswith(expanded_prefix) and normalized.endswith(".py"):
+            return True
+        # Nim binary with expanded path
+        expanded_nim = str(spellbook_dir).replace("\\", "/") + "/hooks/nim/bin/"
+        if expanded_nim in normalized:
+            return True
+
+    return False
+
+
+def _cleanup_legacy_hooks(settings: Dict, spellbook_dir: Optional[Path] = None) -> None:
+    """Remove legacy Nim and .py hook entries from all phases in settings.
+
+    Scans all hook phases for entries containing Nim binary paths or
+    .py wrapper paths. Removes those entries, dropping empty matcher
+    groups. This must run BEFORE new hook registration because old
+    and new command strings differ and won't deduplicate.
+    """
+    hooks_section = settings.get("hooks", {})
+    for phase in _HOOK_PHASES:
+        phase_entries = hooks_section.get(phase, [])
+        if not phase_entries:
+            continue
+        cleaned = []
+        for entry in phase_entries:
+            hooks_list = entry.get("hooks", [])
+            remaining = [h for h in hooks_list if not _is_legacy_hook(h, spellbook_dir)]
+            if remaining:
+                new_entry: Dict[str, Any] = {"hooks": remaining}
+                if "matcher" in entry:
+                    new_entry["matcher"] = entry["matcher"]
+                cleaned.append(new_entry)
+        hooks_section[phase] = cleaned
+
+
 def _expand_spellbook_dir(hook: Union[str, Dict[str, Any]], spellbook_dir: Path) -> Union[str, Dict[str, Any]]:
     """Replace $SPELLBOOK_DIR with the actual spellbook directory path."""
     spellbook_str = str(spellbook_dir)
@@ -399,6 +457,19 @@ def install_hooks(
             message="hooks: would be installed (dry run)",
         )
 
+    # On Windows, verify PowerShell is available before registering hooks.
+    # Without PowerShell, .ps1 hooks cannot execute.
+    import sys
+    if sys.platform == "win32":
+        import shutil
+        if not shutil.which("powershell"):
+            return HookResult(
+                component="hooks",
+                success=True,
+                action="skipped",
+                message="PowerShell not found on PATH; hook registration skipped",
+            )
+
     # Load existing settings
     try:
         settings = _load_settings(settings_path)
@@ -416,6 +487,9 @@ def install_hooks(
     # Ensure hooks structure exists
     if "hooks" not in settings:
         settings["hooks"] = {}
+
+    # Clean up legacy Nim and .py hook entries before registering new ones
+    _cleanup_legacy_hooks(settings, spellbook_dir)
 
     # Merge hooks for each phase
     for phase, hook_defs in HOOK_DEFINITIONS.items():
