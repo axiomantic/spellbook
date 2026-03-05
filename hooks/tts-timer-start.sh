@@ -43,6 +43,8 @@ fi
 # ---------------------------------------------------------------------------
 # Write start timestamp (fail silently)
 # ---------------------------------------------------------------------------
-date +%s > "/tmp/claude-tool-start-${TOOL_USE_ID}" 2>/dev/null || true
+NOW=$(date +%s)
+echo "${NOW}" > "/tmp/claude-tool-start-${TOOL_USE_ID}" 2>/dev/null || true
+echo "${NOW}" > "/tmp/claude-notify-start-${TOOL_USE_ID}" 2>/dev/null || true
 
 exit 0

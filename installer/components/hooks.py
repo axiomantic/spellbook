@@ -14,6 +14,7 @@ PreToolUse hooks:
 PostToolUse hooks:
   - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (async, timeout: 10)
   - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (timeout: 10)
+  - (catch-all, no matcher) -> notify-on-complete.sh (async, timeout: 10)
   - (catch-all, no matcher) -> tts-notify.sh (async, timeout: 15)
 
 PreCompact hooks:
@@ -108,6 +109,12 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
             "hooks": [
                 {
                     "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/notify-on-complete.sh",
+                    "async": True,
+                    "timeout": 10,
+                },
+                {
+                    "type": "command",
                     "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
                     "async": True,
                     "timeout": 15,
@@ -159,6 +166,7 @@ _SHELL_TO_NIM_BINARY = {
     "audit-log.sh": "audit_log",
     "canary-check.sh": "canary_check",
     "tts-notify.sh": "tts_notify",
+    "notify-on-complete.sh": "notify_on_complete",
     "pre-compact-save.sh": "pre_compact_save",
     "post-compact-recover.sh": "post_compact_recover",
 }

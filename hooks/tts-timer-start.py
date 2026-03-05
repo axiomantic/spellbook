@@ -39,9 +39,17 @@ def main() -> None:
     if not tool_use_id:
         sys.exit(0)
 
+    now = str(int(time.time()))
+
     try:
         start_file = Path(tempfile.gettempdir()) / f"claude-tool-start-{tool_use_id}"
-        start_file.write_text(str(int(time.time())))
+        start_file.write_text(now)
+    except OSError:
+        pass  # Fail-open
+
+    try:
+        notify_file = Path(tempfile.gettempdir()) / f"claude-notify-start-{tool_use_id}"
+        notify_file.write_text(now)
     except OSError:
         pass  # Fail-open
 

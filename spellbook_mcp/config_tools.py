@@ -52,17 +52,20 @@ def _get_session_state(session_id: Optional[str] = None) -> dict:
                     for backward compatibility.
 
     Returns:
-        Session state dict with "mode" and "tts" keys.
+        Session state dict with "mode", "tts", and "notify" keys.
     """
     _cleanup_stale_sessions()  # Run cleanup on each access
     sid = session_id or DEFAULT_SESSION_ID
     _session_activity[sid] = datetime.now()
     if sid not in _session_states:
-        _session_states[sid] = {"mode": None, "tts": {}}
+        _session_states[sid] = {"mode": None, "tts": {}, "notify": {}}
     # Ensure tts key exists for sessions created before TTS feature
     state = _session_states[sid]
     if "tts" not in state:
         state["tts"] = {}
+    # Ensure notify key exists for sessions created before notification feature
+    if "notify" not in state:
+        state["notify"] = {}
     return state
 
 
@@ -390,6 +393,10 @@ TTS_DEFAULT_ENABLED = True
 TTS_DEFAULT_VOICE = "af_heart"
 TTS_DEFAULT_VOLUME = 0.3
 
+# Notification defaults (used when neither session nor config has a value)
+NOTIFY_DEFAULT_ENABLED = True
+NOTIFY_DEFAULT_TITLE = "Spellbook"
+
 
 def tts_session_set(
     enabled: bool = None,
@@ -484,6 +491,68 @@ def tts_session_get(session_id: Optional[str] = None) -> dict:
         else:
             result["volume"] = TTS_DEFAULT_VOLUME
             result["source_volume"] = "default"
+
+    return result
+
+
+def notify_session_set(
+    enabled: bool = None,
+    title: str = None,
+    session_id: Optional[str] = None,
+) -> dict:
+    """Set notification overrides for this session (not persisted to config).
+
+    Pass only the settings you want to change. Omitted settings keep
+    their current value.
+
+    Args:
+        enabled: Enable/disable notifications for this session
+        title: Override notification title for this session
+        session_id: Session identifier for multi-session isolation.
+                    If None, uses default session for backward compatibility.
+
+    Returns:
+        Dict with status and current session notification overrides
+    """
+    session_state = _get_session_state(session_id)
+    notify_state = session_state["notify"]
+
+    if enabled is not None:
+        notify_state["enabled"] = enabled
+    if title is not None:
+        notify_state["title"] = title
+
+    return {"status": "ok", "session_notify": dict(notify_state)}
+
+
+def notify_session_get(session_id: Optional[str] = None) -> dict:
+    """Get effective notification settings with resolution: session > config > defaults.
+
+    Each setting is resolved independently. For example, enabled may come
+    from session while title comes from config.
+
+    Args:
+        session_id: Session identifier for multi-session isolation.
+                    If None, uses default session for backward compatibility.
+
+    Returns:
+        Dict with effective enabled, title and their sources
+    """
+    session_state = _get_session_state(session_id)
+    notify_state = session_state["notify"]
+
+    result = {}
+
+    def _resolve(key: str, default_value) -> tuple:
+        if key in notify_state:
+            return notify_state[key], "session"
+        config_val = config_get(f"notify_{key}")
+        if config_val is not None:
+            return config_val, "config"
+        return default_value, "default"
+
+    result["enabled"], result["source_enabled"] = _resolve("enabled", NOTIFY_DEFAULT_ENABLED)
+    result["title"], result["source_title"] = _resolve("title", NOTIFY_DEFAULT_TITLE)
 
     return result
 

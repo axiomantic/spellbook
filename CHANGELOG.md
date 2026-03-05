@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-03-05
+
+### Added
+- **System notification support** (`spellbook_mcp/notify.py`) - Native OS notifications as a visual/accessibility alternative to TTS. Fires macOS Notification Center, Linux `notify-send`, or Windows PowerShell toast when tools exceed a configurable threshold (default 30s). Platform detection handles containers, SSH/headless sessions, and Wayland desktops.
+- **Notification MCP tools** - `notify_send`, `notify_status`, `notify_session_set`, `notify_config_set` for manual notifications, availability checking, and per-session or persistent configuration.
+- **PostToolUse notification hooks** (`hooks/notify-on-complete.{sh,py}`) - Separate hooks that call platform notification tools directly (no HTTP round-trip, unlike TTS). Independent lifecycle, threshold, and blacklist from TTS hooks.
+- **Dual PreToolUse timer files** - `tts-timer-start` hooks now write both `/tmp/claude-tool-start-{id}` (TTS) and `/tmp/claude-notify-start-{id}` (notifications), eliminating race conditions between async hooks.
+- **Notification configuration** in `config_tools.py` - Session state (`notify` key), persistent config (`notify_enabled`, `notify_title`), and `SPELLBOOK_NOTIFY_THRESHOLD` / `SPELLBOOK_NOTIFY_ENABLED` environment variables for hook control.
+- **Notification test suite** - 76 tests across 4 files: core module, config integration, MCP tools, and hook behavior.
+
 ## [0.19.0] - 2026-03-04
 
 ### Added
