@@ -200,7 +200,7 @@ def _send_sync(title: str, body: str) -> None:
             f"[Windows.UI.Notifications.ToastNotificationManager, "
             f"Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; "
             f"$xml = [Windows.UI.Notifications.ToastNotificationManager]"
-            f"::GetTemplateContent(1); "
+            f"::GetTemplateContent(2); "
             f"$text = $xml.GetElementsByTagName('text'); "
             f"$text[0].AppendChild($xml.CreateTextNode('{ps_title}')) | Out-Null; "
             f"$text[1].AppendChild($xml.CreateTextNode('{ps_body}')) | Out-Null; "

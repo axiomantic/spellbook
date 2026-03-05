@@ -541,34 +541,18 @@ def notify_session_get(session_id: Optional[str] = None) -> dict:
     session_state = _get_session_state(session_id)
     notify_state = session_state["notify"]
 
-    # Resolve each setting: session > config > default
     result = {}
 
-    # enabled
-    if "enabled" in notify_state:
-        result["enabled"] = notify_state["enabled"]
-        result["source_enabled"] = "session"
-    else:
-        config_val = config_get("notify_enabled")
+    def _resolve(key: str, default_value) -> tuple:
+        if key in notify_state:
+            return notify_state[key], "session"
+        config_val = config_get(f"notify_{key}")
         if config_val is not None:
-            result["enabled"] = config_val
-            result["source_enabled"] = "config"
-        else:
-            result["enabled"] = NOTIFY_DEFAULT_ENABLED
-            result["source_enabled"] = "default"
+            return config_val, "config"
+        return default_value, "default"
 
-    # title
-    if "title" in notify_state:
-        result["title"] = notify_state["title"]
-        result["source_title"] = "session"
-    else:
-        config_val = config_get("notify_title")
-        if config_val is not None:
-            result["title"] = config_val
-            result["source_title"] = "config"
-        else:
-            result["title"] = NOTIFY_DEFAULT_TITLE
-            result["source_title"] = "default"
+    result["enabled"], result["source_enabled"] = _resolve("enabled", NOTIFY_DEFAULT_ENABLED)
+    result["title"], result["source_title"] = _resolve("title", NOTIFY_DEFAULT_TITLE)
 
     return result
 

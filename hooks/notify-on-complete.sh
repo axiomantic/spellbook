@@ -23,9 +23,21 @@ INPUT=$(cat)
 # ---------------------------------------------------------------------------
 # Extract fields
 # ---------------------------------------------------------------------------
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
-TOOL_USE_ID=$(echo "$INPUT" | jq -r '.tool_use_id // empty')
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
+TOOL_NAME=$(echo "$INPUT" | python3 -c "
+import json, sys
+try: print(json.load(sys.stdin).get('tool_name', ''))
+except Exception: print('')
+")
+TOOL_USE_ID=$(echo "$INPUT" | python3 -c "
+import json, sys
+try: print(json.load(sys.stdin).get('tool_use_id', ''))
+except Exception: print('')
+")
+SESSION_ID=$(echo "$INPUT" | python3 -c "
+import json, sys
+try: print(json.load(sys.stdin).get('session_id', ''))
+except Exception: print('')
+")
 
 # ---------------------------------------------------------------------------
 # Validate tool_use_id against path traversal
@@ -79,9 +91,9 @@ fi
 # Build notification content
 # ---------------------------------------------------------------------------
 NOTIFY_TITLE="${SPELLBOOK_NOTIFY_TITLE:-Spellbook}"
-# Sanitize title for AppleScript (strip double quotes)
-NOTIFY_TITLE=$(echo "$NOTIFY_TITLE" | tr -d '"')
-BODY="${TOOL_NAME} finished (${ELAPSED}s)"
+# Sanitize for shell safety - strip characters that could cause injection
+BODY=$(echo "${TOOL_NAME} finished (${ELAPSED}s)" | tr -d '`$(){}\\!;|&<>'"'"'"')
+NOTIFY_TITLE=$(echo "${NOTIFY_TITLE}" | tr -d '`$(){}\\!;|&<>'"'"'"')
 
 # ---------------------------------------------------------------------------
 # Send platform-specific notification

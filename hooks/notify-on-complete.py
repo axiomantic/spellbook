@@ -18,6 +18,7 @@ FAILURE POLICY: FAIL-OPEN
 import json
 import os
 import sys
+import tempfile
 import time
 
 
@@ -69,7 +70,7 @@ def main() -> None:
         sys.exit(0)
 
     # Read and delete our timer file
-    temp_dir = os.environ.get("TEMP", os.environ.get("TMP", "/tmp"))
+    temp_dir = tempfile.gettempdir()
     start_file = os.path.join(temp_dir, f"claude-notify-start-{tool_use_id}")
     if not os.path.exists(start_file):
         sys.exit(0)
