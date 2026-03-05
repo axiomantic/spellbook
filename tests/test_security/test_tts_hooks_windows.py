@@ -34,16 +34,18 @@ class TestTtsPs1HookFiles:
         assert path.is_file(), f"{hook_name}.ps1 not found at {path}"
 
     @pytest.mark.parametrize("hook_name", list(TTS_PS1_HOOKS.keys()))
-    def test_hook_not_empty(self, hook_name):
+    def test_hook_has_comment_header_and_error_preference(self, hook_name):
+        """Each TTS PS1 hook must start with a comment header and set ErrorActionPreference."""
         path = TTS_PS1_HOOKS[hook_name]
         content = path.read_text()
-        assert len(content) > 50, f"{hook_name}.ps1 is suspiciously short"
-
-    @pytest.mark.parametrize("hook_name", list(TTS_PS1_HOOKS.keys()))
-    def test_hook_has_error_preference(self, hook_name):
-        path = TTS_PS1_HOOKS[hook_name]
-        content = path.read_text()
-        assert '$ErrorActionPreference' in content
+        lines = content.splitlines()
+        assert lines[0] == f"# hooks/{hook_name}.ps1", (
+            f"{hook_name}.ps1 first line should be '# hooks/{hook_name}.ps1', got: {lines[0]}"
+        )
+        assert lines[4] == '$ErrorActionPreference = "Stop"', (
+            f"{hook_name}.ps1 line 5 should be '$ErrorActionPreference = \"Stop\"', "
+            f"got: {lines[4]}"
+        )
 
     @pytest.mark.parametrize("hook_name", list(TTS_PS1_HOOKS.keys()))
     def test_sh_counterpart_exists(self, hook_name):

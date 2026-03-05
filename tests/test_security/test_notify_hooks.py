@@ -302,9 +302,25 @@ class TestNotifyHookRegistration:
         settings = json.loads(settings_path.read_text())
         hooks = settings["hooks"]
 
-        # Check PostToolUse has notify-on-complete
-        post_hooks_flat = json.dumps(hooks.get("PostToolUse", []))
-        assert "notify-on-complete" in post_hooks_flat
+        # Check PostToolUse has notify-on-complete in the catch-all entry (no matcher)
+        post_hooks = hooks.get("PostToolUse", [])
+        notification_entry = post_hooks[-1]
+        assert notification_entry == {
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/notify-on-complete.sh",
+                    "async": True,
+                    "timeout": 10,
+                },
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
+                    "async": True,
+                    "timeout": 15,
+                },
+            ]
+        }
 
     def test_uninstall_removes_notify_hook(self, tmp_path):
         from installer.components.hooks import install_hooks, uninstall_hooks
@@ -318,8 +334,12 @@ class TestNotifyHookRegistration:
         assert result.success
 
         settings = json.loads(settings_path.read_text())
-        hooks_flat = json.dumps(settings.get("hooks", {}))
-        assert "notify-on-complete" not in hooks_flat
+        hooks = settings.get("hooks", {})
+        # After uninstall, all hook phases should be empty lists
+        for phase_name, entries in hooks.items():
+            assert entries == [], (
+                f"Hook phase {phase_name} still has entries after uninstall: {entries}"
+            )
 
     def test_reinstall_idempotent(self, tmp_path):
         from installer.components.hooks import install_hooks
