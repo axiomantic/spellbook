@@ -29,18 +29,15 @@ from unittest.mock import patch
 
 from installer.components.hooks import (
     HOOK_DEFINITIONS,
-    _SHELL_TO_NIM_BINARY,
+    _cleanup_legacy_hooks,
     _expand_spellbook_dir,
+    _get_hook_path,
     _get_hook_path_for_platform,
+    _is_legacy_hook,
     _is_spellbook_hook,
     install_hooks,
     uninstall_hooks,
 )
-
-
-def _hook_ext():
-    """Return the expected hook file extension for the current platform."""
-    return ".py" if sys.platform == "win32" else ".sh"
 
 
 # --- Helpers ---
@@ -82,6 +79,26 @@ def _get_hook_command(hook_entry):
     if isinstance(hook_entry, str):
         return hook_entry
     return hook_entry.get("command", "")
+
+
+def _expected_command(prefix, script_name):
+    """Return the expected hook command string for the current platform.
+
+    On Windows, hooks use PowerShell dispatch with .ps1 extension.
+    On Unix, hooks use the .sh path directly.
+
+    Args:
+        prefix: The path prefix (e.g. "$SPELLBOOK_DIR" or an expanded path).
+        script_name: The script basename without extension (e.g. "bash-gate").
+    """
+    if sys.platform == "win32":
+        return f"powershell -ExecutionPolicy Bypass -File {prefix}/hooks/{script_name}.ps1"
+    return f"{prefix}/hooks/{script_name}.sh"
+
+
+def _expected_ext():
+    """Return the expected hook script extension for the current platform."""
+    return ".ps1" if sys.platform == "win32" else ".sh"
 
 
 # --- HOOK_DEFINITIONS tests ---
@@ -247,7 +264,7 @@ class TestInstallHooks:
         assert bash_entry is not None
         assert len(bash_entry["hooks"]) == 1
         assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}"
+        assert bash_entry["hooks"][0]["command"] == _expected_command("$SPELLBOOK_DIR", "bash-gate")
 
     def test_spawn_hook_entry_correct(self, tmp_path):
         """The spawn_claude_session hook entry should have correct matcher and hook path."""
@@ -266,7 +283,7 @@ class TestInstallHooks:
         assert spawn_entry is not None
         assert len(spawn_entry["hooks"]) == 1
         assert spawn_entry["hooks"][0]["type"] == "command"
-        assert spawn_entry["hooks"][0]["command"] == f"$SPELLBOOK_DIR/hooks/spawn-guard{_hook_ext()}"
+        assert spawn_entry["hooks"][0]["command"] == _expected_command("$SPELLBOOK_DIR", "spawn-guard")
 
     def test_state_sanitize_hook_entry_correct(self, tmp_path):
         """The state-sanitize hook should be in PreToolUse with timeout."""
@@ -287,7 +304,7 @@ class TestInstallHooks:
         assert len(state_entry["hooks"]) == 1
         hook = state_entry["hooks"][0]
         assert hook["type"] == "command"
-        assert hook["command"] == f"$SPELLBOOK_DIR/hooks/state-sanitize{_hook_ext()}"
+        assert hook["command"] == _expected_command("$SPELLBOOK_DIR", "state-sanitize")
         assert hook["timeout"] == 15
 
     def test_audit_log_hook_entry_correct(self, tmp_path):
@@ -301,10 +318,10 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entry = post_tool_use[0]
-        ext = _hook_ext()
+        ext = _expected_ext()
         audit_hook = next(
             (h for h in post_entry["hooks"]
-             if isinstance(h, dict) and h.get("command", "").endswith(f"audit-log{ext}")),
+             if isinstance(h, dict) and _get_hook_path(h).endswith(f"audit-log{ext}")),
             None,
         )
         assert audit_hook is not None
@@ -323,10 +340,10 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entry = post_tool_use[0]
-        ext = _hook_ext()
+        ext = _expected_ext()
         canary_hook = next(
             (h for h in post_entry["hooks"]
-             if isinstance(h, dict) and h.get("command", "").endswith(f"canary-check{ext}")),
+             if isinstance(h, dict) and _get_hook_path(h).endswith(f"canary-check{ext}")),
             None,
         )
         assert canary_hook is not None
@@ -441,11 +458,11 @@ class TestInstallHooks:
         assert "/usr/local/bin/my-post-hook.sh" in hooks_list
         # Spellbook hooks added
         commands = [
-            h["command"] for h in hooks_list if isinstance(h, dict) and "command" in h
+            _get_hook_path(h) for h in hooks_list if isinstance(h, dict) and "command" in h
         ]
-        ext = _hook_ext()
-        assert f"$SPELLBOOK_DIR/hooks/audit-log{ext}" in commands
-        assert f"$SPELLBOOK_DIR/hooks/canary-check{ext}" in commands
+        ext = _expected_ext()
+        assert any(c.endswith(f"audit-log{ext}") for c in commands)
+        assert any(c.endswith(f"canary-check{ext}") for c in commands)
 
     def test_idempotent_no_duplicates(self, tmp_path):
         """Running install_hooks twice should not create duplicate entries."""
@@ -505,12 +522,13 @@ class TestInstallHooks:
         bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
         # The hook list should contain the spellbook path as an object (platform-appropriate extension)
+        ext = _expected_ext()
         spellbook_hooks = [
             h for h in bash_entries[0]["hooks"]
-            if isinstance(h, dict) and h.get("command", "").endswith(f"bash-gate{_hook_ext()}")
+            if isinstance(h, dict) and _get_hook_path(h).endswith(f"bash-gate{ext}")
         ]
         assert len(spellbook_hooks) == 1
-        assert spellbook_hooks[0]["command"] == f"$SPELLBOOK_DIR/hooks/bash-gate{_hook_ext()}"
+        assert spellbook_hooks[0]["command"] == _expected_command("$SPELLBOOK_DIR", "bash-gate")
 
     def test_merges_hooks_into_existing_matcher(self, tmp_path):
         """If a user has their own Bash hook, spellbook adds its hook to the same entry's hooks list."""
@@ -539,9 +557,10 @@ class TestInstallHooks:
         # Both hooks should be in the list (user's string hook + spellbook's object hook)
         hooks_list = bash_entries[0]["hooks"]
         assert "/usr/local/bin/my-bash-hook.sh" in hooks_list
+        ext = _expected_ext()
         spellbook_hooks = [
             h for h in hooks_list
-            if isinstance(h, dict) and h.get("command", "").endswith(f"bash-gate{_hook_ext()}")
+            if isinstance(h, dict) and _get_hook_path(h).endswith(f"bash-gate{ext}")
         ]
         assert len(spellbook_hooks) == 1
 
@@ -942,8 +961,7 @@ class TestClaudeCodeInstallerHookIntegration:
         # Verify specific hook paths are expanded
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
-        ext = _hook_ext()
-        expected_path = f"{spellbook_dir}/hooks/bash-gate{ext}"
+        expected_path = _expected_command(str(spellbook_dir), "bash-gate")
         assert len(bash_entry["hooks"]) == 1
         assert bash_entry["hooks"][0]["type"] == "command"
         assert bash_entry["hooks"][0]["command"] == expected_path
@@ -1060,10 +1078,9 @@ class TestInstallHooksWithSpellbookDir:
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
-        ext = _hook_ext()
         assert len(bash_entry["hooks"]) == 1
         assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == f"{spellbook_dir}/hooks/bash-gate{ext}"
+        assert bash_entry["hooks"][0]["command"] == _expected_command(str(spellbook_dir), "bash-gate")
 
     def test_expanded_dict_hook_correct(self, tmp_path):
         spellbook_dir = _make_spellbook_dir(tmp_path)
@@ -1076,12 +1093,12 @@ class TestInstallHooksWithSpellbookDir:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         post_entry = post_tool_use[0]
-        ext = _hook_ext()
+        ext = _expected_ext()
         audit_hook = next(
             h for h in post_entry["hooks"]
-            if isinstance(h, dict) and h.get("command", "").endswith(f"audit-log{ext}")
+            if isinstance(h, dict) and _get_hook_path(h).endswith(f"audit-log{ext}")
         )
-        assert audit_hook["command"] == f"{spellbook_dir}/hooks/audit-log{ext}"
+        assert audit_hook["command"] == _expected_command(str(spellbook_dir), "audit-log")
         assert audit_hook["async"] is True
         assert audit_hook["timeout"] == 10
 
@@ -1126,10 +1143,9 @@ class TestInstallHooksWithSpellbookDir:
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
-        ext = _hook_ext()
         assert len(bash_entry["hooks"]) == 1
         assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == f"{spellbook_dir}/hooks/bash-gate{ext}"
+        assert bash_entry["hooks"][0]["command"] == _expected_command(str(spellbook_dir), "bash-gate")
 
     def test_preserves_user_hooks_with_expanded_paths(self, tmp_path):
         """User hooks should be preserved when installing with expanded paths."""
@@ -1152,11 +1168,10 @@ class TestInstallHooksWithSpellbookDir:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
         assert "/usr/local/bin/my-bash-hook.sh" in bash_entry["hooks"]
-        ext = _hook_ext()
-        expanded_path = f"{spellbook_dir}/hooks/bash-gate{ext}"
+        expected_cmd = _expected_command(str(spellbook_dir), "bash-gate")
         spellbook_hooks = [
             h for h in bash_entry["hooks"]
-            if isinstance(h, dict) and h.get("command") == expanded_path
+            if isinstance(h, dict) and h.get("command") == expected_cmd
         ]
         assert len(spellbook_hooks) == 1
 
@@ -1418,135 +1433,502 @@ class TestLegacyCatchallMigration:
         assert any("tts-timer-start" in s for s in hook_strs)
 
 
-# --- Nim compilation integration tests ---
+# --- PowerShell command format path extraction tests ---
 
 
-class TestNimDetection:
-    """Tests for Nim detection and compilation in the installer."""
+class TestGetHookPathPowerShellExtraction:
+    """_get_hook_path() must extract the file path from PowerShell invocation wrappers."""
 
-    def test_detect_nim_returns_version_string_or_none(self):
-        from installer.platforms.claude_code import _detect_nim
-        result = _detect_nim()
-        # Either None (Nim not installed) or a version string like "2.0.0"
-        assert result is None or isinstance(result, str)
+    def test_extracts_path_from_powershell_string_hook(self):
+        """Plain string hook with PS prefix should return just the .ps1 path."""
+        hook = "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1"
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.ps1"
 
-    def test_detect_nim_rejects_old_version(self):
-        """Nim < 1.6 should return None."""
-        from unittest.mock import patch, MagicMock
-        from installer.platforms.claude_code import _detect_nim
-
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Nim Compiler Version 1.4.8 [Linux: amd64]"
-        with patch("subprocess.run", return_value=mock_result):
-            assert _detect_nim() is None
-
-
-class TestNimPathResolution:
-    """Tests for Nim binary path resolution in hook registration."""
-
-    def test_nim_available_uses_binary_path(self):
-        hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
-        result = _get_hook_path_for_platform(hook_path, nim_available=True)
-        if sys.platform == "win32":
-            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate.exe"
-        else:
-            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"
-
-    def test_nim_unavailable_keeps_shell_path(self):
-        hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
-        result = _get_hook_path_for_platform(hook_path, nim_available=False)
-        if sys.platform == "win32":
-            assert result.endswith(".py")
-        else:
-            assert result == hook_path
-
-    def test_all_hooks_have_nim_mapping(self):
-        """Every .sh hook should have a Nim binary mapping."""
-        expected = {
-            "tts-timer-start.sh", "bash-gate.sh", "spawn-guard.sh",
-            "state-sanitize.sh", "audit-log.sh", "canary-check.sh",
-            "tts-notify.sh", "notify-on-complete.sh",
-            "pre-compact-save.sh", "post-compact-recover.sh",
+    def test_extracts_path_from_powershell_dict_hook(self):
+        """Dict hook with PS command should return just the .ps1 path."""
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1",
         }
-        assert set(_SHELL_TO_NIM_BINARY.keys()) == expected
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.ps1"
 
-    def test_nim_on_windows_uses_exe(self):
-        """Windows with nim_available=True should use .exe extension."""
-        from unittest.mock import patch
-        with patch("sys.platform", "win32"):
-            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
-            result = _get_hook_path_for_platform(hook_path, nim_available=True)
-            assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate.exe"
+    def test_sh_path_unchanged(self):
+        """Non-PowerShell .sh path should pass through unchanged."""
+        hook = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
 
-    def test_windows_without_nim_uses_py(self):
-        """Windows without Nim should fall back to .py wrappers."""
-        from unittest.mock import patch
-        with patch("sys.platform", "win32"):
-            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
-            result = _get_hook_path_for_platform(hook_path, nim_available=False)
-            assert result.endswith(".py")
+    def test_dict_sh_path_unchanged(self):
+        """Dict hook with .sh command should pass through unchanged."""
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh"}
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
 
+    def test_empty_command_returns_empty(self):
+        """Dict hook without command key should return empty string."""
+        hook = {"type": "command"}
+        result = _get_hook_path(hook)
+        assert result == ""
 
-class TestInstallerNimIntegration:
-    """Tests for Nim hook compilation in the full install flow."""
+    def test_nim_binary_path_unchanged(self):
+        """Legacy Nim binary path should pass through (no PS prefix)."""
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"}
+        result = _get_hook_path(hook)
+        assert result == "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"
 
-    def test_install_hooks_with_nim_available_sets_binary_paths(self, tmp_path):
-        """When nim_available=True, hook paths should point to nim/bin/."""
-        settings_path = tmp_path / "settings.json"
-        spellbook_dir = _make_spellbook_dir(tmp_path)
-
-        # Create nim bin dir with dummy binaries
-        nim_bin = spellbook_dir / "hooks" / "nim" / "bin"
-        nim_bin.mkdir(parents=True)
-        for name in _SHELL_TO_NIM_BINARY.values():
-            (nim_bin / name).write_text("#!/bin/sh\nexit 0\n")
-
-        result = install_hooks(settings_path, spellbook_dir=spellbook_dir, nim_available=True)
-        assert result.success
-
-        settings = _read_settings(settings_path)
-        # Check that at least one hook path points to nim/bin/
-        all_commands = []
-        for phase_entries in settings["hooks"].values():
-            for entry in phase_entries:
-                for hook in entry.get("hooks", []):
-                    cmd = _get_hook_command(hook)
-                    all_commands.append(cmd)
-
-        # Normalize path separators for cross-platform comparison
-        nim_commands = [c for c in all_commands if "/nim/bin/" in c.replace("\\", "/")]
-        assert len(nim_commands) == 10, f"Expected 10 Nim paths, got {len(nim_commands)}: {nim_commands}"
-
-    def test_install_hooks_without_nim_keeps_shell_paths(self, tmp_path):
-        """When nim_available=False, hook paths should point to .sh files."""
-        settings_path = tmp_path / "settings.json"
-        spellbook_dir = _make_spellbook_dir(tmp_path)
-
-        result = install_hooks(settings_path, spellbook_dir=spellbook_dir, nim_available=False)
-        assert result.success
-
-        settings = _read_settings(settings_path)
-        all_commands = []
-        for phase_entries in settings["hooks"].values():
-            for entry in phase_entries:
-                for hook in entry.get("hooks", []):
-                    cmd = _get_hook_command(hook)
-                    all_commands.append(cmd)
-
-        # Normalize path separators for cross-platform comparison
-        nim_commands = [c for c in all_commands if "/nim/bin/" in c.replace("\\", "/")]
-        assert len(nim_commands) == 0, f"Expected 0 Nim paths, got {nim_commands}"
+    def test_expanded_powershell_path(self):
+        """Expanded absolute path in PS wrapper should be extracted."""
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File /home/user/spellbook/hooks/bash-gate.ps1",
+        }
+        result = _get_hook_path(hook)
+        assert result == "/home/user/spellbook/hooks/bash-gate.ps1"
 
 
-class TestNimHookRecognition:
-    """Ensure _is_spellbook_hook recognizes Nim binary paths."""
+class TestIsSpellbookHookWithPowerShell:
+    """_is_spellbook_hook() must recognize PowerShell-wrapped spellbook hooks."""
 
-    def test_recognizes_nim_binary_path_with_dollar(self):
+    def test_recognizes_ps_wrapped_dollar_prefix(self):
+        """PS-wrapped hook with $SPELLBOOK_DIR should be recognized."""
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1",
+        }
+        assert _is_spellbook_hook(hook) is True
+
+    def test_recognizes_ps_wrapped_expanded_path(self, tmp_path):
+        """PS-wrapped hook with expanded path should be recognized when spellbook_dir given."""
+        spellbook_dir = tmp_path / "spellbook"
+        hook = {
+            "type": "command",
+            "command": f"powershell -ExecutionPolicy Bypass -File {spellbook_dir}/hooks/bash-gate.ps1",
+        }
+        assert _is_spellbook_hook(hook, spellbook_dir=spellbook_dir) is True
+
+    def test_sh_hook_still_recognized(self):
+        """Plain .sh hook should still be recognized (unchanged behavior)."""
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh"}
+        assert _is_spellbook_hook(hook) is True
+
+    def test_nim_binary_still_recognized(self):
+        """Legacy Nim binary path should still be recognized."""
         hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"}
         assert _is_spellbook_hook(hook) is True
 
-    def test_recognizes_nim_binary_path_expanded(self, tmp_path):
+    def test_user_hook_not_recognized(self):
+        """Non-spellbook hook should not be recognized."""
+        hook = {"type": "command", "command": "/usr/local/bin/my-hook.sh"}
+        assert _is_spellbook_hook(hook) is False
+
+    def test_ps_wrapped_non_spellbook_not_recognized(self):
+        """PS-wrapped non-spellbook hook should not be recognized."""
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File /usr/local/bin/my-hook.ps1",
+        }
+        assert _is_spellbook_hook(hook) is False
+
+
+# --- Two-tier hook path resolution tests ---
+
+
+class TestTwoTierPathResolution:
+    """Tests for 2-tier hook path resolution (Unix: .sh, Windows: .ps1 via PowerShell)."""
+
+    def test_unix_returns_sh_path_unchanged(self):
+        """On Unix, _get_hook_path_for_platform returns .sh path as-is."""
+        with patch("sys.platform", "linux"):
+            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+            result = _get_hook_path_for_platform(hook_path)
+            assert result == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+
+    def test_unix_no_nim_available_parameter(self):
+        """_get_hook_path_for_platform no longer accepts nim_available."""
+        import inspect
+        sig = inspect.signature(_get_hook_path_for_platform)
+        assert "nim_available" not in sig.parameters
+
+    def test_windows_returns_powershell_command_wrapper(self):
+        """On Windows, _get_hook_path_for_platform wraps .ps1 path in PowerShell invocation."""
+        with patch("sys.platform", "win32"):
+            hook_path = "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+            result = _get_hook_path_for_platform(hook_path)
+            assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1"
+
+    def test_install_hooks_no_nim_available_parameter(self):
+        """install_hooks no longer accepts nim_available."""
+        import inspect
+        sig = inspect.signature(install_hooks)
+        assert "nim_available" not in sig.parameters
+
+    def test_shell_to_nim_binary_removed(self):
+        """_SHELL_TO_NIM_BINARY dict should no longer exist in the module."""
+        import installer.components.hooks as hooks_mod
+        assert not hasattr(hooks_mod, "_SHELL_TO_NIM_BINARY")
+
+    def test_install_hooks_produces_platform_appropriate_paths(self, tmp_path):
+        """install_hooks should produce platform-appropriate hook paths (no nim/bin/, no .py)."""
+        settings_path = tmp_path / "settings.json"
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+
+        result = install_hooks(settings_path, spellbook_dir=spellbook_dir)
+        assert result.success is True
+        assert result.action == "installed"
+
+        settings = _read_settings(settings_path)
+        all_commands = []
+        for phase_entries in settings["hooks"].values():
+            for entry in phase_entries:
+                for hook in entry.get("hooks", []):
+                    cmd = _get_hook_command(hook)
+                    all_commands.append(cmd)
+
+        ext = _expected_ext()
+        # All hook paths should use the platform-appropriate extension (no nim/bin/, no .py)
+        for cmd in all_commands:
+            # Extract the actual file path (handles PowerShell wrapper on Windows)
+            path = _get_hook_path(cmd)
+            normalized = path.replace("\\", "/")
+            assert "/nim/bin/" not in normalized, f"Nim path found: {cmd}"
+            assert not normalized.endswith(".py"), f".py path found: {cmd}"
+            assert normalized.endswith(ext), f"Expected {ext} path, found: {cmd}"
+
+
+# --- Legacy hook detection and cleanup tests ---
+
+
+class TestIsLegacyHook:
+    """_is_legacy_hook() detects Nim binary and .py hook paths for cleanup."""
+
+    def test_nim_binary_with_dollar_prefix_is_legacy(self):
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"}
+        assert _is_legacy_hook(hook) is True
+
+    def test_nim_binary_with_exe_is_legacy(self):
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate.exe"}
+        assert _is_legacy_hook(hook) is True
+
+    def test_py_hook_with_dollar_prefix_is_legacy(self):
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.py"}
+        assert _is_legacy_hook(hook) is True
+
+    def test_nim_binary_expanded_path_is_legacy(self, tmp_path):
         spellbook_dir = tmp_path / "spellbook"
-        hook = {"type": "command", "command": str(spellbook_dir / "hooks" / "nim" / "bin" / "bash_gate")}
-        assert _is_spellbook_hook(hook, spellbook_dir=spellbook_dir) is True
+        hook = {
+            "type": "command",
+            "command": f"{spellbook_dir}/hooks/nim/bin/bash_gate",
+        }
+        assert _is_legacy_hook(hook, spellbook_dir=spellbook_dir) is True
+
+    def test_py_hook_expanded_path_is_legacy(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        hook = {
+            "type": "command",
+            "command": f"{spellbook_dir}/hooks/bash-gate.py",
+        }
+        assert _is_legacy_hook(hook, spellbook_dir=spellbook_dir) is True
+
+    def test_sh_hook_is_not_legacy(self):
+        hook = {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh"}
+        assert _is_legacy_hook(hook) is False
+
+    def test_ps1_hook_is_not_legacy(self):
+        hook = {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1",
+        }
+        assert _is_legacy_hook(hook) is False
+
+    def test_user_py_hook_outside_spellbook_is_not_legacy(self):
+        """A .py hook NOT in the spellbook hooks directory is not legacy."""
+        hook = {"type": "command", "command": "/usr/local/bin/my-hook.py"}
+        assert _is_legacy_hook(hook) is False
+
+    def test_user_hook_is_not_legacy(self):
+        hook = {"type": "command", "command": "/usr/local/bin/my-hook.sh"}
+        assert _is_legacy_hook(hook) is False
+
+    def test_string_nim_hook_is_legacy(self):
+        """Plain string hook with Nim path should also be detected."""
+        hook = "$SPELLBOOK_DIR/hooks/nim/bin/tts_timer_start"
+        assert _is_legacy_hook(hook) is True
+
+    def test_string_py_hook_is_legacy(self):
+        hook = "$SPELLBOOK_DIR/hooks/tts-timer-start.py"
+        assert _is_legacy_hook(hook) is True
+
+
+class TestCleanupLegacyHooks:
+    """_cleanup_legacy_hooks() removes Nim and .py entries from settings."""
+
+    def test_removes_nim_binary_entries(self):
+        settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"},
+                        ],
+                    },
+                ],
+            },
+        }
+        _cleanup_legacy_hooks(settings)
+        # Matcher group should be removed entirely since no hooks remain
+        assert settings == {"hooks": {"PreToolUse": []}}
+
+    def test_removes_py_wrapper_entries(self):
+        settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.py"},
+                        ],
+                    },
+                ],
+            },
+        }
+        _cleanup_legacy_hooks(settings)
+        assert settings == {"hooks": {"PreToolUse": []}}
+
+    def test_preserves_user_hooks_removes_legacy(self):
+        settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"},
+                            {"type": "command", "command": "/usr/local/bin/user-hook.sh"},
+                        ],
+                    },
+                ],
+            },
+        }
+        _cleanup_legacy_hooks(settings)
+        assert settings == {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {"type": "command", "command": "/usr/local/bin/user-hook.sh"},
+                        ],
+                    },
+                ],
+            },
+        }
+
+    def test_preserves_sh_hooks(self):
+        """Current .sh hooks should NOT be removed by legacy cleanup."""
+        settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh"},
+                        ],
+                    },
+                ],
+            },
+        }
+        _cleanup_legacy_hooks(settings)
+        assert settings == {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh"},
+                        ],
+                    },
+                ],
+            },
+        }
+
+    def test_cleans_multiple_phases(self):
+        settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/bash_gate"},
+                        ],
+                    },
+                ],
+                "PostToolUse": [
+                    {
+                        "matcher": "Bash|Read|WebFetch|Grep|mcp__.*",
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/audit-log.py"},
+                        ],
+                    },
+                ],
+            },
+        }
+        _cleanup_legacy_hooks(settings)
+        assert settings == {"hooks": {"PreToolUse": [], "PostToolUse": []}}
+
+    def test_handles_empty_hooks_section(self):
+        settings = {"hooks": {}}
+        _cleanup_legacy_hooks(settings)
+        assert settings == {"hooks": {}}
+
+    def test_handles_no_hooks_key(self):
+        settings = {}
+        _cleanup_legacy_hooks(settings)
+        assert settings == {}
+
+    def test_cleanup_with_expanded_spellbook_dir(self, tmp_path):
+        spellbook_dir = tmp_path / "spellbook"
+        expanded_nim = f"{spellbook_dir}/hooks/nim/bin/bash_gate"
+        settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {"type": "command", "command": expanded_nim},
+                        ],
+                    },
+                ],
+            },
+        }
+        _cleanup_legacy_hooks(settings, spellbook_dir=spellbook_dir)
+        assert settings == {"hooks": {"PreToolUse": []}}
+
+    def test_catchall_entry_preserved_when_non_legacy_hooks_remain(self):
+        """Catch-all entries (no matcher key) should be preserved if they have non-legacy hooks."""
+        settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/nim/bin/tts_timer_start"},
+                            {"type": "command", "command": "/usr/local/bin/user-timer.sh"},
+                        ],
+                    },
+                ],
+            },
+        }
+        _cleanup_legacy_hooks(settings)
+        assert settings == {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "hooks": [
+                            {"type": "command", "command": "/usr/local/bin/user-timer.sh"},
+                        ],
+                    },
+                ],
+            },
+        }
+
+
+class TestInstallHooksLegacyCleanup:
+    """install_hooks() should clean up legacy entries before registering new hooks."""
+
+    def test_legacy_nim_hooks_cleaned_before_registration(self, tmp_path):
+        """Pre-existing Nim binary hooks should be removed during install."""
+        settings_path = tmp_path / "settings.json"
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+
+        # Pre-populate with Nim binary hooks
+        legacy_settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": f"{spellbook_dir}/hooks/nim/bin/bash_gate",
+                            },
+                        ],
+                    },
+                ],
+            },
+        }
+        _make_settings_file(settings_path, legacy_settings)
+
+        result = install_hooks(settings_path, spellbook_dir=spellbook_dir)
+        assert result.success is True
+        assert result.action == "installed"
+
+        settings = _read_settings(settings_path)
+        # All hooks should be current .sh paths (no nim/bin/)
+        all_commands = []
+        for phase_entries in settings["hooks"].values():
+            for entry in phase_entries:
+                for hook in entry.get("hooks", []):
+                    cmd = _get_hook_command(hook)
+                    all_commands.append(cmd)
+        nim_commands = [c for c in all_commands if "/nim/bin/" in c.replace("\\", "/")]
+        assert nim_commands == [], f"Nim paths still present: {nim_commands}"
+
+    def test_legacy_py_hooks_cleaned_before_registration(self, tmp_path):
+        """Pre-existing .py wrapper hooks should be removed during install."""
+        settings_path = tmp_path / "settings.json"
+        spellbook_dir = _make_spellbook_dir(tmp_path)
+
+        legacy_settings = {
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Bash",
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": f"{spellbook_dir}/hooks/bash-gate.py",
+                            },
+                        ],
+                    },
+                ],
+            },
+        }
+        _make_settings_file(settings_path, legacy_settings)
+
+        result = install_hooks(settings_path, spellbook_dir=spellbook_dir)
+        assert result.success is True
+
+        settings = _read_settings(settings_path)
+        all_commands = []
+        for phase_entries in settings["hooks"].values():
+            for entry in phase_entries:
+                for hook in entry.get("hooks", []):
+                    cmd = _get_hook_command(hook)
+                    all_commands.append(cmd)
+        py_commands = [c for c in all_commands if c.endswith(".py")]
+        assert py_commands == [], f".py paths still present: {py_commands}"
+
+
+class TestInstallHooksPowerShellCheck:
+    """install_hooks() should check PowerShell availability on Windows."""
+
+    def test_windows_without_powershell_returns_skipped(self, tmp_path):
+        """On Windows without powershell on PATH, install_hooks should skip."""
+        settings_path = tmp_path / "settings.json"
+        with patch("sys.platform", "win32"), \
+             patch("shutil.which", return_value=None):
+            result = install_hooks(settings_path)
+        assert result.success is True
+        assert result.action == "skipped"
+        assert result.message == "PowerShell not found on PATH; hook registration skipped"
+        # Settings file should NOT have been created
+        assert not settings_path.exists()
+
+    def test_unix_skips_powershell_check(self, tmp_path):
+        """On Unix, install_hooks should not check for PowerShell."""
+        settings_path = tmp_path / "settings.json"
+        # Should succeed even though powershell may not exist
+        result = install_hooks(settings_path)
+        assert result.success is True
+        assert result.action == "installed"

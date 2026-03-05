@@ -65,9 +65,9 @@ class TestNotifyHookExecutability:
     def test_sh_is_executable(self):
         assert os.access(NOTIFY_HOOK_SCRIPT, os.X_OK)
 
-    def test_py_is_executable(self):
-        py_script = NOTIFY_HOOK_SCRIPT.replace(".sh", ".py")
-        assert os.access(py_script, os.X_OK)
+    def test_ps1_exists(self):
+        ps1_script = NOTIFY_HOOK_SCRIPT.replace(".sh", ".ps1")
+        assert os.path.isfile(ps1_script)
 
 
 class TestNotifyHookBehavior:
@@ -302,9 +302,25 @@ class TestNotifyHookRegistration:
         settings = json.loads(settings_path.read_text())
         hooks = settings["hooks"]
 
-        # Check PostToolUse has notify-on-complete
-        post_hooks_flat = json.dumps(hooks.get("PostToolUse", []))
-        assert "notify-on-complete" in post_hooks_flat
+        # Check PostToolUse has notify-on-complete in the catch-all entry (no matcher)
+        post_hooks = hooks.get("PostToolUse", [])
+        notification_entry = post_hooks[-1]
+        assert notification_entry == {
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/notify-on-complete.sh",
+                    "async": True,
+                    "timeout": 10,
+                },
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
+                    "async": True,
+                    "timeout": 15,
+                },
+            ]
+        }
 
     def test_uninstall_removes_notify_hook(self, tmp_path):
         from installer.components.hooks import install_hooks, uninstall_hooks
@@ -318,8 +334,12 @@ class TestNotifyHookRegistration:
         assert result.success
 
         settings = json.loads(settings_path.read_text())
-        hooks_flat = json.dumps(settings.get("hooks", {}))
-        assert "notify-on-complete" not in hooks_flat
+        hooks = settings.get("hooks", {})
+        # After uninstall, all hook phases should be empty lists
+        for phase_name, entries in hooks.items():
+            assert entries == [], (
+                f"Hook phase {phase_name} still has entries after uninstall: {entries}"
+            )
 
     def test_reinstall_idempotent(self, tmp_path):
         from installer.components.hooks import install_hooks
@@ -340,7 +360,7 @@ class TestNotifyHookRegistration:
             result = _get_hook_path_for_platform(
                 "$SPELLBOOK_DIR/hooks/notify-on-complete.sh"
             )
-        assert result == "$SPELLBOOK_DIR/hooks/notify-on-complete.py"
+        assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/notify-on-complete.ps1"
 
     def test_platform_transform_unix(self):
         from installer.components.hooks import _get_hook_path_for_platform

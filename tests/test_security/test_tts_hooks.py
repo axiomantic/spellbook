@@ -60,9 +60,9 @@ class TestTimerStartExecutability:
     def test_sh_is_executable(self):
         assert os.access(TIMER_START_SCRIPT, os.X_OK)
 
-    def test_py_is_executable(self):
-        py_script = TIMER_START_SCRIPT.replace(".sh", ".py")
-        assert os.access(py_script, os.X_OK)
+    def test_ps1_exists(self):
+        ps1_script = TIMER_START_SCRIPT.replace(".sh", ".ps1")
+        assert os.path.isfile(ps1_script)
 
 
 class TestTimerStartBehavior:
@@ -106,9 +106,9 @@ class TestTtsNotifyExecutability:
     def test_sh_is_executable(self):
         assert os.access(TTS_NOTIFY_SCRIPT, os.X_OK)
 
-    def test_py_is_executable(self):
-        py_script = TTS_NOTIFY_SCRIPT.replace(".sh", ".py")
-        assert os.access(py_script, os.X_OK)
+    def test_ps1_exists(self):
+        ps1_script = TTS_NOTIFY_SCRIPT.replace(".sh", ".ps1")
+        assert os.path.isfile(ps1_script)
 
 
 class TestTtsNotifyBehavior:
@@ -259,13 +259,39 @@ class TestHookRegistration:
         settings = json.loads(settings_path.read_text())
         hooks = settings["hooks"]
 
-        # Check PreToolUse has tts-timer-start
-        pre_hooks_flat = json.dumps(hooks.get("PreToolUse", []))
-        assert "tts-timer-start" in pre_hooks_flat
+        # Check PreToolUse has tts-timer-start as its last entry (catch-all, no matcher)
+        pre_hooks = hooks.get("PreToolUse", [])
+        tts_timer_entry = pre_hooks[-1]
+        assert tts_timer_entry == {
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/tts-timer-start.sh",
+                    "async": True,
+                    "timeout": 5,
+                }
+            ]
+        }
 
-        # Check PostToolUse has tts-notify
-        post_hooks_flat = json.dumps(hooks.get("PostToolUse", []))
-        assert "tts-notify" in post_hooks_flat
+        # Check PostToolUse has tts-notify in the catch-all entry (no matcher)
+        post_hooks = hooks.get("PostToolUse", [])
+        notification_entry = post_hooks[-1]
+        assert notification_entry == {
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/notify-on-complete.sh",
+                    "async": True,
+                    "timeout": 10,
+                },
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
+                    "async": True,
+                    "timeout": 15,
+                },
+            ]
+        }
 
     def test_uninstall_removes_tts_hooks(self, tmp_path):
         from installer.components.hooks import install_hooks, uninstall_hooks
@@ -279,9 +305,12 @@ class TestHookRegistration:
         assert result.success
 
         settings = json.loads(settings_path.read_text())
-        hooks_flat = json.dumps(settings.get("hooks", {}))
-        assert "tts-timer-start" not in hooks_flat
-        assert "tts-notify" not in hooks_flat
+        hooks = settings.get("hooks", {})
+        # After uninstall, all hook phases should be empty lists
+        for phase_name, entries in hooks.items():
+            assert entries == [], (
+                f"Hook phase {phase_name} still has entries after uninstall: {entries}"
+            )
 
     def test_reinstall_idempotent(self, tmp_path):
         from installer.components.hooks import install_hooks
@@ -299,7 +328,7 @@ class TestHookRegistration:
         from installer.components.hooks import _get_hook_path_for_platform
         with patch("sys.platform", "win32"):
             result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/tts-timer-start.sh")
-        assert result == "$SPELLBOOK_DIR/hooks/tts-timer-start.py"
+        assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-timer-start.ps1"
 
     def test_platform_transform_unix(self):
         from installer.components.hooks import _get_hook_path_for_platform

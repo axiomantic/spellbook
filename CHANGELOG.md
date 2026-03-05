@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.21.0] - 2026-03-05
+
+### Removed
+- **Nim hook compilation system** - Removed the 3-tier hook dispatch (Nim > .py > .sh) in favor of a simpler 2-tier system (.sh on Unix, .ps1 on Windows). The `_SHELL_TO_NIM_BINARY` mapping, `nim_available` parameter threading, and `_compile_nim_hooks()` build step are all gone.
+- **Python hook wrappers** - Removed all 10 `.py` hook files from `hooks/`. These were intermediate wrappers that called security check modules; the new `.sh` and `.ps1` hooks call them directly.
+- **Nim source directory** - Deleted `hooks/nim/` (Nim sources, build config, and codegen).
+- **Nim test files** - Deleted `test_nim_hook_binaries.py` and `test_nim_codegen.py`.
+
+### Added
+- **PowerShell hooks** - 10 new `.ps1` hooks mirroring every `.sh` hook for native Windows support. Security hooks are fail-closed (exit 2 on error); audit, notification, and compaction hooks are fail-open (exit 0 on error).
+- **Legacy hook cleanup** - `_cleanup_legacy_hooks()` automatically removes stale Nim binary and `.py` wrapper entries from `settings.json` during install, preventing conflicts with the new hook paths.
 
 ## [0.20.0] - 2026-03-05
 
