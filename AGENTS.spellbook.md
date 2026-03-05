@@ -466,7 +466,7 @@ After completing substantive work (finishing a todo, returning from a subagent, 
 - **Command candidate**: You executed a multi-step procedure with a clear trigger that would be identical every time.
 - **Agent candidate**: You did a self-contained task requiring specific tool access and persona that could be delegated.
 
-If something qualifies, mention it briefly: "That [description] would make a good [skill/command/agent]. Want me to draft it in the background?" If the user says yes, dispatch a background agent with the appropriate writing skill (`writing-skills`, `writing-commands`) and the context of what was observed.
+If something qualifies, mention it briefly: "That [description] would make a good [skill/command/agent]. Want me to draft it in the background?" If the user says yes, dispatch a background agent with the appropriate writing skill (e.g., `writing-skills`, `writing-commands`) and the context of what was observed.
 
 Do not suggest things that are obviously one-off. Do not interrupt urgent work to make suggestions. Use natural pause points.
 
