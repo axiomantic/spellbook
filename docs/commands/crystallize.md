@@ -675,7 +675,7 @@ IF verify_iterations == max_verify_iterations AND verdict != PASS:
     DO NOT deliver until user resolves
 ```
 
-**Total circuit breaker budget:** The process includes two iterative review phases. Phase 4.5 (self-review) runs for up to 3 iterations. If it passes, the Pre-Delivery Adversarial Review runs for up to 3 iterations. This results in a total of 1 to 6 loop executions before delivery or HALT.
+**Total circuit breaker budget:** The process includes two iterative review phases. Phase 4.5 (self-review) runs for up to 3 iterations. If it passes, the Pre-Delivery Adversarial Review runs for up to 3 iterations. This results in a total of 2 to 6 loop executions before delivery or HALT.
 
 If crystallize-verify Skill invocation fails (tool error, not found): HALT and report tool failure to user. Do NOT skip. This is a delivery gate, not optional.
 
