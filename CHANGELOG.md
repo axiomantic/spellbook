@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.21.0] - 2026-03-05
 
 ### Removed
 - **Nim hook compilation system** - Removed the 3-tier hook dispatch (Nim > .py > .sh) in favor of a simpler 2-tier system (.sh on Unix, .ps1 on Windows). The `_SHELL_TO_NIM_BINARY` mapping, `nim_available` parameter threading, and `_compile_nim_hooks()` build step are all gone.
