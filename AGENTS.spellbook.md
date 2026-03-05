@@ -151,6 +151,25 @@ Spellbook can announce long-running tool completions via Kokoro text-to-speech. 
 
 **Auto-notifications:** PreToolUse hook records start times; PostToolUse hook announces completions exceeding 30 seconds. Threshold configurable via `SPELLBOOK_TTS_THRESHOLD`. Interactive and management tools (AskUserQuestion, TodoRead, TodoWrite, TaskCreate, TaskUpdate, TaskGet, TaskList) are excluded.
 
+## Notification Configuration
+
+Spellbook can send native OS notifications when long-running tools finish. Uses macOS Notification Center, Linux notify-send, or Windows toast notifications.
+
+**Available MCP tools:**
+- `notify_send(body, title?)` - Send a notification manually
+- `notify_status()` - Check notification availability and settings
+- `notify_session_set(enabled?, title?)` - Override settings for this session
+- `notify_config_set(enabled?, title?)` - Change persistent settings
+
+**Quick commands:**
+- Mute this session: call `notify_session_set(enabled=false)`
+- Unmute this session: call `notify_session_set(enabled=true)`
+- Change title: call `notify_config_set(title="My Project")`
+
+**Auto-notifications:** PostToolUse hook sends a notification when tools exceed the threshold (default 30 seconds). Set threshold via `SPELLBOOK_NOTIFY_THRESHOLD` env var.
+
+**Scope note:** `notify_session_set` and `notify_config_set` only affect MCP tool behavior (e.g., `notify_send` respects enabled state). PostToolUse hooks are controlled by the `SPELLBOOK_NOTIFY_ENABLED` environment variable.
+
 ## Encyclopedia
 
 **Contents:** Glossary, architecture skeleton (mermaid), decision log (why X not Y), entry points, testing commands. Overview-only design resists staleness.
