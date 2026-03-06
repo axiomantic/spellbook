@@ -1,0 +1,61 @@
+name: Bug Report
+description: Report something that is not working correctly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please fill out the sections
+        below so we can understand and reproduce the problem.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug. What did you expect to happen instead?
+      placeholder: "I expected X to happen, but Y happened instead."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to trigger the bug.
+      placeholder: |
+        1. Install version X
+        2. Run this command
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, spellbook version, platform (Claude Code, OpenCode, etc.)
+      placeholder: |
+        - OS: macOS 15.2
+        - Python: 3.12.1
+        - Spellbook: 0.23.0
+        - Platform: Claude Code
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Minimal reproducible example
+      description: If possible, paste a short snippet or sequence of steps that triggers the bug.
+      render: python
+    validations:
+      required: false
+
+  - type: textarea
+    id: error_output
+    attributes:
+      label: Error output or traceback
+      description: Paste any relevant error messages or stack traces.
+      render: shell
+    validations:
+      required: false
