@@ -28,12 +28,12 @@ class TestTtsConfigurationSection:
         tts_pos = content.index("## TTS Configuration")
         assert tts_pos > resume_pos
 
-    def test_section_before_encyclopedia(self):
-        """TTS Configuration should appear before Encyclopedia."""
+    def test_section_before_project_knowledge(self):
+        """TTS Configuration should appear before Project Knowledge."""
         content = self._read_template()
         tts_pos = content.index("## TTS Configuration")
-        encyclopedia_pos = content.index("## Encyclopedia")
-        assert tts_pos < encyclopedia_pos
+        project_knowledge_pos = content.index("## Project Knowledge (AGENTS.md)")
+        assert tts_pos < project_knowledge_pos
 
     def test_documents_kokoro_speak(self):
         """The section should document the kokoro_speak tool."""
