@@ -271,13 +271,19 @@ class Installer:
         if on_progress:
             on_progress("result", {"result": daemon_result})
 
-        total = len(platforms)
-        for i, platform in enumerate(platforms, 1):
-            # Resolve config dirs for this platform
+        # Pre-resolve all dirs to compute accurate total count
+        platform_dirs: list[tuple[str, list[Path]]] = []
+        total = 0
+        for platform in platforms:
             cli_dirs = (config_dir_overrides or {}).get(platform)
             dirs = resolve_config_dirs(platform, cli_dirs=cli_dirs)
+            platform_dirs.append((platform, dirs))
+            total += max(len(dirs), 1)  # Count at least 1 for skip message
 
+        install_index = 0
+        for platform, dirs in platform_dirs:
             if not dirs:
+                install_index += 1
                 # All specified dirs were invalid
                 skip_result = InstallResult(
                     component="platform",
@@ -295,6 +301,7 @@ class Installer:
                 continue
 
             for dir_idx, config_dir in enumerate(dirs):
+                install_index += 1
                 skip_global = dir_idx > 0
 
                 installer = get_platform_installer(
@@ -305,10 +312,14 @@ class Installer:
                 )
 
                 if on_progress:
-                    dir_label = f" ({config_dir})" if len(dirs) > 1 else ""
+                    # Shorten home directory to ~ for display
+                    _home = str(Path.home())
+                    _dir_display = str(config_dir)
+                    if _dir_display.startswith(_home):
+                        _dir_display = "~" + _dir_display[len(_home):]
                     on_progress("platform_start", {
-                        "name": f"{installer.platform_name}{dir_label}",
-                        "index": i,
+                        "name": f"{installer.platform_name} ({_dir_display})",
+                        "index": install_index,
                         "total": total,
                     })
 

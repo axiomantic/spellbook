@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 from .config import (
     PLATFORM_CONFIG,
     SPELLBOOK_DEFAULT_CONFIG_DIR,
-    get_platform_config_dir,
     get_spellbook_config_dir,
 )
 
@@ -30,7 +29,7 @@ class Spinner:
             do_work()
     """
 
-    FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+    FRAMES = ["\u280b", "\u2819", "\u2839", "\u2838", "\u283c", "\u2834", "\u2826", "\u2827", "\u2807", "\u280f"]
 
     def __init__(self, message: str = "Working", delay: float = 0.1):
         self.message = message
@@ -87,8 +86,23 @@ class Colors:
     YELLOW = "\033[1;33m"
     BLUE = "\033[0;34m"
     CYAN = "\033[0;36m"
+    DIM = "\033[2m"
     BOLD = "\033[1m"
     NC = "\033[0m"  # No Color
+
+
+class InstallTimer:
+    """Track elapsed time for the installation."""
+
+    def __init__(self):
+        self.start = time.monotonic()
+
+    def elapsed(self):
+        return time.monotonic() - self.start
+
+    def formatted(self):
+        e = self.elapsed()
+        return f"{e:.1f}s"
 
 
 # Check if output supports colors
@@ -111,80 +125,73 @@ def color(text: str, color_code: str) -> str:
 
 # Status symbols
 def check() -> str:
-    return color("[ok]", Colors.GREEN)
+    return color("\u2713", Colors.GREEN)
 
 
 def cross() -> str:
-    return color("[fail]", Colors.RED)
+    return color("\u2717", Colors.RED)
 
 
 def arrow() -> str:
-    return color("->", Colors.BLUE)
+    return color("\u2192", Colors.BLUE)
 
 
 def warn() -> str:
-    return color("[!]", Colors.YELLOW)
+    return color("\u26a0", Colors.YELLOW)
 
 
 def skip() -> str:
-    return color("[skip]", Colors.CYAN)
+    return color("\u2298", Colors.DIM)
 
 
-def print_header(version: str) -> None:
-    """Print installation header."""
+# Tree drawing helpers
+def tree_mid() -> str:
+    """Middle branch of tree."""
+    return "  \u251c\u2500 "
+
+
+def tree_end() -> str:
+    """Last branch of tree."""
+    return "  \u2514\u2500 "
+
+
+def print_header(version: str = None) -> None:
+    """Print installation header with box-drawing characters."""
+    title = f"  Spellbook Installer{f' v{version}' if version else ''}"
+    width = max(len(title) + 2, 50)
     print()
-    line = "=" * 60
-    print(color(line, Colors.CYAN))
-    print(color(f"  Spellbook Installer v{version}", Colors.CYAN))
-    print(color(line, Colors.CYAN))
+    print(f"\u250c{'\u2500' * width}\u2510")
+    print(f"\u2502{title:<{width}}\u2502")
+    print(f"\u2514{'\u2500' * width}\u2518")
     print()
 
 
 def print_directory_config(spellbook_dir: Path, platforms: List[str]) -> None:
-    """Print directory configuration showing where files will be installed."""
-    print(color("Directory Configuration:", Colors.CYAN))
-    print()
-
-    # Spellbook source
-    print(f"  {color('Source:', Colors.BOLD)}")
-    print(f"    SPELLBOOK_DIR = {spellbook_dir}")
-    print()
-
-    # Spellbook output directory
+    """Print directory configuration in compact format."""
     spellbook_config = get_spellbook_config_dir()
-    is_custom_output = os.environ.get('SPELLBOOK_CONFIG_DIR')
-    print(f"  {color('Output Directory:', Colors.BOLD)}")
-    print(f"    SPELLBOOK_CONFIG_DIR = {spellbook_config}")
-    if is_custom_output:
-        print(f"    {color('(from $SPELLBOOK_CONFIG_DIR)', Colors.YELLOW)}")
-    else:
-        print(f"    {color('(default)', Colors.CYAN)}")
+
+    # Shorten home directory to ~
+    home = str(Path.home())
+    config_display = str(spellbook_config)
+    if config_display.startswith(home):
+        config_display = "~" + config_display[len(home):]
+
+    print(f"  Source: {spellbook_dir}")
+    print(f"  Config: {config_display}")
     print()
 
-    # Platform targets
-    print(f"  {color('Platform Targets:', Colors.BOLD)}")
-    for platform in platforms:
-        config = PLATFORM_CONFIG.get(platform, {})
-        platform_name = config.get("name", platform)
-        config_dir = get_platform_config_dir(platform)
-
-        # Check if using custom env var
-        env_var = config.get("config_dir_env")
-        is_custom = env_var and os.environ.get(env_var)
-
-        print(f"    {platform_name}:")
-        print(f"      {config_dir}")
-        if is_custom:
-            print(f"      {color(f'(from ${env_var})', Colors.YELLOW)}")
-
-    print()
-    print(color("-" * 60, Colors.CYAN))
-    print()
+    # Platform names
+    platform_names = []
+    for p in platforms:
+        cfg = PLATFORM_CONFIG.get(p, {})
+        platform_names.append(cfg.get("name", p))
+    print(f"  Platforms: {', '.join(platform_names)}")
 
 
-def print_platform_section(platform_name: str) -> None:
-    """Print platform section header."""
-    print(f"\n{color(f'>>> {platform_name}', Colors.BLUE)}")
+def print_platform_section(platform_name: str, index: int = None, total: int = None) -> None:
+    """Print platform section header with triangular bullet."""
+    counter = f" [{index}/{total}]" if index and total else ""
+    print(f"\n\u25b8 {color(platform_name, Colors.BOLD)}{counter}")
 
 
 def print_step(message: str) -> None:
@@ -209,11 +216,16 @@ def print_warning(message: str) -> None:
 
 def print_info(message: str) -> None:
     """Print an info message."""
-    print(f"  {color('[i]', Colors.CYAN)} {message}")
+    print(f"  {color('\u2139', Colors.CYAN)} {message}")
 
 
-def print_result(result: "InstallResult") -> None:
-    """Print a single installation result."""
+def print_result(result: "InstallResult", is_last: bool = False) -> None:
+    """Print a single installation result with tree characters.
+
+    Args:
+        result: The installation result to display.
+        is_last: If True, use the end-of-tree branch character.
+    """
     if result.action == "installed":
         icon = check()
     elif result.action == "upgraded":
@@ -229,101 +241,45 @@ def print_result(result: "InstallResult") -> None:
     else:
         icon = arrow()
 
-    print(f"    {icon} {result.message}")
+    branch = tree_end() if is_last else tree_mid()
+    print(f"{branch}{icon} {result.message}")
 
 
-def print_report(session: "InstallSession", show_details: bool = True) -> None:
+def print_report(session: "InstallSession", show_details: bool = True, timer: "InstallTimer | None" = None) -> None:
     """Print final installation report.
 
     Args:
         session: The installation session with results.
         show_details: If True, print per-result details under each platform.
             Set to False when results were already printed inline during install.
+        timer: Optional InstallTimer for elapsed time display.
     """
-    print()
-    line = "=" * 60
-    print(color(line, Colors.CYAN))
-    print(color("  Installation Summary", Colors.CYAN))
-    print(color(line, Colors.CYAN))
-    print()
+    if show_details:
+        # Group results by platform
+        by_platform: Dict[str, List["InstallResult"]] = {}
+        for result in session.results:
+            if result.platform not in by_platform:
+                by_platform[result.platform] = []
+            by_platform[result.platform].append(result)
 
-    # Group results by platform
-    by_platform: Dict[str, List["InstallResult"]] = {}
-    for result in session.results:
-        if result.platform not in by_platform:
-            by_platform[result.platform] = []
-        by_platform[result.platform].append(result)
+        for platform, results in by_platform.items():
+            platform_config = PLATFORM_CONFIG.get(platform, {})
+            platform_name = platform_config.get("name", platform)
+            print_platform_section(platform_name)
+            for i, result in enumerate(results):
+                print_result(result, is_last=(i == len(results) - 1))
 
-    # Track platforms for quick start
-    ready_platforms = []
-
-    # Print per-platform summary
-    for platform, results in by_platform.items():
-        platform_config = PLATFORM_CONFIG.get(platform, {})
-        platform_name = platform_config.get("name", platform)
-        success_count = sum(1 for r in results if r.success)
-        total_count = len(results)
-
-        if success_count == total_count:
-            status = color("Ready", Colors.GREEN)
-            ready_platforms.append(platform)
-        elif success_count > 0:
-            status = color("Partial", Colors.YELLOW)
-            ready_platforms.append(platform)
-        else:
-            status = color("Failed", Colors.RED)
-
-        print(f"  {platform_name}: {status}")
-
-        if show_details:
-            # Show key details
-            for result in results:
-                print_result(result)
-
-        print()
-
-    # Print quick start instructions
-    print(color("Quick Start:", Colors.CYAN))
-    print()
-
-    if "claude_code" in ready_platforms:
-        print("  Claude Code:")
-        print("    $ claude")
-        print()
-
-    if "gemini" in ready_platforms:
-        print("  Gemini CLI:")
-        print("    $ gemini")
-        print()
-
-    if "opencode" in ready_platforms:
-        print("  OpenCode:")
-        print("    Skills available in ~/.config/opencode/skills/")
-        print()
-
-    if "codex" in ready_platforms:
-        print("  Codex:")
-        print("    Skills auto-trigger based on your intent.")
-        print()
-
-    # Print source location
-    print(f"{color('Spellbook location:', Colors.CYAN)} {session.spellbook_dir}")
-    print(f"{color('Version:', Colors.CYAN)} {session.version}")
-
-    if session.previous_version and session.previous_version != session.version:
-        print(f"{color('Upgraded from:', Colors.CYAN)} {session.previous_version}")
-
+    elapsed = timer.formatted() if timer else None
+    if elapsed:
+        print(f"\n  Done in {elapsed}")
+    else:
+        print(f"\n  Done.")
     print()
 
 
 def print_uninstall_report(session: "InstallSession") -> None:
     """Print uninstallation report."""
     print()
-    line = "=" * 60
-    print(color(line, Colors.CYAN))
-    print(color("  Uninstallation Summary", Colors.CYAN))
-    print(color(line, Colors.CYAN))
-    print()
 
     # Group results by platform
     by_platform: Dict[str, List["InstallResult"]] = {}
@@ -336,11 +292,9 @@ def print_uninstall_report(session: "InstallSession") -> None:
     for platform, results in by_platform.items():
         platform_config = PLATFORM_CONFIG.get(platform, {})
         platform_name = platform_config.get("name", platform)
-        removed_count = sum(1 for r in results if r.action in ("removed", "deleted"))
 
-        print(f"  {platform_name}:")
-        for result in results:
-            print_result(result)
-        print()
+        print_platform_section(platform_name)
+        for i, result in enumerate(results):
+            print_result(result, is_last=(i == len(results) - 1))
 
     print()
