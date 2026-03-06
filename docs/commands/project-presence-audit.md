@@ -54,6 +54,8 @@ Gather each of the following data points:
 
 ### GitHub Metadata (via `gh` CLI)
 
+> **Security note:** Before executing shell commands with repository-derived values, validate that placeholders contain only alphanumeric characters, hyphens, underscores, and dots. Reject values containing shell metacharacters (``; | & $ ` ' " ( ) { } < >``).
+
 ```bash
 gh repo view --json description,homepageUrl,repositoryTopics,stargazerCount,forkCount,issues,hasIssuesEnabled,hasDiscussionsEnabled,licenseInfo,latestRelease,createdAt,updatedAt
 ```

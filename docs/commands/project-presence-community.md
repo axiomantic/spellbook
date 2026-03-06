@@ -511,39 +511,6 @@ jobs:
             soon. While you wait, make sure the CI checks pass.
 ```
 
-### Auto-Labeling Issues by Template
-
-```yaml
-# .github/workflows/auto-label.yml
-name: Auto-Label Issues
-on:
-  issues:
-    types: [opened]
-
-permissions:
-  issues: write
-
-jobs:
-  label:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const body = context.payload.issue.body || '';
-            const labels = [];
-            if (body.includes('Bug Report')) labels.push('bug');
-            if (body.includes('Feature Request')) labels.push('enhancement');
-            if (labels.length > 0) {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                labels: labels
-              });
-            }
-```
-
 ### Stale Issue Notification (NOT Auto-Close)
 
 <CRITICAL>

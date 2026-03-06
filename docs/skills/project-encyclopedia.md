@@ -85,7 +85,7 @@ flowchart TD
 ## Skill Content
 
 ``````````markdown
-> **DEPRECATED (v0.21.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in AGENTS.spellbook.md. This skill will be removed in a future version.
+> **DEPRECATED (v0.23.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in AGENTS.spellbook.md. This skill will be removed in a future version.
 
 # Project Encyclopedia
 

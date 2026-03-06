@@ -841,6 +841,7 @@ class TestUninstallHooks:
 
 
 @pytest.mark.timeout(120)
+@pytest.mark.integration
 class TestClaudeCodeInstallerHookIntegration:
     """ClaudeCodeInstaller.install() should register security hooks."""
 
