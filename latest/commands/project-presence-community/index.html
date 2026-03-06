@@ -7813,94 +7813,61 @@
 <a id="__codelineno-0-507" name="__codelineno-0-507" href="#__codelineno-0-507"></a><span class="w">            </span><span class="no">soon. While you wait, make sure the CI checks pass.</span>
 <a id="__codelineno-0-508" name="__codelineno-0-508" href="#__codelineno-0-508"></a><span class="sb">```</span>
 <a id="__codelineno-0-509" name="__codelineno-0-509" href="#__codelineno-0-509"></a>
-<a id="__codelineno-0-510" name="__codelineno-0-510" href="#__codelineno-0-510"></a><span class="gu">### Auto-Labeling Issues by Template</span>
+<a id="__codelineno-0-510" name="__codelineno-0-510" href="#__codelineno-0-510"></a><span class="gu">### Stale Issue Notification (NOT Auto-Close)</span>
 <a id="__codelineno-0-511" name="__codelineno-0-511" href="#__codelineno-0-511"></a>
-<a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a><span class="sb">```yaml</span>
-<a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a><span class="c1"># .github/workflows/auto-label.yml</span>
-<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Auto-Label Issues</span>
-<a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a><span class="nt">on</span><span class="p">:</span>
-<a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span>
-<a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">opened</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a>
-<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a><span class="nt">permissions</span><span class="p">:</span>
-<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
-<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a>
-<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a><span class="nt">jobs</span><span class="p">:</span>
-<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a><span class="w">  </span><span class="nt">label</span><span class="p">:</span>
-<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
-<a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
-<a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/github-script@v7</span>
-<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
-<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a><span class="w">          </span><span class="nt">script</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a><span class="w">            </span><span class="no">const body = context.payload.issue.body || &#39;&#39;;</span>
-<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a><span class="w">            </span><span class="no">const labels = [];</span>
-<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a><span class="w">            </span><span class="no">if (body.includes(&#39;Bug Report&#39;)) labels.push(&#39;bug&#39;);</span>
-<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a><span class="w">            </span><span class="no">if (body.includes(&#39;Feature Request&#39;)) labels.push(&#39;enhancement&#39;);</span>
-<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="w">            </span><span class="no">if (labels.length &gt; 0) {</span>
-<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a><span class="w">              </span><span class="no">await github.rest.issues.addLabels({</span>
-<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a><span class="w">                </span><span class="no">owner: context.repo.owner,</span>
-<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a><span class="w">                </span><span class="no">repo: context.repo.repo,</span>
-<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a><span class="w">                </span><span class="no">issue_number: context.issue.number,</span>
-<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="w">                </span><span class="no">labels: labels</span>
-<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a><span class="w">              </span><span class="no">});</span>
-<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="w">            </span><span class="no">}</span>
+<a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a>Do NOT use stale bots that automatically close issues. Research identifies auto-closing as a contributor repellent. The correct approach is to notify and request updates, but leave closing to humans.
+<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a>
+<a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a><span class="sb">```yaml</span>
+<a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a><span class="c1"># .github/workflows/stale.yml</span>
+<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Stale Issue Notification</span>
+<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a><span class="nt">on</span><span class="p">:</span>
+<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a><span class="w">  </span><span class="nt">schedule</span><span class="p">:</span>
+<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cron</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0</span><span class="nv"> </span><span class="s">9</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1&#39;</span><span class="w">  </span><span class="c1"># Weekly on Monday</span>
+<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a>
+<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a><span class="nt">permissions</span><span class="p">:</span>
+<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
+<a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a>
+<a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a><span class="nt">jobs</span><span class="p">:</span>
+<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a><span class="w">  </span><span class="nt">stale</span><span class="p">:</span>
+<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
+<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/stale@v9</span>
+<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a><span class="w">          </span><span class="nt">repo-token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.GITHUB_TOKEN }}</span>
+<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="w">          </span><span class="nt">stale-issue-message</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a><span class="w">            </span><span class="no">This issue has had no activity for 60 days. Is it still relevant?</span>
+<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a><span class="w">            </span><span class="no">If so, please leave a comment with an update. If not, feel free</span>
+<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a><span class="w">            </span><span class="no">to close it.</span>
+<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a><span class="w">          </span><span class="nt">stale-issue-label</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;stale&#39;</span>
+<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="w">          </span><span class="nt">days-before-stale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a><span class="w">          </span><span class="nt">days-before-close</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span><span class="w">  </span><span class="c1"># NEVER auto-close</span>
+<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="w">          </span><span class="nt">exempt-issue-labels</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;good</span><span class="nv"> </span><span class="s">first</span><span class="nv"> </span><span class="s">issue,help</span><span class="nv"> </span><span class="s">wanted,roadmap&#39;</span>
 <a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a><span class="sb">```</span>
 <a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a>
-<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a><span class="gu">### Stale Issue Notification (NOT Auto-Close)</span>
+<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>The key setting is <span class="sb">`days-before-close: -1`</span>, which disables automatic closing entirely. Stale labels can be removed manually when there is activity.
 <a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a>
-<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>Do NOT use stale bots that automatically close issues. Research identifies auto-closing as a contributor repellent. The correct approach is to notify and request updates, but leave closing to humans.
-<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a><span class="gu">## Output Checklist</span>
+<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>
+<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>After running this phase, confirm you have produced or guided the user through:
 <a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a>
-<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a><span class="sb">```yaml</span>
-<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a><span class="c1"># .github/workflows/stale.yml</span>
-<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Stale Issue Notification</span>
-<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a><span class="nt">on</span><span class="p">:</span>
-<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a><span class="w">  </span><span class="nt">schedule</span><span class="p">:</span>
-<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cron</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0</span><span class="nv"> </span><span class="s">9</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1&#39;</span><span class="w">  </span><span class="c1"># Weekly on Monday</span>
-<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>
-<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a><span class="nt">permissions</span><span class="p">:</span>
-<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
-<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a>
-<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a><span class="nt">jobs</span><span class="p">:</span>
-<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a><span class="w">  </span><span class="nt">stale</span><span class="p">:</span>
-<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
-<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
-<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/stale@v9</span>
-<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
-<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a><span class="w">          </span><span class="nt">repo-token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.GITHUB_TOKEN }}</span>
-<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a><span class="w">          </span><span class="nt">stale-issue-message</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
-<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a><span class="w">            </span><span class="no">This issue has had no activity for 60 days. Is it still relevant?</span>
-<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a><span class="w">            </span><span class="no">If so, please leave a comment with an update. If not, feel free</span>
-<a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a><span class="w">            </span><span class="no">to close it.</span>
-<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a><span class="w">          </span><span class="nt">stale-issue-label</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;stale&#39;</span>
-<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a><span class="w">          </span><span class="nt">days-before-stale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
-<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a><span class="w">          </span><span class="nt">days-before-close</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span><span class="w">  </span><span class="c1"># NEVER auto-close</span>
-<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a><span class="w">          </span><span class="nt">exempt-issue-labels</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;good</span><span class="nv"> </span><span class="s">first</span><span class="nv"> </span><span class="s">issue,help</span><span class="nv"> </span><span class="s">wanted,roadmap&#39;</span>
-<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a><span class="sb">```</span>
-<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a>
-<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a>The key setting is <span class="sb">`days-before-close: -1`</span>, which disables automatic closing entirely. Stale labels can be removed manually when there is activity.
-<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a>
-<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a><span class="gu">## Output Checklist</span>
-<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a>
-<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a>After running this phase, confirm you have produced or guided the user through:
-<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a>
-<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a>| # | Artifact | Destination |
-<a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a>|---|----------|-------------|
-<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a>| 1 | Bug report template | <span class="sb">`.github/ISSUE_TEMPLATE/bug_report.yml`</span> |
-<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a>| 2 | Feature request template | <span class="sb">`.github/ISSUE_TEMPLATE/feature_request.yml`</span> |
-<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a>| 3 | Issue template config | <span class="sb">`.github/ISSUE_TEMPLATE/config.yml`</span> |
-<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a>| 4 | PR template | <span class="sb">`.github/pull_request_template.md`</span> |
-<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a>| 5 | Contributing guide | <span class="sb">`CONTRIBUTING.md`</span> |
-<a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a>| 6 | Code of conduct | <span class="sb">`CODE_OF_CONDUCT.md`</span> (or link to Contributor Covenant) |
-<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a>| 7 | Security policy | <span class="sb">`SECURITY.md`</span> |
-<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a>| 8 | Label set | Created via GitHub API or CLI |
-<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a>| 9 | Roadmap issues | Created from user input, labeled and organized |
-<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a>| 10 | Maintenance checklist | Delivered to user as reference document |
-<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a>| 11 | Awesome list candidates | Identified with submission requirements noted |
-<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a>| 12 | AGENTS.md snippet | Reminder for README and community health maintenance |
-<a id="__codelineno-0-596" name="__codelineno-0-596" href="#__codelineno-0-596"></a>
-<a id="__codelineno-0-597" name="__codelineno-0-597" href="#__codelineno-0-597"></a>All templates should be committed and pushed. Labels and issues should be created via <span class="sb">`gh`</span> CLI or GitHub API. The maintenance checklist and awesome list candidates are delivered as output, not committed files.
+<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>| # | Artifact | Destination |
+<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a>|---|----------|-------------|
+<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a>| 1 | Bug report template | <span class="sb">`.github/ISSUE_TEMPLATE/bug_report.yml`</span> |
+<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a>| 2 | Feature request template | <span class="sb">`.github/ISSUE_TEMPLATE/feature_request.yml`</span> |
+<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a>| 3 | Issue template config | <span class="sb">`.github/ISSUE_TEMPLATE/config.yml`</span> |
+<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>| 4 | PR template | <span class="sb">`.github/pull_request_template.md`</span> |
+<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>| 5 | Contributing guide | <span class="sb">`CONTRIBUTING.md`</span> |
+<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a>| 6 | Code of conduct | <span class="sb">`CODE_OF_CONDUCT.md`</span> (or link to Contributor Covenant) |
+<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>| 7 | Security policy | <span class="sb">`SECURITY.md`</span> |
+<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a>| 8 | Label set | Created via GitHub API or CLI |
+<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a>| 9 | Roadmap issues | Created from user input, labeled and organized |
+<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>| 10 | Maintenance checklist | Delivered to user as reference document |
+<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a>| 11 | Awesome list candidates | Identified with submission requirements noted |
+<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a>| 12 | AGENTS.md snippet | Reminder for README and community health maintenance |
+<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a>
+<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a>All templates should be committed and pushed. Labels and issues should be created via <span class="sb">`gh`</span> CLI or GitHub API. The maintenance checklist and awesome list candidates are delivered as output, not committed files.
 </code></pre></div>
 
 
