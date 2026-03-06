@@ -244,16 +244,11 @@ class TestTerminalUtilsE2E:
 
     def test_detect_terminal_returns_string(self):
         """Test that detect_terminal always returns a string."""
-        import sys
         from spellbook_mcp.terminal_utils import detect_terminal
 
-        if sys.platform == "win32":
-            with pytest.raises(NotImplementedError):
-                detect_terminal()
-        else:
-            result = detect_terminal()
-            assert isinstance(result, str)
-            assert len(result) > 0
+        result = detect_terminal()
+        assert isinstance(result, str)
+        assert len(result) > 0
 
     def test_spawn_command_generation(self):
         """Test that spawn functions generate proper commands."""
