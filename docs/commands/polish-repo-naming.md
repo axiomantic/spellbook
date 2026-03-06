@@ -1,4 +1,4 @@
-# /project-presence-naming
+# /polish-repo-naming
 ## Command Content
 
 ``````````markdown

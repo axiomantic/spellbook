@@ -63,13 +63,13 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/merge-worktree-verify](merge-worktree-verify.md) | Phases 4-5: Final Verification and Cleanup — run full test suite, verify contrac... | spellbook |
 | [/mode](mode.md) | Switch session mode between fun, tarot, or off | spellbook |
 | [/move-project](move-project.md) | Move project: relocate directory and update Claude Code session references safel... | spellbook |
+| [/polish-repo-audit](polish-repo-audit.md) | Phases 0-1 of polish-repo: Reconnaissance gathering and audit scorecard generati... | spellbook |
+| [/polish-repo-community](polish-repo-community.md) | Phase 3 of polish-repo: Community infrastructure, issue templates, roadmap, cont... | spellbook |
+| [/polish-repo-identity](polish-repo-identity.md) | Phase 3 of polish-repo: Visual identity, badges, GitHub metadata, topics, and do... | spellbook |
+| [/polish-repo-naming](polish-repo-naming.md) | Phase 3 of polish-repo: Naming workshop, tagline crafting, and positioning strat... | spellbook |
+| [/polish-repo-readme](polish-repo-readme.md) | Phase 3 of polish-repo: README authoring from scratch, improvement, or replaceme... | spellbook |
 | [/pr-distill](pr-distill.md) | Analyze a PR and generate a review distillation report that categorizes changes ... | spellbook |
 | [/pr-distill-bless](pr-distill-bless.md) | Save a discovered pattern for future PR distillation, adding it to the blessed p... | spellbook |
-| [/project-presence-audit](project-presence-audit.md) | Phases 0-1 of project-presence: Reconnaissance gathering and audit scorecard gen... | spellbook |
-| [/project-presence-community](project-presence-community.md) | Phase 3 of project-presence: Community infrastructure, issue templates, roadmap,... | spellbook |
-| [/project-presence-identity](project-presence-identity.md) | Phase 3 of project-presence: Visual identity, badges, GitHub metadata, topics, a... | spellbook |
-| [/project-presence-naming](project-presence-naming.md) | Phase 3 of project-presence: Naming workshop, tagline crafting, and positioning ... | spellbook |
-| [/project-presence-readme](project-presence-readme.md) | Phase 3 of project-presence: README authoring from scratch, improvement, or repl... | spellbook |
 | [/reflexion-analyze](reflexion-analyze.md) | Steps 1-3 of reflexion: Parse feedback, categorize root causes, store reflection... | spellbook |
 | [/request-review-artifacts](request-review-artifacts.md) | Request Code Review artifact contract: directory structure, phase outputs, manif... | spellbook |
 | [/request-review-execute](request-review-execute.md) | Request Code Review Phases 3-6: Dispatch review agent, triage findings, execute ... | spellbook |

@@ -1,4 +1,4 @@
-# /project-presence-readme
+# /polish-repo-readme
 ## Command Content
 
 ``````````markdown

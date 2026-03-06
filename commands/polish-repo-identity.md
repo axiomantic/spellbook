@@ -1,5 +1,5 @@
 ---
-description: "Phase 3 of project-presence: Visual identity, badges, GitHub metadata, topics, and documentation strategy"
+description: "Phase 3 of polish-repo: Visual identity, badges, GitHub metadata, topics, and documentation strategy"
 ---
 
 # Project Presence - Identity

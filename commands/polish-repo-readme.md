@@ -1,5 +1,5 @@
 ---
-description: "Phase 3 of project-presence: README authoring from scratch, improvement, or replacement"
+description: "Phase 3 of polish-repo: README authoring from scratch, improvement, or replacement"
 ---
 
 # README Authoring Command

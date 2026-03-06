@@ -1,5 +1,5 @@
 ---
-description: "Phase 3 of project-presence: Naming workshop, tagline crafting, and positioning strategy"
+description: "Phase 3 of polish-repo: Naming workshop, tagline crafting, and positioning strategy"
 ---
 
 # Project Presence - Naming and Positioning

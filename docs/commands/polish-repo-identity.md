@@ -1,4 +1,4 @@
-# /project-presence-identity
+# /polish-repo-identity
 ## Command Content
 
 ``````````markdown

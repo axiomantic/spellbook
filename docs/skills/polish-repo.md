@@ -1,4 +1,4 @@
-# project-presence
+# polish-repo
 
 Use when improving project discoverability, attracting users/contributors, or presenting open source work. Triggers: 'write a README', 'improve README', 'get more users', 'get more contributors', 'add badges', 'create a logo', 'set up issue templates', 'audit this project', 'project presence', 'make this discoverable', 'why isn't anyone using this', 'prepare for launch', 'repo presentation', 'open source marketing', 'attract contributors', 'project storefront'. Also triggers on: naming a project, writing taglines, GitHub metadata, community infrastructure, signs of life.
 ## Skill Content
@@ -93,7 +93,7 @@ Store all findings in a structured report for Phase 1.
 
 ## Phase 1: Audit and Scorecard
 
-Run the scoring rubric defined in `/project-presence-audit` (Phase 1: Audit and Scorecard). That command contains the single source of truth for the 100-point scoring criteria, letter grade thresholds, and anti-pattern detection list. Present results as a scorecard with letter grade and flag any anti-patterns detected.
+Run the scoring rubric defined in `/polish-repo-audit` (Phase 1: Audit and Scorecard). That command contains the single source of truth for the 100-point scoring criteria, letter grade thresholds, and anti-pattern detection list. Present results as a scorecard with letter grade and flag any anti-patterns detected.
 
 ## Phase 2: Interview
 
@@ -134,10 +134,10 @@ Dispatch to the appropriate command(s) based on user's choices:
 
 | Domain | Command | What It Produces |
 |--------|---------|-----------------|
-| Naming + positioning | `/project-presence-naming` | Name candidates, tagline, GitHub description |
-| README authoring | `/project-presence-readme` | Complete README.md (scratch / improve / replace) |
-| Visual identity + metadata | `/project-presence-identity` | Logo brief, badges, topics, metadata |
-| Community infrastructure | `/project-presence-community` | Issue templates, PR template, CONTRIBUTING.md, roadmap issues |
+| Naming + positioning | `/polish-repo-naming` | Name candidates, tagline, GitHub description |
+| README authoring | `/polish-repo-readme` | Complete README.md (scratch / improve / replace) |
+| Visual identity + metadata | `/polish-repo-identity` | Logo brief, badges, topics, metadata |
+| Community infrastructure | `/polish-repo-community` | Issue templates, PR template, CONTRIBUTING.md, roadmap issues |
 | Full audit execution | All of the above in sequence | Complete project presence overhaul |
 
 **Dispatch template:**
@@ -204,7 +204,7 @@ Suggest adding a maintenance reminder to the project's AGENTS.md:
 ```
 ## README and Project Presence
 When making significant changes, verify the README still accurately reflects the project.
-Run `/project-presence` audit periodically to check for presentation drift.
+Run `/polish-repo` audit periodically to check for presentation drift.
 ```
 
 ## FORBIDDEN
