@@ -16,7 +16,6 @@ dev = [
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.10.0",
     "pytest-timeout>=2.2.0",
-    "pytest-xdist>=3.5.0",
 ]
 tts = [
     "kokoro>=0.9.0",
