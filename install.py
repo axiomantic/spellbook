@@ -79,28 +79,35 @@ def color(text: str, color_code: str) -> str:
 
 
 def print_header() -> None:
-    """Print installation header."""
+    """Print installation header with box-drawing characters."""
+    title = "  Spellbook Installer"
+    width = max(len(title) + 2, 50)
+    line = "\u2500" * width
     print()
-    print(color("=" * 60, Colors.CYAN))
-    print(color("  Spellbook Installer", Colors.CYAN))
-    print(color("=" * 60, Colors.CYAN))
+    print(f"\u250c{line}\u2510")
+    print(f"\u2502{title:<{width}}\u2502")
+    print(f"\u2514{line}\u2518")
     print()
 
 
 def print_step(msg: str) -> None:
-    print(f"{color('>', Colors.BLUE)} {msg}")
+    icon = color("→", Colors.BLUE)
+    print(f"  {icon} {msg}")
 
 
 def print_success(msg: str) -> None:
-    print(f"{color('[ok]', Colors.GREEN)} {msg}")
+    icon = color("✓", Colors.GREEN)
+    print(f"  {icon} {msg}")
 
 
 def print_error(msg: str) -> None:
-    print(f"{color('[error]', Colors.RED)} {msg}", file=sys.stderr)
+    icon = color("✗", Colors.RED)
+    print(f"  {icon} {msg}", file=sys.stderr)
 
 
 def print_warning(msg: str) -> None:
-    print(f"{color('[!]', Colors.YELLOW)} {msg}")
+    icon = color("⚠", Colors.YELLOW)
+    print(f"  {icon} {msg}")
 
 
 def print_info(msg: str) -> None:
@@ -923,6 +930,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         from installer.config import PLATFORM_CONFIG
         from installer.core import Installer
         from installer.ui import (
+            InstallTimer,
             Spinner,
             color as installer_color,
             Colors as InstallerColors,
@@ -981,24 +989,38 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     if args.dry_run:
         installer_print_warning("DRY RUN - no changes will be made")
-        print()
+
+    # Track pending results per section for tree-drawing (is_last detection)
+    _pending_results: list = []
+    _install_timer = InstallTimer()
+
+    def _flush_results():
+        """Flush pending results with correct tree characters."""
+        for i, r in enumerate(_pending_results):
+            print_result(r, is_last=(i == len(_pending_results) - 1))
+        _pending_results.clear()
 
     def _on_progress(event, data):
         if event == "daemon_start":
+            _flush_results()
             print_platform_section("MCP Daemon")
         elif event == "health_start":
+            _flush_results()
             print_platform_section("Health Check")
         elif event == "platform_start":
+            _flush_results()
             name = data["name"]
             idx = data["index"]
             total = data["total"]
-            print_platform_section(f"{name} [{idx}/{total}]")
+            print_platform_section(name, index=idx, total=total)
         elif event == "platform_skip":
+            _flush_results()
             installer_print_info(data["message"])
         elif event == "step":
-            print_step(data["message"])
+            # Suppress step messages; results contain all needed info
+            pass
         elif event == "result":
-            print_result(data["result"])
+            _pending_results.append(data["result"])
 
     session = installer.run(
         platforms=platforms,
@@ -1008,7 +1030,10 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         config_dir_overrides=config_dir_overrides if config_dir_overrides else None,
     )
 
-    print_report(session, show_details=False)
+    # Flush any remaining results from the last section
+    _flush_results()
+
+    print_report(session, show_details=False, timer=_install_timer)
 
     # TTS setup (optional)
     setup_tts(
@@ -1033,6 +1058,12 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 # =============================================================================
 
 def main() -> int:
+    # Ensure stdout/stderr can handle unicode (Windows defaults to cp1252)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(
         description="Install Spellbook - Multi-platform AI assistant skills",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1135,7 +1166,10 @@ Examples:
     if not is_interactive():
         args.yes = True
 
-    print_header()
+    # Only show bootstrap banner if not re-executed after bootstrap.
+    # The versioned banner in run_installation() will always print.
+    if "--bootstrapped" not in sys.argv:
+        print_header()
 
     # Bootstrap phase
     if args.update_only:
@@ -1149,8 +1183,6 @@ Examples:
         print_step("Checking prerequisites...")
         print()
         spellbook_dir = bootstrap(args)
-
-    print()
 
     # Installation phase
     return run_installation(spellbook_dir, args)
