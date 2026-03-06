@@ -40,9 +40,10 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 timeout = 30
+addopts = "-m 'not docker and not integration and not slow and not external'"
 markers = [
-    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
-    "docker: marks tests that require Docker or heavy platform fixtures (run in CI only)",
-    "slow: marks tests with deliberate sleeps > 0.5s",
-    "external: marks tests requiring external tools like Claude CLI",
+    "integration: marks tests as integration tests (skipped locally, runs in CI)",
+    "docker: marks tests that require Docker or heavy platform fixtures (CI only)",
+    "slow: marks tests with deliberate sleeps > 0.5s (skipped locally, runs in CI)",
+    "external: marks tests requiring external tools like Claude CLI (skipped locally)",
 ]
