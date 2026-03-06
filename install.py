@@ -82,10 +82,11 @@ def print_header() -> None:
     """Print installation header with box-drawing characters."""
     title = "  Spellbook Installer"
     width = max(len(title) + 2, 50)
+    line = "\u2500" * width
     print()
-    print(f"\u250c{'\u2500' * width}\u2510")
+    print(f"\u250c{line}\u2510")
     print(f"\u2502{title:<{width}}\u2502")
-    print(f"\u2514{'\u2500' * width}\u2518")
+    print(f"\u2514{line}\u2518")
     print()
 
 
