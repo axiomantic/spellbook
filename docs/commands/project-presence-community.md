@@ -301,6 +301,7 @@ These exist to make the project look alive, signal ambition, and invite communit
 - Visualization, dashboards, or reporting features
 - Alternative interfaces (TUI, web UI, API endpoint)
 - Compatibility with popular tools in the same space
+- Architectural improvements or major refactorings ("Refactor module X to use pattern Y", "Decouple component A from B")
 
 Write these as genuine feature requests with context about why they would be valuable. Avoid vague aspirations ("Make it faster") in favor of specific, discussable proposals ("Cache dependency resolution results to avoid repeated network calls"). The goal is issues that a motivated stranger could pick up and run with, or at minimum comment on with useful input.
 
