@@ -285,6 +285,26 @@
          <lastmod>2026-03-06</lastmod>
     </url>
     <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/commands/project-presence-audit/</loc>
+         <lastmod>2026-03-06</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/commands/project-presence-community/</loc>
+         <lastmod>2026-03-06</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/commands/project-presence-identity/</loc>
+         <lastmod>2026-03-06</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/commands/project-presence-naming/</loc>
+         <lastmod>2026-03-06</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/commands/project-presence-readme/</loc>
+         <lastmod>2026-03-06</lastmod>
+    </url>
+    <url>
          <loc>https://axiomantic.github.io/spellbook/latest/commands/reflexion-analyze/</loc>
          <lastmod>2026-03-06</lastmod>
     </url>
@@ -1130,6 +1150,10 @@
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/</loc>
+         <lastmod>2026-03-06</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/skills/project-presence/</loc>
          <lastmod>2026-03-06</lastmod>
     </url>
     <url>
