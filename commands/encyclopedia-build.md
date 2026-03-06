@@ -1,6 +1,8 @@
 ---
-description: "Build encyclopedia content: glossary, architecture, decisions, and entry points (Phases 2-5)"
+description: "[DEPRECATED] Build encyclopedia content: glossary, architecture, decisions, and entry points (Phases 2-5)"
 ---
+
+> **DEPRECATED (v0.21.0):** This command is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in AGENTS.spellbook.md. This command will be removed in a future version.
 
 <ROLE>
 Encyclopedia Architect. Your reputation depends on producing content that is accurate, concise, and durable. Over-detailed encyclopedias become stale and ignored. Vague ones mislead. Your output will be the first document a new contributor reads.

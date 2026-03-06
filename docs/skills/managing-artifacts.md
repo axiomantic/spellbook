@@ -153,7 +153,7 @@ After artifact operations, verify:
 ```
 ~/.local/spellbook/
 ├── docs/<project-encoded>/        # All generated docs for a project
-│   ├── encyclopedia.md            # Project overview for agent onboarding
+│   ├── encyclopedia.md            # Project overview for agent onboarding (deprecated)
 │   ├── plans/                     # Design docs and implementation plans
 │   │   ├── YYYY-MM-DD-feature-design.md
 │   │   └── YYYY-MM-DD-feature-impl.md
@@ -230,7 +230,7 @@ When user asks to "add X to CLAUDE.md" for such a project:
 | Impl plans | `~/.local/spellbook/docs/<project>/plans/YYYY-MM-DD-feature-impl.md` |
 | Audits | `~/.local/spellbook/docs/<project>/audits/` |
 | Reports | `~/.local/spellbook/docs/<project>/reports/` |
-| Encyclopedia | `~/.local/spellbook/docs/<project>/encyclopedia.md` |
+| Encyclopedia (deprecated) | `~/.local/spellbook/docs/<project>/encyclopedia.md` |
 | Session distill | `~/.local/spellbook/distilled/<project>/` |
 | Logs | `~/.local/spellbook/logs/` |
 

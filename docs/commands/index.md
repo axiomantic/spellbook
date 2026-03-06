@@ -33,8 +33,8 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/deep-research-plan](deep-research-plan.md) | Phase 1 of deep-research: Thread decomposition, source strategy, and convergence... | spellbook |
 | [/design-assessment](design-assessment.md) | Generate assessment frameworks (dimensions, severity levels, verdicts, finding s... | spellbook |
 | [/distill-session](distill-session.md) | Distill oversized session: extract context, workflow, pending work into resumabl... | spellbook |
-| [/encyclopedia-build](encyclopedia-build.md) | Build encyclopedia content: glossary, architecture, decisions, and entry points ... | spellbook |
-| [/encyclopedia-validate](encyclopedia-validate.md) | Assemble and validate encyclopedia, write to output path (Phase 6) | spellbook |
+| [/encyclopedia-build](encyclopedia-build.md) | [DEPRECATED] Build encyclopedia content: glossary, architecture, decisions, and ... | spellbook |
+| [/encyclopedia-validate](encyclopedia-validate.md) | [DEPRECATED] Assemble and validate encyclopedia, write to output path (Phase 6) | spellbook |
 | [/execute-plan](execute-plan.md) | Execute implementation plans with structured review checkpoints. Use when you ha... | [superpowers](https://github.com/obra/superpowers) |
 | [/execute-work-packet](execute-work-packet.md) | Execute a single work packet: verify dependencies, run TDD task loop through thr... | spellbook |
 | [/execute-work-packets-seq](execute-work-packets-seq.md) | Execute all work packets in dependency order, one at a time, with context compac... | spellbook |

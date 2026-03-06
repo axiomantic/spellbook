@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-03-05
+
+### Changed
+- **Replace encyclopedia with AGENTS.md project knowledge** - The encyclopedia concept (`~/.local/spellbook/docs/<project>/encyclopedia.md`) is replaced by standard `AGENTS.md` files within project repositories. AGENTS.md is version-controlled, benefits all contributors, and uses the standard Claude Code convention. Session start now checks for AGENTS.md instead of encyclopedia.
+- **Expand opportunity awareness** - Agents now also watch for project knowledge candidates (undocumented conventions, build commands, gotchas) and suggest adding them to AGENTS.md.
+- **Update spellbook AGENTS.md** - Added quick-start commands, key conventions, pre-commit hook guidance, and architecture notes for AI assistants working on the spellbook repo itself.
+
+### Deprecated
+- **project-encyclopedia skill** - Use AGENTS.md files instead. Will be removed in a future version.
+- **encyclopedia-build command** - Use AGENTS.md files instead. Will be removed in a future version.
+- **encyclopedia-validate command** - Use AGENTS.md files instead. Will be removed in a future version.
+
 ## [0.22.0] - 2026-03-05
 
 ### Added

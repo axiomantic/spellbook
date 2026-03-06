@@ -1,3 +1,55 @@
+# Spellbook Development
+
+## Quick Start
+
+```bash
+# Install dependencies
+uv pip install -e ".[dev,test,tts]"
+
+# Run tests (targeted)
+uv run pytest tests/test_specific_file.py -x
+
+# Run full test suite
+uv run pytest tests/ -x --timeout=30
+
+# Run linting
+uv run ruff check .
+
+# Generate documentation (auto-runs via pre-commit hook)
+uv run python scripts/update_context_files.py
+```
+
+## Key Conventions
+
+- **AGENTS.md** is this file: spellbook's own development instructions for AI assistants working on the spellbook repo itself
+- **AGENTS.spellbook.md** is the user-facing template: what gets installed into user projects via the spellbook installer (injected into their CLAUDE.md)
+- **Skills** go in `skills/<name>/SKILL.md` with YAML frontmatter
+- **Commands** go in `commands/<name>.md` with YAML frontmatter
+- **Hooks** go in `hooks/` and must be registered in `installer/components/hooks.py`
+- **MCP tools** are defined in `spellbook_mcp/server.py` or domain-specific modules
+
+## Pre-commit Hooks
+
+Pre-commit hooks auto-generate documentation files. If a hook fails:
+- `doctoc` failures: Table of contents in markdown files needs regeneration. Usually fixes itself on re-commit.
+- `Generate documentation`: Runs `scripts/update_context_files.py` to regenerate `docs/` from skills/commands. Stage the generated files and re-commit.
+- `Check documentation completeness`: Ensures every skill/command has a generated doc page. If you added a new skill/command, the hook generates it automatically.
+- `Update context files`: Regenerates context files. Stage and re-commit.
+- `Validate skill/command/agent schemas`: Checks YAML frontmatter in skills and commands. Fix the frontmatter.
+- `Scan changeset for security issues`: Security scanner on staged diffs. Fix the flagged issue.
+
+When a pre-commit hook fails, it often generates or modifies files. Stage those files (`git add`) and commit again.
+
+## Architecture Notes
+
+- The MCP server (`spellbook_mcp/`) runs as a persistent daemon, not inline with the CLI
+- The installer (`installer/`) handles multi-platform installation (Claude Code, OpenCode, Codex, Gemini CLI, Crush)
+- Skills and commands are markdown files with YAML frontmatter, loaded dynamically by the AI assistant
+- Hooks are bash/python scripts installed into the AI assistant's hook system
+- The `extensions/` directory contains platform-specific plugins (e.g., OpenCode workflow state)
+
+---
+
 # Spellbook Development Guide
 
 <ROLE>

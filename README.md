@@ -210,7 +210,7 @@ Reusable workflows for structured development:
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [security-auditing], [generating-diagrams] |
-| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia], [analyzing-skill-usage], [documenting-tools] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
@@ -339,8 +339,8 @@ Reusable workflows for structured development:
 | [/request-review-plan] | Review planning and scope analysis |
 | [/request-review-execute] | Execute review with checklists |
 | [/request-review-artifacts] | Generate review artifacts and reports |
-| [/encyclopedia-build] | Research, build, and write encyclopedia |
-| [/encyclopedia-validate] | Validate encyclopedia accuracy |
+| [/encyclopedia-build] | *(deprecated)* Research, build, and write encyclopedia |
+| [/encyclopedia-validate] | *(deprecated)* Validate encyclopedia accuracy |
 | [/merge-worktree-execute] | Execute worktree merge sequence |
 | [/merge-worktree-resolve] | Resolve merge conflicts |
 | [/merge-worktree-verify] | Verify merge and cleanup |
