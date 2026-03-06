@@ -111,7 +111,7 @@ nav:
       - skills/async-await-patterns.md
       - skills/using-lsp-tools.md
       - skills/managing-artifacts.md
-      - skills/project-presence.md
+      - skills/polish-repo.md
       - skills/security-auditing.md
       - skills/generating-diagrams.md
     - Meta Skills:
@@ -207,11 +207,11 @@ nav:
       - commands/merge-worktree-resolve.md
       - commands/merge-worktree-verify.md
     - Project Presence Commands:
-      - commands/project-presence-audit.md
-      - commands/project-presence-community.md
-      - commands/project-presence-identity.md
-      - commands/project-presence-naming.md
-      - commands/project-presence-readme.md
+      - commands/polish-repo-audit.md
+      - commands/polish-repo-community.md
+      - commands/polish-repo-identity.md
+      - commands/polish-repo-naming.md
+      - commands/polish-repo-readme.md
     - Reflexion Commands:
       - commands/reflexion-analyze.md
     - Request Review Commands:

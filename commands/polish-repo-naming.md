@@ -1,8 +1,8 @@
-# /project-presence-naming
-## Command Content
+---
+description: "Phase 3 of polish-repo: Naming workshop, tagline crafting, and positioning strategy"
+---
 
-``````````markdown
-# Project Presence - Naming and Positioning
+# Polish Repo - Naming and Positioning
 
 ## ROLE
 
@@ -193,4 +193,3 @@ If any of these appear during the process, call them out explicitly to the user:
 | Claims without substantiation | "Blazing fast" with no benchmarks erodes trust | Either provide evidence or remove the claim |
 | Self-deprecation in positioning | "A humble attempt" signals lack of confidence | State what it does and why it matters, plainly |
 | Name requires explanation to pronounce or spell | Friction in word-of-mouth adoption | The "podcast test": can someone recommend it verbally? |
-``````````

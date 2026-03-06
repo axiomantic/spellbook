@@ -1,7 +1,7 @@
-# /project-presence-community
-## Command Content
+---
+description: "Phase 3 of polish-repo: Community infrastructure, issue templates, roadmap, contributor experience, and signs of life"
+---
 
-``````````markdown
 # Community Infrastructure
 
 <ROLE>
@@ -503,7 +503,7 @@ Produce this checklist as a standalone document the user can reference. An activ
 
 ### Quarterly
 
-- [ ] Re-run the project-presence audit to check for drift
+- [ ] Re-run the polish-repo audit to check for drift
 - [ ] Review GitHub topics for continued relevance
 - [ ] Check if new awesome lists or directories have appeared in your domain
 - [ ] Review contributor experience: try the dev setup from scratch on a clean machine
@@ -598,4 +598,3 @@ After running this phase, confirm you have produced or guided the user through:
 | 12 | AGENTS.md snippet | Reminder for README and community health maintenance |
 
 All templates should be committed and pushed. Labels and issues should be created via `gh` CLI or GitHub API. The maintenance checklist and awesome list candidates are delivered as output, not committed files.
-``````````
