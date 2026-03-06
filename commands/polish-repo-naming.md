@@ -2,7 +2,7 @@
 description: "Phase 3 of polish-repo: Naming workshop, tagline crafting, and positioning strategy"
 ---
 
-# Project Presence - Naming and Positioning
+# Polish Repo - Naming and Positioning
 
 ## ROLE
 

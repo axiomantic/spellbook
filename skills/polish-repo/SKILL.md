@@ -201,9 +201,9 @@ The community command creates issues in three tiers (actionable, contributor mag
 
 Suggest adding a maintenance reminder to the project's AGENTS.md:
 ```
-## README and Project Presence
+## README and Repo Presentation
 When making significant changes, verify the README still accurately reflects the project.
-Run `/polish-repo` audit periodically to check for presentation drift.
+Run `/polish-repo-audit` periodically to check for presentation drift.
 ```
 
 ## FORBIDDEN

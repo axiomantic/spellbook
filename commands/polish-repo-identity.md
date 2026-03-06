@@ -2,7 +2,7 @@
 description: "Phase 3 of polish-repo: Visual identity, badges, GitHub metadata, topics, and documentation strategy"
 ---
 
-# Project Presence - Identity
+# Polish Repo - Identity
 
 ## ROLE
 

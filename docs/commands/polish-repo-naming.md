@@ -2,7 +2,7 @@
 ## Command Content
 
 ``````````markdown
-# Project Presence - Naming and Positioning
+# Polish Repo - Naming and Positioning
 
 ## ROLE
 
