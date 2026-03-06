@@ -7575,299 +7575,331 @@
 <a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>
 <a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="gs">**Aim for:**</span> At minimum, 3-5 actionable, 3-5 contributor magnets, and 3-5 conversation starters. A healthy project has 15-25 open issues across all three tiers.
 <a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="gu">### Process</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="gu">### Brainstorming Community Engagement Issues</span>
 <a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="k">1.</span> Ask the user about planned features, known improvements, and wishlist items
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="k">2.</span> Brainstorm conversation-starter issues: aspirational features, integrations with other ecosystems, i18n, visualization tools, developer experience improvements
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="k">3.</span> Identify contributor magnets: scan the codebase for genuinely approachable tasks (missing docs, type hints, test gaps, small features)
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a><span class="k">4.</span> <span class="gs">**Before creating any issue, verify it is not already done.**</span> Check the repo for existing files, configurations, CI workflows, and metadata that satisfy the issue. If already done, skip it or note it for the user.
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="k">5.</span> Create issues for each with clear descriptions and appropriate tier labels
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="k">6.</span> Apply labels strategically
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="gu">### Label Taxonomy</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>Create these labels in the repository:
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>| Label | Hex Color | Purpose |
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>|-------|-----------|---------|
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>| <span class="sb">`good first issue`</span> | <span class="sb">`#0e8a16`</span> | Genuinely approachable tasks. Sites like goodfirstissue.io scrape these. |
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>| <span class="sb">`help wanted`</span> | <span class="sb">`#0e8a16`</span> | Tasks where community help is specifically welcomed |
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>| <span class="sb">`enhancement`</span> | <span class="sb">`#1d76db`</span> | Feature requests and improvements |
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>| <span class="sb">`bug`</span> | <span class="sb">`#d73a4a`</span> | Known bugs |
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>| <span class="sb">`documentation`</span> | <span class="sb">`#7057ff`</span> | Documentation improvements needed |
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>| <span class="sb">`performance`</span> | <span class="sb">`#f9a825`</span> | Performance improvement opportunities |
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>| <span class="sb">`question`</span> | <span class="sb">`#fbca04`</span> | Open design questions that invite discussion |
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="gu">### What Makes a Good &quot;good first issue&quot;</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>Appropriate:
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">-</span><span class="w"> </span>Typo fixes in documentation
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span>Missing type hints or docstrings
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>Simple test additions for uncovered code paths
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>Small, well-scoped feature additions
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>Adding configuration options
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>Contributor magnets and conversation starters are not busywork. They are the primary mechanism for turning visitors into participants. Spend real effort here.
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="gs">**Contributor magnets**</span> (labeled <span class="sb">`good first issue`</span> + <span class="sb">`help wanted`</span>):
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>Scan the codebase and project for genuinely approachable tasks. Good sources:
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="k">-</span><span class="w"> </span>Missing or incomplete documentation (README gaps, undocumented config options, missing examples)
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="k">-</span><span class="w"> </span>Type hint coverage gaps in Python modules
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="k">-</span><span class="w"> </span>Test coverage holes (untested edge cases, missing unit tests for utility functions)
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">-</span><span class="w"> </span>Small, self-contained feature additions (new config option, extra output format, additional validation)
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="k">-</span><span class="w"> </span>Linting or code style consistency fixes across a module
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">-</span><span class="w"> </span>Localization/i18n for user-facing strings
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="k">-</span><span class="w"> </span>Adding examples or sample configurations
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>Each must be genuinely completable by someone unfamiliar with the codebase. Include file paths, relevant patterns to follow, and a &quot;Getting Started&quot; section in the body.
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="gs">**Conversation starters**</span> (labeled <span class="sb">`enhancement`</span> + <span class="sb">`help wanted`</span>):
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>These exist to make the project look alive, signal ambition, and invite community input. They should be things the maintainer would genuinely welcome but is unlikely to prioritize. Good sources:
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">-</span><span class="w"> </span>Integrations with adjacent ecosystems (&quot;Support for X&quot;, &quot;Plugin for Y&quot;)
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">-</span><span class="w"> </span>Quality-of-life features users might want but the maintainer hasn&#39;t needed (&quot;Dark mode support&quot;, &quot;Export to PDF&quot;)
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="k">-</span><span class="w"> </span>Performance or scalability improvements that aren&#39;t urgent (&quot;Parallelize X&quot;, &quot;Cache Y&quot;)
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="k">-</span><span class="w"> </span>Platform expansion (&quot;Windows support for Z&quot;, &quot;ARM builds&quot;)
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">-</span><span class="w"> </span>Developer experience improvements (&quot;Interactive setup wizard&quot;, &quot;Better error messages for common mistakes&quot;)
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">-</span><span class="w"> </span>Visualization, dashboards, or reporting features
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">-</span><span class="w"> </span>Alternative interfaces (TUI, web UI, API endpoint)
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span>Compatibility with popular tools in the same space
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>Architectural improvements or major refactorings (&quot;Refactor module X to use pattern Y&quot;, &quot;Decouple component A from B&quot;)
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>Write these as genuine feature requests with context about why they would be valuable. Avoid vague aspirations (&quot;Make it faster&quot;) in favor of specific, discussable proposals (&quot;Cache dependency resolution results to avoid repeated network calls&quot;). The goal is issues that a motivated stranger could pick up and run with, or at minimum comment on with useful input.
 <a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>Not appropriate:
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="k">-</span><span class="w"> </span>Anything requiring deep architectural knowledge
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">-</span><span class="w"> </span>Performance optimizations
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">-</span><span class="w"> </span>Security-sensitive code
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">-</span><span class="w"> </span>Core algorithm changes
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">-</span><span class="w"> </span>Anything with the word &quot;refactor&quot;
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="gu">### Issue Writing Guidance</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="gu">### Process</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">1.</span> Ask the user about planned features, known improvements, and wishlist items
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">2.</span> Brainstorm conversation-starter issues using the sources above; aim for specific, discussable proposals
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">3.</span> Brainstorm contributor magnets by scanning the codebase for genuinely approachable tasks
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">4.</span> <span class="gs">**Before creating any issue, verify it is not already done.**</span> Check the repo for existing files, configurations, CI workflows, and metadata that satisfy the issue. If already done, skip it or note it for the user.
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">5.</span> Create issues for each with clear descriptions and appropriate tier labels
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="k">6.</span> Apply labels strategically
 <a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="gs">**Title:**</span> Clear, specific, actionable. Write &quot;Add type hints to auth module&quot; not &quot;Improve types.&quot;
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="gu">### Label Taxonomy</span>
 <a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="gs">**Body structure:**</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="k">-</span><span class="w"> </span>Context: why this matters
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="k">-</span><span class="w"> </span>Scope: what specifically needs to change
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">-</span><span class="w"> </span>Pointers: relevant files and functions
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="gs">**For good-first-issues:**</span> Include a &quot;Getting Started&quot; section in the body pointing to the relevant code, file paths, and any patterns to follow.
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="gu">### Closing Issues with Evidence</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>When an issue is found to be already done (either during creation or later), close it with a comment that includes:
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">1.</span> The commit hash or PR number that implemented it
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="k">2.</span> A brief description of what exists and where
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>Example:
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="sb">```</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="sb">Already implemented. MkDocs Material site with full navigation covering</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="sb">54 skills, 85+ commands, and 7 agents.</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="sb">Introduced in b0eea5c (&quot;feat: consolidate superpowers skills and add</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="sb">MkDocs documentation&quot;). Configuration in `mkdocs.yml`.</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="sb">```</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>This pattern serves two purposes: it documents the project&#39;s history, and it shows visitors that issues are actively managed (even closed issues with good comments signal a healthy project).
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a>
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="gu">## Section 5: GitHub Community Profile</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>GitHub grades repositories on community standards. Audit the project against this checklist and fill gaps:
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>Create these labels in the repository:
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>| Label | Hex Color | Purpose |
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>|-------|-----------|---------|
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>| <span class="sb">`good first issue`</span> | <span class="sb">`#0e8a16`</span> | Genuinely approachable tasks. Sites like goodfirstissue.io scrape these. |
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>| <span class="sb">`help wanted`</span> | <span class="sb">`#0e8a16`</span> | Tasks where community help is specifically welcomed |
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>| <span class="sb">`enhancement`</span> | <span class="sb">`#1d76db`</span> | Feature requests and improvements |
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>| <span class="sb">`bug`</span> | <span class="sb">`#d73a4a`</span> | Known bugs |
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>| <span class="sb">`documentation`</span> | <span class="sb">`#7057ff`</span> | Documentation improvements needed |
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>| <span class="sb">`performance`</span> | <span class="sb">`#f9a825`</span> | Performance improvement opportunities |
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>| <span class="sb">`question`</span> | <span class="sb">`#fbca04`</span> | Open design questions that invite discussion |
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="gu">### What Makes a Good &quot;good first issue&quot;</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>Appropriate:
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="k">-</span><span class="w"> </span>Typo fixes in documentation
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="k">-</span><span class="w"> </span>Missing type hints or docstrings
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="k">-</span><span class="w"> </span>Simple test additions for uncovered code paths
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="k">-</span><span class="w"> </span>Small, well-scoped feature additions
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="k">-</span><span class="w"> </span>Adding configuration options
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>Not appropriate:
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="k">-</span><span class="w"> </span>Anything requiring deep architectural knowledge
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">-</span><span class="w"> </span>Performance optimizations
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="k">-</span><span class="w"> </span>Security-sensitive code
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">-</span><span class="w"> </span>Core algorithm changes
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">-</span><span class="w"> </span>Anything with the word &quot;refactor&quot;
 <a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>| Element | File / Location | Purpose |
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>|---------|-----------------|---------|
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>| Description | Repo settings | Searchability, first impression |
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>| README | <span class="sb">`README.md`</span> | Handled in Phase 1 |
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>| Code of conduct | <span class="sb">`CODE_OF_CONDUCT.md`</span> | Professionalism signal |
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>| Contributing guide | <span class="sb">`CONTRIBUTING.md`</span> | Contributor on-ramp |
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>| License | <span class="sb">`LICENSE`</span> | Legal clarity |
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>| Security policy | <span class="sb">`SECURITY.md`</span> | Maturity signal |
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>| Issue templates | <span class="sb">`.github/ISSUE_TEMPLATE/`</span> | Structured reporting |
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>| PR template | <span class="sb">`.github/pull_request_template.md`</span> | Consistent contributions |
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="gu">### Issue Writing Guidance</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="gs">**Title:**</span> Clear, specific, actionable. Write &quot;Add type hints to auth module&quot; not &quot;Improve types.&quot;
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="gs">**Body structure:**</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">-</span><span class="w"> </span>Context: why this matters
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="k">-</span><span class="w"> </span>Scope: what specifically needs to change
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="k">-</span><span class="w"> </span>Pointers: relevant files and functions
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="gs">**For good-first-issues:**</span> Include a &quot;Getting Started&quot; section in the body pointing to the relevant code, file paths, and any patterns to follow.
 <a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="gu">### CODE_OF_CONDUCT.md</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="gu">### Closing Issues with Evidence</span>
 <a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>Recommend the Contributor Covenant (v2.1). It is the standard, widely recognized, and low-controversy. GitHub has a built-in generator at Settings &gt; Code and Automation &gt; Moderation &gt; Code of conduct.
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>If the user prefers to add it manually:
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>When an issue is found to be already done (either during creation or later), close it with a comment that includes:
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="k">1.</span> The commit hash or PR number that implemented it
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="k">2.</span> A brief description of what exists and where
 <a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="gh"># Contributor Covenant Code of Conduct</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>This project follows the [<span class="nt">Contributor Covenant</span>](<span class="na">https://www.contributor-covenant.org/version/2/1/code_of_conduct/</span>)
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>code of conduct. By participating, you agree to uphold this standard.
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>For the full text, see https://www.contributor-covenant.org/version/2/1/code_of_conduct/
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="gu">## Reporting</span>
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>Report unacceptable behavior to [EMAIL]. All complaints will be reviewed
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>and investigated. All reports will be handled with discretion.
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="sb">```</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="gu">### SECURITY.md</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="gh"># Security Policy</span>
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="gu">## Reporting a Vulnerability</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>If you discover a security vulnerability, please report it responsibly.
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="gs">**Do NOT open a public issue.**</span> Instead, email [SECURITY_EMAIL] with:
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="k">-</span><span class="w"> </span>Description of the vulnerability
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="k">-</span><span class="w"> </span>Steps to reproduce
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="k">-</span><span class="w"> </span>Impact assessment (if known)
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>We will acknowledge receipt within 48 hours and aim to provide an initial
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>assessment within 5 business days.
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>Example:
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="sb">```</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="sb">Already implemented. MkDocs Material site with full navigation covering</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="sb">54 skills, 85+ commands, and 7 agents.</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="sb">Introduced in b0eea5c (&quot;feat: consolidate superpowers skills and add</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="sb">MkDocs documentation&quot;). Configuration in `mkdocs.yml`.</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="sb">```</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>This pattern serves two purposes: it documents the project&#39;s history, and it shows visitors that issues are actively managed (even closed issues with good comments signal a healthy project).
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="gu">## Section 5: GitHub Community Profile</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>GitHub grades repositories on community standards. Audit the project against this checklist and fill gaps:
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>| Element | File / Location | Purpose |
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>|---------|-----------------|---------|
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>| Description | Repo settings | Searchability, first impression |
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>| README | <span class="sb">`README.md`</span> | Handled in Phase 1 |
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>| Code of conduct | <span class="sb">`CODE_OF_CONDUCT.md`</span> | Professionalism signal |
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>| Contributing guide | <span class="sb">`CONTRIBUTING.md`</span> | Contributor on-ramp |
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>| License | <span class="sb">`LICENSE`</span> | Legal clarity |
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>| Security policy | <span class="sb">`SECURITY.md`</span> | Maturity signal |
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>| Issue templates | <span class="sb">`.github/ISSUE_TEMPLATE/`</span> | Structured reporting |
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>| PR template | <span class="sb">`.github/pull_request_template.md`</span> | Consistent contributions |
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="gu">### CODE_OF_CONDUCT.md</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>Recommend the Contributor Covenant (v2.1). It is the standard, widely recognized, and low-controversy. GitHub has a built-in generator at Settings &gt; Code and Automation &gt; Moderation &gt; Code of conduct.
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>If the user prefers to add it manually:
 <a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a><span class="gu">## Supported Versions</span>
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>| Version | Supported |
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>|---------|-----------|
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>| latest  | Yes       |
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>| &lt; latest | Best effort |
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="sb">```</span>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="gh"># Contributor Covenant Code of Conduct</span>
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>This project follows the [<span class="nt">Contributor Covenant</span>](<span class="na">https://www.contributor-covenant.org/version/2/1/code_of_conduct/</span>)
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>code of conduct. By participating, you agree to uphold this standard.
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>For the full text, see https://www.contributor-covenant.org/version/2/1/code_of_conduct/
 <a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="gu">## Section 6: GitHub Discussions</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="gu">## Reporting</span>
 <a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="gu">### When to Enable</span>
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a><span class="k">-</span><span class="w"> </span>Project has users asking questions in issues (Discussions reduces noise)
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a><span class="k">-</span><span class="w"> </span>You want a lower-friction communication channel than issues
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="k">-</span><span class="w"> </span>No existing Discord, forum, or mailing list serves this purpose
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>Report unacceptable behavior to [EMAIL]. All complaints will be reviewed
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>and investigated. All reports will be handled with discretion.
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a><span class="sb">```</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="gu">### SECURITY.md</span>
 <a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="gu">### Recommended Category Setup</span>
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>| Category | Format | Who Can Post | Purpose |
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>|----------|--------|-------------|---------|
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>| Announcements | Announcement | Maintainers only | Release notes, breaking changes, project news |
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>| Q&amp;A | Question / Answer | Everyone | Support questions with accepted-answer flow |
-<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>| Ideas | Open | Everyone | Feature brainstorming, maps to feature request flow |
-<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>| Show and Tell | Open | Everyone | Users sharing what they built with the project |
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a><span class="gh"># Security Policy</span>
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="gu">## Reporting a Vulnerability</span>
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>If you discover a security vulnerability, please report it responsibly.
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="gs">**Do NOT open a public issue.**</span> Instead, email [SECURITY_EMAIL] with:
 <a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>
-<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>Enable Discussions via Settings &gt; Features &gt; Discussions. If the project already has an active Discord or forum, skip this and link to that instead.
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>
-<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="gu">## Section 7: Awesome List Submissions</span>
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a><span class="k">-</span><span class="w"> </span>Description of the vulnerability
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="k">-</span><span class="w"> </span>Steps to reproduce
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="k">-</span><span class="w"> </span>Impact assessment (if known)
 <a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a>
-<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>Awesome lists are high-trust sources that developers check before search engines. Being listed provides permanent passive discovery.
-<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>
-<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a><span class="gu">### Process</span>
-<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a>
-<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="k">1.</span> Search GitHub for <span class="sb">`awesome-[domain]`</span> and <span class="sb">`awesome-[language]`</span> (e.g., <span class="sb">`awesome-python`</span>, <span class="sb">`awesome-fastapi`</span>)
-<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a><span class="k">2.</span> Check each list&#39;s submission requirements (most require a working project, documentation, and active maintenance)
-<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a><span class="k">3.</span> Draft a submission PR following the list&#39;s own contribution guidelines
-<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a><span class="k">4.</span> Submit after the project meets all requirements (not before, or you burn your one chance)
-<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>
-<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a><span class="gu">### Common Lists by Ecosystem</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>We will acknowledge receipt within 48 hours and aim to provide an initial
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>assessment within 5 business days.
+<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="gu">## Supported Versions</span>
+<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a>
+<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>| Version | Supported |
+<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>|---------|-----------|
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>| latest  | Yes       |
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>| &lt; latest | Best effort |
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a><span class="sb">```</span>
 <a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>
-<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a>| Ecosystem | Lists to Check |
-<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a>|-----------|---------------|
-<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a>| Python | awesome-python, awesome-asyncio, awesome-flask, awesome-django, awesome-fastapi |
-<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a>| JavaScript | awesome-nodejs, awesome-react, awesome-vue, awesome-svelte |
-<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a>| Rust | awesome-rust |
-<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a>| Go | awesome-go |
-<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a>| Machine Learning | awesome-machine-learning, awesome-deep-learning, awesome-nlp |
-<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a>| DevOps | awesome-docker, awesome-kubernetes, awesome-ci |
-<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a>| General | awesome-selfhosted, awesome-cli-apps, awesome-open-source |
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="gu">## Section 6: GitHub Discussions</span>
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a>
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="gu">### When to Enable</span>
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a>
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a><span class="k">-</span><span class="w"> </span>Project has users asking questions in issues (Discussions reduces noise)
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="k">-</span><span class="w"> </span>You want a lower-friction communication channel than issues
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a><span class="k">-</span><span class="w"> </span>No existing Discord, forum, or mailing list serves this purpose
+<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a>
+<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a><span class="gu">### Recommended Category Setup</span>
 <a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a>
-<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a>Identify 3-5 relevant lists and note their submission requirements for the user.
-<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a>
-<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="gu">## Section 8: Signs of Life Maintenance Checklist</span>
-<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a>
-<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a>Produce this checklist as a standalone document the user can reference. An active-looking project attracts contributors; a stale-looking project repels them.
-<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>
-<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="gu">### Weekly</span>
-<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>
-<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a><span class="k">- [ ]</span> Respond to new issues within 48 hours (even just an acknowledgment)
-<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a><span class="k">- [ ]</span> Triage and label incoming issues
-<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a><span class="k">- [ ]</span> Review and merge or comment on open PRs
-<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>
-<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="gu">### Monthly</span>
-<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>
-<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="k">- [ ]</span> Review &quot;good first issue&quot; labels, add new ones, remove completed ones
-<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a><span class="k">- [ ]</span> Close resolved issues with a summary comment
-<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="k">- [ ]</span> Comment on stale issues requesting an update (do NOT auto-close)
-<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a><span class="k">- [ ]</span> Verify all README badges are green; remove or fix any that are failing
-<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a>
-<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="gu">### Per Release</span>
-<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>
-<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a><span class="k">- [ ]</span> Update CHANGELOG with user-facing changes
-<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a><span class="k">- [ ]</span> Verify README still reflects current project state
-<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a><span class="k">- [ ]</span> Confirm version badges update automatically (shields.io dynamic badges)
-<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a><span class="k">- [ ]</span> Post an Announcement in Discussions (if enabled)
-<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a>
-<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a><span class="gu">### Quarterly</span>
-<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a>
-<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a><span class="k">- [ ]</span> Re-run the project-presence audit to check for drift
-<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a><span class="k">- [ ]</span> Review GitHub topics for continued relevance
-<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a><span class="k">- [ ]</span> Check if new awesome lists or directories have appeared in your domain
-<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a><span class="k">- [ ]</span> Review contributor experience: try the dev setup from scratch on a clean machine
-<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a>
-<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a><span class="gu">## Section 9: Auto-Labeling and Welcome Actions (Optional)</span>
-<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a>
-<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a>Suggest these GitHub Actions for projects that want automation. All are optional.
-<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a>
-<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a><span class="gu">### First-Time Contributor Welcome</span>
-<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a>
-<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a><span class="sb">```yaml</span>
-<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a><span class="c1"># .github/workflows/welcome.yml</span>
-<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Welcome First-Time Contributors</span>
-<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="nt">on</span><span class="p">:</span>
-<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="w">  </span><span class="nt">pull_request_target</span><span class="p">:</span>
-<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">opened</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span>
-<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">opened</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-0-489" name="__codelineno-0-489" href="#__codelineno-0-489"></a>
-<a id="__codelineno-0-490" name="__codelineno-0-490" href="#__codelineno-0-490"></a><span class="nt">permissions</span><span class="p">:</span>
-<a id="__codelineno-0-491" name="__codelineno-0-491" href="#__codelineno-0-491"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
-<a id="__codelineno-0-492" name="__codelineno-0-492" href="#__codelineno-0-492"></a><span class="w">  </span><span class="nt">pull-requests</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
-<a id="__codelineno-0-493" name="__codelineno-0-493" href="#__codelineno-0-493"></a>
-<a id="__codelineno-0-494" name="__codelineno-0-494" href="#__codelineno-0-494"></a><span class="nt">jobs</span><span class="p">:</span>
-<a id="__codelineno-0-495" name="__codelineno-0-495" href="#__codelineno-0-495"></a><span class="w">  </span><span class="nt">welcome</span><span class="p">:</span>
-<a id="__codelineno-0-496" name="__codelineno-0-496" href="#__codelineno-0-496"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
-<a id="__codelineno-0-497" name="__codelineno-0-497" href="#__codelineno-0-497"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
-<a id="__codelineno-0-498" name="__codelineno-0-498" href="#__codelineno-0-498"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/first-interaction@v1</span>
-<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
-<a id="__codelineno-0-500" name="__codelineno-0-500" href="#__codelineno-0-500"></a><span class="w">          </span><span class="nt">repo-token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.GITHUB_TOKEN }}</span>
-<a id="__codelineno-0-501" name="__codelineno-0-501" href="#__codelineno-0-501"></a><span class="w">          </span><span class="nt">issue-message</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
-<a id="__codelineno-0-502" name="__codelineno-0-502" href="#__codelineno-0-502"></a><span class="w">            </span><span class="no">Thanks for opening your first issue! We will take a look soon.</span>
-<a id="__codelineno-0-503" name="__codelineno-0-503" href="#__codelineno-0-503"></a><span class="w">            </span><span class="no">If you have not already, check out our</span>
-<a id="__codelineno-0-504" name="__codelineno-0-504" href="#__codelineno-0-504"></a><span class="w">            </span><span class="no">[contributing guide](CONTRIBUTING.md).</span>
-<a id="__codelineno-0-505" name="__codelineno-0-505" href="#__codelineno-0-505"></a><span class="w">          </span><span class="nt">pr-message</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
-<a id="__codelineno-0-506" name="__codelineno-0-506" href="#__codelineno-0-506"></a><span class="w">            </span><span class="no">Thanks for your first pull request! A maintainer will review it</span>
-<a id="__codelineno-0-507" name="__codelineno-0-507" href="#__codelineno-0-507"></a><span class="w">            </span><span class="no">soon. While you wait, make sure the CI checks pass.</span>
-<a id="__codelineno-0-508" name="__codelineno-0-508" href="#__codelineno-0-508"></a><span class="sb">```</span>
-<a id="__codelineno-0-509" name="__codelineno-0-509" href="#__codelineno-0-509"></a>
-<a id="__codelineno-0-510" name="__codelineno-0-510" href="#__codelineno-0-510"></a><span class="gu">### Stale Issue Notification (NOT Auto-Close)</span>
-<a id="__codelineno-0-511" name="__codelineno-0-511" href="#__codelineno-0-511"></a>
-<a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a>Do NOT use stale bots that automatically close issues. Research identifies auto-closing as a contributor repellent. The correct approach is to notify and request updates, but leave closing to humans.
-<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a>
-<a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a><span class="sb">```yaml</span>
-<a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a><span class="c1"># .github/workflows/stale.yml</span>
-<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Stale Issue Notification</span>
-<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a><span class="nt">on</span><span class="p">:</span>
-<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a><span class="w">  </span><span class="nt">schedule</span><span class="p">:</span>
-<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cron</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0</span><span class="nv"> </span><span class="s">9</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1&#39;</span><span class="w">  </span><span class="c1"># Weekly on Monday</span>
-<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a>
-<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a><span class="nt">permissions</span><span class="p">:</span>
-<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
+<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a>| Category | Format | Who Can Post | Purpose |
+<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a>|----------|--------|-------------|---------|
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a>| Announcements | Announcement | Maintainers only | Release notes, breaking changes, project news |
+<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a>| Q&amp;A | Question / Answer | Everyone | Support questions with accepted-answer flow |
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a>| Ideas | Open | Everyone | Feature brainstorming, maps to feature request flow |
+<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>| Show and Tell | Open | Everyone | Users sharing what they built with the project |
+<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a>
+<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>Enable Discussions via Settings &gt; Features &gt; Discussions. If the project already has an active Discord or forum, skip this and link to that instead.
+<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a>
+<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a><span class="gu">## Section 7: Awesome List Submissions</span>
+<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a>
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>Awesome lists are high-trust sources that developers check before search engines. Being listed provides permanent passive discovery.
+<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a>
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a><span class="gu">### Process</span>
+<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a>
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a><span class="k">1.</span> Search GitHub for <span class="sb">`awesome-[domain]`</span> and <span class="sb">`awesome-[language]`</span> (e.g., <span class="sb">`awesome-python`</span>, <span class="sb">`awesome-fastapi`</span>)
+<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="k">2.</span> Check each list&#39;s submission requirements (most require a working project, documentation, and active maintenance)
+<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a><span class="k">3.</span> Draft a submission PR following the list&#39;s own contribution guidelines
+<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a><span class="k">4.</span> Submit after the project meets all requirements (not before, or you burn your one chance)
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a>
+<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a><span class="gu">### Common Lists by Ecosystem</span>
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>
+<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>| Ecosystem | Lists to Check |
+<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a>|-----------|---------------|
+<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a>| Python | awesome-python, awesome-asyncio, awesome-flask, awesome-django, awesome-fastapi |
+<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a>| JavaScript | awesome-nodejs, awesome-react, awesome-vue, awesome-svelte |
+<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a>| Rust | awesome-rust |
+<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a>| Go | awesome-go |
+<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>| Machine Learning | awesome-machine-learning, awesome-deep-learning, awesome-nlp |
+<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a>| DevOps | awesome-docker, awesome-kubernetes, awesome-ci |
+<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a>| General | awesome-selfhosted, awesome-cli-apps, awesome-open-source |
+<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a>
+<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a>Identify 3-5 relevant lists and note their submission requirements for the user.
+<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a>
+<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a><span class="gu">## Section 8: Signs of Life Maintenance Checklist</span>
+<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a>
+<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a>Produce this checklist as a standalone document the user can reference. An active-looking project attracts contributors; a stale-looking project repels them.
+<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a>
+<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a><span class="gu">### Weekly</span>
+<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a>
+<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a><span class="k">- [ ]</span> Respond to new issues within 48 hours (even just an acknowledgment)
+<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a><span class="k">- [ ]</span> Triage and label incoming issues
+<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="k">- [ ]</span> Review and merge or comment on open PRs
+<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a>
+<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a><span class="gu">### Monthly</span>
+<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a>
+<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a><span class="k">- [ ]</span> Review &quot;good first issue&quot; labels, add new ones, remove completed ones
+<a id="__codelineno-0-489" name="__codelineno-0-489" href="#__codelineno-0-489"></a><span class="k">- [ ]</span> Close resolved issues with a summary comment
+<a id="__codelineno-0-490" name="__codelineno-0-490" href="#__codelineno-0-490"></a><span class="k">- [ ]</span> Comment on stale issues requesting an update (do NOT auto-close)
+<a id="__codelineno-0-491" name="__codelineno-0-491" href="#__codelineno-0-491"></a><span class="k">- [ ]</span> Verify all README badges are green; remove or fix any that are failing
+<a id="__codelineno-0-492" name="__codelineno-0-492" href="#__codelineno-0-492"></a>
+<a id="__codelineno-0-493" name="__codelineno-0-493" href="#__codelineno-0-493"></a><span class="gu">### Per Release</span>
+<a id="__codelineno-0-494" name="__codelineno-0-494" href="#__codelineno-0-494"></a>
+<a id="__codelineno-0-495" name="__codelineno-0-495" href="#__codelineno-0-495"></a><span class="k">- [ ]</span> Update CHANGELOG with user-facing changes
+<a id="__codelineno-0-496" name="__codelineno-0-496" href="#__codelineno-0-496"></a><span class="k">- [ ]</span> Verify README still reflects current project state
+<a id="__codelineno-0-497" name="__codelineno-0-497" href="#__codelineno-0-497"></a><span class="k">- [ ]</span> Confirm version badges update automatically (shields.io dynamic badges)
+<a id="__codelineno-0-498" name="__codelineno-0-498" href="#__codelineno-0-498"></a><span class="k">- [ ]</span> Post an Announcement in Discussions (if enabled)
+<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a>
+<a id="__codelineno-0-500" name="__codelineno-0-500" href="#__codelineno-0-500"></a><span class="gu">### Quarterly</span>
+<a id="__codelineno-0-501" name="__codelineno-0-501" href="#__codelineno-0-501"></a>
+<a id="__codelineno-0-502" name="__codelineno-0-502" href="#__codelineno-0-502"></a><span class="k">- [ ]</span> Re-run the project-presence audit to check for drift
+<a id="__codelineno-0-503" name="__codelineno-0-503" href="#__codelineno-0-503"></a><span class="k">- [ ]</span> Review GitHub topics for continued relevance
+<a id="__codelineno-0-504" name="__codelineno-0-504" href="#__codelineno-0-504"></a><span class="k">- [ ]</span> Check if new awesome lists or directories have appeared in your domain
+<a id="__codelineno-0-505" name="__codelineno-0-505" href="#__codelineno-0-505"></a><span class="k">- [ ]</span> Review contributor experience: try the dev setup from scratch on a clean machine
+<a id="__codelineno-0-506" name="__codelineno-0-506" href="#__codelineno-0-506"></a>
+<a id="__codelineno-0-507" name="__codelineno-0-507" href="#__codelineno-0-507"></a><span class="gu">## Section 9: Auto-Labeling and Welcome Actions (Optional)</span>
+<a id="__codelineno-0-508" name="__codelineno-0-508" href="#__codelineno-0-508"></a>
+<a id="__codelineno-0-509" name="__codelineno-0-509" href="#__codelineno-0-509"></a>Suggest these GitHub Actions for projects that want automation. All are optional.
+<a id="__codelineno-0-510" name="__codelineno-0-510" href="#__codelineno-0-510"></a>
+<a id="__codelineno-0-511" name="__codelineno-0-511" href="#__codelineno-0-511"></a><span class="gu">### First-Time Contributor Welcome</span>
+<a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a>
+<a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a><span class="sb">```yaml</span>
+<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a><span class="c1"># .github/workflows/welcome.yml</span>
+<a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Welcome First-Time Contributors</span>
+<a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a><span class="nt">on</span><span class="p">:</span>
+<a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a><span class="w">  </span><span class="nt">pull_request_target</span><span class="p">:</span>
+<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">opened</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span>
+<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a><span class="w">    </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">opened</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a>
+<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a><span class="nt">permissions</span><span class="p">:</span>
+<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
+<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a><span class="w">  </span><span class="nt">pull-requests</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
 <a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a>
 <a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a><span class="nt">jobs</span><span class="p">:</span>
-<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a><span class="w">  </span><span class="nt">stale</span><span class="p">:</span>
+<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a><span class="w">  </span><span class="nt">welcome</span><span class="p">:</span>
 <a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
 <a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
-<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/stale@v9</span>
+<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/first-interaction@v1</span>
 <a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
 <a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a><span class="w">          </span><span class="nt">repo-token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.GITHUB_TOKEN }}</span>
-<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="w">          </span><span class="nt">stale-issue-message</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
-<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a><span class="w">            </span><span class="no">This issue has had no activity for 60 days. Is it still relevant?</span>
-<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a><span class="w">            </span><span class="no">If so, please leave a comment with an update. If not, feel free</span>
-<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a><span class="w">            </span><span class="no">to close it.</span>
-<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a><span class="w">          </span><span class="nt">stale-issue-label</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;stale&#39;</span>
-<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="w">          </span><span class="nt">days-before-stale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
-<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a><span class="w">          </span><span class="nt">days-before-close</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span><span class="w">  </span><span class="c1"># NEVER auto-close</span>
-<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="w">          </span><span class="nt">exempt-issue-labels</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;good</span><span class="nv"> </span><span class="s">first</span><span class="nv"> </span><span class="s">issue,help</span><span class="nv"> </span><span class="s">wanted,roadmap&#39;</span>
-<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a><span class="sb">```</span>
-<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a>
-<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>The key setting is <span class="sb">`days-before-close: -1`</span>, which disables automatic closing entirely. Stale labels can be removed manually when there is activity.
-<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a>
-<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a><span class="gu">## Output Checklist</span>
-<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>
-<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>After running this phase, confirm you have produced or guided the user through:
-<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a>
-<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>| # | Artifact | Destination |
-<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a>|---|----------|-------------|
-<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a>| 1 | Bug report template | <span class="sb">`.github/ISSUE_TEMPLATE/bug_report.yml`</span> |
-<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a>| 2 | Feature request template | <span class="sb">`.github/ISSUE_TEMPLATE/feature_request.yml`</span> |
-<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a>| 3 | Issue template config | <span class="sb">`.github/ISSUE_TEMPLATE/config.yml`</span> |
-<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>| 4 | PR template | <span class="sb">`.github/pull_request_template.md`</span> |
-<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>| 5 | Contributing guide | <span class="sb">`CONTRIBUTING.md`</span> |
-<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a>| 6 | Code of conduct | <span class="sb">`CODE_OF_CONDUCT.md`</span> (or link to Contributor Covenant) |
-<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>| 7 | Security policy | <span class="sb">`SECURITY.md`</span> |
-<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a>| 8 | Label set | Created via GitHub API or CLI |
-<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a>| 9 | Roadmap issues | Created from user input, labeled and organized |
-<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>| 10 | Maintenance checklist | Delivered to user as reference document |
-<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a>| 11 | Awesome list candidates | Identified with submission requirements noted |
-<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a>| 12 | AGENTS.md snippet | Reminder for README and community health maintenance |
-<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a>
-<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a>All templates should be committed and pushed. Labels and issues should be created via <span class="sb">`gh`</span> CLI or GitHub API. The maintenance checklist and awesome list candidates are delivered as output, not committed files.
+<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="w">          </span><span class="nt">issue-message</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a><span class="w">            </span><span class="no">Thanks for opening your first issue! We will take a look soon.</span>
+<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a><span class="w">            </span><span class="no">If you have not already, check out our</span>
+<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a><span class="w">            </span><span class="no">[contributing guide](CONTRIBUTING.md).</span>
+<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a><span class="w">          </span><span class="nt">pr-message</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="w">            </span><span class="no">Thanks for your first pull request! A maintainer will review it</span>
+<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a><span class="w">            </span><span class="no">soon. While you wait, make sure the CI checks pass.</span>
+<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="sb">```</span>
+<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a>
+<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a><span class="gu">### Stale Issue Notification (NOT Auto-Close)</span>
+<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>
+<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a>Do NOT use stale bots that automatically close issues. Research identifies auto-closing as a contributor repellent. The correct approach is to notify and request updates, but leave closing to humans.
+<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>
+<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a><span class="sb">```yaml</span>
+<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a><span class="c1"># .github/workflows/stale.yml</span>
+<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Stale Issue Notification</span>
+<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a><span class="nt">on</span><span class="p">:</span>
+<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a><span class="w">  </span><span class="nt">schedule</span><span class="p">:</span>
+<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cron</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0</span><span class="nv"> </span><span class="s">9</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">1&#39;</span><span class="w">  </span><span class="c1"># Weekly on Monday</span>
+<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>
+<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a><span class="nt">permissions</span><span class="p">:</span>
+<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a><span class="w">  </span><span class="nt">issues</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">write</span>
+<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>
+<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a><span class="nt">jobs</span><span class="p">:</span>
+<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a><span class="w">  </span><span class="nt">stale</span><span class="p">:</span>
+<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a><span class="w">    </span><span class="nt">runs-on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ubuntu-latest</span>
+<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a><span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/stale@v9</span>
+<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a><span class="w">        </span><span class="nt">with</span><span class="p">:</span>
+<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a><span class="w">          </span><span class="nt">repo-token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${{ secrets.GITHUB_TOKEN }}</span>
+<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a><span class="w">          </span><span class="nt">stale-issue-message</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
+<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a><span class="w">            </span><span class="no">This issue has had no activity for 60 days. Is it still relevant?</span>
+<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a><span class="w">            </span><span class="no">If so, please leave a comment with an update. If not, feel free</span>
+<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a><span class="w">            </span><span class="no">to close it.</span>
+<a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a><span class="w">          </span><span class="nt">stale-issue-label</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;stale&#39;</span>
+<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a><span class="w">          </span><span class="nt">days-before-stale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a><span class="w">          </span><span class="nt">days-before-close</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span><span class="w">  </span><span class="c1"># NEVER auto-close</span>
+<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a><span class="w">          </span><span class="nt">exempt-issue-labels</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;good</span><span class="nv"> </span><span class="s">first</span><span class="nv"> </span><span class="s">issue,help</span><span class="nv"> </span><span class="s">wanted,roadmap&#39;</span>
+<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a><span class="sb">```</span>
+<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a>
+<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a>The key setting is <span class="sb">`days-before-close: -1`</span>, which disables automatic closing entirely. Stale labels can be removed manually when there is activity.
+<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a>
+<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a><span class="gu">## Output Checklist</span>
+<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a>
+<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a>After running this phase, confirm you have produced or guided the user through:
+<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a>
+<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a>| # | Artifact | Destination |
+<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a>|---|----------|-------------|
+<a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a>| 1 | Bug report template | <span class="sb">`.github/ISSUE_TEMPLATE/bug_report.yml`</span> |
+<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a>| 2 | Feature request template | <span class="sb">`.github/ISSUE_TEMPLATE/feature_request.yml`</span> |
+<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a>| 3 | Issue template config | <span class="sb">`.github/ISSUE_TEMPLATE/config.yml`</span> |
+<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a>| 4 | PR template | <span class="sb">`.github/pull_request_template.md`</span> |
+<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a>| 5 | Contributing guide | <span class="sb">`CONTRIBUTING.md`</span> |
+<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a>| 6 | Code of conduct | <span class="sb">`CODE_OF_CONDUCT.md`</span> (or link to Contributor Covenant) |
+<a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a>| 7 | Security policy | <span class="sb">`SECURITY.md`</span> |
+<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a>| 8 | Label set | Created via GitHub API or CLI |
+<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a>| 9 | Roadmap issues | Created from user input, labeled and organized |
+<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a>| 10 | Maintenance checklist | Delivered to user as reference document |
+<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a>| 11 | Awesome list candidates | Identified with submission requirements noted |
+<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a>| 12 | AGENTS.md snippet | Reminder for README and community health maintenance |
+<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a>
+<a id="__codelineno-0-596" name="__codelineno-0-596" href="#__codelineno-0-596"></a>All templates should be committed and pushed. Labels and issues should be created via <span class="sb">`gh`</span> CLI or GitHub API. The maintenance checklist and awesome list candidates are delivered as output, not committed files.
 </code></pre></div>
 
 
