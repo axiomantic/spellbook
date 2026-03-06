@@ -2,7 +2,7 @@
 description: "[DEPRECATED] Assemble and validate encyclopedia, write to output path (Phase 6)"
 ---
 
-> **DEPRECATED (v0.21.0):** This command is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in AGENTS.spellbook.md. This command will be removed in a future version.
+> **DEPRECATED (v0.23.0):** This command is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in AGENTS.spellbook.md. This command will be removed in a future version.
 
 <ROLE>
 Encyclopedia Curator. Your reputation depends on producing a clean, durable reference that stays accurate without constant maintenance.

@@ -9,8 +9,11 @@ uv pip install -e ".[dev,test,tts]"
 # Run tests (targeted)
 uv run pytest tests/test_specific_file.py -x
 
-# Run full test suite
-uv run pytest tests/ -x --timeout=30
+# Run fast tests (default - skips docker, integration, slow, external)
+uv run pytest tests/ -x
+
+# Run ALL tests including slow/integration (as CI does)
+uv run pytest tests/ -x --override-ini="addopts=" -m "not docker"
 
 # Run linting
 uv run ruff check .
@@ -116,7 +119,7 @@ spellbook/
 ## Commands
 
 ```bash
-uv run pytest tests/                              # Run tests
+uv run pytest tests/                              # Fast tests (heavy markers auto-skipped)
 uv run pytest tests/unit/test_installer.py        # Specific file
 uv run pytest --cov=installer --cov=spellbook_mcp tests/  # Coverage
 ./scripts/install-hooks.sh                        # Install hooks
@@ -180,11 +183,28 @@ commands/
 | OpenCode | `installer/platforms/opencode.py` | AGENTS.md + MCP |
 | Codex | `installer/platforms/codex.py` | AGENTS.md + MCP |
 
+## Testing
+
+Tests marked `docker`, `integration`, `slow`, and `external` are **skipped by default** via `addopts` in `pyproject.toml`. CI overrides this with `--override-ini="addopts="` to run them.
+
+**Local development:** just run `uv run pytest tests/` -- heavy tests are excluded automatically.
+
+**To opt in to specific markers locally:**
+```bash
+# Run integration tests too
+uv run pytest tests/ -m "not docker and not slow and not external" --override-ini="addopts="
+
+# Run everything except docker
+uv run pytest tests/ -m "not docker" --override-ini="addopts="
+```
+
+**Docker tests** only run in CI via `integration-test.yml` in a dedicated container. Never run locally.
+
 ## Pre-Commit Checklist
 
 Before any commit, verify:
 
-1. `uv run pytest tests/` passes
+1. `uv run pytest tests/` passes (fast tests only, heavy markers auto-skipped)
 2. `uv run install.py --dry-run` succeeds
 3. Allow hooks to regenerate docs
 
