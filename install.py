@@ -1058,6 +1058,12 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 # =============================================================================
 
 def main() -> int:
+    # Ensure stdout/stderr can handle unicode (Windows defaults to cp1252)
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(
         description="Install Spellbook - Multi-platform AI assistant skills",
         formatter_class=argparse.RawDescriptionHelpFormatter,
