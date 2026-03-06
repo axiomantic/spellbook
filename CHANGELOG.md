@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-03-06
+
+### Added
+- **project-presence skill** - New skill for improving open source project discoverability and presentation without relying on social media. Includes 5 phase commands covering README authoring (scratch/improve/replace), naming workshops, visual identity briefs, community infrastructure, and a 100-point audit scoring rubric. Based on analysis of 50+ open source projects across Python, Go, JS, and Rust ecosystems.
+- **Community infrastructure** - Issue templates (bug report + feature request) using GitHub YAML form format, lightweight PR template, CONTRIBUTING.md with dev setup and skill authoring guide, SECURITY.md with spellbook-specific vulnerability scope, and a welcome bot GitHub Action for first-time contributors.
+- **GitHub topics** - Added 15 topics for discoverability (ai-assistant, claude, mcp, python, etc.)
+- **Homepage URL** - Set to docs site for repo metadata completeness.
+
 ## [0.23.0] - 2026-03-05
 
 ### Changed
