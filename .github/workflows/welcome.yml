@@ -1,0 +1,28 @@
+name: Welcome First-Time Contributors
+on:
+  pull_request_target:
+    types: [opened]
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: >
+            Thanks for opening your first issue! We will take a look soon.
+            If you have not already, check out our
+            [contributing guide](https://github.com/axiomantic/spellbook/blob/main/CONTRIBUTING.md)
+            and [documentation](https://axiomantic.github.io/spellbook/latest/).
+          pr-message: >
+            Thanks for your first pull request! A maintainer will review it
+            soon. While you wait, make sure the CI checks pass. If you have
+            questions, check our
+            [contributing guide](https://github.com/axiomantic/spellbook/blob/main/CONTRIBUTING.md).
