@@ -49,8 +49,8 @@
   - [What it handles](#what-it-handles)
   - [What keeps it honest](#what-keeps-it-honest)
 - [What's Included](#whats-included)
-  - [Skills (54 total)](#skills-54-total)
-  - [Commands (85 total)](#commands-85-total)
+  - [Skills (55 total)](#skills-55-total)
+  - [Commands (90 total)](#commands-90-total)
   - [Agents (7 total)](#agents-7-total)
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
@@ -199,7 +199,7 @@ Seven named rationalization patterns that LLMs use to skip work -- Scope Minimiz
 
 ## What's Included
 
-### Skills (54 total)
+### Skills (55 total)
 
 Reusable workflows for structured development:
 
@@ -209,7 +209,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
 | **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [security-auditing], [generating-diagrams] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [project-presence], [security-auditing], [generating-diagrams] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
@@ -252,6 +252,7 @@ Reusable workflows for structured development:
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
 [project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
+[project-presence]: https://axiomantic.github.io/spellbook/latest/skills/project-presence/
 [analyzing-skill-usage]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-skill-usage/
 [documenting-tools]: https://axiomantic.github.io/spellbook/latest/skills/documenting-tools/
 [writing-commands]: https://axiomantic.github.io/spellbook/latest/skills/writing-commands/
@@ -271,7 +272,7 @@ Reusable workflows for structured development:
 [deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
 [fractal-thinking]: https://axiomantic.github.io/spellbook/latest/skills/fractal-thinking/
 
-### Commands (85 total)
+### Commands (90 total)
 
 | Command | Description |
 |---------|-------------|
@@ -316,6 +317,11 @@ Reusable workflows for structured development:
 | [/mode] | Switch session mode (fun/tarot/off) |
 | [/pr-distill] | Analyze PR, categorize changes by review necessity |
 | [/pr-distill-bless] | Save discovered pattern for future distillations |
+| [/project-presence-audit] | Phases 0-1 of project-presence: Reconnaissance gathering and audit scorecard generation |
+| [/project-presence-community] | Phase 3 of project-presence: Community infrastructure, issue templates, roadmap, contributor experience, and signs of life |
+| [/project-presence-identity] | Phase 3 of project-presence: Visual identity, badges, GitHub metadata, topics, and documentation strategy |
+| [/project-presence-naming] | Phase 3 of project-presence: Naming workshop, tagline crafting, and positioning strategy |
+| [/project-presence-readme] | Phase 3 of project-presence: README authoring from scratch, improvement, or replacement |
 | [/advanced-code-review-plan] | Phase 1: Strategic planning for code review |
 | [/advanced-code-review-context] | Phase 2: Context analysis and previous review loading |
 | [/advanced-code-review-review] | Phase 3: Deep multi-pass code review |
@@ -405,6 +411,11 @@ Reusable workflows for structured development:
 [/mode]: https://axiomantic.github.io/spellbook/latest/commands/mode/
 [/pr-distill]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill/
 [/pr-distill-bless]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill-bless/
+[/project-presence-audit]: https://axiomantic.github.io/spellbook/latest/commands/project-presence-audit/
+[/project-presence-community]: https://axiomantic.github.io/spellbook/latest/commands/project-presence-community/
+[/project-presence-identity]: https://axiomantic.github.io/spellbook/latest/commands/project-presence-identity/
+[/project-presence-naming]: https://axiomantic.github.io/spellbook/latest/commands/project-presence-naming/
+[/project-presence-readme]: https://axiomantic.github.io/spellbook/latest/commands/project-presence-readme/
 [/advanced-code-review-plan]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-plan/
 [/advanced-code-review-context]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-context/
 [/advanced-code-review-review]: https://axiomantic.github.io/spellbook/latest/commands/advanced-code-review-review/
