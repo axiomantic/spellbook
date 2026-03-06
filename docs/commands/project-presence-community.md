@@ -273,11 +273,42 @@ Every set of roadmap issues should include all three tiers. Each serves a differ
 
 **Aim for:** At minimum, 3-5 actionable, 3-5 contributor magnets, and 3-5 conversation starters. A healthy project has 15-25 open issues across all three tiers.
 
+### Brainstorming Community Engagement Issues
+
+Contributor magnets and conversation starters are not busywork. They are the primary mechanism for turning visitors into participants. Spend real effort here.
+
+**Contributor magnets** (labeled `good first issue` + `help wanted`):
+
+Scan the codebase and project for genuinely approachable tasks. Good sources:
+- Missing or incomplete documentation (README gaps, undocumented config options, missing examples)
+- Type hint coverage gaps in Python modules
+- Test coverage holes (untested edge cases, missing unit tests for utility functions)
+- Small, self-contained feature additions (new config option, extra output format, additional validation)
+- Linting or code style consistency fixes across a module
+- Localization/i18n for user-facing strings
+- Adding examples or sample configurations
+
+Each must be genuinely completable by someone unfamiliar with the codebase. Include file paths, relevant patterns to follow, and a "Getting Started" section in the body.
+
+**Conversation starters** (labeled `enhancement` + `help wanted`):
+
+These exist to make the project look alive, signal ambition, and invite community input. They should be things the maintainer would genuinely welcome but is unlikely to prioritize. Good sources:
+- Integrations with adjacent ecosystems ("Support for X", "Plugin for Y")
+- Quality-of-life features users might want but the maintainer hasn't needed ("Dark mode support", "Export to PDF")
+- Performance or scalability improvements that aren't urgent ("Parallelize X", "Cache Y")
+- Platform expansion ("Windows support for Z", "ARM builds")
+- Developer experience improvements ("Interactive setup wizard", "Better error messages for common mistakes")
+- Visualization, dashboards, or reporting features
+- Alternative interfaces (TUI, web UI, API endpoint)
+- Compatibility with popular tools in the same space
+
+Write these as genuine feature requests with context about why they would be valuable. Avoid vague aspirations ("Make it faster") in favor of specific, discussable proposals ("Cache dependency resolution results to avoid repeated network calls"). The goal is issues that a motivated stranger could pick up and run with, or at minimum comment on with useful input.
+
 ### Process
 
 1. Ask the user about planned features, known improvements, and wishlist items
-2. Brainstorm conversation-starter issues: aspirational features, integrations with other ecosystems, i18n, visualization tools, developer experience improvements
-3. Identify contributor magnets: scan the codebase for genuinely approachable tasks (missing docs, type hints, test gaps, small features)
+2. Brainstorm conversation-starter issues using the sources above; aim for specific, discussable proposals
+3. Brainstorm contributor magnets by scanning the codebase for genuinely approachable tasks
 4. **Before creating any issue, verify it is not already done.** Check the repo for existing files, configurations, CI workflows, and metadata that satisfy the issue. If already done, skip it or note it for the user.
 5. Create issues for each with clear descriptions and appropriate tier labels
 6. Apply labels strategically
