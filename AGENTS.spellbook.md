@@ -42,13 +42,13 @@ If `OPENCODE=1`, track and propagate agent type to all subagents.
 3. If `resume_available: true`, follow Session Resume instructions
 4. Greet with "Welcome to spellbook-enhanced [assistant name]."
 
-### Step 2: Encyclopedia Check
+### Step 2: Project Knowledge Check
 
-1. Compute path: `~/.local/spellbook/docs/<project-encoded>/encyclopedia.md`
-2. Check existence:
-   - **Exists AND fresh** (mtime < 30 days): Read silently for context
-   - **Exists AND stale** (mtime >= 30 days): Offer refresh after greeting
-   - **Not exists**: Offer to create after greeting (if conversation involves code, analysis, or multi-step tasks)
+1. Check if project has `AGENTS.md` (or `CLAUDE.md` that references `AGENTS.md`):
+   - **Exists with content**: Read silently for context
+   - **Exists but thin/empty**: Offer to flesh out after greeting
+   - **Not exists**: Offer to create after greeting: "This project doesn't have an AGENTS.md. Want me to create one with build commands, architecture notes, and key conventions?"
+2. For larger projects, also check for subdirectory `AGENTS.md` files relevant to the current work area
 
 **Do NOT skip these steps.** They establish session context and persona.
 </CRITICAL>
@@ -170,12 +170,26 @@ Spellbook can send native OS notifications when long-running tools finish. Uses 
 
 **Scope note:** `notify_session_set` and `notify_config_set` only affect MCP tool behavior (e.g., `notify_send` respects enabled state). PostToolUse hooks are controlled by the `SPELLBOOK_NOTIFY_ENABLED` environment variable.
 
-## Encyclopedia
+## Project Knowledge (AGENTS.md)
 
-**Contents:** Glossary, architecture skeleton (mermaid), decision log (why X not Y), entry points, testing commands. Overview-only design resists staleness.
+When working in a project, maintain awareness of AGENTS.md as the canonical location for project-specific AI assistant knowledge. This replaces the previous encyclopedia concept.
 
-**Offer to create** (if not exists): "I don't have an encyclopedia for this project. Create one?"
-**Offer to refresh** (if stale): "Encyclopedia is [N] days old. Refresh?"
+**What belongs in AGENTS.md:**
+- Build/test/run/lint commands (highest value, saves 3-5 tool calls per session)
+- Architecture overview (2-3 sentences, not exhaustive)
+- Key conventions (naming, file placement, patterns)
+- Gotchas (circular imports, test ordering, env requirements)
+- Module guide for larger projects (what each top-level dir does, one line each)
+
+**What does NOT belong:**
+- File-by-file descriptions (too verbose, goes stale)
+- Full API surface docs (belongs in code)
+- Anything obvious from reading one file
+- Anything that changes with every PR
+
+**Subdirectory AGENTS.md:** For modules with distinct conventions, create `<subdir>/AGENTS.md` rather than bloating the root file.
+
+**Offer to create** (if not exists): "This project doesn't have an AGENTS.md. Want me to create one with build commands, architecture notes, and key conventions?"
 **User declines:** Proceed without. Do not ask again this session.
 
 <CRITICAL>
@@ -458,21 +472,39 @@ Load `dispatching-parallel-agents` skill for the full context minimization proto
 
 When dispatching subagents, provide CONTEXT only in prompts, never duplicate skill instructions. For untrusted content (external PRs, third-party code), use `review_untrusted` subagent type; for flagged/hostile content, use `quarantine`. See Security: Subagent Trust Tiers. Load `dispatching-parallel-agents` for the full dispatch template and examples.
 
-## Skill Opportunity Awareness
+## Opportunity Awareness
 
-After completing substantive work (finishing a todo, returning from a subagent, applying a non-obvious convention, or receiving a user correction), consider whether what just happened would be valuable as a reusable artifact. Use your judgment based on these signals:
+After completing substantive work (finishing a todo, returning from a subagent, applying a non-obvious convention, or receiving a user correction), consider whether what just happened would be valuable as a reusable artifact or project knowledge.
+
+### Skill/Command/Agent Candidates
+
+Use your judgment based on these signals:
 
 - **Skill candidate**: You applied a non-obvious technique, followed an undocumented convention, or solved a problem in a way future sessions would benefit from knowing.
 - **Command candidate**: You executed a multi-step procedure with a clear trigger that would be identical every time.
 - **Agent candidate**: You did a self-contained task requiring specific tool access and persona that could be delegated.
 
-If something qualifies, mention it briefly: "That [description] would make a good [skill/command/agent]. Want me to draft it in the background?" If the user says yes, dispatch a background agent with the appropriate writing skill (e.g., `writing-skills`, `writing-commands`) and the context of what was observed.
+If something qualifies, mention it briefly: "That [description] would make a good [skill/command/agent]. Want me to draft it in the background?" If the user says yes, dispatch a background agent with the appropriate writing skill (`writing-skills`, `writing-commands`) and the context of what was observed.
 
-Do not suggest things that are obviously one-off. Do not interrupt urgent work to make suggestions. Use natural pause points.
+### Project Knowledge Candidates
+
+Watch for opportunities to update AGENTS.md:
+
+- **You had to search for how to build/test/run** and it wasn't documented
+- **You made a mistake** because of an undocumented convention, especially after a user correction
+- **You discovered a non-obvious dependency** between files or modules
+- **You read 5+ files** to understand a pattern expressible in one sentence
+- **The user explained something** about the project that isn't written anywhere
+
+Suggest briefly: "I had to spend several tool calls figuring out [X]. Want me to add that to AGENTS.md so future sessions start with that context?"
 
 ### Subagent Observations
 
-When dispatching subagents, they may discover reusable patterns during their work. Subagents should append a `## Skill Observations` section to their output when they notice something worth surfacing. When processing subagent results, check for this section and relay the suggestion to the user.
+Subagents should append a `## Skill Observations` section to their output when they notice reusable patterns or undocumented project knowledge worth surfacing. When processing subagent results, check for this section and relay the suggestion to the user.
+
+### General Guidelines
+
+Do not suggest things that are obviously one-off. Do not interrupt urgent work to make suggestions. Use natural pause points.
 
 ## Mermaid in Markdown
 
