@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-03-06
+
+### Changed
+- **Installer output redesign** - Prettier terminal output with box-drawing section headers, unicode tree characters (`├─`/`└─`) for hierarchy, consistent status icons (`✓`/`→`/`⊘`/`✗`), elapsed time display, and no double blank lines. Fixed double banner on uv re-execution and platform counter bug. Added UTF-8 stdout/stderr reconfiguration for Windows compatibility.
+- **Rename project-presence to polish-repo** - All skills, commands, and docs renamed from `project-presence-*` to `polish-repo-*` for easier recall.
+- **Expand community engagement guidance** - Added concrete brainstorming sources (README gaps, architectural debt, ecosystem integrations, etc.) for contributor magnets and conversation starters in the polish-repo-community command.
+
 ## [0.24.0] - 2026-03-06
 
 ### Added
