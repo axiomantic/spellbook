@@ -91,19 +91,23 @@ def print_header() -> None:
 
 
 def print_step(msg: str) -> None:
-    print(f"  {color('\u2192', Colors.BLUE)} {msg}")
+    icon = color("→", Colors.BLUE)
+    print(f"  {icon} {msg}")
 
 
 def print_success(msg: str) -> None:
-    print(f"  {color('\u2713', Colors.GREEN)} {msg}")
+    icon = color("✓", Colors.GREEN)
+    print(f"  {icon} {msg}")
 
 
 def print_error(msg: str) -> None:
-    print(f"  {color('\u2717', Colors.RED)} {msg}", file=sys.stderr)
+    icon = color("✗", Colors.RED)
+    print(f"  {icon} {msg}", file=sys.stderr)
 
 
 def print_warning(msg: str) -> None:
-    print(f"  {color('\u26a0', Colors.YELLOW)} {msg}")
+    icon = color("⚠", Colors.YELLOW)
+    print(f"  {icon} {msg}")
 
 
 def print_info(msg: str) -> None:

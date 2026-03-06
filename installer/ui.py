@@ -217,7 +217,8 @@ def print_warning(message: str) -> None:
 
 def print_info(message: str) -> None:
     """Print an info message."""
-    print(f"  {color('\u2139', Colors.CYAN)} {message}")
+    icon = color("ℹ", Colors.CYAN)
+    print(f"  {icon} {message}")
 
 
 def print_result(result: "InstallResult", is_last: bool = False) -> None:
