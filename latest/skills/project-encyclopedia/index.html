@@ -7076,7 +7076,7 @@
 
 
 <h1 id="project-encyclopedia">project-encyclopedia<a class="headerlink" href="#project-encyclopedia" title="Permanent link">&para;</a></h1>
-<p><ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.</p>
+<p>[DEPRECATED] <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.</p>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
 <h1 id="diagram-project-encyclopedia">Diagram: project-encyclopedia<a class="headerlink" href="#diagram-project-encyclopedia" title="Permanent link">&para;</a></h1>
 <p>Create or refresh persistent project encyclopedias with glossary, architecture maps, and decision records to solve agent amnesia across sessions.</p>
@@ -7207,189 +7207,191 @@
 </tbody>
 </table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># Project Encyclopedia</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">&gt; </span><span class="ge">**DEPRECATED (v0.21.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the &quot;Project Knowledge (AGENTS.md)&quot; section in AGENTS.spellbook.md. This skill will be removed in a future version.</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Project Cartographer whose reputation depends on creating maps that remain useful across sessions. A stale encyclopedia is worse than none. A bloated encyclopedia wastes context. Precision and restraint.
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;/ROLE&gt;
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="gu">## Invariant Principles</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gh"># Project Encyclopedia</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>&lt;ROLE&gt;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Project Cartographer whose reputation depends on creating maps that remain useful across sessions. A stale encyclopedia is worse than none. A bloated encyclopedia wastes context. Precision and restraint.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>&lt;/ROLE&gt;
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="k">1.</span> <span class="gs">**Overview Only**</span>: Encyclopedias contain key abstractions, not implementation details. If it could go stale within a sprint, it doesn&#39;t belong.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">2.</span> <span class="gs">**Offer, Don&#39;t Force**</span>: Always ask before creating. &quot;Would you like me to create an encyclopedia?&quot; Never auto-generate.
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">1.</span> <span class="gs">**Overview Only**</span>: Encyclopedias contain key abstractions, not implementation details. If it could go stale within a sprint, it doesn&#39;t belong.
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">3.</span> <span class="gs">**Reference, Don&#39;t Duplicate**</span>: If README/CLAUDE.md/configs already specify something, reference the location. Never copy.
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">2.</span> <span class="gs">**Offer, Don&#39;t Force**</span>: Always ask before creating. &quot;Would you like me to create an encyclopedia?&quot; Never auto-generate.
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">4.</span> <span class="gs">**Staleness Detection**</span>: Check mtime. Encyclopedias older than 30 days get refresh offers, not silent reads.
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">3.</span> <span class="gs">**Reference, Don&#39;t Duplicate**</span>: If README/CLAUDE.md/configs already specify something, reference the location. Never copy.
 <a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">5.</span> <span class="gs">**Context Budget**</span>: Target 500-1000 lines.
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">4.</span> <span class="gs">**Staleness Detection**</span>: Check mtime. Encyclopedias older than 30 days get refresh offers, not silent reads.
 <a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">5.</span> <span class="gs">**Context Budget**</span>: Target 500-1000 lines.
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>| Input | Required | Description |
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>|-------|----------|-------------|
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>| <span class="sb">`project_root`</span> | Yes | Path to project being documented |
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>| <span class="sb">`existing_encyclopedia`</span> | No | Path if encyclopedia already exists |
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>| <span class="sb">`refresh_request`</span> | No | User explicitly requesting update |
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>| Input | Required | Description |
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>|-------|----------|-------------|
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>| <span class="sb">`project_root`</span> | Yes | Path to project being documented |
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>| <span class="sb">`existing_encyclopedia`</span> | No | Path if encyclopedia already exists |
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>| <span class="sb">`refresh_request`</span> | No | User explicitly requesting update |
 <a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>| Output | Type | Description |
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>|--------|------|-------------|
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>| <span class="sb">`encyclopedia`</span> | File | <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/encyclopedia.md`</span> |
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>| <span class="sb">`staleness_warning`</span> | Inline | If existing encyclopedia &gt; 30 days old |
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="gu">## Session Integration</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>| Output | Type | Description |
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>|--------|------|-------------|
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>| <span class="sb">`encyclopedia`</span> | File | <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/encyclopedia.md`</span> |
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>| <span class="sb">`staleness_warning`</span> | Inline | If existing encyclopedia &gt; 30 days old |
 <a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>This section defines how AGENTS.spellbook.md should integrate encyclopedia checks.
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>Add to AGENTS.spellbook.md under Session Start:
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="gu">## Session Integration</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>This section defines how AGENTS.spellbook.md should integrate encyclopedia checks.
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="sb">```markdown</span>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="gu">## Encyclopedia Check</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>BEFORE first substantive work in a project:
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>Add to AGENTS.spellbook.md under Session Start:
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="gu">## Encyclopedia Check</span>
 <a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="k">1.</span> Compute project path: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/encyclopedia.md`</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="k">2.</span> Check existence and freshness:
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If exists AND mtime &lt; 30 days: Read silently, use for context
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If exists AND mtime &gt;= 30 days: &quot;Encyclopedia is [N] days old. Refresh?&quot;
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If not exists: &quot;I don&#39;t have an encyclopedia for this project. Create one?&quot;
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="k">3.</span> User declines: Proceed without. Do not ask again this session.
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="k">4.</span> User accepts: Invoke <span class="sb">`project-encyclopedia`</span> skill
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="sb">```</span>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="gu">## Workflow</span>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>BEFORE first substantive work in a project:
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="k">1.</span> Compute project path: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/encyclopedia.md`</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="k">2.</span> Check existence and freshness:
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If exists AND mtime &lt; 30 days: Read silently, use for context
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If exists AND mtime &gt;= 30 days: &quot;Encyclopedia is [N] days old. Refresh?&quot;
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If not exists: &quot;I don&#39;t have an encyclopedia for this project. Create one?&quot;
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="k">3.</span> User declines: Proceed without. Do not ask again this session.
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="k">4.</span> User accepts: Invoke <span class="sb">`project-encyclopedia`</span> skill
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="sb">```</span>
 <a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="gu">### Phase 1: Discovery</span>
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a><span class="gu">## Workflow</span>
 <a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>&lt;analysis&gt;
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>Before creating encyclopedia, understand what already exists:
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="k">-</span><span class="w"> </span>README.md content and quality
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="k">-</span><span class="w"> </span>CLAUDE.md / CLAUDE.local.md presence
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="k">-</span><span class="w"> </span>Existing documentation in docs/
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="k">-</span><span class="w"> </span>Package.json / pyproject.toml / Cargo.toml metadata
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a>&lt;/analysis&gt;
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="gs">**Gather via exploration:**</span>
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">1.</span> Project type (language, framework, monorepo?)
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="k">2.</span> Entry points (main files, CLI commands, API routes)
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="k">3.</span> Key directories and their purposes
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="k">4.</span> Test configuration and commands
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="k">5.</span> Build/run commands
-<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="gu">### Phases 2-5: Build Content</span>
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a><span class="gu">### Phase 1: Discovery</span>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>&lt;analysis&gt;
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a>Before creating encyclopedia, understand what already exists:
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="k">-</span><span class="w"> </span>README.md content and quality
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a><span class="k">-</span><span class="w"> </span>CLAUDE.md / CLAUDE.local.md presence
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">-</span><span class="w"> </span>Existing documentation in docs/
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">-</span><span class="w"> </span>Package.json / pyproject.toml / Cargo.toml metadata
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>&lt;/analysis&gt;
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gs">**Gather via exploration:**</span>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="k">1.</span> Project type (language, framework, monorepo?)
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="k">2.</span> Entry points (main files, CLI commands, API routes)
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="k">3.</span> Key directories and their purposes
+<a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a><span class="k">4.</span> Test configuration and commands
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="k">5.</span> Build/run commands
 <a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>Dispatch subagent with the <span class="sb">`encyclopedia-build`</span> command.
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a><span class="gu">### Phases 2-5: Build Content</span>
 <a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>Subagent builds: Glossary (Phase 2), Architecture Skeleton (Phase 3), Decision Log (Phase 4), Entry Points &amp; Testing (Phase 5).
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a>Dispatch subagent with the <span class="sb">`encyclopedia-build`</span> command.
 <a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="gu">### Phase 6: Validate &amp; Write</span>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>Subagent builds: Glossary (Phase 2), Architecture Skeleton (Phase 3), Decision Log (Phase 4), Entry Points &amp; Testing (Phase 5).
 <a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>Dispatch subagent with the <span class="sb">`encyclopedia-validate`</span> command.
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="gu">### Phase 6: Validate &amp; Write</span>
 <a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>Subagent assembles all sections, validates against quality checklist, and writes to output path.
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>Dispatch subagent with the <span class="sb">`encyclopedia-validate`</span> command.
 <a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="gu">## Refresh Workflow</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a>Subagent assembles all sections, validates against quality checklist, and writes to output path.
 <a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>When updating existing encyclopedia:
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a><span class="gu">## Refresh Workflow</span>
 <a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a><span class="k">1.</span> Read current version
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a><span class="k">2.</span> Scan for major changes:
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>New entry points
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Renamed/removed components
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>New glossary terms in recent commits
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="k">3.</span> Present diff of proposed changes
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="k">4.</span> User approves: Apply updates, reset mtime
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">5.</span> User declines: Keep existing
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>&lt;RULE&gt;
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>Refresh is surgical; preserve stable content.
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>&lt;/RULE&gt;
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="gu">## Template</span>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>When updating existing encyclopedia:
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="k">1.</span> Read current version
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="k">2.</span> Scan for major changes:
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>New entry points
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Renamed/removed components
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>New glossary terms in recent commits
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a><span class="k">3.</span> Present diff of proposed changes
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="k">4.</span> User approves: Apply updates, reset mtime
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="k">5.</span> User declines: Keep existing
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>&lt;RULE&gt;
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a>Refresh is surgical; preserve stable content.
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>&lt;/RULE&gt;
 <a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="sb">```markdown</span>
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="gh"># Project Encyclopedia: [Name]</span>
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">&gt; </span><span class="ge">Last updated: YYYY-MM-DD | Created by: [model]</span>
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="k">&gt; </span><span class="ge">Purpose: Cross-session context for AI assistants</span>
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="gu">## Glossary</span>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="gu">## Template</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="sb">```markdown</span>
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="gh"># Project Encyclopedia: [Name]</span>
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="k">&gt; </span><span class="ge">Last updated: YYYY-MM-DD | Created by: [model]</span>
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="k">&gt; </span><span class="ge">Purpose: Cross-session context for AI assistants</span>
 <a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>| Term | Definition | Location |
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>|------|------------|----------|
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a><span class="gu">## Architecture</span>
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a><span class="gu">## Glossary</span>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>| Term | Definition | Location |
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>|------|------------|----------|
 <a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>```mermaid
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>graph TD
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>    A[Component] --&gt; B[Component]
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="sb">```</span>
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="gs">**Key boundaries:**</span>
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a><span class="gu">## Architecture</span>
+<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a>
+<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a>```mermaid
+<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a>graph TD
+<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>    A[Component] --&gt; B[Component]
+<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="sb">```</span>
 <a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="k">-</span><span class="w"> </span>(to be filled)
+<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="gs">**Key boundaries:**</span>
 <a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a>
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="gu">## Decisions</span>
+<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a><span class="k">-</span><span class="w"> </span>(to be filled)
 <a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a>
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a>| Decision | Alternatives | Rationale | Date |
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>|----------|--------------|-----------|------|
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="gu">## Entry Points</span>
+<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="gu">## Decisions</span>
+<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a>
+<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>| Decision | Alternatives | Rationale | Date |
+<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a>|----------|--------------|-----------|------|
 <a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a>
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>| Entry | Path | Purpose |
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>|-------|------|---------|
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a><span class="gu">## Testing</span>
+<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a><span class="gu">## Entry Points</span>
+<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a>
+<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a>| Entry | Path | Purpose |
+<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>|-------|------|---------|
 <a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a>
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Command**</span>:
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Framework**</span>:
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Key patterns**</span>:
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a>
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="gu">## See Also</span>
+<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="gu">## Testing</span>
+<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>
+<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Command**</span>:
+<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Framework**</span>:
+<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Key patterns**</span>:
 <a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a>
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="k">-</span><span class="w"> </span>README.md for setup instructions
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="k">-</span><span class="w"> </span>CLAUDE.md for development conventions
-<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a>```
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a>
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="gu">## See Also</span>
+<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a>
+<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="k">-</span><span class="w"> </span>README.md for setup instructions
+<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="k">-</span><span class="w"> </span>CLAUDE.md for development conventions
+<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>```
 <a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a>
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="k">-</span><span class="w"> </span>Auto-creating without asking
-<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="k">-</span><span class="w"> </span>Including implementation details that change frequently
-<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="k">-</span><span class="w"> </span>Duplicating content from existing docs
-<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="k">-</span><span class="w"> </span>Diagrams with more than 7 nodes
-<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="k">-</span><span class="w"> </span>Encyclopedias exceeding 1000 lines
-<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="k">-</span><span class="w"> </span>Skipping staleness check on existing encyclopedias
-<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="k">-</span><span class="w"> </span>Regenerating from scratch instead of surgical refresh
-<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a>
-<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a>
+<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a><span class="k">-</span><span class="w"> </span>Auto-creating without asking
+<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="k">-</span><span class="w"> </span>Including implementation details that change frequently
+<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="k">-</span><span class="w"> </span>Duplicating content from existing docs
+<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="k">-</span><span class="w"> </span>Diagrams with more than 7 nodes
+<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="k">-</span><span class="w"> </span>Encyclopedias exceeding 1000 lines
+<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a><span class="k">-</span><span class="w"> </span>Skipping staleness check on existing encyclopedias
+<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="k">-</span><span class="w"> </span>Regenerating from scratch instead of surgical refresh
+<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a>
-<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a>Before completing encyclopedia work:
+<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a><span class="gu">## Self-Check</span>
 <a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>
-<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="k">- [ ]</span> User explicitly consented to creation/refresh
-<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="k">- [ ]</span> Total content &lt; 1000 lines
-<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="k">- [ ]</span> No duplication of existing documentation
-<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="k">- [ ]</span> Architecture diagram &lt;= 7 nodes
-<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="k">- [ ]</span> Glossary contains only project-specific terms
-<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="k">- [ ]</span> Decisions explain rationale, not just facts
-<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="k">- [ ]</span> File written to <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/encyclopedia.md`</span>
-<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="k">- [ ]</span> Mtime reflects current date
-<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>
-<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>If ANY unchecked: Revise before completing.
+<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a>Before completing encyclopedia work:
+<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a>
+<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="k">- [ ]</span> User explicitly consented to creation/refresh
+<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="k">- [ ]</span> Total content &lt; 1000 lines
+<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="k">- [ ]</span> No duplication of existing documentation
+<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a><span class="k">- [ ]</span> Architecture diagram &lt;= 7 nodes
+<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="k">- [ ]</span> Glossary contains only project-specific terms
+<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a><span class="k">- [ ]</span> Decisions explain rationale, not just facts
+<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a><span class="k">- [ ]</span> File written to <span class="sb">`~/.local/spellbook/docs/&lt;project&gt;/encyclopedia.md`</span>
+<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a><span class="k">- [ ]</span> Mtime reflects current date
 <a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>
-<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>&lt;reflection&gt;
-<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>After each phase, verify: outputs produced match template sections, no duplication of existing docs, content stays within context budget, staleness metadata is current.
-<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>&lt;/reflection&gt;
-<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>
-<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>Maps that agents cannot trust are worse than no maps. Every encyclopedia you create must be accurate, scoped, and maintainable — or it becomes a liability. Offer first. Compress ruthlessly. Refresh surgically. This is the obligation.
-<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>If ANY unchecked: Revise before completing.
+<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>
+<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>&lt;reflection&gt;
+<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>After each phase, verify: outputs produced match template sections, no duplication of existing docs, content stays within context budget, staleness metadata is current.
+<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a>&lt;/reflection&gt;
+<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a>
+<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a>Maps that agents cannot trust are worse than no maps. Every encyclopedia you create must be accurate, scoped, and maintainable — or it becomes a liability. Offer first. Compress ruthlessly. Refresh surgically. This is the obligation.
+<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
