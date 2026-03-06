@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from .config import PLATFORM_CONFIG, SUPPORTED_PLATFORMS, get_platform_config_dir, resolve_config_dirs
 from .platforms.base import PlatformInstaller
+from .ui import shorten_home
 from .version import check_upgrade_needed, read_version
 
 
@@ -312,11 +313,7 @@ class Installer:
                 )
 
                 if on_progress:
-                    # Shorten home directory to ~ for display
-                    _home = str(Path.home())
-                    _dir_display = str(config_dir)
-                    if _dir_display.startswith(_home):
-                        _dir_display = "~" + _dir_display[len(_home):]
+                    _dir_display = shorten_home(config_dir)
                     on_progress("platform_start", {
                         "name": f"{installer.platform_name} ({_dir_display})",
                         "index": install_index,

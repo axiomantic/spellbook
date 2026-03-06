@@ -167,15 +167,19 @@ def print_header(version: str = None) -> None:
     print()
 
 
+def shorten_home(path) -> str:
+    """Replace the home directory prefix with ~ for display."""
+    home = str(Path.home())
+    display = str(path)
+    if display.startswith(home):
+        display = "~" + display[len(home):]
+    return display
+
+
 def print_directory_config(spellbook_dir: Path, platforms: List[str]) -> None:
     """Print directory configuration in compact format."""
     spellbook_config = get_spellbook_config_dir()
-
-    # Shorten home directory to ~
-    home = str(Path.home())
-    config_display = str(spellbook_config)
-    if config_display.startswith(home):
-        config_display = "~" + config_display[len(home):]
+    config_display = shorten_home(spellbook_config)
 
     print(f"  Source: {spellbook_dir}")
     print(f"  Config: {config_display}")
@@ -247,6 +251,16 @@ def print_result(result: "InstallResult", is_last: bool = False) -> None:
     print(f"{branch}{icon} {result.message}")
 
 
+def _group_results_by_platform(session: "InstallSession") -> Dict[str, List["InstallResult"]]:
+    """Group installation results by platform key."""
+    by_platform: Dict[str, List["InstallResult"]] = {}
+    for result in session.results:
+        if result.platform not in by_platform:
+            by_platform[result.platform] = []
+        by_platform[result.platform].append(result)
+    return by_platform
+
+
 def print_report(session: "InstallSession", show_details: bool = True, timer: "InstallTimer | None" = None) -> None:
     """Print final installation report.
 
@@ -257,12 +271,7 @@ def print_report(session: "InstallSession", show_details: bool = True, timer: "I
         timer: Optional InstallTimer for elapsed time display.
     """
     if show_details:
-        # Group results by platform
-        by_platform: Dict[str, List["InstallResult"]] = {}
-        for result in session.results:
-            if result.platform not in by_platform:
-                by_platform[result.platform] = []
-            by_platform[result.platform].append(result)
+        by_platform = _group_results_by_platform(session)
 
         for platform, results in by_platform.items():
             platform_config = PLATFORM_CONFIG.get(platform, {})
@@ -283,12 +292,7 @@ def print_uninstall_report(session: "InstallSession") -> None:
     """Print uninstallation report."""
     print()
 
-    # Group results by platform
-    by_platform: Dict[str, List["InstallResult"]] = {}
-    for result in session.results:
-        if result.platform not in by_platform:
-            by_platform[result.platform] = []
-        by_platform[result.platform].append(result)
+    by_platform = _group_results_by_platform(session)
 
     # Print per-platform summary
     for platform, results in by_platform.items():

@@ -992,7 +992,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     # Track pending results per section for tree-drawing (is_last detection)
     _pending_results: list = []
-    _current_section: str | None = None
     _install_timer = InstallTimer()
 
     def _flush_results():
@@ -1002,22 +1001,17 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         _pending_results.clear()
 
     def _on_progress(event, data):
-        nonlocal _current_section
-
         if event == "daemon_start":
             _flush_results()
-            _current_section = "daemon"
             print_platform_section("MCP Daemon")
         elif event == "health_start":
             _flush_results()
-            _current_section = "health"
             print_platform_section("Health Check")
         elif event == "platform_start":
             _flush_results()
             name = data["name"]
             idx = data["index"]
             total = data["total"]
-            _current_section = name
             print_platform_section(name, index=idx, total=total)
         elif event == "platform_skip":
             _flush_results()
