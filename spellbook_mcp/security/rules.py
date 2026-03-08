@@ -84,7 +84,7 @@ class ScanResult:
 
 INJECTION_RULES: list[tuple[str, Severity, str, str]] = [
     (
-        r"(?i)ignore\s+(previous|above|all)\s+(instructions?|prompts?|rules?)",
+        r"(?i)ignore\s+(previous|above|all)(\s+(previous|above|all))*\s+(instructions?|prompts?|rules?)",
         Severity.CRITICAL,
         "INJ-001",
         "Instruction override attempt",
@@ -96,7 +96,7 @@ INJECTION_RULES: list[tuple[str, Severity, str, str]] = [
         "Role reassignment attempt",
     ),
     (
-        r"(?i)system\s*:\s*",
+        r"(?i)(system\s*:\s*|</?system>)",
         Severity.HIGH,
         "INJ-003",
         "System prompt injection marker",
@@ -114,7 +114,7 @@ INJECTION_RULES: list[tuple[str, Severity, str, str]] = [
         "Explicit instruction injection",
     ),
     (
-        r"<system-reminder>",
+        r"</?system-reminder>",
         Severity.CRITICAL,
         "INJ-006",
         "System reminder tag in content",
@@ -142,6 +142,20 @@ INJECTION_RULES: list[tuple[str, Severity, str, str]] = [
         Severity.MEDIUM,
         "INJ-010",
         "Behavioral override via pretense",
+    ),
+    # AppleScript injection
+    (
+        r"(?i)tell\s+application|do\s+(shell\s+)?script",
+        Severity.HIGH,
+        "APPLESCRIPT-001",
+        "AppleScript injection pattern detected",
+    ),
+    # Base64-encoded shell commands
+    (
+        r"(?i)(?:echo|printf)\s+[A-Za-z0-9+/]{20,}={0,2}\s*\|\s*(?:base64|b64)",
+        Severity.HIGH,
+        "BASE64-001",
+        "Base64-encoded command pipeline detected",
     ),
 ]
 
@@ -489,6 +503,22 @@ def check_patterns(
                     "severity": severity.name,
                     "message": message,
                     "matched_text": match.group(),
+                }
+            )
+
+    # Entropy check for potential encoded payloads (defense-in-depth signal).
+    # Always runs regardless of security mode -- it's a supplementary signal,
+    # not a blocking rule. Threshold of 5.0 bits/char avoids false positives
+    # on normal English text and structured code (~4.5-4.9 bits/char).
+    if len(text) > 50:
+        entropy = shannon_entropy(text)
+        if entropy > 5.0:
+            results.append(
+                {
+                    "rule_id": "ENTROPY-001",
+                    "severity": "LOW",
+                    "message": f"High entropy content detected ({entropy:.2f} bits/char), possible encoded payload",
+                    "category": "obfuscation",
                 }
             )
 

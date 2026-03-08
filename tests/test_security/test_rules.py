@@ -134,7 +134,7 @@ class TestInjectionRules:
 
     def test_injection_rules_exist(self):
         from spellbook_mcp.security.rules import INJECTION_RULES
-        assert len(INJECTION_RULES) == 10
+        assert len(INJECTION_RULES) == 12
 
     def test_all_patterns_compile(self):
         from spellbook_mcp.security.rules import INJECTION_RULES
@@ -145,6 +145,7 @@ class TestInjectionRules:
     def test_rule_ids_sequential(self):
         from spellbook_mcp.security.rules import INJECTION_RULES
         expected_ids = [f"INJ-{i:03d}" for i in range(1, 11)]
+        expected_ids.extend(["APPLESCRIPT-001", "BASE64-001"])
         actual_ids = [rule_id for _, _, rule_id, _ in INJECTION_RULES]
         assert actual_ids == expected_ids
 
@@ -743,7 +744,7 @@ class TestBackwardCompatibleAliases:
     def test_injection_triggers_alias(self):
         from spellbook_mcp.security.rules import INJECTION_TRIGGERS
         assert INJECTION_TRIGGERS is not None
-        assert len(INJECTION_TRIGGERS) == 10
+        assert len(INJECTION_TRIGGERS) == 12
 
     def test_exfiltration_patterns_alias(self):
         from spellbook_mcp.security.rules import EXFILTRATION_PATTERNS

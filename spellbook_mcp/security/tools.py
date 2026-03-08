@@ -327,7 +327,7 @@ def do_query_events(
 
 
 # Valid security modes
-_VALID_MODES = {"standard", "paranoid", "permissive"}
+_VALID_MODES = {"standard", "paranoid"}
 
 
 def do_set_security_mode(
@@ -342,7 +342,7 @@ def do_set_security_mode(
     security event for the mode transition.
 
     Args:
-        mode: One of "standard", "paranoid", "permissive".
+        mode: One of "standard", "paranoid".
         reason: Optional reason string stored in updated_by.
         db_path: Path to the database file. If None, uses the default path.
 
@@ -350,10 +350,40 @@ def do_set_security_mode(
         Dict with keys:
             mode: The new mode.
             auto_restore_at: ISO timestamp when mode will auto-restore.
+        Or error dict if permissive mode is requested.
 
     Raises:
         ValueError: If mode is not a valid security mode.
     """
+    # Permissive mode has been removed -- reject with error dict and log
+    if mode == "permissive":
+        if db_path is None:
+            from spellbook_mcp.db import get_db_path
+
+            db_path = str(get_db_path())
+
+        conn = sqlite3.connect(db_path, timeout=5.0)
+        try:
+            conn.execute(
+                "INSERT INTO security_events "
+                "(event_type, severity, source, detail, action_taken) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    "permissive_mode_blocked",
+                    "WARNING",
+                    "security_set_mode",
+                    "Blocked attempt to set permissive security mode",
+                    "rejected",
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        return {
+            "error": "Permissive mode has been removed for security. Only 'standard' and 'paranoid' are available."
+        }
+
     if mode not in _VALID_MODES:
         raise ValueError(f"invalid security mode: {mode!r}")
 
