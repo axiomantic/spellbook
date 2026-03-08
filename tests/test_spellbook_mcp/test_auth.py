@@ -27,6 +27,11 @@ class TestTokenGeneration:
 
             # Token must be url-safe base64, 43 chars for 32 bytes
             assert len(token) == 43
+            # Verify token contains only url-safe base64 characters
+            import re
+            assert re.fullmatch(r'[A-Za-z0-9_-]+', token), (
+                f"Token contains non-url-safe-base64 characters: {token}"
+            )
             # File permissions must be owner-only read/write
             file_mode = stat.S_IMODE(token_path.stat().st_mode)
             assert file_mode == 0o600
@@ -374,5 +379,4 @@ class TestServerStartupAuthIntegration:
 
         deps = pyproject["project"]["dependencies"]
         fastmcp_deps = [d for d in deps if d.startswith("fastmcp")]
-        assert len(fastmcp_deps) == 1
-        assert fastmcp_deps[0] == '"fastmcp>=2.9.0,<4"' or fastmcp_deps[0] == "fastmcp>=2.9.0,<4"
+        assert fastmcp_deps == ["fastmcp>=2.9.0,<4"]

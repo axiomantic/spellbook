@@ -347,7 +347,7 @@ def scan_skill(
 
     Args:
         file_path: Path to the markdown file to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         ScanResult with findings and verdict.
@@ -420,7 +420,7 @@ def scan_directory(
 
     Args:
         dir_path: Path to the directory to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
         include_patterns: If provided, only scan files matching these glob patterns.
         exclude_patterns: If provided, skip files matching these glob patterns.
 
@@ -529,7 +529,7 @@ def scan_changeset(
 
     Args:
         diff_text: Unified diff text (e.g., from `git diff`).
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         List of ScanResult objects, one per file in the diff that has .md extension.
@@ -582,7 +582,7 @@ def scan_python_file(
 
     Args:
         file_path: Path to the Python file to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         ScanResult with findings and verdict.
@@ -642,7 +642,7 @@ def scan_mcp_directory(
 
     Args:
         dir_path: Path to the directory to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         List of ScanResult objects, one per scanned Python file.

@@ -112,8 +112,9 @@ class TestPermissiveModeRejected:
         #   ESCAPE: Nothing reasonable -- any exception propagation fails the test
         #   IMPACT: Callers crash instead of receiving actionable error dict
         result = do_set_security_mode("permissive", db_path=db_path)
-        assert isinstance(result, dict)
-        assert "error" in result
+        assert result == {
+            "error": "Permissive mode has been removed for security. Only 'standard' and 'paranoid' are available."
+        }
 
 
 # ===========================================================================
@@ -191,8 +192,11 @@ class TestValidModesUnchanged:
         #   MUTATION: If standard removed from valid set -> error or raise
         #   ESCAPE: Nothing reasonable -- mode field verified exactly
         #   IMPACT: Standard mode broken, users cannot set default security
+        assert set(result.keys()) == {"mode", "auto_restore_at"}
         assert result["mode"] == "standard"
-        assert "auto_restore_at" in result
+        # auto_restore_at is a dynamic ISO timestamp
+        from datetime import datetime
+        datetime.fromisoformat(result["auto_restore_at"])  # validates format
         row = _get_security_mode_row(db_path)
         assert row["mode"] == "standard"
 
@@ -210,8 +214,11 @@ class TestValidModesUnchanged:
         #   MUTATION: If paranoid removed from valid set -> error or raise
         #   ESCAPE: Nothing reasonable -- mode field and DB both verified
         #   IMPACT: Paranoid mode broken, security elevation impossible
+        assert set(result.keys()) == {"mode", "auto_restore_at"}
         assert result["mode"] == "paranoid"
-        assert "auto_restore_at" in result
+        # auto_restore_at is a dynamic ISO timestamp
+        from datetime import datetime
+        datetime.fromisoformat(result["auto_restore_at"])  # validates format
         row = _get_security_mode_row(db_path)
         assert row["mode"] == "paranoid"
 

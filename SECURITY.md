@@ -59,7 +59,7 @@ Every tool invocation passes through pattern-based security scanning:
 - **Escalation detection**: sudo, eval/exec, shell=True subprocess, permission bypass flags
 - **Obfuscation detection**: High-entropy strings, hex escapes, char code concatenation
 
-The security mode (standard/paranoid/permissive) controls the severity threshold for blocking.
+The security mode (standard/paranoid) controls the severity threshold for blocking.
 
 Relevant sources: `spellbook_mcp/security/rules.py`, `spellbook_mcp/security/tools.py`, `spellbook_mcp/security/check.py`
 

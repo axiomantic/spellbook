@@ -91,9 +91,8 @@ class TestFieldLengthLimits:
         #   MUTATION: If no truncation, full 250-char string appears
         #   ESCAPE: Nothing reasonable -- we verify the 250-char string is NOT present
         #   IMPACT: Oversized DB fields could bloat context or carry hidden payloads
-        assert context is not None
-        assert long_persona not in context
-        assert "A" * 200 in context
+        truncated = "A" * 200
+        assert context == f"**Session Persona:** {truncated}"
 
         close_all_connections()
 
@@ -115,9 +114,8 @@ class TestFieldLengthLimits:
         #   MUTATION: No truncation -> full string present
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Oversized skill names could carry injection payloads
-        assert context is not None
-        assert long_skill not in context
-        assert "x" * 100 in context
+        truncated = "x" * 100
+        assert context == f"**Active Skill:** {truncated}"
 
         close_all_connections()
 
@@ -139,9 +137,8 @@ class TestFieldLengthLimits:
         #   MUTATION: No truncation -> full string present
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Oversized phase strings used as injection vector
-        assert context is not None
-        assert long_phase not in context
-        assert "P" * 100 in context
+        truncated = "P" * 100
+        assert context == f"**Skill Phase:** {truncated}"
 
         close_all_connections()
 
@@ -164,10 +161,8 @@ class TestFieldLengthLimits:
         #   MUTATION: No truncation -> 600 T's appear in context
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Long todo items carry injection payloads into recovery context
-        assert context is not None
-        assert long_content not in context
-        # Truncated content should be present (500 chars of T)
-        assert "T" * 500 in context
+        truncated = "T" * 500
+        assert context == f"**Active TODOs:**\n- {truncated} (pending)"
 
         close_all_connections()
 
@@ -192,8 +187,9 @@ class TestFieldLengthLimits:
         #   MUTATION: No truncation -> 600 F's appear in context
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Long position args carry injection payloads
-        assert context is not None
-        assert long_arg not in context
+        # Position item's primary_arg is truncated to 500 chars
+        truncated_arg = "F" * 500
+        assert context == f"**Last Actions:**\n- Read: {truncated_arg}"
 
         close_all_connections()
 
@@ -229,11 +225,8 @@ class TestInjectionPatternOmission:
         #   MUTATION: If no sanitization, malicious persona appears in context
         #   ESCAPE: Nothing reasonable -- both presence and absence verified
         #   IMPACT: Injected persona modifies agent behavior post-compaction
-        assert context is not None
-        assert malicious_persona not in context
-        assert "IGNORE ALL PREVIOUS" not in context
-        # Legitimate fields should still be present
-        assert "legitimate-skill" in context
+        # Persona omitted due to injection, only legitimate skill remains
+        assert context == "**Active Skill:** legitimate-skill"
 
         close_all_connections()
 
@@ -260,10 +253,8 @@ class TestInjectionPatternOmission:
         #   MUTATION: If no sanitization, closing system-reminder tag appears
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Injected skill field breaks out of system-reminder context
-        assert context is not None
-        assert malicious_skill not in context
-        assert "</system-reminder>" not in context
-        assert "safe-persona" in context
+        # Active skill omitted due to injection, only safe persona remains
+        assert context == "**Session Persona:** safe-persona"
 
         close_all_connections()
 
@@ -293,11 +284,12 @@ class TestInjectionPatternOmission:
         #   MUTATION: If no per-item sanitization, malicious todo appears
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Injected todo item instructs agent to run destructive commands
-        assert context is not None
-        assert "Legitimate task" in context
-        assert "Another safe task" in context
-        assert "IGNORE PREVIOUS INSTRUCTIONS" not in context
-        assert "rm -rf" not in context
+        # Malicious todo filtered out, safe ones remain
+        assert context == (
+            "**Active TODOs:**\n"
+            "- Legitimate task (in_progress)\n"
+            "- Another safe task (pending)"
+        )
 
         close_all_connections()
 
@@ -324,10 +316,8 @@ class TestInjectionPatternOmission:
         #   MUTATION: If no sanitization, SYSTEM tags appear in context
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Injected phase overrides safety constraints
-        assert context is not None
-        assert malicious_phase not in context
-        assert "<SYSTEM>" not in context
-        assert "safe-skill" in context
+        # Skill phase omitted due to injection, only safe skill remains
+        assert context == "**Active Skill:** safe-skill"
 
         close_all_connections()
 
@@ -356,9 +346,8 @@ class TestInjectionPatternOmission:
         #   MUTATION: If no per-item sanitization, IGNORE instruction appears
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Injected position instructs agent to ignore safety
-        assert context is not None
-        assert "/safe/file.py" in context
-        assert "IGNORE ALL PREVIOUS INSTRUCTIONS" not in context
+        # Malicious position item filtered out, safe one remains
+        assert context == "**Last Actions:**\n- Read: /safe/file.py"
 
         close_all_connections()
 
@@ -396,8 +385,10 @@ class TestSanitizationWarningLogging:
         warning_messages = [
             r.message for r in caplog.records if r.levelno >= logging.WARNING
         ]
-        assert any("persona" in msg for msg in warning_messages), (
-            f"Expected warning mentioning 'persona', got: {warning_messages}"
+        assert len(warning_messages) == 1
+        assert warning_messages[0] == (
+            "Injection pattern detected in recovery context field 'persona', "
+            "omitting from context"
         )
 
         close_all_connections()
@@ -429,8 +420,10 @@ class TestSanitizationWarningLogging:
         #   MUTATION: If no per-item logging, no warning mentioning "todo"
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Malicious todo injections invisible in logs
-        assert any("todo" in msg.lower() for msg in warning_messages), (
-            f"Expected warning mentioning 'todo', got: {warning_messages}"
+        assert len(warning_messages) == 1
+        assert warning_messages[0] == (
+            "Injection pattern detected in recovery context field 'todo item', "
+            "omitting from context"
         )
 
         close_all_connections()
@@ -472,12 +465,15 @@ class TestCleanFieldsPassThrough:
         #   MUTATION: If sanitization is too aggressive, clean fields omitted
         #   ESCAPE: Nothing reasonable -- all 5 field values verified
         #   IMPACT: Clean session state lost during recovery, degraded UX
-        assert context is not None
-        assert "Detective" in context
-        assert "writing-plans" in context
-        assert "Phase 2: Design" in context
-        assert "Write tests" in context
-        assert "/src/main.py" in context
+        assert context == (
+            "**Active TODOs:**\n"
+            "- Write tests (in_progress)\n\n"
+            "**Active Skill:** writing-plans\n\n"
+            "**Skill Phase:** Phase 2: Design\n\n"
+            "**Session Persona:** Detective\n\n"
+            "**Last Actions:**\n"
+            "- Read: /src/main.py"
+        )
 
         close_all_connections()
 
@@ -504,9 +500,10 @@ class TestCleanFieldsPassThrough:
         #   MUTATION: Off-by-one in limit check -> truncation at exact boundary
         #   ESCAPE: Nothing reasonable
         #   IMPACT: Valid data silently truncated
-        assert context is not None
-        assert exact_persona in context
-        assert exact_skill in context
+        assert context == (
+            f"**Active Skill:** {exact_skill}\n\n"
+            f"**Session Persona:** {exact_persona}"
+        )
 
         close_all_connections()
 

@@ -137,7 +137,7 @@ The security mode can be changed at runtime via the `security_set_mode` MCP tool
 security_set_mode(mode="standard")
 ```
 
-Available modes: `standard` (default, HIGH+ threshold), `paranoid` (MEDIUM+ threshold), `permissive` (CRITICAL only).
+Available modes: `standard` (default, HIGH+ threshold), `paranoid` (MEDIUM+ threshold).
 
 ### Revert Security Changes
 

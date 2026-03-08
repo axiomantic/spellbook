@@ -108,6 +108,7 @@ class TestAppleScriptEscaping:
             expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
             assert applescript == expected_applescript
             assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_semicolon_in_prompt_is_escaped(self):
         """A prompt containing semicolons must be shlex-quoted, preventing command chaining."""
@@ -129,6 +130,7 @@ class TestAppleScriptEscaping:
             expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
             assert applescript == expected_applescript
             assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_backtick_in_prompt_is_escaped(self):
         """Backtick command substitution must be neutralized by shlex.quote."""
@@ -150,6 +152,7 @@ class TestAppleScriptEscaping:
             expected_applescript = _expected_macos_applescript("terminal", prompt, "/tmp", "claude")
             assert applescript == expected_applescript
             assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_working_directory_is_escaped(self):
         """working_directory with shell metacharacters must be shlex-quoted."""
@@ -171,6 +174,7 @@ class TestAppleScriptEscaping:
             expected_applescript = _expected_macos_applescript("terminal", "hello", malicious_wd, "claude")
             assert applescript == expected_applescript
             assert result == {"status": "spawned", "terminal": "terminal", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_iterm2_uses_escaped_command(self):
         """iTerm2 AppleScript must use the escaped command in write text."""
@@ -192,6 +196,7 @@ class TestAppleScriptEscaping:
             expected_applescript = _expected_macos_applescript("iterm2", prompt, "/tmp", "claude")
             assert applescript == expected_applescript
             assert result == {"status": "spawned", "terminal": "iTerm2", "pid": 5678}
+            assert mock_popen.call_count == 1
 
     def test_warp_uses_escaped_command(self):
         """Warp AppleScript must use the escaped command in keystroke."""
@@ -213,6 +218,7 @@ class TestAppleScriptEscaping:
             expected_applescript = _expected_macos_applescript("warp", prompt, "/tmp", "claude")
             assert applescript == expected_applescript
             assert result == {"status": "spawned", "terminal": "Warp", "pid": 9999}
+            assert mock_popen.call_count == 1
 
     def test_popen_called_with_osascript(self):
         """subprocess.Popen must be called with ['osascript', '-e', script]."""
@@ -256,6 +262,7 @@ class TestLinuxTerminalEscaping:
             expected_cmd = _expected_linux_command("gnome-terminal", prompt, "/tmp", "claude")
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "gnome-terminal", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_working_directory_is_shell_escaped_linux(self):
         """working_directory must be shlex.quote'd in bash -c command."""
@@ -276,6 +283,7 @@ class TestLinuxTerminalEscaping:
             expected_cmd = _expected_linux_command("xterm", "hello", malicious_wd, "claude")
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "xterm", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_semicolon_in_prompt_escaped_linux(self):
         """Semicolons in prompt must be neutralized by shlex.quote."""
@@ -296,6 +304,7 @@ class TestLinuxTerminalEscaping:
             expected_cmd = _expected_linux_command("konsole", prompt, "/tmp", "claude")
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "konsole", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_terminator_double_escapes_command(self):
         """Terminator wraps the bash -c arg in shlex.quote for its -e flag."""
@@ -316,6 +325,7 @@ class TestLinuxTerminalEscaping:
             expected_cmd = _expected_linux_command("terminator", prompt, "/tmp", "claude")
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "terminator", "pid": 1234}
+            assert mock_popen.call_count == 1
 
 
 class TestWindowsTerminalEscaping:
@@ -341,6 +351,7 @@ class TestWindowsTerminalEscaping:
             expected_cmd = ["wt", "-d", "C:\\Users\\test", "cmd", "/c", safe_cli_prompt]
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "windows-terminal", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_prompt_with_special_chars_pwsh(self):
         """Prompt with special characters must be properly escaped for PowerShell."""
@@ -363,6 +374,7 @@ class TestWindowsTerminalEscaping:
                            f"Set-Location 'C:\\Users\\test'; {safe_cli_prompt}"]
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "pwsh", "pid": 1234}
+            assert mock_popen.call_count == 1
 
     def test_prompt_with_special_chars_cmd(self):
         """Prompt with special characters must be properly escaped for cmd."""
@@ -385,6 +397,7 @@ class TestWindowsTerminalEscaping:
                            f'cd /d "C:\\Users\\test" && {safe_cli_prompt}']
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "cmd", "pid": 1234}
+            assert mock_popen.call_count == 1
 
 
 class TestWorkingDirectoryValidation:
@@ -560,6 +573,20 @@ class TestTerminalEnvAllowlist:
                     mock_run.side_effect = run_side_effect
                     result = detect_linux_terminal()
         assert result == "gnome-terminal"
+
+    def test_empty_terminal_env_uses_detection_cascade(self):
+        """An empty $TERMINAL value must be treated as unset and use detection cascade."""
+        from spellbook_mcp.terminal_utils import detect_linux_terminal
+
+        with patch.dict(os.environ, {"TERMINAL": ""}):
+            with patch("spellbook_mcp.terminal_utils.subprocess.run") as mock_run:
+                def run_side_effect(cmd, **kwargs):
+                    if 'konsole' in cmd:
+                        return MagicMock(returncode=0)
+                    return MagicMock(returncode=1)
+                mock_run.side_effect = run_side_effect
+                result = detect_linux_terminal()
+        assert result == "konsole"
 
     def test_no_terminal_env_uses_detection_cascade(self):
         """Without $TERMINAL set, detection cascade runs normally."""

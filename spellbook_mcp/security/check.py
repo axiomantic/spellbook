@@ -15,7 +15,7 @@ Usage as CLI (Claude Code hook protocol):
     # Exit code 0 = safe, exit code 2 = blocked
 
 Flags:
-    --mode standard|paranoid|permissive|audit|canary   Security sensitivity level
+    --mode standard|paranoid|audit|canary               Security sensitivity level
     --check-output                                      Switch to output checking mode
     --get-mode                                          Print current security mode and exit
 """
@@ -56,7 +56,7 @@ def check_tool_input(
     Args:
         tool_name: The name of the tool being invoked.
         tool_input: The input dict for the tool.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         Dict with keys:
@@ -115,7 +115,7 @@ def check_tool_output(
     Args:
         tool_name: The name of the tool that produced the output.
         output_text: The raw output text to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         Dict with keys:
@@ -189,7 +189,7 @@ def get_current_mode(db_path: Optional[str] = None) -> str:
         db_path: Path to the database file. If None, uses the default path.
 
     Returns:
-        Current security mode string ("standard", "paranoid", or "permissive").
+        Current security mode string ("standard" or "paranoid").
         Falls back to "standard" if the DB is unavailable.
     """
     if db_path is None:
@@ -318,7 +318,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=["standard", "paranoid", "permissive", "audit", "canary"],
+        choices=["standard", "paranoid", "audit", "canary"],
         default="standard",
         help="Security sensitivity level (audit = log only, canary = scan output for canary tokens, both fail-open)",
     )

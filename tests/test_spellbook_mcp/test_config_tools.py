@@ -562,7 +562,7 @@ class TestGetSpellbookDir:
         assert isinstance(result, Path)
         # Should find the actual spellbook dir (running from repo or worktree) or default
         # Worktrees live under .claude/worktrees/ or .worktrees/
-        assert result.name == "spellbook" or "/worktrees/" in str(result)
+        assert result.name == "spellbook" or "worktrees/" in str(result)
 
 
 class TestSessionIsolation:

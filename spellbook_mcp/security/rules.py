@@ -461,11 +461,9 @@ def shannon_entropy(s: str) -> float:
 # Severity thresholds per security mode.
 # "standard": HIGH and above
 # "paranoid": MEDIUM and above (catches more)
-# "permissive": CRITICAL only (catches less)
 _MODE_SEVERITY_THRESHOLD: dict[str, Severity] = {
     "standard": Severity.HIGH,
     "paranoid": Severity.MEDIUM,
-    "permissive": Severity.CRITICAL,
 }
 
 
@@ -479,7 +477,7 @@ def check_patterns(
     Args:
         text: The text to scan.
         patterns: List of (regex_pattern, severity, rule_id, message) tuples.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
             Controls the minimum severity threshold for reporting findings.
 
     Returns:

