@@ -89,8 +89,9 @@ namespace = cwd.replace('/', '-').lstrip('-') if cwd else 'unknown'
 # Build tags
 tags_list = [tool_name.lower()]
 if subject:
-    # Extract filename from path
-    parts = subject.rsplit('/', 1)
+    # Extract filename from path (handle both / and \ separators)
+    normalized = subject.replace('\\\\', '/')
+    parts = normalized.rsplit('/', 1)
     if len(parts) > 1:
         tags_list.append(parts[-1].lower())
 

@@ -54,7 +54,7 @@ if tool_name not in file_tools:
 
 # Extract file path
 file_path = ''
-if tool_name in ('Read', 'Write', 'Edit'):
+if tool_name in ('Read', 'Edit'):
     file_path = tool_input.get('file_path', '')
 elif tool_name == 'Grep':
     file_path = tool_input.get('path', '')

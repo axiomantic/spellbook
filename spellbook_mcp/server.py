@@ -3258,7 +3258,6 @@ async def api_memory_event(request: Request) -> JSONResponse:
     tool_name = str(body["tool_name"])[:100]
     subject = str(body["subject"])[:500]
     tags = str(body.get("tags", ""))[:500]
-    namespace = str(body.get("namespace", ""))[:200]
 
     db_path = str(get_db_path())
     result = do_log_event(
