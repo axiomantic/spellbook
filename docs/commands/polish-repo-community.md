@@ -389,9 +389,23 @@ GitHub grades repositories on community standards. Audit the project against thi
 
 ### CODE_OF_CONDUCT.md
 
-Recommend the Contributor Covenant (v2.1). It is the standard, widely recognized, and low-controversy. GitHub has a built-in generator at Settings > Code and Automation > Moderation > Code of conduct.
+<CRITICAL>
+NEVER generate the full Contributor Covenant text inline. The full text contains policy language
+about harassment, abuse, and discrimination that reliably triggers API content filtering, causing
+400 errors and blocking the entire output. Always use one of the approaches below instead.
+</CRITICAL>
 
-If the user prefers to add it manually:
+Recommend the Contributor Covenant (v2.1). It is the standard, widely recognized, and low-controversy.
+
+**Approach 1 (preferred):** Fetch the canonical file directly:
+
+```bash
+curl -sL https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md -o CODE_OF_CONDUCT.md
+```
+
+Then append a "## Reporting" section with the project maintainer's contact email.
+
+**Approach 2:** If fetching fails, create a short stub that links to the full text. Use EXACTLY this template (do not expand or paraphrase the covenant):
 
 ```markdown
 # Contributor Covenant Code of Conduct
@@ -406,6 +420,8 @@ For the full text, see https://www.contributor-covenant.org/version/2/1/code_of_
 Report unacceptable behavior to [EMAIL]. All complaints will be reviewed
 and investigated. All reports will be handled with discretion.
 ```
+
+**Approach 3:** Point the user to GitHub's built-in generator at Settings > Code and Automation > Moderation > Code of conduct.
 
 ### SECURITY.md
 

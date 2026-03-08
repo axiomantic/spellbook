@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-03-07
+
+### Fixed
+- **polish-repo-community: avoid content filter on CODE_OF_CONDUCT.md** - The Contributor Covenant full text contains policy language that triggers API content filtering (400 errors). The skill now prefers fetching the canonical file via curl, falls back to a short linking stub, or directs users to GitHub's built-in generator.
+
 ## [0.25.0] - 2026-03-06
 
 ### Changed
