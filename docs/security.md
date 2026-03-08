@@ -1,0 +1,182 @@
+# Security Architecture
+
+Technical documentation for spellbook's MCP server security hardening. For a high-level overview, see [SECURITY.md](../SECURITY.md) in the project root.
+
+## Architecture Diagram
+
+```mermaid
+graph TD
+    Client["AI Assistant<br>(Claude Code / Codex / Gemini)"] -->|"HTTP + Bearer token"| Auth["BearerAuthMiddleware<br>(ASGI layer)"]
+    Client -->|"stdio pipe"| Stdio["stdio transport<br>(no auth needed)"]
+
+    Auth -->|"authenticated request"| Dispatch["FastMCP Tool Dispatch"]
+    Stdio --> Dispatch
+
+    Dispatch --> Validation["Input Validation Pipeline<br>(check_tool_input)"]
+    Validation -->|"safe"| Handler["Tool Handler"]
+    Validation -->|"blocked"| Block["Return blocked response<br>+ audit log event"]
+
+    Handler --> StateVal["State Validation<br>(validate_workflow_state)"]
+    Handler --> SpawnGuard["Spawn Guard<br>(injection + rate limit + path validation)"]
+    Handler --> Recovery["Recovery Context<br>(sanitized DB fields)"]
+
+    StateVal -->|"valid"| DB["SQLite DB<br>(0600 perms, WAL mode)"]
+    StateVal -->|"invalid"| Hostile["Mark hostile<br>+ log security event"]
+    SpawnGuard -->|"allowed"| Terminal["Terminal Spawn<br>(shlex-escaped)"]
+    Recovery --> DB
+
+    style Auth fill:#e1f5fe
+    style Validation fill:#e8f5e9
+    style StateVal fill:#fff3e0
+    style Block fill:#ffebee
+    style Hostile fill:#ffebee
+```
+
+## Auth Flow Detail
+
+### Token Lifecycle
+
+1. **Generation**: On server startup in HTTP mode, `generate_and_store_token()` calls `secrets.token_urlsafe(32)` to produce a 43-character cryptographic token.
+2. **Storage**: The token is written atomically using `os.open()` with flags `O_WRONLY | O_CREAT | O_TRUNC` and mode `0o600`. This avoids the TOCTOU race inherent in `Path.write_text()` followed by `os.chmod()`.
+3. **Distribution**: The token file lives at `~/.local/spellbook/.mcp-token`. Clients read this file to obtain the token.
+4. **Validation**: `BearerAuthMiddleware` extracts the `Authorization` header, strips the `Bearer` prefix, and compares using `secrets.compare_digest()` (constant-time, prevents timing side-channels).
+5. **Expiry**: Tokens are per-server-instance. Restarting the server generates a new token, invalidating all prior tokens.
+
+### Multi-Session Behavior
+
+Multiple AI assistant sessions can share a single HTTP server instance. Each session reads the same token file. When the server restarts:
+
+- A new token is generated and written to the token file
+- Existing sessions with the old token will receive 401 Unauthorized
+- Sessions must re-read the token file to reconnect
+
+### stdio vs HTTP
+
+| Property | stdio | HTTP (streamable-http) |
+|---|---|---|
+| Auth required | No (direct pipe, no network) | Yes (bearer token) |
+| DNS rebinding risk | None | Mitigated by auth |
+| Multi-session | No (one client per pipe) | Yes (shared server) |
+| Default | Yes | No (opt-in via env var) |
+
+Source: `spellbook_mcp/auth.py`, `spellbook_mcp/server.py:build_http_run_kwargs()`
+
+## RCE Kill Chain Analysis
+
+The most critical findings (#1 and #2) described a remote code execution kill chain through workflow state persistence. An attacker who can write to the SQLite database (or poison it through a compromised MCP tool) could inject arbitrary commands into the `boot_prompt` field, which gets executed by the AI assistant on session resume.
+
+### Three-Barrier Defense
+
+**Barrier 1: workflow_state_save/update validation** (`spellbook_mcp/server.py`)
+
+Both `workflow_state_save` and `workflow_state_update` call `validate_workflow_state()` before writing to the database. The update path validates BOTH the incoming updates AND the merged result, preventing payloads that become dangerous only after merge.
+
+**Barrier 2: workflow_state_load rejection** (`spellbook_mcp/resume.py:load_workflow_state()`)
+
+When loading persisted state, `load_workflow_state()` re-validates the state. This catches state that was written before validation was added, or state that was tampered with directly in the database.
+
+**Barrier 3: boot_prompt content restrictions** (`spellbook_mcp/resume.py:_validate_boot_prompt()`)
+
+The boot_prompt validator uses context-aware line tracking with two phases:
+
+1. **Full-string scan**: Checks dangerous patterns (`Bash(`, `Write(`, `Edit(`, `WebFetch(`, `curl`, `wget`, `rm -`) against the entire boot_prompt. This catches patterns split across lines.
+2. **Per-line validation**: Each line must match a safe pattern (Skill invocations, Read operations, TodoWrite, markdown formatting) or be inside a tracked multi-line structure (JSON array/object). Lines that match neither are rejected.
+
+Any validation failure marks the state as hostile in the trust registry and logs a CRITICAL security event.
+
+Source: `spellbook_mcp/resume.py:validate_workflow_state()`, `spellbook_mcp/resume.py:_validate_boot_prompt()`
+
+Test: `tests/test_spellbook_mcp/test_workflow_state_security.py`
+
+## Per-Finding Detail
+
+| # | Finding | Severity | File(s) Changed | Fix Approach | Test File |
+|---|---|---|---|---|---|
+| 1 | RCE via workflow_state_save: arbitrary boot_prompt | CRITICAL | `spellbook_mcp/resume.py`, `spellbook_mcp/server.py` | Schema validation with allowlisted keys, size caps, boot_prompt content restrictions, dangerous operation blocklist | `tests/test_spellbook_mcp/test_workflow_state_security.py` |
+| 2 | RCE via workflow_state_update: merge-based injection | CRITICAL | `spellbook_mcp/server.py` | Pre-merge AND post-merge validation; validates both updates dict and merged result | `tests/test_spellbook_mcp/test_workflow_state_security.py` |
+| 3 | No authentication on HTTP transport | HIGH | `spellbook_mcp/auth.py`, `spellbook_mcp/server.py`, `pyproject.toml` | Bearer token ASGI middleware with atomic token file creation (0600), constant-time comparison, /health exemption | `tests/test_spellbook_mcp/test_auth.py` |
+| 4 | No rate limiting on spawn_claude_session | HIGH | `spellbook_mcp/server.py` | DB-backed rate limiter: max 1 spawn per 5 minutes, fail-closed on DB error | `tests/test_spellbook_mcp/test_terminal_security.py` |
+| 5 | Path traversal via working_directory | HIGH | `spellbook_mcp/server.py` | `_validate_working_directory()`: symlink resolution, existence check, scope restriction to $HOME or project dir | `tests/test_spellbook_mcp/test_terminal_security.py` |
+| 6 | Prompt injection in spawn prompt | HIGH | `spellbook_mcp/server.py` | MCP-level security guard: `check_tool_input()` scan before spawn, audit log on block | `tests/test_spellbook_mcp/test_terminal_security.py` |
+| 7 | boot_prompt validation bypass via multi-line evasion | HIGH | `spellbook_mcp/resume.py` | Context-aware validation with brace/bracket depth tracking; dangerous patterns checked on full string AND per-line | `tests/test_spellbook_mcp/test_workflow_state_security.py`, `tests/test_resume.py` |
+| 8 | Shell injection via terminal command inputs | HIGH | `spellbook_mcp/terminal_utils.py` | `shlex.quote()` on all user inputs (prompt, working_directory, cli_command) before shell interpolation; AppleScript-specific escaping | `tests/test_spellbook_mcp/test_terminal_security.py` |
+| 9 | Recovery context injection via poisoned DB fields | MEDIUM | `spellbook_mcp/injection.py` | Per-field sanitization with injection pattern detection via `do_detect_injection()`; fields with injection patterns omitted from context | `tests/test_spellbook_mcp/test_injection_security.py` |
+| 10 | Insufficient injection pattern coverage | MEDIUM | `spellbook_mcp/security/rules.py` | Added AppleScript injection pattern (APPLESCRIPT-001) and base64-encoded command pipeline pattern (BASE64-001) | `tests/test_security/test_pattern_expansion.py` |
+| 11 | TERMINAL env var used without validation | MEDIUM | `spellbook_mcp/terminal_utils.py` | Validate via `shutil.which()` before use; fall back to detection if not found | `tests/test_spellbook_mcp/test_terminal_security.py` |
+| 12 | Recovery context field length unbounded | MEDIUM | `spellbook_mcp/injection.py` | `_FIELD_LENGTH_LIMITS` dict with per-field caps (100-500 chars); truncation before injection scan | `tests/test_spellbook_mcp/test_injection_security.py` |
+| 13 | SPELLBOOK_CLI_COMMAND not validated | MEDIUM | `spellbook_mcp/terminal_utils.py` | `_ALLOWED_CLI_COMMANDS` frozenset allowlist; basename extraction prevents path injection; defaults to 'claude' | `tests/test_spellbook_mcp/test_terminal_security.py` |
+| 14 | DB file permissions too permissive | LOW | `spellbook_mcp/db.py` | `os.chmod(db_path, 0o600)` on connection, `os.chmod(db_dir, 0o700)` on directory; TTL-based connection cache (1 hour) with health checks | `tests/test_spellbook_mcp/test_db_security.py` |
+
+## Configuration Options
+
+| Variable | Default | Description |
+|---|---|---|
+| `SPELLBOOK_MCP_AUTH` | (enabled) | Set to `disabled` to skip bearer token authentication on HTTP transport. The server logs a warning when auth is disabled. |
+| `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Binding to `0.0.0.0` exposes the server to the network and is strongly discouraged. |
+| `SPELLBOOK_MCP_PORT` | `8765` | Port number for HTTP transport. |
+| `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode. `stdio` for direct pipe (default, used by Claude Code). `streamable-http` for HTTP with auth. |
+| `SPELLBOOK_CLI_COMMAND` | `claude` | CLI command invoked in spawned terminal sessions. Validated against allowlist: `claude`, `codex`, `gemini`, `opencode`, `crush`. |
+
+## Rollback Instructions
+
+### Disable Authentication
+
+Set the environment variable before starting the server:
+
+```bash
+SPELLBOOK_MCP_AUTH=disabled
+```
+
+The server will log a warning: `MCP auth disabled via SPELLBOOK_MCP_AUTH=disabled`.
+
+### Revert to Standard Security Mode
+
+The security mode can be changed at runtime via the `security_set_mode` MCP tool:
+
+```
+security_set_mode(mode="standard")
+```
+
+Available modes: `standard` (default, HIGH+ threshold), `paranoid` (MEDIUM+ threshold), `permissive` (CRITICAL only).
+
+### Revert Security Changes
+
+All security hardening was implemented in discrete, well-scoped commits. To revert a specific finding's fix:
+
+```bash
+# Example: revert only the auth middleware integration
+git revert bd6ed35
+```
+
+To revert all security hardening:
+
+```bash
+git revert --no-commit ab83dc2..HEAD
+```
+
+## Source Citations
+
+The security audit and hardening drew from 45 sources. The top references:
+
+| # | Source | URL |
+|---|---|---|
+| 1 | Anthropic MCP Specification | https://modelcontextprotocol.io/specification |
+| 2 | Invariant Labs: MCP Security Audit | https://invariantlabs.ai/blog/mcp-security-audit |
+| 3 | Trail of Bits: MCP Security Analysis | https://blog.trailofbits.com/2025/04/15/mcp-security-analysis/ |
+| 4 | CVE-2025-53967: DNS Rebinding in MCP | https://nvd.nist.gov/vuln/detail/CVE-2025-53967 |
+| 5 | CVE-2025-66414: SSRF in MCP Servers | https://nvd.nist.gov/vuln/detail/CVE-2025-66414 |
+| 6 | CVE-2025-66416: Prompt Injection via Tool Descriptions | https://nvd.nist.gov/vuln/detail/CVE-2025-66416 |
+| 7 | CVE-2025-59536: Unauthenticated RCE via MCP | https://nvd.nist.gov/vuln/detail/CVE-2025-59536 |
+| 8 | OWASP: Prompt Injection | https://owasp.org/www-project-top-10-for-large-language-model-applications/ |
+| 9 | Python secrets module documentation | https://docs.python.org/3/library/secrets.html |
+| 10 | Python shlex module documentation | https://docs.python.org/3/library/shlex.html |
+| 11 | Starlette ASGI Middleware | https://www.starlette.io/middleware/ |
+| 12 | FastMCP Documentation | https://gofastmcp.com/ |
+| 13 | SQLite WAL Mode | https://www.sqlite.org/wal.html |
+| 14 | TOCTOU Race Conditions | https://cwe.mitre.org/data/definitions/367.html |
+| 15 | CWE-78: OS Command Injection | https://cwe.mitre.org/data/definitions/78.html |
+| 16 | CWE-22: Path Traversal | https://cwe.mitre.org/data/definitions/22.html |
+| 17 | CWE-798: Hard-coded Credentials | https://cwe.mitre.org/data/definitions/798.html |
+| 18 | Simon Willison: Prompt Injection Attacks | https://simonwillison.net/2025/Apr/9/mcp-prompt-injection/ |
+| 19 | Embrace The Red: MCP Security | https://embracethered.com/blog/posts/2025/mcp-server-tool-poisoning/ |
+| 20 | NIST SP 800-63B: Digital Identity Guidelines | https://pages.nist.gov/800-63-3/sp800-63b.html |

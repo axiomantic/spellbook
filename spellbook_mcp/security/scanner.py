@@ -68,6 +68,8 @@ _ENTROPY_THRESHOLD = 4.5
 _DOCUMENTATION_EXCLUDE_SUFFIXES: list[str] = [
     "AGENTS.spellbook.md",
     "commands/polish-repo-community.md",
+    "SECURITY.md",
+    "docs/security.md",
 ]
 
 
@@ -131,7 +133,7 @@ def _scan_line(
                     severity=_severity_from_name(match["severity"]),
                     rule_id=match["rule_id"],
                     message=match["message"],
-                    evidence=match["matched_text"],
+                    evidence=match.get("matched_text", match.get("message", "")),
                     remediation=f"Review and remove pattern matching {match['rule_id']}",
                 )
             )
@@ -622,7 +624,7 @@ def scan_python_file(
                     severity=_severity_from_name(match["severity"]),
                     rule_id=match["rule_id"],
                     message=match["message"],
-                    evidence=match["matched_text"],
+                    evidence=match.get("matched_text", match.get("message", "")),
                     remediation=f"Review and remediate pattern matching {match['rule_id']}",
                 )
             )
