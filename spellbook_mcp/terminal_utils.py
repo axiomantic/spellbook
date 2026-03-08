@@ -1,9 +1,20 @@
 """Terminal detection and spawning utilities for spawn_session MCP tool."""
 
+import shlex
 import sys
 import os
 import subprocess
 from typing import Optional
+
+
+def _escape_for_applescript(s: str) -> str:
+    """Escape a string for embedding inside an AppleScript double-quoted string.
+
+    AppleScript double-quoted strings require:
+    - Backslash escaped as double-backslash
+    - Double-quote escaped as backslash-quote
+    """
+    return s.replace('\\', '\\\\').replace('"', '\\"')
 
 
 def detect_terminal() -> str:
@@ -180,19 +191,23 @@ def spawn_macos_terminal(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
-    # Escape quotes in prompt and directory
-    escaped_prompt = prompt.replace('"', '\\"')
-    escaped_wd = working_directory.replace('"', '\\"')
+    # Shell-escape all user inputs with shlex.quote to prevent injection
+    safe_prompt = shlex.quote(prompt)
+    safe_wd = shlex.quote(working_directory)
+    safe_cli = shlex.quote(cli_command)
 
-    # Build command to execute
-    command = f'cd "{escaped_wd}" && {cli_command} "{escaped_prompt}"'
+    # Build shell command with properly escaped components
+    command = f'cd {safe_wd} && {safe_cli} {safe_prompt}'
+
+    # Escape for AppleScript string context (backslashes and double quotes)
+    as_command = _escape_for_applescript(command)
 
     if terminal.lower() == 'iterm2':
         applescript = f'''
 tell application "iTerm2"
     create window with default profile
     tell current session of current window
-        write text "{command}"
+        write text "{as_command}"
     end tell
 end tell
 '''
@@ -203,7 +218,7 @@ tell application "Warp"
     tell application "System Events"
         keystroke "t" using {{command down}}
         delay 0.5
-        keystroke "{command}"
+        keystroke "{as_command}"
         keystroke return
     end tell
 end tell
@@ -211,7 +226,7 @@ end tell
     else:  # terminal (Terminal.app)
         applescript = f'''
 tell application "Terminal"
-    do script "{command}"
+    do script "{as_command}"
     activate
 end tell
 '''
@@ -248,12 +263,13 @@ def spawn_linux_terminal(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
-    # Escape quotes
-    escaped_prompt = prompt.replace('"', '\\"')
-    escaped_wd = working_directory.replace('"', '\\"')
+    # Shell-escape all user inputs with shlex.quote to prevent injection
+    safe_prompt = shlex.quote(prompt)
+    safe_wd = shlex.quote(working_directory)
+    safe_cli = shlex.quote(cli_command)
 
-    # Build command
-    command = f'cd "{escaped_wd}" && {cli_command} "{escaped_prompt}"; exec bash'
+    # Build command with properly escaped components
+    command = f'cd {safe_wd} && {safe_cli} {safe_prompt}; exec bash'
 
     # Build terminal-specific command
     if terminal == 'gnome-terminal':
@@ -263,7 +279,7 @@ def spawn_linux_terminal(
     elif terminal == 'xterm':
         cmd = ['xterm', '-e', 'bash', '-c', command]
     elif terminal == 'terminator':
-        cmd = ['terminator', '-e', f'bash -c "{command}"']
+        cmd = ['terminator', '-e', f'bash -c {shlex.quote(command)}']
     elif terminal == 'alacritty':
         cmd = ['alacritty', '-e', 'bash', '-c', command]
     else:
@@ -302,17 +318,19 @@ def spawn_windows_terminal(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
-    escaped_prompt = prompt.replace('"', '\\"')
+    # Use subprocess.list2cmdline for proper Windows escaping of cli+prompt
+    safe_cli_prompt = subprocess.list2cmdline([cli_command, prompt])
 
     if terminal == "windows-terminal":
-        cmd = ["wt", "-d", working_directory, "cmd", "/c",
-               f'{cli_command} "{escaped_prompt}"']
+        cmd = ["wt", "-d", working_directory, "cmd", "/c", safe_cli_prompt]
     elif terminal == "pwsh":
+        # PowerShell: use list2cmdline for the command part, quote the path
+        safe_wd = working_directory.replace("'", "''")
         cmd = ["pwsh", "-NoExit", "-Command",
-               f'Set-Location "{working_directory}"; {cli_command} "{escaped_prompt}"']
+               f"Set-Location '{safe_wd}'; {safe_cli_prompt}"]
     else:  # cmd
         cmd = ["cmd", "/c", "start", "cmd", "/k",
-               f'cd /d "{working_directory}" && {cli_command} "{escaped_prompt}"']
+               f'cd /d "{working_directory}" && {safe_cli_prompt}']
 
     creationflags = 0
     if sys.platform == "win32":
