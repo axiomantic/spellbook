@@ -2,11 +2,15 @@
 
 Covers:
 - Task 5: AppleScript/shell escaping in terminal spawn functions (Finding #8)
+- Task 6: working_directory validation in spawn_claude_session (Finding #5)
 """
 
+import os
 import shlex
 import subprocess
+import tempfile
 import pytest
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from spellbook_mcp.terminal_utils import _escape_for_applescript
@@ -379,3 +383,68 @@ class TestWindowsTerminalEscaping:
                            f'cd /d "C:\\Users\\test" && {safe_cli_prompt}']
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "cmd", "pid": 1234}
+
+
+class TestWorkingDirectoryValidation:
+    """spawn_claude_session must validate working_directory (Finding #5)."""
+
+    def test_rejects_nonexistent_directory(self):
+        """working_directory pointing to a nonexistent path must be rejected."""
+        from spellbook_mcp.server import _validate_working_directory
+
+        with pytest.raises(ValueError, match="does not exist"):
+            _validate_working_directory("/nonexistent/path/xyz", project_path=None)
+
+    def test_rejects_system_directory(self):
+        """working_directory=/etc must be rejected (outside $HOME and project)."""
+        from spellbook_mcp.server import _validate_working_directory
+
+        with pytest.raises(ValueError, match="outside allowed scope"):
+            _validate_working_directory("/etc", project_path=None)
+
+    def test_accepts_home_directory(self):
+        """$HOME itself must be accepted."""
+        from spellbook_mcp.server import _validate_working_directory
+
+        home = str(Path.home())
+        result = _validate_working_directory(home, project_path=None)
+        assert result == str(Path(home).resolve())
+
+    def test_accepts_home_subdirectory(self):
+        """A real directory under $HOME must be accepted."""
+        from spellbook_mcp.server import _validate_working_directory
+
+        # Use a known subdirectory under home
+        home = Path.home()
+        # Create a temp dir under home for testing
+        with tempfile.TemporaryDirectory(dir=str(home)) as tmpdir:
+            result = _validate_working_directory(tmpdir, project_path=None)
+            assert result == str(Path(tmpdir).resolve())
+
+    def test_accepts_project_subdirectory(self):
+        """A directory under the project path must be accepted."""
+        from spellbook_mcp.server import _validate_working_directory
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            subdir = os.path.join(tmpdir, "src")
+            os.makedirs(subdir)
+            result = _validate_working_directory(subdir, project_path=tmpdir)
+            assert result == str(Path(subdir).resolve())
+
+    def test_rejects_symlink_escape(self):
+        """A symlink pointing outside allowed scope must be rejected after resolution."""
+        from spellbook_mcp.server import _validate_working_directory
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            link = os.path.join(tmpdir, "escape")
+            os.symlink("/etc", link)
+            with pytest.raises(ValueError, match="outside allowed scope"):
+                _validate_working_directory(link, project_path=tmpdir)
+
+    def test_rejects_file_not_directory(self):
+        """A path that exists but is a file (not a directory) must be rejected."""
+        from spellbook_mcp.server import _validate_working_directory
+
+        with tempfile.NamedTemporaryFile() as tmpfile:
+            with pytest.raises(ValueError, match="does not exist"):
+                _validate_working_directory(tmpfile.name, project_path=None)
