@@ -125,6 +125,11 @@ def _scan_line(
     for rules, category in _ALL_RULE_SETS:
         matches = check_patterns(line, rules, security_mode=security_mode)
         for match in matches:
+            # Skip ENTROPY-001 from per-line checks; entropy is handled
+            # separately via _extract_code_blocks to avoid false positives
+            # on non-code-block content.
+            if match.get("rule_id") == "ENTROPY-001":
+                continue
             findings.append(
                 Finding(
                     file=file_path,
