@@ -112,17 +112,25 @@ def detect_linux_terminal() -> str:
     Detect terminal application on Linux.
 
     Detection order:
-    1. Check TERMINAL environment variable
+    1. Check TERMINAL environment variable (validated via shutil.which)
     2. Check for common installed terminals
     3. Fallback to 'xterm'
 
     Returns:
         Terminal name
     """
-    # Check TERMINAL environment variable
+    import shutil
+
+    # Check TERMINAL environment variable, validated via shutil.which
     terminal_env = os.environ.get('TERMINAL')
     if terminal_env:
-        return terminal_env
+        terminal_name = os.path.basename(terminal_env)
+        if shutil.which(terminal_name):
+            return terminal_name
+        _logger.warning(
+            "TERMINAL env var '%s' not found via which(), falling back to detection",
+            terminal_env,
+        )
 
     # Check for common terminals
     common_terminals = [

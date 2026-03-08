@@ -4,6 +4,7 @@ Covers:
 - Task 5: AppleScript/shell escaping in terminal spawn functions (Finding #8)
 - Task 6: working_directory validation in spawn_claude_session (Finding #5)
 - Task 7: SPELLBOOK_CLI_COMMAND env var allowlist (Finding #13)
+- Task 8: $TERMINAL env var allowlist for Linux (Finding #11)
 """
 
 import os
@@ -508,3 +509,70 @@ class TestCLICommandAllowlist:
                     spawn_terminal_window("terminal", "hello", "/tmp")
                     # cli_command should be the validated value from _get_cli_command
                     mock_spawn.assert_called_once_with("terminal", "hello", "/tmp", "codex")
+
+
+class TestTerminalEnvAllowlist:
+    """$TERMINAL env var must be validated via shutil.which (Finding #11)."""
+
+    def test_malicious_terminal_rejected(self):
+        """An unknown $TERMINAL value that doesn't exist on PATH must be ignored."""
+        from spellbook_mcp.terminal_utils import detect_linux_terminal
+
+        with patch.dict(os.environ, {"TERMINAL": "/tmp/evil"}):
+            with patch("shutil.which", return_value=None):
+                with patch("spellbook_mcp.terminal_utils.subprocess.run") as mock_run:
+                    # Make the fallback detection also find nothing
+                    mock_run.return_value = MagicMock(returncode=1)
+                    result = detect_linux_terminal()
+        # Must NOT return the malicious value; should fall through to detection
+        assert result == "xterm"  # final fallback
+
+    def test_known_terminal_in_env_accepted(self):
+        """A known terminal in $TERMINAL that exists via which() must be accepted."""
+        from spellbook_mcp.terminal_utils import detect_linux_terminal
+
+        with patch.dict(os.environ, {"TERMINAL": "alacritty"}):
+            with patch("shutil.which", return_value="/usr/bin/alacritty"):
+                result = detect_linux_terminal()
+        assert result == "alacritty"
+
+    def test_full_path_to_known_terminal_accepted(self):
+        """$TERMINAL=/usr/bin/gnome-terminal extracts basename and validates."""
+        from spellbook_mcp.terminal_utils import detect_linux_terminal
+
+        with patch.dict(os.environ, {"TERMINAL": "/usr/bin/gnome-terminal"}):
+            with patch("shutil.which", return_value="/usr/bin/gnome-terminal"):
+                result = detect_linux_terminal()
+        assert result == "gnome-terminal"
+
+    def test_terminal_not_on_path_falls_through(self):
+        """Even a reasonable-looking $TERMINAL must be rejected if which() fails."""
+        from spellbook_mcp.terminal_utils import detect_linux_terminal
+
+        with patch.dict(os.environ, {"TERMINAL": "kitty"}):
+            with patch("shutil.which", return_value=None):
+                with patch("spellbook_mcp.terminal_utils.subprocess.run") as mock_run:
+                    # gnome-terminal found in fallback cascade
+                    def run_side_effect(cmd, **kwargs):
+                        if 'gnome-terminal' in cmd:
+                            return MagicMock(returncode=0)
+                        return MagicMock(returncode=1)
+                    mock_run.side_effect = run_side_effect
+                    result = detect_linux_terminal()
+        assert result == "gnome-terminal"
+
+    def test_no_terminal_env_uses_detection_cascade(self):
+        """Without $TERMINAL set, detection cascade runs normally."""
+        from spellbook_mcp.terminal_utils import detect_linux_terminal
+
+        env = os.environ.copy()
+        env.pop("TERMINAL", None)
+        with patch.dict(os.environ, env, clear=True):
+            with patch("spellbook_mcp.terminal_utils.subprocess.run") as mock_run:
+                def run_side_effect(cmd, **kwargs):
+                    if 'konsole' in cmd:
+                        return MagicMock(returncode=0)
+                    return MagicMock(returncode=1)
+                mock_run.side_effect = run_side_effect
+                result = detect_linux_terminal()
+        assert result == "konsole"
