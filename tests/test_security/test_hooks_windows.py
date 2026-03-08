@@ -240,8 +240,8 @@ class TestHookTransformationLogic:
                     elif isinstance(hook, dict) and "command" in hook:
                         all_paths.append(hook["command"])
 
-        assert len(all_paths) == 10, (
-            f"Expected 10 hook paths installed, got {len(all_paths)}: {all_paths}"
+        assert len(all_paths) == 12, (
+            f"Expected 12 hook paths installed, got {len(all_paths)}: {all_paths}"
         )
         expected_paths = [
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1",
@@ -250,8 +250,10 @@ class TestHookTransformationLogic:
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-timer-start.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/audit-log.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/canary-check.ps1",
+            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/memory-inject.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/notify-on-complete.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-notify.ps1",
+            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/memory-capture.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/pre-compact-save.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/post-compact-recover.ps1",
         ]

@@ -432,6 +432,126 @@ def init_db(db_path: str = None) -> None:
         ON spawn_rate_limit(timestamp)
     """)
 
+    # --- Memory System Tables ---
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS memories (
+            id TEXT PRIMARY KEY,
+            content TEXT NOT NULL,
+            memory_type TEXT,
+            namespace TEXT NOT NULL,
+            importance REAL DEFAULT 1.0,
+            created_at TEXT NOT NULL,
+            accessed_at TEXT,
+            status TEXT DEFAULT 'active',
+            deleted_at TEXT,
+            content_hash TEXT NOT NULL,
+            meta TEXT DEFAULT '{}'
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memories_namespace
+        ON memories(namespace)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memories_content_hash
+        ON memories(content_hash)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memories_status
+        ON memories(status)
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS memory_citations (
+            id INTEGER PRIMARY KEY,
+            memory_id TEXT NOT NULL REFERENCES memories(id),
+            file_path TEXT NOT NULL,
+            line_range TEXT,
+            content_snippet TEXT,
+            UNIQUE(memory_id, file_path, line_range)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_citations_file
+        ON memory_citations(file_path)
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS memory_links (
+            memory_a TEXT NOT NULL,
+            memory_b TEXT NOT NULL,
+            link_type TEXT NOT NULL,
+            weight REAL DEFAULT 1.0,
+            last_seen TEXT,
+            PRIMARY KEY (memory_a, memory_b, link_type)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS raw_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT,
+            timestamp TEXT NOT NULL,
+            project TEXT NOT NULL,
+            event_type TEXT,
+            tool_name TEXT,
+            subject TEXT,
+            summary TEXT,
+            tags TEXT,
+            consolidated INTEGER DEFAULT 0,
+            batch_id TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_raw_events_consolidated
+        ON raw_events(consolidated)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_raw_events_project
+        ON raw_events(project)
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS memory_audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            action TEXT NOT NULL,
+            memory_id TEXT,
+            details TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memory_audit_action
+        ON memory_audit_log(action)
+    """)
+
+    # FTS5 for BM25 retrieval (standalone table, manually synced)
+    # Note: Using IF NOT EXISTS is not directly supported by FTS5 CREATE VIRTUAL TABLE.
+    # Check if the table exists first.
+    # This is a standalone FTS5 table (not an external content table). The
+    # application manually inserts/deletes rows in memories_fts whenever
+    # memories are created or soft-deleted. A standalone table avoids the
+    # column-name-mismatch issues that external content tables cause (the
+    # FTS columns tags/citations do not exist on the memories table).
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='memories_fts'"
+    )
+    if cursor.fetchone() is None:
+        cursor.execute("""
+            CREATE VIRTUAL TABLE memories_fts USING fts5(
+                content, tags, citations,
+                tokenize="unicode61 tokenchars '_.' "
+            )
+        """)
+
     conn.commit()
 
 

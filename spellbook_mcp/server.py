@@ -51,11 +51,21 @@ _FASTMCP_MAJOR = int(_fastmcp_module.__version__.split(".")[0])
 
 # All imports use full package paths - no sys.path manipulation needed
 from spellbook_mcp.path_utils import (
+    encode_cwd,
     get_project_dir,
     get_project_dir_from_context,
     get_project_dir_for_path,
     get_project_path_from_context,
     get_spellbook_config_dir,
+)
+from spellbook_mcp.memory_tools import (
+    do_memory_recall,
+    do_memory_forget,
+    do_log_event,
+)
+from spellbook_mcp.memory_consolidation import (
+    should_consolidate,
+    consolidate_batch,
 )
 from spellbook_mcp.session_ops import (
     split_by_char_limit,
@@ -3261,6 +3271,182 @@ def build_http_run_kwargs() -> dict:
         "stateless_http": True,
         "middleware": auth_middleware,
     }
+
+
+# ============================================================================
+# Memory System Tools
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+async def memory_recall(
+    ctx: Context,
+    query: str = "",
+    namespace: str = "",
+    limit: int = 10,
+    file_path: str = "",
+) -> dict:
+    """Search and retrieve project memories.
+
+    Query memories by keyword search or file path. Empty query returns
+    the most recent and important memories.
+
+    Args:
+        query: FTS5 search query (keywords). Empty = recent+important.
+        namespace: Project namespace. Auto-detected if empty.
+        limit: Maximum memories to return (default 10).
+        file_path: If provided, find memories citing this file path.
+
+    Returns:
+        Dict with 'memories' list, count, query, and namespace.
+    """
+    db_path = str(get_db_path())
+    if not namespace:
+        project_path = await get_project_path_from_context(ctx)
+        if project_path:
+            namespace = encode_cwd(project_path)
+        else:
+            return {"error": "Could not determine project namespace", "memories": []}
+
+    return do_memory_recall(
+        db_path=db_path,
+        query=query,
+        namespace=namespace,
+        limit=limit,
+        file_path=file_path if file_path else None,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+async def memory_forget(ctx: Context, memory_id: str) -> dict:
+    """Soft-delete a memory by ID. Memory is recoverable for 30 days.
+
+    Args:
+        memory_id: The UUID of the memory to forget.
+
+    Returns:
+        Dict with status ('deleted' or 'not_found').
+    """
+    db_path = str(get_db_path())
+    return do_memory_forget(db_path=db_path, memory_id=memory_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+async def memory_consolidate(ctx: Context, namespace: str = "") -> dict:
+    """Trigger memory consolidation: extract structured memories from raw events.
+
+    Checks if enough unconsolidated events have accumulated, then runs
+    the consolidation pipeline (LLM extraction, dedup, bibliographic coupling).
+
+    Args:
+        namespace: Project namespace. Auto-detected if empty.
+
+    Returns:
+        Dict with status, events_consolidated, and memories_created.
+    """
+    import asyncio
+
+    db_path = str(get_db_path())
+    if not namespace:
+        project_path = await get_project_path_from_context(ctx)
+        if project_path:
+            namespace = encode_cwd(project_path)
+        else:
+            return {"error": "Could not determine project namespace"}
+
+    if not should_consolidate(db_path):
+        return {
+            "status": "below_threshold",
+            "message": "Not enough unconsolidated events to trigger consolidation.",
+        }
+
+    # Run synchronous consolidation in a thread to avoid blocking the event loop
+    result = await asyncio.to_thread(consolidate_batch, db_path, namespace)
+    return result
+
+
+# --- Memory Event REST Endpoint ---
+
+
+@mcp.custom_route("/api/memory/event", methods=["POST"])
+async def api_memory_event(request: Request) -> JSONResponse:
+    """REST endpoint for hook scripts to log raw observation events.
+
+    Accepts JSON body: {
+        "session_id": "...",
+        "project": "...",
+        "tool_name": "...",
+        "subject": "...",
+        "summary": "...",
+        "tags": "...",
+        "event_type": "tool_use"
+    }
+    Returns JSON: {"status": "logged", "event_id": N}
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    required = ["session_id", "project", "tool_name", "subject", "summary"]
+    missing = [f for f in required if not body.get(f)]
+    if missing:
+        return JSONResponse(
+            {"error": f"missing required fields: {missing}"}, status_code=400
+        )
+
+    # Input length validation (truncate, not reject -- fail-open)
+    summary = str(body["summary"])[:1000]
+    tool_name = str(body["tool_name"])[:100]
+    subject = str(body["subject"])[:500]
+    tags = str(body.get("tags", ""))[:500]
+
+    db_path = str(get_db_path())
+    result = do_log_event(
+        db_path=db_path,
+        session_id=body["session_id"],
+        project=body["project"],
+        tool_name=tool_name,
+        subject=subject,
+        summary=summary,
+        tags=tags,
+        event_type=body.get("event_type", "tool_use"),
+    )
+    return JSONResponse(result)
+
+
+# --- Memory Recall REST Endpoint ---
+
+
+@mcp.custom_route("/api/memory/recall", methods=["POST"])
+async def api_memory_recall(request: Request) -> JSONResponse:
+    """REST endpoint for hook scripts to query memories by file path.
+
+    Accepts JSON body: {"file_path": "...", "namespace": "...", "limit": 5}
+    or {"query": "...", "namespace": "...", "limit": 10}
+    Returns JSON: {"memories": [...], "count": N}
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    namespace = body.get("namespace", "")
+    if not namespace:
+        return JSONResponse({"memories": [], "count": 0})
+
+    db_path = str(get_db_path())
+    result = do_memory_recall(
+        db_path=db_path,
+        query=body.get("query", ""),
+        namespace=namespace,
+        limit=body.get("limit", 5),
+        file_path=body.get("file_path"),
+    )
+    return JSONResponse(result)
 
 
 if __name__ == "__main__":
