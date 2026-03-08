@@ -154,12 +154,14 @@ class TestDoSetSecurityModeBasic:
         result = do_set_security_mode("paranoid", db_path=db_path)
         assert result["mode"] == "paranoid"
 
-    def test_sets_permissive_mode(self, tmp_path):
+    def test_permissive_mode_rejected(self, tmp_path):
         from spellbook_mcp.security.tools import do_set_security_mode
 
         db_path = _init_test_db(tmp_path)
         result = do_set_security_mode("permissive", db_path=db_path)
-        assert result["mode"] == "permissive"
+        assert result == {
+            "error": "Permissive mode has been removed for security. Only 'standard' and 'paranoid' are available."
+        }
 
     def test_sets_standard_mode(self, tmp_path):
         from spellbook_mcp.security.tools import do_set_security_mode

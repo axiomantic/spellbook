@@ -11,6 +11,7 @@ Key functions:
 """
 
 import json
+import logging
 import os
 import threading
 from functools import wraps
@@ -22,6 +23,64 @@ try:
 except ImportError:
     from db import get_connection, get_db_path
     from watcher import is_heartbeat_fresh
+
+logger = logging.getLogger(__name__)
+
+# Field length limits for DB-sourced recovery context fields
+_FIELD_LENGTH_LIMITS = {
+    "persona": 200,
+    "active_skill": 100,
+    "skill_phase": 100,
+    "todos": 500,        # per item
+    "recent_files": 500,  # per item
+    "exact_position": 500,  # per item (serialized)
+}
+
+
+def _sanitize_field(field_name: str, value: str, max_length: int) -> Optional[str]:
+    """Sanitize a single DB-sourced field for injection patterns and length.
+
+    Args:
+        field_name: Name of the field (for logging).
+        value: The field value to sanitize.
+        max_length: Maximum allowed length.
+
+    Returns:
+        Sanitized value, or None if the field contains injection patterns.
+    """
+    if not value:
+        return value
+
+    # Truncate to length limit
+    if len(value) > max_length:
+        value = value[:max_length]
+
+    # Check for injection patterns using the security detection
+    try:
+        from spellbook_mcp.security.tools import do_detect_injection
+
+        result = do_detect_injection(value)
+        if result["is_injection"]:
+            logger.warning(
+                "Injection pattern detected in recovery context field '%s', "
+                "omitting from context",
+                field_name,
+            )
+            return None
+    except ImportError:
+        # Security module not installed; still apply length limits
+        pass
+    except Exception as e:
+        # Unexpected error during security check: fail closed by omitting
+        # the field rather than silently passing potentially dangerous input
+        logger.warning(
+            "Security check failed for field '%s', omitting as precaution: %s",
+            field_name,
+            type(e).__name__,
+        )
+        return None
+
+    return value
 
 
 # Module state for injection control
@@ -165,11 +224,49 @@ def build_recovery_context(
     except json.JSONDecodeError:
         exact_position = []
 
+    # Sanitize scalar fields through injection detection and length limits
+    persona = _sanitize_field("persona", persona, _FIELD_LENGTH_LIMITS["persona"])
+    active_skill = _sanitize_field("active_skill", active_skill, _FIELD_LENGTH_LIMITS["active_skill"])
+    skill_phase = _sanitize_field("skill_phase", skill_phase, _FIELD_LENGTH_LIMITS["skill_phase"])
+
+    # Sanitize list fields per-item
+    if todos:
+        sanitized_todos = []
+        for t in todos[:5]:
+            content = t.get("content", "")
+            sanitized_content = _sanitize_field("todo item", content, _FIELD_LENGTH_LIMITS["todos"])
+            if sanitized_content is not None:
+                sanitized_todos.append({**t, "content": sanitized_content})
+        todos = sanitized_todos
+
+    if exact_position:
+        sanitized_positions = []
+        for a in exact_position[-5:]:
+            # Sanitize the serialized representation of each position item
+            item_str = f"{a.get('tool', '')}: {a.get('primary_arg', '')}"
+            sanitized_item = _sanitize_field("exact_position item", item_str, _FIELD_LENGTH_LIMITS["exact_position"])
+            if sanitized_item is not None:
+                # Truncate individual fields within the position item
+                truncated_a = dict(a)
+                if len(truncated_a.get("primary_arg", "")) > _FIELD_LENGTH_LIMITS["exact_position"]:
+                    truncated_a["primary_arg"] = truncated_a["primary_arg"][:_FIELD_LENGTH_LIMITS["exact_position"]]
+                sanitized_positions.append(truncated_a)
+        exact_position = sanitized_positions
+
+    if recent_files:
+        sanitized_files = []
+        for f in recent_files:
+            item_str = str(f) if not isinstance(f, str) else f
+            sanitized_item = _sanitize_field("recent_files item", item_str, _FIELD_LENGTH_LIMITS["recent_files"])
+            if sanitized_item is not None:
+                sanitized_files.append(f)
+        recent_files = sanitized_files
+
     # Build context parts (only include non-empty sections)
     parts = []
 
     if todos:
-        todo_lines = [f"- {t['content']} ({t['status']})" for t in todos[:5]]
+        todo_lines = [f"- {t['content']} ({t['status']})" for t in todos]
         parts.append("**Active TODOs:**\n" + "\n".join(todo_lines))
 
     if active_skill:
@@ -182,7 +279,7 @@ def build_recovery_context(
         parts.append(f"**Session Persona:** {persona}")
 
     if exact_position:
-        pos_lines = [f"- {a['tool']}: {a['primary_arg']}" for a in exact_position[-5:]]
+        pos_lines = [f"- {a['tool']}: {a['primary_arg']}" for a in exact_position]
         parts.append("**Last Actions:**\n" + "\n".join(pos_lines))
 
     if not parts:

@@ -381,6 +381,40 @@ async def list_sessions(ctx: Context, limit: int = 5) -> List[Dict[str, Any]]:
 
     return list_sessions_with_samples(str(project_dir), limit)
 
+
+def _validate_working_directory(wd: str, project_path: str | None) -> str:
+    """Validate and resolve working directory for spawn.
+
+    Rules:
+    1. Must be an existing directory (after symlink resolution)
+    2. Must resolve to a path under $HOME or the project path
+    3. No symlink escape (resolve before checking)
+
+    Raises:
+        ValueError: If validation fails.
+
+    Returns:
+        Resolved absolute path as string.
+    """
+    resolved = Path(wd).resolve()
+
+    if not resolved.is_dir():
+        raise ValueError(f"Working directory does not exist: {wd}")
+
+    home = Path.home().resolve()
+    allowed_roots = [home]
+    if project_path:
+        allowed_roots.append(Path(project_path).resolve())
+
+    if not any(resolved == root or resolved.is_relative_to(root) for root in allowed_roots):
+        raise ValueError(
+            f"Working directory {wd} is outside allowed scope "
+            f"(must be under $HOME or project directory)"
+        )
+
+    return str(resolved)
+
+
 @mcp.tool()
 @inject_recovery_context
 async def spawn_claude_session(
@@ -490,11 +524,44 @@ async def spawn_claude_session(
     )
     # --- End security guard ---
 
+    # Also scan working_directory through security check if provided
+    if working_directory:
+        _wd_check = _check_tool_input(
+            "spawn_claude_session",
+            {"working_directory": working_directory},
+        )
+        if not _wd_check["safe"]:
+            _wd_first = _wd_check["findings"][0]
+            _do_log_event(
+                event_type="spawn_blocked",
+                severity="HIGH",
+                source="spawn_guard",
+                detail=f"Injection pattern in working_directory: {_wd_first['message']}",
+                tool_name="spawn_claude_session",
+                action_taken=f"blocked:{_wd_first['rule_id']}",
+                db_path=_db_path,
+            )
+            return {
+                "blocked": True,
+                "reason": _wd_first["message"],
+                "rule_id": _wd_first["rule_id"],
+            }
+
     if terminal is None:
         terminal = detect_terminal()
 
     if working_directory is None:
         working_directory = await get_project_path_from_context(ctx)
+
+    # Validate working_directory is a real, in-scope directory
+    if working_directory:
+        try:
+            working_directory = _validate_working_directory(
+                working_directory,
+                project_path=os.environ.get("CLAUDE_PROJECT_DIR"),
+            )
+        except ValueError as e:
+            return {"success": False, "error": str(e)}
 
     return spawn_terminal_window(terminal, prompt, working_directory)
 
@@ -1846,7 +1913,21 @@ def workflow_state_load(
         from spellbook_mcp.resume import validate_workflow_state
         validation = validate_workflow_state(state)
         if not validation["valid"]:
-            _logger.warning("Loaded workflow state for %s failed validation: %s", project_path, [f.get("message", "unknown") for f in validation["findings"]])
+            _logger.warning(
+                "Loaded workflow state for %s failed validation: %s",
+                project_path,
+                [f.get("message", "unknown") for f in validation["findings"]],
+            )
+            return {
+                "success": True,
+                "found": False,
+                "state": None,
+                "age_hours": age_hours,
+                "trigger": trigger,
+                "rejected": True,
+                "rejection_reason": "State failed validation",
+                "finding_count": len(validation["findings"]),
+            }
 
         return {
             "success": True,
@@ -1910,8 +1991,37 @@ def workflow_state_update(
         else:
             base_state = json.loads(row[0])
 
+        # Validate incoming updates before merging
+        from spellbook_mcp.resume import validate_workflow_state
+
+        pre_validation = validate_workflow_state(updates)
+        if not pre_validation["valid"]:
+            return {
+                "success": False,
+                "project_path": project_path,
+                "error": "Updates failed validation",
+                "findings": [
+                    f.get("message", "unknown")
+                    for f in pre_validation["findings"]
+                ],
+            }
+
         # Deep merge updates into existing state
         merged_state = _deep_merge(base_state, updates)
+
+        # Validate merged result (catches payloads that become dangerous after merge)
+        post_validation = validate_workflow_state(merged_state)
+        if not post_validation["valid"]:
+            return {
+                "success": False,
+                "project_path": project_path,
+                "error": "Merged state failed validation",
+                "findings": [
+                    f.get("message", "unknown")
+                    for f in post_validation["findings"]
+                ],
+                "state": base_state,
+            }
 
         state_json = json.dumps(merged_state)
         now = datetime.now(timezone.utc).isoformat()
@@ -3128,6 +3238,41 @@ def fractal_get_ready_to_synthesize(graph_id: str):
     return do_fractal_get_ready_to_synthesize(graph_id=graph_id)
 
 
+def build_http_run_kwargs() -> dict:
+    """Build kwargs for mcp.run() with auth middleware for HTTP transport.
+
+    Reads SPELLBOOK_MCP_HOST, SPELLBOOK_MCP_PORT, and SPELLBOOK_MCP_AUTH
+    from environment. When auth is not disabled, generates a bearer token,
+    writes it to the token file, and includes BearerAuthMiddleware in the
+    middleware list.
+
+    Returns:
+        Dict of kwargs to pass to mcp.run() for streamable-http transport.
+    """
+    from starlette.middleware import Middleware
+    from spellbook_mcp.auth import (
+        BearerAuthMiddleware,
+        auth_is_disabled,
+        generate_and_store_token,
+    )
+
+    host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
+    port = int(os.environ.get("SPELLBOOK_MCP_PORT", "8765"))
+
+    auth_middleware = []
+    if not auth_is_disabled():
+        token = generate_and_store_token()
+        auth_middleware = [Middleware(BearerAuthMiddleware, token=token)]
+
+    return {
+        "transport": "streamable-http",
+        "host": host,
+        "port": port,
+        "stateless_http": True,
+        "middleware": auth_middleware,
+    }
+
+
 # ============================================================================
 # Memory System Tools
 # ============================================================================
@@ -3341,12 +3486,14 @@ if __name__ == "__main__":
     _tts_preload.start()
 
     if transport == "streamable-http":
-        host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
-        port = int(os.environ.get("SPELLBOOK_MCP_PORT", "8765"))
-        print(f"Starting spellbook MCP server on {host}:{port}")
+        _http_kwargs = build_http_run_kwargs()
+        _auth_status = "auth enabled" if _http_kwargs["middleware"] else "auth DISABLED"
+        print(f"Starting spellbook MCP server on {_http_kwargs['host']}:{_http_kwargs['port']} ({_auth_status})")
+        if not _http_kwargs["middleware"]:
+            _logger.warning("MCP auth disabled via SPELLBOOK_MCP_AUTH=disabled")
         # Use stateless_http=True so that unknown session IDs (e.g., from
         # a previous daemon instance) are handled gracefully instead of
         # returning "Bad Request: No valid session ID provided"
-        mcp.run(transport="streamable-http", host=host, port=port, stateless_http=True)
+        mcp.run(**_http_kwargs)
     else:
         mcp.run()

@@ -73,10 +73,11 @@ class TestDetectMacOSTerminal(unittest.TestCase):
 class TestDetectLinuxTerminal(unittest.TestCase):
     """Test Linux terminal detection."""
 
+    @patch('shutil.which', return_value='/usr/bin/gnome-terminal')
     @patch('os.environ', {'TERMINAL': 'gnome-terminal'})
     @patch('sys.platform', 'linux')
-    def test_detect_from_env_var(self):
-        """Test detection from TERMINAL environment variable."""
+    def test_detect_from_env_var(self, mock_which):
+        """Test detection from TERMINAL environment variable (validated via which)."""
         result = detect_linux_terminal()
 
         self.assertEqual(result, 'gnome-terminal')

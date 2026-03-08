@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-03-08
+
+### Added
+- **MCP server security hardening** - Comprehensive security hardening based on 45-source audit covering industry CVEs, OWASP agentic security guidance, and MCP-specific attack research. Fixes 13 identified vulnerabilities including an RCE kill chain through workflow state, command injection in terminal construction, and injection via DB-sourced recovery context. Adds bearer token authentication for HTTP transport via FastMCP middleware, connection health checks with TTL, boot prompt validation with context-aware parsing, Shannon entropy detection for obfuscated payloads, and path traversal protection for spawn sessions. Removes permissive security mode entirely. Includes SECURITY.md with threat model and responsible disclosure policy. ([45 cited sources](docs/security.md))
+- **Memory system** - Project-scoped knowledge persistence with FTS5 search, namespace isolation, and importance scoring. Memories are stored in the spellbook database and recalled across sessions.
+
 ## [0.25.1] - 2026-03-07
 
 ### Fixed

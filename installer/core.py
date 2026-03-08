@@ -59,9 +59,21 @@ def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
     if not all_findings:
         return (True, [])
 
+    # Only block on HIGH and CRITICAL findings (standard mode threshold).
+    # LOW/MEDIUM findings (like entropy signals) are informational only.
+    from spellbook_mcp.security.rules import Severity
+
+    blocking_findings = [
+        f for f in all_findings
+        if Severity[f["severity"]].value >= Severity.HIGH.value
+    ]
+
+    if not blocking_findings:
+        return (True, [])
+
     issues = [
-        f"[{f['severity']}] {f['rule_id']}: {f['message']} (matched: {f['matched_text']!r})"
-        for f in all_findings
+        f"[{f['severity']}] {f['rule_id']}: {f['message']} (matched: {f.get('matched_text', 'N/A')!r})"
+        for f in blocking_findings
     ]
     return (False, issues)
 

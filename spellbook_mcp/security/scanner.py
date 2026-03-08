@@ -68,6 +68,8 @@ _ENTROPY_THRESHOLD = 4.5
 _DOCUMENTATION_EXCLUDE_SUFFIXES: list[str] = [
     "AGENTS.spellbook.md",
     "commands/polish-repo-community.md",
+    "SECURITY.md",
+    "docs/security.md",
 ]
 
 
@@ -123,6 +125,11 @@ def _scan_line(
     for rules, category in _ALL_RULE_SETS:
         matches = check_patterns(line, rules, security_mode=security_mode)
         for match in matches:
+            # Skip ENTROPY-001 from per-line checks; entropy is handled
+            # separately via _extract_code_blocks to avoid false positives
+            # on non-code-block content.
+            if match.get("rule_id") == "ENTROPY-001":
+                continue
             findings.append(
                 Finding(
                     file=file_path,
@@ -131,7 +138,7 @@ def _scan_line(
                     severity=_severity_from_name(match["severity"]),
                     rule_id=match["rule_id"],
                     message=match["message"],
-                    evidence=match["matched_text"],
+                    evidence=match.get("matched_text", match.get("message", "")),
                     remediation=f"Review and remove pattern matching {match['rule_id']}",
                 )
             )
@@ -345,7 +352,7 @@ def scan_skill(
 
     Args:
         file_path: Path to the markdown file to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         ScanResult with findings and verdict.
@@ -418,7 +425,7 @@ def scan_directory(
 
     Args:
         dir_path: Path to the directory to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
         include_patterns: If provided, only scan files matching these glob patterns.
         exclude_patterns: If provided, skip files matching these glob patterns.
 
@@ -527,7 +534,7 @@ def scan_changeset(
 
     Args:
         diff_text: Unified diff text (e.g., from `git diff`).
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         List of ScanResult objects, one per file in the diff that has .md extension.
@@ -580,7 +587,7 @@ def scan_python_file(
 
     Args:
         file_path: Path to the Python file to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         ScanResult with findings and verdict.
@@ -622,7 +629,7 @@ def scan_python_file(
                     severity=_severity_from_name(match["severity"]),
                     rule_id=match["rule_id"],
                     message=match["message"],
-                    evidence=match["matched_text"],
+                    evidence=match.get("matched_text", match.get("message", "")),
                     remediation=f"Review and remediate pattern matching {match['rule_id']}",
                 )
             )
@@ -640,7 +647,7 @@ def scan_mcp_directory(
 
     Args:
         dir_path: Path to the directory to scan.
-        security_mode: One of "standard", "paranoid", "permissive".
+        security_mode: One of "standard" or "paranoid".
 
     Returns:
         List of ScanResult objects, one per scanned Python file.

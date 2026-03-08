@@ -1,9 +1,51 @@
 """Terminal detection and spawning utilities for spawn_session MCP tool."""
 
+import shlex
 import sys
 import os
 import subprocess
 from typing import Optional
+
+
+import logging
+
+_ALLOWED_CLI_COMMANDS = frozenset({
+    'claude', 'codex', 'gemini', 'opencode', 'crush',
+})
+
+_logger = logging.getLogger(__name__)
+
+
+def _get_cli_command() -> str:
+    """Get validated CLI command from environment.
+
+    Reads SPELLBOOK_CLI_COMMAND env var, extracts basename, and validates
+    against the allowlist. Falls back to 'claude' if not in allowlist.
+
+    Returns:
+        Validated CLI command name (basename only, never a path).
+    """
+    cli_cmd = os.environ.get('SPELLBOOK_CLI_COMMAND', 'claude')
+    cmd_name = os.path.basename(cli_cmd)
+
+    if cmd_name not in _ALLOWED_CLI_COMMANDS:
+        _logger.warning(
+            "SPELLBOOK_CLI_COMMAND '%s' not in allowlist, defaulting to 'claude'",
+            cli_cmd,
+        )
+        return 'claude'
+
+    return cmd_name
+
+
+def _escape_for_applescript(s: str) -> str:
+    """Escape a string for embedding inside an AppleScript double-quoted string.
+
+    AppleScript double-quoted strings require:
+    - Backslash escaped as double-backslash
+    - Double-quote escaped as backslash-quote
+    """
+    return s.replace('\\', '\\\\').replace('"', '\\"')
 
 
 def detect_terminal() -> str:
@@ -70,17 +112,25 @@ def detect_linux_terminal() -> str:
     Detect terminal application on Linux.
 
     Detection order:
-    1. Check TERMINAL environment variable
+    1. Check TERMINAL environment variable (validated via shutil.which)
     2. Check for common installed terminals
     3. Fallback to 'xterm'
 
     Returns:
         Terminal name
     """
-    # Check TERMINAL environment variable
+    import shutil
+
+    # Check TERMINAL environment variable, validated via shutil.which
     terminal_env = os.environ.get('TERMINAL')
     if terminal_env:
-        return terminal_env
+        terminal_name = os.path.basename(terminal_env)
+        if shutil.which(terminal_name):
+            return terminal_name
+        _logger.warning(
+            "TERMINAL env var '%s' not found via which(), falling back to detection",
+            terminal_env,
+        )
 
     # Check for common terminals
     common_terminals = [
@@ -150,7 +200,7 @@ def spawn_terminal_window(
         working_directory = os.getcwd()
 
     if cli_command is None:
-        cli_command = os.environ.get('SPELLBOOK_CLI_COMMAND', 'claude')
+        cli_command = _get_cli_command()
 
     if sys.platform == 'darwin':
         return spawn_macos_terminal(terminal, prompt, working_directory, cli_command)
@@ -180,19 +230,23 @@ def spawn_macos_terminal(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
-    # Escape quotes in prompt and directory
-    escaped_prompt = prompt.replace('"', '\\"')
-    escaped_wd = working_directory.replace('"', '\\"')
+    # Shell-escape all user inputs with shlex.quote to prevent injection
+    safe_prompt = shlex.quote(prompt)
+    safe_wd = shlex.quote(working_directory)
+    safe_cli = shlex.quote(cli_command)
 
-    # Build command to execute
-    command = f'cd "{escaped_wd}" && {cli_command} "{escaped_prompt}"'
+    # Build shell command with properly escaped components
+    command = f'cd {safe_wd} && {safe_cli} {safe_prompt}'
+
+    # Escape for AppleScript string context (backslashes and double quotes)
+    as_command = _escape_for_applescript(command)
 
     if terminal.lower() == 'iterm2':
         applescript = f'''
 tell application "iTerm2"
     create window with default profile
     tell current session of current window
-        write text "{command}"
+        write text "{as_command}"
     end tell
 end tell
 '''
@@ -203,7 +257,7 @@ tell application "Warp"
     tell application "System Events"
         keystroke "t" using {{command down}}
         delay 0.5
-        keystroke "{command}"
+        keystroke "{as_command}"
         keystroke return
     end tell
 end tell
@@ -211,7 +265,7 @@ end tell
     else:  # terminal (Terminal.app)
         applescript = f'''
 tell application "Terminal"
-    do script "{command}"
+    do script "{as_command}"
     activate
 end tell
 '''
@@ -248,12 +302,13 @@ def spawn_linux_terminal(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
-    # Escape quotes
-    escaped_prompt = prompt.replace('"', '\\"')
-    escaped_wd = working_directory.replace('"', '\\"')
+    # Shell-escape all user inputs with shlex.quote to prevent injection
+    safe_prompt = shlex.quote(prompt)
+    safe_wd = shlex.quote(working_directory)
+    safe_cli = shlex.quote(cli_command)
 
-    # Build command
-    command = f'cd "{escaped_wd}" && {cli_command} "{escaped_prompt}"; exec bash'
+    # Build command with properly escaped components
+    command = f'cd {safe_wd} && {safe_cli} {safe_prompt}; exec bash'
 
     # Build terminal-specific command
     if terminal == 'gnome-terminal':
@@ -263,7 +318,7 @@ def spawn_linux_terminal(
     elif terminal == 'xterm':
         cmd = ['xterm', '-e', 'bash', '-c', command]
     elif terminal == 'terminator':
-        cmd = ['terminator', '-e', f'bash -c "{command}"']
+        cmd = ['terminator', '-e', f'bash -c {shlex.quote(command)}']
     elif terminal == 'alacritty':
         cmd = ['alacritty', '-e', 'bash', '-c', command]
     else:
@@ -302,17 +357,25 @@ def spawn_windows_terminal(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
-    escaped_prompt = prompt.replace('"', '\\"')
+    # Use subprocess.list2cmdline for proper Windows/cmd escaping
+    safe_cli_prompt = subprocess.list2cmdline([cli_command, prompt])
 
     if terminal == "windows-terminal":
-        cmd = ["wt", "-d", working_directory, "cmd", "/c",
-               f'{cli_command} "{escaped_prompt}"']
+        cmd = ["wt", "-d", working_directory, "cmd", "/c", safe_cli_prompt]
     elif terminal == "pwsh":
+        # PowerShell: use single-quoted strings for safe escaping.
+        # In PowerShell single-quoted strings, the only special character
+        # is ' itself, escaped by doubling it (''). This prevents
+        # interpretation of $, `, and other PowerShell metacharacters
+        # that subprocess.list2cmdline does NOT escape.
+        safe_wd = working_directory.replace("'", "''")
+        safe_cli = cli_command.replace("'", "''")
+        safe_prompt = prompt.replace("'", "''")
         cmd = ["pwsh", "-NoExit", "-Command",
-               f'Set-Location "{working_directory}"; {cli_command} "{escaped_prompt}"']
+               f"Set-Location '{safe_wd}'; & '{safe_cli}' '{safe_prompt}'"]
     else:  # cmd
         cmd = ["cmd", "/c", "start", "cmd", "/k",
-               f'cd /d "{working_directory}" && {cli_command} "{escaped_prompt}"']
+               f'cd /d "{working_directory}" && {safe_cli_prompt}']
 
     creationflags = 0
     if sys.platform == "win32":

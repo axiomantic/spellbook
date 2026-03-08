@@ -1,6 +1,8 @@
 """Database schema and connection management for session recovery."""
 
+import os
 import sqlite3
+import time
 import threading
 from pathlib import Path
 from typing import Optional
@@ -14,15 +16,26 @@ def get_db_path() -> Path:
     """
     db_dir = Path.home() / ".local" / "spellbook"
     db_dir.mkdir(parents=True, exist_ok=True)
+
+    # Restrict directory permissions (owner-only)
+    try:
+        os.chmod(str(db_dir), 0o700)
+    except OSError:
+        pass  # May fail on Windows or special filesystems
+
     return db_dir / "spellbook.db"
 
 
-_connections = {}  # Cache connections by path
+_connections: dict[str, tuple[sqlite3.Connection, float]] = {}  # Cache: path -> (conn, created_at)
 _connections_lock: threading.Lock = threading.Lock()
+_CONNECTION_TTL = 3600  # 1 hour
 
 
 def get_connection(db_path: str = None) -> sqlite3.Connection:
     """Get database connection with WAL mode enabled.
+
+    Connections are cached by path. Cached connections are health-checked
+    (SELECT 1) before reuse and replaced if broken or past TTL.
 
     Args:
         db_path: Path to database file (defaults to standard location)
@@ -34,15 +47,39 @@ def get_connection(db_path: str = None) -> sqlite3.Connection:
         db_path = str(get_db_path())
 
     with _connections_lock:
-        # Return cached connection if exists
         if db_path in _connections:
-            return _connections[db_path]
+            conn, created_at = _connections[db_path]
+
+            # Check TTL
+            if time.time() - created_at > _CONNECTION_TTL:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                del _connections[db_path]
+            else:
+                # Health check
+                try:
+                    conn.execute("SELECT 1")
+                    return conn
+                except sqlite3.Error:
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+                    del _connections[db_path]
 
         conn = sqlite3.connect(db_path, timeout=5.0, check_same_thread=False)
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA synchronous=NORMAL")
 
-        _connections[db_path] = conn
+        # Set file permissions (owner-only read/write)
+        try:
+            os.chmod(db_path, 0o600)
+        except OSError:
+            pass  # May fail on Windows, non-critical
+
+        _connections[db_path] = (conn, time.time())
         return conn
 
 
@@ -525,6 +562,6 @@ def close_all_connections():
     """
     global _connections
     with _connections_lock:
-        for conn in _connections.values():
+        for conn, _created_at in _connections.values():
             conn.close()
         _connections = {}
