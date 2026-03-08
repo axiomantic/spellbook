@@ -1,6 +1,7 @@
 """Tests for PowerShell (.ps1) hook implementations used on Windows.
 
-The hook system provides 10 hooks, each with a .sh (Unix) and .ps1 (Windows) variant:
+The hook system provides 12 hooks, each with a .sh (Unix) and .ps1 (Windows) variant.
+This test module covers the 10 standard hooks that follow the common PS1 structure:
 
 Security hooks (fail-closed, exit 2 on block):
   - bash-gate: blocks dangerous bash commands via check.py
@@ -19,6 +20,9 @@ Notification hooks (fail-open, exit 0 always):
 Compaction hooks (fail-open, exit 0 always):
   - pre-compact-save: saves workflow state before compaction via MCP
   - post-compact-recover: injects recovery context after compaction
+
+Note: memory-capture and memory-inject hooks use a different PS1 structure
+and are validated separately via the installer integration tests.
 
 This test module validates file existence, content structure, behavioral
 parity with .sh counterparts, and correctness of PowerShell patterns.
@@ -1220,13 +1224,15 @@ class TestHookTransformationPs1:
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-timer-start.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/audit-log.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/canary-check.ps1",
+            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/memory-inject.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/notify-on-complete.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-notify.ps1",
+            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/memory-capture.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/pre-compact-save.ps1",
             "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/post-compact-recover.ps1",
         ]
-        assert len(all_paths) == 10, (
-            f"Expected 10 hook paths installed, got {len(all_paths)}: {all_paths}"
+        assert len(all_paths) == 12, (
+            f"Expected 12 hook paths installed, got {len(all_paths)}: {all_paths}"
         )
         assert sorted(all_paths) == sorted(expected_paths), (
             f"Installed hook paths do not match expected.\n"
