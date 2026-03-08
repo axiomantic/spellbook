@@ -10,6 +10,7 @@ Covers:
 import os
 import shlex
 import subprocess
+import sys
 import tempfile
 import pytest
 from pathlib import Path
@@ -412,11 +413,12 @@ class TestWorkingDirectoryValidation:
             _validate_working_directory("/nonexistent/path/xyz", project_path=None)
 
     def test_rejects_system_directory(self):
-        """working_directory=/etc must be rejected (outside $HOME and project)."""
+        """System directories must be rejected (outside $HOME and project)."""
         from spellbook_mcp.server import _validate_working_directory
 
-        with pytest.raises(ValueError, match="outside allowed scope"):
-            _validate_working_directory("/etc", project_path=None)
+        system_dir = r"C:\Windows" if sys.platform == "win32" else "/etc"
+        with pytest.raises(ValueError, match="outside allowed scope|does not exist"):
+            _validate_working_directory(system_dir, project_path=None)
 
     def test_accepts_home_directory(self):
         """$HOME itself must be accepted."""
@@ -447,6 +449,7 @@ class TestWorkingDirectoryValidation:
             result = _validate_working_directory(subdir, project_path=tmpdir)
             assert result == str(Path(subdir).resolve())
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="symlinks require elevated privileges on Windows")
     def test_rejects_symlink_escape(self):
         """A symlink pointing outside allowed scope must be rejected after resolution."""
         from spellbook_mcp.server import _validate_working_directory

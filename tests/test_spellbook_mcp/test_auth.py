@@ -7,6 +7,7 @@ authenticating HTTP requests to the MCP server.
 import os
 import secrets
 import stat
+import sys
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock, call
@@ -32,9 +33,11 @@ class TestTokenGeneration:
             assert re.fullmatch(r'[A-Za-z0-9_-]+', token), (
                 f"Token contains non-url-safe-base64 characters: {token}"
             )
-            # File permissions must be owner-only read/write
-            file_mode = stat.S_IMODE(token_path.stat().st_mode)
-            assert file_mode == 0o600
+            # File permissions must be owner-only read/write (Unix only;
+            # Windows does not support POSIX permission bits)
+            if sys.platform != "win32":
+                file_mode = stat.S_IMODE(token_path.stat().st_mode)
+                assert file_mode == 0o600
             # File content must be exactly the returned token
             assert token_path.read_text() == token
         finally:
