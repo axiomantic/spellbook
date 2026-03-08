@@ -3,6 +3,7 @@
 Covers:
 - Task 5: AppleScript/shell escaping in terminal spawn functions (Finding #8)
 - Task 6: working_directory validation in spawn_claude_session (Finding #5)
+- Task 7: SPELLBOOK_CLI_COMMAND env var allowlist (Finding #13)
 """
 
 import os
@@ -448,3 +449,62 @@ class TestWorkingDirectoryValidation:
         with tempfile.NamedTemporaryFile() as tmpfile:
             with pytest.raises(ValueError, match="does not exist"):
                 _validate_working_directory(tmpfile.name, project_path=None)
+
+
+class TestCLICommandAllowlist:
+    """SPELLBOOK_CLI_COMMAND must be validated against an allowlist (Finding #13)."""
+
+    def test_malicious_cli_command_falls_back_to_claude(self):
+        """A CLI command not in the allowlist falls back to 'claude'."""
+        from spellbook_mcp.terminal_utils import _get_cli_command
+
+        with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "rm -rf /; claude"}):
+            result = _get_cli_command()
+        assert result == "claude"
+
+    def test_valid_cli_commands_accepted(self):
+        """All known CLI commands are accepted."""
+        from spellbook_mcp.terminal_utils import _get_cli_command
+
+        for cmd in ["claude", "codex", "gemini", "opencode", "crush"]:
+            with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": cmd}):
+                result = _get_cli_command()
+            assert result == cmd
+
+    def test_path_based_cli_command_extracts_basename(self):
+        """A full path to a known CLI is accepted by extracting basename."""
+        from spellbook_mcp.terminal_utils import _get_cli_command
+
+        with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "/usr/local/bin/claude"}):
+            result = _get_cli_command()
+        assert result == "claude"
+
+    def test_path_to_unknown_command_falls_back(self):
+        """A full path to an unknown command falls back to 'claude'."""
+        from spellbook_mcp.terminal_utils import _get_cli_command
+
+        with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "/usr/local/bin/evil"}):
+            result = _get_cli_command()
+        assert result == "claude"
+
+    def test_default_is_claude(self):
+        """Without env var, default is 'claude'."""
+        from spellbook_mcp.terminal_utils import _get_cli_command
+
+        env = os.environ.copy()
+        env.pop("SPELLBOOK_CLI_COMMAND", None)
+        with patch.dict(os.environ, env, clear=True):
+            result = _get_cli_command()
+        assert result == "claude"
+
+    def test_spawn_terminal_window_uses_validated_cli(self):
+        """spawn_terminal_window must use _get_cli_command when cli_command is None."""
+        from spellbook_mcp.terminal_utils import spawn_terminal_window, _get_cli_command
+
+        with patch.dict(os.environ, {"SPELLBOOK_CLI_COMMAND": "codex"}):
+            with patch("spellbook_mcp.terminal_utils.spawn_macos_terminal") as mock_spawn:
+                with patch("sys.platform", "darwin"):
+                    mock_spawn.return_value = {"status": "spawned", "terminal": "t", "pid": 1}
+                    spawn_terminal_window("terminal", "hello", "/tmp")
+                    # cli_command should be the validated value from _get_cli_command
+                    mock_spawn.assert_called_once_with("terminal", "hello", "/tmp", "codex")

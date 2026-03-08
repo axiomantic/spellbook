@@ -7,6 +7,37 @@ import subprocess
 from typing import Optional
 
 
+import logging
+
+_ALLOWED_CLI_COMMANDS = frozenset({
+    'claude', 'codex', 'gemini', 'opencode', 'crush',
+})
+
+_logger = logging.getLogger(__name__)
+
+
+def _get_cli_command() -> str:
+    """Get validated CLI command from environment.
+
+    Reads SPELLBOOK_CLI_COMMAND env var, extracts basename, and validates
+    against the allowlist. Falls back to 'claude' if not in allowlist.
+
+    Returns:
+        Validated CLI command name (basename only, never a path).
+    """
+    cli_cmd = os.environ.get('SPELLBOOK_CLI_COMMAND', 'claude')
+    cmd_name = os.path.basename(cli_cmd)
+
+    if cmd_name not in _ALLOWED_CLI_COMMANDS:
+        _logger.warning(
+            "SPELLBOOK_CLI_COMMAND '%s' not in allowlist, defaulting to 'claude'",
+            cli_cmd,
+        )
+        return 'claude'
+
+    return cmd_name
+
+
 def _escape_for_applescript(s: str) -> str:
     """Escape a string for embedding inside an AppleScript double-quoted string.
 
@@ -161,7 +192,7 @@ def spawn_terminal_window(
         working_directory = os.getcwd()
 
     if cli_command is None:
-        cli_command = os.environ.get('SPELLBOOK_CLI_COMMAND', 'claude')
+        cli_command = _get_cli_command()
 
     if sys.platform == 'darwin':
         return spawn_macos_terminal(terminal, prompt, working_directory, cli_command)
