@@ -319,6 +319,12 @@ class TestNotifyHookRegistration:
                     "async": True,
                     "timeout": 15,
                 },
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_DIR/hooks/memory-capture.sh",
+                    "async": True,
+                    "timeout": 5,
+                },
             ]
         }
 
