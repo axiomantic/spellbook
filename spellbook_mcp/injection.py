@@ -67,9 +67,18 @@ def _sanitize_field(field_name: str, value: str, max_length: int) -> Optional[st
                 field_name,
             )
             return None
-    except Exception:
-        # If security module unavailable, still apply length limits
+    except ImportError:
+        # Security module not installed; still apply length limits
         pass
+    except Exception as e:
+        # Unexpected error during security check: fail closed by omitting
+        # the field rather than silently passing potentially dangerous input
+        logger.warning(
+            "Security check failed for field '%s', omitting as precaution: %s",
+            field_name,
+            type(e).__name__,
+        )
+        return None
 
     return value
 

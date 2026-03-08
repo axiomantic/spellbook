@@ -368,10 +368,11 @@ class TestWindowsTerminalEscaping:
             )
             call_args = mock_popen.call_args
             cmd_list = call_args[0][0]
-            safe_cli_prompt = subprocess.list2cmdline(["claude", prompt])
 
+            # PowerShell uses single-quoted strings (not list2cmdline) to
+            # prevent interpretation of $, `, and other PS metacharacters.
             expected_cmd = ["pwsh", "-NoExit", "-Command",
-                           f"Set-Location 'C:\\Users\\test'; {safe_cli_prompt}"]
+                           "Set-Location 'C:\\Users\\test'; & 'claude' 'test & del *'"]
             assert cmd_list == expected_cmd
             assert result == {"status": "spawned", "terminal": "pwsh", "pid": 1234}
             assert mock_popen.call_count == 1

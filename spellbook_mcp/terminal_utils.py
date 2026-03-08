@@ -357,16 +357,22 @@ def spawn_windows_terminal(
     Returns:
         {"status": "spawned", "terminal": str, "pid": int | None}
     """
-    # Use subprocess.list2cmdline for proper Windows escaping of cli+prompt
+    # Use subprocess.list2cmdline for proper Windows/cmd escaping
     safe_cli_prompt = subprocess.list2cmdline([cli_command, prompt])
 
     if terminal == "windows-terminal":
         cmd = ["wt", "-d", working_directory, "cmd", "/c", safe_cli_prompt]
     elif terminal == "pwsh":
-        # PowerShell: use list2cmdline for the command part, quote the path
+        # PowerShell: use single-quoted strings for safe escaping.
+        # In PowerShell single-quoted strings, the only special character
+        # is ' itself, escaped by doubling it (''). This prevents
+        # interpretation of $, `, and other PowerShell metacharacters
+        # that subprocess.list2cmdline does NOT escape.
         safe_wd = working_directory.replace("'", "''")
+        safe_cli = cli_command.replace("'", "''")
+        safe_prompt = prompt.replace("'", "''")
         cmd = ["pwsh", "-NoExit", "-Command",
-               f"Set-Location '{safe_wd}'; {safe_cli_prompt}"]
+               f"Set-Location '{safe_wd}'; & '{safe_cli}' '{safe_prompt}'"]
     else:  # cmd
         cmd = ["cmd", "/c", "start", "cmd", "/k",
                f'cd /d "{working_directory}" && {safe_cli_prompt}']

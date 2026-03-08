@@ -126,7 +126,7 @@ This hardening was motivated by vulnerabilities disclosed in the MCP ecosystem d
 - **No OAuth/OIDC**: Authentication is a shared secret (bearer token), not a full OAuth flow. Sufficient for local single-user operation but not suitable for multi-user or networked deployments.
 - **Regex detection is bypassable**: Pattern-based injection detection can be evaded with sufficient creativity (novel encodings, semantic equivalents, split payloads). The patterns cover known attack vectors but cannot guarantee completeness.
 - **No TLS**: HTTP transport uses plain HTTP on localhost. The bearer token travels unencrypted, but since traffic is loopback-only, the risk is limited to local process sniffing.
-- **Rate limiting is per-server**: The spawn rate limit resets on server restart. A persistent attacker could restart the server to bypass rate limits.
+- **Rate limiting is per-server**: The spawn rate limit is persistent (backed by the SQLite database) and does NOT reset on server restart. However, a persistent attacker with filesystem access could delete or modify the database to bypass rate limits.
 
 ## Responsible Disclosure
 
