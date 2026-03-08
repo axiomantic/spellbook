@@ -14,9 +14,17 @@ import json
 import os
 import stat
 import subprocess
+import sys
 import textwrap
 
 import pytest
+
+pytestmark = [
+    pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Bash hook scripts not available on Windows",
+    ),
+]
 
 
 WORKTREE = os.path.dirname(
