@@ -3228,6 +3228,41 @@ def fractal_get_ready_to_synthesize(graph_id: str):
     return do_fractal_get_ready_to_synthesize(graph_id=graph_id)
 
 
+def build_http_run_kwargs() -> dict:
+    """Build kwargs for mcp.run() with auth middleware for HTTP transport.
+
+    Reads SPELLBOOK_MCP_HOST, SPELLBOOK_MCP_PORT, and SPELLBOOK_MCP_AUTH
+    from environment. When auth is not disabled, generates a bearer token,
+    writes it to the token file, and includes BearerAuthMiddleware in the
+    middleware list.
+
+    Returns:
+        Dict of kwargs to pass to mcp.run() for streamable-http transport.
+    """
+    from starlette.middleware import Middleware
+    from spellbook_mcp.auth import (
+        BearerAuthMiddleware,
+        auth_is_disabled,
+        generate_and_store_token,
+    )
+
+    host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
+    port = int(os.environ.get("SPELLBOOK_MCP_PORT", "8765"))
+
+    auth_middleware = []
+    if not auth_is_disabled():
+        token = generate_and_store_token()
+        auth_middleware = [Middleware(BearerAuthMiddleware, token=token)]
+
+    return {
+        "transport": "streamable-http",
+        "host": host,
+        "port": port,
+        "stateless_http": True,
+        "middleware": auth_middleware,
+    }
+
+
 if __name__ == "__main__":
     # Initialize database and start watcher thread
     db_path = str(get_db_path())
@@ -3265,12 +3300,14 @@ if __name__ == "__main__":
     _tts_preload.start()
 
     if transport == "streamable-http":
-        host = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
-        port = int(os.environ.get("SPELLBOOK_MCP_PORT", "8765"))
-        print(f"Starting spellbook MCP server on {host}:{port}")
+        _http_kwargs = build_http_run_kwargs()
+        _auth_status = "auth enabled" if _http_kwargs["middleware"] else "auth DISABLED"
+        print(f"Starting spellbook MCP server on {_http_kwargs['host']}:{_http_kwargs['port']} ({_auth_status})")
+        if not _http_kwargs["middleware"]:
+            _logger.warning("MCP auth disabled via SPELLBOOK_MCP_AUTH=disabled")
         # Use stateless_http=True so that unknown session IDs (e.g., from
         # a previous daemon instance) are handled gracefully instead of
         # returning "Bad Request: No valid session ID provided"
-        mcp.run(transport="streamable-http", host=host, port=port, stateless_http=True)
+        mcp.run(**_http_kwargs)
     else:
         mcp.run()

@@ -9,7 +9,7 @@ import secrets
 import stat
 import pytest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, call
 
 
 class TestTokenGeneration:
@@ -266,3 +266,113 @@ class TestAuthDisabledEnvVar:
 
         with patch.dict(os.environ, {"SPELLBOOK_MCP_AUTH": "off"}):
             assert auth_is_disabled() is False
+
+
+class TestServerStartupAuthIntegration:
+    """Server startup must wire auth middleware for HTTP transport.
+
+    These tests verify the __main__ block logic by testing the
+    build_http_run_kwargs helper function that constructs the kwargs
+    passed to mcp.run().
+    """
+
+    def test_http_kwargs_include_middleware_when_auth_enabled(self, tmp_path):
+        """When auth is not disabled, build_http_run_kwargs must return middleware list."""
+        from spellbook_mcp import auth
+        from spellbook_mcp.server import build_http_run_kwargs
+
+        token_path = tmp_path / ".mcp-token"
+        original = auth.TOKEN_PATH
+        auth.TOKEN_PATH = token_path
+        try:
+            with patch.dict(os.environ, {"SPELLBOOK_MCP_HOST": "127.0.0.1", "SPELLBOOK_MCP_PORT": "9999"}, clear=False):
+                kwargs = build_http_run_kwargs()
+
+            assert kwargs["transport"] == "streamable-http"
+            assert kwargs["host"] == "127.0.0.1"
+            assert kwargs["port"] == 9999
+            assert kwargs["stateless_http"] is True
+            # Must have exactly one middleware entry
+            assert len(kwargs["middleware"]) == 1
+            mw = kwargs["middleware"][0]
+            # Starlette Middleware wraps our class
+            from starlette.middleware import Middleware
+            assert isinstance(mw, Middleware)
+            assert mw.cls is auth.BearerAuthMiddleware
+            # Token must have been written to file
+            assert token_path.exists()
+            written_token = token_path.read_text()
+            assert len(written_token) == 43
+            assert mw.kwargs == {"token": written_token}
+        finally:
+            auth.TOKEN_PATH = original
+
+    def test_http_kwargs_no_middleware_when_auth_disabled(self, tmp_path):
+        """When SPELLBOOK_MCP_AUTH=disabled, build_http_run_kwargs must return empty middleware."""
+        from spellbook_mcp import auth
+        from spellbook_mcp.server import build_http_run_kwargs
+
+        token_path = tmp_path / ".mcp-token"
+        original = auth.TOKEN_PATH
+        auth.TOKEN_PATH = token_path
+        try:
+            with patch.dict(os.environ, {
+                "SPELLBOOK_MCP_AUTH": "disabled",
+                "SPELLBOOK_MCP_HOST": "0.0.0.0",
+                "SPELLBOOK_MCP_PORT": "8765",
+            }, clear=False):
+                kwargs = build_http_run_kwargs()
+
+            assert kwargs == {
+                "transport": "streamable-http",
+                "host": "0.0.0.0",
+                "port": 8765,
+                "stateless_http": True,
+                "middleware": [],
+            }
+            # Token file must NOT have been created
+            assert not token_path.exists()
+        finally:
+            auth.TOKEN_PATH = original
+
+    def test_http_kwargs_use_default_host_and_port(self, tmp_path):
+        """build_http_run_kwargs must use default host/port when env vars are unset."""
+        from spellbook_mcp import auth
+        from spellbook_mcp.server import build_http_run_kwargs
+
+        token_path = tmp_path / ".mcp-token"
+        original = auth.TOKEN_PATH
+        auth.TOKEN_PATH = token_path
+        try:
+            # Clear host/port env vars to test defaults
+            env = {
+                "SPELLBOOK_MCP_AUTH": "disabled",
+            }
+            with patch.dict(os.environ, env, clear=False):
+                # Remove host/port if they happen to be set
+                os.environ.pop("SPELLBOOK_MCP_HOST", None)
+                os.environ.pop("SPELLBOOK_MCP_PORT", None)
+                kwargs = build_http_run_kwargs()
+
+            assert kwargs == {
+                "transport": "streamable-http",
+                "host": "127.0.0.1",
+                "port": 8765,
+                "stateless_http": True,
+                "middleware": [],
+            }
+        finally:
+            auth.TOKEN_PATH = original
+
+    def test_fastmcp_version_constraint(self):
+        """pyproject.toml must require fastmcp>=2.9.0 for middleware support."""
+        import tomllib
+
+        pyproject_path = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        with open(pyproject_path, "rb") as f:
+            pyproject = tomllib.load(f)
+
+        deps = pyproject["project"]["dependencies"]
+        fastmcp_deps = [d for d in deps if d.startswith("fastmcp")]
+        assert len(fastmcp_deps) == 1
+        assert fastmcp_deps[0] == '"fastmcp>=2.9.0,<4"' or fastmcp_deps[0] == "fastmcp>=2.9.0,<4"
