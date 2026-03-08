@@ -811,12 +811,15 @@ def validate_workflow_state(
 
 
 def _validate_boot_prompt(boot_prompt: str) -> list[dict]:
-    """Validate that a boot_prompt only contains safe operations.
+    """Validate boot_prompt with context-aware line tracking.
 
-    Safe operations are: Skill invocations, Read operations, TodoWrite calls,
-    markdown formatting (headers, bold, lists, code fences), and plain text labels.
+    Instead of checking each line independently, track whether we are
+    inside a multi-line structure (TodoWrite JSON, Read path list, etc.)
+    and only allow continuation lines within those tracked contexts.
 
-    Dangerous operations (Bash, Write, Edit, curl, etc.) are always rejected.
+    Dangerous patterns are checked in two phases:
+    1. Against the full boot_prompt string (catches multi-line spanning patterns)
+    2. Against each individual line (catches per-line dangerous operations)
 
     Args:
         boot_prompt: The boot prompt string to validate.
@@ -825,8 +828,12 @@ def _validate_boot_prompt(boot_prompt: str) -> list[dict]:
         List of finding dicts (empty if boot_prompt is safe).
     """
     findings: list[dict] = []
+    in_multiline_context = None  # None or "structured"
+    brace_depth = 0
+    bracket_depth = 0
 
-    # Check for dangerous patterns first (these are always rejected)
+    # Phase 1: Check dangerous patterns against the FULL string first.
+    # This catches patterns that could be split across lines to evade per-line checks.
     for pattern in _DANGEROUS_BOOT_PROMPT_PATTERNS:
         if pattern.search(boot_prompt):
             findings.append({
@@ -838,55 +845,62 @@ def _validate_boot_prompt(boot_prompt: str) -> list[dict]:
                 "severity": "CRITICAL",
             })
 
-    # Check each line for allowed patterns
+    # Phase 2: Per-line context-aware validation
     for line in boot_prompt.split("\n"):
-        line_stripped = line.strip()
-        if not line_stripped:
-            continue  # Empty lines are fine
+        stripped = line.strip()
+        if not stripped:
+            continue
 
-        line_is_safe = any(
-            p.match(line) for p in _SAFE_BOOT_PROMPT_PATTERNS
-        )
-        if not line_is_safe:
-            # Check if it looks like a continuation of a multi-line structure
-            # (e.g., JSON inside TodoWrite, or continuation of Read path)
-            if _is_likely_continuation(line_stripped):
+        # Check dangerous patterns on EVERY line, regardless of
+        # whether we are inside a tracked multi-line structure.
+        for pattern in _DANGEROUS_BOOT_PROMPT_PATTERNS:
+            if pattern.search(stripped):
+                findings.append({
+                    "check": "boot_prompt",
+                    "message": (
+                        f"boot_prompt contains dangerous operation: "
+                        f"matched pattern '{pattern.pattern}'"
+                    ),
+                    "severity": "CRITICAL",
+                })
+
+        # Track multi-line context entry via safe patterns
+        if any(p.match(line) for p in _SAFE_BOOT_PROMPT_PATTERNS):
+            brace_depth += stripped.count("{") - stripped.count("}")
+            bracket_depth += stripped.count("[") - stripped.count("]")
+            if brace_depth > 0 or bracket_depth > 0:
+                in_multiline_context = "structured"
+            continue
+
+        # If inside a tracked multi-line structure, allow structural content
+        if in_multiline_context == "structured":
+            brace_depth += stripped.count("{") - stripped.count("}")
+            bracket_depth += stripped.count("[") - stripped.count("]")
+
+            if brace_depth <= 0 and bracket_depth <= 0:
+                in_multiline_context = None  # Structure closed
+
+            # Within structure: only allow JSON-safe content (no tool calls).
+            # This regex permits JSON structural chars, quotes, alphanumerics,
+            # common punctuation, and whitespace.
+            if re.match(
+                r'^[\[\]{}(),:\s"\'0-9a-zA-Z_.\-+/\\|=!@#$%^&*~`]+$',
+                stripped,
+            ):
                 continue
+            # Otherwise fall through to unrecognized-line rejection
 
-            findings.append({
-                "check": "boot_prompt",
-                "message": (
-                    f"boot_prompt contains unrecognized operation on line: "
-                    f"'{line_stripped[:80]}'"
-                ),
-                "severity": "HIGH",
-            })
+        # Line is not recognized by a safe pattern and not in a tracked context
+        findings.append({
+            "check": "boot_prompt",
+            "message": (
+                f"boot_prompt contains unrecognized operation: "
+                f"'{stripped[:80]}'"
+            ),
+            "severity": "HIGH",
+        })
 
     return findings
-
-
-def _is_likely_continuation(line: str) -> bool:
-    """Check if a line is a likely continuation of a multi-line safe structure.
-
-    Recognizes JSON fragments (inside TodoWrite calls), closing parens/brackets,
-    and quoted strings that are part of function call arguments.
-
-    Args:
-        line: A stripped line of text.
-
-    Returns:
-        True if the line looks like a continuation of safe content.
-    """
-    continuation_patterns = [
-        re.compile(r'^[\[\]{},\s]*$'),           # JSON structural chars
-        re.compile(r'^\)$'),                       # Closing paren
-        re.compile(r'^"[^"]*"\s*[:,\]})]?\s*$'),   # Quoted string in JSON
-        re.compile(r'^\d+\s*[,\]}]?\s*$'),         # Number in JSON
-        re.compile(r'^(true|false|null)\s*[,\]}]?\s*$'),  # JSON literals
-        re.compile(r'^\s*"content"'),              # JSON key in todo
-        re.compile(r'^\s*"status"'),               # JSON key in todo
-    ]
-    return any(p.match(line) for p in continuation_patterns)
 
 
 def _check_state_injection(state: dict) -> list[dict]:
