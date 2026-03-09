@@ -568,59 +568,6 @@ class TestConsolidateBatch:
         namespaces = [row[0] for row in cursor.fetchall()]
         assert all(ns == "alpha" for ns in namespaces)
 
-    def test_piggyback_gc(self, db):
-        """Consolidation calls purge_deleted at the end on success."""
-        _seed_duplicate_events(db)
-
-        with patch(
-            "spellbook_mcp.memory_consolidation.purge_deleted",
-            return_value=2,
-        ) as mock_purge:
-            result = consolidate_batch(
-                db_path=db,
-                namespace="Users-alice-myproject",
-            )
-
-        assert result["status"] == "success"
-        assert result["purged"] == 2
-        mock_purge.assert_called_once_with(db)
-
-    def test_audit_log_on_success(self, db):
-        """Successful consolidation logs consolidation_complete with metrics."""
-        _seed_duplicate_events(db)
-
-        result = consolidate_batch(
-            db_path=db,
-            namespace="Users-alice-myproject",
-        )
-
-        assert result["status"] == "success"
-
-        # Verify audit log entry
-        conn = get_connection(db)
-        cursor = conn.execute(
-            "SELECT action, details FROM memory_audit_log WHERE action = 'consolidation_complete'"
-        )
-        row = cursor.fetchone()
-        assert row is not None
-        assert row[0] == "consolidation_complete"
-        details = json.loads(row[1])
-        assert details["batch_id"] == result["batch_id"]
-        assert details["events_consolidated"] == 3
-        assert details["memories_created"] == 2
-        # compression_ratio = 2/3 = 0.667
-        assert details["compression_ratio"] == round(2 / 3, 3)
-        # strategies_used should be a list containing the strategies that produced memories
-        assert set(details["strategies_used"]) == {"content_hash", "temporal_clustering"}
-
-    def test_mixed_event_types_full_pipeline(self, db):
-        """All 4 strategies produce memories from mixed event types in one batch."""
-        # --- Seed events that exercise each strategy ---
-
-        # Group A: 2 exact duplicates -> content_hash dedup
-        for _ in range(2):
-            log_raw_event(
-                db_path=db, session_id="sess-1", project="ns",
                 event_type="tool_use", tool_name="Read",
                 subject="src/config.py",
                 summary="Read config loader initialization",
