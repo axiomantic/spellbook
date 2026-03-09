@@ -62,6 +62,8 @@ from spellbook_mcp.memory_tools import (
     do_memory_recall,
     do_memory_forget,
     do_log_event,
+    do_get_unconsolidated,
+    do_store_memories,
 )
 from spellbook_mcp.memory_consolidation import (
     should_consolidate,
@@ -3339,7 +3341,7 @@ async def memory_consolidate(ctx: Context, namespace: str = "") -> dict:
     """Trigger memory consolidation: extract structured memories from raw events.
 
     Checks if enough unconsolidated events have accumulated, then runs
-    the consolidation pipeline (LLM extraction, dedup, bibliographic coupling).
+    the consolidation pipeline (heuristic strategies, dedup, bibliographic coupling).
 
     Args:
         namespace: Project namespace. Auto-detected if empty.
@@ -3366,6 +3368,84 @@ async def memory_consolidate(ctx: Context, namespace: str = "") -> dict:
     # Run synchronous consolidation in a thread to avoid blocking the event loop
     result = await asyncio.to_thread(consolidate_batch, db_path, namespace)
     return result
+
+
+@mcp.tool()
+@inject_recovery_context
+async def memory_get_unconsolidated(
+    ctx: Context,
+    namespace: str = "",
+    limit: int = 50,
+    include_consolidated: bool = False,
+) -> dict:
+    """Get raw events for client-side memory synthesis.
+
+    Returns unconsolidated events with a pre-built consolidation prompt and
+    response schema. Use with memory_store_memories for two-tool synthesis:
+    1. Call memory_get_unconsolidated to get events + prompt
+    2. Process the prompt with your LLM
+    3. Call memory_store_memories with the synthesized memories
+
+    Args:
+        namespace: Project namespace. Auto-detected if empty.
+        limit: Maximum events to return (default 50).
+        include_consolidated: If true, also return events consolidated in last 24h.
+
+    Returns:
+        Dict with events, count, consolidation_prompt, and response_schema.
+    """
+    db_path = str(get_db_path())
+    if not namespace:
+        project_path = await get_project_path_from_context(ctx)
+        if project_path:
+            namespace = encode_cwd(project_path)
+        else:
+            return {"error": "Could not determine project namespace", "events": []}
+
+    return do_get_unconsolidated(
+        db_path=db_path,
+        namespace=namespace,
+        limit=limit,
+        include_consolidated=include_consolidated,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+async def memory_store_memories(
+    ctx: Context,
+    memories: str,
+    event_ids: str = "",
+    namespace: str = "",
+) -> dict:
+    """Store client-synthesized memories from raw events.
+
+    Accepts memories as a JSON string (output from client LLM processing
+    the consolidation_prompt from memory_get_unconsolidated).
+
+    Args:
+        memories: JSON string of memory objects. Format:
+            {"memories": [{"content": "...", "memory_type": "fact", "tags": [...]}]}
+        event_ids: Comma-separated event IDs to mark as consolidated.
+        namespace: Project namespace. Auto-detected if empty.
+
+    Returns:
+        Dict with status, memories_created, events_consolidated, memory_ids.
+    """
+    db_path = str(get_db_path())
+    if not namespace:
+        project_path = await get_project_path_from_context(ctx)
+        if project_path:
+            namespace = encode_cwd(project_path)
+        else:
+            return {"error": "Could not determine project namespace"}
+
+    return do_store_memories(
+        db_path=db_path,
+        memories_json=memories,
+        event_ids_str=event_ids,
+        namespace=namespace,
+    )
 
 
 # --- Memory Event REST Endpoint ---

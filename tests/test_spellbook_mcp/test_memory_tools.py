@@ -3,6 +3,7 @@
 import json
 
 import pytest
+from unittest.mock import AsyncMock, MagicMock
 
 from spellbook_mcp.db import init_db, get_connection, close_all_connections
 from spellbook_mcp.memory_store import (
@@ -870,3 +871,244 @@ class TestDoStoreMemories:
         )
         assert result["status"] == "success"
         assert result["events_consolidated"] == 0
+
+
+class TestMemoryToolsServerRegistration:
+    """Test that memory_get_unconsolidated and memory_store_memories are registered as MCP tools in server.py."""
+
+    def test_memory_consolidate_docstring_updated(self):
+        """memory_consolidate docstring references heuristic strategies, not LLM."""
+        from spellbook_mcp import server
+
+        docstring = server.memory_consolidate.fn.__doc__
+        assert "heuristic strategies" in docstring, (
+            "memory_consolidate docstring should reference 'heuristic strategies'"
+        )
+        assert "LLM" not in docstring, (
+            "memory_consolidate docstring should not reference 'LLM'"
+        )
+
+    def test_memory_get_unconsolidated_is_registered(self):
+        """memory_get_unconsolidated is registered as a tool on the server module."""
+        from spellbook_mcp import server
+
+        assert hasattr(server, "memory_get_unconsolidated"), (
+            "memory_get_unconsolidated not found on server module"
+        )
+        assert callable(server.memory_get_unconsolidated.fn), (
+            "memory_get_unconsolidated.fn is not callable"
+        )
+
+    def test_memory_store_memories_is_registered(self):
+        """memory_store_memories is registered as a tool on the server module."""
+        from spellbook_mcp import server
+
+        assert hasattr(server, "memory_store_memories"), (
+            "memory_store_memories not found on server module"
+        )
+        assert callable(server.memory_store_memories.fn), (
+            "memory_store_memories.fn is not callable"
+        )
+
+    def test_server_imports_do_get_unconsolidated(self):
+        """do_get_unconsolidated is imported in server module."""
+        from spellbook_mcp import server
+
+        assert hasattr(server, "do_get_unconsolidated"), (
+            "do_get_unconsolidated not imported in server"
+        )
+
+    def test_server_imports_do_store_memories(self):
+        """do_store_memories is imported in server module."""
+        from spellbook_mcp import server
+
+        assert hasattr(server, "do_store_memories"), (
+            "do_store_memories not imported in server"
+        )
+
+    @pytest.mark.asyncio
+    async def test_memory_get_unconsolidated_delegates_to_do_function(self, db):
+        """memory_get_unconsolidated delegates to do_get_unconsolidated with correct args."""
+        from spellbook_mcp import server
+        from spellbook_mcp.memory_tools import MEMORY_STORE_SCHEMA
+        from unittest.mock import patch
+
+        mock_ctx = MagicMock()
+        mock_ctx.list_roots = AsyncMock(return_value=[])
+
+        with patch.object(server, "get_db_path", return_value=db), \
+             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=None) as mock_get_path, \
+             patch.object(server, "do_get_unconsolidated") as mock_do:
+            mock_do.return_value = {
+                "events": [],
+                "count": 0,
+                "consolidation_prompt": "",
+                "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
+            }
+            # With explicit namespace, should NOT call get_project_path_from_context
+            result = await server.memory_get_unconsolidated.fn(
+                ctx=mock_ctx,
+                namespace="test-ns",
+                limit=25,
+                include_consolidated=True,
+            )
+
+            mock_do.assert_called_once_with(
+                db_path=db,
+                namespace="test-ns",
+                limit=25,
+                include_consolidated=True,
+            )
+            assert result == {
+                "events": [],
+                "count": 0,
+                "consolidation_prompt": "",
+                "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
+            }
+
+    @pytest.mark.asyncio
+    async def test_memory_get_unconsolidated_auto_detects_namespace(self, db):
+        """memory_get_unconsolidated auto-detects namespace from context when empty."""
+        from spellbook_mcp import server
+        from spellbook_mcp.path_utils import encode_cwd
+        from unittest.mock import patch
+
+        mock_ctx = MagicMock()
+
+        fake_project_path = "/Users/test/myproject"
+        expected_namespace = encode_cwd(fake_project_path)
+
+        with patch.object(server, "get_db_path", return_value=db), \
+             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
+             patch.object(server, "do_get_unconsolidated") as mock_do:
+            mock_do.return_value = {"events": [], "count": 0, "consolidation_prompt": "", "response_schema": "{}"}
+
+            result = await server.memory_get_unconsolidated.fn(
+                ctx=mock_ctx,
+                namespace="",
+                limit=50,
+                include_consolidated=False,
+            )
+
+            mock_do.assert_called_once_with(
+                db_path=db,
+                namespace=expected_namespace,
+                limit=50,
+                include_consolidated=False,
+            )
+
+    @pytest.mark.asyncio
+    async def test_memory_get_unconsolidated_returns_error_when_no_namespace(self, db):
+        """memory_get_unconsolidated returns error when namespace empty and context fails."""
+        from spellbook_mcp import server
+        from unittest.mock import patch
+
+        mock_ctx = MagicMock()
+
+        with patch.object(server, "get_db_path", return_value=db), \
+             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=None):
+            result = await server.memory_get_unconsolidated.fn(
+                ctx=mock_ctx,
+                namespace="",
+                limit=50,
+                include_consolidated=False,
+            )
+
+            assert result == {
+                "error": "Could not determine project namespace",
+                "events": [],
+            }
+
+    @pytest.mark.asyncio
+    async def test_memory_store_memories_delegates_to_do_function(self, db):
+        """memory_store_memories delegates to do_store_memories with correct args."""
+        from spellbook_mcp import server
+        from unittest.mock import patch
+
+        mock_ctx = MagicMock()
+
+        with patch.object(server, "get_db_path", return_value=db), \
+             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=None), \
+             patch.object(server, "do_store_memories") as mock_do:
+            mock_do.return_value = {
+                "status": "success",
+                "memories_created": 1,
+                "events_consolidated": 2,
+                "memory_ids": ["mem-1"],
+            }
+
+            result = await server.memory_store_memories.fn(
+                ctx=mock_ctx,
+                memories='{"memories": [{"content": "test"}]}',
+                event_ids="1,2",
+                namespace="test-ns",
+            )
+
+            mock_do.assert_called_once_with(
+                db_path=db,
+                memories_json='{"memories": [{"content": "test"}]}',
+                event_ids_str="1,2",
+                namespace="test-ns",
+            )
+            assert result == {
+                "status": "success",
+                "memories_created": 1,
+                "events_consolidated": 2,
+                "memory_ids": ["mem-1"],
+            }
+
+    @pytest.mark.asyncio
+    async def test_memory_store_memories_auto_detects_namespace(self, db):
+        """memory_store_memories auto-detects namespace from context when empty."""
+        from spellbook_mcp import server
+        from spellbook_mcp.path_utils import encode_cwd
+        from unittest.mock import patch
+
+        mock_ctx = MagicMock()
+        fake_project_path = "/Users/test/myproject"
+        expected_namespace = encode_cwd(fake_project_path)
+
+        with patch.object(server, "get_db_path", return_value=db), \
+             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
+             patch.object(server, "do_store_memories") as mock_do:
+            mock_do.return_value = {
+                "status": "success",
+                "memories_created": 0,
+                "events_consolidated": 0,
+                "memory_ids": [],
+            }
+
+            await server.memory_store_memories.fn(
+                ctx=mock_ctx,
+                memories="[]",
+                event_ids="",
+                namespace="",
+            )
+
+            mock_do.assert_called_once_with(
+                db_path=db,
+                memories_json="[]",
+                event_ids_str="",
+                namespace=expected_namespace,
+            )
+
+    @pytest.mark.asyncio
+    async def test_memory_store_memories_returns_error_when_no_namespace(self, db):
+        """memory_store_memories returns error when namespace empty and context fails."""
+        from spellbook_mcp import server
+        from unittest.mock import patch
+
+        mock_ctx = MagicMock()
+
+        with patch.object(server, "get_db_path", return_value=db), \
+             patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=None):
+            result = await server.memory_store_memories.fn(
+                ctx=mock_ctx,
+                memories='{"memories": []}',
+                event_ids="",
+                namespace="",
+            )
+
+            assert result == {
+                "error": "Could not determine project namespace",
+            }
