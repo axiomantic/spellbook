@@ -248,6 +248,43 @@ def get_unconsolidated_events(
     ]
 
 
+def get_recently_consolidated_events(
+    db_path: str,
+    limit: int = 50,
+    namespace: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Get events consolidated within the last 24 hours.
+
+    Used by memory_get_unconsolidated with include_consolidated=True
+    to allow client re-synthesis of recently consolidated events.
+    """
+    conn = get_connection(db_path)
+    if namespace:
+        cursor = conn.execute(
+            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
+            "subject, summary, tags FROM raw_events "
+            "WHERE consolidated = 1 AND timestamp > datetime('now', '-24 hours') "
+            "AND project = ? ORDER BY id ASC LIMIT ?",
+            (namespace, limit),
+        )
+    else:
+        cursor = conn.execute(
+            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
+            "subject, summary, tags FROM raw_events "
+            "WHERE consolidated = 1 AND timestamp > datetime('now', '-24 hours') "
+            "ORDER BY id ASC LIMIT ?",
+            (limit,),
+        )
+    return [
+        {
+            "id": r[0], "session_id": r[1], "timestamp": r[2],
+            "project": r[3], "event_type": r[4], "tool_name": r[5],
+            "subject": r[6], "summary": r[7], "tags": r[8],
+        }
+        for r in cursor.fetchall()
+    ]
+
+
 def mark_events_consolidated(
     db_path: str, event_ids: List[int], batch_id: str
 ) -> None:

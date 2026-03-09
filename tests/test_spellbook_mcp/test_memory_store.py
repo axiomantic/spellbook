@@ -716,6 +716,51 @@ class TestGetUnconsolidatedEventsNamespace:
         assert len(events) == 2
 
 
+class TestGetRecentlyConsolidatedEvents:
+    def test_returns_recently_consolidated(self, db):
+        """Returns events consolidated within the last 24 hours."""
+        eid1 = log_raw_event(db, "s1", "proj", "tool_use", "Read", "a.py", "read a", "python")
+        eid2 = log_raw_event(db, "s1", "proj", "tool_use", "Edit", "b.py", "edit b", "python")
+        mark_events_consolidated(db, [eid1, eid2], "batch-1")
+
+        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        events = get_recently_consolidated_events(db, limit=50)
+        assert len(events) == 2
+        assert events[0]["id"] == eid1
+        assert events[1]["id"] == eid2
+
+    def test_excludes_unconsolidated(self, db):
+        """Unconsolidated events are not returned."""
+        log_raw_event(db, "s1", "proj", "tool_use", "Read", "a.py", "read a", "")
+
+        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        events = get_recently_consolidated_events(db, limit=50)
+        assert len(events) == 0
+
+    def test_namespace_filter(self, db):
+        """When namespace is provided, only matching project events are returned."""
+        eid1 = log_raw_event(db, "s1", "proj-a", "tool_use", "Read", "a.py", "read a", "")
+        eid2 = log_raw_event(db, "s1", "proj-b", "tool_use", "Read", "b.py", "read b", "")
+        mark_events_consolidated(db, [eid1, eid2], "batch-1")
+
+        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        events = get_recently_consolidated_events(db, limit=50, namespace="proj-a")
+        assert len(events) == 1
+        assert events[0]["project"] == "proj-a"
+
+    def test_respects_limit(self, db):
+        """Limit parameter caps results."""
+        eids = []
+        for i in range(5):
+            eid = log_raw_event(db, "s1", "proj", "tool_use", "Read", f"{i}.py", f"read {i}", "")
+            eids.append(eid)
+        mark_events_consolidated(db, eids, "batch-1")
+
+        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        events = get_recently_consolidated_events(db, limit=2)
+        assert len(events) == 2
+
+
 class TestInsertMemoryExtraMeta:
     def test_extra_meta_merged_into_meta_json(self, db):
         """extra_meta dict is shallow-merged into stored meta JSON alongside tags."""
