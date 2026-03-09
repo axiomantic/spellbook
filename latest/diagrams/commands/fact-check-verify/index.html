@@ -7203,25 +7203,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -7240,121 +7221,303 @@
   
 
 
-<!-- diagram-meta: {"source": "commands/fact-check-verify.md", "source_hash": "sha256:c3769c5ea37747bc20a5d4ed1b209d51984971550d72600155ef07201ea0b1da", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/fact-check-verify.md", "source_hash": "sha256:69bd9dd391d25f57505a8cd405285372bb3c3b0ae01d9bc1e09bff99c8a6c49e", "generated_at": "2026-03-09T10:30:36Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-fact-check-verify">Diagram: fact-check-verify<a class="headerlink" href="#diagram-fact-check-verify" title="Permanent link">&para;</a></h1>
-<p>Perform parallel verification of extracted claims using specialized agents, check AgentDB for prior findings, produce evidence-backed verdicts, and store results for future sessions.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  Start([Start: Claims triaged]) --&gt; CheckDB[Check AgentDB first]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  style CheckDB fill:#2196F3,color:#fff
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  CheckDB --&gt; DBHit{Prior finding exists?}
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  style DBHit fill:#FF9800,color:#000
+<p>Now I have the full picture. Here are the diagrams:</p>
+<hr />
+<h1 id="fact-check-verify-command-diagrams">fact-check-verify Command Diagrams<a class="headerlink" href="#fact-check-verify-command-diagrams" title="Permanent link">&para;</a></h1>
+<h2 id="overview-high-level-flow">Overview: High-Level Flow<a class="headerlink" href="#overview-high-level-flow" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>graph TD
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    subgraph legend[&quot;Legend&quot;]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        L1[&quot;Process&quot;]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        L2{&quot;Decision&quot;}
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        L3([Terminal])
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        L4[&quot;Subagent Dispatch&quot;]:::subagent
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        L5{&quot;Quality Gate&quot;}:::gate
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        L6([Success]):::success
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    end
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>  DBHit --&gt;|Yes, similarity &gt; 0.92| Reuse[Reuse cached finding]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>  DBHit --&gt;|No| SpawnAgents[Spawn category agents]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  style Reuse fill:#2196F3,color:#fff
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  style SpawnAgents fill:#4CAF50,color:#fff
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  SpawnAgents --&gt; SecAgent[SecurityAgent]
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  SpawnAgents --&gt; CorAgent[CorrectnessAgent]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  SpawnAgents --&gt; PerfAgent[PerformanceAgent]
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>  SpawnAgents --&gt; ConcAgent[ConcurrencyAgent]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  SpawnAgents --&gt; DocAgent[DocumentationAgent]
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  SpawnAgents --&gt; HistAgent[HistoricalAgent]
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  SpawnAgents --&gt; ConfAgent[ConfigurationAgent]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    START([Phase 4-5 Entry]) --&gt; CACHE_CHECK{&quot;AgentDB&lt;br&gt;available?&quot;}
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    CACHE_CHECK --&gt;|Yes| RETRIEVE[&quot;Retrieve cached findings&lt;br&gt;similarity threshold 0.92&quot;]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    CACHE_CHECK --&gt;|No| SKIP_CACHE[&quot;Skip cache, proceed&lt;br&gt;store locally for later sync&quot;]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    RETRIEVE --&gt; CACHE_HIT{&quot;Cached finding&lt;br&gt;similarity &gt; 0.92?&quot;}
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    CACHE_HIT --&gt;|Yes| FILE_CHANGED{&quot;Referenced file&lt;br&gt;changed since storage?&quot;}
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    CACHE_HIT --&gt;|No| SPAWN
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    FILE_CHANGED --&gt;|Yes| INVALIDATE[&quot;Invalidate cache entry&quot;] --&gt; SPAWN
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    FILE_CHANGED --&gt;|No| RETURN_CACHED[&quot;Return cached finding&quot;] --&gt; VERDICT_ASSEMBLY
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    SKIP_CACHE --&gt; SPAWN
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>  style SecAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  style CorAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>  style PerfAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  style ConcAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  style DocAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  style HistAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  style ConfAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  SecAgent --&gt; Collect[Collect agent results]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>  CorAgent --&gt; Collect
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>  PerfAgent --&gt; Collect
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  ConcAgent --&gt; Collect
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  DocAgent --&gt; Collect
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>  HistAgent --&gt; Collect
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  ConfAgent --&gt; Collect
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    SPAWN[&quot;Spawn category agents&lt;br&gt;via swarm-orchestration&quot;]:::subagent --&gt; SPAWN_OK{&quot;Swarm spawn&lt;br&gt;successful?&quot;}:::gate
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    SPAWN_OK --&gt;|No| ESCALATE_FAIL([Escalate to orchestrator&lt;br&gt;NO partial verdicts])
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    SPAWN_OK --&gt;|Yes| PARALLEL[&quot;Parallel agent verification&lt;br&gt;See: Detail Diagram A&quot;]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    PARALLEL --&gt; SCOPE_CHECK{&quot;System-wide&lt;br&gt;claim keywords?&quot;}
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    SCOPE_CHECK --&gt;|Yes| SCOPE_EXPAND[&quot;Scope Expansion&lt;br&gt;See: Detail Diagram B&quot;]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    SCOPE_CHECK --&gt;|No| CONFLICT_CHECK
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    SCOPE_EXPAND --&gt; CONFLICT_CHECK{&quot;Cross-agent&lt;br&gt;conflict detected?&quot;}
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    CONFLICT_CHECK --&gt;|Yes| CONTESTED[&quot;Mark Contested&lt;br&gt;present BOTH verdicts&lt;br&gt;See: Detail Diagram C&quot;]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    CONFLICT_CHECK --&gt;|No| DEPTH_CHECK
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    CONTESTED --&gt; DEPTH_CHECK{&quot;Depth escalation&lt;br&gt;required?&quot;}
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  style Collect fill:#2196F3,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>  Reuse --&gt; AssignVerdict
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>  Collect --&gt; EvidenceGate{Concrete evidence?}
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>  style EvidenceGate fill:#f44336,color:#fff
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    DEPTH_CHECK --&gt;|Yes| ESCALATION[&quot;Depth Escalation&lt;br&gt;See: Detail Diagram D&quot;]
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    DEPTH_CHECK --&gt;|No| FRACTAL_CHECK
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    ESCALATION --&gt; FRACTAL_CHECK{&quot;Verdict is&lt;br&gt;Inconclusive or&lt;br&gt;Ambiguous?&quot;}
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    FRACTAL_CHECK --&gt;|Yes| FRACTAL[&quot;Invoke fractal-thinking&lt;br&gt;intensity: pulse&quot;]
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    FRACTAL_CHECK --&gt;|No| VERDICT_ASSEMBLY
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>  EvidenceGate --&gt;|No| GatherMore[Gather more evidence]
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>  EvidenceGate --&gt;|Yes| AssignVerdict[Assign verdict]
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>  style GatherMore fill:#2196F3,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>  GatherMore --&gt; EvidenceGate
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>  AssignVerdict --&gt; Verified[Verified]
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>  AssignVerdict --&gt; Refuted[Refuted]
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>  AssignVerdict --&gt; Incomplete[Incomplete]
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>  AssignVerdict --&gt; Inconclusive[Inconclusive]
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>  AssignVerdict --&gt; Stale[Stale / Misleading]
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>  style AssignVerdict fill:#2196F3,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>  style Verified fill:#2196F3,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>  style Refuted fill:#2196F3,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>  style Incomplete fill:#2196F3,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>  style Inconclusive fill:#2196F3,color:#fff
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>  style Stale fill:#2196F3,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>  Verified --&gt; StoreDB[Store in AgentDB]
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>  Refuted --&gt; StoreDB
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>  Incomplete --&gt; StoreDB
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>  Inconclusive --&gt; StoreDB
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>  Stale --&gt; StoreDB
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>  style StoreDB fill:#2196F3,color:#fff
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>  StoreDB --&gt; AllDone{All claims verified?}
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>  style AllDone fill:#FF9800,color:#000
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>  AllDone --&gt;|No| CheckDB
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>  AllDone --&gt;|Yes| End([End: Verdicts assigned])
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>  style End fill:#4CAF50,color:#fff
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    FRACTAL --&gt; FRACTAL_UPGRADE{&quot;Verdict&lt;br&gt;upgraded?&quot;}
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    FRACTAL_UPGRADE --&gt;|Yes| UPDATE_VERDICT[&quot;Update verdict&lt;br&gt;category + evidence&quot;]
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    FRACTAL_UPGRADE --&gt;|No| VERDICT_ASSEMBLY
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    UPDATE_VERDICT --&gt; VERDICT_ASSEMBLY
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    VERDICT_ASSEMBLY{&quot;Every verdict has&lt;br&gt;concrete evidence?&quot;}:::gate
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    VERDICT_ASSEMBLY --&gt;|No| REJECT_VERDICT([FORBIDDEN:&lt;br&gt;No verdict without citation])
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    VERDICT_ASSEMBLY --&gt;|Yes| STORE_FINDING[&quot;Store finding in AgentDB&lt;br&gt;with file hash&quot;]
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    STORE_FINDING --&gt; OUTPUT([Emit verdicts&lt;br&gt;to fact-check-report]):::success
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<h3 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Color</th>
-<th>Meaning</th>
+<th>Overview Node</th>
+<th>Detail Diagram</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Parallel agent verification</td>
+<td>Detail Diagram A: Category Agent Dispatch</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>Scope Expansion</td>
+<td>Detail Diagram B: System-Wide Claim Expansion</td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td>Mark Contested</td>
+<td>Detail Diagram C: Cross-Agent Conflict Resolution</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Depth Escalation</td>
+<td>Detail Diagram D: Depth Escalation Protocol</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="detail-diagram-a-category-agent-dispatch-phase-4">Detail Diagram A: Category Agent Dispatch (Phase 4)<a class="headerlink" href="#detail-diagram-a-category-agent-dispatch-phase-4" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>graph TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    subgraph legend[&quot;Legend&quot;]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        L1[&quot;Process&quot;]
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>        L2{&quot;Decision&quot;}
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        L4[&quot;Subagent&quot;]:::subagent
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        L5{&quot;Quality Gate&quot;}:::gate
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    end
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    ENTRY([Swarm spawn]) --&gt; AGENTS
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    subgraph AGENTS[&quot;Category Agents (Parallel)&quot;]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>        SEC[&quot;SecurityAgent&quot;]:::subagent
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>        COR[&quot;CorrectnessAgent&quot;]:::subagent
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        PERF[&quot;PerformanceAgent&quot;]:::subagent
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        CONC[&quot;ConcurrencyAgent&quot;]:::subagent
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>        DOC[&quot;DocumentationAgent&quot;]:::subagent
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        HIST[&quot;HistoricalAgent&quot;]:::subagent
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        CONF[&quot;ConfigurationAgent&quot;]:::subagent
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    end
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    AGENTS --&gt; CUSTOM_CHECK{&quot;Claims require&lt;br&gt;non-standard domain?&quot;}
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    CUSTOM_CHECK --&gt;|Yes| CUSTOM[&quot;Spawn additional&lt;br&gt;domain-specific agents&quot;]:::subagent
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    CUSTOM_CHECK --&gt;|No| COLLECT
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    CUSTOM --&gt; COLLECT[&quot;Collect all agent results&quot;]
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    COLLECT --&gt; EVIDENCE_CHECK{&quot;Each verdict cites&lt;br&gt;Tier 1-5 evidence?&quot;}:::gate
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    EVIDENCE_CHECK --&gt;|No| REJECT([FORBIDDEN:&lt;br&gt;Tier 6 alone is not evidence])
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    EVIDENCE_CHECK --&gt;|Yes| TIER_CHECK{&quot;Evidence tier&lt;br&gt;classification&quot;}
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    TIER_CHECK --&gt; T1[&quot;Tier 1: Code trace&lt;br&gt;Standalone: Yes&quot;]
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    TIER_CHECK --&gt; T2[&quot;Tier 2: Test output&lt;br&gt;Standalone: Yes&quot;]
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    TIER_CHECK --&gt; T3[&quot;Tier 3: Project docs&lt;br&gt;Standalone: doc claims only&quot;]
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    TIER_CHECK --&gt; T4[&quot;Tier 4: External source&lt;br&gt;Standalone: ext ref claims only&quot;]
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    TIER_CHECK --&gt; T5[&quot;Tier 5: Git history&lt;br&gt;Standalone: historical claims only&quot;]
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    TIER_CHECK --&gt; T6[&quot;Tier 6: LLM knowledge&lt;br&gt;Standalone: NEVER&quot;]
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    T1 &amp; T2 &amp; T3 &amp; T4 &amp; T5 &amp; T6 --&gt; OUTPUT([Return agent results])
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="detail-diagram-b-scope-expansion-for-system-wide-claims">Detail Diagram B: Scope Expansion for System-Wide Claims<a class="headerlink" href="#detail-diagram-b-scope-expansion-for-system-wide-claims" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>graph TD
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph legend[&quot;Legend&quot;]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        L1[&quot;Process&quot;]
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        L2{&quot;Decision&quot;}
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        L5{&quot;Quality Gate&quot;}:::gate
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        L6([Terminal]):::success
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    end
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    ENTRY([Claim contains&lt;br&gt;system-wide keyword]) --&gt; KEYWORD{&quot;Keyword type?&quot;}
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    KEYWORD --&gt;|&quot;backwards compatible&quot;&lt;br&gt;&quot;breaking change&quot;&lt;br&gt;&quot;all callers&quot;&lt;br&gt;&quot;API contract&quot;| API_SCOPE[&quot;Identify all files&lt;br&gt;importing/referencing module&quot;]
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    KEYWORD --&gt;|&quot;thread-safe&quot;&lt;br&gt;applied to class| THREAD_SCOPE[&quot;Identify all files&lt;br&gt;importing/referencing class&quot;]
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    KEYWORD --&gt;|&quot;no side effects&quot;&lt;br&gt;function calls others| EFFECT_SCOPE[&quot;Identify all functions&lt;br&gt;called by subject function&quot;]
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    API_SCOPE &amp; THREAD_SCOPE &amp; EFFECT_SCOPE --&gt; FILE_COUNT{&quot;Scope exceeds&lt;br&gt;20 files?&quot;}:::gate
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    FILE_COUNT --&gt;|Yes| INCONCLUSIVE([&quot;Mark Inconclusive:&lt;br&gt;&#39;Requires system-wide&lt;br&gt;verification beyond scope&#39;&quot;]):::success
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    FILE_COUNT --&gt;|No| CALLER[&quot;Include caller analysis&lt;br&gt;in verification&quot;]
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    CALLER --&gt; RETURN([Return expanded&lt;br&gt;verification results]):::success
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="detail-diagram-c-cross-agent-conflict-resolution">Detail Diagram C: Cross-Agent Conflict Resolution<a class="headerlink" href="#detail-diagram-c-cross-agent-conflict-resolution" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>graph TD
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    subgraph legend[&quot;Legend&quot;]
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>        L1[&quot;Process&quot;]
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        L2{&quot;Decision&quot;}
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>        L5{&quot;Quality Gate&quot;}:::gate
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        L6([Terminal]):::success
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    end
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    ENTRY([Contradicting verdicts&lt;br&gt;detected]) --&gt; SURFACE[&quot;Surface contradiction&lt;br&gt;explicitly in report&quot;]
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    SURFACE --&gt; PRESENT[&quot;Present BOTH verdicts&lt;br&gt;with full evidence&quot;]
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    PRESENT --&gt; TIER_COMPARE{&quot;One agent has&lt;br&gt;higher-tier evidence?&quot;}
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    TIER_COMPARE --&gt;|Yes| NOTE_TIER[&quot;Note evidence tier&lt;br&gt;difference in report&quot;]
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    TIER_COMPARE --&gt;|No| MARK
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    NOTE_TIER --&gt; MARK[&quot;Mark claim as&lt;br&gt;&#39;Contested&#39;&quot;]
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    MARK --&gt; SILENT_CHECK{&quot;Attempted to silently&lt;br&gt;pick one verdict?&quot;}:::gate
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    SILENT_CHECK --&gt;|Yes| FORBIDDEN([FORBIDDEN:&lt;br&gt;Silent resolution])
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    SILENT_CHECK --&gt;|No| USER_CALL([&quot;Defer final call&lt;br&gt;to user&quot;]):::success
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="detail-diagram-d-depth-escalation-protocol">Detail Diagram D: Depth Escalation Protocol<a class="headerlink" href="#detail-diagram-d-depth-escalation-protocol" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>graph TD
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    subgraph legend[&quot;Legend&quot;]
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        L1[&quot;Process&quot;]
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>        L2{&quot;Decision&quot;}
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        L4[&quot;Subagent&quot;]:::subagent
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        L5{&quot;Quality Gate&quot;}:::gate
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        L6([Terminal]):::success
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    end
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    ENTRY([Check verdict +&lt;br&gt;current depth]) --&gt; VERDICT_TYPE{&quot;Verdict category?&quot;}
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    VERDICT_TYPE --&gt;|&quot;Refuted / Misleading / Stale&quot;| SHALLOW_CHECK{&quot;Current depth?&quot;}
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    VERDICT_TYPE --&gt;|&quot;Verified / Incomplete /&lt;br&gt;Ambiguous / Jargon-heavy /&lt;br&gt;Extraneous&quot;| NO_ESC([No escalation&lt;br&gt;required]):::success
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    VERDICT_TYPE --&gt;|&quot;Inconclusive&quot;| NO_ESC_INC([&quot;No escalation required&lt;br&gt;Document what would resolve&quot;]):::success
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    SHALLOW_CHECK --&gt;|Shallow| MEDIUM[&quot;Re-verify at&lt;br&gt;Medium depth&quot;]:::subagent
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    SHALLOW_CHECK --&gt;|Medium| DEEP_FEASIBLE{&quot;Deep verification&lt;br&gt;feasible?&lt;br&gt;Tests runnable?&lt;br&gt;Benchmarks executable?&quot;}
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    MEDIUM --&gt; MEDIUM_RESULT{&quot;Verdict after&lt;br&gt;Medium depth?&quot;}
+<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>
+<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    MEDIUM_RESULT --&gt;|Still Refuted| DEEP_FEASIBLE
+<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    MEDIUM_RESULT --&gt;|Changed| FINAL_VERDICT([Finalize new verdict]):::success
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    DEEP_FEASIBLE --&gt;|Yes| DEEP[&quot;Re-verify at&lt;br&gt;Deep depth&quot;]:::subagent
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    DEEP_FEASIBLE --&gt;|No| FINALIZE_MEDIUM([Finalize at&lt;br&gt;Medium verdict]):::success
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    DEEP --&gt; FINAL_DEEP([Finalize&lt;br&gt;Deep verdict]):::success
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    SHALLOW_CHECK --&gt;|Deep| ALREADY_DEEP([Already at max depth&lt;br&gt;Finalize verdict]):::success
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    classDef subagent fill:#4a9eff,stroke:#333,color:#fff
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="detail-diagram-e-mandatory-inconclusive-conditions">Detail Diagram E: Mandatory Inconclusive Conditions<a class="headerlink" href="#detail-diagram-e-mandatory-inconclusive-conditions" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>graph TD
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    subgraph legend[&quot;Legend&quot;]
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        L1[&quot;Process&quot;]
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        L2{&quot;Decision&quot;}
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        L5{&quot;Quality Gate&quot;}:::gate
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        L6([Terminal]):::success
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    end
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    ENTRY([Evaluate mandatory&lt;br&gt;inconclusive conditions]) --&gt; C1{&quot;Runtime behavior claim&lt;br&gt;+ no tests executed?&quot;}:::gate
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    C1 --&gt;|Yes| INC([MUST be Inconclusive]):::success
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    C1 --&gt;|No| C2{&quot;External system claim&lt;br&gt;+ no web verification?&quot;}:::gate
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    C2 --&gt;|Yes| INC
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    C2 --&gt;|No| C3{&quot;Relies solely on&lt;br&gt;Tier 6 evidence?&quot;}:::gate
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    C3 --&gt;|Yes| INC
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    C3 --&gt;|No| C4{&quot;Contradicting evidence&lt;br&gt;+ cannot determine&lt;br&gt;which is correct?&quot;}:::gate
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>
+<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    C4 --&gt;|Yes| INC
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    C4 --&gt;|No| C5{&quot;Requires code in files&lt;br&gt;not provided to agent?&quot;}:::gate
+<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    C5 --&gt;|Yes| INC
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    C5 --&gt;|No| PROCEED([Proceed with&lt;br&gt;determined verdict]):::success
+<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+</code></pre></div>
+<hr />
+<h2 id="verdict-classification-reference">Verdict Classification Reference<a class="headerlink" href="#verdict-classification-reference" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>graph LR
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    subgraph legend[&quot;Legend&quot;]
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        L5{&quot;Quality Gate&quot;}:::gate
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        L6([Terminal]):::success
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    end
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    subgraph verdicts[&quot;9 Verdict Categories&quot;]
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        V1[&quot;Verified&lt;br&gt;Claim is accurate&quot;]
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        V2[&quot;Refuted&lt;br&gt;Claim is false&quot;]
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>        V3[&quot;Incomplete&lt;br&gt;True but missing context&quot;]
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        V4[&quot;Inconclusive&lt;br&gt;Cannot determine&quot;]
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        V5[&quot;Ambiguous&lt;br&gt;Wording unclear&quot;]
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        V6[&quot;Misleading&lt;br&gt;Technically true,&lt;br&gt;implies falsehood&quot;]
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>        V7[&quot;Jargon-heavy&lt;br&gt;Too technical&lt;br&gt;for audience&quot;]
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>        V8[&quot;Stale&lt;br&gt;Was true,&lt;br&gt;no longer applies&quot;]
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>        V9[&quot;Extraneous&lt;br&gt;Unnecessary/redundant&quot;]
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    end
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>    subgraph escalation[&quot;Depth Escalation Triggers&quot;]
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>        ESC[&quot;Refuted / Misleading / Stale&lt;br&gt;at Shallow depth&quot;]:::gate
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>        ESC2[&quot;Refuted at Medium depth&quot;]:::gate
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>    end
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>    subgraph fractal[&quot;Fractal Exploration Triggers&quot;]
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>        FRAC[&quot;Inconclusive or Ambiguous&quot;]:::gate
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>    end
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>    ESC --&gt;|&quot;MUST re-verify&lt;br&gt;at Medium&quot;| V2 &amp; V6 &amp; V8
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>    ESC2 --&gt;|&quot;Escalate to Deep&lt;br&gt;if feasible&quot;| V2
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>    FRAC --&gt;|&quot;fractal-thinking&lt;br&gt;intensity: pulse&quot;| V4 &amp; V5
+<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>
+<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>    classDef gate fill:#ff6b6b,stroke:#333,color:#fff
+<a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>    classDef success fill:#51cf66,stroke:#333,color:#fff
+</code></pre></div>
 
 
 

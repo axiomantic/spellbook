@@ -7240,9 +7240,9 @@
   
 
 
-<!-- diagram-meta: {"source": "commands/fact-check-extract.md", "source_hash": "sha256:9682544becabe00a417017bea444d0fbd3026d00848b9354ba2219a49e616c37", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/fact-check-extract.md", "source_hash": "sha256:50ecf30579290ce1fd2939f2e97baf690a058b3655330560fb6fead75bcf359b", "generated_at": "2026-03-09T00:00:00Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-fact-check-extract">Diagram: fact-check-extract<a class="headerlink" href="#diagram-fact-check-extract" title="Permanent link">&para;</a></h1>
-<p>Extract all claims from code, comments, docstrings, commits, and naming conventions, then triage by category and verification depth before proceeding to verification.</p>
+<p>Extract all claims from code, comments, docstrings, commits, and naming conventions (including mandatory naming convention scan and LLM-content escalation), then triage by category and verification depth before proceeding to verification.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  Start([Start: Scope defined]) --&gt; ScanSrc[Scan source patterns]
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
@@ -7263,76 +7263,88 @@
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  style Naming fill:#2196F3,color:#fff
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  style ScanSrc fill:#2196F3,color:#fff
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  Comments --&gt; Classify
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  Docstrings --&gt; Classify
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  Markdown --&gt; Classify
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  Commits --&gt; Classify
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>  PRDesc --&gt; Classify
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  Naming --&gt; Classify
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  Comments --&gt; NamingScan
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  Docstrings --&gt; NamingScan
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  Markdown --&gt; NamingScan
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  Commits --&gt; NamingScan
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>  PRDesc --&gt; NamingScan
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  Naming --&gt; NamingScan
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  Classify[Classify by category] --&gt; CatTech[Technical claims]
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  Classify --&gt; CatSec[Security claims]
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  Classify --&gt; CatPerf[Performance claims]
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  Classify --&gt; CatConc[Concurrency claims]
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>  Classify --&gt; CatHist[Historical claims]
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  Classify --&gt; CatOther[Config / Docs / Other]
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>  style Classify fill:#2196F3,color:#fff
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  style CatTech fill:#2196F3,color:#fff
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  style CatSec fill:#2196F3,color:#fff
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>  style CatPerf fill:#2196F3,color:#fff
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  style CatConc fill:#2196F3,color:#fff
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>  style CatHist fill:#2196F3,color:#fff
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  style CatOther fill:#2196F3,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>  CatTech --&gt; AssignAgent[Assign verification agent]
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>  CatSec --&gt; AssignAgent
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>  CatPerf --&gt; AssignAgent
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>  CatConc --&gt; AssignAgent
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>  CatHist --&gt; AssignAgent
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>  CatOther --&gt; AssignAgent
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>  style AssignAgent fill:#4CAF50,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>  AssignAgent --&gt; FlagAmb{Ambiguous or misleading?}
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>  style FlagAmb fill:#FF9800,color:#000
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>  FlagAmb --&gt;|Yes| AddFlag[Add quality flag]
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>  FlagAmb --&gt;|No| AssignDepth
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>  style AddFlag fill:#2196F3,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>  AddFlag --&gt; AssignDepth[Assign depth level]
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>  AssignDepth --&gt; DepthShallow[Shallow: self-evident]
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>  AssignDepth --&gt; DepthMedium[Medium: trace paths]
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>  AssignDepth --&gt; DepthDeep[Deep: execute tests]
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>  style AssignDepth fill:#2196F3,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>  style DepthShallow fill:#2196F3,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>  style DepthMedium fill:#2196F3,color:#fff
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>  style DepthDeep fill:#2196F3,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>  DepthShallow --&gt; Present[Present all claims]
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>  DepthMedium --&gt; Present
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>  DepthDeep --&gt; Present
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>  style Present fill:#2196F3,color:#fff
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>  Present --&gt; ShowAll{All claims shown?}
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>  style ShowAll fill:#f44336,color:#fff
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>  ShowAll --&gt;|No| Present
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>  ShowAll --&gt;|Yes| UserAdj{User adjusts depths?}
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>  style UserAdj fill:#FF9800,color:#000
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>  UserAdj --&gt;|Yes| AssignDepth
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>  UserAdj --&gt;|No| End([End: Triage complete])
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  NamingScan[Naming Convention Scan&lt;br&gt;validate*, safe*, is*, etc.] --&gt; LLMCheck{LLM-generated content?}
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  style NamingScan fill:#f44336,color:#fff
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  style LLMCheck fill:#FF9800,color:#000
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  LLMCheck --&gt;|Yes| LLMEscalate[Flag source_risk: llm_generated&lt;br&gt;Force MEDIUM depth min]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>  LLMCheck --&gt;|No| Classify
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  style LLMEscalate fill:#2196F3,color:#fff
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>  LLMEscalate --&gt; Classify
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>  Classify[Classify by category] --&gt; CatTech[Technical claims]
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  Classify --&gt; CatSec[Security claims]
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>  Classify --&gt; CatPerf[Performance claims]
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>  Classify --&gt; CatConc[Concurrency claims]
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>  Classify --&gt; CatHist[Historical claims]
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>  Classify --&gt; CatOther[Config / Docs / Other]
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>  style Classify fill:#2196F3,color:#fff
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>  style CatTech fill:#2196F3,color:#fff
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>  style CatSec fill:#2196F3,color:#fff
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>  style CatPerf fill:#2196F3,color:#fff
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>  style CatConc fill:#2196F3,color:#fff
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>  style CatHist fill:#2196F3,color:#fff
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>  style CatOther fill:#2196F3,color:#fff
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>  CatTech --&gt; AssignAgent[Assign verification agent]
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>  CatSec --&gt; AssignAgent
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>  CatPerf --&gt; AssignAgent
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>  CatConc --&gt; AssignAgent
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>  CatHist --&gt; AssignAgent
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>  CatOther --&gt; AssignAgent
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>  style AssignAgent fill:#4CAF50,color:#fff
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>  AssignAgent --&gt; FlagAmb{Ambiguous or misleading?}
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>  style FlagAmb fill:#FF9800,color:#000
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>  FlagAmb --&gt;|Yes| AddFlag[Add quality flag]
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>  FlagAmb --&gt;|No| AssignDepth
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>  style AddFlag fill:#2196F3,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>  AddFlag --&gt; AssignDepth[Assign depth level]
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>  AssignDepth --&gt; DepthShallow[Shallow: self-evident]
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>  AssignDepth --&gt; DepthMedium[Medium: trace paths]
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>  AssignDepth --&gt; DepthDeep[Deep: execute tests]
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>  style AssignDepth fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>  style DepthShallow fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>  style DepthMedium fill:#2196F3,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>  style DepthDeep fill:#2196F3,color:#fff
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>  DepthShallow --&gt; Present[Present all claims]
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>  DepthMedium --&gt; Present
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>  DepthDeep --&gt; Present
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>  style Present fill:#2196F3,color:#fff
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>  style End fill:#4CAF50,color:#fff
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>  Present --&gt; ShowAll{All claims shown?}
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>  style ShowAll fill:#f44336,color:#fff
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>  ShowAll --&gt;|No| Present
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>  ShowAll --&gt;|Yes| UserAdj{User adjusts depths?}
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>  style UserAdj fill:#FF9800,color:#000
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>  UserAdj --&gt;|Yes| AssignDepth
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>  UserAdj --&gt;|No| End([End: Triage complete])
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>  style End fill:#4CAF50,color:#fff
 </code></pre></div>
 <h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
