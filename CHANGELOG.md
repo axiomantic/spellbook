@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-03-09
+
+### Changed
+- **Consolidated verification skill hardening** - Hardened fact-checking, devil's advocate, and dehallucination skills with shared evidence hierarchy (6 tiers from code trace to LLM knowledge), mandatory depth escalation protocol (shallow/medium/deep), and 6 mandatory Inconclusive conditions. Devil's advocate now uses READY/NEEDS WORK/NOT READY/INCONCLUSIVE verdicts instead of hardcoded issue minimums. Added two new implementing-features phases: Phase 1.5.7 (Dehallucination Gate) and Phase 2.5 (Assumption Verification). Created shared reference at `skills/shared-references/evidence-hierarchy.md`.
+
 ## [0.27.0] - 2026-03-09
 
 ### Changed

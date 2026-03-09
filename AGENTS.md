@@ -22,6 +22,16 @@ uv run ruff check .
 uv run python scripts/update_context_files.py
 ```
 
+## Session Start: Pre-release Check
+
+On session start in this project, check if there's a GitHub pre-release newer than the latest full release:
+
+```bash
+gh release list --limit 5 --repo elijahrutschman/spellbook
+```
+
+If a pre-release exists that is newer than the last actual release, ask: "There's a pre-release (`vX.Y.Z`) ready. Want to promote it to a full release?"
+
 ## Key Conventions
 
 - **AGENTS.md** is this file: spellbook's own development instructions for AI assistants working on the spellbook repo itself
