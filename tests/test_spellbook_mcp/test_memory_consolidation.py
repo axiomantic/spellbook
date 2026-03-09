@@ -1,9 +1,8 @@
 """Tests for memory consolidation pipeline."""
 
 import json
-import os
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from spellbook_mcp.db import init_db, get_connection, close_all_connections
 from spellbook_mcp.memory_store import (
@@ -321,123 +320,39 @@ class TestComputeBibliographicCoupling:
         assert links == [{"other_id": id2, "weight": pytest.approx(1.0, abs=0.01)}]
 
 
-# --- consolidate_batch ---
+# --- consolidate_batch (heuristic pipeline) ---
+
+
+def _seed_duplicate_events(db_path):
+    """Seed events with exact duplicates for content-hash dedup testing."""
+    # Two identical events (same subject + summary)
+    for i in range(2):
+        log_raw_event(
+            db_path=db_path,
+            session_id="sess-1",
+            project="Users-alice-myproject",
+            event_type="tool_use",
+            tool_name="Read",
+            subject="src/auth.py",
+            summary="Read authentication module config",
+            tags="python,auth",
+        )
+    # One unique event
+    log_raw_event(
+        db_path=db_path,
+        session_id="sess-1",
+        project="Users-alice-myproject",
+        event_type="tool_use",
+        tool_name="Edit",
+        subject="src/database.py",
+        summary="Edited database migration schema",
+        tags="python,db",
+    )
 
 
 class TestConsolidateBatch:
-    def test_success(self, db):
-        """Successful consolidation creates memories and marks events."""
-        _seed_events(db, 15)
-
-        mock_response = json.dumps({
-            "memories": [
-                {
-                    "content": "Modules are organized by number",
-                    "memory_type": "fact",
-                    "tags": ["organization", "modules"],
-                    "citations": [
-                        {"file_path": "src/module_0.py", "line_range": "1-10", "snippet": "..."}
-                    ],
-                }
-            ]
-        })
-
-        with patch(
-            "spellbook_mcp.memory_consolidation._call_llm",
-            return_value=mock_response,
-        ):
-            result = consolidate_batch(
-                db_path=db,
-                namespace="Users-alice-myproject",
-            )
-
-        assert result["status"] == "success"
-        assert result["events_consolidated"] == 15
-        assert result["memories_created"] == 1
-        assert "batch_id" in result
-        # Verify batch_id is a valid UUID4 string
-        import uuid
-        uuid.UUID(result["batch_id"], version=4)
-
-        # Events should now be marked consolidated
-        remaining = get_unconsolidated_events(db, limit=50)
-        assert remaining == []
-
-        # Verify the memory was actually inserted into the database
-        conn = get_connection(db)
-        cursor = conn.execute(
-            "SELECT content, memory_type, namespace FROM memories WHERE namespace = ?",
-            ("Users-alice-myproject",),
-        )
-        rows = cursor.fetchall()
-        assert len(rows) == 1
-        assert rows[0][0] == "Modules are organized by number"
-        assert rows[0][1] == "fact"
-        assert rows[0][2] == "Users-alice-myproject"
-
-    def test_llm_failure_leaves_events_unconsolidated(self, db):
-        """LLM failure leaves events unconsolidated and logs error."""
-        _seed_events(db, 15)
-
-        with patch(
-            "spellbook_mcp.memory_consolidation._call_llm",
-            side_effect=RuntimeError("LLM timeout"),
-        ):
-            result = consolidate_batch(
-                db_path=db,
-                namespace="Users-alice-myproject",
-            )
-
-        assert result == {
-            "status": "error",
-            "error": "LLM timeout",
-            "events_consolidated": 0,
-            "memories_created": 0,
-        }
-
-        # Events should remain unconsolidated
-        remaining = get_unconsolidated_events(db, limit=50)
-        assert len(remaining) == 15
-
-        # Verify audit log entry was created
-        conn = get_connection(db)
-        cursor = conn.execute(
-            "SELECT action, details FROM memory_audit_log WHERE action = 'consolidation_error'"
-        )
-        row = cursor.fetchone()
-        assert row is not None
-        details = json.loads(row[1])
-        assert details["error"] == "LLM timeout"
-        assert details["event_count"] == 15
-
-    def test_empty_parse_marks_events_consolidated(self, db):
-        """Empty LLM parse result still marks events as consolidated (prevents infinite retry)."""
-        _seed_events(db, 15)
-
-        # LLM returns valid JSON but no extractable memories
-        mock_response = json.dumps({"memories": []})
-
-        with patch(
-            "spellbook_mcp.memory_consolidation._call_llm",
-            return_value=mock_response,
-        ):
-            result = consolidate_batch(
-                db_path=db,
-                namespace="Users-alice-myproject",
-            )
-
-        assert result == {
-            "status": "success",
-            "events_consolidated": 15,
-            "memories_created": 0,
-        }
-
-        # Events should be marked consolidated despite no memories
-        remaining = get_unconsolidated_events(db, limit=50)
-        assert remaining == []
-
     def test_no_events(self, db):
-        """No unconsolidated events returns early."""
+        """No unconsolidated events returns early with no_events status."""
         result = consolidate_batch(
             db_path=db,
             namespace="Users-alice-myproject",
@@ -448,69 +363,115 @@ class TestConsolidateBatch:
             "memories_created": 0,
         }
 
-    def test_dedup_via_content_hash(self, db):
-        """Duplicate content produces only one memory (dedup via content_hash)."""
+    def test_heuristic_pipeline_creates_memories_with_extra_meta(self, db):
+        """Heuristic pipeline creates memories with source=heuristic extra_meta."""
+        _seed_duplicate_events(db)
+
+        result = consolidate_batch(
+            db_path=db,
+            namespace="Users-alice-myproject",
+        )
+
+        assert result["status"] == "success"
+        assert result["events_consolidated"] == 3
+        # 2 duplicate events -> 1 content_hash memory
+        # 1 remaining unique event -> goes through jaccard (no match), tag_grouping (no match),
+        # temporal_clustering (produces 1 memory)
+        # Total: 2 memories
+        assert result["memories_created"] == 2
+        # batch_id must be a valid UUID
+        import uuid
+        uuid.UUID(result["batch_id"], version=4)
+
+        # All events should be marked consolidated
+        remaining = get_unconsolidated_events(db, limit=50)
+        assert remaining == []
+
+        # Verify memories were inserted with correct extra_meta
+        conn = get_connection(db)
+        cursor = conn.execute(
+            "SELECT content, memory_type, namespace, meta FROM memories "
+            "WHERE namespace = ? ORDER BY content",
+            ("Users-alice-myproject",),
+        )
+        rows = cursor.fetchall()
+        assert len(rows) == 2
+
+        # Check each memory has correct extra_meta
+        for row in rows:
+            meta = json.loads(row[3])
+            assert meta["source"] == "heuristic"
+            assert meta["strategy"] in (
+                "content_hash", "jaccard_similarity", "tag_grouping", "temporal_clustering",
+            )
+            assert isinstance(meta["event_count"], int)
+            assert meta["event_count"] >= 1
+            assert meta["batch_id"] == result["batch_id"]
+
+        # Verify the content_hash dedup memory
+        content_hash_rows = [
+            r for r in rows if json.loads(r[3])["strategy"] == "content_hash"
+        ]
+        assert len(content_hash_rows) == 1
+        assert content_hash_rows[0][0] == "[Read] src/auth.py: Read authentication module config"
+        assert content_hash_rows[0][1] == "fact"
+        assert content_hash_rows[0][2] == "Users-alice-myproject"
+        ch_meta = json.loads(content_hash_rows[0][3])
+        assert ch_meta["event_count"] == 2
+
+        # Verify the temporal_clustering memory (the unique event)
+        temporal_rows = [
+            r for r in rows if json.loads(r[3])["strategy"] == "temporal_clustering"
+        ]
+        assert len(temporal_rows) == 1
+        assert temporal_rows[0][1] == "fact"
+        tc_meta = json.loads(temporal_rows[0][3])
+        assert tc_meta["event_count"] == 1
+
+    def test_error_handling_marks_events_and_returns_error(self, db):
+        """Strategy failure logs error, marks events consolidated, returns error dict."""
         _seed_events(db, 15)
 
-        mock_response = json.dumps({
-            "memories": [
-                {
-                    "content": "Duplicated fact",
-                    "memory_type": "fact",
-                    "tags": ["dup"],
-                    "citations": [],
-                },
-                {
-                    "content": "Duplicated fact",
-                    "memory_type": "fact",
-                    "tags": ["dup"],
-                    "citations": [],
-                },
-            ]
-        })
-
+        # Force an error in the heuristic pipeline by making a strategy raise
         with patch(
-            "spellbook_mcp.memory_consolidation._call_llm",
-            return_value=mock_response,
+            "spellbook_mcp.memory_consolidation._strategy_content_hash_dedup",
+            side_effect=RuntimeError("hash computation failed"),
         ):
             result = consolidate_batch(
                 db_path=db,
                 namespace="Users-alice-myproject",
             )
 
-        assert result["status"] == "success"
+        assert result["status"] == "error"
+        assert result["error"] == "hash computation failed"
         assert result["events_consolidated"] == 15
-        # Both entries get the same memory ID due to dedup, but memories_created
-        # counts all IDs returned (including the dedup'd one that returns existing ID)
-        assert result["memories_created"] == 2
+        assert result["memories_created"] == 0
+        # batch_id must be present and valid
+        import uuid
+        uuid.UUID(result["batch_id"], version=4)
 
-        # But only one memory actually exists in the database
+        # Events should be marked consolidated (prevent infinite retry)
+        remaining = get_unconsolidated_events(db, limit=50)
+        assert remaining == []
+
+        # Verify audit log entry was created
         conn = get_connection(db)
         cursor = conn.execute(
-            "SELECT COUNT(*) FROM memories WHERE namespace = ?",
-            ("Users-alice-myproject",),
+            "SELECT action, details FROM memory_audit_log WHERE action = 'consolidation_error'"
         )
-        assert cursor.fetchone()[0] == 1
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "consolidation_error"
+        details = json.loads(row[1])
+        assert details["error"] == "hash computation failed"
+        assert details["events_count"] == 15
+        assert details["batch_id"] == result["batch_id"]
 
     def test_piggyback_gc(self, db):
-        """Consolidation calls purge_deleted at the end."""
-        _seed_events(db, 15)
-
-        mock_response = json.dumps({
-            "memories": [
-                {
-                    "content": "GC test memory",
-                    "memory_type": "fact",
-                    "tags": ["gc"],
-                    "citations": [],
-                }
-            ]
-        })
+        """Consolidation calls purge_deleted at the end on success."""
+        _seed_duplicate_events(db)
 
         with patch(
-            "spellbook_mcp.memory_consolidation._call_llm",
-            return_value=mock_response,
-        ), patch(
             "spellbook_mcp.memory_consolidation.purge_deleted",
             return_value=2,
         ) as mock_purge:
@@ -519,148 +480,138 @@ class TestConsolidateBatch:
                 namespace="Users-alice-myproject",
             )
 
+        assert result["status"] == "success"
         assert result["purged"] == 2
         mock_purge.assert_called_once_with(db)
 
+    def test_audit_log_on_success(self, db):
+        """Successful consolidation logs consolidation_complete with metrics."""
+        _seed_duplicate_events(db)
 
-# --- _call_llm ---
-
-
-class TestCallLlm:
-    def test_missing_api_key_raises(self):
-        """_call_llm raises RuntimeError when ANTHROPIC_API_KEY is not set."""
-        from spellbook_mcp.memory_consolidation import _call_llm
-
-        env = os.environ.copy()
-        env.pop("ANTHROPIC_API_KEY", None)
-        with patch.dict(os.environ, env, clear=True):
-            with pytest.raises(RuntimeError, match="ANTHROPIC_API_KEY"):
-                _call_llm("test prompt")
-
-    def test_calls_anthropic_api(self):
-        """_call_llm calls the Anthropic messages API with correct parameters."""
-        from spellbook_mcp.memory_consolidation import _call_llm
-
-        mock_response = MagicMock()
-        mock_response.content = [MagicMock(text='{"memories": []}')]
-
-        mock_client_instance = MagicMock()
-        mock_client_instance.messages.create.return_value = mock_response
-
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-test-key123"}):
-            with patch("spellbook_mcp.memory_consolidation.anthropic") as mock_anthropic:
-                mock_anthropic.Anthropic.return_value = mock_client_instance
-                mock_anthropic.RateLimitError = Exception
-                mock_anthropic.APIError = Exception
-
-                result = _call_llm("test prompt")
-
-        assert result == '{"memories": []}'
-        mock_anthropic.Anthropic.assert_called_once_with(api_key="sk-ant-test-key123")
-        mock_client_instance.messages.create.assert_called_once_with(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4096,
-            messages=[{"role": "user", "content": "test prompt"}],
+        result = consolidate_batch(
+            db_path=db,
+            namespace="Users-alice-myproject",
         )
 
-    def test_retries_on_rate_limit(self):
-        """_call_llm retries with exponential backoff on RateLimitError."""
-        from spellbook_mcp.memory_consolidation import _call_llm
+        assert result["status"] == "success"
 
-        mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="ok")]
+        # Verify audit log entry
+        conn = get_connection(db)
+        cursor = conn.execute(
+            "SELECT action, details FROM memory_audit_log WHERE action = 'consolidation_complete'"
+        )
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "consolidation_complete"
+        details = json.loads(row[1])
+        assert details["batch_id"] == result["batch_id"]
+        assert details["events_consolidated"] == 3
+        assert details["memories_created"] == 2
+        # compression_ratio = 2/3 = 0.667
+        assert details["compression_ratio"] == round(2 / 3, 3)
+        # strategies_used should be a list containing the strategies that produced memories
+        assert set(details["strategies_used"]) == {"content_hash", "temporal_clustering"}
 
-        mock_client_instance = MagicMock()
+    def test_strategies_run_in_pipeline_order(self, db):
+        """Strategies consume events in order: content_hash, jaccard, tag_grouping, temporal."""
+        # Seed events that will be consumed at different pipeline stages:
+        # 2 exact duplicates (consumed by content_hash)
+        for _ in range(2):
+            log_raw_event(
+                db_path=db,
+                session_id="sess-1",
+                project="p",
+                event_type="tool_use",
+                tool_name="Read",
+                subject="src/dup.py",
+                summary="Read exact same content here",
+                tags="python,dup",
+            )
+        # 1 unique event (will pass through to temporal_clustering)
+        log_raw_event(
+            db_path=db,
+            session_id="sess-1",
+            project="p",
+            event_type="tool_use",
+            tool_name="Edit",
+            subject="src/unique.py",
+            summary="Completely different topic about databases and migrations",
+            tags="sql",
+        )
 
-        # Create a real exception class for RateLimitError
-        class FakeRateLimitError(Exception):
-            pass
+        result = consolidate_batch(db_path=db, namespace="ns")
 
-        class FakeAPIError(Exception):
-            pass
+        assert result["status"] == "success"
+        assert result["events_consolidated"] == 3
 
-        # First two calls raise rate limit, third succeeds
-        mock_client_instance.messages.create.side_effect = [
-            FakeRateLimitError("rate limited"),
-            FakeRateLimitError("rate limited"),
-            mock_response,
-        ]
+        # Verify which strategies created memories
+        conn = get_connection(db)
+        cursor = conn.execute(
+            "SELECT meta FROM memories WHERE namespace = ?", ("ns",),
+        )
+        strategies = [json.loads(r[0])["strategy"] for r in cursor.fetchall()]
 
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-test-key123"}):
-            with patch("spellbook_mcp.memory_consolidation.anthropic") as mock_anthropic:
-                mock_anthropic.Anthropic.return_value = mock_client_instance
-                mock_anthropic.RateLimitError = FakeRateLimitError
-                mock_anthropic.APIError = FakeAPIError
-
-                with patch("time.sleep") as mock_sleep:
-                    result = _call_llm("test prompt")
-
-        assert result == "ok"
-        assert mock_client_instance.messages.create.call_count == 3
-        # Verify exponential backoff: sleep(1), sleep(2)
-        assert mock_sleep.call_count == 2
-        mock_sleep.assert_any_call(1)
-        mock_sleep.assert_any_call(2)
+        # content_hash should have consumed the 2 duplicates
+        assert "content_hash" in strategies
+        # temporal_clustering should have consumed the unique event
+        assert "temporal_clustering" in strategies
 
 
-# --- Bibliographic coupling after consolidation ---
+# --- Bibliographic coupling after consolidation (heuristic pipeline) ---
 
 
 class TestBibliographicCouplingIntegration:
     def test_consolidation_creates_bibliographic_links(self, db):
-        """After consolidation with two memories citing the same file,
-        verify memory_links contains a bibliographic coupling entry
-        with correct Jaccard weight."""
-        _seed_events(db, 15)
+        """After heuristic consolidation produces memories with shared citations,
+        verify memory_links contains a bibliographic coupling entry."""
+        # Seed events whose subjects are file paths (so _extract_citations finds them)
+        # Two events with subject "src/shared.py" will be deduped by content_hash
+        # if identical, or grouped by temporal_clustering if different.
+        # We need 2 memories that each cite "src/shared.py" to get bibliographic coupling.
+        # Best approach: events with different content but file-path subjects that overlap.
 
-        # LLM returns two memories that share a citation (src/shared.py)
-        mock_response = json.dumps({
-            "memories": [
-                {
-                    "content": "Module handles authentication logic",
-                    "memory_type": "fact",
-                    "tags": ["auth"],
-                    "citations": [
-                        {"file_path": "src/shared.py", "line_range": "1-10", "snippet": "..."},
-                        {"file_path": "src/auth.py", "line_range": "1-5", "snippet": "..."},
-                    ],
-                },
-                {
-                    "content": "Module handles user registration",
-                    "memory_type": "fact",
-                    "tags": ["users"],
-                    "citations": [
-                        {"file_path": "src/shared.py", "line_range": "20-30", "snippet": "..."},
-                        {"file_path": "src/models.py", "line_range": "1-5", "snippet": "..."},
-                    ],
-                },
-            ]
-        })
-
-        with patch(
-            "spellbook_mcp.memory_consolidation._call_llm",
-            return_value=mock_response,
-        ):
-            result = consolidate_batch(
+        # Group 1: two identical events -> content_hash memory citing "src/shared.py"
+        for _ in range(2):
+            log_raw_event(
                 db_path=db,
-                namespace="Users-alice-myproject",
+                session_id="sess-1",
+                project="p",
+                event_type="tool_use",
+                tool_name="Read",
+                subject="src/shared.py",
+                summary="Read shared utility functions",
+                tags="python,utils",
             )
 
-        assert result["status"] == "success"
-        assert result["memories_created"] == 2
+        # Group 2: a single event -> temporal_clustering memory also citing "src/shared.py"
+        log_raw_event(
+            db_path=db,
+            session_id="sess-2",
+            project="p",
+            event_type="tool_use",
+            tool_name="Edit",
+            subject="src/shared.py",
+            summary="Edited shared helper methods",
+            tags="python,refactor",
+        )
 
-        # Verify bibliographic coupling link was created in memory_links
+        result = consolidate_batch(db_path=db, namespace="ns")
+
+        assert result["status"] == "success"
+        assert result["memories_created"] >= 2
+
+        # Verify bibliographic coupling link was created
         conn = get_connection(db)
         cursor = conn.execute(
             "SELECT memory_a, memory_b, link_type, weight FROM memory_links "
             "WHERE link_type = 'bibliographic'"
         )
         rows = cursor.fetchall()
-        assert len(rows) == 1
+        assert len(rows) >= 1
+        # Both memories cite only "src/shared.py" -> Jaccard = 1.0
         row = rows[0]
         assert row[2] == "bibliographic"
-        # Jaccard: |{shared.py}| / |{shared.py, auth.py, models.py}| = 1/3
-        assert abs(row[3] - (1.0 / 3.0)) < 0.01
+        assert abs(row[3] - 1.0) < 0.01
 
 
 # --- purge_deleted cascade ---

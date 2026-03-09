@@ -521,18 +521,17 @@ def consolidate_batch(
     namespace: str,
     event_limit: int = 50,
 ) -> Dict[str, Any]:
-    """Run one consolidation batch.
+    """Run one consolidation batch using heuristic strategies.
 
     Intentionally synchronous: this is a background batch operation,
     not an MCP request handler. The MCP server calls this via
     asyncio.to_thread() to avoid blocking the event loop.
 
-    1. Fetch unconsolidated events
-    2. Build prompt and call LLM
-    3. Parse response and insert memories
-    4. Compute bibliographic coupling for new memories
-    5. Mark events as consolidated
-    6. Run GC (purge old soft-deleted entries)
+    Pipeline ordering (cheapest/most-certain first):
+    1. Content-hash dedup (O(n), zero false positives)
+    2. Jaccard similarity (O(n^2), near-duplicate detection)
+    3. Tag grouping (topical clustering by shared tags)
+    4. Temporal clustering (session + time window + subject)
 
     Returns dict with status, counts, and any errors.
     """
@@ -543,69 +542,94 @@ def consolidate_batch(
     batch_id = str(uuid.uuid4())
     event_ids = [e["id"] for e in events]
 
-    prompt = build_consolidation_prompt(events)
-
+    # CRITICAL: Wrap the entire heuristic pipeline in try/except to mirror the
+    # error handling of the old LLM-based consolidate_batch(). On failure:
+    # 1. Log error via log_audit() for observability
+    # 2. Mark events as consolidated even on failure (prevents infinite retry loop)
+    # 3. Return error status dict so callers can detect and handle failures
     try:
-        response = _call_llm(prompt)
-    except Exception as e:
-        log_audit(db_path, "consolidation_error", details={
-            "batch_id": batch_id,
-            "error": str(e),
-            "event_count": len(events),
-        })
-        return {
-            "status": "error",
-            "error": str(e),
-            "events_consolidated": 0,
-            "memories_created": 0,
-        }
+        all_memories: List[StrategyMemory] = []
 
-    memories = parse_llm_response(response)
-    if not memories:
+        # Strategy 1: Content-hash dedup
+        memories_1, remaining = _strategy_content_hash_dedup(events)
+        all_memories.extend(memories_1)
+
+        # Strategy 2: Jaccard similarity
+        if remaining:
+            memories_2, remaining = _strategy_jaccard_similarity(remaining)
+            all_memories.extend(memories_2)
+
+        # Strategy 3: Tag grouping
+        if remaining:
+            memories_3, remaining = _strategy_tag_grouping(remaining)
+            all_memories.extend(memories_3)
+
+        # Strategy 4: Temporal clustering (consumes all remaining)
+        if remaining:
+            memories_4, remaining = _strategy_temporal_clustering(remaining)
+            all_memories.extend(memories_4)
+
+        # Insert memories and compute bibliographic coupling
+        created_ids = []
+        for mem in all_memories:
+            mem_id = insert_memory(
+                db_path=db_path,
+                content=mem["content"],
+                memory_type=mem["memory_type"],
+                namespace=namespace,
+                tags=mem["tags"],
+                citations=mem["citations"],
+                extra_meta={
+                    "source": "heuristic",
+                    "strategy": mem["strategy"],
+                    "event_count": len(mem["event_ids"]),
+                    "batch_id": batch_id,
+                },
+            )
+            created_ids.append(mem_id)
+
+        # Compute bibliographic coupling for new memories
+        for mem_id in created_ids:
+            links = compute_bibliographic_coupling(db_path, mem_id)
+            for link in links:
+                insert_link(
+                    db_path, mem_id, link["other_id"],
+                    "bibliographic", link["weight"],
+                )
+
+    except Exception as exc:
+        # Log the error for debugging
         log_audit(db_path, "consolidation_error", details={
             "batch_id": batch_id,
-            "error": "No memories parsed from LLM response",
-            "response_preview": response[:200],
+            "error": str(exc),
+            "events_count": len(event_ids),
         })
-        # INTENTIONAL: Mark events as consolidated even though no memories
-        # were extracted. This is a deliberate deviation from the design
-        # doc's error recovery spec (which only covers LLM call failures).
-        # Empty parse results (valid JSON but no extractable memories) are
-        # NOT retryable -- the same events will produce the same empty
-        # result. Leaving them unconsolidated would create an infinite
-        # retry loop at each consolidation trigger.
+        # Mark events consolidated even on failure to prevent infinite retry.
+        # These events can be re-processed via memory_get_unconsolidated with
+        # include_consolidated=True if needed.
         mark_events_consolidated(db_path, event_ids, batch_id)
         return {
-            "status": "success",
+            "status": "error",
+            "batch_id": batch_id,
+            "error": str(exc),
             "events_consolidated": len(event_ids),
             "memories_created": 0,
         }
-
-    created_ids = []
-    for mem in memories:
-        mem_id = insert_memory(
-            db_path=db_path,
-            content=mem["content"],
-            memory_type=mem["memory_type"],
-            namespace=namespace,
-            tags=mem["tags"],
-            citations=mem["citations"],
-        )
-        created_ids.append(mem_id)
-
-    # Compute bibliographic coupling for new memories
-    for mem_id in created_ids:
-        links = compute_bibliographic_coupling(db_path, mem_id)
-        for link in links:
-            insert_link(
-                db_path, mem_id, link["other_id"],
-                "bibliographic", link["weight"],
-            )
 
     mark_events_consolidated(db_path, event_ids, batch_id)
 
     # Piggyback GC
     purged = purge_deleted(db_path)
+
+    # Log consolidation metrics
+    compression_ratio = len(created_ids) / len(event_ids) if event_ids else 0
+    log_audit(db_path, "consolidation_complete", details={
+        "batch_id": batch_id,
+        "events_consolidated": len(event_ids),
+        "memories_created": len(created_ids),
+        "compression_ratio": round(compression_ratio, 3),
+        "strategies_used": list({m["strategy"] for m in all_memories}),
+    })
 
     return {
         "status": "success",
