@@ -104,6 +104,10 @@ Run these commands to verify. If ANY check fails, go back and complete the phase
 
 ### After Phase 1.5 (Informed Discovery):
 
+**Memory-Primed Discovery:** At the start of discovery, call `memory_recall(query="design decision [subsystem]")` and `memory_recall(query="convention [project]")` to surface prior architectural decisions, naming conventions, and resolved ambiguities. Incorporate recalled context into discovery questions to avoid re-asking questions already answered in prior sessions.
+
+Note: The `<spellbook-memory>` auto-injection only fires on file reads. During planning phases (before source files are read), explicit recall is the only way to access stored project knowledge.
+
 ```bash
 ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 # MUST contain: understanding-[feature]-*.md
@@ -113,6 +117,11 @@ ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 - [ ] Completeness score = 100% (11/11 validation functions)
 - [ ] Dehallucination gate subagent was dispatched (Phase 1.5.7)
 - [ ] Devil's advocate subagent was dispatched
+
+**Persist Discovered Conventions:** If research or discovery revealed project conventions not documented in AGENTS.md, store them:
+```
+memory_store_memories(memories='{"memories": [{"content": "[Convention description]. Discovered in [context].", "memory_type": "rule", "tags": ["convention", "[area]"], "citations": [{"file_path": "[relevant_file]"}]}]}')
+```
 
 ### Phase 1.5.7: Dehallucination Gate
 
@@ -136,6 +145,11 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 - [ ] Design review subagent (reviewing-design-docs) was dispatched
 - [ ] All critical/important findings fixed (if any)
 - [ ] Assumption verification completed (Phase 2.5)
+
+**Persist Design Decisions:** After design is approved, store key architectural decisions for future sessions:
+```
+memory_store_memories(memories='{"memories": [{"content": "Design decision for [feature]: [chosen approach]. Rationale: [why]. Alternatives considered: [list].", "memory_type": "decision", "tags": ["design", "[subsystem]", "[feature_slug]"], "citations": [{"file_path": "[design_doc_path]"}]}]}')
+```
 
 ### Phase 2.5: Assumption Verification
 
@@ -333,6 +347,10 @@ echo "================================="
 
 If zero boxes are checked, the phase MUST be executed. There are no other valid reasons.
 
+### Memory-Informed Classification
+
+Before running complexity heuristics, call `memory_recall(query="complexity tier [domain_or_subsystem]")` to check if similar features in this area were previously classified. Use prior classifications as a calibration reference, not as a binding precedent.
+
 ### Complexity Upgrade Protocol
 
 If during execution the task reveals greater complexity than classified:
@@ -424,6 +442,7 @@ Phase 0: Configuration Wizard
   ├─ 0.5: Continuation detection
   ├─ 0.6: Detect refactoring mode
   └─ 0.7: Complexity Router (mechanical heuristics -> tier classification)
+        └─ Memory-informed classification (recall prior complexity assessments)
     ↓
     ├─[TRIVIAL]──> EXIT SKILL (log: "Trivial change, no workflow needed")
     ├─[SIMPLE]───> Simple Path (see below)
@@ -437,6 +456,7 @@ Phase 1: Research (STANDARD/COMPLEX only)
   └─ 1.4: GATE: Research Quality Score = 100%
     ↓
 Phase 1.5: Informed Discovery (STANDARD/COMPLEX only)
+  ├─ Memory-primed discovery (recall prior design decisions + conventions)
   ├─ 1.5.0: Disambiguation session (resolve ambiguities)
   ├─ 1.5.1: Generate 7-category discovery questions
   ├─ 1.5.2: Conduct discovery wizard (AskUserQuestion + ARH)

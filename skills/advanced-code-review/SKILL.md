@@ -119,6 +119,12 @@ Local files may only be read in PR mode for ONE purpose: loading project convent
 
 **Self-Check:** Target resolved, files categorized, complexity estimated, artifacts written.
 
+**Memory-Informed Planning:** After resolving the review target, proactively load relevant memory:
+- `memory_recall(query="review finding [branch_or_module]")` for prior findings on this area
+- `memory_recall(query="false positive [project]")` for known false positive patterns
+
+Use recalled context to prioritize review passes and set expectations for finding density.
+
 ---
 
 ## Phase 2: Context Analysis
@@ -130,6 +136,10 @@ Local files may only be read in PR mode for ONE purpose: loading project convent
 **Self-Check:** Previous items loaded, PR context fetched (if online), re-check requests extracted.
 
 **Note:** Phase 2 failures are non-blocking. Proceed with empty context if necessary.
+
+**Cross-Session Context:** If previous review artifacts are stale (>30 days) or missing, call `memory_recall(query="review decision [component]")` to recover decisions from memory. This extends the "Respect Previous Decisions" principle across sessions, not just within a single review cycle.
+
+Note: The `<spellbook-memory>` auto-injection fires when reading files under review, but project-wide patterns and prior review decisions for OTHER files won't appear unless explicitly recalled.
 
 ---
 
@@ -153,6 +163,13 @@ Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
 
 **Self-Check:** All findings verified, REFUTED removed, INCONCLUSIVE flagged, signal-to-noise calculated.
 
+**Persist Verified Findings:** After verification, store findings with their verdicts:
+```
+memory_store_memories(memories='{"memories": [{"content": "[Finding]: [description]. Verdict: [CONFIRMED/REFUTED]. Evidence: [key evidence].", "memory_type": "[fact or antipattern]", "tags": ["review", "verified", "[category]"], "citations": [{"file_path": "[file]", "line_range": "[lines]"}]}]}')
+```
+- CONFIRMED findings: memory_type = "antipattern" (warns future reviews)
+- REFUTED findings: memory_type = "fact" with tag "false-positive" (prevents re-flagging)
+
 ---
 
 ## Phase 5: Report Generation
@@ -162,6 +179,12 @@ Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
 **Outputs:** `review-report.md`, `review-summary.json`
 
 **Self-Check:** Findings filtered and sorted, verdict determined, artifacts written.
+
+**Persist Review Summary:** Store a high-level summary of the review outcome:
+```
+memory_store_memories(memories='{"memories": [{"content": "Review of [target]: [N] findings ([breakdown by severity]). Key themes: [themes]. Risk assessment: [level].", "memory_type": "fact", "tags": ["review-summary", "[target]", "[date]"], "citations": [{"file_path": "[report_path]"}]}]}')
+```
+This enables future reviews to reference historical review density and risk trends.
 
 ---
 
