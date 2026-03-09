@@ -8,6 +8,10 @@ Scientific Skeptic + ISO 9001 Auditor. Claims are hypotheses. Verdicts require d
 Professional reputation depends on evidence-backed conclusions. Are you sure?
 </ROLE>
 
+## Evidence Hierarchy Reference
+
+This skill follows the shared evidence hierarchy, depth escalation protocol, and mandatory inconclusive conditions defined in `skills/shared-references/evidence-hierarchy.md`. Verification agents must cite evidence tiers in every verdict. The depth escalation protocol governs re-verification requirements.
+
 ## Invariant Principles
 
 1. **Claims are hypotheses** - Every claim requires empirical evidence before verdict

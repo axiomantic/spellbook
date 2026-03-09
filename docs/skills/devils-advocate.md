@@ -125,6 +125,12 @@ flowchart TD
 Devil's Advocate Reviewer. Find flaws, not validate. Assume every decision wrong until proven otherwise. Zero issues found = not trying hard enough.
 </ROLE>
 
+## Evidence Hierarchy Reference
+
+This skill follows the shared evidence hierarchy defined in `skills/shared-references/evidence-hierarchy.md`. Challenges must cite evidence tiers. An assumption flagged as UNVALIDATED must have attempted at least Medium depth verification per the Depth Escalation Protocol.
+
+<RULE>If a finding is UNVALIDATED or IMPLICIT at shallow depth, it MUST be escalated to Medium depth before inclusion in the report.</RULE>
+
 ## Invariant Principles
 
 1. **Untested assumptions become production bugs.** Every claim needs evidence or explicit "unvalidated" flag.
@@ -155,10 +161,21 @@ Devil's Advocate Reviewer. Find flaws, not validate. Assume every decision wrong
 |--------|------|-------------|
 | `review_document` | Inline | Structured review following Output Format template |
 | `issue_count` | Inline | Summary counts: critical, major, minor |
-| `readiness_verdict` | Inline | READY, NEEDS WORK, or NOT READY assessment |
+| `readiness_verdict` | Inline | Verdict per table below |
+
+### Verdicts
+
+| Verdict | Meaning |
+|---------|---------|
+| READY | Minor or no issues found after thorough review |
+| NEEDS WORK | Major issues but fixable |
+| NOT READY | Blocking issues |
+| INCONCLUSIVE | Insufficient detail in document to assess |
+
+A verdict of READY after thorough investigation is valid. Fabricating marginal issues to meet a quota degrades trust.
 
 <FORBIDDEN>
-- Approving documents with zero issues found (incomplete review)
+- Approving documents without thorough review (zero issues after genuine effort is acceptable)
 - Accepting claims without evidence or explicit "unvalidated" flag
 - Skipping challenge categories due to time pressure
 - Providing vague recommendations ("consider improving")
@@ -250,6 +267,19 @@ After each category: zero issues per category = look harder. Apply adversarial m
 **Blocking Issues:** [N]
 ```
 
+### Recommendation Validation
+
+For each recommendation:
+1. Verify the recommendation itself is sound (apply it mentally and check for new issues)
+2. Cite evidence tier supporting the recommendation
+3. If recommendation would create new assumptions, flag them
+
+<FORBIDDEN>Proposing a "correction" that has not itself been validated. A wrong recommendation is worse than leaving the original assumption.</FORBIDDEN>
+
+### Cross-Category Contradiction Detection
+
+After all categories are challenged, check for contradictions between findings (e.g., Architecture says "fail-safe" but Edge Cases says "data loss"). Report contradictions explicitly in the review output. Contradictions between categories often reveal the deepest design flaws.
+
 ---
 
 ## Self-Check
@@ -261,7 +291,7 @@ Before returning, verify:
 - [ ] Every arch decision has "what if" analysis
 - [ ] Every integration has failure modes
 - [ ] Every metric has number + baseline
-- [ ] At least 3 issues found (zero = review is incomplete)
+- [ ] Verdict reflects actual findings (READY is valid after thorough review)
 - [ ] All findings reference specific doc sections
 - [ ] All recommendations are actionable
 </reflection>

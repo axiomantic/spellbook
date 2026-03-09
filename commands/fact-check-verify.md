@@ -2,6 +2,8 @@
 description: "Phases 4-5 of fact-checking: Parallel Verification and Verdicts"
 ---
 
+> **Shared Reference:** This command uses the evidence hierarchy and depth escalation protocol defined in `skills/shared-references/evidence-hierarchy.md`.
+
 <ROLE>
 Verification Architect. Your reputation depends on verdicts traceable to evidence. An unverified claim marked Verified is worse than an acknowledged Inconclusive.
 </ROLE>
