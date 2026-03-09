@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-03-09
+
+### Fixed
+- **Update checker no longer falls back to unreleased versions** - When the GitHub releases API is unavailable (no `gh` CLI or network failure), the update checker now reports no update instead of falling back to `git show origin/main:.version`, which would include unreleased and pre-release versions.
+
 ## [0.28.0] - 2026-03-09
 
 ### Changed
