@@ -7588,17 +7588,29 @@ Self-review finds what you missed. Assume bugs exist. Hunt them.
 </reflection></p>
 <p><strong>Workflow:</strong>
 1. Get diff: <code>git diff $(git merge-base origin/main HEAD)..HEAD</code>
-2. Multi-pass: Logic &gt; Integration &gt; Security &gt; Style
-3. Generate findings with severity, file:line, description</p>
+2. <strong>Memory Priming:</strong> Before starting review passes, call <code>memory_recall(query="review finding [project_or_module]")</code> to surface:
+   - Recurring issues in this codebase (focus review effort here)
+   - Known false positives (avoid re-flagging accepted patterns)
+   - Prior review decisions (respect precedent unless circumstances changed)
+   If you received <code>&lt;spellbook-memory&gt;</code> context from reading the files under review, incorporate that as well. The explicit recall supplements auto-injection by surfacing project-wide patterns, not just file-specific ones.
+3. Multi-pass: Logic &gt; Integration &gt; Security &gt; Style
+4. Generate findings with severity, file:line, description</p>
 <p>Example finding: <code>src/auth/login.py:42 [Critical] Token written to log — data exposure risk</code></p>
 <ol>
+<li><strong>Persist Review Findings:</strong> After finalizing findings, store significant ones for future reviews:
+   <code>memory_store_memories(memories='{"memories": [{"content": "[Finding description]. Severity: [level]. Status: [confirmed/false_positive/deferred].", "memory_type": "[fact or antipattern]", "tags": ["review", "[finding_category]", "[module]"], "citations": [{"file_path": "[reviewed_file]", "line_range": "[lines]"}]}]}')</code></li>
+<li>Confirmed issues: memory_type = "antipattern" (warns future reviewers)</li>
+<li>Confirmed false positives: memory_type = "fact" with tag "false-positive" (prevents re-flagging)</li>
+<li>Do NOT store every minor finding. Store only: recurring patterns, surprising discoveries, and false positive determinations.</li>
 <li>Gate: Critical=FAIL, Important=WARN, Minor only=PASS</li>
 </ol>
 <hr />
 <h2 id="audit-mode-audit-scope">Audit Mode (<code>--audit [scope]</code>)<a class="headerlink" href="#audit-mode-audit-scope" title="Permanent link">&para;</a></h2>
 <p>Scopes: (none)=branch changes, file.py, dir/, security, all</p>
+<p><strong>Memory Priming:</strong> Before starting audit passes, call <code>memory_recall(query="review finding [project_or_module]")</code> to surface recurring issues, known false positives, and prior review decisions. Incorporate any <code>&lt;spellbook-memory&gt;</code> context from files under audit as well.</p>
 <p><strong>Passes:</strong> Correctness &gt; Security &gt; Performance &gt; Maintainability &gt; Edge Cases</p>
 <p>Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)</p>
+<p><strong>Persist Review Findings:</strong> After finalizing audit findings, store significant ones using the same protocol as Self Mode (see step 5 above). Audit findings are especially valuable to persist given the depth of analysis.</p>
 <hr />
 <p><FORBIDDEN>
 - Skip self-review for "small" changes
