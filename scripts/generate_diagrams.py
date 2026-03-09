@@ -23,6 +23,7 @@ import argparse
 import fnmatch
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -381,6 +382,10 @@ def generate_diagram(
         print(f"  Command: {' '.join(cmd[:3])} [prompt truncated]")
         print(f"  Stdin: {item.source_path}")
 
+    # Unset CLAUDECODE to allow spawning Claude subprocesses from within
+    # an active Claude Code session (e.g., when run via pre-commit hooks).
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+
     try:
         result = subprocess.run(
             cmd,
@@ -389,6 +394,7 @@ def generate_diagram(
             text=True,
             timeout=CLAUDE_TIMEOUT_SECONDS,
             cwd=REPO_ROOT,
+            env=env,
         )
     except subprocess.TimeoutExpired:
         return GenerationResult(
