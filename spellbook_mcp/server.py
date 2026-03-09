@@ -1346,6 +1346,7 @@ def forge_iteration_return(
     return_to: str,
     feedback: list,
     reflection: str = None,
+    accumulated_knowledge: dict = None,
 ) -> dict:
     """
     Return to earlier stage with feedback (ITERATE verdict).
@@ -1364,6 +1365,7 @@ def forge_iteration_return(
             - suggestion: Recommended fix
             - severity: "blocking" | "significant" | "minor"
         reflection: Optional lesson learned from this iteration
+        accumulated_knowledge: Optional dict to merge into existing accumulated_knowledge
 
     Returns:
         Dict containing:
@@ -1380,6 +1382,7 @@ def forge_iteration_return(
         return_to=return_to,
         feedback=feedback,
         reflection=reflection,
+        accumulated_knowledge=accumulated_knowledge,
     )
 
 

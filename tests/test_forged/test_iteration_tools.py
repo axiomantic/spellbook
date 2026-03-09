@@ -675,6 +675,144 @@ class TestForgeIterationReturn:
         assert "feedback" in result["error"].lower()
 
 
+class TestForgeIterationReturnAccumulatedKnowledge:
+    """Tests for accumulated_knowledge persistence in forge_iteration_return."""
+
+    def test_accumulated_knowledge_persisted(self, tmp_path):
+        """Calling forge_iteration_return with accumulated_knowledge persists the value."""
+        from spellbook_mcp.forged.iteration_tools import (
+            forge_iteration_start, forge_iteration_advance, forge_iteration_return,
+            _get_iteration_state,
+        )
+        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+        conn = get_forged_connection(str(db_path))
+
+        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+            mock_conn.return_value = conn
+            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+                mock_project.return_value = "/test/project"
+
+                start_result = forge_iteration_start(feature_name="my-feature")
+                token = start_result["token"]
+                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
+                token = advance_result["token"]
+
+                forge_iteration_return(
+                    feature_name="my-feature",
+                    current_token=token,
+                    return_to="DISCOVER",
+                    feedback=[{"source": "test", "critique": "test", "evidence": "e", "suggestion": "s", "severity": "minor"}],
+                    accumulated_knowledge={"fractal_invocation_count": 1},
+                )
+
+                state = _get_iteration_state(conn, "/test/project", "my-feature")
+
+        assert state["accumulated_knowledge"]["fractal_invocation_count"] == 1
+
+    def test_accumulated_knowledge_not_affected_when_omitted(self, tmp_path):
+        """Calling without accumulated_knowledge doesn't affect existing accumulated_knowledge."""
+        from spellbook_mcp.forged.iteration_tools import (
+            forge_iteration_start, forge_iteration_advance, forge_iteration_return,
+            _get_iteration_state,
+        )
+        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+        conn = get_forged_connection(str(db_path))
+
+        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+            mock_conn.return_value = conn
+            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+                mock_project.return_value = "/test/project"
+
+                start_result = forge_iteration_start(feature_name="my-feature")
+                token = start_result["token"]
+                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
+                token = advance_result["token"]
+
+                # First return: with accumulated_knowledge
+                forge_iteration_return(
+                    feature_name="my-feature",
+                    current_token=token,
+                    return_to="DISCOVER",
+                    feedback=[{"source": "test", "critique": "test", "evidence": "e", "suggestion": "s", "severity": "minor"}],
+                    accumulated_knowledge={"fractal_invocation_count": 1},
+                )
+
+                # Resume and advance again
+                resume_result = forge_iteration_start(feature_name="my-feature")
+                token = resume_result["token"]
+                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
+                token = advance_result["token"]
+
+                # Second return: without accumulated_knowledge
+                forge_iteration_return(
+                    feature_name="my-feature",
+                    current_token=token,
+                    return_to="DISCOVER",
+                    feedback=[{"source": "test", "critique": "test2", "evidence": "e2", "suggestion": "s2", "severity": "minor"}],
+                )
+
+                state = _get_iteration_state(conn, "/test/project", "my-feature")
+
+        assert state["accumulated_knowledge"]["fractal_invocation_count"] == 1
+
+    def test_accumulated_knowledge_merges_not_replaces(self, tmp_path):
+        """Calling with new keys merges (doesn't replace) existing keys."""
+        from spellbook_mcp.forged.iteration_tools import (
+            forge_iteration_start, forge_iteration_advance, forge_iteration_return,
+            _get_iteration_state,
+        )
+        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+
+        db_path = tmp_path / "forged.db"
+        init_forged_schema(str(db_path))
+        conn = get_forged_connection(str(db_path))
+
+        with patch("spellbook_mcp.forged.iteration_tools.get_forged_connection") as mock_conn:
+            mock_conn.return_value = conn
+            with patch("spellbook_mcp.forged.iteration_tools._get_project_path") as mock_project:
+                mock_project.return_value = "/test/project"
+
+                start_result = forge_iteration_start(feature_name="my-feature")
+                token = start_result["token"]
+                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
+                token = advance_result["token"]
+
+                # First return: with initial knowledge
+                forge_iteration_return(
+                    feature_name="my-feature",
+                    current_token=token,
+                    return_to="DISCOVER",
+                    feedback=[{"source": "test", "critique": "test", "evidence": "e", "suggestion": "s", "severity": "minor"}],
+                    accumulated_knowledge={"fractal_invocation_count": 1},
+                )
+
+                # Resume and advance again
+                resume_result = forge_iteration_start(feature_name="my-feature")
+                token = resume_result["token"]
+                advance_result = forge_iteration_advance(feature_name="my-feature", current_token=token)
+                token = advance_result["token"]
+
+                # Second return: with additional knowledge key
+                forge_iteration_return(
+                    feature_name="my-feature",
+                    current_token=token,
+                    return_to="DISCOVER",
+                    feedback=[{"source": "test", "critique": "test2", "evidence": "e2", "suggestion": "s2", "severity": "minor"}],
+                    accumulated_knowledge={"new_key": "new_value"},
+                )
+
+                state = _get_iteration_state(conn, "/test/project", "my-feature")
+
+        assert state["accumulated_knowledge"]["fractal_invocation_count"] == 1
+        assert state["accumulated_knowledge"]["new_key"] == "new_value"
+
+
 class TestTokenSystem:
     """Integration tests for token-based workflow enforcement."""
 

@@ -444,6 +444,7 @@ def forge_iteration_return(
     return_to: str,
     feedback: list,
     reflection: Optional[str] = None,
+    accumulated_knowledge: Optional[dict] = None,
 ) -> dict:
     """Return to earlier stage with feedback.
 
@@ -461,6 +462,7 @@ def forge_iteration_return(
             - suggestion: Recommended fix
             - severity: "blocking" | "significant" | "minor"
         reflection: Optional lesson learned
+        accumulated_knowledge: Optional dict to merge into existing accumulated_knowledge
 
     Returns:
         Dict containing:
@@ -509,6 +511,10 @@ def forge_iteration_return(
             "status": "error",
             "error": f"No iteration state found for feature '{feature_name}'",
         }
+
+    # Merge accumulated_knowledge if provided
+    if accumulated_knowledge is not None:
+        state["accumulated_knowledge"].update(accumulated_knowledge)
 
     # Build feedback objects and add to history
     new_iteration = state["iteration_number"] + 1

@@ -40,7 +40,65 @@ Parse every item. Extract all structured fields.
 | Quality Shortcut | Missing tests | Time pressure/oversight |
 | Integration Blind Spot | Interface mismatch | System thinking gap |
 
-**Fractal exploration (optional):** When the same root cause category appears in 2+ feedback items, invoke fractal-thinking with intensity `explore` and seed: "Why does [failure pattern] keep recurring despite [previous corrections]?". Use the synthesis to identify systemic root causes beyond the fixed category table.
+## Step 2.5: Fractal Escalation (Conditional)
+
+**Trigger conditions** (either triggers escalation):
+1. `iteration_number >= 2` AND current `stage` matches the stage from the
+   previous iteration's feedback (repeated failure on same stage)
+2. 2+ feedback items have `severity = 'blocking'` in the current feedback set
+
+**Fractal invocation counter:** Before checking escalation conditions, read
+`IterationState.accumulated_knowledge["fractal_invocation_count"]` (default 0).
+If count >= 3, skip fractal escalation entirely and fall back to plain reflexion
+regardless of conditions. After a successful fractal completion (Step 2 below),
+increment the counter.
+
+**If neither condition is met:** Skip to Step 3. Simple ITERATEs proceed at
+normal speed with zero overhead.
+
+**If escalation triggers:**
+
+**Previous stage retrieval:** The orchestrator passes the previous iteration's
+stage from `IterationState.feedback_history[-1].stage` (if available) as
+`previous_stage` in the reflexion-analyze invocation context. This is how
+reflexion-analyze knows whether the current stage matches the previous one
+for condition 1 detection.
+
+1. Construct the seed question from feedback context:
+   - **Repeated stage failure (condition 1):** "Why does [dominant_root_cause_category]
+     keep recurring in [stage] despite corrections: [list of APPLIED/SUPERSEDED reflections]?"
+   - **Severe first-time failure (condition 2):** "What systemic issues cause [N] blocking
+     failures simultaneously in [stage]? Failures: [list of blocking critiques, truncated]"
+
+2. Invoke the fractal-thinking skill (using the Skill tool with the seed question,
+   `intensity=explore`, `checkpoint_mode=autonomous`). The skill orchestrates:
+   a. `fractal-think-seed` - Initialize fractal graph (5-7 sub-questions, max depth 4, 8 max agents)
+   b. `fractal-think-work` - Dispatch fractal workers until completion or budget exhaustion
+   c. `fractal-think-harvest` - Collect structured JSON with synthesis_chain, findings, boundary_questions
+
+3. Map the FractalResult to Feedback objects using `fractal_to_feedback()` from
+   `spellbook_mcp.forged.fractal_feedback`. Pass the harvest JSON, current stage,
+   and iteration number.
+
+4. Merge fractal-derived Feedback into the existing feedback set.
+   Fractal feedback items have `source = "fractal-analysis"`.
+   Fractal feedback is additive (no deduplication needed).
+
+5. Call `suggest_return_stage()` from `spellbook_mcp.forged.fractal_feedback`
+   with the harvest JSON and current stage. Include the recommendation in
+   retry guidance output with machine-readable markers.
+
+6. After successful fractal completion, increment the fractal invocation counter.
+   Read the current value from `accumulated_knowledge["fractal_invocation_count"]`
+   (default 0), add 1, and include the updated count in the retry guidance output
+   as `FRACTAL_INVOCATION_COUNT: [N]`. The orchestrator is responsible for passing
+   this value to `forge_iteration_return` so it persists in `accumulated_knowledge`.
+
+7. If fractal exploration fails:
+   - **Autonomous mode:** Retry once. If retry fails, log warning
+     "Fractal escalation failed; falling back to standard reflexion"
+     and continue with standard Step 3.
+   - **Interactive mode:** Escalate to user with the error details.
 
 ## Step 3: Root Cause Questions
 
@@ -85,6 +143,30 @@ Status transitions:
 ### Pattern Alert
 [If applicable]
 
+### Fractal Analysis
+*(Include this section only when fractal escalation was triggered in Step 2.5)*
+
+Seed: [seed question used]
+Graph: [graph_id from harvest]
+Root synthesis: [root synthesis summary, first 200 chars]
+Recommended return stage: [stage] (distance: [N] stages back)
+Confidence: [HIGH if convergence_count >= 3, else MEDIUM]
+
+FRACTAL_RETURN_STAGE: [STAGE_NAME]
+FRACTAL_RETURN_DISTANCE: [N]
+FRACTAL_RETURN_CONFIDENCE: [HIGH|MEDIUM]
+FRACTAL_INVOCATION_COUNT: [current count after increment]
+
+The `FRACTAL_INVOCATION_COUNT` line reports the updated count after this fractal
+invocation completes successfully. The orchestrator must pass this value to
+`forge_iteration_return` via `accumulated_knowledge["fractal_invocation_count"]`
+so subsequent iterations can enforce the invocation cap (>= 3 skips fractal).
+
+### Fractal-Derived Corrections
+1. [Specific correction from convergence finding]
+2. [Specific correction from boundary finding]
+...
+
 ### Success Criteria
 - [ ] All blocking feedback addressed
 - [ ] Root cause fixed (not just symptom)
@@ -115,6 +197,8 @@ Status transitions:
 - [ ] Reflections stored in forged.db with PENDING status
 - [ ] Pattern check performed against thresholds
 - [ ] Retry guidance generated with specific corrections
+- [ ] Fractal escalation evaluated (conditions checked)
+- [ ] Fractal-derived feedback mapped (if escalation triggered)
 
 If ANY unchecked: complete before returning results to orchestrator.
 
