@@ -946,6 +946,7 @@ class TestDoStoreMemories:
 
 
 
+
 class TestTwoToolPatternEndToEnd:
     """Test the full get_unconsolidated -> parse -> store_memories flow."""
 
@@ -1134,6 +1135,7 @@ class TestTwoToolPatternEndToEnd:
         # No unconsolidated events remain
         remaining = do_get_unconsolidated(db_path=db, namespace="test-project")
         assert remaining["count"] == 0
+
 
 
 class TestMemoryToolsServerRegistration:
