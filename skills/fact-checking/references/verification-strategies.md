@@ -2,11 +2,17 @@
 
 This reference documents verification approaches for each specialized agent.
 
+> **Cross-references:** All agents must follow the **Evidence Hierarchy** and **Depth Escalation Rule** defined in `commands/fact-check-verify.md`. Evidence from Tier 6 (LLM parametric knowledge) alone is never sufficient for a verdict. Refuted/Misleading/Stale verdicts at Shallow depth must be re-verified at Medium; Refuted at Medium must escalate to Deep when feasible.
+>
+> **When to use Inconclusive:** Each agent must issue Inconclusive (not Refuted or Verified) when: (1) the claim requires runtime/execution evidence and none was gathered, (2) contradicting evidence exists but cannot be resolved, or (3) the verification relies solely on LLM parametric knowledge. See **Mandatory Inconclusive Conditions** in `commands/fact-check-verify.md`.
+
 ---
 
 ## SecurityAgent
 
 Responsible for: XSS, injection, authentication, sanitization, hashing, encryption claims.
+
+**Inconclusive rule:** Security claims verified only by code reading (no test execution or static analysis) at Shallow depth that receive Refuted must escalate. Claims about runtime sanitization behavior without test execution must be Inconclusive.
 
 ### Claim: "Input is sanitized"
 
@@ -88,6 +94,8 @@ Responsible for: XSS, injection, authentication, sanitization, hashing, encrypti
 ## CorrectnessAgent
 
 Responsible for: Behavior claims, return values, exceptions, invariants, state, side effects.
+
+**Inconclusive rule:** Behavior claims about error paths or edge cases that were not tested must be Inconclusive unless code trace provides definitive evidence. "Pure function" and "no side effects" claims require tracing all transitive calls; if any called function is opaque, use Inconclusive.
 
 ### Claim: "Returns X when Y"
 
@@ -173,6 +181,8 @@ Responsible for: Behavior claims, return values, exceptions, invariants, state, 
 
 Responsible for: Complexity claims, benchmarks, caching, memory, performance numbers.
 
+**Inconclusive rule:** Performance claims with specific numbers (latency, throughput) MUST be Inconclusive at Shallow depth. Complexity claims (Big-O) may be Verified at Medium if loop/recursion analysis is definitive, but benchmark claims always require Deep verification with actual execution.
+
 ### Claim: "O(n)" / "O(log n)" / complexity claims
 
 **Shallow:**
@@ -243,6 +253,8 @@ Responsible for: Complexity claims, benchmarks, caching, memory, performance num
 ## ConcurrencyAgent
 
 Responsible for: Thread-safety, atomicity, lock-free, wait-free, reentrant claims.
+
+**Inconclusive rule:** Concurrency claims are inherently runtime-dependent. Without test execution or thread sanitizer output, thread-safety and atomicity claims MUST be Inconclusive. Code reading alone cannot prove absence of race conditions.
 
 ### Claim: "Thread-safe"
 
@@ -327,6 +339,8 @@ Responsible for: Thread-safety, atomicity, lock-free, wait-free, reentrant claim
 
 Responsible for: README accuracy, example code, API docs, external links, test coverage claims.
 
+**Inconclusive rule:** External URL claims must be Inconclusive if the URL was not fetched and verified. Example code claims must be Inconclusive at Shallow depth if the example was not executed.
+
 ### Claim: Example code in documentation
 
 **Shallow:**
@@ -374,6 +388,8 @@ Responsible for: README accuracy, example code, API docs, external links, test c
 
 Responsible for: TODOs, FIXMEs, issue references, deprecation, workaround rationale.
 
+**Inconclusive rule:** Claims about whether a workaround is still needed must be Inconclusive unless the referenced bug/issue was actually checked (fetched via web or git). Claims about issue status without API verification must be Inconclusive.
+
 ### Claim: "TODO: remove after #123"
 
 **Shallow:**
@@ -419,6 +435,8 @@ Responsible for: TODOs, FIXMEs, issue references, deprecation, workaround ration
 ## ConfigurationAgent
 
 Responsible for: Defaults, environment variables, config files, version requirements.
+
+**Inconclusive rule:** Version requirement claims must be Inconclusive unless the specific version-dependent API usage is traced in code. Environment variable claims must be Inconclusive if the env-to-behavior path was not fully traced.
 
 ### Claim: "Defaults to X"
 

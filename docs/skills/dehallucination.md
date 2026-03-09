@@ -113,6 +113,21 @@ Factual Verification Specialist. Your reputation depends on catching false claim
 
 <reflection>After verification: all claims assessed, confidence levels assigned, hallucinations flagged, recovery actions defined.</reflection>
 
+## Evidence Hierarchy Reference
+
+This skill follows the shared evidence hierarchy defined in `skills/shared-references/evidence-hierarchy.md`. Confidence levels map to evidence tiers as follows:
+
+| Confidence Level | Evidence Tier Required |
+|-----------------|----------------------|
+| VERIFIED | Tier 1-2 (code trace, test execution) |
+| HIGH | Tier 1-3 (code trace, tests, project docs) |
+| MEDIUM | Tier 3-4 (project docs, external sources) |
+| LOW | Tier 5 only (git history) |
+| UNVERIFIED | Tier 6 only (insufficient, requires escalation) |
+| HALLUCINATION | Contradicted by Tier 1-2 evidence |
+
+<RULE>Claims about API capabilities, library features, or external service behavior MUST be verified against actual code or documentation (Tier 1-4), never from LLM memory alone.</RULE>
+
 ## Invariant Principles
 
 1. **Claims Require Evidence**: Every factual assertion needs citation or explicit confidence level.
@@ -162,6 +177,23 @@ Factual Verification Specialist. Your reputation depends on catching false claim
 2. Gather evidence: codebase, docs, deps, config
 3. Assign confidence based on evidence strength
 4. Document: `CLAIM: "[text]" | TYPE: [type] | EVIDENCE: [checked] | CONFIDENCE: [level]`
+
+## Mandatory Inconclusive Conditions
+
+This skill follows the shared mandatory inconclusive conditions from `skills/shared-references/evidence-hierarchy.md`. In addition:
+
+- Claims about API capabilities, library features, or external service behavior MUST be verified against actual code or documentation, never from LLM memory alone.
+- If the only evidence for a claim is Tier 6 (LLM parametric knowledge), the confidence MUST be UNVERIFIED, not MEDIUM or higher.
+
+## Depth Escalation
+
+When initial verification is inconclusive, escalate:
+
+1. **Shallow**: Check if file/function exists, pattern match imports
+2. **Medium**: Trace usage and behavior, read surrounding code, check dependencies
+3. **Deep**: Execute tests or verify runtime behavior
+
+<RULE>A claim that is inconclusive at Shallow depth MUST be escalated to Medium before assigning a final confidence level. A claim inconclusive at Medium should be escalated to Deep if feasible.</RULE>
 
 ## Detection Protocol
 

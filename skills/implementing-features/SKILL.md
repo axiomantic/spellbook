@@ -111,7 +111,19 @@ ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 
 - [ ] Understanding document exists
 - [ ] Completeness score = 100% (11/11 validation functions)
+- [ ] Dehallucination gate subagent was dispatched (Phase 1.5.7)
 - [ ] Devil's advocate subagent was dispatched
+
+### Phase 1.5.7: Dehallucination Gate
+
+Before devil's advocate challenges the understanding document, verify it is grounded in reality.
+
+Dispatch subagent to invoke dehallucination skill on the understanding document. Focus on:
+- Are all referenced files/functions real?
+- Are integration points accurately described?
+- Are claimed constraints actual constraints?
+
+If hallucinations found: fix understanding document before proceeding to devil's advocate.
 
 ### After Phase 2 (Design):
 
@@ -123,6 +135,17 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 - [ ] Design document exists
 - [ ] Design review subagent (reviewing-design-docs) was dispatched
 - [ ] All critical/important findings fixed (if any)
+- [ ] Assumption verification completed (Phase 2.5)
+
+### Phase 2.5: Assumption Verification
+
+After design review fixes, fact-check assumptions flagged by devil's advocate in Phase 1.6.
+
+Dispatch subagent to invoke fact-checking skill with scope limited to:
+- Assumptions marked UNVALIDATED or IMPLICIT by devil's advocate
+- Claims in the design document that reference codebase patterns
+
+This closes the loop: devil's advocate flags assumptions, fact-checking verifies them, design proceeds with evidence.
 
 ### After Phase 3 (Implementation Planning):
 
@@ -165,9 +188,11 @@ If a subagent fails or returns empty results: re-dispatch with additional contex
 | Phase | Step                     | Skill to Invoke                  | Direct Execution |
 | ----- | ------------------------ | -------------------------------- | ---------------- |
 | 1.2   | Research                 | explore agent (Task tool)        | FORBIDDEN        |
+| 1.5.7 | Dehallucination gate     | dehallucination                  | FORBIDDEN        |
 | 1.6   | Devil's advocate         | devils-advocate                  | FORBIDDEN        |
 | 2.1   | Design creation          | brainstorming (SYNTHESIS MODE)   | FORBIDDEN        |
 | 2.2   | Design review            | reviewing-design-docs            | FORBIDDEN        |
+| 2.5   | Assumption verification  | fact-checking                    | FORBIDDEN        |
 | 2.4   | Fix design               | executing-plans                  | FORBIDDEN        |
 | 3.1   | Plan creation            | writing-plans                    | FORBIDDEN        |
 | 3.2   | Plan review              | reviewing-impl-plans             | FORBIDDEN        |
@@ -419,13 +444,15 @@ Phase 1.5: Informed Discovery (STANDARD/COMPLEX only)
   ├─ 1.5.4: Synthesize design_context
   ├─ 1.5.5: GATE: Completeness Score = 100% (11 validation functions)
   ├─ 1.5.6: Create Understanding Document
+  ├─ 1.5.7: Dehallucination Gate
   └─ 1.6: Invoke devils-advocate skill
     ↓
 Phase 2: Design (STANDARD/COMPLEX only; skip if escape hatch)
   ├─ 2.1: Subagent invokes brainstorming (SYNTHESIS MODE)
   ├─ 2.2: Subagent invokes reviewing-design-docs
   ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous)
-  └─ 2.4: Subagent invokes executing-plans to fix
+  ├─ 2.4: Subagent invokes executing-plans to fix
+  └─ 2.5: Assumption Verification
     ↓
 Phase 3: Implementation Planning (STANDARD/COMPLEX only; skip if impl plan escape hatch)
   ├─ 3.1: Subagent invokes writing-plans

@@ -4,7 +4,7 @@
 
 # Diagram: fact-check-extract
 
-Extract all claims from code, comments, docstrings, commits, and naming conventions, then triage by category and verification depth before proceeding to verification.
+Extract all claims from code, comments, docstrings, commits, and naming conventions (including mandatory naming convention scan and LLM-content escalation), then triage by category and verification depth before proceeding to verification.
 
 ```mermaid
 flowchart TD
@@ -27,12 +27,24 @@ flowchart TD
   style Naming fill:#2196F3,color:#fff
   style ScanSrc fill:#2196F3,color:#fff
 
-  Comments --> Classify
-  Docstrings --> Classify
-  Markdown --> Classify
-  Commits --> Classify
-  PRDesc --> Classify
-  Naming --> Classify
+  Comments --> NamingScan
+  Docstrings --> NamingScan
+  Markdown --> NamingScan
+  Commits --> NamingScan
+  PRDesc --> NamingScan
+  Naming --> NamingScan
+
+  NamingScan[Naming Convention Scan<br>validate*, safe*, is*, etc.] --> LLMCheck{LLM-generated content?}
+
+  style NamingScan fill:#f44336,color:#fff
+  style LLMCheck fill:#FF9800,color:#000
+
+  LLMCheck -->|Yes| LLMEscalate[Flag source_risk: llm_generated<br>Force MEDIUM depth min]
+  LLMCheck -->|No| Classify
+
+  style LLMEscalate fill:#2196F3,color:#fff
+
+  LLMEscalate --> Classify
 
   Classify[Classify by category] --> CatTech[Technical claims]
   Classify --> CatSec[Security claims]
@@ -143,6 +155,17 @@ Claim Extractor and Triage Analyst. Your reputation depends on completeness: eve
 
 If a source is inaccessible (no git history, no PR): skip and log `⚠ [Source] unavailable -- skipped`. If no claims found across all sources: report "No verifiable claims found" and halt.
 
+## Naming Convention Scan (Mandatory)
+
+After extracting explicit claims from comments/docs, scan ALL function and variable names in scope against naming patterns:
+
+1. Run pattern matching for: validate*, verify*, check*, assert*, ensure*, safe*, sanitize*, escape*, is*, has*, can*, get*, compute*, create*, clone*, atomic*, sync*, lock*
+2. For each match, extract the implicit claim: "[function name] implies [property]"
+3. Add to claims list with source_type: "naming_convention"
+4. These claims default to MEDIUM depth (not shallow)
+
+<RULE>Implicit claims from naming conventions are first-class claims. Skipping this scan is FORBIDDEN.</RULE>
+
 **Categories** (also flag: Ambiguous, Misleading, Jargon-heavy):
 | Category | Examples | Agent |
 |----------|----------|-------|
@@ -184,6 +207,15 @@ Adjust depths? (Enter claim numbers and new depth, e.g. "1=deep 3=shallow", or '
 | Shallow | Read code, reason about behavior | Simple, self-evident claims |
 | Medium | Trace execution paths, analyze control flow | Most claims |
 | Deep | Execute tests, run benchmarks, instrument | Critical/numeric claims |
+
+## LLM-Generated Content Escalation
+
+When a comment matches LLM Over-Commenting Patterns (from claim-patterns.md), AND the comment contains a verifiable claim:
+
+1. Flag the claim with `source_risk: "llm_generated"`
+2. Auto-assign MEDIUM depth minimum (never shallow)
+3. Require Tier 1-2 evidence (code trace or test execution) for verification
+4. Note in the report that the claim may share bias with its verifier
 
 **ARH response routing**:
 | Response | Meaning | Action |
