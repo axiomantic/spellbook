@@ -228,14 +228,13 @@ class TestCheckForUpdates:
             assert result["is_major_bump"] is False
             assert result["error"] is None
 
-    def test_update_available_fallback_to_git_show(self, tmp_path):
-        """Falls back to git show when gh CLI is not available."""
+    def test_no_update_when_gh_unavailable(self, tmp_path):
+        """Reports no update when gh CLI is not available (no fallback to git show)."""
         from spellbook_mcp.update_tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         (spellbook_dir / ".version").write_text("0.9.9\n")
-        (spellbook_dir / "CHANGELOG.md").write_text(SAMPLE_CHANGELOG)
 
         with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
              patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
@@ -254,19 +253,13 @@ class TestCheckForUpdates:
             fetch_result = MagicMock()
             fetch_result.returncode = 0
 
-            # git show returns remote version (fallback)
-            show_result = MagicMock()
-            show_result.returncode = 0
-            show_result.stdout = "0.9.10\n"
-
-            mock_run.side_effect = [remote_result, fetch_result, show_result]
+            mock_run.side_effect = [remote_result, fetch_result]
 
             result = check_for_updates(spellbook_dir)
 
-            assert result["update_available"] is True
+            assert result["update_available"] is False
             assert result["current_version"] == "0.9.9"
-            assert result["remote_version"] == "0.9.10"
-            assert result["is_major_bump"] is False
+            assert result["remote_version"] is None
             assert result["error"] is None
 
     def test_no_update_available(self, tmp_path):
@@ -279,7 +272,7 @@ class TestCheckForUpdates:
 
         with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
              patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value=None):
+             patch("spellbook_mcp.update_tools.shutil.which", return_value="/usr/local/bin/gh"):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
                 "auto_update_branch": "main",
@@ -293,11 +286,17 @@ class TestCheckForUpdates:
             fetch_result = MagicMock()
             fetch_result.returncode = 0
 
-            show_result = MagicMock()
-            show_result.returncode = 0
-            show_result.stdout = "0.9.10\n"
+            # git remote get-url (for _get_owner_repo)
+            url_result = MagicMock()
+            url_result.returncode = 0
+            url_result.stdout = "git@github.com:axiomantic/spellbook.git\n"
 
-            mock_run.side_effect = [remote_result, fetch_result, show_result]
+            # gh api releases/latest
+            api_result = MagicMock()
+            api_result.returncode = 0
+            api_result.stdout = "v0.9.10\n"
+
+            mock_run.side_effect = [remote_result, fetch_result, url_result, api_result]
 
             result = check_for_updates(spellbook_dir)
 
@@ -345,7 +344,7 @@ class TestCheckForUpdates:
 
         with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
              patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
-             patch("spellbook_mcp.update_tools.shutil.which", return_value=None):
+             patch("spellbook_mcp.update_tools.shutil.which", return_value="/usr/local/bin/gh"):
             mock_config_get.side_effect = lambda key: None
 
             # git remote (validation) - returns "origin" as default
@@ -356,19 +355,25 @@ class TestCheckForUpdates:
             fetch_result = MagicMock()
             fetch_result.returncode = 0
 
-            show_result = MagicMock()
-            show_result.returncode = 0
-            show_result.stdout = "1.0.0\n"
+            # git remote get-url (for _get_owner_repo)
+            url_result = MagicMock()
+            url_result.returncode = 0
+            url_result.stdout = "git@github.com:axiomantic/spellbook.git\n"
 
-            mock_run.side_effect = [remote_result, fetch_result, show_result]
+            # gh api releases/latest returns major bump
+            api_result = MagicMock()
+            api_result.returncode = 0
+            api_result.stdout = "v1.0.0\n"
+
+            mock_run.side_effect = [remote_result, fetch_result, url_result, api_result]
 
             result = check_for_updates(spellbook_dir)
 
             assert result["update_available"] is True
             assert result["is_major_bump"] is True
 
-    def test_github_api_failure_falls_back_to_git_show(self, tmp_path):
-        """Falls back to git show when GitHub API call fails."""
+    def test_github_api_failure_reports_no_update(self, tmp_path):
+        """Reports no update when GitHub API call fails (no fallback to git show)."""
         from spellbook_mcp.update_tools import check_for_updates
 
         spellbook_dir = tmp_path / "spellbook"
@@ -399,17 +404,12 @@ class TestCheckForUpdates:
             api_result.returncode = 1
             api_result.stdout = ""
 
-            # git show fallback
-            show_result = MagicMock()
-            show_result.returncode = 0
-            show_result.stdout = "0.9.10\n"
-
-            mock_run.side_effect = [remote_result, fetch_result, url_result, api_result, show_result]
+            mock_run.side_effect = [remote_result, fetch_result, url_result, api_result]
 
             result = check_for_updates(spellbook_dir)
 
-            assert result["update_available"] is True
-            assert result["remote_version"] == "0.9.10"
+            assert result["update_available"] is False
+            assert result["remote_version"] is None
             assert result["error"] is None
 
     def test_missing_local_version(self, tmp_path):
