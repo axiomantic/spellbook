@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-03-09
+
+### Changed
+- **Memory consolidation refactor** - Replaced LLM-based memory consolidation with four heuristic strategies (content-hash dedup, Jaccard word similarity, tag grouping, temporal clustering). Removed `anthropic` from production dependencies. Added two new MCP tools (`memory_get_unconsolidated`, `memory_store_memories`) for optional client-side LLM synthesis.
+
+### Fixed
+- **Daemon PATH detection** - Resolve CLI tool paths at install time via `shutil.which()` so tools installed through mise, asdf, and other version managers are found by the daemon.
+- **Update checker** - Use GitHub releases API instead of `git show origin/main:.version` to determine latest version, which naturally excludes pre-releases and drafts.
+- **Pre-release workflow** - Auto-release now creates pre-releases by default so releases can be reviewed before promotion.
+
 ## [0.26.0] - 2026-03-08
 
 ### Added
