@@ -218,16 +218,26 @@ def log_raw_event(
 
 
 def get_unconsolidated_events(
-    db_path: str, limit: int = 50
+    db_path: str,
+    limit: int = 50,
+    namespace: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    """Get unconsolidated raw events."""
+    """Get unconsolidated raw events, optionally filtered by namespace (project)."""
     conn = get_connection(db_path)
-    cursor = conn.execute(
-        "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-        "subject, summary, tags FROM raw_events "
-        "WHERE consolidated = 0 ORDER BY id ASC LIMIT ?",
-        (limit,),
-    )
+    if namespace:
+        cursor = conn.execute(
+            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
+            "subject, summary, tags FROM raw_events "
+            "WHERE consolidated = 0 AND project = ? ORDER BY id ASC LIMIT ?",
+            (namespace, limit),
+        )
+    else:
+        cursor = conn.execute(
+            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
+            "subject, summary, tags FROM raw_events "
+            "WHERE consolidated = 0 ORDER BY id ASC LIMIT ?",
+            (limit,),
+        )
     return [
         {
             "id": r[0], "session_id": r[1], "timestamp": r[2],

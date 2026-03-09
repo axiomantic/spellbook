@@ -696,6 +696,26 @@ def test_insert_memory_creates_audit_log(db):
     assert json.loads(row[2]) == {"memory_type": "fact"}
 
 
+class TestGetUnconsolidatedEventsNamespace:
+    def test_namespace_filters_by_project(self, db):
+        """When namespace is provided, only events with matching project are returned."""
+        log_raw_event(db, "s1", "project-a", "tool_use", "Read", "f.py", "read f", "")
+        log_raw_event(db, "s1", "project-b", "tool_use", "Read", "g.py", "read g", "")
+        log_raw_event(db, "s1", "project-a", "tool_use", "Edit", "h.py", "edit h", "")
+
+        events = get_unconsolidated_events(db, limit=50, namespace="project-a")
+        assert len(events) == 2
+        assert all(e["project"] == "project-a" for e in events)
+
+    def test_no_namespace_returns_all(self, db):
+        """When namespace is None (default), all unconsolidated events are returned."""
+        log_raw_event(db, "s1", "project-a", "tool_use", "Read", "f.py", "read f", "")
+        log_raw_event(db, "s1", "project-b", "tool_use", "Read", "g.py", "read g", "")
+
+        events = get_unconsolidated_events(db, limit=50)
+        assert len(events) == 2
+
+
 class TestInsertMemoryExtraMeta:
     def test_extra_meta_merged_into_meta_json(self, db):
         """extra_meta dict is shallow-merged into stored meta JSON alongside tags."""
