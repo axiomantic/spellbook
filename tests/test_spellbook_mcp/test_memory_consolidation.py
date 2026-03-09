@@ -467,6 +467,63 @@ class TestConsolidateBatch:
         assert details["events_count"] == 15
         assert details["batch_id"] == result["batch_id"]
 
+    def test_mid_pipeline_strategy_failure_graceful_recovery(self, db):
+        """When a mid-pipeline strategy fails, error is caught and all events marked consolidated."""
+        # Seed events: 2 duplicates (consumed by content_hash) + 3 unique (hit jaccard)
+        for _ in range(2):
+            log_raw_event(
+                db_path=db, session_id="sess-1", project="p",
+                event_type="tool_use", tool_name="Read",
+                subject="src/dup.py",
+                summary="Read exact duplicate content here",
+                tags="python",
+            )
+        for i in range(3):
+            log_raw_event(
+                db_path=db, session_id="sess-1", project="p",
+                event_type="tool_use", tool_name="Edit",
+                subject=f"src/unique_{i}.py",
+                summary=f"Completely different unique content number {i} for testing",
+                tags=f"tag_{i}",
+            )
+
+        # Fail jaccard_similarity (second strategy, after content_hash succeeds)
+        with patch(
+            "spellbook_mcp.memory_consolidation._strategy_jaccard_similarity",
+            side_effect=ValueError("jaccard computation exploded"),
+        ):
+            result = consolidate_batch(db_path=db, namespace="ns")
+
+        assert result["status"] == "error"
+        assert result["error"] == "jaccard computation exploded"
+        assert result["events_consolidated"] == 5
+        assert result["memories_created"] == 0
+        import uuid as uuid_mod
+        uuid_mod.UUID(result["batch_id"], version=4)
+
+        # All events marked consolidated (prevents infinite retry)
+        remaining = get_unconsolidated_events(db, limit=50)
+        assert remaining == []
+
+        # No memories were persisted (error rolls back the batch)
+        conn = get_connection(db)
+        cursor = conn.execute(
+            "SELECT COUNT(*) FROM memories WHERE namespace = ?", ("ns",),
+        )
+        assert cursor.fetchone()[0] == 0
+
+        # Audit log records the error
+        cursor = conn.execute(
+            "SELECT action, details FROM memory_audit_log WHERE action = 'consolidation_error'"
+        )
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "consolidation_error"
+        details = json.loads(row[1])
+        assert details["error"] == "jaccard computation exploded"
+        assert details["events_count"] == 5
+        assert details["batch_id"] == result["batch_id"]
+
     def test_piggyback_gc(self, db):
         """Consolidation calls purge_deleted at the end on success."""
         _seed_duplicate_events(db)
@@ -511,6 +568,154 @@ class TestConsolidateBatch:
         assert details["compression_ratio"] == round(2 / 3, 3)
         # strategies_used should be a list containing the strategies that produced memories
         assert set(details["strategies_used"]) == {"content_hash", "temporal_clustering"}
+
+    def test_mixed_event_types_full_pipeline(self, db):
+        """All 4 strategies produce memories from mixed event types in one batch."""
+        # --- Seed events that exercise each strategy ---
+
+        # Group A: 2 exact duplicates -> content_hash dedup
+        for _ in range(2):
+            log_raw_event(
+                db_path=db, session_id="sess-1", project="p",
+                event_type="tool_use", tool_name="Read",
+                subject="src/config.py",
+                summary="Read config loader initialization",
+                tags="python,config",
+            )
+
+        # Group B: 2 similar events (Jaccard >= 0.6) -> jaccard_similarity
+        # These share "authentication", "module", "configuration", "handler"
+        # but differ enough to not be exact duplicates
+        log_raw_event(
+            db_path=db, session_id="sess-1", project="p",
+            event_type="tool_use", tool_name="Read",
+            subject="src/auth.py",
+            summary="authentication module configuration handler validates tokens",
+            tags="python,auth,security",
+        )
+        log_raw_event(
+            db_path=db, session_id="sess-1", project="p",
+            event_type="tool_use", tool_name="Read",
+            subject="src/auth.py",
+            summary="authentication module configuration handler validates sessions",
+            tags="python,auth,security",
+        )
+
+        # Group C: 2 events with shared tags (python,db) -> tag_grouping
+        # These must NOT be Jaccard-similar (different words) and NOT exact dupes
+        log_raw_event(
+            db_path=db, session_id="sess-1", project="p",
+            event_type="tool_use", tool_name="Edit",
+            subject="src/models.py",
+            summary="alpha schema creation",
+            tags="python,db",
+        )
+        log_raw_event(
+            db_path=db, session_id="sess-1", project="p",
+            event_type="tool_use", tool_name="Edit",
+            subject="src/migrations.py",
+            summary="beta migration runner",
+            tags="python,db",
+        )
+
+        # Group D: 1 unique event with no tag overlap -> temporal_clustering fallback
+        log_raw_event(
+            db_path=db, session_id="sess-1", project="p",
+            event_type="tool_use", tool_name="Edit",
+            subject="README.md",
+            summary="Updated project documentation overview",
+            tags="docs",
+        )
+
+        result = consolidate_batch(db_path=db, namespace="ns")
+
+        assert result["status"] == "success"
+        assert result["events_consolidated"] == 7
+        import uuid as uuid_mod
+        uuid_mod.UUID(result["batch_id"], version=4)
+
+        # All events should be consumed
+        remaining = get_unconsolidated_events(db, limit=50)
+        assert remaining == []
+
+        # Verify memories by strategy
+        conn = get_connection(db)
+        cursor = conn.execute(
+            "SELECT content, memory_type, namespace, meta FROM memories "
+            "WHERE namespace = ? ORDER BY content",
+            ("ns",),
+        )
+        rows = cursor.fetchall()
+
+        # Classify memories by strategy
+        by_strategy = {}
+        for row in rows:
+            meta = json.loads(row[3])
+            strategy = meta["strategy"]
+            by_strategy.setdefault(strategy, []).append({
+                "content": row[0],
+                "memory_type": row[1],
+                "namespace": row[2],
+                "meta": meta,
+            })
+
+        # Strategy 1: content_hash should have 1 memory from the 2 duplicate events
+        assert len(by_strategy.get("content_hash", [])) == 1
+        ch_mem = by_strategy["content_hash"][0]
+        assert ch_mem["content"] == "[Read] src/config.py: Read config loader initialization"
+        assert ch_mem["memory_type"] == "fact"
+        assert ch_mem["namespace"] == "ns"
+        assert ch_mem["meta"]["source"] == "heuristic"
+        assert ch_mem["meta"]["event_count"] == 2
+        assert ch_mem["meta"]["batch_id"] == result["batch_id"]
+
+        # Strategy 2: jaccard_similarity should have 1 memory from the 2 similar events
+        assert len(by_strategy.get("jaccard_similarity", [])) == 1
+        jac_mem = by_strategy["jaccard_similarity"][0]
+        assert jac_mem["meta"]["source"] == "heuristic"
+        assert jac_mem["meta"]["strategy"] == "jaccard_similarity"
+        assert jac_mem["meta"]["event_count"] == 2
+        assert jac_mem["meta"]["batch_id"] == result["batch_id"]
+
+        # Strategy 3: tag_grouping should have 1 memory from the 2 shared-tag events
+        assert len(by_strategy.get("tag_grouping", [])) == 1
+        tg_mem = by_strategy["tag_grouping"][0]
+        assert tg_mem["content"] == (
+            "Related activities:\n"
+            "- src/models.py: alpha schema creation\n"
+            "- src/migrations.py: beta migration runner"
+        )
+        assert tg_mem["meta"]["source"] == "heuristic"
+        assert tg_mem["meta"]["strategy"] == "tag_grouping"
+        assert tg_mem["meta"]["event_count"] == 2
+        assert tg_mem["meta"]["batch_id"] == result["batch_id"]
+
+        # Strategy 4: temporal_clustering should have 1 memory (the README event)
+        assert len(by_strategy.get("temporal_clustering", [])) == 1
+        tc_mem = by_strategy["temporal_clustering"][0]
+        assert tc_mem["content"] == "[Edit] README.md: Updated project documentation overview"
+        assert tc_mem["meta"]["source"] == "heuristic"
+        assert tc_mem["meta"]["strategy"] == "temporal_clustering"
+        assert tc_mem["meta"]["event_count"] == 1
+        assert tc_mem["meta"]["batch_id"] == result["batch_id"]
+
+        # Total: 4 memories from 7 events
+        assert result["memories_created"] == 4
+
+        # Verify audit log has correct compression ratio
+        cursor = conn.execute(
+            "SELECT details FROM memory_audit_log WHERE action = 'consolidation_complete'"
+        )
+        audit_row = cursor.fetchone()
+        assert audit_row is not None
+        audit_details = json.loads(audit_row[0])
+        assert audit_details["batch_id"] == result["batch_id"]
+        assert audit_details["events_consolidated"] == 7
+        assert audit_details["memories_created"] == 4
+        assert audit_details["compression_ratio"] == round(4 / 7, 3)
+        assert set(audit_details["strategies_used"]) == {
+            "content_hash", "jaccard_similarity", "tag_grouping", "temporal_clustering",
+        }
 
     def test_strategies_run_in_pipeline_order(self, db):
         """Strategies consume events in order: content_hash, jaccard, tag_grouping, temporal."""

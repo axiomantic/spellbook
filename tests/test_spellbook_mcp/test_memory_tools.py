@@ -848,6 +848,71 @@ class TestDoStoreMemories:
         assert meta["source"] == "client_llm"
         assert meta["tags"] == ["meta"]
 
+    def test_store_whitespace_only_content_accepted(self, db):
+        """Whitespace-only content passes parse_llm_response (truthy string) and is stored."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {"content": "   ", "memory_type": "fact", "tags": [], "citations": []},
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        # Whitespace-only is truthy in Python, so parse_llm_response accepts it
+        assert result["status"] == "success"
+        assert result["memories_created"] == 1
+        assert len(result["memory_ids"]) == 1
+        mem = get_memory(db, result["memory_ids"][0])
+        assert mem["content"] == "   "
+        assert mem["memory_type"] == "fact"
+
+    def test_store_missing_content_field_rejected(self, db):
+        """Memories missing 'content' key entirely are rejected."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {"memory_type": "fact", "tags": ["test"], "citations": []},
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        assert result["status"] == "error"
+        assert "No valid memories found" in result["error"]
+
+    def test_store_partial_valid_memories(self, db):
+        """Mix of valid and invalid memories: only valid ones are stored."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {"memory_type": "fact", "tags": []},  # Missing content -> skipped
+                {"content": "", "memory_type": "fact"},  # Empty content -> skipped
+                {"content": "Valid memory here", "memory_type": "rule", "tags": ["good"]},
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        assert result["memories_created"] == 1
+        assert len(result["memory_ids"]) == 1
+        mem = get_memory(db, result["memory_ids"][0])
+        assert mem["content"] == "Valid memory here"
+        assert mem["memory_type"] == "rule"
+
     def test_store_ignores_invalid_event_ids(self, db):
         """Non-integer event IDs in event_ids_str are silently ignored."""
         from spellbook_mcp.memory_tools import do_store_memories
@@ -871,6 +936,196 @@ class TestDoStoreMemories:
         )
         assert result["status"] == "success"
         assert result["events_consolidated"] == 0
+
+
+class TestTwoToolPatternEndToEnd:
+    """Test the full get_unconsolidated -> parse -> store_memories flow."""
+
+    def _log_events(self, db, count=3, project="test-project"):
+        """Helper to log raw events and return their IDs."""
+        event_ids = []
+        for i in range(count):
+            eid = log_raw_event(
+                db_path=db,
+                session_id="sess-1",
+                project=project,
+                event_type="tool_use",
+                tool_name="Read",
+                subject=f"src/file{i}.py",
+                summary=f"Read file{i}.py ({i * 10 + 5} lines)",
+                tags="python,read",
+            )
+            event_ids.append(eid)
+        return event_ids
+
+    def test_full_flow_get_parse_store(self, db):
+        """Full two-tool pattern: get events, construct memories, store them."""
+        from spellbook_mcp.memory_tools import (
+            do_get_unconsolidated,
+            do_store_memories,
+            MEMORY_STORE_SCHEMA,
+        )
+
+        # Step 1: Log some raw events
+        event_ids = self._log_events(db, count=3, project="test-project")
+
+        # Step 2: Get unconsolidated events (simulates client calling memory_get_unconsolidated)
+        get_result = do_get_unconsolidated(db_path=db, namespace="test-project")
+        assert get_result["count"] == 3
+        assert len(get_result["events"]) == 3
+        assert get_result["consolidation_prompt"] != ""
+        assert get_result["response_schema"] == json.dumps(MEMORY_STORE_SCHEMA)
+
+        # Step 3: Client "synthesizes" memories from the events (simulating LLM output)
+        # In real usage, the client LLM would parse the prompt and produce this JSON
+        synthesized_memories = json.dumps({
+            "memories": [
+                {
+                    "content": "Project reads file0.py, file1.py, and file2.py as part of initial codebase exploration",
+                    "memory_type": "fact",
+                    "tags": ["python", "exploration", "read"],
+                    "citations": [
+                        {"file_path": "src/file0.py"},
+                        {"file_path": "src/file1.py"},
+                        {"file_path": "src/file2.py"},
+                    ],
+                },
+            ]
+        })
+
+        # Step 4: Store the synthesized memories and mark events consolidated
+        event_ids_str = ",".join(str(eid) for eid in event_ids)
+        store_result = do_store_memories(
+            db_path=db,
+            memories_json=synthesized_memories,
+            event_ids_str=event_ids_str,
+            namespace="test-project",
+        )
+        assert store_result["status"] == "success"
+        assert store_result["memories_created"] == 1
+        assert store_result["events_consolidated"] == 3
+        assert len(store_result["memory_ids"]) == 1
+
+        # Step 5: Verify events are now consolidated
+        get_result_after = do_get_unconsolidated(db_path=db, namespace="test-project")
+        assert get_result_after["count"] == 0
+        assert get_result_after["events"] == []
+        assert get_result_after["consolidation_prompt"] == ""
+
+        # Step 6: Verify the stored memory has correct content and meta
+        mem = get_memory(db, store_result["memory_ids"][0])
+        assert mem["content"] == (
+            "Project reads file0.py, file1.py, and file2.py as part of initial codebase exploration"
+        )
+        assert mem["memory_type"] == "fact"
+        assert mem["namespace"] == "test-project"
+        meta = json.loads(mem["meta"])
+        assert meta["source"] == "client_llm"
+        assert meta["tags"] == ["python", "exploration", "read"]
+
+        # Step 7: Verify citations were stored
+        conn = get_connection(db)
+        cursor = conn.execute(
+            "SELECT file_path FROM memory_citations WHERE memory_id = ? ORDER BY file_path",
+            (store_result["memory_ids"][0],),
+        )
+        citation_paths = [row[0] for row in cursor.fetchall()]
+        assert citation_paths == ["src/file0.py", "src/file1.py", "src/file2.py"]
+
+        # Step 8: Verify events are marked with batch_id in DB
+        for eid in event_ids:
+            cursor = conn.execute(
+                "SELECT consolidated, batch_id FROM raw_events WHERE id = ?", (eid,)
+            )
+            row = cursor.fetchone()
+            assert row[0] == 1
+            assert row[1] is not None
+
+    def test_get_then_store_with_include_consolidated(self, db):
+        """After storing, include_consolidated=True still shows recently consolidated events."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated, do_store_memories
+
+        # Log and consolidate via store
+        event_ids = self._log_events(db, count=2, project="test-project")
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Consolidated memory from first batch",
+                    "memory_type": "fact",
+                    "tags": ["batch1"],
+                    "citations": [],
+                },
+            ]
+        })
+        do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            event_ids_str=",".join(str(eid) for eid in event_ids),
+            namespace="test-project",
+        )
+
+        # Log new unconsolidated events
+        new_ids = self._log_events(db, count=1, project="test-project")
+
+        # Without include_consolidated, only new events
+        result_without = do_get_unconsolidated(db_path=db, namespace="test-project")
+        assert result_without["count"] == 1
+        assert result_without["events"][0]["id"] == new_ids[0]
+
+        # With include_consolidated, should get both new and recently consolidated
+        result_with = do_get_unconsolidated(
+            db_path=db, namespace="test-project", include_consolidated=True,
+        )
+        returned_ids = {e["id"] for e in result_with["events"]}
+        assert new_ids[0] in returned_ids
+        for eid in event_ids:
+            assert eid in returned_ids
+        assert result_with["count"] == 3
+
+    def test_store_multiple_memories_from_single_batch(self, db):
+        """Client produces multiple memories from a single get_unconsolidated call."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated, do_store_memories
+
+        event_ids = self._log_events(db, count=4, project="test-project")
+
+        # Client produces 2 memories from 4 events
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Files 0 and 1 are related to data processing",
+                    "memory_type": "fact",
+                    "tags": ["data"],
+                    "citations": [{"file_path": "src/file0.py"}, {"file_path": "src/file1.py"}],
+                },
+                {
+                    "content": "Files 2 and 3 handle API endpoints",
+                    "memory_type": "fact",
+                    "tags": ["api"],
+                    "citations": [{"file_path": "src/file2.py"}, {"file_path": "src/file3.py"}],
+                },
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            event_ids_str=",".join(str(eid) for eid in event_ids),
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        assert result["memories_created"] == 2
+        assert result["events_consolidated"] == 4
+        assert len(result["memory_ids"]) == 2
+
+        # Verify both memories are retrievable
+        mem1 = get_memory(db, result["memory_ids"][0])
+        assert mem1["content"] == "Files 0 and 1 are related to data processing"
+        mem2 = get_memory(db, result["memory_ids"][1])
+        assert mem2["content"] == "Files 2 and 3 handle API endpoints"
+
+        # No unconsolidated events remain
+        remaining = do_get_unconsolidated(db_path=db, namespace="test-project")
+        assert remaining["count"] == 0
 
 
 class TestMemoryToolsServerRegistration:
