@@ -851,10 +851,11 @@ class TestConflictResolution:
             "Fool": "APPROVE",
         }
 
-        consensus, return_to = determine_consensus(verdicts, "DESIGN")
+        consensus, return_to, needs_confirmation = determine_consensus(verdicts, "DESIGN")
 
         assert consensus is True
         assert return_to is None
+        assert needs_confirmation is False
 
     def test_determine_consensus_any_iterate(self):
         """determine_consensus returns False when any ITERATE."""
@@ -866,7 +867,7 @@ class TestConflictResolution:
             "Fool": "APPROVE",
         }
 
-        consensus, return_to = determine_consensus(verdicts, "DESIGN")
+        consensus, return_to, needs_confirmation = determine_consensus(verdicts, "DESIGN")
 
         assert consensus is False
 
@@ -880,7 +881,7 @@ class TestConflictResolution:
             "Fool": "APPROVE",
         }
 
-        consensus, return_to = determine_consensus(verdicts, "DESIGN")
+        consensus, return_to, needs_confirmation = determine_consensus(verdicts, "DESIGN")
 
         # Should be True since ABSTAIN doesn't count against
         assert consensus is True
@@ -895,7 +896,7 @@ class TestConflictResolution:
             "Hermit": "APPROVE",
         }
 
-        consensus, return_to = determine_consensus(verdicts, "IMPLEMENT")
+        consensus, return_to, needs_confirmation = determine_consensus(verdicts, "IMPLEMENT")
 
         assert consensus is False
         assert return_to is not None
@@ -905,7 +906,7 @@ class TestConflictResolution:
         """determine_consensus handles empty verdicts."""
         from spellbook_mcp.forged.roundtable import determine_consensus
 
-        consensus, return_to = determine_consensus({}, "DESIGN")
+        consensus, return_to, needs_confirmation = determine_consensus({}, "DESIGN")
 
         # Empty verdicts should be treated as no objections (consensus)
         assert consensus is True
@@ -1058,7 +1059,7 @@ class TestDetermineConsensusBackwardCompatible:
 
         verdicts = {"Magician": "ITERATE", "Hermit": "APPROVE"}
 
-        consensus, return_to = determine_consensus(verdicts, "IMPLEMENT")
+        consensus, return_to, needs_confirmation = determine_consensus(verdicts, "IMPLEMENT")
 
         assert consensus is False
         assert return_to == "IMPLEMENT"
@@ -1069,10 +1070,94 @@ class TestDetermineConsensusBackwardCompatible:
 
         verdicts = {"Magician": "APPROVE", "Hermit": "APPROVE"}
 
-        consensus, return_to = determine_consensus(verdicts, "DESIGN")
+        consensus, return_to, needs_confirmation = determine_consensus(verdicts, "DESIGN")
 
         assert consensus is True
         assert return_to is None
+        assert needs_confirmation is False
+
+
+class TestDetermineConsensusNeedsConfirmation:
+    """Tests for needs_confirmation flag in determine_consensus."""
+
+    def test_iterate_verdict_returns_needs_confirmation_false_for_same_stage(self):
+        """determine_consensus with ITERATE returns needs_confirmation=False when no fractal suggestion (returns current stage)."""
+        from spellbook_mcp.forged.roundtable import determine_consensus
+
+        verdicts = {"Magician": "ITERATE", "Hermit": "APPROVE"}
+
+        consensus, return_to, needs_confirmation = determine_consensus(verdicts, "IMPLEMENT")
+
+        assert consensus is False
+        assert return_to == "IMPLEMENT"
+        assert needs_confirmation is False
+
+    def test_approve_returns_needs_confirmation_false(self):
+        """determine_consensus with APPROVE returns needs_confirmation=False."""
+        from spellbook_mcp.forged.roundtable import determine_consensus
+
+        verdicts = {"Magician": "APPROVE", "Hermit": "APPROVE"}
+
+        consensus, return_to, needs_confirmation = determine_consensus(verdicts, "IMPLEMENT")
+
+        assert consensus is True
+        assert return_to is None
+        assert needs_confirmation is False
+
+    def test_empty_verdicts_returns_needs_confirmation_false(self):
+        """determine_consensus with empty verdicts returns needs_confirmation=False."""
+        from spellbook_mcp.forged.roundtable import determine_consensus
+
+        consensus, return_to, needs_confirmation = determine_consensus({}, "DESIGN")
+
+        assert consensus is True
+        assert return_to is None
+        assert needs_confirmation is False
+
+
+class TestProcessRoundtableResponseNeedsConfirmation:
+    """Tests for needs_confirmation in process_roundtable_response output."""
+
+    def test_process_response_includes_needs_confirmation(self):
+        """process_roundtable_response output dict includes needs_confirmation."""
+        from spellbook_mcp.forged.roundtable import process_roundtable_response
+
+        response = """
+        **Magician**: Looks good.
+
+        Verdict: APPROVE
+
+        **Hermit**: Agreed.
+
+        Verdict: APPROVE
+        """
+
+        result = process_roundtable_response(response=response, stage="IMPLEMENT", iteration=1)
+
+        assert "needs_confirmation" in result
+        assert result["needs_confirmation"] is False
+
+    def test_process_response_iterate_includes_needs_confirmation(self):
+        """process_roundtable_response with ITERATE includes needs_confirmation."""
+        from spellbook_mcp.forged.roundtable import process_roundtable_response
+
+        response = """
+        **Magician**: Code has issues.
+
+        Concerns:
+        - Missing error handling
+
+        Suggestions:
+        - Add validation
+
+        Verdict: ITERATE
+        Severity: blocking
+        """
+
+        result = process_roundtable_response(response=response, stage="IMPLEMENT", iteration=1)
+
+        assert "needs_confirmation" in result
+        assert isinstance(result["needs_confirmation"], bool)
 
 
 # =============================================================================

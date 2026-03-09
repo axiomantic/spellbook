@@ -32,11 +32,14 @@ def fractal_to_feedback(
     """
     feedbacks = []
 
+    # Compute suggested return stage ONCE for all convergence findings
+    suggested_stage = suggest_return_stage(harvest_result, current_stage)
+
     # Map convergence findings (HIGH confidence -> blocking/significant)
     for finding in harvest_result.get("findings", []):
         if finding.get("type") == "convergence":
             feedbacks.append(
-                _convergence_to_feedback(finding, current_stage, iteration, harvest_result)
+                _convergence_to_feedback(finding, current_stage, iteration, suggested_stage, harvest_result)
             )
         elif finding.get("type") == "tension" and finding.get("status") == "UNRESOLVED":
             feedbacks.append(
@@ -149,14 +152,12 @@ def _convergence_to_feedback(
     finding: dict,
     stage: str,
     iteration: int,
-    harvest_result: dict,
+    suggested_stage: str | None,
+    harvest_result: dict | None = None,
 ) -> Feedback:
     """Map a convergence finding to Feedback."""
     supporting = finding.get("supporting_nodes", "multiple")
     insight = finding.get("insight", "Fractal analysis identified convergent concern")
-
-    # Derive return_to from synthesis if available
-    suggested_stage = suggest_return_stage(harvest_result, stage)
 
     return Feedback(
         source="fractal-analysis",
@@ -167,7 +168,7 @@ def _convergence_to_feedback(
             f"Identified via fractal exploration with {supporting} "
             f"independent branches converging on same conclusion"
         ),
-        suggestion=_extract_remediation(insight, harvest_result),
+        suggestion=_extract_remediation(insight, harvest_result or {}),
         severity="blocking",
         iteration=iteration,
     )

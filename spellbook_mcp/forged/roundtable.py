@@ -137,7 +137,7 @@ def has_conflict(verdicts: dict[str, str]) -> bool:
 
 def determine_consensus(
     verdicts: dict[str, str], current_stage: str
-) -> tuple[bool, Optional[str]]:
+) -> tuple[bool, Optional[str], bool]:
     """Determine consensus and return stage if iteration needed.
 
     Args:
@@ -145,12 +145,13 @@ def determine_consensus(
         current_stage: The current workflow stage
 
     Returns:
-        Tuple of (consensus_reached, return_to_stage)
+        Tuple of (consensus_reached, return_to_stage, needs_confirmation)
         - consensus_reached: True if all active verdicts are APPROVE
         - return_to_stage: Stage to return to if ITERATE, else None
+        - needs_confirmation: True if return stage is 2+ stages back
     """
     if not verdicts:
-        return True, None
+        return True, None, False
 
     # Filter out ABSTAIN verdicts
     active_verdicts = [
@@ -159,16 +160,16 @@ def determine_consensus(
 
     if not active_verdicts:
         # All abstained
-        return True, None
+        return True, None, False
 
     # Check if any ITERATE
     if "ITERATE" in active_verdicts:
         # Determine which stage to return to based on current stage
-        return_to, _needs_confirmation = _determine_return_stage(current_stage)
-        return False, return_to
+        return_to, needs_confirmation = _determine_return_stage(current_stage)
+        return False, return_to, needs_confirmation
 
     # All active verdicts are APPROVE
-    return True, None
+    return True, None, False
 
 
 def _determine_return_stage(
@@ -528,7 +529,7 @@ def process_roundtable_response(
     verdicts = {pv.archetype: pv.verdict for pv in parsed_verdicts}
 
     # Determine consensus
-    consensus, return_to = determine_consensus(verdicts, stage)
+    consensus, return_to, needs_confirmation = determine_consensus(verdicts, stage)
 
     # Build feedback from ITERATE verdicts
     feedback = []
@@ -553,5 +554,6 @@ def process_roundtable_response(
         "verdicts": verdicts,
         "feedback": feedback,
         "return_to": return_to,
+        "needs_confirmation": needs_confirmation,
         "parsed_verdicts": [pv.to_dict() for pv in parsed_verdicts],
     }
