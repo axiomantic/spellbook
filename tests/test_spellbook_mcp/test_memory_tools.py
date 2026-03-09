@@ -5,7 +5,12 @@ import json
 import pytest
 
 from spellbook_mcp.db import init_db, get_connection, close_all_connections
-from spellbook_mcp.memory_store import insert_memory, get_memory
+from spellbook_mcp.memory_store import (
+    insert_memory,
+    get_memory,
+    log_raw_event,
+    mark_events_consolidated,
+)
 
 
 @pytest.fixture
@@ -298,3 +303,570 @@ class TestEventLogging:
         row = cursor.fetchone()
         assert row[0] == "file_edit"
         assert row[1] == "python,edit"
+
+
+class TestMemoryStoreSchema:
+    """Test the MEMORY_STORE_SCHEMA constant."""
+
+    def test_schema_structure(self):
+        """MEMORY_STORE_SCHEMA has correct top-level structure."""
+        from spellbook_mcp.memory_tools import MEMORY_STORE_SCHEMA
+
+        assert MEMORY_STORE_SCHEMA == {
+            "type": "object",
+            "required": ["memories"],
+            "properties": {
+                "memories": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["content"],
+                        "properties": {
+                            "content": {
+                                "type": "string",
+                                "description": "The synthesized memory content. Non-empty.",
+                            },
+                            "memory_type": {
+                                "type": "string",
+                                "enum": ["fact", "rule", "antipattern", "preference", "decision"],
+                                "default": "fact",
+                                "description": "Category of the memory.",
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "maxItems": 20,
+                                "description": "Keywords for retrieval. Max 20.",
+                            },
+                            "citations": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "required": ["file_path"],
+                                    "properties": {
+                                        "file_path": {"type": "string"},
+                                        "line_range": {"type": "string"},
+                                        "snippet": {"type": "string"},
+                                    },
+                                },
+                                "description": "Source file references.",
+                            },
+                        },
+                    },
+                },
+            },
+        }
+
+    def test_schema_is_valid_json_serializable(self):
+        """Schema can be JSON-serialized (needed for response_schema field)."""
+        from spellbook_mcp.memory_tools import MEMORY_STORE_SCHEMA
+
+        serialized = json.dumps(MEMORY_STORE_SCHEMA)
+        deserialized = json.loads(serialized)
+        assert deserialized == MEMORY_STORE_SCHEMA
+
+
+class TestDoGetUnconsolidated:
+    """Test the do_get_unconsolidated function."""
+
+    def _log_events(self, db, count=3, project="test-project"):
+        """Helper to log raw events and return their IDs."""
+        event_ids = []
+        for i in range(count):
+            eid = log_raw_event(
+                db_path=db,
+                session_id="sess-1",
+                project=project,
+                event_type="tool_use",
+                tool_name="Read",
+                subject=f"src/file{i}.py",
+                summary=f"Read file{i}.py ({i * 10 + 5} lines)",
+                tags="python,read",
+            )
+            event_ids.append(eid)
+        return event_ids
+
+    def test_no_events_returns_empty(self, db):
+        """No unconsolidated events returns empty result with schema."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated, MEMORY_STORE_SCHEMA
+
+        result = do_get_unconsolidated(db_path=db, namespace="test-project")
+        assert result == {
+            "events": [],
+            "count": 0,
+            "consolidation_prompt": "",
+            "response_schema": json.dumps(MEMORY_STORE_SCHEMA),
+        }
+
+    def test_returns_unconsolidated_events(self, db):
+        """Returns unconsolidated events with count, prompt, and schema."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated, MEMORY_STORE_SCHEMA
+
+        event_ids = self._log_events(db, count=2, project="test-project")
+
+        result = do_get_unconsolidated(db_path=db, namespace="test-project")
+
+        assert result["count"] == 2
+        assert len(result["events"]) == 2
+        # Verify event structure
+        assert result["events"][0]["id"] == event_ids[0]
+        assert result["events"][0]["session_id"] == "sess-1"
+        assert result["events"][0]["project"] == "test-project"
+        assert result["events"][0]["event_type"] == "tool_use"
+        assert result["events"][0]["tool_name"] == "Read"
+        assert result["events"][0]["subject"] == "src/file0.py"
+        assert result["events"][0]["summary"] == "Read file0.py (5 lines)"
+        assert result["events"][0]["tags"] == "python,read"
+        assert isinstance(result["events"][0]["timestamp"], str)
+
+        assert result["events"][1]["id"] == event_ids[1]
+        assert result["events"][1]["subject"] == "src/file1.py"
+        assert result["events"][1]["summary"] == "Read file1.py (15 lines)"
+
+        # Prompt should contain observations
+        assert "src/file0.py" in result["consolidation_prompt"]
+        assert "src/file1.py" in result["consolidation_prompt"]
+        assert "Read file0.py (5 lines)" in result["consolidation_prompt"]
+
+        # Schema should be JSON-serialized MEMORY_STORE_SCHEMA
+        assert result["response_schema"] == json.dumps(MEMORY_STORE_SCHEMA)
+
+    def test_namespace_filtering(self, db):
+        """Only events matching namespace are returned."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated
+
+        self._log_events(db, count=2, project="project-a")
+        self._log_events(db, count=1, project="project-b")
+
+        result = do_get_unconsolidated(db_path=db, namespace="project-a")
+        assert result["count"] == 2
+        for event in result["events"]:
+            assert event["project"] == "project-a"
+
+    def test_empty_namespace_returns_all(self, db):
+        """Empty namespace string returns all events."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated
+
+        self._log_events(db, count=2, project="project-a")
+        self._log_events(db, count=1, project="project-b")
+
+        result = do_get_unconsolidated(db_path=db, namespace="")
+        assert result["count"] == 3
+
+    def test_limit_parameter(self, db):
+        """Limit parameter caps number of returned events."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated
+
+        self._log_events(db, count=5, project="test-project")
+
+        result = do_get_unconsolidated(db_path=db, namespace="test-project", limit=2)
+        assert result["count"] == 2
+        assert len(result["events"]) == 2
+
+    def test_include_consolidated_merges_events(self, db):
+        """include_consolidated=True merges recently consolidated events."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated
+
+        # Log and consolidate some events
+        consolidated_ids = self._log_events(db, count=2, project="test-project")
+        mark_events_consolidated(db, consolidated_ids, "batch-1")
+
+        # Log some unconsolidated events
+        unconsolidated_ids = self._log_events(db, count=1, project="test-project")
+
+        result = do_get_unconsolidated(
+            db_path=db, namespace="test-project", include_consolidated=True,
+        )
+        # Should have unconsolidated + recently consolidated
+        returned_ids = [e["id"] for e in result["events"]]
+        assert unconsolidated_ids[0] in returned_ids
+        # Consolidated events should also appear (they were consolidated recently)
+        for cid in consolidated_ids:
+            assert cid in returned_ids
+        assert result["count"] == 3
+
+    def test_include_consolidated_respects_limit(self, db):
+        """include_consolidated=True still respects the total limit."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated
+
+        # Log and consolidate events
+        consolidated_ids = self._log_events(db, count=3, project="test-project")
+        mark_events_consolidated(db, consolidated_ids, "batch-1")
+
+        # Log unconsolidated events
+        self._log_events(db, count=3, project="test-project")
+
+        result = do_get_unconsolidated(
+            db_path=db, namespace="test-project", include_consolidated=True, limit=4,
+        )
+        # Should cap at limit=4 total
+        assert result["count"] == 4
+        assert len(result["events"]) == 4
+
+    def test_include_consolidated_no_duplicates(self, db):
+        """include_consolidated=True does not duplicate events."""
+        from spellbook_mcp.memory_tools import do_get_unconsolidated
+
+        # All unconsolidated, none consolidated
+        event_ids = self._log_events(db, count=3, project="test-project")
+
+        result = do_get_unconsolidated(
+            db_path=db, namespace="test-project", include_consolidated=True,
+        )
+        returned_ids = [e["id"] for e in result["events"]]
+        assert len(returned_ids) == len(set(returned_ids))  # No duplicates
+        assert result["count"] == 3
+
+
+class TestDoStoreMemories:
+    """Test the do_store_memories function."""
+
+    def _log_events(self, db, count=3, project="test-project"):
+        """Helper to log raw events and return their IDs."""
+        event_ids = []
+        for i in range(count):
+            eid = log_raw_event(
+                db_path=db,
+                session_id="sess-1",
+                project=project,
+                event_type="tool_use",
+                tool_name="Read",
+                subject=f"src/file{i}.py",
+                summary=f"Read file{i}.py ({i * 10 + 5} lines)",
+                tags="python,read",
+            )
+            event_ids.append(eid)
+        return event_ids
+
+    def test_store_valid_memories(self, db):
+        """Stores valid memories and returns success with correct counts."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Project uses pytest for testing",
+                    "memory_type": "fact",
+                    "tags": ["pytest", "testing"],
+                    "citations": [{"file_path": "tests/conftest.py"}],
+                },
+                {
+                    "content": "Always run linter before commit",
+                    "memory_type": "rule",
+                    "tags": ["linting", "workflow"],
+                    "citations": [],
+                },
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        assert result["memories_created"] == 2
+        assert result["events_consolidated"] == 0
+        assert len(result["memory_ids"]) == 2
+
+        # Verify memories were actually stored with correct content
+        mem1 = get_memory(db, result["memory_ids"][0])
+        assert mem1["content"] == "Project uses pytest for testing"
+        assert mem1["memory_type"] == "fact"
+        assert mem1["namespace"] == "test-project"
+        meta1 = json.loads(mem1["meta"])
+        assert meta1["source"] == "client_llm"
+        assert meta1["tags"] == ["pytest", "testing"]
+
+        mem2 = get_memory(db, result["memory_ids"][1])
+        assert mem2["content"] == "Always run linter before commit"
+        assert mem2["memory_type"] == "rule"
+        meta2 = json.loads(mem2["meta"])
+        assert meta2["source"] == "client_llm"
+
+    def test_store_bare_list_format(self, db):
+        """Accepts bare list format (not wrapped in {"memories": [...]})."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps([
+            {
+                "content": "Use type hints everywhere",
+                "memory_type": "rule",
+                "tags": ["typing"],
+                "citations": [],
+            },
+        ])
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        assert result["memories_created"] == 1
+        assert len(result["memory_ids"]) == 1
+
+        mem = get_memory(db, result["memory_ids"][0])
+        assert mem["content"] == "Use type hints everywhere"
+        assert mem["memory_type"] == "rule"
+
+    def test_store_invalid_json(self, db):
+        """Invalid JSON returns error."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json="not valid json{{{",
+            namespace="test-project",
+        )
+        assert result["status"] == "error"
+        assert "Invalid JSON" in result["error"]
+
+    def test_store_non_object_non_array(self, db):
+        """Non-object/non-array JSON returns error."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json='"just a string"',
+            namespace="test-project",
+        )
+        assert result["status"] == "error"
+        assert "Expected JSON object or array" in result["error"]
+
+    def test_store_empty_content_rejected(self, db):
+        """Memories with empty content are rejected."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {"content": "", "memory_type": "fact", "tags": [], "citations": []},
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        assert result["status"] == "error"
+        assert "No valid memories found" in result["error"]
+
+    def test_store_invalid_memory_type_defaults_to_fact(self, db):
+        """Invalid memory_type is silently corrected to 'fact'."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Some memory with bad type",
+                    "memory_type": "invalid_type",
+                    "tags": ["test"],
+                    "citations": [],
+                },
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        assert result["memories_created"] == 1
+
+        mem = get_memory(db, result["memory_ids"][0])
+        assert mem["memory_type"] == "fact"
+
+    def test_store_tags_capped_at_20(self, db):
+        """Tags list is capped at 20 items."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        too_many_tags = [f"tag{i}" for i in range(25)]
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Memory with too many tags",
+                    "memory_type": "fact",
+                    "tags": too_many_tags,
+                    "citations": [],
+                },
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        assert result["memories_created"] == 1
+
+        mem = get_memory(db, result["memory_ids"][0])
+        meta = json.loads(mem["meta"])
+        assert len(meta["tags"]) == 20
+        assert meta["tags"] == [f"tag{i}" for i in range(20)]
+
+    def test_store_marks_events_consolidated(self, db):
+        """Providing event_ids_str marks those events as consolidated."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        event_ids = self._log_events(db, count=3, project="test-project")
+
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Synthesized memory from events",
+                    "memory_type": "fact",
+                    "tags": ["synthesis"],
+                    "citations": [],
+                },
+            ]
+        })
+
+        event_ids_str = ",".join(str(eid) for eid in event_ids)
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            event_ids_str=event_ids_str,
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        assert result["events_consolidated"] == 3
+
+        # Verify events are marked consolidated in DB
+        conn = get_connection(db)
+        for eid in event_ids:
+            cursor = conn.execute(
+                "SELECT consolidated, batch_id FROM raw_events WHERE id = ?", (eid,)
+            )
+            row = cursor.fetchone()
+            assert row[0] == 1  # consolidated = 1
+            assert row[1] is not None  # batch_id assigned
+
+    def test_store_computes_bibliographic_coupling(self, db):
+        """New memories get bibliographic coupling links computed."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        # Insert an existing memory citing a file
+        existing_id = insert_memory(
+            db_path=db,
+            content="Existing memory about auth module",
+            memory_type="fact",
+            namespace="test-project",
+            tags=["auth"],
+            citations=[{"file_path": "src/auth.py", "line_range": "1-50", "snippet": "class Auth:"}],
+        )
+
+        # Store a new memory citing the same file
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Auth module needs refactoring",
+                    "memory_type": "decision",
+                    "tags": ["auth", "refactor"],
+                    "citations": [{"file_path": "src/auth.py"}],
+                },
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        new_id = result["memory_ids"][0]
+
+        # Verify bibliographic link was created
+        conn = get_connection(db)
+        a, b = (existing_id, new_id) if existing_id < new_id else (new_id, existing_id)
+        cursor = conn.execute(
+            "SELECT link_type, weight FROM memory_links "
+            "WHERE memory_a = ? AND memory_b = ?",
+            (a, b),
+        )
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "bibliographic"
+        assert row[1] == 1.0  # Both cite only src/auth.py, Jaccard = 1.0
+
+    def test_store_dedup_via_content_hash(self, db):
+        """Duplicate content returns existing memory ID (dedup)."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Duplicate content test",
+                    "memory_type": "fact",
+                    "tags": [],
+                    "citations": [],
+                },
+            ]
+        })
+
+        result1 = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        result2 = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+
+        assert result1["status"] == "success"
+        assert result2["status"] == "success"
+        # Same memory ID returned due to content hash dedup
+        assert result1["memory_ids"][0] == result2["memory_ids"][0]
+
+    def test_store_with_source_meta(self, db):
+        """Stored memories have extra_meta={"source": "client_llm"}."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Memory with source tracking",
+                    "memory_type": "fact",
+                    "tags": ["meta"],
+                    "citations": [],
+                },
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            namespace="test-project",
+        )
+        mem = get_memory(db, result["memory_ids"][0])
+        meta = json.loads(mem["meta"])
+        assert meta["source"] == "client_llm"
+        assert meta["tags"] == ["meta"]
+
+    def test_store_ignores_invalid_event_ids(self, db):
+        """Non-integer event IDs in event_ids_str are silently ignored."""
+        from spellbook_mcp.memory_tools import do_store_memories
+
+        memories_json = json.dumps({
+            "memories": [
+                {
+                    "content": "Memory with bad event ids",
+                    "memory_type": "fact",
+                    "tags": [],
+                    "citations": [],
+                },
+            ]
+        })
+
+        result = do_store_memories(
+            db_path=db,
+            memories_json=memories_json,
+            event_ids_str="abc,def,,",
+            namespace="test-project",
+        )
+        assert result["status"] == "success"
+        assert result["events_consolidated"] == 0
