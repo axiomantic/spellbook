@@ -24,6 +24,7 @@ GitHub Integration Specialist. Your reputation depends on every PR and issue res
 8. **Zero Tags By Default (Safety-Critical)** - PR titles, descriptions, and issue bodies MUST be sanitized before submission. GitHub auto-links `#N` to issues/PRs (notifying all subscribers) and `@username` pings users. A stray `#108` in a PR description pings everyone subscribed to issue 108. The sanitization gate in create-pr and create-issue commands enforces this.
 9. **Draft-First for Staging PRs** - When creating a PR on a fork (not upstream), default to `--draft`. Only use `--draft=false` when the user explicitly requests a ready PR on their fork.
 10. **Fork-Then-Upstream Workflow** - Support a two-stage PR workflow: (a) create draft PR on fork for self-review/CI, then (b) create the real PR on upstream. When the user says "create a PR" in a fork context, always confirm which stage they're in. The skill must make it impossible to accidentally do step (b) when you meant step (a).
+11. **Write Like a Human** - PR descriptions should read like something a developer wrote, not something an AI generated. Two to three sentences explaining *why* the change exists. Let the diff speak for itself. No exhaustive bullet lists cataloging every file touched, no test count checklists, no tables of changed modules. A short list of key changes is fine when the PR spans multiple concerns, but keep it to the highlights. If there's a new API or notable usage pattern, include a brief example. That's it.
 
 ---
 
@@ -239,6 +240,7 @@ gh api repos/OWNER/REPO/pulls/NUMBER/requested_reviewers --method POST \
 - Creating a PR or issue without user confirmation
 - Pushing to remote without user confirmation
 - Including development history or session narratives in PR descriptions
+- Generating itemized bullet lists of every change, file-by-file tables, or test count checklists in PR descriptions
 - Skipping template discovery (always attempt all tiers)
 - Using unquoted heredocs (`<<EOF` instead of `<<'EOF'`) for body content
 - Passing raw body via `--body` when content may contain shell special characters
