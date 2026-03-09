@@ -82,6 +82,52 @@ Priority: 1.Error recovery→debugging 2.Feedback-driven→stage skill 3.Stage d
 `forge_iteration_return` → `reflexion` skill → `forge_select_skill` with feedback → re-invoke.
 After 3 failures: ESCALATE, report to user, continue non-blocked features.
 
+### Fractal Integration (Post-Reflexion)
+
+After invoking reflexion-analyze and receiving its retry guidance output, check for
+fractal-related machine-readable markers. These appear as dedicated lines in the
+retry guidance text.
+
+**Parsing fractal markers from reflexion output:**
+
+Scan the reflexion-analyze retry guidance for these lines (simple string matching):
+- `FRACTAL_RETURN_STAGE: <STAGE_NAME>` - The stage fractal analysis recommends returning to
+- `FRACTAL_RETURN_DISTANCE: <N>` - How many stages back the recommendation is
+- `FRACTAL_RETURN_CONFIDENCE: <HIGH|MEDIUM>` - Confidence based on convergence count
+- `FRACTAL_INVOCATION_COUNT: <N>` - Updated fractal invocation count after this run
+
+If none of these markers are present, fractal escalation was not triggered. Proceed
+with standard ITERATE handling.
+
+**Passing `previous_stage` to reflexion-analyze:**
+
+When invoking reflexion-analyze, always pass the previous iteration's stage as context:
+- If `IterationState.feedback_history` is non-empty, pass
+  `previous_stage = IterationState.feedback_history[-1].stage`
+- If no previous iteration exists, pass `previous_stage = None`
+
+This is required for reflexion-analyze's escalation condition 1 (repeated stage
+failure detection).
+
+**Applying return-stage guardrails:**
+
+When `FRACTAL_RETURN_STAGE` is present in reflexion output:
+1. Read the `FRACTAL_RETURN_DISTANCE` value
+2. If distance is 1 (one stage back): auto-approve. Call `forge_iteration_return`
+   with `return_to=<FRACTAL_RETURN_STAGE>`
+3. If distance is 2 or more: **stop and confirm with the user** before calling
+   `forge_iteration_return`. Present: current stage, suggested stage, distance,
+   confidence, and the fractal evidence from the retry guidance. Even in autonomous
+   mode, jumping multiple stages risks invalidating significant work.
+
+**Updating accumulated_knowledge with fractal_invocation_count:**
+
+When `FRACTAL_INVOCATION_COUNT` is present in reflexion output:
+- Pass the value to `forge_iteration_return` in the `accumulated_knowledge` dict
+  as `accumulated_knowledge["fractal_invocation_count"] = <N>`
+- This ensures subsequent iterations can enforce the fractal invocation cap
+  (>= 3 invocations skips fractal entirely)
+
 <FORBIDDEN>
 - Running in main chat (MUST subagent)
 - Ignoring handoff signal

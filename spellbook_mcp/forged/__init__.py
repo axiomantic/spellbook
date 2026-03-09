@@ -23,6 +23,12 @@ from spellbook_mcp.forged.iteration_tools import (
     forge_iteration_start,
 )
 
+# Fractal feedback mapper exports
+from spellbook_mcp.forged.fractal_feedback import (
+    fractal_to_feedback,
+    suggest_return_stage,
+)
+
 __all__ = [
     # Artifacts
     "VALID_ARTIFACT_TYPES",
@@ -37,4 +43,7 @@ __all__ = [
     "forge_iteration_advance",
     "forge_iteration_return",
     "forge_iteration_start",
+    # Fractal feedback
+    "fractal_to_feedback",
+    "suggest_return_stage",
 ]
