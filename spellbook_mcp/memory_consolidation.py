@@ -103,6 +103,28 @@ def _extract_citations(subject: str) -> List[Dict[str, Any]]:
     return []
 
 
+def _merge_event_metadata(
+    group_events: List[Dict[str, Any]],
+) -> tuple[set, List[int], List[Dict[str, Any]]]:
+    """Extract and deduplicate tags, event IDs, and citations from a group of events.
+
+    Returns (tags_set, event_ids, citations).
+    """
+    all_tags: set = set()
+    all_event_ids: List[int] = []
+    all_citations: List[Dict[str, Any]] = []
+    seen_paths: set = set()
+    for e in group_events:
+        if e.get("tags"):
+            all_tags.update(t.strip() for t in e["tags"].split(",") if t.strip())
+        all_event_ids.append(e["id"])
+        for cit in _extract_citations(e["subject"]):
+            if cit["file_path"] not in seen_paths:
+                seen_paths.add(cit["file_path"])
+                all_citations.append(cit)
+    return all_tags, all_event_ids, all_citations
+
+
 def _strategy_content_hash_dedup(
     events: List[Dict[str, Any]],
 ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
@@ -218,25 +240,13 @@ def _strategy_jaccard_similarity(
             # Merge: concatenate unique sentences, union tags
             seen_texts = set()
             content_parts = []
-            all_tags = set()
-            all_event_ids = []
             for e in group_events:
                 text = _event_text(e)
                 if text not in seen_texts:
                     seen_texts.add(text)
                     content_parts.append(f"[{e['tool_name']}] {text}")
-                if e.get("tags"):
-                    all_tags.update(t.strip() for t in e["tags"].split(",") if t.strip())
-                all_event_ids.append(e["id"])
 
-            # Extract citations from all subjects
-            all_citations = []
-            seen_paths = set()
-            for e in group_events:
-                for cit in _extract_citations(e["subject"]):
-                    if cit["file_path"] not in seen_paths:
-                        seen_paths.add(cit["file_path"])
-                        all_citations.append(cit)
+            all_tags, all_event_ids, all_citations = _merge_event_metadata(group_events)
 
             memories.append({
                 "content": "; ".join(content_parts),
@@ -310,23 +320,12 @@ def _strategy_tag_grouping(
             # Bullet list of unique subjects
             seen_subjects = set()
             bullet_lines = []
-            all_tags = set()
-            all_event_ids = []
             for e in group_events:
                 if e["subject"] not in seen_subjects:
                     seen_subjects.add(e["subject"])
                     bullet_lines.append(f"- {e['subject']}: {e['summary']}")
-                if e.get("tags"):
-                    all_tags.update(t.strip() for t in e["tags"].split(",") if t.strip())
-                all_event_ids.append(e["id"])
 
-            all_citations = []
-            seen_paths = set()
-            for e in group_events:
-                for cit in _extract_citations(e["subject"]):
-                    if cit["file_path"] not in seen_paths:
-                        seen_paths.add(cit["file_path"])
-                        all_citations.append(cit)
+            all_tags, all_event_ids, all_citations = _merge_event_metadata(group_events)
 
             memories.append({
                 "content": "Related activities:\n" + "\n".join(bullet_lines),
@@ -610,7 +609,7 @@ def consolidate_batch(
         # Mark events consolidated even on failure to prevent infinite retry.
         # These events can be re-processed via memory_get_unconsolidated with
         # include_consolidated=True if needed.
-        mark_events_consolidated(db_path, event_ids, batch_id)
+        mark_events_consolidated(db_path, event_ids, batch_id, namespace=namespace)
         return {
             "status": "error",
             "batch_id": batch_id,
@@ -619,7 +618,7 @@ def consolidate_batch(
             "memories_created": 0,
         }
 
-    mark_events_consolidated(db_path, event_ids, batch_id)
+    mark_events_consolidated(db_path, event_ids, batch_id, namespace=namespace)
 
     # Piggyback GC
     purged = purge_deleted(db_path)

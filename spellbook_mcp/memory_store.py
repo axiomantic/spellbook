@@ -286,19 +286,37 @@ def get_recently_consolidated_events(
 
 
 def mark_events_consolidated(
-    db_path: str, event_ids: List[int], batch_id: str
-) -> None:
-    """Mark raw events as consolidated with a batch ID."""
+    db_path: str, event_ids: List[int], batch_id: str,
+    namespace: Optional[str] = None,
+) -> int:
+    """Mark raw events as consolidated with a batch ID.
+
+    Args:
+        db_path: Database path.
+        event_ids: Event IDs to mark.
+        batch_id: Consolidation batch identifier.
+        namespace: If provided, only mark events belonging to this project.
+            Prevents marking events from other namespaces.
+
+    Returns:
+        Number of events actually marked.
+    """
     if not event_ids:
-        return
+        return 0
     conn = get_connection(db_path)
     placeholders = ",".join("?" for _ in event_ids)
-    conn.execute(
+    params: list = [batch_id]
+    query = (
         f"UPDATE raw_events SET consolidated = 1, batch_id = ? "
-        f"WHERE id IN ({placeholders})",
-        [batch_id] + event_ids,
+        f"WHERE id IN ({placeholders})"
     )
+    params.extend(event_ids)
+    if namespace:
+        query += " AND project = ?"
+        params.append(namespace)
+    cursor = conn.execute(query, params)
     conn.commit()
+    return cursor.rowcount
 
 
 def recall_by_file_path(

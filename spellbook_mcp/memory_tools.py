@@ -246,11 +246,7 @@ def do_store_memories(
         return {"status": "error", "error": f"Invalid JSON: {e}"}
 
     # Accept both {"memories": [...]} and bare list [...]
-    if isinstance(data, list):
-        raw_memories = data
-    elif isinstance(data, dict):
-        raw_memories = data.get("memories", [])
-    else:
+    if not isinstance(data, (list, dict)):
         return {"status": "error", "error": "Expected JSON object or array"}
 
     # Validate and parse using parse_llm_response for consistency
@@ -308,14 +304,17 @@ def do_store_memories(
                 "bibliographic", link["weight"],
             )
 
-    # Mark events consolidated
+    # Mark events consolidated (scoped to namespace to prevent cross-project marking)
+    events_consolidated = 0
     if event_ids:
         batch_id = str(uuid.uuid4())
-        mark_events_consolidated(db_path, event_ids, batch_id)
+        events_consolidated = mark_events_consolidated(
+            db_path, event_ids, batch_id, namespace=namespace or None,
+        )
 
     return {
         "status": "success",
         "memories_created": len(created_ids),
-        "events_consolidated": len(event_ids),
+        "events_consolidated": events_consolidated,
         "memory_ids": created_ids,
     }
