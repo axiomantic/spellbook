@@ -116,20 +116,6 @@ def _merge_event_metadata(
     all_event_ids: List[int] = []
     all_citations: List[Dict[str, Any]] = []
     all_branches: set = set()
-    seen_paths: set = set()
-    for e in group_events:
-        if e.get("tags"):
-            all_tags.update(t.strip() for t in e["tags"].split(",") if t.strip())
-        all_event_ids.append(e["id"])
-        for cit in _extract_citations(e["subject"]):
-            if cit["file_path"] not in seen_paths:
-                seen_paths.add(cit["file_path"])
-                all_citations.append(cit)
-        branch = e.get("branch", "")
-        if branch:
-            all_branches.add(branch)
-    return all_tags, all_event_ids, all_citations, all_branches
-
 
 
 def _strategy_content_hash_dedup(
