@@ -1,17 +1,19 @@
 # Auto-Release Workflow
 #
-# Automatically creates tags and GitHub releases when .version file changes on main.
+# Automatically creates tags and GitHub pre-releases when .version file changes on main.
+# Pre-releases can be manually promoted to full releases after review.
 #
 # When .version is bumped (e.g., 0.2.1 -> 0.3.0):
 # 1. Creates semver tag (v0.3.0)
-# 2. Creates GitHub release with notes extracted from CHANGELOG.md
+# 2. Creates GitHub pre-release with notes extracted from CHANGELOG.md
 # 3. Force-updates floating major version tag (v0) to point to new release
 #
 # Usage:
 # 1. Update CHANGELOG.md with new version section (## [X.Y.Z] - YYYY-MM-DD)
 # 2. Update .version file with new version number
 # 3. Commit and push/merge to main
-# 4. Workflow automatically creates release
+# 4. Workflow automatically creates pre-release
+# 5. Manually promote to full release after review
 
 name: Auto Release
 
@@ -154,7 +156,8 @@ jobs:
 
           gh release create "$TAG" \
             --title "Release $VERSION" \
-            --notes-file /tmp/release_notes.md
+            --notes-file /tmp/release_notes.md \
+            --prerelease
 
           echo "Created GitHub release: $TAG"
 

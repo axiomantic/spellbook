@@ -206,11 +206,40 @@ def get_launchd_plist_path() -> Path:
     return Path.home() / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
 
 
+def _resolve_cli_tool_dirs(paths: list[str]) -> list[str]:
+    """Resolve paths of supported CLI tools and add their directories.
+
+    Uses shutil.which() to find the actual location of each supported CLI
+    tool. This captures tools installed via mise, asdf, or other version
+    managers whose shim directories are not in the hardcoded PATH list.
+
+    Args:
+        paths: Existing list of PATH directories to extend.
+
+    Returns:
+        Deduplicated list of PATH directories with tool directories added.
+    """
+    import shutil
+
+    cli_tools = ["gemini", "claude", "codex", "opencode", "crush"]
+    seen = set(paths)
+    for tool in cli_tools:
+        tool_path = shutil.which(tool)
+        if tool_path:
+            tool_dir = str(Path(tool_path).resolve().parent)
+            if tool_dir not in seen:
+                paths.append(tool_dir)
+                seen.add(tool_dir)
+
+    return paths
+
+
 def get_daemon_path() -> str:
     """Get PATH for daemon environment.
 
     launchd doesn't inherit shell PATH, so we need to explicitly set it.
-    Includes Homebrew paths for both Apple Silicon and Intel Macs.
+    Includes Homebrew paths for both Apple Silicon and Intel Macs, plus
+    directories of any supported CLI tools found via shutil.which().
     """
     import platform
 
@@ -235,6 +264,9 @@ def get_daemon_path() -> str:
 
     # System paths
     paths.extend(["/usr/bin", "/bin", "/usr/sbin", "/sbin"])
+
+    # Resolve CLI tool directories (mise, asdf, etc.)
+    paths = _resolve_cli_tool_dirs(paths)
 
     return os.pathsep.join(paths)
 
@@ -386,7 +418,11 @@ def get_systemd_service_path() -> Path:
 
 
 def get_linux_daemon_path() -> str:
-    """Get PATH for Linux daemon environment."""
+    """Get PATH for Linux daemon environment.
+
+    Includes standard system paths plus directories of any supported CLI
+    tools found via shutil.which().
+    """
     paths = []
 
     home = Path.home()
@@ -405,6 +441,9 @@ def get_linux_daemon_path() -> str:
 
     # System paths
     paths.extend(["/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"])
+
+    # Resolve CLI tool directories (mise, asdf, etc.)
+    paths = _resolve_cli_tool_dirs(paths)
 
     return os.pathsep.join(paths)
 
