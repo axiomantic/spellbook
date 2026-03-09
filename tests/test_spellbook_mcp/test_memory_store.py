@@ -249,7 +249,12 @@ def test_mark_events_consolidated(db):
 def test_mark_events_consolidated_empty_list(db):
     """Calling with empty list is a no-op."""
     mark_events_consolidated(db, [], "batch-000")
-    # Should not raise
+    # Verify no rows were modified
+    conn = get_connection(db)
+    cursor = conn.execute(
+        "SELECT COUNT(*) FROM raw_events WHERE batch_id = 'batch-000'"
+    )
+    assert cursor.fetchone()[0] == 0
 
 
 def test_recall_by_file_path(db):
@@ -397,16 +402,12 @@ def test_recall_by_query_fts5_column_filter_blocked(db):
     )
     # Attempt FTS5 column filter syntax -- should be escaped to a phrase query
     results = recall_by_query(db, "content:secret", namespace="beta")
-    assert isinstance(results, list)
-    # Must NOT return the alpha namespace memory
-    for r in results:
-        assert "secret data in namespace alpha" != r["content"]
+    # Must NOT return the alpha namespace memory; phrase "content:secret" matches nothing
+    assert results == []
 
     # Wildcard attempt should also be blocked
     results = recall_by_query(db, "content:*", namespace="beta")
-    assert isinstance(results, list)
-    for r in results:
-        assert "secret data in namespace alpha" != r["content"]
+    assert results == []
 
 
 def test_update_access(db):

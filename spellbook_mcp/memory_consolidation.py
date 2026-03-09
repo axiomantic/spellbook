@@ -535,7 +535,7 @@ def consolidate_batch(
 
     Returns dict with status, counts, and any errors.
     """
-    events = get_unconsolidated_events(db_path, limit=event_limit)
+    events = get_unconsolidated_events(db_path, limit=event_limit, namespace=namespace)
     if not events:
         return {"status": "no_events", "events_consolidated": 0, "memories_created": 0}
 

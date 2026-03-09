@@ -405,7 +405,7 @@ class TestConsolidateBatch:
                 "content_hash", "jaccard_similarity", "tag_grouping", "temporal_clustering",
             )
             assert isinstance(meta["event_count"], int)
-            assert meta["event_count"] >= 1
+            assert meta["event_count"] in (1, 2)
             assert meta["batch_id"] == result["batch_id"]
 
         # Verify the content_hash dedup memory
@@ -472,7 +472,7 @@ class TestConsolidateBatch:
         # Seed events: 2 duplicates (consumed by content_hash) + 3 unique (hit jaccard)
         for _ in range(2):
             log_raw_event(
-                db_path=db, session_id="sess-1", project="p",
+                db_path=db, session_id="sess-1", project="ns",
                 event_type="tool_use", tool_name="Read",
                 subject="src/dup.py",
                 summary="Read exact duplicate content here",
@@ -480,7 +480,7 @@ class TestConsolidateBatch:
             )
         for i in range(3):
             log_raw_event(
-                db_path=db, session_id="sess-1", project="p",
+                db_path=db, session_id="sess-1", project="ns",
                 event_type="tool_use", tool_name="Edit",
                 subject=f"src/unique_{i}.py",
                 summary=f"Completely different unique content number {i} for testing",
@@ -523,6 +523,50 @@ class TestConsolidateBatch:
         assert details["error"] == "jaccard computation exploded"
         assert details["events_count"] == 5
         assert details["batch_id"] == result["batch_id"]
+
+    def test_namespace_isolation(self, db):
+        """consolidate_batch only consumes events from the specified namespace."""
+        # Seed events in namespace "alpha"
+        for _ in range(2):
+            log_raw_event(
+                db_path=db, session_id="sess-1", project="alpha",
+                event_type="tool_use", tool_name="Read",
+                subject="src/alpha.py",
+                summary="Read alpha module code",
+                tags="python",
+            )
+        # Seed events in namespace "beta"
+        for _ in range(2):
+            log_raw_event(
+                db_path=db, session_id="sess-1", project="beta",
+                event_type="tool_use", tool_name="Read",
+                subject="src/beta.py",
+                summary="Read beta module code",
+                tags="python",
+            )
+
+        # Consolidate only "alpha"
+        result = consolidate_batch(db_path=db, namespace="alpha")
+
+        assert result["status"] == "success"
+        assert result["events_consolidated"] == 2
+
+        # Alpha events should be consolidated
+        alpha_remaining = get_unconsolidated_events(db, limit=50, namespace="alpha")
+        assert alpha_remaining == []
+
+        # Beta events should remain unconsolidated
+        beta_remaining = get_unconsolidated_events(db, limit=50, namespace="beta")
+        assert len(beta_remaining) == 2
+        assert all(e["project"] == "beta" for e in beta_remaining)
+
+        # Memories should be stored under "alpha" namespace only
+        conn = get_connection(db)
+        cursor = conn.execute(
+            "SELECT namespace FROM memories"
+        )
+        namespaces = [row[0] for row in cursor.fetchall()]
+        assert all(ns == "alpha" for ns in namespaces)
 
     def test_piggyback_gc(self, db):
         """Consolidation calls purge_deleted at the end on success."""
@@ -576,7 +620,7 @@ class TestConsolidateBatch:
         # Group A: 2 exact duplicates -> content_hash dedup
         for _ in range(2):
             log_raw_event(
-                db_path=db, session_id="sess-1", project="p",
+                db_path=db, session_id="sess-1", project="ns",
                 event_type="tool_use", tool_name="Read",
                 subject="src/config.py",
                 summary="Read config loader initialization",
@@ -587,14 +631,14 @@ class TestConsolidateBatch:
         # These share "authentication", "module", "configuration", "handler"
         # but differ enough to not be exact duplicates
         log_raw_event(
-            db_path=db, session_id="sess-1", project="p",
+            db_path=db, session_id="sess-1", project="ns",
             event_type="tool_use", tool_name="Read",
             subject="src/auth.py",
             summary="authentication module configuration handler validates tokens",
             tags="python,auth,security",
         )
         log_raw_event(
-            db_path=db, session_id="sess-1", project="p",
+            db_path=db, session_id="sess-1", project="ns",
             event_type="tool_use", tool_name="Read",
             subject="src/auth.py",
             summary="authentication module configuration handler validates sessions",
@@ -604,14 +648,14 @@ class TestConsolidateBatch:
         # Group C: 2 events with shared tags (python,db) -> tag_grouping
         # These must NOT be Jaccard-similar (different words) and NOT exact dupes
         log_raw_event(
-            db_path=db, session_id="sess-1", project="p",
+            db_path=db, session_id="sess-1", project="ns",
             event_type="tool_use", tool_name="Edit",
             subject="src/models.py",
             summary="alpha schema creation",
             tags="python,db",
         )
         log_raw_event(
-            db_path=db, session_id="sess-1", project="p",
+            db_path=db, session_id="sess-1", project="ns",
             event_type="tool_use", tool_name="Edit",
             subject="src/migrations.py",
             summary="beta migration runner",
@@ -620,7 +664,7 @@ class TestConsolidateBatch:
 
         # Group D: 1 unique event with no tag overlap -> temporal_clustering fallback
         log_raw_event(
-            db_path=db, session_id="sess-1", project="p",
+            db_path=db, session_id="sess-1", project="ns",
             event_type="tool_use", tool_name="Edit",
             subject="README.md",
             summary="Updated project documentation overview",
@@ -725,7 +769,7 @@ class TestConsolidateBatch:
             log_raw_event(
                 db_path=db,
                 session_id="sess-1",
-                project="p",
+                project="ns",
                 event_type="tool_use",
                 tool_name="Read",
                 subject="src/dup.py",
@@ -736,7 +780,7 @@ class TestConsolidateBatch:
         log_raw_event(
             db_path=db,
             session_id="sess-1",
-            project="p",
+            project="ns",
             event_type="tool_use",
             tool_name="Edit",
             subject="src/unique.py",
@@ -754,12 +798,10 @@ class TestConsolidateBatch:
         cursor = conn.execute(
             "SELECT meta FROM memories WHERE namespace = ?", ("ns",),
         )
-        strategies = [json.loads(r[0])["strategy"] for r in cursor.fetchall()]
+        strategies = sorted(json.loads(r[0])["strategy"] for r in cursor.fetchall())
 
-        # content_hash should have consumed the 2 duplicates
-        assert "content_hash" in strategies
-        # temporal_clustering should have consumed the unique event
-        assert "temporal_clustering" in strategies
+        # content_hash consumed the 2 duplicates, temporal_clustering consumed the unique event
+        assert strategies == ["content_hash", "temporal_clustering"]
 
 
 # --- Bibliographic coupling after consolidation (heuristic pipeline) ---
@@ -780,7 +822,7 @@ class TestBibliographicCouplingIntegration:
             log_raw_event(
                 db_path=db,
                 session_id="sess-1",
-                project="p",
+                project="ns",
                 event_type="tool_use",
                 tool_name="Read",
                 subject="src/shared.py",
@@ -792,7 +834,7 @@ class TestBibliographicCouplingIntegration:
         log_raw_event(
             db_path=db,
             session_id="sess-2",
-            project="p",
+            project="ns",
             event_type="tool_use",
             tool_name="Edit",
             subject="src/shared.py",
@@ -803,7 +845,7 @@ class TestBibliographicCouplingIntegration:
         result = consolidate_batch(db_path=db, namespace="ns")
 
         assert result["status"] == "success"
-        assert result["memories_created"] >= 2
+        assert result["memories_created"] == 2
 
         # Verify bibliographic coupling link was created
         conn = get_connection(db)
@@ -812,7 +854,7 @@ class TestBibliographicCouplingIntegration:
             "WHERE link_type = 'bibliographic'"
         )
         rows = cursor.fetchall()
-        assert len(rows) >= 1
+        assert len(rows) == 1
         # Both memories cite only "src/shared.py" -> Jaccard = 1.0
         row = rows[0]
         assert row[2] == "bibliographic"
@@ -1045,16 +1087,20 @@ class TestStrategyJaccardSimilarity:
         ]
         memories, unconsumed = _strategy_jaccard_similarity(events)
         # Events 1 and 2 share "authentication", "module", "configuration" -> similar
-        assert len(memories) >= 1
-        # Verify events 1+2 are grouped together
-        grouped_ids = set()
-        for m in memories:
-            grouped_ids.update(m["event_ids"])
-        assert {1, 2}.issubset(grouped_ids)
+        assert len(memories) == 1
+        assert set(memories[0]["event_ids"]) == {1, 2}
         assert memories[0]["strategy"] == "jaccard_similarity"
+        assert memories[0]["memory_type"] == "fact"
+        # Merged content contains both event texts joined by "; "
+        assert memories[0]["content"] == (
+            "[Read] src/auth.py: Read authentication module configuration setup; "
+            "[Read] src/auth.py: Read authentication module configuration handler"
+        )
+        assert memories[0]["tags"] == ["auth", "python"]
+        assert memories[0]["citations"] == [{"file_path": "src/auth.py"}]
         # Event 3 should be unconsumed (different topic)
-        unconsumed_ids = {e["id"] for e in unconsumed}
-        assert 3 in unconsumed_ids
+        assert len(unconsumed) == 1
+        assert unconsumed[0]["id"] == 3
 
     def test_short_texts_skipped(self):
         """Events with fewer than MIN_MEANINGFUL_WORDS are passed through."""

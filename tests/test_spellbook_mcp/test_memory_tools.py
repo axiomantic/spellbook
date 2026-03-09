@@ -54,7 +54,9 @@ class TestMemoryRecallTool:
         assert mem["status"] == "active"
         assert mem["importance"] == 1.0  # query-time snapshot (DB bumped after)
         assert isinstance(mem["created_at"], str)  # ISO timestamp, server-generated
-        assert "T" in mem["created_at"]  # valid ISO format
+        # Verify valid ISO 8601 format by parsing
+        from datetime import datetime
+        datetime.fromisoformat(mem["created_at"])
         # accessed_at in returned dict is query-time snapshot (None for new memory)
         # update_access happens after results are fetched
         assert mem["accessed_at"] is None
@@ -130,7 +132,9 @@ class TestMemoryRecallTool:
         mem_after = get_memory(db, mem_id)
         assert mem_after["importance"] == 1.1
         assert isinstance(mem_after["accessed_at"], str)  # ISO timestamp, server-generated
-        assert "T" in mem_after["accessed_at"]  # valid ISO format
+        # Verify valid ISO 8601 format by parsing
+        from datetime import datetime
+        datetime.fromisoformat(mem_after["accessed_at"])
 
     def test_recall_namespace_scoping(self, db):
         """Memories from different namespace are not returned."""
@@ -208,8 +212,10 @@ class TestMemoryForgetTool:
         result = do_memory_forget(db_path=db, memory_id=mem_id)
         assert result["status"] == "deleted"
         assert result["memory_id"] == mem_id
-        assert "To be forgotten content here" in result["message"]
-        assert "30 days" in result["message"]
+        assert result["message"] == (
+            "Memory soft-deleted. Will be purged after 30 days. "
+            "Content preview: To be forgotten content here..."
+        )
 
         # Verify actual DB state changed
         mem = get_memory(db, mem_id)
@@ -424,10 +430,10 @@ class TestDoGetUnconsolidated:
         assert result["events"][1]["subject"] == "src/file1.py"
         assert result["events"][1]["summary"] == "Read file1.py (15 lines)"
 
-        # Prompt should contain observations
-        assert "src/file0.py" in result["consolidation_prompt"]
-        assert "src/file1.py" in result["consolidation_prompt"]
-        assert "Read file0.py (5 lines)" in result["consolidation_prompt"]
+        # Prompt should match build_consolidation_prompt() exactly
+        from spellbook_mcp.memory_consolidation import build_consolidation_prompt
+        expected_prompt = build_consolidation_prompt(result["events"])
+        assert result["consolidation_prompt"] == expected_prompt
 
         # Schema should be JSON-serialized MEMORY_STORE_SCHEMA
         assert result["response_schema"] == json.dumps(MEMORY_STORE_SCHEMA)
@@ -621,7 +627,7 @@ class TestDoStoreMemories:
             namespace="test-project",
         )
         assert result["status"] == "error"
-        assert "Invalid JSON" in result["error"]
+        assert result["error"].startswith("Invalid JSON: ")
 
     def test_store_non_object_non_array(self, db):
         """Non-object/non-array JSON returns error."""
@@ -633,7 +639,7 @@ class TestDoStoreMemories:
             namespace="test-project",
         )
         assert result["status"] == "error"
-        assert "Expected JSON object or array" in result["error"]
+        assert result["error"] == "Expected JSON object or array"
 
     def test_store_empty_content_rejected(self, db):
         """Memories with empty content are rejected."""
@@ -651,7 +657,7 @@ class TestDoStoreMemories:
             namespace="test-project",
         )
         assert result["status"] == "error"
-        assert "No valid memories found" in result["error"]
+        assert result["error"] == "No valid memories found. Each memory must have non-empty 'content'."
 
     def test_store_invalid_memory_type_defaults_to_fact(self, db):
         """Invalid memory_type is silently corrected to 'fact'."""
@@ -887,7 +893,7 @@ class TestDoStoreMemories:
             namespace="test-project",
         )
         assert result["status"] == "error"
-        assert "No valid memories found" in result["error"]
+        assert result["error"] == "No valid memories found. Each memory must have non-empty 'content'."
 
     def test_store_partial_valid_memories(self, db):
         """Mix of valid and invalid memories: only valid ones are stored."""
