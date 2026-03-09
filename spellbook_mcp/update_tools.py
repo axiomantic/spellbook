@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import time
 from datetime import datetime
@@ -144,12 +145,90 @@ def get_changelog_between(
     return result
 
 
-def check_for_updates(spellbook_dir: Path) -> dict:
-    """Perform an on-demand update check via git fetch.
+def _get_owner_repo(spellbook_dir: Path) -> Optional[str]:
+    """Parse owner/repo from git remote URL.
 
-    Fetches the configured remote/branch, reads the remote .version file
-    via ``git show``, and compares it to the local .version file. Does NOT
-    modify the working tree.
+    Supports both SSH (git@github.com:owner/repo.git) and HTTPS
+    (https://github.com/owner/repo.git) formats.
+
+    Args:
+        spellbook_dir: Path to the spellbook git repository
+
+    Returns:
+        "owner/repo" string, or None if parsing fails
+    """
+    remote = config_get("auto_update_remote") or "origin"
+    try:
+        url_proc = subprocess.run(
+            ["git", "-C", str(spellbook_dir), "remote", "get-url", remote],
+            capture_output=True, text=True, timeout=5,
+        )
+        if url_proc.returncode != 0:
+            return None
+        url = url_proc.stdout.strip()
+    except (subprocess.SubprocessError, OSError):
+        return None
+
+    # SSH: git@github.com:owner/repo.git
+    match = re.match(r"git@github\.com:(.+/.+?)(?:\.git)?$", url)
+    if match:
+        return match.group(1)
+
+    # HTTPS: https://github.com/owner/repo.git
+    match = re.match(r"https://github\.com/(.+/.+?)(?:\.git)?$", url)
+    if match:
+        return match.group(1)
+
+    return None
+
+
+def _get_latest_release_version(spellbook_dir: Path) -> Optional[str]:
+    """Get the latest non-pre-release version from GitHub releases API.
+
+    Uses ``gh api repos/{owner}/{repo}/releases/latest`` which automatically
+    excludes pre-releases and drafts.
+
+    Args:
+        spellbook_dir: Path to the spellbook git repository
+
+    Returns:
+        Version string (without 'v' prefix), or None if unavailable
+    """
+    if not shutil.which("gh"):
+        return None
+
+    owner_repo = _get_owner_repo(spellbook_dir)
+    if not owner_repo:
+        return None
+
+    try:
+        api_proc = subprocess.run(
+            ["gh", "api", f"repos/{owner_repo}/releases/latest",
+             "--jq", ".tag_name"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if api_proc.returncode != 0:
+            return None
+        tag = api_proc.stdout.strip()
+        if not tag:
+            return None
+        # Strip 'v' prefix if present
+        return tag.lstrip("v")
+    except (subprocess.SubprocessError, OSError):
+        return None
+
+
+def check_for_updates(spellbook_dir: Path) -> dict:
+    """Perform an on-demand update check.
+
+    Prefers the GitHub releases API (``/releases/latest``) to determine the
+    latest non-pre-release version. Falls back to ``git show`` on
+    ``origin/main:.version`` if ``gh`` is unavailable or the API call fails.
+
+    Always runs ``git fetch`` so that changelog extraction (which still uses
+    ``git show``) has up-to-date refs.
 
     Args:
         spellbook_dir: Path to the spellbook git repository
@@ -193,7 +272,7 @@ def check_for_updates(spellbook_dir: Path) -> dict:
     except subprocess.SubprocessError:
         pass  # If we can't list remotes, proceed anyway
 
-    # Git fetch
+    # Git fetch (needed for changelog extraction and as fallback for version)
     try:
         fetch_proc = subprocess.run(
             ["git", "-C", str(spellbook_dir), "fetch", remote, branch],
@@ -211,26 +290,31 @@ def check_for_updates(spellbook_dir: Path) -> dict:
         result["error"] = f"git fetch error: {e}"
         return result
 
-    # Read remote version
-    try:
-        show_proc = subprocess.run(
-            ["git", "-C", str(spellbook_dir), "show",
-             f"{remote}/{branch}:.version"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-        if show_proc.returncode != 0:
-            result["error"] = f"Could not read remote .version: {show_proc.stderr.strip()}"
+    # Determine remote version: prefer GitHub releases API, fall back to git show
+    remote_version = _get_latest_release_version(spellbook_dir)
+
+    if remote_version is None:
+        # Fallback: read .version from remote branch via git show
+        try:
+            show_proc = subprocess.run(
+                ["git", "-C", str(spellbook_dir), "show",
+                 f"{remote}/{branch}:.version"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if show_proc.returncode != 0:
+                result["error"] = f"Could not read remote .version: {show_proc.stderr.strip()}"
+                return result
+            remote_version = show_proc.stdout.strip()
+        except subprocess.TimeoutExpired:
+            result["error"] = "git show timed out (30s)"
             return result
-        remote_version = show_proc.stdout.strip()
-        result["remote_version"] = remote_version
-    except subprocess.TimeoutExpired:
-        result["error"] = "git show timed out (30s)"
-        return result
-    except OSError as e:
-        result["error"] = f"git show error: {e}"
-        return result
+        except OSError as e:
+            result["error"] = f"git show error: {e}"
+            return result
+
+    result["remote_version"] = remote_version
 
     # Compare versions
     bump_type = classify_version_bump(local_version, remote_version)
