@@ -696,6 +696,43 @@ def test_insert_memory_creates_audit_log(db):
     assert json.loads(row[2]) == {"memory_type": "fact"}
 
 
+class TestInsertMemoryExtraMeta:
+    def test_extra_meta_merged_into_meta_json(self, db):
+        """extra_meta dict is shallow-merged into stored meta JSON alongside tags."""
+        mem_id = insert_memory(
+            db_path=db,
+            content="Heuristic-generated memory",
+            memory_type="fact",
+            namespace="ns",
+            tags=["auth", "refactor"],
+            citations=[],
+            extra_meta={"source": "heuristic", "strategy": "content_hash", "batch_id": "abc-123"},
+        )
+        conn = get_connection(db)
+        cursor = conn.execute("SELECT meta FROM memories WHERE id = ?", (mem_id,))
+        meta = json.loads(cursor.fetchone()[0])
+        assert meta["tags"] == ["auth", "refactor"]
+        assert meta["source"] == "heuristic"
+        assert meta["strategy"] == "content_hash"
+        assert meta["batch_id"] == "abc-123"
+
+    def test_extra_meta_none_preserves_existing_behavior(self, db):
+        """When extra_meta is None (default), meta contains only tags and possibly secret_findings."""
+        mem_id = insert_memory(
+            db_path=db,
+            content="Normal memory without extra meta",
+            memory_type="fact",
+            namespace="ns",
+            tags=["normal"],
+            citations=[],
+        )
+        conn = get_connection(db)
+        cursor = conn.execute("SELECT meta FROM memories WHERE id = ?", (mem_id,))
+        meta = json.loads(cursor.fetchone()[0])
+        assert meta["tags"] == ["normal"]
+        assert "source" not in meta
+
+
 def test_fts5_synced_on_insert(db):
     """FTS5 standalone table should be populated on insert."""
     insert_memory(

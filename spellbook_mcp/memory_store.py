@@ -32,6 +32,7 @@ def insert_memory(
     tags: List[str],
     citations: List[Dict[str, Any]],
     importance: float = 1.0,
+    extra_meta: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Insert a memory, deduplicating by content_hash. Returns memory ID.
 
@@ -60,6 +61,9 @@ def insert_memory(
     secret_findings = scan_for_secrets(content)
     if secret_findings:
         meta["secret_findings"] = secret_findings
+
+    if extra_meta:
+        meta.update(extra_meta)
 
     conn.execute(
         "INSERT INTO memories (id, content, memory_type, namespace, importance, "
