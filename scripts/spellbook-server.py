@@ -222,16 +222,17 @@ def _resolve_cli_tool_dirs(paths: list[str]) -> list[str]:
     import shutil
 
     cli_tools = ["gemini", "claude", "codex", "opencode", "crush"]
-    seen = set(paths)
+    resolved = list(paths)
+    seen = set(resolved)
     for tool in cli_tools:
         tool_path = shutil.which(tool)
         if tool_path:
             tool_dir = str(Path(tool_path).resolve().parent)
             if tool_dir not in seen:
-                paths.append(tool_dir)
+                resolved.append(tool_dir)
                 seen.add(tool_dir)
 
-    return paths
+    return resolved
 
 
 def get_daemon_path() -> str:
