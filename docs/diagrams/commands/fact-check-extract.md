@@ -1,7 +1,7 @@
-<!-- diagram-meta: {"source": "commands/fact-check-extract.md", "source_hash": "sha256:9682544becabe00a417017bea444d0fbd3026d00848b9354ba2219a49e616c37", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/fact-check-extract.md", "source_hash": "sha256:50ecf30579290ce1fd2939f2e97baf690a058b3655330560fb6fead75bcf359b", "generated_at": "2026-03-09T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: fact-check-extract
 
-Extract all claims from code, comments, docstrings, commits, and naming conventions, then triage by category and verification depth before proceeding to verification.
+Extract all claims from code, comments, docstrings, commits, and naming conventions (including mandatory naming convention scan and LLM-content escalation), then triage by category and verification depth before proceeding to verification.
 
 ```mermaid
 flowchart TD
@@ -24,12 +24,24 @@ flowchart TD
   style Naming fill:#2196F3,color:#fff
   style ScanSrc fill:#2196F3,color:#fff
 
-  Comments --> Classify
-  Docstrings --> Classify
-  Markdown --> Classify
-  Commits --> Classify
-  PRDesc --> Classify
-  Naming --> Classify
+  Comments --> NamingScan
+  Docstrings --> NamingScan
+  Markdown --> NamingScan
+  Commits --> NamingScan
+  PRDesc --> NamingScan
+  Naming --> NamingScan
+
+  NamingScan[Naming Convention Scan<br>validate*, safe*, is*, etc.] --> LLMCheck{LLM-generated content?}
+
+  style NamingScan fill:#f44336,color:#fff
+  style LLMCheck fill:#FF9800,color:#000
+
+  LLMCheck -->|Yes| LLMEscalate[Flag source_risk: llm_generated<br>Force MEDIUM depth min]
+  LLMCheck -->|No| Classify
+
+  style LLMEscalate fill:#2196F3,color:#fff
+
+  LLMEscalate --> Classify
 
   Classify[Classify by category] --> CatTech[Technical claims]
   Classify --> CatSec[Security claims]

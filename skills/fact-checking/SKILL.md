@@ -114,6 +114,17 @@ Autonomous mode detected ("Mode: AUTONOMOUS")? Enable all automatically.
 **Subagent dispatch:** Invoke `fact-check-verify` command.
 **Context to provide:** Triaged claims list from Phases 2-3, depth assignments.
 
+## Subagent Context Requirements
+
+When spawning verification agents, provide:
+1. The claim and its location
+2. Surrounding code context (minimum 50 lines)
+3. AGENTS.md content (project conventions, glossary, architecture)
+4. Any project-specific glossary terms relevant to the claim
+5. The list of ALL files in scope (not just the claim's file)
+
+<RULE>Verification agents MUST NOT make verdicts based on general knowledge that contradicts project-specific conventions documented in AGENTS.md.</RULE>
+
 ### Phases 6-7: Report and Learning
 
 **Subagent dispatch:** Invoke `fact-check-report` command.
@@ -127,6 +138,18 @@ Autonomous mode detected ("Mode: AUTONOMOUS")? Enable all automatically.
 2. Show proposed change, ask approval
 3. Apply approved fixes
 4. Offer re-verification
+
+### Fix Verification Step
+
+<RULE>NEVER apply fixes without explicit per-fix user approval.</RULE>
+
+For each proposed fix:
+1. Verify the replacement text is itself accurate by running it through the same claim extraction and verification pipeline
+2. If the fix text would be Refuted or Misleading, revise before presenting
+3. Show proposed change WITH verification result to user
+4. Apply only user-approved fixes
+
+<FORBIDDEN>Proposing a "correction" that has not itself been verified. A wrong fix is worse than leaving the original claim.</FORBIDDEN>
 
 ---
 
