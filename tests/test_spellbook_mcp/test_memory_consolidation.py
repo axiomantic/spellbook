@@ -847,6 +847,7 @@ class TestBibliographicCouplingIntegration:
         assert result["status"] == "success"
         assert result["memories_created"] == 2
 
+
         # Verify bibliographic coupling link was created
         conn = get_connection(db)
         cursor = conn.execute(

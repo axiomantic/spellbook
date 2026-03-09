@@ -620,6 +620,7 @@ def consolidate_batch(
                 if branch_name != origin_branch:
                     insert_branch_association(db_path, mem_id, branch_name, "origin")
 
+
         # Compute bibliographic coupling for new memories
         for mem_id in created_ids:
             links = compute_bibliographic_coupling(db_path, mem_id)
