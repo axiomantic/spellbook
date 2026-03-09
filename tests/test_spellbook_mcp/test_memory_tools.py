@@ -919,6 +919,7 @@ class TestDoStoreMemories:
         assert mem["content"] == "Valid memory here"
         assert mem["memory_type"] == "rule"
 
+
     def test_store_ignores_invalid_event_ids(self, db):
         """Non-integer event IDs in event_ids_str are silently ignored."""
         from spellbook_mcp.memory_tools import do_store_memories
@@ -942,6 +943,7 @@ class TestDoStoreMemories:
         )
         assert result["status"] == "success"
         assert result["events_consolidated"] == 0
+
 
 
 class TestTwoToolPatternEndToEnd:
