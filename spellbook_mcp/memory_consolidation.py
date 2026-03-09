@@ -1,14 +1,13 @@
 """Memory consolidation pipeline.
 
-Batch-extracts structured memories from raw events via LLM.
+Batch-extracts structured memories from raw events via heuristic strategies.
 Handles dedup, bibliographic coupling, FTS5 sync, and error recovery.
+Client-side LLM synthesis available via memory_get_unconsolidated/memory_store_memories tools.
 """
 
 import json
 import uuid
 from typing import Any, Dict, List
-
-import anthropic
 
 from spellbook_mcp.db import get_connection
 from spellbook_mcp.memory_store import (
@@ -126,63 +125,6 @@ def compute_bibliographic_coupling(
             links.append({"other_id": other_id, "weight": weight})
 
     return links
-
-
-def _call_llm(prompt: str) -> str:
-    """Call the Anthropic API for memory extraction.
-
-    Uses the Anthropic SDK to send the consolidation prompt and return
-    the raw text response. Handles rate limits with exponential backoff.
-
-    Intentionally synchronous: consolidation is a background batch job,
-    not an MCP request handler. The MCP server should call consolidate_batch()
-    via asyncio.to_thread() if invoked from an async context.
-
-    Requires:
-        - ANTHROPIC_API_KEY environment variable
-        - anthropic package (already a spellbook dependency)
-
-    The model is configurable via spellbook config (key: memory_llm_model),
-    defaulting to claude-sonnet-4-20250514.
-    """
-    import os
-    import time
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY environment variable is required for "
-            "memory consolidation. Set it in your shell profile or .env."
-        )
-
-    # Read model from spellbook config, with fallback
-    model = "claude-sonnet-4-20250514"
-    try:
-        from spellbook_mcp.config import get_config
-        model = get_config("memory_llm_model", default=model)
-    except Exception:
-        pass  # Use default if config unavailable
-
-    client = anthropic.Anthropic(api_key=api_key)
-
-    # Exponential backoff for rate limits (max 3 retries)
-    max_retries = 3
-    for attempt in range(max_retries + 1):
-        try:
-            response = client.messages.create(
-                model=model,
-                max_tokens=4096,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            # Extract text from response
-            return response.content[0].text
-        except anthropic.RateLimitError:
-            if attempt >= max_retries:
-                raise
-            wait_time = 2 ** attempt  # 1s, 2s, 4s
-            time.sleep(wait_time)
-        except anthropic.APIError:
-            raise  # Don't retry non-rate-limit API errors
 
 
 def consolidate_batch(
