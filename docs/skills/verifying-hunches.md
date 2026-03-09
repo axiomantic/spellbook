@@ -187,6 +187,14 @@ Track ALL hypotheses. Persist across compaction in `/handoff`.
 **Déjà vu check:** Before any new hypothesis, scan registry. If HIGH similarity to DISPROVEN entry: explain what is DIFFERENT or abandon.
 </CRITICAL>
 
+**Cross-Session Déjà Vu Check:** The local registry only covers this session. Before accepting a new hypothesis, query stored memories for prior hypotheses about this symptom or component:
+```
+memory_recall(query="hypothesis [component_or_symptom]")
+```
+If a matching DISPROVEN hypothesis is found in memory, you MUST explain what is DIFFERENT about your current hypothesis or abandon it. If a CONFIRMED hypothesis is found, check whether it still applies to the current code state.
+
+Note: The `<spellbook-memory>` auto-injection only fires on file reads. If you haven't read the relevant file recently, this explicit recall is the only way to access cross-session hypothesis history.
+
 ---
 
 ## Confidence Calibration
@@ -217,6 +225,12 @@ Hypothesis MUST have:
 3. **Execute:** Run with instrumentation.
 4. **Compare:** Prediction vs Actual → MATCHED | CONTRADICTED | INCONCLUSIVE
 5. **Update registry:** Mark CONFIRMED (2+ matches) or DISPROVEN (contradiction).
+6. **Persist to memory:** After resolving a hypothesis (CONFIRMED or DISPROVEN), store the result for future sessions:
+   ```
+   memory_store_memories(memories='{"memories": [{"content": "[CONFIRMED/DISPROVEN] Hypothesis: [specific claim]. Evidence: [key evidence]. Component: [file:line]", "memory_type": "[fact or antipattern]", "tags": ["hypothesis", "[component]", "[symptom_type]"], "citations": [{"file_path": "[relevant_file]"}]}]}')
+   ```
+   - CONFIRMED hypotheses: memory_type = "fact"
+   - DISPROVEN hypotheses: memory_type = "antipattern" (prevents future re-investigation)
 
 ### Pre-Claim Checklist
 

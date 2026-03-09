@@ -250,11 +250,20 @@ Wait for explicit choice. If B chosen: reset fix_attempts = 0, proceed.
 - Pattern feels fundamentally unsound
 
 **Actions when 3-fix rule triggered:**
-1. **Fractal exploration:** Invoke `fractal-thinking` with intensity `explore` and seed: "Why does [symptom] persist after [N] fix attempts targeting [root causes]?" Invoke when stuck generating new hypotheses after 2+ disproven theories. Use synthesis to produce new hypothesis families.
-2. Question architecture (not just implementation)
-3. Discuss with human before more fixes
-4. Consider refactoring vs. tactical fixes
-5. Document the pattern issue
+1. **Memory check:** Call `memory_recall(query="architecture issue [component]")` to check for documented systemic problems in this area.
+2. **Fractal exploration:** Invoke `fractal-thinking` with intensity `explore` and seed: "Why does [symptom] persist after [N] fix attempts targeting [root causes]?" Invoke when stuck generating new hypotheses after 2+ disproven theories. Use synthesis to produce new hypothesis families.
+3. Question architecture (not just implementation)
+4. Discuss with human before more fixes
+5. Consider refactoring vs. tactical fixes
+6. Document the pattern issue
+
+### 1.4 Memory Priming
+
+Before selecting a debugging methodology, check for relevant stored memories:
+
+1. If you received `<spellbook-memory>` context from recent file reads, incorporate it.
+2. Otherwise, call `memory_recall(query="[symptom_type] [component_or_module]")` to surface prior root causes, antipatterns, and debugging outcomes for this area.
+3. If prior root causes are found, check whether they apply to the current symptom before pursuing new hypotheses.
 
 ## Phase 2: Methodology Selection
 
@@ -405,6 +414,17 @@ Verification confirms:
 - Original symptom no longer occurs
 - Tests pass (if applicable)
 - No new failures introduced
+
+**If verification succeeds:**
+
+**Memory Persistence:** After confirming a fix, store the root cause for future sessions:
+```
+memory_store_memories(memories='{"memories": [{"content": "Root cause: [description]. Fix: [what was changed]. Symptom: [what was observed].", "memory_type": "fact", "tags": ["root-cause", "[component]", "[symptom_type]"], "citations": [{"file_path": "[fixed_file]", "line_range": "[lines]"}]}]}')
+```
+For recurring issues (3-fix-rule triggers), also store an antipattern:
+```
+memory_store_memories(memories='{"memories": [{"content": "Recurring issue in [component]: [pattern description]. Consider architectural review.", "memory_type": "antipattern", "tags": ["recurring", "[component]", "architecture"], "citations": [{"file_path": "[file]"}]}]}')
+```
 
 **If verification fails:**
 ```
