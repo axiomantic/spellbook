@@ -249,7 +249,12 @@ def test_mark_events_consolidated(db):
 def test_mark_events_consolidated_empty_list(db):
     """Calling with empty list is a no-op."""
     mark_events_consolidated(db, [], "batch-000")
-    # Should not raise
+    # Verify no rows were modified
+    conn = get_connection(db)
+    cursor = conn.execute(
+        "SELECT COUNT(*) FROM raw_events WHERE batch_id = 'batch-000'"
+    )
+    assert cursor.fetchone()[0] == 0
 
 
 def test_recall_by_file_path(db):
@@ -397,16 +402,12 @@ def test_recall_by_query_fts5_column_filter_blocked(db):
     )
     # Attempt FTS5 column filter syntax -- should be escaped to a phrase query
     results = recall_by_query(db, "content:secret", namespace="beta")
-    assert isinstance(results, list)
-    # Must NOT return the alpha namespace memory
-    for r in results:
-        assert "secret data in namespace alpha" != r["content"]
+    # Must NOT return the alpha namespace memory; phrase "content:secret" matches nothing
+    assert results == []
 
     # Wildcard attempt should also be blocked
     results = recall_by_query(db, "content:*", namespace="beta")
-    assert isinstance(results, list)
-    for r in results:
-        assert "secret data in namespace alpha" != r["content"]
+    assert results == []
 
 
 def test_update_access(db):
@@ -694,6 +695,108 @@ def test_insert_memory_creates_audit_log(db):
     assert row[0] == "create"
     assert row[1] == mem_id
     assert json.loads(row[2]) == {"memory_type": "fact"}
+
+
+class TestGetUnconsolidatedEventsNamespace:
+    def test_namespace_filters_by_project(self, db):
+        """When namespace is provided, only events with matching project are returned."""
+        log_raw_event(db, "s1", "project-a", "tool_use", "Read", "f.py", "read f", "")
+        log_raw_event(db, "s1", "project-b", "tool_use", "Read", "g.py", "read g", "")
+        log_raw_event(db, "s1", "project-a", "tool_use", "Edit", "h.py", "edit h", "")
+
+        events = get_unconsolidated_events(db, limit=50, namespace="project-a")
+        assert len(events) == 2
+        assert all(e["project"] == "project-a" for e in events)
+
+    def test_no_namespace_returns_all(self, db):
+        """When namespace is None (default), all unconsolidated events are returned."""
+        log_raw_event(db, "s1", "project-a", "tool_use", "Read", "f.py", "read f", "")
+        log_raw_event(db, "s1", "project-b", "tool_use", "Read", "g.py", "read g", "")
+
+        events = get_unconsolidated_events(db, limit=50)
+        assert len(events) == 2
+
+
+class TestGetRecentlyConsolidatedEvents:
+    def test_returns_recently_consolidated(self, db):
+        """Returns events consolidated within the last 24 hours."""
+        eid1 = log_raw_event(db, "s1", "proj", "tool_use", "Read", "a.py", "read a", "python")
+        eid2 = log_raw_event(db, "s1", "proj", "tool_use", "Edit", "b.py", "edit b", "python")
+        mark_events_consolidated(db, [eid1, eid2], "batch-1")
+
+        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        events = get_recently_consolidated_events(db, limit=50)
+        assert len(events) == 2
+        assert events[0]["id"] == eid1
+        assert events[1]["id"] == eid2
+
+    def test_excludes_unconsolidated(self, db):
+        """Unconsolidated events are not returned."""
+        log_raw_event(db, "s1", "proj", "tool_use", "Read", "a.py", "read a", "")
+
+        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        events = get_recently_consolidated_events(db, limit=50)
+        assert len(events) == 0
+
+    def test_namespace_filter(self, db):
+        """When namespace is provided, only matching project events are returned."""
+        eid1 = log_raw_event(db, "s1", "proj-a", "tool_use", "Read", "a.py", "read a", "")
+        eid2 = log_raw_event(db, "s1", "proj-b", "tool_use", "Read", "b.py", "read b", "")
+        mark_events_consolidated(db, [eid1, eid2], "batch-1")
+
+        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        events = get_recently_consolidated_events(db, limit=50, namespace="proj-a")
+        assert len(events) == 1
+        assert events[0]["project"] == "proj-a"
+
+    def test_respects_limit(self, db):
+        """Limit parameter caps results."""
+        eids = []
+        for i in range(5):
+            eid = log_raw_event(db, "s1", "proj", "tool_use", "Read", f"{i}.py", f"read {i}", "")
+            eids.append(eid)
+        mark_events_consolidated(db, eids, "batch-1")
+
+        from spellbook_mcp.memory_store import get_recently_consolidated_events
+        events = get_recently_consolidated_events(db, limit=2)
+        assert len(events) == 2
+
+
+class TestInsertMemoryExtraMeta:
+    def test_extra_meta_merged_into_meta_json(self, db):
+        """extra_meta dict is shallow-merged into stored meta JSON alongside tags."""
+        mem_id = insert_memory(
+            db_path=db,
+            content="Heuristic-generated memory",
+            memory_type="fact",
+            namespace="ns",
+            tags=["auth", "refactor"],
+            citations=[],
+            extra_meta={"source": "heuristic", "strategy": "content_hash", "batch_id": "abc-123"},
+        )
+        conn = get_connection(db)
+        cursor = conn.execute("SELECT meta FROM memories WHERE id = ?", (mem_id,))
+        meta = json.loads(cursor.fetchone()[0])
+        assert meta["tags"] == ["auth", "refactor"]
+        assert meta["source"] == "heuristic"
+        assert meta["strategy"] == "content_hash"
+        assert meta["batch_id"] == "abc-123"
+
+    def test_extra_meta_none_preserves_existing_behavior(self, db):
+        """When extra_meta is None (default), meta contains only tags and possibly secret_findings."""
+        mem_id = insert_memory(
+            db_path=db,
+            content="Normal memory without extra meta",
+            memory_type="fact",
+            namespace="ns",
+            tags=["normal"],
+            citations=[],
+        )
+        conn = get_connection(db)
+        cursor = conn.execute("SELECT meta FROM memories WHERE id = ?", (mem_id,))
+        meta = json.loads(cursor.fetchone()[0])
+        assert meta["tags"] == ["normal"]
+        assert "source" not in meta
 
 
 def test_fts5_synced_on_insert(db):

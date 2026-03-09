@@ -32,6 +32,7 @@ def insert_memory(
     tags: List[str],
     citations: List[Dict[str, Any]],
     importance: float = 1.0,
+    extra_meta: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Insert a memory, deduplicating by content_hash. Returns memory ID.
 
@@ -60,6 +61,9 @@ def insert_memory(
     secret_findings = scan_for_secrets(content)
     if secret_findings:
         meta["secret_findings"] = secret_findings
+
+    if extra_meta:
+        meta.update(extra_meta)
 
     conn.execute(
         "INSERT INTO memories (id, content, memory_type, namespace, importance, "
@@ -214,16 +218,63 @@ def log_raw_event(
 
 
 def get_unconsolidated_events(
-    db_path: str, limit: int = 50
+    db_path: str,
+    limit: int = 50,
+    namespace: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    """Get unconsolidated raw events."""
+    """Get unconsolidated raw events, optionally filtered by namespace (project)."""
     conn = get_connection(db_path)
-    cursor = conn.execute(
-        "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-        "subject, summary, tags FROM raw_events "
-        "WHERE consolidated = 0 ORDER BY id ASC LIMIT ?",
-        (limit,),
-    )
+    if namespace:
+        cursor = conn.execute(
+            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
+            "subject, summary, tags FROM raw_events "
+            "WHERE consolidated = 0 AND project = ? ORDER BY id ASC LIMIT ?",
+            (namespace, limit),
+        )
+    else:
+        cursor = conn.execute(
+            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
+            "subject, summary, tags FROM raw_events "
+            "WHERE consolidated = 0 ORDER BY id ASC LIMIT ?",
+            (limit,),
+        )
+    return [
+        {
+            "id": r[0], "session_id": r[1], "timestamp": r[2],
+            "project": r[3], "event_type": r[4], "tool_name": r[5],
+            "subject": r[6], "summary": r[7], "tags": r[8],
+        }
+        for r in cursor.fetchall()
+    ]
+
+
+def get_recently_consolidated_events(
+    db_path: str,
+    limit: int = 50,
+    namespace: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Get events consolidated within the last 24 hours.
+
+    Used by memory_get_unconsolidated with include_consolidated=True
+    to allow client re-synthesis of recently consolidated events.
+    """
+    conn = get_connection(db_path)
+    if namespace:
+        cursor = conn.execute(
+            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
+            "subject, summary, tags FROM raw_events "
+            "WHERE consolidated = 1 AND timestamp > datetime('now', '-24 hours') "
+            "AND project = ? ORDER BY id ASC LIMIT ?",
+            (namespace, limit),
+        )
+    else:
+        cursor = conn.execute(
+            "SELECT id, session_id, timestamp, project, event_type, tool_name, "
+            "subject, summary, tags FROM raw_events "
+            "WHERE consolidated = 1 AND timestamp > datetime('now', '-24 hours') "
+            "ORDER BY id ASC LIMIT ?",
+            (limit,),
+        )
     return [
         {
             "id": r[0], "session_id": r[1], "timestamp": r[2],
@@ -235,19 +286,37 @@ def get_unconsolidated_events(
 
 
 def mark_events_consolidated(
-    db_path: str, event_ids: List[int], batch_id: str
-) -> None:
-    """Mark raw events as consolidated with a batch ID."""
+    db_path: str, event_ids: List[int], batch_id: str,
+    namespace: Optional[str] = None,
+) -> int:
+    """Mark raw events as consolidated with a batch ID.
+
+    Args:
+        db_path: Database path.
+        event_ids: Event IDs to mark.
+        batch_id: Consolidation batch identifier.
+        namespace: If provided, only mark events belonging to this project.
+            Prevents marking events from other namespaces.
+
+    Returns:
+        Number of events actually marked.
+    """
     if not event_ids:
-        return
+        return 0
     conn = get_connection(db_path)
     placeholders = ",".join("?" for _ in event_ids)
-    conn.execute(
+    params: list = [batch_id]
+    query = (
         f"UPDATE raw_events SET consolidated = 1, batch_id = ? "
-        f"WHERE id IN ({placeholders})",
-        [batch_id] + event_ids,
+        f"WHERE id IN ({placeholders})"
     )
+    params.extend(event_ids)
+    if namespace:
+        query += " AND project = ?"
+        params.append(namespace)
+    cursor = conn.execute(query, params)
     conn.commit()
+    return cursor.rowcount
 
 
 def recall_by_file_path(
