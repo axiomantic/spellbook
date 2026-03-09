@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-03-09
+
+### Added
+- **Fractal-thinking integration for roundtable ITERATE path** - When a roundtable returns ITERATE with escalation conditions (2+ iterations on same stage or 2+ blocking-severity items), `reflexion-analyze` now invokes fractal-thinking for deep exploration before retrying. New `fractal_feedback` module maps fractal harvest output to Feedback instances. Enhanced `_determine_return_stage()` with fractal-informed stage recommendations and distance-based confirmation guardrails. Simple/first-time ITERATEs continue using plain reflexion with zero overhead.
+- **Explicit memory integration in Tier 1 skills** - Added `memory_recall` calls at investigation/decision start points and `memory_store_memories` calls at key output moments in 5 skills: verifying-hunches, debugging, implementing-features, code-review, and advanced-code-review. Closes the learn-and-recall loop that was previously limited to passive file-path auto-injection via hooks.
+
 ## [0.28.1] - 2026-03-09
 
 ### Fixed
