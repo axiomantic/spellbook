@@ -131,6 +131,7 @@ def _merge_event_metadata(
     return all_tags, all_event_ids, all_citations, all_branches
 
 
+
 def _strategy_content_hash_dedup(
     events: List[Dict[str, Any]],
 ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
