@@ -53,8 +53,8 @@ _STOP_WORDS = frozenset({
 class StrategyMemory(TypedDict):
     """Structure returned by each heuristic strategy for a grouped memory.
 
-    Enforces key consistency across all 4 strategies, preventing runtime
-    KeyError from typos (e.g., 'citation' vs 'citations').
+    Documents expected key structure across all 4 strategies, enabling
+    static type checkers to catch key typos (e.g., 'citation' vs 'citations').
     """
     content: str
     memory_type: str
@@ -422,7 +422,7 @@ def should_consolidate(db_path: str) -> bool:
 
 
 def build_consolidation_prompt(events: List[Dict[str, Any]]) -> str:
-    """Build the LLM prompt from a batch of raw events."""
+    """Build a consolidation prompt from raw events for client-side LLM synthesis."""
     observations = []
     for e in events:
         line = f"- [{e['tool_name']}] {e['subject']}: {e['summary']}"
@@ -445,7 +445,10 @@ def build_consolidation_prompt(events: List[Dict[str, Any]]) -> str:
 
 
 def parse_llm_response(response: str) -> List[Dict[str, Any]]:
-    """Parse LLM response into memory dicts. Returns empty list on failure."""
+    """Parse and validate a JSON response into memory dicts. Returns empty list on failure.
+
+    Used by memory_store_memories to validate client input.
+    """
     try:
         data = json.loads(response)
     except (json.JSONDecodeError, TypeError):
