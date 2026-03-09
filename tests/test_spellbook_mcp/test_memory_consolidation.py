@@ -22,6 +22,18 @@ from spellbook_mcp.memory_consolidation import (
     compute_bibliographic_coupling,
     should_consolidate,
     EVENT_THRESHOLD,
+    SIMILARITY_THRESHOLD,
+    TAG_OVERLAP_BOOST,
+    MIN_SHARED_TAGS,
+    TEMPORAL_GAP_MINUTES,
+    MIN_MEANINGFUL_WORDS,
+    _strategy_content_hash_dedup,
+    _strategy_jaccard_similarity,
+    _strategy_tag_grouping,
+    _strategy_temporal_clustering,
+    _event_text,
+    _extract_citations,
+    _extract_keywords,
 )
 
 
@@ -724,3 +736,347 @@ class TestPurgeDeletedCascade:
             "SELECT COUNT(*) FROM memory_citations WHERE memory_id = ?", (id2,),
         )
         assert cursor.fetchone()[0] == 1
+
+
+# --- Helper functions ---
+
+
+class TestExtractKeywords:
+    def test_filters_stop_words_and_short_words(self):
+        """Stop words and words <= 2 chars are removed."""
+        result = _extract_keywords("the quick brown fox is a fast animal")
+        assert result == {"quick", "brown", "fox", "fast", "animal"}
+
+    def test_lowercases_input(self):
+        """All words are lowercased."""
+        result = _extract_keywords("Python Authentication Module")
+        assert result == {"python", "authentication", "module"}
+
+    def test_empty_string(self):
+        """Empty string returns empty set."""
+        result = _extract_keywords("")
+        assert result == set()
+
+
+class TestEventText:
+    def test_combines_subject_and_summary(self):
+        """Returns 'subject: summary' format."""
+        event = {"subject": "src/auth.py", "summary": "Read authentication module"}
+        assert _event_text(event) == "src/auth.py: Read authentication module"
+
+
+class TestExtractCitations:
+    def test_path_with_slash(self):
+        """Subject with '/' is treated as a file path."""
+        result = _extract_citations("src/auth.py")
+        assert result == [{"file_path": "src/auth.py"}]
+
+    def test_known_extension(self):
+        """Subject ending with known extension without '/' is a citation."""
+        result = _extract_citations("config.toml")
+        assert result == [{"file_path": "config.toml"}]
+
+    def test_no_path_no_extension(self):
+        """Subject without path separator or known extension returns empty."""
+        result = _extract_citations("v2.0 release notes")
+        assert result == []
+
+    def test_case_insensitive_extension(self):
+        """Extension check is case-insensitive."""
+        result = _extract_citations("README.MD")
+        assert result == [{"file_path": "README.MD"}]
+
+
+# --- Strategy 1: Content-Hash Dedup ---
+
+
+class TestStrategyContentHashDedup:
+    def test_exact_duplicates_merged(self):
+        """Events with identical normalized content produce one memory."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read", "subject": "src/a.py",
+             "summary": "Read src/a.py lines 1-10", "tags": "python"},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read", "subject": "src/a.py",
+             "summary": "Read src/a.py lines 1-10", "tags": "python"},
+            {"id": 3, "session_id": "s1", "timestamp": "2026-01-01T00:02:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read", "subject": "src/b.py",
+             "summary": "Read src/b.py lines 1-5", "tags": "python"},
+        ]
+        memories, unconsumed = _strategy_content_hash_dedup(events)
+
+        # Events 1+2 are identical -> one memory; event 3 is unique -> unconsumed
+        assert len(memories) == 1
+        assert memories[0]["event_ids"] == [1, 2]
+        assert memories[0]["strategy"] == "content_hash"
+        assert memories[0]["memory_type"] == "fact"
+        assert memories[0]["content"] == "[Read] src/a.py: Read src/a.py lines 1-10"
+        assert memories[0]["tags"] == ["python"]
+        assert memories[0]["citations"] == [{"file_path": "src/a.py"}]
+
+        assert len(unconsumed) == 1
+        assert unconsumed[0]["id"] == 3
+
+    def test_whitespace_normalization(self):
+        """Events with different whitespace/casing but same content are deduped."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read", "subject": "src/a.py",
+             "summary": "Read  src/a.py   lines 1-10", "tags": ""},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read", "subject": "src/a.py",
+             "summary": "Read src/a.py lines 1-10", "tags": ""},
+        ]
+        memories, unconsumed = _strategy_content_hash_dedup(events)
+        # _content_hash normalizes whitespace, so these are duplicates
+        assert len(memories) == 1
+        assert memories[0]["event_ids"] == [1, 2]
+        assert len(unconsumed) == 0
+
+    def test_no_duplicates_all_unconsumed(self):
+        """When all events are unique, no memories are produced."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read", "subject": "src/a.py",
+             "summary": "Read alpha", "tags": ""},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Edit", "subject": "src/b.py",
+             "summary": "Edit beta", "tags": ""},
+        ]
+        memories, unconsumed = _strategy_content_hash_dedup(events)
+        assert memories == []
+        assert len(unconsumed) == 2
+        assert {e["id"] for e in unconsumed} == {1, 2}
+
+    def test_tag_merging_across_duplicates(self):
+        """Tags from all duplicates in a group are merged and sorted."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read", "subject": "src/a.py",
+             "summary": "Read src/a.py lines 1-10", "tags": "python,auth"},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read", "subject": "src/a.py",
+             "summary": "Read src/a.py lines 1-10", "tags": "python,backend"},
+        ]
+        memories, unconsumed = _strategy_content_hash_dedup(events)
+        assert len(memories) == 1
+        assert memories[0]["tags"] == ["auth", "backend", "python"]
+
+
+# --- Strategy 2: Jaccard Similarity ---
+
+
+class TestStrategyJaccardSimilarity:
+    def test_similar_events_grouped(self):
+        """Events with Jaccard similarity >= threshold are grouped."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/auth.py",
+             "summary": "Read authentication module configuration setup",
+             "tags": "python,auth"},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/auth.py",
+             "summary": "Read authentication module configuration handler",
+             "tags": "python,auth"},
+            {"id": 3, "session_id": "s1", "timestamp": "2026-01-01T00:02:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Edit",
+             "subject": "src/database.py",
+             "summary": "Edited database migration schema completely different topic",
+             "tags": "python,db"},
+        ]
+        memories, unconsumed = _strategy_jaccard_similarity(events)
+        # Events 1 and 2 share "authentication", "module", "configuration" -> similar
+        assert len(memories) >= 1
+        # Verify events 1+2 are grouped together
+        grouped_ids = set()
+        for m in memories:
+            grouped_ids.update(m["event_ids"])
+        assert {1, 2}.issubset(grouped_ids)
+        assert memories[0]["strategy"] == "jaccard_similarity"
+        # Event 3 should be unconsumed (different topic)
+        unconsumed_ids = {e["id"] for e in unconsumed}
+        assert 3 in unconsumed_ids
+
+    def test_short_texts_skipped(self):
+        """Events with fewer than MIN_MEANINGFUL_WORDS are passed through."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "a.py", "summary": "ok", "tags": ""},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "b.py", "summary": "ok", "tags": ""},
+        ]
+        memories, unconsumed = _strategy_jaccard_similarity(events)
+        assert memories == []
+        assert len(unconsumed) == 2
+
+    def test_tag_boost(self):
+        """Events at borderline similarity with 50%+ tag overlap get boosted above threshold.
+
+        Without boost: Jaccard = 5/9 = 0.556 (below 0.6 threshold)
+        With boost (+0.1): 0.656 (above 0.6 threshold)
+        """
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/module.py",
+             "summary": "authentication handler validates tokens config requests",
+             "tags": "auth,security,python"},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/module.py",
+             "summary": "authentication handler validates sessions config responses",
+             "tags": "auth,security,python"},
+        ]
+        memories, unconsumed = _strategy_jaccard_similarity(events)
+        # With tag boost, these should be grouped
+        assert len(memories) == 1
+        assert memories[0]["strategy"] == "jaccard_similarity"
+        assert set(memories[0]["event_ids"]) == {1, 2}
+
+    def test_single_event_returns_unconsumed(self):
+        """A single event cannot be grouped, returned as unconsumed."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/a.py", "summary": "Read authentication module config",
+             "tags": "python"},
+        ]
+        memories, unconsumed = _strategy_jaccard_similarity(events)
+        assert memories == []
+        assert len(unconsumed) == 1
+        assert unconsumed[0]["id"] == 1
+
+
+# --- Strategy 3: Tag Grouping ---
+
+
+class TestStrategyTagGrouping:
+    def test_shared_tags_grouped(self):
+        """Events sharing >= MIN_SHARED_TAGS are grouped."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/a.py", "summary": "alpha work",
+             "tags": "python,auth,backend"},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Edit",
+             "subject": "src/b.py", "summary": "beta work",
+             "tags": "python,auth,frontend"},
+            {"id": 3, "session_id": "s1", "timestamp": "2026-01-01T00:02:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/c.py", "summary": "gamma work",
+             "tags": "rust,wasm"},
+        ]
+        memories, unconsumed = _strategy_tag_grouping(events)
+        # Events 1 and 2 share "python" and "auth" (2 tags >= MIN_SHARED_TAGS)
+        assert len(memories) == 1
+        assert set(memories[0]["event_ids"]) == {1, 2}
+        assert memories[0]["strategy"] == "tag_grouping"
+        assert memories[0]["tags"] == ["auth", "backend", "frontend", "python"]
+        assert memories[0]["content"] == (
+            "Related activities:\n"
+            "- src/a.py: alpha work\n"
+            "- src/b.py: beta work"
+        )
+        # Event 3 has no overlap -> unconsumed
+        unconsumed_ids = {e["id"] for e in unconsumed}
+        assert 3 in unconsumed_ids
+
+    def test_no_tags_passed_through(self):
+        """Events with no tags are passed through as unconsumed."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "a.py", "summary": "work", "tags": ""},
+        ]
+        memories, unconsumed = _strategy_tag_grouping(events)
+        assert memories == []
+        assert len(unconsumed) == 1
+
+    def test_single_shared_tag_not_grouped(self):
+        """Events sharing only 1 tag are not grouped (below MIN_SHARED_TAGS)."""
+        events = [
+            {"id": 1, "session_id": "s1", "timestamp": "2026-01-01T00:00:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Read",
+             "subject": "a.py", "summary": "work", "tags": "python"},
+            {"id": 2, "session_id": "s1", "timestamp": "2026-01-01T00:01:00", "project": "p",
+             "event_type": "tool_use", "tool_name": "Edit",
+             "subject": "b.py", "summary": "more", "tags": "python"},
+        ]
+        memories, unconsumed = _strategy_tag_grouping(events)
+        assert memories == []
+        assert len(unconsumed) == 2
+
+
+# --- Strategy 4: Temporal Clustering ---
+
+
+class TestStrategyTemporalClustering:
+    def test_same_session_subject_within_gap(self):
+        """Events in same session, same subject, within gap are clustered."""
+        events = [
+            {"id": 1, "session_id": "sess-1", "timestamp": "2026-01-01T10:00:00+00:00",
+             "project": "p", "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/main.py", "summary": "Read main header", "tags": "python"},
+            {"id": 2, "session_id": "sess-1", "timestamp": "2026-01-01T10:15:00+00:00",
+             "project": "p", "event_type": "tool_use", "tool_name": "Edit",
+             "subject": "src/main.py", "summary": "Edited main function", "tags": "python"},
+        ]
+        memories, unconsumed = _strategy_temporal_clustering(events)
+        assert len(memories) == 1
+        assert set(memories[0]["event_ids"]) == {1, 2}
+        assert memories[0]["strategy"] == "temporal_clustering"
+        assert memories[0]["content"] == (
+            "Session activity on src/main.py: Read main header; Edited main function"
+        )
+        assert memories[0]["tags"] == ["python"]
+        assert unconsumed == []
+
+    def test_gap_exceeds_threshold_splits_clusters(self):
+        """Events with gap > TEMPORAL_GAP_MINUTES become separate clusters."""
+        events = [
+            {"id": 1, "session_id": "sess-1", "timestamp": "2026-01-01T10:00:00+00:00",
+             "project": "p", "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/main.py", "summary": "Morning work", "tags": ""},
+            {"id": 2, "session_id": "sess-1", "timestamp": "2026-01-01T11:00:00+00:00",
+             "project": "p", "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/main.py", "summary": "After break work", "tags": ""},
+        ]
+        memories, unconsumed = _strategy_temporal_clustering(events)
+        assert len(memories) == 2  # Two separate clusters
+        assert memories[0]["event_ids"] == [1]
+        assert memories[1]["event_ids"] == [2]
+        assert unconsumed == []
+
+    def test_different_sessions_separate(self):
+        """Events from different sessions are not merged even if close in time."""
+        events = [
+            {"id": 1, "session_id": "sess-1", "timestamp": "2026-01-01T10:00:00+00:00",
+             "project": "p", "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/main.py", "summary": "Session 1 work", "tags": ""},
+            {"id": 2, "session_id": "sess-2", "timestamp": "2026-01-01T10:05:00+00:00",
+             "project": "p", "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/main.py", "summary": "Session 2 work", "tags": ""},
+        ]
+        memories, unconsumed = _strategy_temporal_clustering(events)
+        assert len(memories) == 2  # Separate sessions
+        assert memories[0]["event_ids"] == [1]
+        assert memories[1]["event_ids"] == [2]
+
+    def test_single_event_produces_memory(self):
+        """A single event still produces a memory (fallback behavior)."""
+        events = [
+            {"id": 1, "session_id": "sess-1", "timestamp": "2026-01-01T10:00:00+00:00",
+             "project": "p", "event_type": "tool_use", "tool_name": "Read",
+             "subject": "src/main.py", "summary": "Solo read", "tags": "python"},
+        ]
+        memories, unconsumed = _strategy_temporal_clustering(events)
+        assert len(memories) == 1
+        assert memories[0]["event_ids"] == [1]
+        assert memories[0]["content"] == "[Read] src/main.py: Solo read"
+        assert unconsumed == []
