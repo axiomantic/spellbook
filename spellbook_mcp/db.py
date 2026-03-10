@@ -455,6 +455,13 @@ def init_db(db_path: str = None) -> None:
         ON memories(namespace)
     """)
 
+    # Migration: add branch column to existing memories tables
+    existing_cols = {
+        row[1] for row in cursor.execute("PRAGMA table_info(memories)").fetchall()
+    }
+    if "branch" not in existing_cols:
+        cursor.execute("ALTER TABLE memories ADD COLUMN branch TEXT DEFAULT ''")
+
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_memories_branch
         ON memories(branch)
