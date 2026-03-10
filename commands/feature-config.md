@@ -187,7 +187,7 @@ Always runs. Determines the base branch, handles uncommitted changes, and create
 1. Identify base branch and verify it exists.
 2. Find where it's checked out and check for uncommitted changes:
    ```bash
-   BASE_CHECKOUT=$(git worktree list | grep "\[<branch>\]" | awk '{print $1}')
+   BASE_CHECKOUT=$(git worktree list --porcelain | awk -v b="refs/heads/<branch>" '/^worktree / {p = substr($0, 10)} /^branch / && $2 == b {print p}')
    [ -n "$BASE_CHECKOUT" ] && git -C "$BASE_CHECKOUT" status --porcelain
    ```
    If dirty, ask: **Commit first** (changes carry to new branch) or **Leave uncommitted** (new branch starts from last commit, uncommitted changes stay in original checkout).

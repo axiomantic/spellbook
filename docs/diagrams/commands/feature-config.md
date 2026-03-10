@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-config.md", "source_hash": "sha256:5cb80c68731603e260ae09c1be0a7f1801e2e2f25dcd38fba5fd6eefd2aded21", "generated_at": "2026-03-10T06:27:43Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-config.md", "source_hash": "sha256:83c81a603fa55c0fc81e0c4d44ee00f21ed2c70bc4c507813a5e6b0e5654b395", "generated_at": "2026-03-10T06:27:43Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-config
 
 ## Overview
