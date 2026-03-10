@@ -384,7 +384,7 @@ def main():
 
     # Validate commands
     for cmd_file in sorted(commands_dir.glob("*.md")):
-        if not cmd_file.name.startswith("_") and "crystallized2" not in cmd_file.name:
+        if not cmd_file.name.startswith("_") and "crystallized2" not in cmd_file.name and not cmd_file.name.startswith("DIAGRAM."):
             results.append(validate_command(cmd_file))
 
     # Validate agents

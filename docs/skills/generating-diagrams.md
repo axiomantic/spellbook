@@ -6,176 +6,209 @@ Use when generating flowcharts, diagrams, dependency graphs, or visual represent
 
 # Diagram: generating-diagrams
 
-Workflow for the generating-diagrams skill. A 4-phase process: Analysis (identify subject, scope traversal, select format, plan decomposition), Content Extraction (systematic depth-first traversal with completeness check), Diagram Generation (code generation, legend, cross-reference table), and Verification (syntax, renderability, completeness). Incomplete results loop back to extraction.
+## Overview
 
 ```mermaid
 flowchart TD
-    Start([Start]) --> Phase1["Phase 1: Analysis"]
+    START([Skill Invoked]) --> MODE{Mode?}
+    MODE -->|"--headless"| P1[Phase 1: Analysis]
+    MODE -->|"default"| P1
+    P1 --> P2[Phase 2: Content Extraction]
+    P2 --> P3[Phase 3: Diagram Generation]
+    P3 --> P4[Phase 4: Verification]
+    P4 --> COMPLETE{Completeness<br>Check Passed?}
+    COMPLETE -->|No| P2
+    COMPLETE -->|Yes| OUTPUT{Mode?}
+    OUTPUT -->|"--headless"| RAW([Output Raw Markdown])
+    OUTPUT -->|"default"| WRITE([Write to File])
 
-    subgraph P1["Phase 1: Analysis"]
-        IdentifySubject["Identify diagram subject"]
-        ClassifyType{Diagram type?}
-        Flowchart["Flowchart"]
-        Sequence["Sequence"]
-        State["State"]
-        ER["ER"]
-        ClassDiag["Class"]
-        DepGraph["Dependency graph"]
-        ScopeTraversal["Scope the traversal"]
-        SelectFormat{Node count?}
-        UseMermaid["Use Mermaid"]
-        UseGraphviz["Use Graphviz"]
-        Decompose["Plan decomposition"]
-        IdentifySubject --> ClassifyType
-        ClassifyType --> Flowchart
-        ClassifyType --> Sequence
-        ClassifyType --> State
-        ClassifyType --> ER
-        ClassifyType --> ClassDiag
-        ClassifyType --> DepGraph
-        Flowchart --> ScopeTraversal
-        Sequence --> ScopeTraversal
-        State --> ScopeTraversal
-        ER --> ScopeTraversal
-        ClassDiag --> ScopeTraversal
-        DepGraph --> ScopeTraversal
-        ScopeTraversal --> SelectFormat
-        SelectFormat -->|"< 50"| UseMermaid
-        SelectFormat -->|"50-150"| UseGraphviz
-        SelectFormat -->|"> 150"| Decompose
-        Decompose --> UseMermaid
-        Decompose --> UseGraphviz
-    end
-
-    Phase1 --> IdentifySubject
-    UseMermaid --> Phase2
-    UseGraphviz --> Phase2
-
-    Phase2["Phase 2: Content Extraction"]
-
-    subgraph P2["Phase 2: Extraction"]
-        InitQueue["Init queue with ROOT"]
-        PopEntity["Pop next entity"]
-        ReadSource["Read source material"]
-        ExtractNode["Extract node + metadata"]
-        ExtractEdges["Extract outgoing edges"]
-        QueueRefs["Queue unvisited refs"]
-        MoreQueue{Queue empty?}
-        InitQueue --> PopEntity
-        PopEntity --> ReadSource
-        ReadSource --> ExtractNode
-        ExtractNode --> ExtractEdges
-        ExtractEdges --> QueueRefs
-        QueueRefs --> MoreQueue
-        MoreQueue -->|No| PopEntity
-    end
-
-    Phase2 --> InitQueue
-    MoreQueue -->|Yes| GateComplete{Completeness check?}
-
-    GateComplete -->|"Orphan nodes/missing branches"| Phase2
-    GateComplete -->|Pass| Phase3["Phase 3: Generation"]
-
-    subgraph P3["Phase 3: Diagram Generation"]
-        GenCode["Generate diagram code"]
-        ApplyLayout["Apply layout rules"]
-        GenLegend["Generate legend"]
-        GenXRef["Generate cross-ref table"]
-        GenCode --> ApplyLayout
-        ApplyLayout --> GenLegend
-        GenLegend --> GenXRef
-    end
-
-    Phase3 --> GenCode
-
-    GenXRef --> Phase4["Phase 4: Verification"]
-
-    subgraph P4["Phase 4: Verification"]
-        SyntaxCheck["Syntax check"]
-        SyntaxOK{Syntax valid?}
-        RenderCheck["Renderability check"]
-        RenderOK{Renders cleanly?}
-        FinalComplete{Source completeness?}
-        SyntaxCheck --> SyntaxOK
-        SyntaxOK -->|No| FixSyntax["Fix syntax errors"]
-        FixSyntax --> SyntaxCheck
-        SyntaxOK -->|Yes| RenderCheck
-        RenderCheck --> RenderOK
-        RenderOK -->|No| FixRender["Fix render issues"]
-        FixRender --> RenderCheck
-        RenderOK -->|Yes| FinalComplete
-    end
-
-    Phase4 --> SyntaxCheck
-    FinalComplete -->|Missing content| Phase2
-    FinalComplete -->|Complete| Done([Done])
-
-    style Start fill:#4CAF50,color:#fff
-    style Done fill:#4CAF50,color:#fff
-    style Phase1 fill:#4CAF50,color:#fff
-    style Phase2 fill:#4CAF50,color:#fff
-    style Phase3 fill:#4CAF50,color:#fff
-    style Phase4 fill:#4CAF50,color:#fff
-    style IdentifySubject fill:#2196F3,color:#fff
-    style Flowchart fill:#2196F3,color:#fff
-    style Sequence fill:#2196F3,color:#fff
-    style State fill:#2196F3,color:#fff
-    style ER fill:#2196F3,color:#fff
-    style ClassDiag fill:#2196F3,color:#fff
-    style DepGraph fill:#2196F3,color:#fff
-    style ScopeTraversal fill:#2196F3,color:#fff
-    style UseMermaid fill:#2196F3,color:#fff
-    style UseGraphviz fill:#2196F3,color:#fff
-    style Decompose fill:#2196F3,color:#fff
-    style InitQueue fill:#2196F3,color:#fff
-    style PopEntity fill:#2196F3,color:#fff
-    style ReadSource fill:#2196F3,color:#fff
-    style ExtractNode fill:#2196F3,color:#fff
-    style ExtractEdges fill:#2196F3,color:#fff
-    style QueueRefs fill:#2196F3,color:#fff
-    style GenCode fill:#2196F3,color:#fff
-    style ApplyLayout fill:#2196F3,color:#fff
-    style GenLegend fill:#2196F3,color:#fff
-    style GenXRef fill:#2196F3,color:#fff
-    style SyntaxCheck fill:#2196F3,color:#fff
-    style FixSyntax fill:#2196F3,color:#fff
-    style RenderCheck fill:#2196F3,color:#fff
-    style FixRender fill:#2196F3,color:#fff
-    style ClassifyType fill:#FF9800,color:#fff
-    style SelectFormat fill:#FF9800,color:#fff
-    style MoreQueue fill:#FF9800,color:#fff
-    style SyntaxOK fill:#FF9800,color:#fff
-    style RenderOK fill:#FF9800,color:#fff
-    style GateComplete fill:#f44336,color:#fff
-    style FinalComplete fill:#f44336,color:#fff
+    style P1 fill:#4a9eff,color:#fff
+    style P2 fill:#4a9eff,color:#fff
+    style P3 fill:#4a9eff,color:#fff
+    style P4 fill:#4a9eff,color:#fff
 ```
 
-## Legend
+## Phase 1: Analysis
 
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
+```mermaid
+flowchart TD
+    P1_START([Phase 1 Start]) --> SUBJ[1.1 Identify<br>Diagram Subject]
+    SUBJ --> SUBJ_TYPE{Subject Type?}
+    SUBJ_TYPE -->|"Process/workflow"| FC_FLOW[Flowchart]
+    SUBJ_TYPE -->|"Temporal interaction"| FC_SEQ[Sequence Diagram]
+    SUBJ_TYPE -->|"Lifecycle/states"| FC_STATE[State Diagram]
+    SUBJ_TYPE -->|"Data model"| FC_ER[ER Diagram]
+    SUBJ_TYPE -->|"Type hierarchy"| FC_CLASS[Class Diagram]
+    SUBJ_TYPE -->|"Dependencies"| FC_DEP[Dependency Graph]
+    FC_FLOW --> MULTI{Spans multiple types?}
+    FC_SEQ --> MULTI
+    FC_STATE --> MULTI
+    FC_ER --> MULTI
+    FC_CLASS --> MULTI
+    FC_DEP --> MULTI
+    MULTI -->|Yes| SEP[Produce separate diagrams]
+    MULTI -->|No| SCOPE
+    SEP --> SCOPE[1.2 Scope Traversal]
+    SCOPE --> SCOPE_DEF[Define ROOT, DEPTH,<br>BOUNDARY, EXCLUSIONS]
+    SCOPE_DEF --> FORMAT[1.3 Select Format]
+    FORMAT --> FMT_DEC{Node count?}
+    FMT_DEC -->|"< 50"| MERMAID[Use Mermaid]
+    FMT_DEC -->|"50-150"| FMT_RISK{Complex layout?}
+    FMT_DEC -->|"> 150"| GRAPHVIZ[Use Graphviz<br>or Decompose]
+    FMT_RISK -->|Yes| GRAPHVIZ
+    FMT_RISK -->|No| MERMAID
+    MERMAID --> DECOMP{Exceeds<br>format limits?}
+    GRAPHVIZ --> DECOMP
+    DECOMP -->|No| P1_END([Phase 1 Complete])
+    DECOMP -->|Yes| PLAN[1.4 Plan Decomposition]
+    PLAN --> L0[Level 0: Overview]
+    L0 --> L1[Level 1: Phase Detail]
+    L1 --> L2_DEC{Phase internally<br>complex?}
+    L2_DEC -->|Yes| L2[Level 2: Deep Dive]
+    L2_DEC -->|No| P1_END
+    L2 --> P1_END
+
+    style SUBJ fill:#4a9eff,color:#fff
+    style SCOPE fill:#4a9eff,color:#fff
+    style FORMAT fill:#4a9eff,color:#fff
+    style PLAN fill:#4a9eff,color:#fff
+    classDef decision fill:#ff6b6b,color:#fff
+    class SUBJ_TYPE,MULTI,FMT_DEC,FMT_RISK,DECOMP,L2_DEC decision
+```
+
+## Phase 2: Content Extraction
+
+```mermaid
+flowchart TD
+    P2_START([Phase 2 Start]) --> INIT[Initialize QUEUE,<br>VISITED, NODES, EDGES]
+    INIT --> LOOP{QUEUE empty?}
+    LOOP -->|Yes| VERIFY[2.2 Verify Completeness]
+    LOOP -->|No| POP[Pop current from QUEUE]
+    POP --> VISITED_CHK{Already visited?}
+    VISITED_CHK -->|Yes| LOOP
+    VISITED_CHK -->|No| READ[Read source location]
+    READ --> EXTRACT[Extract: decisions,<br>dispatches, transforms]
+    EXTRACT --> EXTRACT2[Extract: quality gates,<br>loops, terminals]
+    EXTRACT2 --> EXTRACT3[Extract: conditional<br>branches]
+    EXTRACT3 --> ADD_NODE[Append to NODES]
+    ADD_NODE --> ADD_EDGES[Append edges<br>for references]
+    ADD_EDGES --> ENQUEUE[Enqueue unvisited<br>targets]
+    ENQUEUE --> LOOP
+    VERIFY --> CHK1{Orphan nodes?}
+    CHK1 -->|Yes| FAIL([Return to fix])
+    CHK1 -->|No| CHK2{All terminals<br>marked?}
+    CHK2 -->|No| FAIL
+    CHK2 -->|Yes| CHK3{All branches<br>represented?}
+    CHK3 -->|No| FAIL
+    CHK3 -->|Yes| CHK4{Loop conditions<br>complete?}
+    CHK4 -->|No| FAIL
+    CHK4 -->|Yes| CHK5{Placeholders<br>exist?}
+    CHK5 -->|Yes| FAIL
+    CHK5 -->|No| P2_END([Phase 2 Complete])
+
+    style INIT fill:#4a9eff,color:#fff
+    style READ fill:#4a9eff,color:#fff
+    style EXTRACT fill:#4a9eff,color:#fff
+    style VERIFY fill:#4a9eff,color:#fff
+    classDef decision fill:#ff6b6b,color:#fff
+    class LOOP,VISITED_CHK,CHK1,CHK2,CHK3,CHK4,CHK5 decision
+```
+
+## Phase 3: Diagram Generation
+
+```mermaid
+flowchart TD
+    P3_START([Phase 3 Start]) --> GEN[3.1 Generate<br>Diagram Code]
+    GEN --> APPLY_DIR[Set flow direction<br>TD or LR]
+    APPLY_DIR --> GROUP[Group nodes into<br>subgraphs by phase]
+    GROUP --> SHAPES[Apply node shapes:<br>decision, process, terminal]
+    SHAPES --> STYLES[Apply styles:<br>blue=dispatch, red=gate]
+    STYLES --> LABELS[Apply label guidelines:<br>max 5 words per line]
+    LABELS --> MULT{Multiple edges<br>same source-target?}
+    MULT -->|Yes| ANNOT[Use multiplicity<br>annotation]
+    MULT -->|No| LEGEND
+    ANNOT --> LEGEND[3.2 Generate Legend]
+    LEGEND --> LEG_SUB[Add disconnected<br>legend subgraph]
+    LEG_SUB --> LEG_COLOR[Include color meanings<br>if using classDef]
+    LEG_COLOR --> XREF{Decomposed<br>diagram?}
+    XREF -->|Yes| TABLE[3.3 Generate<br>Cross-Reference Table]
+    XREF -->|No| P3_END([Phase 3 Complete])
+    TABLE --> P3_END
+
+    style GEN fill:#4a9eff,color:#fff
+    style LEGEND fill:#4a9eff,color:#fff
+    style TABLE fill:#4a9eff,color:#fff
+    classDef decision fill:#ff6b6b,color:#fff
+    class MULT,XREF decision
+```
+
+## Phase 4: Verification
+
+```mermaid
+flowchart TD
+    P4_START([Phase 4 Start]) --> SYNTAX[4.1 Syntax Check]
+    SYNTAX --> RENDER_AVAIL{Renderer<br>available?}
+    RENDER_AVAIL -->|"Mermaid"| MERM_LIVE[Test in mermaid.live]
+    RENDER_AVAIL -->|"Graphviz"| DOT_RUN[Run dot command]
+    RENDER_AVAIL -->|"None"| MANUAL[Manual syntax audit]
+    MANUAL --> BRACE[Count braces/brackets]
+    BRACE --> SUB_END[Verify subgraph/end pairs]
+    SUB_END --> NODE_ID[Check node ID format]
+    NODE_ID --> EDGE_Q[Check edge label quoting]
+    EDGE_Q --> CLASS_REF[Verify classDef matches]
+    CLASS_REF --> RESERVED[Check reserved words]
+    MERM_LIVE --> RENDER[4.2 Renderability Check]
+    DOT_RUN --> RENDER
+    RESERVED --> RENDER
+    RENDER --> R_NODES{Too many nodes?}
+    R_NODES -->|Yes| FIX_DECOMP[Decompose into levels]
+    R_NODES -->|No| R_LABELS{Overlapping labels?}
+    FIX_DECOMP --> RENDER
+    R_LABELS -->|Yes| FIX_LABELS[Shorten labels]
+    R_LABELS -->|No| R_EDGES{Edge spaghetti?}
+    FIX_LABELS --> RENDER
+    R_EDGES -->|Yes| FIX_EDGES[Reorder nodes,<br>change direction]
+    R_EDGES -->|No| COMPLETE[4.3 Completeness Check]
+    FIX_EDGES --> RENDER
+    COMPLETE --> C1{All source sections<br>have nodes?}
+    C1 -->|No| RETRAVERSE([Return to Phase 2])
+    C1 -->|Yes| C2{All branches<br>as edges?}
+    C2 -->|No| RETRAVERSE
+    C2 -->|Yes| C3{All invocations<br>represented?}
+    C3 -->|No| RETRAVERSE
+    C3 -->|Yes| C4{All gates show<br>pass and fail?}
+    C4 -->|No| RETRAVERSE
+    C4 -->|Yes| P4_END([Phase 4 Complete])
+
+    style SYNTAX fill:#4a9eff,color:#fff
+    style RENDER fill:#4a9eff,color:#fff
+    style COMPLETE fill:#4a9eff,color:#fff
+    classDef decision fill:#ff6b6b,color:#fff
+    class RENDER_AVAIL,R_NODES,R_LABELS,R_EDGES,C1,C2,C3,C4 decision
+```
 
 ## Cross-Reference
 
-| Node | Source Reference |
-|------|----------------|
-| Identify diagram subject | SKILL.md: Phase 1 - 1.1 Identify Diagram Subject |
-| Diagram type classification | SKILL.md: Phase 1 - Subject Type table (Flowchart, Sequence, State, ER, Class, Dependency) |
-| Scope the traversal | SKILL.md: Phase 1 - 1.2 ROOT/DEPTH/BOUNDARY/EXCLUSIONS |
-| Node count format selection | SKILL.md: Phase 1 - 1.3 Decision matrix (<50 Mermaid, 50-150 Graphviz, >150 decompose) |
-| Plan decomposition | SKILL.md: Phase 1 - 1.4 Level 0/1/2 decomposition |
-| Systematic traversal | SKILL.md: Phase 2 - 2.1 Depth-first traversal protocol (QUEUE/VISITED/NODES/EDGES) |
-| Completeness check | SKILL.md: Phase 2 - 2.2 No orphan nodes, all branches, all loops |
-| Generate diagram code | SKILL.md: Phase 3 - 3.1 Layout rules (TD/LR, subgraphs, shapes) |
-| Generate legend | SKILL.md: Phase 3 - 3.2 Every diagram MUST include legend |
-| Generate cross-ref table | SKILL.md: Phase 3 - 3.3 Node-to-detail mapping |
-| Syntax check | SKILL.md: Phase 4 - 4.1 Bracket matching, subgraph/end pairs, node ID validation |
-| Renderability check | SKILL.md: Phase 4 - 4.2 Node overflow, label collision, subgraph escape |
-| Source completeness | SKILL.md: Phase 4 - 4.3 Compare diagram against source material |
+| Overview Node | Detail Section | Source |
+|---|---|---|
+| P1 | Phase 1: Analysis | `skills/generating-diagrams/SKILL.md:47-99` |
+| P2 | Phase 2: Content Extraction | `skills/generating-diagrams/SKILL.md:101-156` |
+| P3 | Phase 3: Diagram Generation | `skills/generating-diagrams/SKILL.md:158-203` |
+| P4 | Phase 4: Verification | `skills/generating-diagrams/SKILL.md:205-237` |
+
+## Legend
+
+```mermaid
+flowchart LR
+    L1[Process Step]
+    L2{Decision Point}
+    L3([Terminal])
+    L4[Loop Back]
+    style L1 fill:#4a9eff,color:#fff
+    style L2 fill:#ff6b6b,color:#fff
+    style L3 fill:#51cf66,color:#fff
+    style L4 fill:#f0f0f0,color:#333
+```
 
 ## Skill Content
 
@@ -520,6 +553,67 @@ digraph G {
 | "The completeness check takes too long" | Completeness check catches missing edges every time. 2 minutes to check vs. delivering wrong diagram. |
 | "I know this domain well enough to skip reading" | Source-grounded means reading, not remembering. Read or mark out-of-scope. |
 
+## Modes
+
+### `--headless`
+
+Invoked as: `/generating-diagrams --headless`
+
+<CRITICAL>
+When `--headless` is specified, the calling script captures your raw text output and saves it directly as a file. Your output IS the file content.
+
+Rules:
+1. Do ALL analysis, extraction, and verification work SILENTLY. Do not output your Phase 1/2/4 work.
+2. Do NOT read, compare against, or reference any existing diagram files. Always generate fresh from the source.
+3. Do NOT output "no changes needed" or "the diagram is accurate". Always output the full diagram.
+4. Do NOT output any prose, preamble, summary, or description of what you did.
+5. ONLY output markdown headings, mermaid code blocks, and cross-reference tables.
+
+Your output must match this template exactly:
+</CRITICAL>
+
+```
+## Overview
+
+\`\`\`mermaid
+flowchart TD
+    A[Phase 1] --> B[Phase 2]
+\`\`\`
+
+## Phase 1: Name
+
+\`\`\`mermaid
+flowchart TD
+    A[Step 1] --> B{Decision}
+    B -->|Yes| C[Action]
+    B -->|No| D[Other]
+\`\`\`
+
+## Cross-Reference
+
+| Overview Node | Detail Section | Source |
+|---|---|---|
+| A | Phase 1: Name | `path/to/source` |
+
+## Legend
+
+\`\`\`mermaid
+flowchart LR
+    L1[Process Step]
+    L2{Decision Point}
+    L3([Terminal])
+    style L1 fill:#4a9eff,color:#fff
+    style L2 fill:#ff6b6b,color:#fff
+    style L3 fill:#51cf66,color:#fff
+\`\`\`
+```
+
+If the very first characters of your output are not `## Overview`, you are doing it wrong.
+
+### Default (interactive)
+
+When `--headless` is NOT specified, write the diagram to the appropriate file path using Write or Edit tools. Confirm the output path with the user if not obvious from context.
+
 <FORBIDDEN>
 - Placeholder nodes ("...", "etc.", "and more")
 - Duplicate nodes for the same entity in relationship diagrams
@@ -530,6 +624,7 @@ digraph G {
 - Hybrid diagrams mixing process flow with relationship data (use separate diagrams)
 - Handwaving over nested references ("see X for details" without tracing X)
 - Rationalizing that "this is simple enough" to skip any phase
+- In headless mode: any text output that is not a markdown heading, mermaid code block, or cross-reference table
 </FORBIDDEN>
 
 <FINAL_EMPHASIS>

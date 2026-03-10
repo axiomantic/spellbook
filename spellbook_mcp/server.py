@@ -61,6 +61,7 @@ from spellbook_mcp.path_utils import (
 from spellbook_mcp.memory_tools import (
     do_memory_recall,
     do_memory_forget,
+    do_memory_purge_topic,
     do_log_event,
     do_get_unconsolidated,
     do_store_memories,
@@ -3336,6 +3337,52 @@ async def memory_forget(ctx: Context, memory_id: str) -> dict:
     """
     db_path = str(get_db_path())
     return do_memory_forget(db_path=db_path, memory_id=memory_id)
+
+
+@mcp.tool()
+@inject_recovery_context
+async def memory_purge_topic(
+    ctx: Context,
+    query: str,
+    namespace: str = "",
+    dry_run: bool = True,
+) -> dict:
+    """Sweep all memory storage layers for a topic and optionally purge matches.
+
+    Searches across 4 layers: SQLite memories (FTS5), raw_events, understanding
+    docs (markdown), and auto-memory files (Claude project memory).
+
+    Call with dry_run=True first to preview what will be deleted, then with
+    dry_run=False to actually delete after user confirmation.
+
+    Args:
+        query: Search term or topic to find and purge across all memory layers.
+        namespace: Project namespace. Auto-detected from context if empty.
+        dry_run: If True (default), preview matches without deleting. If False, delete all matches.
+
+    Returns:
+        Dict with matches found across memories, raw_events, understanding docs,
+        and auto-memory files. When dry_run=False, includes deletion counts.
+    """
+    db_path = str(get_db_path())
+    if not namespace:
+        project_path = await get_project_path_from_context(ctx)
+        if project_path:
+            namespace = encode_cwd(project_path)
+        else:
+            return {"error": "Could not determine project namespace"}
+
+    config_dir = str(get_spellbook_config_dir())
+    claude_projects_dir = os.path.expanduser("~/.claude/projects")
+
+    return do_memory_purge_topic(
+        db_path=db_path,
+        topic=query,
+        namespace=namespace,
+        config_dir=config_dir,
+        claude_projects_dir=claude_projects_dir,
+        dry_run=dry_run,
+    )
 
 
 @mcp.tool()

@@ -439,6 +439,114 @@ def purge_deleted(db_path: str, retention_days: int = 30) -> int:
     return len(ids)
 
 
+def search_memories_by_topic(
+    db_path: str,
+    query: str,
+    namespace: str,
+    limit: int = 50,
+) -> List[Dict[str, Any]]:
+    """Search memories table via FTS5 for topic matches.
+
+    Returns list of matching memories with id, content snippet, and created_at.
+    Only returns active (non-deleted) memories.
+
+    Args:
+        db_path: Database path.
+        query: Search term/topic to find.
+        namespace: Project namespace for scoping.
+        limit: Maximum results to return.
+
+    Returns:
+        List of dicts with id, content (first 200 chars), created_at, memory_type.
+    """
+    if not query.strip():
+        return []
+
+    conn = get_connection(db_path)
+    safe_query = '"' + query.replace('"', '""') + '"'
+    cursor = conn.execute(
+        "SELECT m.id, m.content, m.created_at, m.memory_type "
+        "FROM memories_fts fts "
+        "JOIN memories m ON m.rowid = fts.rowid "
+        "WHERE memories_fts MATCH ? AND m.namespace = ? AND m.status != 'deleted' "
+        "ORDER BY m.created_at DESC "
+        "LIMIT ?",
+        (safe_query, namespace, limit),
+    )
+    return [
+        {
+            "id": r[0],
+            "content": r[1][:200],
+            "created_at": r[2],
+            "memory_type": r[3],
+        }
+        for r in cursor.fetchall()
+    ]
+
+
+def delete_raw_events_by_topic(
+    db_path: str,
+    query: str,
+    namespace: str,
+    dry_run: bool = True,
+    limit: int = 200,
+) -> Dict[str, Any]:
+    """Search raw_events by summary/tags matching query.
+
+    If dry_run=False, DELETE matching rows. Returns count and event details.
+
+    Args:
+        db_path: Database path.
+        query: Search term to match against summary and tags columns.
+        namespace: Project namespace (project column).
+        dry_run: If True, only return matches without deleting.
+        limit: Maximum events to process.
+
+    Returns:
+        Dict with count and list of matched event summaries.
+    """
+    if not query.strip():
+        return {"count": 0, "events": []}
+
+    conn = get_connection(db_path)
+    # Use LIKE for substring matching on summary and tags
+    like_pattern = f"%{query}%"
+    cursor = conn.execute(
+        "SELECT id, summary, tags FROM raw_events "
+        "WHERE project = ? AND (summary LIKE ? OR tags LIKE ?) "
+        "ORDER BY id DESC LIMIT ?",
+        (namespace, like_pattern, like_pattern, limit),
+    )
+    rows = cursor.fetchall()
+    events = [
+        {"id": r[0], "summary": r[1], "tags": r[2]}
+        for r in rows
+    ]
+
+    deleted_count = 0
+    if not dry_run and events:
+        event_ids = [e["id"] for e in events]
+        placeholders = ",".join("?" for _ in event_ids)
+        cursor = conn.execute(
+            f"DELETE FROM raw_events WHERE id IN ({placeholders})",
+            event_ids,
+        )
+        deleted_count = cursor.rowcount
+        conn.commit()
+        for event in events:
+            log_audit(
+                db_path,
+                "purge_topic_raw_event",
+                details={"event_id": event["id"], "query": query},
+            )
+
+    return {
+        "matched": len(events),
+        "events": events,
+        "deleted": deleted_count,
+    }
+
+
 def log_audit(
     db_path: str,
     action: str,
