@@ -137,7 +137,7 @@ def has_conflict(verdicts: dict[str, str]) -> bool:
 
 def determine_consensus(
     verdicts: dict[str, str], current_stage: str
-) -> tuple[bool, Optional[str], bool]:
+) -> tuple[bool, Optional[str]]:
     """Determine consensus and return stage if iteration needed.
 
     Args:
@@ -145,13 +145,12 @@ def determine_consensus(
         current_stage: The current workflow stage
 
     Returns:
-        Tuple of (consensus_reached, return_to_stage, needs_confirmation)
+        Tuple of (consensus_reached, return_to_stage)
         - consensus_reached: True if all active verdicts are APPROVE
         - return_to_stage: Stage to return to if ITERATE, else None
-        - needs_confirmation: True if return stage is 2+ stages back
     """
     if not verdicts:
-        return True, None, False
+        return True, None
 
     # Filter out ABSTAIN verdicts
     active_verdicts = [
@@ -160,58 +159,33 @@ def determine_consensus(
 
     if not active_verdicts:
         # All abstained
-        return True, None, False
+        return True, None
 
     # Check if any ITERATE
     if "ITERATE" in active_verdicts:
         # Determine which stage to return to based on current stage
-        return_to, needs_confirmation = _determine_return_stage(current_stage)
-        return False, return_to, needs_confirmation
+        return_to = _determine_return_stage(current_stage)
+        return False, return_to
 
     # All active verdicts are APPROVE
-    return True, None, False
+    return True, None
 
 
-def _determine_return_stage(
-    current_stage: str,
-    fractal_suggestion: str | None = None,
-) -> tuple[str, bool]:
+def _determine_return_stage(current_stage: str) -> str:
     """Determine which stage to return to on ITERATE.
 
-    When fractal analysis suggests returning to an earlier stage,
-    applies distance-based guardrails: 1 stage back is auto-approved,
-    2+ stages back requires user confirmation (returned as needs_confirmation).
+    Generally returns the same stage for iteration, but can be
+    customized for stage-specific logic.
 
     Args:
         current_stage: The current workflow stage
-        fractal_suggestion: Optional stage suggested by fractal analysis
 
     Returns:
-        Tuple of (stage_to_return_to, needs_user_confirmation)
+        Stage to return to for iteration
     """
-    stage_order = ["DISCOVER", "DESIGN", "PLAN", "IMPLEMENT", "COMPLETE"]
-
-    if current_stage not in stage_order:
-        return current_stage, False
-
-    if fractal_suggestion is None or fractal_suggestion not in stage_order:
-        return current_stage, False
-
-    current_idx = stage_order.index(current_stage)
-    suggested_idx = stage_order.index(fractal_suggestion)
-
-    # Suggested stage must be strictly earlier than current
-    if suggested_idx >= current_idx:
-        return current_stage, False
-
-    distance = current_idx - suggested_idx
-
-    if distance == 1:
-        # 1 stage back: auto-approved
-        return fractal_suggestion, False
-    else:
-        # 2+ stages back: needs user confirmation
-        return fractal_suggestion, True
+    # For now, return to the same stage to iterate on current work
+    # Could be enhanced to return to earlier stages based on feedback
+    return current_stage
 
 
 # =============================================================================
@@ -529,7 +503,7 @@ def process_roundtable_response(
     verdicts = {pv.archetype: pv.verdict for pv in parsed_verdicts}
 
     # Determine consensus
-    consensus, return_to, needs_confirmation = determine_consensus(verdicts, stage)
+    consensus, return_to = determine_consensus(verdicts, stage)
 
     # Build feedback from ITERATE verdicts
     feedback = []
@@ -554,6 +528,5 @@ def process_roundtable_response(
         "verdicts": verdicts,
         "feedback": feedback,
         "return_to": return_to,
-        "needs_confirmation": needs_confirmation,
         "parsed_verdicts": [pv.to_dict() for pv in parsed_verdicts],
     }

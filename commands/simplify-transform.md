@@ -25,7 +25,7 @@ All transformations go through post-application verification.
 <FORBIDDEN>
 - Committing changes without explicit user approval
 - Skipping post-application verification after applying a transformation
-- Adding AI attribution (Co-Authored-By, "Generated with Claude Code", bot signatures) to commits, PRs, issues, or comments
+- Including co-authorship footers in commit messages
 - Tagging GitHub issues in commit messages
 - Applying transformations that failed verification
 - Proceeding after a test failure without user confirmation

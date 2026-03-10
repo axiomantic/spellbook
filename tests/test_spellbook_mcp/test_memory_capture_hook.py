@@ -240,6 +240,7 @@ class TestPayloadStructure:
             "summary": "Read: /Users/alice/project/src/main.py",
             "tags": "read,main.py",
             "event_type": "tool_use",
+            "branch": "",
         }
 
     def test_write_tool_payload(self):
@@ -261,6 +262,7 @@ class TestPayloadStructure:
             "summary": "Write: /tmp/output.txt",
             "tags": "write,output.txt",
             "event_type": "tool_use",
+            "branch": "",
         }
 
     def test_edit_tool_payload(self):
@@ -282,6 +284,7 @@ class TestPayloadStructure:
             "summary": "Edit: /src/app.py",
             "tags": "edit,app.py",
             "event_type": "tool_use",
+            "branch": "",
         }
 
     def test_bash_tool_payload_truncates_command(self):
@@ -306,6 +309,7 @@ class TestPayloadStructure:
             "summary": expected_summary,
             "tags": "bash",
             "event_type": "tool_use",
+            "branch": "",
         }
 
     def test_grep_tool_payload(self):
@@ -327,6 +331,7 @@ class TestPayloadStructure:
             "summary": "Grep: def main",
             "tags": "grep",
             "event_type": "tool_use",
+            "branch": "",
         }
 
     def test_glob_tool_payload(self):
@@ -349,6 +354,7 @@ class TestPayloadStructure:
             "summary": "Glob: **/*.py",
             "tags": "glob,*.py",
             "event_type": "tool_use",
+            "branch": "",
         }
 
     def test_webfetch_tool_payload(self):
@@ -371,6 +377,7 @@ class TestPayloadStructure:
             "summary": "WebFetch: https://example.com/api",
             "tags": "webfetch,api",
             "event_type": "tool_use",
+            "branch": "",
         }
 
     def test_mcp_tool_payload(self):
@@ -392,6 +399,7 @@ class TestPayloadStructure:
             "summary": "mcp__spellbook__health_check: mcp__spellbook__health_check",
             "tags": "mcp__spellbook__health_check",
             "event_type": "tool_use",
+            "branch": "",
         }
 
     def test_bash_tool_with_description_appends_to_summary(self):
@@ -413,6 +421,7 @@ class TestPayloadStructure:
             "summary": "Bash: ls -la (List files in directory)",
             "tags": "bash",
             "event_type": "tool_use",
+            "branch": "",
         }
 
 

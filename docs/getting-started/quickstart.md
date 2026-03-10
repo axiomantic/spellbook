@@ -18,7 +18,7 @@ Or use the Skill tool directly to list them.
 When you need a structured workflow, invoke the relevant skill:
 
 ```
-I need to debug this issue. Use the debugging skill.
+I need to debug this issue. Use the systematic-debugging skill.
 ```
 
 Or let the AI assistant detect when a skill applies automatically.
@@ -27,46 +27,26 @@ Or let the AI assistant detect when a skill applies automatically.
 
 ### Starting a New Feature
 
-Use the `implementing-features` skill. It handles the entire lifecycle: discovery, design, planning, and implementation.
-
-```
-I want to add user authentication. Use the implementing-features skill.
-```
-
-Or just describe what you want -- the skill is invoked automatically for any code change:
-
-```
-Add a REST API for managing projects
-```
-
-### Creating an Entire Project
-
-Use the `autonomous-roundtable` skill (Forge) for greenfield projects. It decomposes a project into features and executes them through parallel worktrees with roundtable quality gates.
-
-```
-Create a new CLI tool for managing database migrations. Use Forge.
-```
+1. **Brainstorm first:** Use `/brainstorm` or invoke `brainstorming` skill
+2. **Create a plan:** Use `/write-plan` or invoke `writing-plans` skill
+3. **Execute the plan:** Use `/execute-plan` or invoke `executing-plans` skill
 
 ### Debugging an Issue
 
-Invoke the `debugging` skill, or just describe the problem:
-
-```
-This endpoint returns 500 when the user has no profile. Debug it.
-```
-
-The skill triages the issue, selects a methodology (scientific or systematic), and verifies the fix.
+1. Invoke `systematic-debugging` skill
+2. Follow the hypothesis-driven debugging process
+3. Document findings and fixes
 
 ### Code Review
 
-**Giving review:**
+**Requesting review:**
 ```
-Review this PR using the code-review skill
+Review my changes using the requesting-code-review skill
 ```
 
-**Addressing feedback:**
+**Receiving feedback:**
 ```
-Address the PR feedback using the code-review skill
+Address this PR feedback using the receiving-code-review skill
 ```
 
 ## Autonomous Mode
@@ -86,14 +66,12 @@ This allows skills to execute multi-step workflows (git operations, file changes
 
 | Task | Skill |
 |------|-------|
-| Build or modify features | `implementing-features` |
-| Create entire projects | `autonomous-roundtable` (Forge) |
-| Debug issues | `debugging` |
-| Review code | `code-review` |
-| Deep research | `deep-research` |
+| Design exploration | `brainstorming` |
+| Implementation planning | `writing-plans` |
+| Bug investigation | `systematic-debugging` |
 | Test-first development | `test-driven-development` |
 | Feature isolation | `using-git-worktrees` |
-| Finish and ship a branch | `finishing-a-development-branch` |
+| Quality verification | `/verify` command |
 
 ## Tips
 

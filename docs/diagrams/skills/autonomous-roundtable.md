@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/autonomous-roundtable/SKILL.md", "source_hash": "sha256:86d78d98216f2dbd6bd9222c39f76f59263f72ec494dba7e631ff47096a4a682", "generated_at": "2026-03-09T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/autonomous-roundtable/SKILL.md", "source_hash": "sha256:1d32922245b4c3d7a87e78eb49c94b183459f65fa49bbcddf6f78424c0400506", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 # Diagram: autonomous-roundtable
 
 Workflow for the autonomous-roundtable skill (Forged system). A meta-orchestrator that decomposes projects into features, processes each through DISCOVER, DESIGN, PLAN, IMPLEMENT, COMPLETE stages with roundtable consensus gating. Runs exclusively as a subagent, with handoff protocol for context overflow.

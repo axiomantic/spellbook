@@ -7,8 +7,6 @@ repo_name: axiomantic/spellbook
 
 theme:
   name: material
-  logo: assets/book.svg
-  favicon: assets/book.svg
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default

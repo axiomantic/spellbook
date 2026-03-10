@@ -50,6 +50,7 @@ from typing import List, Dict, Any, Optional
 _FASTMCP_MAJOR = int(_fastmcp_module.__version__.split(".")[0])
 
 # All imports use full package paths - no sys.path manipulation needed
+from spellbook_mcp.branch_ancestry import get_current_branch
 from spellbook_mcp.path_utils import (
     encode_cwd,
     get_project_dir,
@@ -57,11 +58,11 @@ from spellbook_mcp.path_utils import (
     get_project_dir_for_path,
     get_project_path_from_context,
     get_spellbook_config_dir,
+    resolve_repo_root,
 )
 from spellbook_mcp.memory_tools import (
     do_memory_recall,
     do_memory_forget,
-    do_memory_purge_topic,
     do_log_event,
     do_get_unconsolidated,
     do_store_memories,
@@ -1347,7 +1348,6 @@ def forge_iteration_return(
     return_to: str,
     feedback: list,
     reflection: str = None,
-    accumulated_knowledge: dict = None,
 ) -> dict:
     """
     Return to earlier stage with feedback (ITERATE verdict).
@@ -1366,7 +1366,6 @@ def forge_iteration_return(
             - suggestion: Recommended fix
             - severity: "blocking" | "significant" | "minor"
         reflection: Optional lesson learned from this iteration
-        accumulated_knowledge: Optional dict to merge into existing accumulated_knowledge
 
     Returns:
         Dict containing:
@@ -1383,7 +1382,6 @@ def forge_iteration_return(
         return_to=return_to,
         feedback=feedback,
         reflection=reflection,
-        accumulated_knowledge=accumulated_knowledge,
     )
 
 
@@ -3308,12 +3306,16 @@ async def memory_recall(
         Dict with 'memories' list, count, query, and namespace.
     """
     db_path = str(get_db_path())
+    project_path = await get_project_path_from_context(ctx)
     if not namespace:
-        project_path = await get_project_path_from_context(ctx)
         if project_path:
             namespace = encode_cwd(project_path)
         else:
             return {"error": "Could not determine project namespace", "memories": []}
+
+    # Detect current branch for branch-weighted scoring
+    repo_path = resolve_repo_root(project_path) if project_path else ""
+    branch = get_current_branch(repo_path) if repo_path else ""
 
     return do_memory_recall(
         db_path=db_path,
@@ -3321,6 +3323,8 @@ async def memory_recall(
         namespace=namespace,
         limit=limit,
         file_path=file_path if file_path else None,
+        branch=branch,
+        repo_path=repo_path,
     )
 
 
@@ -3337,52 +3341,6 @@ async def memory_forget(ctx: Context, memory_id: str) -> dict:
     """
     db_path = str(get_db_path())
     return do_memory_forget(db_path=db_path, memory_id=memory_id)
-
-
-@mcp.tool()
-@inject_recovery_context
-async def memory_purge_topic(
-    ctx: Context,
-    query: str,
-    namespace: str = "",
-    dry_run: bool = True,
-) -> dict:
-    """Sweep all memory storage layers for a topic and optionally purge matches.
-
-    Searches across 4 layers: SQLite memories (FTS5), raw_events, understanding
-    docs (markdown), and auto-memory files (Claude project memory).
-
-    Call with dry_run=True first to preview what will be deleted, then with
-    dry_run=False to actually delete after user confirmation.
-
-    Args:
-        query: Search term or topic to find and purge across all memory layers.
-        namespace: Project namespace. Auto-detected from context if empty.
-        dry_run: If True (default), preview matches without deleting. If False, delete all matches.
-
-    Returns:
-        Dict with matches found across memories, raw_events, understanding docs,
-        and auto-memory files. When dry_run=False, includes deletion counts.
-    """
-    db_path = str(get_db_path())
-    if not namespace:
-        project_path = await get_project_path_from_context(ctx)
-        if project_path:
-            namespace = encode_cwd(project_path)
-        else:
-            return {"error": "Could not determine project namespace"}
-
-    config_dir = str(get_spellbook_config_dir())
-    claude_projects_dir = os.path.expanduser("~/.claude/projects")
-
-    return do_memory_purge_topic(
-        db_path=db_path,
-        topic=query,
-        namespace=namespace,
-        config_dir=config_dir,
-        claude_projects_dir=claude_projects_dir,
-        dry_run=dry_run,
-    )
 
 
 @mcp.tool()
@@ -3483,18 +3441,22 @@ async def memory_store_memories(
         Dict with status, memories_created, events_consolidated, memory_ids.
     """
     db_path = str(get_db_path())
+    project_path = await get_project_path_from_context(ctx)
     if not namespace:
-        project_path = await get_project_path_from_context(ctx)
         if project_path:
             namespace = encode_cwd(project_path)
         else:
             return {"error": "Could not determine project namespace"}
+
+    # Detect current branch
+    branch = get_current_branch(project_path) if project_path else ""
 
     return do_store_memories(
         db_path=db_path,
         memories_json=memories,
         event_ids_str=event_ids,
         namespace=namespace,
+        branch=branch,
     )
 
 
@@ -3512,7 +3474,8 @@ async def api_memory_event(request: Request) -> JSONResponse:
         "subject": "...",
         "summary": "...",
         "tags": "...",
-        "event_type": "tool_use"
+        "event_type": "tool_use",
+        "branch": "..."
     }
     Returns JSON: {"status": "logged", "event_id": N}
     """
@@ -3533,6 +3496,7 @@ async def api_memory_event(request: Request) -> JSONResponse:
     tool_name = str(body["tool_name"])[:100]
     subject = str(body["subject"])[:500]
     tags = str(body.get("tags", ""))[:500]
+    branch = str(body.get("branch", ""))[:200]
 
     db_path = str(get_db_path())
     result = do_log_event(
@@ -3544,6 +3508,7 @@ async def api_memory_event(request: Request) -> JSONResponse:
         summary=summary,
         tags=tags,
         event_type=body.get("event_type", "tool_use"),
+        branch=branch,
     )
     return JSONResponse(result)
 
@@ -3555,8 +3520,8 @@ async def api_memory_event(request: Request) -> JSONResponse:
 async def api_memory_recall(request: Request) -> JSONResponse:
     """REST endpoint for hook scripts to query memories by file path.
 
-    Accepts JSON body: {"file_path": "...", "namespace": "...", "limit": 5}
-    or {"query": "...", "namespace": "...", "limit": 10}
+    Accepts JSON body: {"file_path": "...", "namespace": "...", "branch": "...", "limit": 5}
+    or {"query": "...", "namespace": "...", "branch": "...", "limit": 10}
     Returns JSON: {"memories": [...], "count": N}
     """
     try:
@@ -3568,6 +3533,9 @@ async def api_memory_recall(request: Request) -> JSONResponse:
     if not namespace:
         return JSONResponse({"memories": [], "count": 0})
 
+    branch = body.get("branch", "")
+    repo_path = body.get("repo_path", "")
+
     db_path = str(get_db_path())
     result = do_memory_recall(
         db_path=db_path,
@@ -3575,6 +3543,8 @@ async def api_memory_recall(request: Request) -> JSONResponse:
         namespace=namespace,
         limit=body.get("limit", 5),
         file_path=body.get("file_path"),
+        branch=branch,
+        repo_path=repo_path,
     )
     return JSONResponse(result)
 

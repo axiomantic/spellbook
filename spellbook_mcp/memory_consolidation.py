@@ -14,6 +14,7 @@ from spellbook_mcp.db import get_connection
 from spellbook_mcp.memory_store import (
     get_unconsolidated_events,
     insert_memory,
+    insert_branch_association,
     insert_link,
     mark_events_consolidated,
     log_audit,
@@ -62,6 +63,7 @@ class StrategyMemory(TypedDict):
     citations: List[Dict[str, Any]]
     event_ids: List[int]
     strategy: str
+    branches: List[str]
 
 
 def _extract_keywords(text: str) -> set:
@@ -105,14 +107,15 @@ def _extract_citations(subject: str) -> List[Dict[str, Any]]:
 
 def _merge_event_metadata(
     group_events: List[Dict[str, Any]],
-) -> tuple[set, List[int], List[Dict[str, Any]]]:
-    """Extract and deduplicate tags, event IDs, and citations from a group of events.
+) -> tuple[set, List[int], List[Dict[str, Any]], set]:
+    """Extract and deduplicate tags, event IDs, citations, and branches from a group of events.
 
-    Returns (tags_set, event_ids, citations).
+    Returns (tags_set, event_ids, citations, branches_set).
     """
     all_tags: set = set()
     all_event_ids: List[int] = []
     all_citations: List[Dict[str, Any]] = []
+    all_branches: set = set()
     seen_paths: set = set()
     for e in group_events:
         if e.get("tags"):
@@ -122,7 +125,10 @@ def _merge_event_metadata(
             if cit["file_path"] not in seen_paths:
                 seen_paths.add(cit["file_path"])
                 all_citations.append(cit)
-    return all_tags, all_event_ids, all_citations
+        branch = e.get("branch", "")
+        if branch:
+            all_branches.add(branch)
+    return all_tags, all_event_ids, all_citations, all_branches
 
 
 def _strategy_content_hash_dedup(
@@ -146,9 +152,13 @@ def _strategy_content_hash_dedup(
             # Duplicate group: produce one memory from first event
             first = group[0]
             all_tags = set()
+            all_branches = set()
             for e in group:
                 if e.get("tags"):
                     all_tags.update(t.strip() for t in e["tags"].split(",") if t.strip())
+                branch = e.get("branch", "")
+                if branch:
+                    all_branches.add(branch)
             memories.append({
                 "content": f"[{first['tool_name']}] {_event_text(first)}",
                 "memory_type": "fact",
@@ -156,6 +166,7 @@ def _strategy_content_hash_dedup(
                 "citations": _extract_citations(first["subject"]),
                 "event_ids": [e["id"] for e in group],
                 "strategy": "content_hash",
+                "branches": sorted(all_branches),
             })
         else:
             unconsumed.append(group[0])
@@ -246,7 +257,7 @@ def _strategy_jaccard_similarity(
                     seen_texts.add(text)
                     content_parts.append(f"[{e['tool_name']}] {text}")
 
-            all_tags, all_event_ids, all_citations = _merge_event_metadata(group_events)
+            all_tags, all_event_ids, all_citations, all_branches = _merge_event_metadata(group_events)
 
             memories.append({
                 "content": "; ".join(content_parts),
@@ -255,6 +266,7 @@ def _strategy_jaccard_similarity(
                 "citations": all_citations,
                 "event_ids": all_event_ids,
                 "strategy": "jaccard_similarity",
+                "branches": sorted(all_branches),
             })
         else:
             unconsumed.append(events[member_indices[0]])
@@ -325,7 +337,7 @@ def _strategy_tag_grouping(
                     seen_subjects.add(e["subject"])
                     bullet_lines.append(f"- {e['subject']}: {e['summary']}")
 
-            all_tags, all_event_ids, all_citations = _merge_event_metadata(group_events)
+            all_tags, all_event_ids, all_citations, all_branches = _merge_event_metadata(group_events)
 
             memories.append({
                 "content": "Related activities:\n" + "\n".join(bullet_lines),
@@ -334,6 +346,7 @@ def _strategy_tag_grouping(
                 "citations": all_citations,
                 "event_ids": all_event_ids,
                 "strategy": "tag_grouping",
+                "branches": sorted(all_branches),
             })
         else:
             unconsumed.append(events[member_indices[0]])
@@ -381,12 +394,16 @@ def _strategy_temporal_clustering(
         for cluster in clusters:
             all_tags = set()
             all_event_ids = []
+            all_branches = set()
             summaries = []
             for e in cluster:
                 summaries.append(e["summary"])
                 if e.get("tags"):
                     all_tags.update(t.strip() for t in e["tags"].split(",") if t.strip())
                 all_event_ids.append(e["id"])
+                branch = e.get("branch", "")
+                if branch:
+                    all_branches.add(branch)
 
             first = cluster[0]
             if len(cluster) == 1:
@@ -405,6 +422,7 @@ def _strategy_temporal_clustering(
                 "citations": _extract_citations(first["subject"]),
                 "event_ids": all_event_ids,
                 "strategy": "temporal_clustering",
+                "branches": sorted(all_branches),
             })
 
     return memories, []  # Temporal clustering consumes all remaining events
@@ -427,6 +445,8 @@ def build_consolidation_prompt(events: List[Dict[str, Any]]) -> str:
         line = f"- [{e['tool_name']}] {e['subject']}: {e['summary']}"
         if e.get("tags"):
             line += f" (tags: {e['tags']})"
+        if e.get("branch"):
+            line += f" [branch: {e['branch']}]"
         observations.append(line)
 
     return (
@@ -574,6 +594,9 @@ def consolidate_batch(
         # Insert memories and compute bibliographic coupling
         created_ids = []
         for mem in all_memories:
+            branches = mem.get("branches", [])
+            origin_branch = branches[0] if branches else ""
+
             mem_id = insert_memory(
                 db_path=db_path,
                 content=mem["content"],
@@ -587,8 +610,14 @@ def consolidate_batch(
                     "event_count": len(mem["event_ids"]),
                     "batch_id": batch_id,
                 },
+                branch=origin_branch,
             )
             created_ids.append(mem_id)
+
+            # Add all contributing branches to junction table
+            for branch_name in branches:
+                if branch_name != origin_branch:
+                    insert_branch_association(db_path, mem_id, branch_name, "origin")
 
         # Compute bibliographic coupling for new memories
         for mem_id in created_ids:

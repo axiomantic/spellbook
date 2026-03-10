@@ -3,9 +3,7 @@
 Separated from server.py for testability. server.py thin wrappers call these.
 """
 
-import glob as glob_module
 import json
-import os
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -16,14 +14,11 @@ from spellbook_mcp.memory_store import (
     get_memory,
     update_access,
     log_raw_event,
-    log_audit,
     get_unconsolidated_events,
     get_recently_consolidated_events,
     insert_memory,
     insert_link,
     mark_events_consolidated,
-    search_memories_by_topic,
-    delete_raw_events_by_topic,
 )
 from spellbook_mcp.memory_consolidation import (
     build_consolidation_prompt,
@@ -84,6 +79,8 @@ def do_memory_recall(
     namespace: str,
     limit: int = 10,
     file_path: Optional[str] = None,
+    branch: str = "",
+    repo_path: str = "",
 ) -> Dict[str, Any]:
     """Recall memories by query or file path.
 
@@ -93,14 +90,22 @@ def do_memory_recall(
         namespace: Project namespace for scoping.
         limit: Max results.
         file_path: If provided, search by cited file path instead of FTS5.
+        branch: Current git branch for branch-weighted scoring.
+        repo_path: Git repo root path for ancestry checks.
 
     Returns:
         Dict with 'memories' list and metadata.
     """
     if file_path:
-        results = recall_by_file_path(db_path, file_path, namespace, limit)
+        results = recall_by_file_path(
+            db_path, file_path, namespace, limit,
+            branch=branch, repo_path=repo_path,
+        )
     else:
-        results = recall_by_query(db_path, query, namespace, limit)
+        results = recall_by_query(
+            db_path, query, namespace, limit,
+            branch=branch, repo_path=repo_path,
+        )
 
     # Update access for returned memories
     for mem in results:
@@ -149,6 +154,7 @@ def do_log_event(
     summary: str,
     tags: str = "",
     event_type: str = "tool_use",
+    branch: str = "",
 ) -> Dict[str, Any]:
     """Log a raw observation event (called by hooks via REST endpoint).
 
@@ -161,6 +167,7 @@ def do_log_event(
         summary: One-line summary of what happened.
         tags: Comma-separated keywords.
         event_type: Event type (default: tool_use).
+        branch: Git branch name (default: empty).
 
     Returns:
         Dict with status and event_id.
@@ -174,6 +181,7 @@ def do_log_event(
         subject=subject,
         summary=summary,
         tags=tags,
+        branch=branch,
     )
     return {"status": "logged", "event_id": event_id}
 
@@ -232,6 +240,7 @@ def do_store_memories(
     memories_json: str,
     event_ids_str: str = "",
     namespace: str = "",
+    branch: str = "",
 ) -> Dict[str, Any]:
     """Store client-synthesized memories and mark source events consolidated.
 
@@ -240,6 +249,7 @@ def do_store_memories(
         memories_json: JSON string of memory objects matching MEMORY_STORE_SCHEMA.
         event_ids_str: Comma-separated event IDs to mark consolidated.
         namespace: Project namespace.
+        branch: Git branch name to associate with stored memories.
 
     Returns:
         Dict with status, memories_created, events_consolidated, memory_ids.
@@ -297,6 +307,7 @@ def do_store_memories(
             tags=mem["tags"],
             citations=mem["citations"],
             extra_meta={"source": "client_llm"},
+            branch=branch,
         )
         created_ids.append(mem_id)
 
@@ -323,224 +334,3 @@ def do_store_memories(
         "events_consolidated": events_consolidated,
         "memory_ids": created_ids,
     }
-
-
-def _grep_files_for_topic(
-    file_paths: List[str],
-    query: str,
-) -> List[Dict[str, Any]]:
-    """Search a list of files for lines matching query (case-insensitive).
-
-    Returns list of dicts with path, matched_lines, total_lines, match_ratio.
-    """
-    results: List[Dict[str, Any]] = []
-    query_lower = query.lower()
-    for fpath in file_paths:
-        try:
-            with open(fpath, "r", encoding="utf-8", errors="replace") as f:
-                lines = f.readlines()
-        except OSError:
-            continue
-        matched = [
-            line.strip() for line in lines if query_lower in line.lower()
-        ]
-        if matched:
-            total = len(lines)
-            results.append({
-                "path": fpath,
-                "matched_lines": matched[:10],  # Cap preview at 10 lines
-                "match_count": len(matched),
-                "total_lines": total,
-                "match_ratio": len(matched) / total if total > 0 else 0.0,
-            })
-    return results
-
-
-def do_memory_purge_topic(
-    db_path: str,
-    topic: str,
-    namespace: str,
-    config_dir: str = "",
-    claude_projects_dir: str = "",
-    understanding_dir: str = "",
-    auto_memory_dir: str = "",
-    dry_run: bool = True,
-) -> Dict[str, Any]:
-    """Sweep all 4 memory storage layers for topic matches.
-
-    Searches memories (SQLite FTS5), raw_events (SQLite LIKE), understanding
-    docs (markdown files), and auto-memory files (Claude project memory).
-
-    Args:
-        db_path: Database path.
-        topic: Search term/topic to purge.
-        namespace: Project namespace (encoded path).
-        config_dir: Spellbook config dir (~/.local/spellbook). Used to derive
-            understanding_dir if understanding_dir is not provided.
-        claude_projects_dir: Claude projects dir (~/.claude/projects). Used to
-            derive auto_memory_dir if auto_memory_dir is not provided.
-        understanding_dir: Direct path to understanding docs directory. Overrides
-            config_dir-based resolution.
-        auto_memory_dir: Direct path to auto-memory directory. Overrides
-            claude_projects_dir-based resolution.
-        dry_run: If True, return findings without deleting. If False, delete.
-
-    Returns:
-        Dict with matches across all layers, total_found, dry_run flag,
-        and deleted counts when dry_run=False.
-    """
-    if not topic.strip():
-        return {"status": "error", "error": "Query cannot be empty"}
-
-    deleted: Dict[str, int] = {
-        "memories": 0,
-        "raw_events": 0,
-        "understanding_docs": 0,
-        "auto_memory_files": 0,
-    }
-
-    # Layer 1: SQLite memories table (FTS5)
-    matching_memories = search_memories_by_topic(
-        db_path=db_path, query=topic, namespace=namespace,
-    )
-    if not dry_run:
-        for mem in matching_memories:
-            soft_delete_memory(db_path=db_path, memory_id=mem["id"])
-        deleted["memories"] = len(matching_memories)
-
-    # Layer 2: SQLite raw_events table
-    raw_result = delete_raw_events_by_topic(
-        db_path=db_path, query=topic, namespace=namespace, dry_run=dry_run,
-    )
-    if not dry_run:
-        deleted["raw_events"] = raw_result.get("deleted", 0)
-
-    # Layer 3: Understanding docs
-    understanding_matches: List[Dict[str, Any]] = []
-    # Resolve understanding directory: explicit param > config_dir-based
-    resolved_understanding_dir = understanding_dir
-    if not resolved_understanding_dir and config_dir:
-        resolved_understanding_dir = os.path.join(
-            config_dir, "docs", namespace, "understanding",
-        )
-    if resolved_understanding_dir and os.path.isdir(resolved_understanding_dir):
-        md_files = glob_module.glob(
-            os.path.join(resolved_understanding_dir, "*.md"),
-        )
-        understanding_matches = _grep_files_for_topic(
-            file_paths=md_files, query=topic,
-        )
-        if not dry_run:
-            for match in understanding_matches:
-                try:
-                    os.remove(match["path"])
-                    deleted["understanding_docs"] += 1
-                    log_audit(
-                        db_path,
-                        "purge_topic_understanding",
-                        details={
-                            "path": match["path"],
-                            "topic": topic,
-                        },
-                    )
-                except OSError:
-                    pass  # Permission error or already removed
-
-    # Layer 4: Auto-memory files
-    auto_memory_matches: List[Dict[str, Any]] = []
-    auto_memory_deleted: List[Dict[str, Any]] = []
-    auto_memory_flagged: List[Dict[str, Any]] = []
-
-    # Resolve auto-memory directory: explicit param > claude_projects_dir-based
-    if auto_memory_dir and os.path.isdir(auto_memory_dir):
-        memory_files = glob_module.glob(
-            os.path.join(auto_memory_dir, "*.md"),
-        )
-        auto_memory_matches = _grep_files_for_topic(
-            file_paths=memory_files, query=topic,
-        )
-    elif claude_projects_dir and os.path.isdir(claude_projects_dir):
-        memory_files = glob_module.glob(
-            os.path.join(claude_projects_dir, "*", "memory", "*.md"),
-        )
-        auto_memory_matches = _grep_files_for_topic(
-            file_paths=memory_files, query=topic,
-        )
-
-    if not dry_run:
-        for match in auto_memory_matches:
-            # Only delete files where >50% of lines match the topic
-            if match["match_ratio"] > 0.5:
-                try:
-                    os.remove(match["path"])
-                    deleted["auto_memory_files"] += 1
-                    auto_memory_deleted.append({
-                        "path": match["path"],
-                        "match_ratio": round(match["match_ratio"], 2),
-                    })
-                    log_audit(
-                        db_path,
-                        "purge_topic_auto_memory",
-                        details={
-                            "path": match["path"],
-                            "topic": topic,
-                            "match_ratio": match["match_ratio"],
-                        },
-                    )
-                except OSError:
-                    pass  # Permission error or already removed
-            else:
-                # Files with <=50% match are flagged for manual review
-                auto_memory_flagged.append({
-                    "path": match["path"],
-                    "matched_lines": match["matched_lines"],
-                    "match_ratio": round(match["match_ratio"], 2),
-                })
-
-    total_found = (
-        len(matching_memories)
-        + raw_result["matched"]
-        + len(understanding_matches)
-        + len(auto_memory_matches)
-    )
-
-    result: Dict[str, Any] = {
-        "memories": matching_memories,
-        "raw_events": raw_result["events"],
-        "understanding_docs": [
-            {"path": m["path"], "matched_lines": m["matched_lines"]}
-            for m in understanding_matches
-        ],
-        "auto_memory": {
-            "files": [
-                {
-                    "path": m["path"],
-                    "matched_lines": m["matched_lines"],
-                    "match_ratio": round(m["match_ratio"], 2),
-                    "would_auto_delete": m["match_ratio"] > 0.5,
-                }
-                for m in auto_memory_matches
-            ],
-            "deleted": auto_memory_deleted,
-            "flagged_for_review": auto_memory_flagged,
-        },
-        "total_found": total_found,
-        "dry_run": dry_run,
-        "topic": topic,
-        "namespace": namespace,
-    }
-
-    if not dry_run:
-        result["deleted"] = deleted
-        log_audit(
-            db_path,
-            "purge_topic",
-            details={
-                "topic": topic,
-                "namespace": namespace,
-                "deleted": deleted,
-                "total_found": total_found,
-            },
-        )
-
-    return result
