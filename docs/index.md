@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Spellbook" width="120" height="120">
+  <img src="assets/book.svg" alt="Spellbook" width="120" height="120">
 </p>
 
 <h1 align="center">Spellbook</h1>
