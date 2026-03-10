@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-03-10
+
+### Added
+- **Branch-aware memory system** - Memories are now scoped to the git branch where they were created. Recall scoring boosts memories from the current branch (1.5x) and ancestors (1.2x), penalizes unrelated branches (0.8x). Two-phase scoring: SQL over-fetch with base score, then Python re-rank with ancestry-aware multipliers via `git merge-base --is-ancestor`. New `branch_ancestry` module with LRU-cached ancestry checks. New `memory_branches` junction table for M:N branch-memory associations.
+- **Namespace unification** - Worktrees now resolve to the main repository root for consistent project identification. New `resolve_repo_root()` in `path_utils` uses `git worktree list --porcelain` to find the main worktree.
+
+### Fixed
+- **Windows path handling** - `resolve_repo_root` now normalizes git output with `os.path.normpath` so paths use OS-native separators. `encode_cwd` handles both backslash and forward slash separators. Bash hook tests skip on Windows.
+
+## [0.29.0] - 2026-03-09
+
+### Added
+- **Fractal-thinking integration for roundtable ITERATE path** - When a roundtable returns ITERATE with escalation conditions (2+ iterations on same stage or 2+ blocking-severity items), `reflexion-analyze` now invokes fractal-thinking for deep exploration before retrying. New `fractal_feedback` module maps fractal harvest output to Feedback instances. Enhanced `_determine_return_stage()` with fractal-informed stage recommendations and distance-based confirmation guardrails. Simple/first-time ITERATEs continue using plain reflexion with zero overhead.
+- **Explicit memory integration in Tier 1 skills** - Added `memory_recall` calls at investigation/decision start points and `memory_store_memories` calls at key output moments in 5 skills: verifying-hunches, debugging, implementing-features, code-review, and advanced-code-review. Closes the learn-and-recall loop that was previously limited to passive file-path auto-injection via hooks.
+
+## [0.28.1] - 2026-03-09
+
+### Fixed
+- **Update checker no longer falls back to unreleased versions** - When the GitHub releases API is unavailable (no `gh` CLI or network failure), the update checker now reports no update instead of falling back to `git show origin/main:.version`, which would include unreleased and pre-release versions.
+
 ## [0.28.0] - 2026-03-09
 
 ### Changed
