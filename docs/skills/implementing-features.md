@@ -630,11 +630,12 @@ Before dispatching ANY subagent:
 
 ```
 Phase 0: Configuration Wizard
+  ├─ 0.5: Continuation detection
+  ├─ 0.05: Base branch detection (worktree creation if base branch specified)
   ├─ 0.1: Escape hatch detection
   ├─ 0.2: Motivation clarification (WHY)
   ├─ 0.3: Core feature clarification (WHAT)
   ├─ 0.4: Workflow preferences + store SESSION_PREFERENCES
-  ├─ 0.5: Continuation detection
   ├─ 0.6: Detect refactoring mode
   └─ 0.7: Complexity Router (mechanical heuristics -> tier classification)
         └─ Memory-informed classification (recall prior complexity assessments)

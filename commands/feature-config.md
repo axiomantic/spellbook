@@ -11,12 +11,13 @@ Configuration Architect for implementing-features Phase 0. Your reputation depen
 ## Invariant Principles
 
 1. **Configuration before execution** - Collect all preferences upfront; never proceed with incomplete configuration.
-2. **Escape hatch detection** - Existing documents bypass phases they cover; detect before asking redundant questions.
-3. **Motivation drives design** - Understanding WHY shapes every subsequent decision; never skip motivation clarification.
-4. **Continuation awareness** - Detect and honor prior session state; artifacts indicate progress, not fresh starts.
+2. **Correct branch before exploration** - If a base branch is specified, create a worktree and work there BEFORE anything else.
+3. **Escape hatch detection** - Existing documents bypass phases they cover; detect before asking redundant questions.
+4. **Motivation drives design** - Understanding WHY shapes every subsequent decision; never skip motivation clarification.
+5. **Continuation awareness** - Detect and honor prior session state; artifacts indicate progress, not fresh starts.
 
 <CRITICAL>
-**Execution order matters.** Section 0.5 (Continuation Detection) MUST execute BEFORE 0.1–0.4. If continuation signals are present, skip the wizard and jump directly to the resume flow. Only when no continuation signals exist should you proceed to 0.1.
+**Execution order:** 0.5 (Continuation) then 0.05 (Base Branch) then 0.1-0.7. A base branch means worktree creation before anything else. Continuation signals bypass the wizard.
 </CRITICAL>
 
 ---
@@ -168,6 +169,36 @@ Display on resume:
 
 Proceeding...
 ```
+
+---
+
+### 0.05 Base Branch and Worktree Setup
+
+<CRITICAL>
+Always runs. Determines the base branch, handles uncommitted changes, and creates the feature worktree. All subsequent work targets the worktree.
+</CRITICAL>
+
+**Determine base branch:**
+- User explicitly specified one ("based on X", "start from X", etc.): use that branch.
+- No explicit branch: use the current branch in the current working directory/worktree.
+
+**Steps:**
+
+1. Identify base branch and verify it exists.
+2. Find where it's checked out and check for uncommitted changes:
+   ```bash
+   BASE_CHECKOUT=$(git worktree list | grep "\[<branch>\]" | awk '{print $1}')
+   [ -n "$BASE_CHECKOUT" ] && git -C "$BASE_CHECKOUT" status --porcelain
+   ```
+   If dirty, ask: **Commit first** (changes carry to new branch) or **Leave uncommitted** (new branch starts from last commit, uncommitted changes stay in original checkout).
+3. Create worktree and switch to it:
+   ```bash
+   git worktree add ".claude/worktrees/<feature-slug>" -b "<user>/<feature-slug>" "<branch>"
+   ```
+   This is the project root for the rest of the session.
+4. Store `base_branch` and `worktree_path` in SESSION_PREFERENCES.
+
+**If explicit branch not found:** Ask user to confirm the name. Do NOT fall back to current branch.
 
 ---
 
@@ -417,6 +448,7 @@ Store confirmed tier in `SESSION_PREFERENCES.complexity_tier`.
 Before proceeding, verify:
 
 - [ ] 0.5 Continuation check executed first (resume or fresh start determined)
+- [ ] 0.05 Base branch detection executed (worktree created if base branch specified)
 - [ ] Escape hatches detected (or confirmed none)
 - [ ] Motivation clarified (WHY)
 - [ ] Feature essence clarified (WHAT)
