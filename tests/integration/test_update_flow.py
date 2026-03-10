@@ -1,9 +1,7 @@
 """Integration tests for the auto-update flow using real git repos."""
 
-import json
 import os
 import subprocess
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -82,11 +80,11 @@ class TestFullUpdateDetection:
 
             result = check_for_updates(repo)
 
-        assert result["update_available"] is True
+        assert result["error"] is None, f"Unexpected error: {result}"
+        assert result["update_available"] is True, f"Expected update_available=True: {result}"
         assert result["current_version"] == "0.9.9"
         assert result["remote_version"] == "0.9.10"
         assert result["is_major_bump"] is False
-        assert result["error"] is None
 
     def test_no_update_when_up_to_date(self, mock_git_repo):
         """No update detected when versions match."""
@@ -134,5 +132,6 @@ class TestFullUpdateDetection:
 
             result = check_for_updates(repo)
 
-        assert result["update_available"] is True
+        assert result["error"] is None, f"Unexpected error: {result}"
+        assert result["update_available"] is True, f"Expected update_available=True: {result}"
         assert result["is_major_bump"] is True

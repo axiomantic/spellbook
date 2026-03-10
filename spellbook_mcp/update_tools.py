@@ -272,14 +272,14 @@ def check_for_updates(spellbook_dir: Path) -> dict:
     except subprocess.SubprocessError:
         pass  # If we can't list remotes, proceed anyway
 
-    # Git fetch (needed for changelog extraction and as fallback for version)
-    # Use explicit refspec to ensure remote tracking ref is updated.
-    # Plain "git fetch origin main" only updates FETCH_HEAD on some git
-    # versions, leaving origin/main stale.
-    refspec = f"{branch}:refs/remotes/{remote}/{branch}"
+    # Git fetch to update remote tracking refs.
+    # Use bare "git fetch <remote>" so the remote's configured refspec
+    # (typically +refs/heads/*:refs/remotes/origin/*) handles ref updates.
+    # Explicit refspecs like "main:refs/remotes/origin/main" can silently
+    # fail on some git versions/configurations in CI environments.
     try:
         fetch_proc = subprocess.run(
-            ["git", "-C", str(spellbook_dir), "fetch", remote, refspec],
+            ["git", "-C", str(spellbook_dir), "fetch", remote],
             capture_output=True,
             text=True,
             timeout=60,
@@ -423,12 +423,12 @@ def apply_update(
         return result
 
     try:
-        # Fetch remote refs before pull
-        # Use explicit refspec to update the remote tracking ref reliably
-        refspec = f"{branch}:refs/remotes/{remote}/{branch}"
+        # Fetch remote refs before pull.
+        # Use bare "git fetch <remote>" for maximum portability across
+        # git versions and CI environments.
         try:
             fetch_proc = subprocess.run(
-                ["git", "-C", str(spellbook_dir), "fetch", remote, refspec],
+                ["git", "-C", str(spellbook_dir), "fetch", remote],
                 capture_output=True,
                 text=True,
                 timeout=60,
