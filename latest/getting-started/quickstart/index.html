@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/book.svg">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
@@ -100,7 +100,8 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -237,7 +238,8 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     Spellbook
@@ -516,17 +518,6 @@
     <span class="md-ellipsis">
       
         Starting a New Feature
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#creating-an-entire-project" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Creating an Entire Project
       
     </span>
   </a>
@@ -7454,17 +7445,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#creating-an-entire-project" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Creating an Entire Project
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#debugging-an-issue" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7554,36 +7534,32 @@
 <p>Or use the Skill tool directly to list them.</p>
 <h3 id="2-invoke-a-skill">2. Invoke a Skill<a class="headerlink" href="#2-invoke-a-skill" title="Permanent link">&para;</a></h3>
 <p>When you need a structured workflow, invoke the relevant skill:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>I need to debug this issue. Use the debugging skill.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>I need to debug this issue. Use the systematic-debugging skill.
 </code></pre></div>
 <p>Or let the AI assistant detect when a skill applies automatically.</p>
 <h2 id="common-workflows">Common Workflows<a class="headerlink" href="#common-workflows" title="Permanent link">&para;</a></h2>
 <h3 id="starting-a-new-feature">Starting a New Feature<a class="headerlink" href="#starting-a-new-feature" title="Permanent link">&para;</a></h3>
-<p>Use the <code>implementing-features</code> skill. It handles the entire lifecycle: discovery, design, planning, and implementation.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>I want to add user authentication. Use the implementing-features skill.
-</code></pre></div>
-<p>Or just describe what you want -- the skill is invoked automatically for any code change:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Add a REST API for managing projects
-</code></pre></div>
-<h3 id="creating-an-entire-project">Creating an Entire Project<a class="headerlink" href="#creating-an-entire-project" title="Permanent link">&para;</a></h3>
-<p>Use the <code>autonomous-roundtable</code> skill (Forge) for greenfield projects. It decomposes a project into features and executes them through parallel worktrees with roundtable quality gates.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Create a new CLI tool for managing database migrations. Use Forge.
-</code></pre></div>
+<ol>
+<li><strong>Brainstorm first:</strong> Use <code>/brainstorm</code> or invoke <code>brainstorming</code> skill</li>
+<li><strong>Create a plan:</strong> Use <code>/write-plan</code> or invoke <code>writing-plans</code> skill</li>
+<li><strong>Execute the plan:</strong> Use <code>/execute-plan</code> or invoke <code>executing-plans</code> skill</li>
+</ol>
 <h3 id="debugging-an-issue">Debugging an Issue<a class="headerlink" href="#debugging-an-issue" title="Permanent link">&para;</a></h3>
-<p>Invoke the <code>debugging</code> skill, or just describe the problem:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>This endpoint returns 500 when the user has no profile. Debug it.
-</code></pre></div>
-<p>The skill triages the issue, selects a methodology (scientific or systematic), and verifies the fix.</p>
+<ol>
+<li>Invoke <code>systematic-debugging</code> skill</li>
+<li>Follow the hypothesis-driven debugging process</li>
+<li>Document findings and fixes</li>
+</ol>
 <h3 id="code-review">Code Review<a class="headerlink" href="#code-review" title="Permanent link">&para;</a></h3>
-<p><strong>Giving review:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Review this PR using the code-review skill
+<p><strong>Requesting review:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Review my changes using the requesting-code-review skill
 </code></pre></div></p>
-<p><strong>Addressing feedback:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Address the PR feedback using the code-review skill
+<p><strong>Receiving feedback:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Address this PR feedback using the receiving-code-review skill
 </code></pre></div></p>
 <h2 id="autonomous-mode">Autonomous Mode<a class="headerlink" href="#autonomous-mode" title="Permanent link">&para;</a></h2>
 <p>For uninterrupted workflows, enable autonomous mode:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>/allowed-tools Bash(*)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>/allowed-tools Bash(*)
 </code></pre></div>
 <p>This allows skills to execute multi-step workflows (git operations, file changes, test runs) without constant approval prompts.</p>
 <div class="admonition warning">
@@ -7600,24 +7576,16 @@
 </thead>
 <tbody>
 <tr>
-<td>Build or modify features</td>
-<td><code>implementing-features</code></td>
+<td>Design exploration</td>
+<td><code>brainstorming</code></td>
 </tr>
 <tr>
-<td>Create entire projects</td>
-<td><code>autonomous-roundtable</code> (Forge)</td>
+<td>Implementation planning</td>
+<td><code>writing-plans</code></td>
 </tr>
 <tr>
-<td>Debug issues</td>
-<td><code>debugging</code></td>
-</tr>
-<tr>
-<td>Review code</td>
-<td><code>code-review</code></td>
-</tr>
-<tr>
-<td>Deep research</td>
-<td><code>deep-research</code></td>
+<td>Bug investigation</td>
+<td><code>systematic-debugging</code></td>
 </tr>
 <tr>
 <td>Test-first development</td>
@@ -7628,8 +7596,8 @@
 <td><code>using-git-worktrees</code></td>
 </tr>
 <tr>
-<td>Finish and ship a branch</td>
-<td><code>finishing-a-development-branch</code></td>
+<td>Quality verification</td>
+<td><code>/verify</code> command</td>
 </tr>
 </tbody>
 </table>

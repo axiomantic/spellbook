@@ -18,7 +18,7 @@
         
       
       
-      <link rel="icon" href="../../../assets/book.svg">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
@@ -96,7 +96,8 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -233,7 +234,8 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     Spellbook
@@ -7208,76 +7210,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-0-prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 0: Prerequisites
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-1-triage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 1: Triage
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-2-methodology-selection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 2: Methodology Selection
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-3-execute-methodology" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 3: Execute Methodology
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ci-investigation-branch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CI Investigation Branch
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-4-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 4: Verification
+        Legend
       
     </span>
   </a>
@@ -7289,17 +7225,6 @@
     <span class="md-ellipsis">
       
         Cross-Reference
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
       
     </span>
   </a>
@@ -7326,332 +7251,229 @@
   
 
 
-<!-- diagram-meta: {"source": "skills/debugging/SKILL.md", "source_hash": "sha256:964a5fd550f627da4ea517c8d8c2cee10f61c05a25b69af2ceaa62149cb36af5", "generated_at": "2026-03-10T06:23:02Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/debugging/SKILL.md", "source_hash": "sha256:29d5bd3efa1a0d70261bd42bcc0f39a5c88ea80be51a0bac9041ec9353a1c1ce", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-debugging">Diagram: debugging<a class="headerlink" href="#diagram-debugging" title="Permanent link">&para;</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Multi-phase debugging workflow with mandatory prerequisites, triage-based methodology selection, and a 3-fix rule circuit breaker. Supports scientific debugging, systematic debugging, and CI-specific investigation branches.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    ENTRY[Entry Points] --&gt; P0[Phase 0:&lt;br/&gt;Prerequisites]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    P0 --&gt; P1[Phase 1:&lt;br/&gt;Triage]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    P1 --&gt; P2[Phase 2:&lt;br/&gt;Methodology Selection]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    P2 --&gt; P3[Phase 3:&lt;br/&gt;Execute Methodology]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    P3 --&gt; P4[Phase 4:&lt;br/&gt;Verification]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    P4 --&gt;|Verified| DONE([Session Complete])
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    P4 --&gt;|Failed| FIX_CHECK{fix_attempts &gt;= 3?}
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    FIX_CHECK --&gt;|Yes| THREE_FIX[3-Fix Rule Warning]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    FIX_CHECK --&gt;|No| P3
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    THREE_FIX --&gt;|Continue| P3
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    THREE_FIX --&gt;|Stop| ARCH([Architecture Review])
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    ENTRY_SKIP[Entry: --scientific&lt;br/&gt;or --systematic] --&gt; P0
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ENTRY_SKIP -.-&gt;|Skip Triage| P3
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    style P0 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    style P4 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    style DONE fill:#51cf66,color:#fff
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    style ARCH fill:#f59f00,color:#fff
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start]) --&gt; P0[Phase 0: Prerequisites]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    P0 --&gt; P0_1[Establish Clean Baseline]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    P0_1 --&gt; P0_2[Prove Bug Exists]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    P0_2 --&gt; P0_2_G{Bug Reproduced?}
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    P0_2_G --&gt;|No| P0_NR[Refine Steps or Abort]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    P0_NR --&gt; P0_2
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    P0_2_G --&gt;|Yes| P0_3[Track Code State]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    P0_3 --&gt; P1[Phase 1: Triage]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    P1 --&gt; P1_1[Gather Context]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    P1_1 --&gt; P1_2{Simple Bug?}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    P1_2 --&gt;|Yes| DirectFix[Apply Direct Fix]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    DirectFix --&gt; Verify
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    P1_2 --&gt;|No| P1_3{3+ Prior Attempts?}
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    P1_3 --&gt;|Yes| ThreeFix{3-Fix Rule Warning}
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    ThreeFix --&gt;|Architecture Review| ArchReview[Invoke Architecture Review]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ThreeFix --&gt;|Continue| P2
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ThreeFix --&gt;|Escalate| Escalate[Escalate to Human]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    ArchReview --&gt; End
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    Escalate --&gt; End
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    P1_3 --&gt;|No| P2[Phase 2: Select Methodology]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    P2 --&gt; P2_D{Symptom Type?}
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    P2_D --&gt;|Intermittent/Unexpected| SciDebug[/scientific-debugging/]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    P2_D --&gt;|Clear Error/Test Failure| SysDebug[/systematic-debugging/]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    P2_D --&gt;|CI-Only Failure| CI[CI Investigation Branch]
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    P2_D --&gt;|Test Quality Issue| FixTests[/fixing-tests/]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    CI --&gt; CI_1{CI Symptom?}
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    CI_1 --&gt;|Environment| CI_ENV[Environment Diff Protocol]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    CI_1 --&gt;|Cache| CI_CACHE[Cache Forensics]
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    CI_1 --&gt;|Resource| CI_RES[Resource Analysis]
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    CI_1 --&gt;|Credentials| CI_CRED[Credential Audit]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    CI_ENV --&gt; CI_FIX[Fix CI Config]
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    CI_CACHE --&gt; CI_FIX
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    CI_RES --&gt; CI_FIX
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    CI_CRED --&gt; CI_FIX
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    CI_FIX --&gt; Verify
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    SciDebug --&gt; HunchGate{Hunch Detected?}
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    SysDebug --&gt; HunchGate
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    HunchGate --&gt;|Yes| VerifyHunch[/verifying-hunches/]
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    VerifyHunch --&gt; IsoTest[/isolated-testing/]
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    HunchGate --&gt;|No| IsoTest
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    IsoTest --&gt; AttemptFix[Apply Fix]
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    AttemptFix --&gt; FixCheck{Fix Succeeded?}
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    FixCheck --&gt;|Yes| Verify
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    FixCheck --&gt;|No| IncAttempts[Increment fix_attempts]
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    IncAttempts --&gt; AttemptGate{Attempts &gt;= 3?}
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    AttemptGate --&gt;|Yes| ThreeFix
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    AttemptGate --&gt;|No| P2
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    Verify[[Phase 4: /verify]]
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    Verify --&gt; VerifyGate{Verification Passed?}
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    VerifyGate --&gt;|Yes| SelfCheck[Self-Check Checklist]
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    SelfCheck --&gt; End([End])
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    VerifyGate --&gt;|No| IncAttempts
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    FixTests --&gt; End
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style End fill:#4CAF50,color:#fff
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style P0 fill:#2196F3,color:#fff
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style P0_1 fill:#2196F3,color:#fff
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style P0_2 fill:#2196F3,color:#fff
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style P0_3 fill:#2196F3,color:#fff
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style P1 fill:#2196F3,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style P1_1 fill:#2196F3,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style DirectFix fill:#2196F3,color:#fff
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style P2 fill:#2196F3,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style AttemptFix fill:#2196F3,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style IncAttempts fill:#2196F3,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style CI fill:#2196F3,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style CI_ENV fill:#2196F3,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style CI_CACHE fill:#2196F3,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style CI_RES fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style CI_CRED fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style CI_FIX fill:#2196F3,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style P0_NR fill:#2196F3,color:#fff
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style SelfCheck fill:#2196F3,color:#fff
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style P1_2 fill:#FF9800,color:#fff
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style P1_3 fill:#FF9800,color:#fff
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style P2_D fill:#FF9800,color:#fff
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style CI_1 fill:#FF9800,color:#fff
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style ThreeFix fill:#FF9800,color:#fff
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    style HunchGate fill:#FF9800,color:#fff
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    style FixCheck fill:#FF9800,color:#fff
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    style AttemptGate fill:#FF9800,color:#fff
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>    style P0_2_G fill:#f44336,color:#fff
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>    style Verify fill:#f44336,color:#fff
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>    style VerifyGate fill:#f44336,color:#fff
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>    style SciDebug fill:#4CAF50,color:#fff
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    style SysDebug fill:#4CAF50,color:#fff
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>    style FixTests fill:#4CAF50,color:#fff
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    style VerifyHunch fill:#4CAF50,color:#fff
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>    style IsoTest fill:#4CAF50,color:#fff
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    style ArchReview fill:#4CAF50,color:#fff
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    style Escalate fill:#2196F3,color:#fff
 </code></pre></div>
-<h2 id="phase-0-prerequisites">Phase 0: Prerequisites<a class="headerlink" href="#phase-0-prerequisites" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    START([Phase 0 Entry]) --&gt; BL[0.1 Establish&lt;br/&gt;Clean Baseline]
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    BL --&gt; BL_CHECK{Clean state&lt;br/&gt;reachable?}
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    BL_CHECK --&gt;|Yes| BL_TEST[Test clean state&lt;br/&gt;works correctly]
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    BL_CHECK --&gt;|No| BL_BLOCK([Cannot proceed:&lt;br/&gt;establish clean state first])
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    BL_TEST --&gt; BL_RECORD[Record baseline:&lt;br/&gt;commit SHA, verified, date]
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    BL_RECORD --&gt; SET_BL[&quot;baseline_established = true&lt;br/&gt;code_state = clean&quot;]
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    SET_BL --&gt; REPRO[0.2 Prove Bug Exists]
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    REPRO --&gt; REPRO_RUN[Run specific test&lt;br/&gt;on clean baseline]
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    REPRO_RUN --&gt; REPRO_CHECK{Bug reproduced?}
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    REPRO_CHECK --&gt;|Yes| REPRO_RECORD[&quot;Record steps + output&lt;br/&gt;bug_reproduced = true&quot;]
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    REPRO_CHECK --&gt;|No| NO_REPRO{Why not?}
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    NO_REPRO --&gt;|Already fixed| DONE_NR([Bug doesn&#39;t exist])
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    NO_REPRO --&gt;|Incomplete steps| REFINE[Refine reproduction steps]
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    NO_REPRO --&gt;|Environment-specific| ENV[Investigate environment&lt;br/&gt;differences]
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    REFINE --&gt; REPRO_RUN
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    ENV --&gt; REPRO_RUN
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    REPRO_RECORD --&gt; CST[0.3 Code State Tracking]
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    CST --&gt; CST_VERIFY[&quot;Before EVERY test:&lt;br/&gt;verify code state&quot;]
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    CST_VERIFY --&gt; PHASE1([Proceed to Phase 1])
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    style START fill:#4a9eff,color:#fff
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    style BL_BLOCK fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    style DONE_NR fill:#51cf66,color:#fff
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    style PHASE1 fill:#4a9eff,color:#fff
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    style REPRO_CHECK fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    style BL_CHECK fill:#ff6b6b,color:#fff
-</code></pre></div>
-<h2 id="phase-1-triage">Phase 1: Triage<a class="headerlink" href="#phase-1-triage" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    START([Phase 1 Entry]) --&gt; GATHER[1.1 Gather Context&lt;br/&gt;via AskUserQuestion]
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    GATHER --&gt; SYMPTOM{Symptom type?}
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    SYMPTOM --&gt;|Clear error + stack trace| SIMPLE_CHK
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    SYMPTOM --&gt;|Test failure| SIMPLE_CHK
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    SYMPTOM --&gt;|Unexpected behavior| SIMPLE_CHK
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    SYMPTOM --&gt;|Intermittent/flaky| SIMPLE_CHK
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    SYMPTOM --&gt;|CI-only failure| SIMPLE_CHK
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    SIMPLE_CHK[1.2 Simple Bug Detection]
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    SIMPLE_CHK --&gt; SIMPLE{All simple&lt;br/&gt;criteria met?}
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    SIMPLE --&gt;|Yes: clear error,&lt;br/&gt;reproducible, 0 attempts,&lt;br/&gt;obvious fix| DIRECT_FIX[Apply fix directly&lt;br/&gt;skip methodology]
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    DIRECT_FIX --&gt; P4([Phase 4: Verification])
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    SIMPLE --&gt;|No| THREE_CHK[1.3 Check 3-Fix Rule]
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    THREE_CHK --&gt; THREE{Prior attempts&lt;br/&gt;&gt;= 3?}
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    THREE --&gt;|Yes| WARNING[&quot;3-Fix Rule Warning:&lt;br/&gt;A) Architecture review&lt;br/&gt;B) Continue (reset)&lt;br/&gt;C) Escalate&lt;br/&gt;D) Spike ticket&quot;]
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    WARNING --&gt; WARN_CHOICE{User choice?}
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    WARN_CHOICE --&gt;|A, C, or D| ESCALATE([Escalate / Stop])
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    WARN_CHOICE --&gt;|B: Continue| RESET[&quot;fix_attempts = 0&quot;]
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    THREE --&gt;|No| MEMORY[1.4 Memory Priming]
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    RESET --&gt; MEMORY
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>    MEMORY --&gt; MEM_RECALL[&quot;memory_recall(query=&lt;br/&gt;symptom + component)&quot;]
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    MEM_RECALL --&gt; PRIOR{Prior root&lt;br/&gt;causes found?}
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>    PRIOR --&gt;|Yes| CHECK_PRIOR[Check if prior&lt;br/&gt;causes apply]
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>    PRIOR --&gt;|No| PHASE2([Phase 2: Selection])
-<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>    CHECK_PRIOR --&gt; PHASE2
-<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>    style START fill:#4a9eff,color:#fff
-<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    style SIMPLE fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>    style THREE fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    style P4 fill:#4a9eff,color:#fff
-<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>    style PHASE2 fill:#4a9eff,color:#fff
-<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>    style ESCALATE fill:#f59f00,color:#fff
-<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>    style WARNING fill:#f59f00,color:#fff
-</code></pre></div>
-<h2 id="phase-2-methodology-selection">Phase 2: Methodology Selection<a class="headerlink" href="#phase-2-methodology-selection" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    START([Phase 2 Entry]) --&gt; ROUTE{Symptom +&lt;br/&gt;Reproducibility?}
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    ROUTE --&gt;|Intermittent + Sometimes/No| SCI[Scientific Debugging]
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    ROUTE --&gt;|Unexpected behavior +&lt;br/&gt;Sometimes/No| SCI
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    ROUTE --&gt;|Clear error + Yes| SYS[Systematic Debugging]
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    ROUTE --&gt;|Test failure + Yes| TEST_CHOICE{Test quality or&lt;br/&gt;production bug?}
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    ROUTE --&gt;|CI-only failure| CI[CI Investigation Branch]
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    ROUTE --&gt;|Any + 3 attempts| ARCH([Architecture Review])
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    TEST_CHOICE --&gt;|Test quality issue| FIX_TESTS[&quot;Invoke: fixing-tests skill&quot;]
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    TEST_CHOICE --&gt;|Production bug&lt;br/&gt;exposed by test| SYS
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    SCI --&gt; P3([Phase 3: Execute&lt;br/&gt;Scientific Method])
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    SYS --&gt; P3_SYS([Phase 3: Execute&lt;br/&gt;Systematic Method])
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    CI --&gt; CI_BRANCH([CI Investigation])
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    style START fill:#4a9eff,color:#fff
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    style ROUTE fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    style TEST_CHOICE fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    style ARCH fill:#f59f00,color:#fff
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    style FIX_TESTS fill:#4a9eff,color:#fff
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    style P3 fill:#4a9eff,color:#fff
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    style P3_SYS fill:#4a9eff,color:#fff
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    style CI_BRANCH fill:#4a9eff,color:#fff
-</code></pre></div>
-<h2 id="phase-3-execute-methodology">Phase 3: Execute Methodology<a class="headerlink" href="#phase-3-execute-methodology" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    START([Phase 3 Entry]) --&gt; METHOD{Methodology?}
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    METHOD --&gt;|Scientific| SCI[&quot;Invoke:&lt;br/&gt;scientific-debugging skill&quot;]
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    METHOD --&gt;|Systematic| SYS[&quot;Invoke:&lt;br/&gt;systematic-debugging skill&quot;]
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    METHOD --&gt;|Just Fix It&lt;br/&gt;(user request)| WARN[&quot;WARNING: Lower success&lt;br/&gt;rate, higher rework risk&quot;]
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    WARN --&gt; ATTEMPT[Attempt fix directly]
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    SCI --&gt; INVESTIGATE[Investigation Loop]
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    SYS --&gt; INVESTIGATE
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    INVESTIGATE --&gt; HUNCH{Feeling&lt;br/&gt;&#39;I found it&#39;?}
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    HUNCH --&gt;|Yes| VERIFY_HUNCH[&quot;Invoke:&lt;br/&gt;verifying-hunches skill&quot;]
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    HUNCH --&gt;|No| CONTINUE[Continue investigation]
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    CONTINUE --&gt; EXPERIMENT
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    VERIFY_HUNCH --&gt; CONFIRMED{Hunch&lt;br/&gt;confirmed?}
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    CONFIRMED --&gt;|Yes| APPLY_FIX[Apply fix]
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    CONFIRMED --&gt;|No| CONTINUE
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    EXPERIMENT{Ready to&lt;br/&gt;test theory?} --&gt; ISO[&quot;Invoke:&lt;br/&gt;isolated-testing skill&quot;]
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    ISO --&gt; ISO_STEPS[&quot;1. Design repro test&lt;br/&gt;2. Get approval&lt;br/&gt;3. Test ONE theory&lt;br/&gt;4. Stop on reproduction&quot;]
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    ISO_STEPS --&gt; CHAOS{Chaos&lt;br/&gt;detected?}
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    CHAOS --&gt;|&quot;&#39;Let me try...&#39;&lt;br/&gt;&#39;Maybe if I...&#39;&lt;br/&gt;Multiple theories&quot;| STOP_CHAOS[STOP: Return to&lt;br/&gt;isolated testing]
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    STOP_CHAOS --&gt; ISO
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    CHAOS --&gt;|Clean single test| RESULT{Fix attempt&lt;br/&gt;succeeded?}
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    APPLY_FIX --&gt; RESULT
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    ATTEMPT --&gt; RESULT
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    RESULT --&gt;|Yes| P4([Phase 4: Verification])
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    RESULT --&gt;|No| INC[&quot;fix_attempts += 1&quot;]
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    INC --&gt; THREE{fix_attempts&lt;br/&gt;&gt;= 3?}
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    THREE --&gt;|Yes| THREE_WARN[3-Fix Rule Warning]
-<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    THREE --&gt;|No| INVESTIGATE
-<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>
-<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    THREE_WARN --&gt;|Continue| INVESTIGATE
-<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    THREE_WARN --&gt;|Stop| ARCH([Architecture Review])
-<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>
-<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>    style START fill:#4a9eff,color:#fff
-<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>    style HUNCH fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    style EXPERIMENT fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>    style CHAOS fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>    style RESULT fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    style THREE fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>    style P4 fill:#4a9eff,color:#fff
-<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>    style ARCH fill:#f59f00,color:#fff
-<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>    style SCI fill:#4a9eff,color:#fff
-<a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a>    style SYS fill:#4a9eff,color:#fff
-<a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>    style VERIFY_HUNCH fill:#4a9eff,color:#fff
-<a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a>    style ISO fill:#4a9eff,color:#fff
-</code></pre></div>
-<h2 id="ci-investigation-branch">CI Investigation Branch<a class="headerlink" href="#ci-investigation-branch" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>flowchart TD
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    START([CI Investigation&lt;br/&gt;Entry]) --&gt; CLASSIFY{CI Symptom?}
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    CLASSIFY --&gt;|Works locally,&lt;br/&gt;fails CI| ENV[Environment Diff Protocol]
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    CLASSIFY --&gt;|Flaky in CI only| RES[Resource Analysis]
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    CLASSIFY --&gt;|Cache errors| CACHE[Cache Forensics]
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    CLASSIFY --&gt;|Permission/access| CRED[Credential Audit]
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    CLASSIFY --&gt;|Timeouts| PERF[Performance Triage]
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    CLASSIFY --&gt;|Dependency&lt;br/&gt;resolution fails| DEP[Dependency Forensics]
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    ENV --&gt; ENV1[Capture CI environment&lt;br/&gt;from logs/config]
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    ENV1 --&gt; ENV2[Compare: runtime versions,&lt;br/&gt;OS, env vars, paths]
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    ENV2 --&gt; ENV3[Identify parity violations]
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    ENV3 --&gt; FIX_CI
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    RES --&gt; RES_TBL[&quot;Check: Memory (exit 137),&lt;br/&gt;CPU throttling, Disk,&lt;br/&gt;Network limits&quot;]
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    RES_TBL --&gt; FIX_CI
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    CACHE --&gt; C1[Identify cache keys]
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    C1 --&gt; C2[Check cache age vs lockfile]
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    C2 --&gt; C3[Test with cache disabled]
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>    C3 --&gt; C4[Document invalidation strategy]
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    C4 --&gt; FIX_CI
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    CRED --&gt; FIX_CI
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    PERF --&gt; FIX_CI
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>    DEP --&gt; FIX_CI
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>
-<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>    FIX_CI[Apply CI fix] --&gt; CHECKLIST[&quot;CI Checklist:&lt;br/&gt;Runtime version match,&lt;br/&gt;Env vars compared,&lt;br/&gt;Cache tested,&lt;br/&gt;Resources checked,&lt;br/&gt;Secrets verified,&lt;br/&gt;Network access confirmed,&lt;br/&gt;CI code paths checked&quot;]
-<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>    CHECKLIST --&gt; DOC[Document environment&lt;br/&gt;requirement]
-<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>    DOC --&gt; P4([Phase 4: Verification])
-<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>
-<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>    style START fill:#4a9eff,color:#fff
-<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>    style CLASSIFY fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>    style P4 fill:#4a9eff,color:#fff
-</code></pre></div>
-<h2 id="phase-4-verification">Phase 4: Verification<a class="headerlink" href="#phase-4-verification" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>flowchart TD
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    START([Phase 4 Entry:&lt;br/&gt;Auto-invoked after&lt;br/&gt;every fix claim]) --&gt; V1[Original symptom&lt;br/&gt;no longer occurs?]
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    V1 --&gt; V2[Tests pass?]
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    V2 --&gt; V3[No new failures&lt;br/&gt;introduced?]
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    V3 --&gt; RESULT{All verified?}
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    RESULT --&gt;|Yes| STORE[&quot;Store root cause:&lt;br/&gt;memory_store_memories()&lt;br/&gt;type=fact, tags=[root-cause]&quot;]
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    STORE --&gt; RECUR{Was 3-fix rule&lt;br/&gt;triggered?}
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    RECUR --&gt;|Yes| ANTI[&quot;Store antipattern:&lt;br/&gt;memory_store_memories()&lt;br/&gt;type=antipattern,&lt;br/&gt;tags=[recurring, architecture]&quot;]
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    RECUR --&gt;|No| DONE
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    ANTI --&gt; DONE([Session Complete])
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    RESULT --&gt;|No| FAILED[&quot;Verification failed:&lt;br/&gt;show what failed&quot;]
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    FAILED --&gt; INC[&quot;fix_attempts += 1&quot;]
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    INC --&gt; THREE{fix_attempts&lt;br/&gt;&gt;= 3?}
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    THREE --&gt;|Yes| WARN[3-Fix Rule Warning]
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    THREE --&gt;|No| RETURN([Return to&lt;br/&gt;Phase 3])
-<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>
-<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>    WARN --&gt;|Continue| RETURN
-<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>    WARN --&gt;|Stop| ARCH([Architecture Review])
-<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>
-<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>    style START fill:#ff6b6b,color:#fff
-<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>    style RESULT fill:#ff6b6b,color:#fff
-<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>    style RECUR fill:#ff6b6b,color:#fff
-<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>    style THREE fill:#ff6b6b,color:#fff
-<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>    style DONE fill:#51cf66,color:#fff
-<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>    style RETURN fill:#4a9eff,color:#fff
-<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>    style ARCH fill:#f59f00,color:#fff
-</code></pre></div>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Color</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
+</tr>
+<tr>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
+</tr>
+<tr>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
+</tr>
+<tr>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
+</tr>
+</tbody>
+</table>
 <h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Overview Node</th>
-<th>Detail Section</th>
-<th>Source</th>
+<th>Node</th>
+<th>Source Reference</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Phase 0: Prerequisites</td>
-<td>Phase 0: Prerequisites</td>
-<td><code>skills/debugging/SKILL.md:47-148</code></td>
+<td>Phase 0 (lines 47-148)</td>
+</tr>
+<tr>
+<td>Establish Clean Baseline</td>
+<td>Section 0.1 (lines 55-83)</td>
+</tr>
+<tr>
+<td>Prove Bug Exists</td>
+<td>Section 0.2 (lines 85-128)</td>
+</tr>
+<tr>
+<td>Bug Reproduced?</td>
+<td>Gate at line 88: "HARD GATE: You cannot investigate or fix a bug you haven't reproduced"</td>
+</tr>
+<tr>
+<td>Track Code State</td>
+<td>Section 0.3 (lines 130-148)</td>
 </tr>
 <tr>
 <td>Phase 1: Triage</td>
-<td>Phase 1: Triage</td>
-<td><code>skills/debugging/SKILL.md:151-266</code></td>
+<td>Phase 1 (lines 150-273)</td>
 </tr>
 <tr>
-<td>Phase 2: Methodology Selection</td>
-<td>Phase 2: Methodology Selection</td>
-<td><code>skills/debugging/SKILL.md:268-290</code></td>
+<td>Gather Context</td>
+<td>Section 1.1 (lines 162-199)</td>
 </tr>
 <tr>
-<td>Phase 3: Execute Methodology</td>
-<td>Phase 3: Execute Methodology</td>
-<td><code>skills/debugging/SKILL.md:292-345</code></td>
+<td>Simple Bug?</td>
+<td>Section 1.2 (lines 201-223)</td>
 </tr>
 <tr>
-<td>CI Investigation</td>
+<td>3+ Prior Attempts?</td>
+<td>Section 1.3 (lines 225-249)</td>
+</tr>
+<tr>
+<td>3-Fix Rule Warning</td>
+<td>3-Fix Rule (lines 416-430)</td>
+</tr>
+<tr>
+<td>Phase 2: Select Methodology</td>
+<td>Phase 2 (lines 251-273)</td>
+</tr>
+<tr>
+<td>/scientific-debugging/</td>
+<td>Phase 3 invocation (line 278)</td>
+</tr>
+<tr>
+<td>/systematic-debugging/</td>
+<td>Phase 3 invocation (line 279)</td>
+</tr>
+<tr>
+<td>/fixing-tests/</td>
+<td>Phase 2 alternative (lines 262-271)</td>
+</tr>
+<tr>
 <td>CI Investigation Branch</td>
-<td><code>skills/debugging/SKILL.md:347-407</code></td>
+<td>CI Investigation Branch (lines 329-393)</td>
 </tr>
 <tr>
-<td>Phase 4: Verification</td>
-<td>Phase 4: Verification</td>
-<td><code>skills/debugging/SKILL.md:409-438</code></td>
+<td>/verifying-hunches/</td>
+<td>Hunch Interception (lines 281-283)</td>
 </tr>
 <tr>
-<td>scientific-debugging</td>
-<td>External skill</td>
-<td><code>skills/debugging/SKILL.md:296</code></td>
+<td>/isolated-testing/</td>
+<td>Isolated Testing Mandate (lines 285-298)</td>
 </tr>
 <tr>
-<td>systematic-debugging</td>
-<td>External skill</td>
-<td><code>skills/debugging/SKILL.md:297</code></td>
+<td>Phase 4: /verify</td>
+<td>Phase 4: Verification (lines 394-412)</td>
 </tr>
 <tr>
-<td>verifying-hunches</td>
-<td>External skill</td>
-<td><code>skills/debugging/SKILL.md:299</code></td>
+<td>Verification Passed?</td>
+<td>Gate at line 396: "Auto-invoke /verify after EVERY fix claim"</td>
 </tr>
 <tr>
-<td>isolated-testing</td>
-<td>External skill</td>
-<td><code>skills/debugging/SKILL.md:303</code></td>
-</tr>
-<tr>
-<td>fixing-tests</td>
-<td>External skill</td>
-<td><code>skills/debugging/SKILL.md:279</code></td>
-</tr>
-<tr>
-<td>fractal-thinking</td>
-<td>External skill</td>
-<td><code>skills/debugging/SKILL.md:254</code></td>
+<td>Self-Check Checklist</td>
+<td>Self-Check (lines 464-482)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>flowchart LR
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    L1[Process Step]
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    L2{Decision Point}
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    L3([Terminal])
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    L4[&quot;Invoke: External Skill&quot;]
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    L5[Warning / Escalation]
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    style L1 fill:#f0f0f0,color:#000
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    style L2 fill:#ff6b6b,color:#fff
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    style L3 fill:#51cf66,color:#fff
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    style L4 fill:#4a9eff,color:#fff
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>    style L5 fill:#f59f00,color:#fff
-</code></pre></div>
 
 
 

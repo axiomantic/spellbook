@@ -18,7 +18,7 @@
         
       
       
-      <link rel="icon" href="../../../assets/book.svg">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
@@ -96,7 +96,8 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -233,7 +234,8 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     Spellbook
@@ -7201,102 +7203,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#self-mode-self" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Self Mode (--self)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#feedback-mode-feedback" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Feedback Mode (--feedback)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#give-mode-give" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Give Mode (--give)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#audit-mode-audit" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Audit Mode (--audit)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tarot-integration-tarot" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tarot Integration (--tarot)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cross-Reference
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -7315,250 +7221,154 @@
   
 
 
-<!-- diagram-meta: {"source": "skills/code-review/SKILL.md", "source_hash": "sha256:f91840caa91900a230dff1fcfe64cc56510bef88d8934391ae7c9ab56a7017e5", "generated_at": "2026-03-10T06:21:33Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/code-review/SKILL.md", "source_hash": "sha256:41feb41fdd1a955fea85da61bbac250a783657649f45279b9e0cce241c447034", "generated_at": "2026-02-20T00:13:41Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-code-review">Diagram: code-review<a class="headerlink" href="#diagram-code-review" title="Permanent link">&para;</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    START([Code Review&lt;br/&gt;Invoked]) --&gt; PARSE[Parse Mode Flags]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    PARSE --&gt; ROUTER{Mode Router}
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ROUTER --&gt;|&quot;--self or default&quot;| SELF[Self Mode]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ROUTER --&gt;|&quot;--feedback, -f&quot;| FEEDBACK[Feedback Mode]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ROUTER --&gt;|&quot;--give target&quot;| GIVE[Give Mode]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    ROUTER --&gt;|&quot;--audit scope&quot;| AUDIT[Audit Mode]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    SELF --&gt; TAROT_CHECK{--tarot flag?}
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    FEEDBACK --&gt; TAROT_CHECK
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    GIVE --&gt; TAROT_CHECK
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    AUDIT --&gt; TAROT_CHECK
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    TAROT_CHECK --&gt;|Yes| TAROT[Tarot Roundtable&lt;br/&gt;Persona Overlay]
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    TAROT_CHECK --&gt;|No| OUTPUT
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    TAROT --&gt; OUTPUT([Findings + Status])
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    subgraph Legend
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        L1[Process Step]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        L2{Decision Point}
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        L3([Terminal])
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    end
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    style SELF fill:#4a9eff,color:#fff
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    style FEEDBACK fill:#4a9eff,color:#fff
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    style GIVE fill:#4a9eff,color:#fff
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    style AUDIT fill:#4a9eff,color:#fff
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    style TAROT fill:#c084fc,color:#fff
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    style OUTPUT fill:#51cf66,color:#fff
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    style START fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="self-mode-self">Self Mode (<code>--self</code>)<a class="headerlink" href="#self-mode-self" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    S_START([Self Mode Entry]) --&gt; S_DIFF[&quot;Get diff from&lt;br/&gt;merge-base&quot;]
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    S_DIFF --&gt; S_MEMORY[&quot;Memory Priming:&lt;br/&gt;memory_recall()&quot;]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    S_MEMORY --&gt; S_PASS1[&quot;Pass 1: Logic&quot;]
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    S_PASS1 --&gt; S_PASS2[&quot;Pass 2: Integration&quot;]
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    S_PASS2 --&gt; S_PASS3[&quot;Pass 3: Security&quot;]
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    S_PASS3 --&gt; S_PASS4[&quot;Pass 4: Style&quot;]
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    S_PASS4 --&gt; S_FINDINGS[&quot;Generate findings&lt;br/&gt;with severity + file:line&quot;]
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    S_FINDINGS --&gt; S_PERSIST[&quot;Persist significant&lt;br/&gt;findings via memory_store&quot;]
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    S_PERSIST --&gt; S_GATE{Severity Gate}
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    S_GATE --&gt;|&quot;Critical found&quot;| S_FAIL([FAIL])
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    S_GATE --&gt;|&quot;Important found&quot;| S_WARN([WARN])
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    S_GATE --&gt;|&quot;Minor only&quot;| S_PASS([PASS])
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    style S_START fill:#51cf66,color:#fff
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    style S_GATE fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    style S_FAIL fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    style S_WARN fill:#fbbf24,color:#000
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    style S_PASS fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="feedback-mode-feedback">Feedback Mode (<code>--feedback</code>)<a class="headerlink" href="#feedback-mode-feedback" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    F_START([Feedback Mode Entry]) --&gt; F_GATHER[&quot;Gather ALL feedback&lt;br/&gt;across related PRs&quot;]
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    F_GATHER --&gt; F_CAT[&quot;Categorize each item:&lt;br/&gt;bug/style/question/&lt;br/&gt;suggestion/nit&quot;]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    F_CAT --&gt; F_DECIDE{Decide Response}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    F_DECIDE --&gt;|Correct, improves code| F_ACCEPT[&quot;Accept:&lt;br/&gt;Make the change&quot;]
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    F_DECIDE --&gt;|Incorrect or harmful| F_PUSH[&quot;Push Back:&lt;br/&gt;Disagree with evidence&quot;]
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    F_DECIDE --&gt;|Ambiguous| F_CLARIFY[&quot;Clarify:&lt;br/&gt;Ask questions&quot;]
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    F_DECIDE --&gt;|Valid but out of scope| F_DEFER[&quot;Defer:&lt;br/&gt;Acknowledge + follow-up&quot;]
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    F_ACCEPT --&gt; F_RATIONALE[&quot;Document rationale&lt;br/&gt;for each decision&quot;]
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    F_PUSH --&gt; F_RATIONALE
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    F_CLARIFY --&gt; F_RATIONALE
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    F_DEFER --&gt; F_RATIONALE
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    F_RATIONALE --&gt; F_FACT[&quot;Fact-check&lt;br/&gt;technical claims&quot;]
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    F_FACT --&gt; F_EXEC[&quot;Execute fixes&quot;]
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    F_EXEC --&gt; F_RERUN[&quot;Re-run self-review&quot;]
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    F_RERUN --&gt; F_OUT([Responses Sent])
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    style F_START fill:#51cf66,color:#fff
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    style F_DECIDE fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    style F_OUT fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="give-mode-give">Give Mode (<code>--give</code>)<a class="headerlink" href="#give-mode-give" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    G_START([Give Mode Entry]) --&gt; G_STEP0[&quot;Step 0: Load&lt;br/&gt;Project Conventions&quot;]
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    G_STEP0 --&gt; G_READ_CFG[&quot;Read CLAUDE.md,&lt;br/&gt;style configs,&lt;br/&gt;review instructions&quot;]
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    G_READ_CFG --&gt; G_SAMPLE[&quot;Sample adjacent files&lt;br/&gt;for conventions&quot;]
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    G_SAMPLE --&gt; G_STEP1[&quot;Step 1: Fetch&lt;br/&gt;and Inventory&quot;]
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    G_STEP1 --&gt; G_DIFF[&quot;Fetch diff via&lt;br/&gt;gh pr diff / git diff&quot;]
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    G_DIFF --&gt; G_MANIFEST[&quot;Build Coverage&lt;br/&gt;Manifest: ALL files&quot;]
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    G_MANIFEST --&gt; G_PRIOR[&quot;Fetch prior&lt;br/&gt;unresolved comments&quot;]
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    G_PRIOR --&gt; G_CLASS[&quot;Classify prior:&lt;br/&gt;ADDRESSED / STILL_OPEN&quot;]
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    G_CLASS --&gt; G_STEP2[&quot;Step 2: Multi-Pass&lt;br/&gt;Review&quot;]
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    G_STEP2 --&gt; G_MANDATORY[&quot;Mandatory Dimensions&lt;br/&gt;(all 6 per file)&quot;]
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    subgraph Mandatory[&quot;Mandatory Dimensions&quot;]
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>        M1[&quot;Correctness&quot;]
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        M2[&quot;Security&quot;]
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>        M3[&quot;Error Handling&quot;]
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>        M4[&quot;Data Integrity&quot;]
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>        M5[&quot;API Contracts&quot;]
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>        M6[&quot;Test Coverage&quot;]
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    end
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    G_MANDATORY --&gt; G_SEC[&quot;Security Pass:&lt;br/&gt;6 concrete checks&quot;]
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    G_SEC --&gt; G_COND{Conditional&lt;br/&gt;Triggers?}
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    G_COND --&gt;|&quot;async/threading&quot;| G_CONC[&quot;Concurrency Pass&quot;]
-<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    G_COND --&gt;|&quot;hot paths/DB&quot;| G_PERF[&quot;Performance Pass&quot;]
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    G_COND --&gt;|&quot;UI/frontend&quot;| G_A11Y[&quot;Accessibility Pass&quot;]
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    G_COND --&gt;|None triggered| G_STEP3
-<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>
-<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>    G_CONC --&gt; G_STEP3
-<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>    G_PERF --&gt; G_STEP3
-<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    G_A11Y --&gt; G_STEP3
-<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>
-<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>    G_STEP3[&quot;Step 3: Output&quot;] --&gt; G_VERIFY_COV[&quot;Verify coverage:&lt;br/&gt;every file evaluated?&quot;]
-<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>    G_VERIFY_COV --&gt; G_FORMAT[&quot;Format: Summary,&lt;br/&gt;Manifest, Reconciliation,&lt;br/&gt;Findings, Recommendation&quot;]
-<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>    G_FORMAT --&gt; G_REC{Recommendation}
-<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>    G_REC --&gt;|No issues| G_APPROVE([APPROVE])
-<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>    G_REC --&gt;|Issues found| G_CHANGES([REQUEST_CHANGES])
-<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>    G_REC --&gt;|Questions only| G_COMMENT([COMMENT])
-<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a>
-<a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a>    style G_START fill:#51cf66,color:#fff
-<a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a>    style G_COND fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a>    style G_REC fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a>    style G_APPROVE fill:#51cf66,color:#fff
-<a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a>    style G_CHANGES fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a>    style G_COMMENT fill:#fbbf24,color:#000
-<a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a>    style G_SEC fill:#e879f9,color:#fff
-<a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a>    style G_CONC fill:#e879f9,color:#fff
-</code></pre></div>
-<h2 id="audit-mode-audit">Audit Mode (<code>--audit</code>)<a class="headerlink" href="#audit-mode-audit" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    A_START([Audit Mode Entry]) --&gt; A_SCOPE{Scope?}
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    A_SCOPE --&gt;|&quot;(none)&quot;| A_BRANCH[&quot;Branch changes&quot;]
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    A_SCOPE --&gt;|&quot;file.py&quot;| A_FILE[&quot;Single file&quot;]
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    A_SCOPE --&gt;|&quot;dir/&quot;| A_DIR[&quot;Directory&quot;]
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    A_SCOPE --&gt;|&quot;security&quot;| A_SEC_ONLY[&quot;Security only&quot;]
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    A_SCOPE --&gt;|&quot;all&quot;| A_ALL[&quot;Entire codebase&quot;]
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    A_BRANCH --&gt; A_MEMORY
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    A_FILE --&gt; A_MEMORY
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    A_DIR --&gt; A_MEMORY
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    A_SEC_ONLY --&gt; A_MEMORY
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    A_ALL --&gt; A_MEMORY
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    A_MEMORY[&quot;Memory Priming:&lt;br/&gt;memory_recall()&quot;] --&gt; A_PASS1[&quot;Pass 1: Correctness&quot;]
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    A_PASS1 --&gt; A_PASS2[&quot;Pass 2: Security&quot;]
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    A_PASS2 --&gt; A_PASS3[&quot;Pass 3: Performance&quot;]
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    A_PASS3 --&gt; A_PASS4[&quot;Pass 4: Maintainability&quot;]
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    A_PASS4 --&gt; A_PASS5[&quot;Pass 5: Edge Cases&quot;]
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    A_PASS5 --&gt; A_PERSIST[&quot;Persist significant&lt;br/&gt;findings via memory_store&quot;]
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    A_PERSIST --&gt; A_OUTPUT[&quot;Output: Executive Summary,&lt;br/&gt;Findings by Category&quot;]
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    A_OUTPUT --&gt; A_RISK{Risk Assessment}
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    A_RISK --&gt;|LOW| A_LOW([LOW])
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    A_RISK --&gt;|MEDIUM| A_MED([MEDIUM])
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    A_RISK --&gt;|HIGH| A_HIGH([HIGH])
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    A_RISK --&gt;|CRITICAL| A_CRIT([CRITICAL])
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    style A_START fill:#51cf66,color:#fff
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    style A_SCOPE fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    style A_RISK fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    style A_LOW fill:#51cf66,color:#fff
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>    style A_MED fill:#fbbf24,color:#000
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    style A_HIGH fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    style A_CRIT fill:#ff6b6b,color:#fff
-</code></pre></div>
-<h2 id="tarot-integration-tarot">Tarot Integration (<code>--tarot</code>)<a class="headerlink" href="#tarot-integration-tarot" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>flowchart TD
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    T_START([Tarot Modifier&lt;br/&gt;Active]) --&gt; T_ASSIGN[&quot;Assign Personas&lt;br/&gt;to Review Passes&quot;]
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    T_ASSIGN --&gt; T_HERMIT[&quot;Hermit:&lt;br/&gt;Security reviewer&quot;]
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    T_ASSIGN --&gt; T_PRIESTESS[&quot;Priestess:&lt;br/&gt;Architecture reviewer&quot;]
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    T_ASSIGN --&gt; T_FOOL[&quot;Fool:&lt;br/&gt;Assumption challenger&quot;]
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    T_HERMIT --&gt; T_DIALOGUE[&quot;Roundtable&lt;br/&gt;Dialogue Format&quot;]
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    T_PRIESTESS --&gt; T_DIALOGUE
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    T_FOOL --&gt; T_DIALOGUE
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    T_DIALOGUE --&gt; T_CONFLICT{Archetype&lt;br/&gt;Disagreement?}
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    T_CONFLICT --&gt;|Yes| T_EVIDENCE[&quot;Resolve by&lt;br/&gt;evidence weight&quot;]
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    T_CONFLICT --&gt;|No| T_SYNTH
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    T_EVIDENCE --&gt; T_SYNTH[&quot;Magician:&lt;br/&gt;Synthesis + Verdict&quot;]
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    T_SYNTH --&gt; T_SEPARATE[&quot;Separate persona&lt;br/&gt;dialogue from&lt;br/&gt;formal findings&quot;]
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    T_SEPARATE --&gt; T_OUT([Findings Output:&lt;br/&gt;Persona-Free])
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>    style T_START fill:#c084fc,color:#fff
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    style T_CONFLICT fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>    style T_HERMIT fill:#c084fc,color:#fff
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    style T_PRIESTESS fill:#c084fc,color:#fff
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    style T_FOOL fill:#c084fc,color:#fff
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    style T_SYNTH fill:#c084fc,color:#fff
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    style T_OUT fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Overview Node</th>
-<th>Detail Section</th>
-<th>Source</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Self Mode</td>
-<td>Self Mode (<code>--self</code>)</td>
-<td><code>skills/code-review/SKILL.md:65-91</code></td>
-</tr>
-<tr>
-<td>Feedback Mode</td>
-<td>Feedback Mode (<code>--feedback</code>)</td>
-<td><code>commands/code-review-feedback.md</code></td>
-</tr>
-<tr>
-<td>Give Mode</td>
-<td>Give Mode (<code>--give</code>)</td>
-<td><code>commands/code-review-give.md</code></td>
-</tr>
-<tr>
-<td>Audit Mode</td>
-<td>Audit Mode (<code>--audit</code>)</td>
-<td><code>skills/code-review/SKILL.md:94-105</code></td>
-</tr>
-<tr>
-<td>Tarot Roundtable</td>
-<td>Tarot Integration (<code>--tarot</code>)</td>
-<td><code>commands/code-review-tarot.md</code></td>
-</tr>
-</tbody>
-</table>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>flowchart LR
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    L1[Process Step]
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    L2{Decision Point}
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    L3([Terminal])
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    L4[Security/Conditional Pass]
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    L5[Tarot Persona]
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    style L1 fill:#4a9eff,color:#fff
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    style L2 fill:#ff6b6b,color:#fff
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    style L3 fill:#51cf66,color:#fff
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    style L4 fill:#e879f9,color:#fff
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    style L5 fill:#c084fc,color:#fff
+<p>Unified code review skill with four modes: self-review (pre-PR), feedback processing, giving reviews, and deep audit. Routes via mode flags to specialized handlers with MCP tool integration.</p>
+<p>```mermaid
+flowchart TD
+    Start([Start Code Review])
+    ParseArgs[Parse Mode Flags]
+    ModeRouter{Which Mode?}</p>
+<div class="highlight"><pre><span></span><code>%% Self Mode
+SelfMode[Self Mode]
+GetDiff[Get Merge-Base Diff]
+LogicPass[Logic Pass]
+IntegrationPass[Integration Pass]
+SecurityPass[Security Pass]
+StylePass[Style Pass]
+SelfFindings[Generate Findings]
+SelfGate{Severity Gate}
+SelfFail([FAIL: Critical Found])
+SelfWarn([WARN: Important Found])
+SelfPass([PASS: Minor Only])
+
+%% Feedback Mode
+FeedbackMode[&quot;/code-review-feedback&quot;]
+ProcessComments[Process PR Comments]
+FeedbackOut([Feedback Addressed])
+
+%% Give Mode
+GiveMode[&quot;/code-review-give&quot;]
+ReviewTarget[Review Target Code]
+GiveOut([Review Delivered])
+
+%% Audit Mode
+AuditMode[Audit Mode]
+AuditScope{Scope?}
+CorrectnessAudit[Correctness Pass]
+SecurityAudit[Security Pass]
+PerfAudit[Performance Pass]
+MaintAudit[Maintainability Pass]
+EdgeAudit[Edge Cases Pass]
+RiskAssess{Risk Assessment}
+AuditLow([LOW Risk])
+AuditMed([MEDIUM Risk])
+AuditHigh([HIGH Risk])
+AuditCrit([CRITICAL Risk])
+
+%% Tarot Modifier
+TarotCheck{--tarot flag?}
+TarotMode[&quot;/code-review-tarot&quot;]
+
+%% MCP Integration
+MCPTools[MCP: pr_fetch, pr_diff]
+FallbackCLI[Fallback: gh CLI]
+FallbackLocal[Fallback: Local Diff]
+
+%% Self-Check
+FinalCheck{Self-Check Gate}
+Done([Review Complete])
+
+Start --&gt; ParseArgs --&gt; ModeRouter
+
+ModeRouter --&gt;|&quot;--self / default&quot;| SelfMode
+ModeRouter --&gt;|&quot;--feedback&quot;| FeedbackMode
+ModeRouter --&gt;|&quot;--give target&quot;| GiveMode
+ModeRouter --&gt;|&quot;--audit&quot;| AuditMode
+
+%% Self flow
+SelfMode --&gt; TarotCheck
+TarotCheck --&gt;|Yes| TarotMode --&gt; GetDiff
+TarotCheck --&gt;|No| GetDiff
+GetDiff --&gt; LogicPass --&gt; IntegrationPass --&gt; SecurityPass --&gt; StylePass
+StylePass --&gt; SelfFindings --&gt; SelfGate
+SelfGate --&gt;|Critical| SelfFail
+SelfGate --&gt;|Important| SelfWarn
+SelfGate --&gt;|Minor only| SelfPass
+
+%% Feedback flow
+FeedbackMode --&gt; ProcessComments --&gt; FeedbackOut
+
+%% Give flow
+GiveMode --&gt; MCPTools
+MCPTools --&gt;|Available| ReviewTarget
+MCPTools --&gt;|Unavailable| FallbackCLI --&gt; ReviewTarget
+FallbackCLI --&gt;|Unavailable| FallbackLocal --&gt; ReviewTarget
+ReviewTarget --&gt; GiveOut
+
+%% Audit flow
+AuditMode --&gt; AuditScope
+AuditScope --&gt;|&quot;branch/file/dir/all&quot;| CorrectnessAudit
+AuditScope --&gt;|&quot;security&quot;| SecurityAudit
+CorrectnessAudit --&gt; SecurityAudit --&gt; PerfAudit --&gt; MaintAudit --&gt; EdgeAudit
+EdgeAudit --&gt; RiskAssess
+RiskAssess --&gt;|LOW| AuditLow
+RiskAssess --&gt;|MEDIUM| AuditMed
+RiskAssess --&gt;|HIGH| AuditHigh
+RiskAssess --&gt;|CRITICAL| AuditCrit
+
+%% Final check
+SelfFail --&gt; FinalCheck
+SelfWarn --&gt; FinalCheck
+SelfPass --&gt; FinalCheck
+FeedbackOut --&gt; FinalCheck
+GiveOut --&gt; FinalCheck
+AuditLow --&gt; FinalCheck
+AuditMed --&gt; FinalCheck
+AuditHigh --&gt; FinalCheck
+AuditCrit --&gt; FinalCheck
+FinalCheck --&gt;|All checks pass| Done
+FinalCheck --&gt;|&quot;Missing file:line&quot;| ParseArgs
+
+style Start fill:#4CAF50,color:#fff
+style Done fill:#4CAF50,color:#fff
+style SelfPass fill:#4CAF50,color:#fff
+style AuditLow fill:#4CAF50,color:#fff
+style FeedbackMode fill:#2196F3,color:#fff
+style GiveMode fill:#2196F3,color:#fff
+style TarotMode fill:#2196F3,color:#fff
+style GetDiff fill:#2196F3,color:#fff
+style LogicPass fill:#2196F3,color:#fff
+style IntegrationPass fill:#2196F3,color:#fff
+style SecurityPass fill:#2196F3,color:#fff
+style StylePass fill:#2196F3,color:#fff
+style SelfFindings fill:#2196F3,color:#fff
+style ProcessComments fill:#2196F3,color:#fff
+style ReviewTarget fill:#2196F3,color:#fff
+style CorrectnessAudit fill:#2196F3,color:#fff
+style SecurityAudit fill:#2196F3,color:#fff
+style PerfAudit fill:#2196F3,color:#fff
+style MaintAudit fill:#2196F3,color:#fff
+style EdgeAudit fill:#2196F3,color:#fff
+style MCPTools fill:#2196F3,color:#fff
+style FallbackCLI fill:#2196F3,color:#fff
+style FallbackLocal fill:#2196F3,color:#fff
+style ParseArgs fill:#2196F3,color:#fff
+style ModeRouter fill:#FF9800,color:#fff
+style TarotCheck fill:#FF9800,color:#fff
+style AuditScope fill:#FF9800,color:#fff
+style SelfGate fill:#f44336,color:#fff
+style RiskAssess fill:#f44336,color:#fff
+style FinalCheck fill:#f44336,color:#fff
+style SelfFail fill:#f44336,color:#fff
+style SelfWarn fill:#FF9800,color:#fff
+style AuditMed fill:#FF9800,color:#fff
+style AuditHigh fill:#f44336,color:#fff
+style AuditCrit fill:#f44336,color:#fff
+style FeedbackOut fill:#4CAF50,color:#fff
+style GiveOut fill:#4CAF50,color:#fff
+style SelfMode fill:#4CAF50,color:#fff
+style AuditMode fill:#4CAF50,color:#fff
 </code></pre></div>
 
 

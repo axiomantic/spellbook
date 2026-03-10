@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/book.svg">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
@@ -100,7 +100,8 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -237,7 +238,8 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     Spellbook
@@ -7455,171 +7457,87 @@
 <a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>| Quality Shortcut | Missing tests | Time pressure/oversight |
 <a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>| Integration Blind Spot | Interface mismatch | System thinking gap |
 <a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="gu">## Step 2.5: Fractal Escalation (Conditional)</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="gs">**Fractal exploration (optional):**</span> When the same root cause category appears in 2+ feedback items, invoke fractal-thinking with intensity <span class="sb">`explore`</span> and seed: &quot;Why does [failure pattern] keep recurring despite [previous corrections]?&quot;. Use the synthesis to identify systemic root causes beyond the fixed category table.
 <a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="gs">**Trigger conditions**</span> (either triggers escalation):
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="k">1.</span> <span class="sb">`iteration_number &gt;= 2`</span> AND current <span class="sb">`stage`</span> matches the stage from the
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>   previous iteration&#39;s feedback (repeated failure on same stage)
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">2.</span> 2+ feedback items have <span class="sb">`severity = &#39;blocking&#39;`</span> in the current feedback set
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="gs">**Fractal invocation counter:**</span> Before checking escalation conditions, read
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="sb">`IterationState.accumulated_knowledge[&quot;fractal_invocation_count&quot;]`</span> (default 0).
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>If count &gt;= 3, skip fractal escalation entirely and fall back to plain reflexion
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>regardless of conditions. After a successful fractal completion (Step 2 below),
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>increment the counter.
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="gs">**If neither condition is met:**</span> Skip to Step 3. Simple ITERATEs proceed at
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>normal speed with zero overhead.
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gs">**If escalation triggers:**</span>
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a><span class="gs">**Previous stage retrieval:**</span> The orchestrator passes the previous iteration&#39;s
-<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>stage from <span class="sb">`IterationState.feedback_history[-1].stage`</span> (if available) as
-<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a><span class="sb">`previous_stage`</span> in the reflexion-analyze invocation context. This is how
-<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>reflexion-analyze knows whether the current stage matches the previous one
-<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>for condition 1 detection.
-<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a>
-<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="k">1.</span> Construct the seed question from feedback context:
-<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Repeated stage failure (condition 1):**</span> &quot;Why does [dominant_root_cause_category]
-<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>     keep recurring in [stage] despite corrections: [list of APPLIED/SUPERSEDED reflections]?&quot;
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Severe first-time failure (condition 2):**</span> &quot;What systemic issues cause [N] blocking
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>     failures simultaneously in [stage]? Failures: [list of blocking critiques, truncated]&quot;
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a>
-<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="k">2.</span> Invoke the fractal-thinking skill (using the Skill tool with the seed question,
-<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>   <span class="sb">`intensity=explore`</span>, <span class="sb">`checkpoint_mode=autonomous`</span>). The skill orchestrates:
-<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>   a. <span class="sb">`fractal-think-seed`</span> - Initialize fractal graph (5-7 sub-questions, max depth 4, 8 max agents)
-<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a>   b. <span class="sb">`fractal-think-work`</span> - Dispatch fractal workers until completion or budget exhaustion
-<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a>   c. <span class="sb">`fractal-think-harvest`</span> - Collect structured JSON with synthesis_chain, findings, boundary_questions
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="gu">## Step 3: Root Cause Questions</span>
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>For each categorized failure, answer:
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">1.</span> What was expected vs actual?
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a><span class="k">2.</span> Why did deviation occur? (information gap, process gap, judgment error, external factor)
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="k">3.</span> What would have prevented this?
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="gu">## Reflection Storage (`forged.db`)</span>
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>| Field | Description |
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>|-------|-------------|
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>| <span class="sb">`feature_name`</span> | Feature under analysis |
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>| <span class="sb">`validator`</span> | Archetype that raised the feedback |
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>| <span class="sb">`iteration`</span> | Iteration number |
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>| <span class="sb">`failure_description`</span> | What went wrong |
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>| <span class="sb">`root_cause`</span> | Categorized root cause |
+<a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>| <span class="sb">`lesson_learned`</span> | Actionable lesson extracted |
+<a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>| <span class="sb">`status`</span> | Lifecycle: PENDING -&gt; APPLIED or SUPERSEDED |
+<a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>
+<a id="__codelineno-1-61" name="__codelineno-1-61" href="#__codelineno-1-61"></a>Status transitions:
+<a id="__codelineno-1-62" name="__codelineno-1-62" href="#__codelineno-1-62"></a><span class="k">-</span><span class="w"> </span><span class="gs">**PENDING**</span>: Stored, not yet acted on
+<a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="k">-</span><span class="w"> </span><span class="gs">**APPLIED**</span>: Next iteration addressed this reflection successfully
+<a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a><span class="k">-</span><span class="w"> </span><span class="gs">**SUPERSEDED**</span>: Later reflection replaced this one (deeper root cause found)
+<a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="gu">## Retry Guidance Generation</span>
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a>
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="sb">```</span>
+<a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a><span class="sb">## Reflexion Guidance - Retry #[N]</span>
+<a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a>
+<a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a><span class="sb">### Feedback Summary</span>
+<a id="__codelineno-1-72" name="__codelineno-1-72" href="#__codelineno-1-72"></a><span class="sb">| Source | Severity | Issue |</span>
+<a id="__codelineno-1-73" name="__codelineno-1-73" href="#__codelineno-1-73"></a><span class="sb">|--------|----------|-------|</span>
 <a id="__codelineno-1-74" name="__codelineno-1-74" href="#__codelineno-1-74"></a>
-<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="k">3.</span> Map the FractalResult to Feedback objects using <span class="sb">`fractal_to_feedback()`</span> from
-<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a>   <span class="sb">`spellbook_mcp.forged.fractal_feedback`</span>. Pass the harvest JSON, current stage,
-<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>   and iteration number.
-<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a>
-<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="k">4.</span> Merge fractal-derived Feedback into the existing feedback set.
-<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>   Fractal feedback items have <span class="sb">`source = &quot;fractal-analysis&quot;`</span>.
-<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a>   Fractal feedback is additive (no deduplication needed).
-<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a>
-<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a><span class="k">5.</span> Call <span class="sb">`suggest_return_stage()`</span> from <span class="sb">`spellbook_mcp.forged.fractal_feedback`</span>
-<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a>   with the harvest JSON and current stage. Include the recommendation in
-<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a>   retry guidance output with machine-readable markers.
-<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a>
-<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="k">6.</span> After successful fractal completion, increment the fractal invocation counter.
-<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a>   Read the current value from <span class="sb">`accumulated_knowledge[&quot;fractal_invocation_count&quot;]`</span>
-<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>   (default 0), add 1, and include the updated count in the retry guidance output
-<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a>   as <span class="sb">`FRACTAL_INVOCATION_COUNT: [N]`</span>. The orchestrator is responsible for passing
-<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>   this value to <span class="sb">`forge_iteration_return`</span> so it persists in <span class="sb">`accumulated_knowledge`</span>.
-<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>
-<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a><span class="k">7.</span> If fractal exploration fails:
-<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Autonomous mode:**</span> Retry once. If retry fails, log warning
-<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>     &quot;Fractal escalation failed; falling back to standard reflexion&quot;
-<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>     and continue with standard Step 3.
-<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Interactive mode:**</span> Escalate to user with the error details.
-<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>
-<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="gu">## Step 3: Root Cause Questions</span>
-<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a>
-<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a>For each categorized failure, answer:
-<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a>
-<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">1.</span> What was expected vs actual?
-<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a><span class="k">2.</span> Why did deviation occur? (information gap, process gap, judgment error, external factor)
-<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a><span class="k">3.</span> What would have prevented this?
-<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a>
-<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a><span class="gu">## Reflection Storage (`forged.db`)</span>
-<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a>
-<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a>| Field | Description |
-<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a>|-------|-------------|
-<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a>| <span class="sb">`feature_name`</span> | Feature under analysis |
-<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a>| <span class="sb">`validator`</span> | Archetype that raised the feedback |
-<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a>| <span class="sb">`iteration`</span> | Iteration number |
-<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>| <span class="sb">`failure_description`</span> | What went wrong |
-<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>| <span class="sb">`root_cause`</span> | Categorized root cause |
-<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>| <span class="sb">`lesson_learned`</span> | Actionable lesson extracted |
-<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>| <span class="sb">`status`</span> | Lifecycle: PENDING -&gt; APPLIED or SUPERSEDED |
-<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>
-<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>Status transitions:
-<a id="__codelineno-1-120" name="__codelineno-1-120" href="#__codelineno-1-120"></a><span class="k">-</span><span class="w"> </span><span class="gs">**PENDING**</span>: Stored, not yet acted on
-<a id="__codelineno-1-121" name="__codelineno-1-121" href="#__codelineno-1-121"></a><span class="k">-</span><span class="w"> </span><span class="gs">**APPLIED**</span>: Next iteration addressed this reflection successfully
-<a id="__codelineno-1-122" name="__codelineno-1-122" href="#__codelineno-1-122"></a><span class="k">-</span><span class="w"> </span><span class="gs">**SUPERSEDED**</span>: Later reflection replaced this one (deeper root cause found)
-<a id="__codelineno-1-123" name="__codelineno-1-123" href="#__codelineno-1-123"></a>
-<a id="__codelineno-1-124" name="__codelineno-1-124" href="#__codelineno-1-124"></a><span class="gu">## Retry Guidance Generation</span>
-<a id="__codelineno-1-125" name="__codelineno-1-125" href="#__codelineno-1-125"></a>
-<a id="__codelineno-1-126" name="__codelineno-1-126" href="#__codelineno-1-126"></a><span class="sb">```</span>
-<a id="__codelineno-1-127" name="__codelineno-1-127" href="#__codelineno-1-127"></a><span class="sb">## Reflexion Guidance - Retry #[N]</span>
-<a id="__codelineno-1-128" name="__codelineno-1-128" href="#__codelineno-1-128"></a>
-<a id="__codelineno-1-129" name="__codelineno-1-129" href="#__codelineno-1-129"></a><span class="sb">### Feedback Summary</span>
-<a id="__codelineno-1-130" name="__codelineno-1-130" href="#__codelineno-1-130"></a><span class="sb">| Source | Severity | Issue |</span>
-<a id="__codelineno-1-131" name="__codelineno-1-131" href="#__codelineno-1-131"></a><span class="sb">|--------|----------|-------|</span>
-<a id="__codelineno-1-132" name="__codelineno-1-132" href="#__codelineno-1-132"></a>
-<a id="__codelineno-1-133" name="__codelineno-1-133" href="#__codelineno-1-133"></a><span class="sb">### Root Cause</span>
-<a id="__codelineno-1-134" name="__codelineno-1-134" href="#__codelineno-1-134"></a><span class="sb">[Category]: [Specific cause]</span>
-<a id="__codelineno-1-135" name="__codelineno-1-135" href="#__codelineno-1-135"></a>
-<a id="__codelineno-1-136" name="__codelineno-1-136" href="#__codelineno-1-136"></a><span class="sb">### Required Corrections</span>
-<a id="__codelineno-1-137" name="__codelineno-1-137" href="#__codelineno-1-137"></a><span class="sb">1. [Specific fix with location]</span>
-<a id="__codelineno-1-138" name="__codelineno-1-138" href="#__codelineno-1-138"></a>
-<a id="__codelineno-1-139" name="__codelineno-1-139" href="#__codelineno-1-139"></a><span class="sb">### Pattern Alert</span>
-<a id="__codelineno-1-140" name="__codelineno-1-140" href="#__codelineno-1-140"></a><span class="sb">[If applicable]</span>
-<a id="__codelineno-1-141" name="__codelineno-1-141" href="#__codelineno-1-141"></a>
-<a id="__codelineno-1-142" name="__codelineno-1-142" href="#__codelineno-1-142"></a><span class="sb">### Fractal Analysis</span>
-<a id="__codelineno-1-143" name="__codelineno-1-143" href="#__codelineno-1-143"></a><span class="sb">*(Include this section only when fractal escalation was triggered in Step 2.5)*</span>
-<a id="__codelineno-1-144" name="__codelineno-1-144" href="#__codelineno-1-144"></a>
-<a id="__codelineno-1-145" name="__codelineno-1-145" href="#__codelineno-1-145"></a><span class="sb">Seed: [seed question used]</span>
-<a id="__codelineno-1-146" name="__codelineno-1-146" href="#__codelineno-1-146"></a><span class="sb">Graph: [graph_id from harvest]</span>
-<a id="__codelineno-1-147" name="__codelineno-1-147" href="#__codelineno-1-147"></a><span class="sb">Root synthesis: [root synthesis summary, first 200 chars]</span>
-<a id="__codelineno-1-148" name="__codelineno-1-148" href="#__codelineno-1-148"></a><span class="sb">Recommended return stage: [stage] (distance: [N] stages back)</span>
-<a id="__codelineno-1-149" name="__codelineno-1-149" href="#__codelineno-1-149"></a><span class="sb">Confidence: [HIGH if convergence_count &gt;= 3, else MEDIUM]</span>
-<a id="__codelineno-1-150" name="__codelineno-1-150" href="#__codelineno-1-150"></a>
-<a id="__codelineno-1-151" name="__codelineno-1-151" href="#__codelineno-1-151"></a><span class="sb">FRACTAL_RETURN_STAGE: [STAGE_NAME]</span>
-<a id="__codelineno-1-152" name="__codelineno-1-152" href="#__codelineno-1-152"></a><span class="sb">FRACTAL_RETURN_DISTANCE: [N]</span>
-<a id="__codelineno-1-153" name="__codelineno-1-153" href="#__codelineno-1-153"></a><span class="sb">FRACTAL_RETURN_CONFIDENCE: [HIGH|MEDIUM]</span>
-<a id="__codelineno-1-154" name="__codelineno-1-154" href="#__codelineno-1-154"></a><span class="sb">FRACTAL_INVOCATION_COUNT: [current count after increment]</span>
-<a id="__codelineno-1-155" name="__codelineno-1-155" href="#__codelineno-1-155"></a>
-<a id="__codelineno-1-156" name="__codelineno-1-156" href="#__codelineno-1-156"></a><span class="sb">The `FRACTAL_INVOCATION_COUNT` line reports the updated count after this fractal</span>
-<a id="__codelineno-1-157" name="__codelineno-1-157" href="#__codelineno-1-157"></a><span class="sb">invocation completes successfully. The orchestrator must pass this value to</span>
-<a id="__codelineno-1-158" name="__codelineno-1-158" href="#__codelineno-1-158"></a><span class="sb">`forge_iteration_return` via `accumulated_knowledge[&quot;fractal_invocation_count&quot;]`</span>
-<a id="__codelineno-1-159" name="__codelineno-1-159" href="#__codelineno-1-159"></a><span class="sb">so subsequent iterations can enforce the invocation cap (&gt;= 3 skips fractal).</span>
-<a id="__codelineno-1-160" name="__codelineno-1-160" href="#__codelineno-1-160"></a>
-<a id="__codelineno-1-161" name="__codelineno-1-161" href="#__codelineno-1-161"></a><span class="sb">### Fractal-Derived Corrections</span>
-<a id="__codelineno-1-162" name="__codelineno-1-162" href="#__codelineno-1-162"></a><span class="sb">1. [Specific correction from convergence finding]</span>
-<a id="__codelineno-1-163" name="__codelineno-1-163" href="#__codelineno-1-163"></a><span class="sb">2. [Specific correction from boundary finding]</span>
-<a id="__codelineno-1-164" name="__codelineno-1-164" href="#__codelineno-1-164"></a><span class="sb">...</span>
-<a id="__codelineno-1-165" name="__codelineno-1-165" href="#__codelineno-1-165"></a>
-<a id="__codelineno-1-166" name="__codelineno-1-166" href="#__codelineno-1-166"></a><span class="sb">### Success Criteria</span>
-<a id="__codelineno-1-167" name="__codelineno-1-167" href="#__codelineno-1-167"></a><span class="sb">- [ ] All blocking feedback addressed</span>
-<a id="__codelineno-1-168" name="__codelineno-1-168" href="#__codelineno-1-168"></a><span class="sb">- [ ] Root cause fixed (not just symptom)</span>
-<a id="__codelineno-1-169" name="__codelineno-1-169" href="#__codelineno-1-169"></a><span class="sb">- [ ] Previous lessons applied</span>
-<a id="__codelineno-1-170" name="__codelineno-1-170" href="#__codelineno-1-170"></a><span class="sb">```</span>
-<a id="__codelineno-1-171" name="__codelineno-1-171" href="#__codelineno-1-171"></a>
-<a id="__codelineno-1-172" name="__codelineno-1-172" href="#__codelineno-1-172"></a><span class="gu">## Pattern Detection Reference</span>
-<a id="__codelineno-1-173" name="__codelineno-1-173" href="#__codelineno-1-173"></a>
-<a id="__codelineno-1-174" name="__codelineno-1-174" href="#__codelineno-1-174"></a>| Pattern | Threshold | Alert |
-<a id="__codelineno-1-175" name="__codelineno-1-175" href="#__codelineno-1-175"></a>|---------|-----------|-------|
-<a id="__codelineno-1-176" name="__codelineno-1-176" href="#__codelineno-1-176"></a>| Same failure, same feature | 2 iterations | &quot;Root cause not addressed&quot; |
-<a id="__codelineno-1-177" name="__codelineno-1-177" href="#__codelineno-1-177"></a>| Same failure, different features | 3 features | &quot;Systemic pattern&quot; |
-<a id="__codelineno-1-178" name="__codelineno-1-178" href="#__codelineno-1-178"></a>| Same validator, different failures | 3 failures | &quot;Validator focus area needs attention&quot; |
-<a id="__codelineno-1-179" name="__codelineno-1-179" href="#__codelineno-1-179"></a>
-<a id="__codelineno-1-180" name="__codelineno-1-180" href="#__codelineno-1-180"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-1-181" name="__codelineno-1-181" href="#__codelineno-1-181"></a><span class="k">-</span><span class="w"> </span>Ignoring feedback severity (blocking must block)
-<a id="__codelineno-1-182" name="__codelineno-1-182" href="#__codelineno-1-182"></a><span class="k">-</span><span class="w"> </span>Surface-level analysis (symptoms, not causes)
-<a id="__codelineno-1-183" name="__codelineno-1-183" href="#__codelineno-1-183"></a><span class="k">-</span><span class="w"> </span>Generic lessons (&quot;be more careful&quot;)
-<a id="__codelineno-1-184" name="__codelineno-1-184" href="#__codelineno-1-184"></a><span class="k">-</span><span class="w"> </span>Skipping pattern detection
-<a id="__codelineno-1-185" name="__codelineno-1-185" href="#__codelineno-1-185"></a><span class="k">-</span><span class="w"> </span>Failing to store reflections in database
-<a id="__codelineno-1-186" name="__codelineno-1-186" href="#__codelineno-1-186"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-1-187" name="__codelineno-1-187" href="#__codelineno-1-187"></a>
-<a id="__codelineno-1-188" name="__codelineno-1-188" href="#__codelineno-1-188"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-1-189" name="__codelineno-1-189" href="#__codelineno-1-189"></a>
-<a id="__codelineno-1-190" name="__codelineno-1-190" href="#__codelineno-1-190"></a><span class="k">- [ ]</span> All feedback items parsed with full field extraction
-<a id="__codelineno-1-191" name="__codelineno-1-191" href="#__codelineno-1-191"></a><span class="k">- [ ]</span> Root causes categorized using the table (not just described)
-<a id="__codelineno-1-192" name="__codelineno-1-192" href="#__codelineno-1-192"></a><span class="k">- [ ]</span> Root cause questions answered for each failure
-<a id="__codelineno-1-193" name="__codelineno-1-193" href="#__codelineno-1-193"></a><span class="k">- [ ]</span> Reflections stored in forged.db with PENDING status
-<a id="__codelineno-1-194" name="__codelineno-1-194" href="#__codelineno-1-194"></a><span class="k">- [ ]</span> Pattern check performed against thresholds
-<a id="__codelineno-1-195" name="__codelineno-1-195" href="#__codelineno-1-195"></a><span class="k">- [ ]</span> Retry guidance generated with specific corrections
-<a id="__codelineno-1-196" name="__codelineno-1-196" href="#__codelineno-1-196"></a><span class="k">- [ ]</span> Fractal escalation evaluated (conditions checked)
-<a id="__codelineno-1-197" name="__codelineno-1-197" href="#__codelineno-1-197"></a><span class="k">- [ ]</span> Fractal-derived feedback mapped (if escalation triggered)
-<a id="__codelineno-1-198" name="__codelineno-1-198" href="#__codelineno-1-198"></a>
-<a id="__codelineno-1-199" name="__codelineno-1-199" href="#__codelineno-1-199"></a>If ANY unchecked: complete before returning results to orchestrator.
-<a id="__codelineno-1-200" name="__codelineno-1-200" href="#__codelineno-1-200"></a>
-<a id="__codelineno-1-201" name="__codelineno-1-201" href="#__codelineno-1-201"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-1-202" name="__codelineno-1-202" href="#__codelineno-1-202"></a>You are the memory system of the Forge. A crystallized lesson that prevents one repeated failure pays back every cycle spent here. The same mistake twice is negligence. Store precisely, categorize rigorously, and ensure the next attempt has exactly what it needs.
-<a id="__codelineno-1-203" name="__codelineno-1-203" href="#__codelineno-1-203"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-75" name="__codelineno-1-75" href="#__codelineno-1-75"></a><span class="sb">### Root Cause</span>
+<a id="__codelineno-1-76" name="__codelineno-1-76" href="#__codelineno-1-76"></a><span class="sb">[Category]: [Specific cause]</span>
+<a id="__codelineno-1-77" name="__codelineno-1-77" href="#__codelineno-1-77"></a>
+<a id="__codelineno-1-78" name="__codelineno-1-78" href="#__codelineno-1-78"></a><span class="sb">### Required Corrections</span>
+<a id="__codelineno-1-79" name="__codelineno-1-79" href="#__codelineno-1-79"></a><span class="sb">1. [Specific fix with location]</span>
+<a id="__codelineno-1-80" name="__codelineno-1-80" href="#__codelineno-1-80"></a>
+<a id="__codelineno-1-81" name="__codelineno-1-81" href="#__codelineno-1-81"></a><span class="sb">### Pattern Alert</span>
+<a id="__codelineno-1-82" name="__codelineno-1-82" href="#__codelineno-1-82"></a><span class="sb">[If applicable]</span>
+<a id="__codelineno-1-83" name="__codelineno-1-83" href="#__codelineno-1-83"></a>
+<a id="__codelineno-1-84" name="__codelineno-1-84" href="#__codelineno-1-84"></a><span class="sb">### Success Criteria</span>
+<a id="__codelineno-1-85" name="__codelineno-1-85" href="#__codelineno-1-85"></a><span class="sb">- [ ] All blocking feedback addressed</span>
+<a id="__codelineno-1-86" name="__codelineno-1-86" href="#__codelineno-1-86"></a><span class="sb">- [ ] Root cause fixed (not just symptom)</span>
+<a id="__codelineno-1-87" name="__codelineno-1-87" href="#__codelineno-1-87"></a><span class="sb">- [ ] Previous lessons applied</span>
+<a id="__codelineno-1-88" name="__codelineno-1-88" href="#__codelineno-1-88"></a><span class="sb">```</span>
+<a id="__codelineno-1-89" name="__codelineno-1-89" href="#__codelineno-1-89"></a>
+<a id="__codelineno-1-90" name="__codelineno-1-90" href="#__codelineno-1-90"></a><span class="gu">## Pattern Detection Reference</span>
+<a id="__codelineno-1-91" name="__codelineno-1-91" href="#__codelineno-1-91"></a>
+<a id="__codelineno-1-92" name="__codelineno-1-92" href="#__codelineno-1-92"></a>| Pattern | Threshold | Alert |
+<a id="__codelineno-1-93" name="__codelineno-1-93" href="#__codelineno-1-93"></a>|---------|-----------|-------|
+<a id="__codelineno-1-94" name="__codelineno-1-94" href="#__codelineno-1-94"></a>| Same failure, same feature | 2 iterations | &quot;Root cause not addressed&quot; |
+<a id="__codelineno-1-95" name="__codelineno-1-95" href="#__codelineno-1-95"></a>| Same failure, different features | 3 features | &quot;Systemic pattern&quot; |
+<a id="__codelineno-1-96" name="__codelineno-1-96" href="#__codelineno-1-96"></a>| Same validator, different failures | 3 failures | &quot;Validator focus area needs attention&quot; |
+<a id="__codelineno-1-97" name="__codelineno-1-97" href="#__codelineno-1-97"></a>
+<a id="__codelineno-1-98" name="__codelineno-1-98" href="#__codelineno-1-98"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-1-99" name="__codelineno-1-99" href="#__codelineno-1-99"></a><span class="k">-</span><span class="w"> </span>Ignoring feedback severity (blocking must block)
+<a id="__codelineno-1-100" name="__codelineno-1-100" href="#__codelineno-1-100"></a><span class="k">-</span><span class="w"> </span>Surface-level analysis (symptoms, not causes)
+<a id="__codelineno-1-101" name="__codelineno-1-101" href="#__codelineno-1-101"></a><span class="k">-</span><span class="w"> </span>Generic lessons (&quot;be more careful&quot;)
+<a id="__codelineno-1-102" name="__codelineno-1-102" href="#__codelineno-1-102"></a><span class="k">-</span><span class="w"> </span>Skipping pattern detection
+<a id="__codelineno-1-103" name="__codelineno-1-103" href="#__codelineno-1-103"></a><span class="k">-</span><span class="w"> </span>Failing to store reflections in database
+<a id="__codelineno-1-104" name="__codelineno-1-104" href="#__codelineno-1-104"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-1-105" name="__codelineno-1-105" href="#__codelineno-1-105"></a>
+<a id="__codelineno-1-106" name="__codelineno-1-106" href="#__codelineno-1-106"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-1-107" name="__codelineno-1-107" href="#__codelineno-1-107"></a>
+<a id="__codelineno-1-108" name="__codelineno-1-108" href="#__codelineno-1-108"></a><span class="k">- [ ]</span> All feedback items parsed with full field extraction
+<a id="__codelineno-1-109" name="__codelineno-1-109" href="#__codelineno-1-109"></a><span class="k">- [ ]</span> Root causes categorized using the table (not just described)
+<a id="__codelineno-1-110" name="__codelineno-1-110" href="#__codelineno-1-110"></a><span class="k">- [ ]</span> Root cause questions answered for each failure
+<a id="__codelineno-1-111" name="__codelineno-1-111" href="#__codelineno-1-111"></a><span class="k">- [ ]</span> Reflections stored in forged.db with PENDING status
+<a id="__codelineno-1-112" name="__codelineno-1-112" href="#__codelineno-1-112"></a><span class="k">- [ ]</span> Pattern check performed against thresholds
+<a id="__codelineno-1-113" name="__codelineno-1-113" href="#__codelineno-1-113"></a><span class="k">- [ ]</span> Retry guidance generated with specific corrections
+<a id="__codelineno-1-114" name="__codelineno-1-114" href="#__codelineno-1-114"></a>
+<a id="__codelineno-1-115" name="__codelineno-1-115" href="#__codelineno-1-115"></a>If ANY unchecked: complete before returning results to orchestrator.
+<a id="__codelineno-1-116" name="__codelineno-1-116" href="#__codelineno-1-116"></a>
+<a id="__codelineno-1-117" name="__codelineno-1-117" href="#__codelineno-1-117"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-1-118" name="__codelineno-1-118" href="#__codelineno-1-118"></a>You are the memory system of the Forge. A crystallized lesson that prevents one repeated failure pays back every cycle spent here. The same mistake twice is negligence. Store precisely, categorize rigorously, and ensure the next attempt has exactly what it needs.
+<a id="__codelineno-1-119" name="__codelineno-1-119" href="#__codelineno-1-119"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

@@ -18,7 +18,7 @@
         
       
       
-      <link rel="icon" href="../../../assets/book.svg">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
@@ -96,7 +96,8 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -233,7 +234,8 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     Spellbook
@@ -7208,83 +7210,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#05-continuation-detection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        0.5 Continuation Detection
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#005-base-branch-worktree-setup" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        0.05 Base Branch &amp; Worktree Setup
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#01-escape-hatch-detection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        0.1 Escape Hatch Detection
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#02-04-motivation-feature-preferences" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        0.2-0.4 Motivation, Feature, Preferences
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#06-07-refactoring-complexity" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        0.6-0.7 Refactoring &amp; Complexity
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cross-Reference
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7315,241 +7240,125 @@
   
 
 
-<!-- diagram-meta: {"source": "commands/feature-config.md", "source_hash": "sha256:83c81a603fa55c0fc81e0c4d44ee00f21ed2c70bc4c507813a5e6b0e5654b395", "generated_at": "2026-03-10T06:27:43Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-config.md", "source_hash": "sha256:3b317a792e3373f101011a2a3593233af654c70c8ff190bdef183a983c464b6a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-feature-config">Diagram: feature-config<a class="headerlink" href="#diagram-feature-config" title="Permanent link">&para;</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Phase 0 of implementing-features: Configuration wizard that collects preferences, detects escape hatches, clarifies motivation, classifies complexity, and routes to the appropriate next phase.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    START([Entry: Phase 0]) --&gt; CONT[&quot;0.5 Continuation&lt;br/&gt;Detection&quot;]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    CONT --&gt;|No signals| BASE[&quot;0.05 Base Branch&lt;br/&gt;&amp; Worktree Setup&quot;]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    CONT --&gt;|Signals detected| RESUME[&quot;Resume Flow&quot;]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    RESUME --&gt; JUMP([Phase Jump:&lt;br/&gt;Skip to Target])
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    BASE --&gt; ESC[&quot;0.1 Escape Hatch&lt;br/&gt;Detection&quot;]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ESC --&gt;|Hatch found| HATCH_ROUTE[&quot;Route by&lt;br/&gt;Escape Hatch&quot;]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    HATCH_ROUTE --&gt; JUMP_ESC([Skip to&lt;br/&gt;Target Phase])
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ESC --&gt;|None| MOT[&quot;0.2 Clarify&lt;br/&gt;Motivation&quot;]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    MOT --&gt; FEAT[&quot;0.3 Clarify&lt;br/&gt;Feature&quot;]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    FEAT --&gt; PREFS[&quot;0.4 Collect&lt;br/&gt;Preferences&quot;]
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    PREFS --&gt; REFAC[&quot;0.6 Detect&lt;br/&gt;Refactoring Mode&quot;]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    REFAC --&gt; COMP[&quot;0.7 Complexity&lt;br/&gt;Classification&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    COMP --&gt; ROUTE{Route by Tier}
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ROUTE --&gt;|TRIVIAL| EXIT([Exit Skill])
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    ROUTE --&gt;|SIMPLE| SIMPLE([&quot;Lightweight Research&lt;br/&gt;then /feature-implement&quot;])
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    ROUTE --&gt;|STANDARD/COMPLEX| RESEARCH([&quot;/feature-research&lt;br/&gt;Phase 1&quot;])
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    subgraph Legend
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        L1[Process Step]
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        L2{Decision Point}
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        L3([Terminal/Exit])
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    end
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    style L1 fill:#4a9eff,color:#fff
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    style L2 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    style L3 fill:#51cf66,color:#fff
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Phase 0 Start])
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    DetCont{Continuation signals?}
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ParseRecovery[Parse recovery context]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    VerifyArtifacts[Verify artifact existence]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    QuickPrefs[Quick preferences check]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    SynthResume[Synthesize resume point]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    ConfirmResume[Confirm and resume]
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    PhaseJump[Phase jump mechanism]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    DetEscape[Detect escape hatches]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    EscapeFound{Escape hatch found?}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    AskDocHandling[Ask document handling]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    RouteEscape[Route by escape type]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    ClarifyWhy[Clarify motivation]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    MotivClear{Motivation clear?}
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    AskMotiv[Ask WHY via wizard]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ClarifyWhat[Clarify feature essence]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    CollectPrefs[Collect workflow prefs]
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    DetRefactor{Refactoring mode?}
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    SetRefactor[Set refactoring mode]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    RunHeuristics[Run mechanical heuristics]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    DeriveTier[Derive complexity tier]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    ConfirmTier[Present and confirm tier]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    TierRoute{Complexity tier?}
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    ExitTrivial([Exit: TRIVIAL])
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    SimplePath[Simple path: inline]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    StandardPath[/feature-research]
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    ComplexPath[/feature-research]
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    GateP0{Phase 0 checklist complete?}
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    FixP0[Complete missing items]
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    Start --&gt; DetCont
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    DetCont --&gt;|Yes| ParseRecovery
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    ParseRecovery --&gt; VerifyArtifacts
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    VerifyArtifacts --&gt; QuickPrefs
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    QuickPrefs --&gt; SynthResume
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    SynthResume --&gt; ConfirmResume
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    ConfirmResume --&gt; PhaseJump
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    PhaseJump --&gt; GateP0
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    DetCont --&gt;|No| DetEscape
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    DetEscape --&gt; EscapeFound
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    EscapeFound --&gt;|Yes| AskDocHandling
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    AskDocHandling --&gt; RouteEscape
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    RouteEscape --&gt; ClarifyWhy
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    EscapeFound --&gt;|No| ClarifyWhy
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    ClarifyWhy --&gt; MotivClear
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    MotivClear --&gt;|No| AskMotiv
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    AskMotiv --&gt; ClarifyWhat
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    MotivClear --&gt;|Yes| ClarifyWhat
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    ClarifyWhat --&gt; CollectPrefs
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    CollectPrefs --&gt; DetRefactor
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    DetRefactor --&gt;|Yes| SetRefactor
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    SetRefactor --&gt; RunHeuristics
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    DetRefactor --&gt;|No| RunHeuristics
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    RunHeuristics --&gt; DeriveTier
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    DeriveTier --&gt; ConfirmTier
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    ConfirmTier --&gt; GateP0
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    GateP0 --&gt;|Incomplete| FixP0
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    FixP0 --&gt; GateP0
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    GateP0 --&gt;|Complete| TierRoute
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    TierRoute --&gt;|TRIVIAL| ExitTrivial
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    TierRoute --&gt;|SIMPLE| SimplePath
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    TierRoute --&gt;|STANDARD| StandardPath
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    TierRoute --&gt;|COMPLEX| ComplexPath
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style Start fill:#2196F3,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style ExitTrivial fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style SimplePath fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style StandardPath fill:#4CAF50,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style ComplexPath fill:#4CAF50,color:#fff
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style DetCont fill:#FF9800,color:#fff
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style EscapeFound fill:#FF9800,color:#fff
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style MotivClear fill:#FF9800,color:#fff
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style DetRefactor fill:#FF9800,color:#fff
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style TierRoute fill:#FF9800,color:#fff
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style GateP0 fill:#f44336,color:#fff
 </code></pre></div>
-<h2 id="05-continuation-detection">0.5 Continuation Detection<a class="headerlink" href="#05-continuation-detection" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    CD_START([Entry]) --&gt; CD_CHECK{Continuation&lt;br/&gt;Signals?}
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    CD_CHECK --&gt;|&quot;User says continue/resume/&lt;br/&gt;MCP has skill phase/&lt;br/&gt;Artifacts exist&quot;| CD_PARSE[&quot;Step 1: Parse&lt;br/&gt;Recovery Context&quot;]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    CD_CHECK --&gt;|No signals| CD_EXIT([Proceed to 0.05])
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    CD_PARSE --&gt; CD_VERIFY[&quot;Step 2: Verify&lt;br/&gt;Artifact Existence&quot;]
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    CD_VERIFY --&gt; CD_ART{Artifacts Match&lt;br/&gt;Claimed Phase?}
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    CD_ART --&gt;|Yes| CD_PREFS[&quot;Step 3: Quick&lt;br/&gt;Preferences Check&lt;br/&gt;(4 questions only)&quot;]
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    CD_ART --&gt;|Missing artifacts| CD_MISSING{User Choice}
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    CD_MISSING --&gt;|Regenerate| CD_PREFS
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    CD_MISSING --&gt;|Start fresh| CD_EXIT
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    CD_PREFS --&gt; CD_SYNTH[&quot;Step 4: Synthesize&lt;br/&gt;Resume Point&quot;]
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    CD_SYNTH --&gt; CD_INFER{Resume Source}
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    CD_INFER --&gt;|In-progress todo| CD_CONFIRM[&quot;Step 5: Confirm&lt;br/&gt;and Resume&quot;]
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    CD_INFER --&gt;|skill_phase from MCP| CD_CONFIRM
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    CD_INFER --&gt;|Artifact pattern| CD_CONFIRM
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    CD_CONFIRM --&gt; CD_JUMP[&quot;Phase Jump:&lt;br/&gt;Skip Completed Phases&quot;]
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    CD_JUMP --&gt; CD_TARGET([Jump to&lt;br/&gt;Target Phase])
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    style CD_CHECK fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    style CD_ART fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    style CD_MISSING fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    style CD_INFER fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    style CD_EXIT fill:#51cf66,color:#fff
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    style CD_TARGET fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="005-base-branch-worktree-setup">0.05 Base Branch &amp; Worktree Setup<a class="headerlink" href="#005-base-branch-worktree-setup" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    BB_START([Entry]) --&gt; BB_DET{Base Branch&lt;br/&gt;Source?}
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    BB_DET --&gt;|User specified| BB_EXPLICIT[&quot;Use Explicit Branch&quot;]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    BB_DET --&gt;|Not specified| BB_CURRENT[&quot;Use Current Branch&quot;]
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    BB_EXPLICIT --&gt; BB_EXISTS{Branch Exists?}
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    BB_EXISTS --&gt;|Yes| BB_CHECKOUT[&quot;Find Checkout&lt;br/&gt;Location&quot;]
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    BB_EXISTS --&gt;|No| BB_ASK_NAME[&quot;Ask User to&lt;br/&gt;Confirm Name&quot;]
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    BB_ASK_NAME --&gt; BB_EXISTS
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    BB_CURRENT --&gt; BB_CHECKOUT
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    BB_CHECKOUT --&gt; BB_DIRTY{Uncommitted&lt;br/&gt;Changes?}
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    BB_DIRTY --&gt;|Clean| BB_CREATE[&quot;Create Worktree&lt;br/&gt;.claude/worktrees/&amp;lt;slug&amp;gt;&quot;]
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    BB_DIRTY --&gt;|Dirty| BB_DIRTY_CHOICE{User Choice}
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    BB_DIRTY_CHOICE --&gt;|Commit first| BB_COMMIT[&quot;Commit Changes&quot;] --&gt; BB_CREATE
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    BB_DIRTY_CHOICE --&gt;|Leave uncommitted| BB_CREATE
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    BB_CREATE --&gt; BB_STORE[&quot;Store base_branch&lt;br/&gt;&amp; worktree_path&quot;]
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    BB_STORE --&gt; BB_EXIT([Proceed to 0.1])
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    style BB_DET fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    style BB_EXISTS fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    style BB_DIRTY fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    style BB_DIRTY_CHOICE fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>    style BB_EXIT fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="01-escape-hatch-detection">0.1 Escape Hatch Detection<a class="headerlink" href="#01-escape-hatch-detection" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    EH_START([Entry]) --&gt; EH_PARSE{Escape Hatch&lt;br/&gt;in User Message?}
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    EH_PARSE --&gt;|&quot;using design doc&quot;| EH_DESIGN{Review or&lt;br/&gt;Accept?}
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    EH_PARSE --&gt;|&quot;using impl plan&quot;| EH_IMPL{Review or&lt;br/&gt;Accept?}
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    EH_PARSE --&gt;|&quot;just implement,&lt;br/&gt;no docs&quot;| EH_MINIMAL([Minimal Inline Plan&lt;br/&gt;→ Phase 4])
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    EH_PARSE --&gt;|None detected| EH_PROCEED([Proceed to 0.2])
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    EH_DESIGN --&gt;|Review first| EH_D_REVIEW([&quot;Skip 2.1&lt;br/&gt;→ Phase 2.2 Review&quot;])
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    EH_DESIGN --&gt;|Treat as ready| EH_D_READY([&quot;Skip Phase 2&lt;br/&gt;→ Phase 3&quot;])
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    EH_IMPL --&gt;|Review first| EH_I_REVIEW([&quot;Skip 2.1-3.1&lt;br/&gt;→ Phase 3.2 Review&quot;])
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    EH_IMPL --&gt;|Treat as ready| EH_I_READY([&quot;Skip Phases 2-3&lt;br/&gt;→ Phase 4&quot;])
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    style EH_PARSE fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    style EH_DESIGN fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    style EH_IMPL fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    style EH_MINIMAL fill:#51cf66,color:#fff
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    style EH_PROCEED fill:#51cf66,color:#fff
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    style EH_D_REVIEW fill:#51cf66,color:#fff
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    style EH_D_READY fill:#51cf66,color:#fff
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    style EH_I_REVIEW fill:#51cf66,color:#fff
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    style EH_I_READY fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="02-04-motivation-feature-preferences">0.2-0.4 Motivation, Feature, Preferences<a class="headerlink" href="#02-04-motivation-feature-preferences" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    MOT_START([From 0.1]) --&gt; MOT_CHECK{Motivation&lt;br/&gt;Clear?}
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    MOT_CHECK --&gt;|Yes| MOT_STORE[&quot;Store Motivation&quot;]
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    MOT_CHECK --&gt;|Ambiguous| MOT_ASK[&quot;Ask WHY via&lt;br/&gt;AskUserQuestion&quot;]
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    MOT_ASK --&gt; MOT_CAT[&quot;Categorize:&lt;br/&gt;User Pain / Perf /&lt;br/&gt;Tech Debt / Business /&lt;br/&gt;Security / DX&quot;]
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    MOT_CAT --&gt; MOT_STORE
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    MOT_STORE --&gt; FEAT_ASK[&quot;0.3 Ask WHAT:&lt;br/&gt;Core purpose +&lt;br/&gt;Resources/links&quot;]
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    FEAT_ASK --&gt; FEAT_STORE[&quot;Store Feature Essence&quot;]
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    FEAT_STORE --&gt; PREF_WIZ[&quot;0.4 Configuration Wizard&lt;br/&gt;(Single AskUserQuestion)&quot;]
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    subgraph PREF_WIZ_DETAIL[&quot;Wizard: 4 Questions&quot;]
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        PQ1[&quot;Q1: Execution Mode&lt;br/&gt;Autonomous / Interactive /&lt;br/&gt;Mostly Autonomous&quot;]
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>        PQ2[&quot;Q2: Parallelization&lt;br/&gt;Maximize / Conservative /&lt;br/&gt;Ask Each Time&quot;]
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>        PQ3[&quot;Q3: Worktree Strategy&lt;br/&gt;Single / Per Track / None&quot;]
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>        PQ4[&quot;Q4: Post-Implementation&lt;br/&gt;Offer Options / Auto PR / Stop&quot;]
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    end
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    PREF_WIZ --&gt; COUPLING{Worktree =&lt;br/&gt;per_parallel_track?}
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    COUPLING --&gt;|Yes| FORCE[&quot;Force parallelization&lt;br/&gt;= maximize&quot;]
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    COUPLING --&gt;|No| PREF_DONE[&quot;Store All in&lt;br/&gt;SESSION_PREFERENCES&quot;]
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    FORCE --&gt; PREF_DONE
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    PREF_DONE --&gt; PREF_EXIT([Proceed to 0.6])
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    style MOT_CHECK fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    style COUPLING fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    style PREF_EXIT fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="06-07-refactoring-complexity">0.6-0.7 Refactoring &amp; Complexity<a class="headerlink" href="#06-07-refactoring-complexity" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>flowchart TD
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    REF_START([From 0.4]) --&gt; REF_CHECK{Request Contains&lt;br/&gt;Refactor Keywords?}
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    REF_CHECK --&gt;|Yes| REF_SET[&quot;Set refactoring_mode&lt;br/&gt;= true&quot;]
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    REF_CHECK --&gt;|No| COMP_START
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    REF_SET --&gt; COMP_START[&quot;0.7 Run Mechanical&lt;br/&gt;Heuristics&quot;]
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    COMP_START --&gt; COMP_BASH[&quot;Bash: File Count,&lt;br/&gt;Test Impact,&lt;br/&gt;Integration Points&quot;]
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    COMP_BASH --&gt; COMP_BEHAV[&quot;Analyze: Behavioral&lt;br/&gt;Change? Structural&lt;br/&gt;Change?&quot;]
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    COMP_BEHAV --&gt; COMP_MATRIX[&quot;Derive Tier&lt;br/&gt;from Matrix&quot;]
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    COMP_MATRIX --&gt; COMP_PRESENT[&quot;Present Results&lt;br/&gt;to User&quot;]
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    COMP_PRESENT --&gt; COMP_CONFIRM{User Confirms&lt;br/&gt;or Overrides?}
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    COMP_CONFIRM --&gt;|Confirm| COMP_ROUTE{Tier?}
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    COMP_CONFIRM --&gt;|Override| COMP_OVERRIDE[&quot;Use User&#39;s Tier&quot;] --&gt; COMP_ROUTE
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    COMP_ROUTE --&gt;|TRIVIAL| T_EXIT([&quot;Exit Skill:&lt;br/&gt;Direct Change&quot;])
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    COMP_ROUTE --&gt;|SIMPLE| T_SIMPLE([&quot;Lightweight Research&lt;br/&gt;→ /feature-implement&quot;])
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    COMP_ROUTE --&gt;|STANDARD| T_STD([&quot;/feature-research&lt;br/&gt;Phase 1&quot;])
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    COMP_ROUTE --&gt;|COMPLEX| T_COMP([&quot;/feature-research&lt;br/&gt;Phase 1&quot;])
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    style REF_CHECK fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>    style COMP_CONFIRM fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    style COMP_ROUTE fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    style T_EXIT fill:#51cf66,color:#fff
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>    style T_SIMPLE fill:#51cf66,color:#fff
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    style T_STD fill:#51cf66,color:#fff
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>    style T_COMP fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Overview Node</th>
-<th>Detail Section</th>
-<th>Source</th>
+<th>Color</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>0.5 Continuation Detection</td>
-<td>0.5 Continuation Detection</td>
-<td><code>commands/feature-config.md:25-172</code></td>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
 </tr>
 <tr>
-<td>0.05 Base Branch &amp; Worktree Setup</td>
-<td>0.05 Base Branch &amp; Worktree Setup</td>
-<td><code>commands/feature-config.md:175-203</code></td>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
 </tr>
 <tr>
-<td>0.1 Escape Hatch Detection</td>
-<td>0.1 Escape Hatch Detection</td>
-<td><code>commands/feature-config.md:205-235</code></td>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
 </tr>
 <tr>
-<td>0.2 Clarify Motivation</td>
-<td>0.2-0.4 Motivation, Feature, Preferences</td>
-<td><code>commands/feature-config.md:237-276</code></td>
-</tr>
-<tr>
-<td>0.3 Clarify Feature</td>
-<td>0.2-0.4 Motivation, Feature, Preferences</td>
-<td><code>commands/feature-config.md:278-287</code></td>
-</tr>
-<tr>
-<td>0.4 Collect Preferences</td>
-<td>0.2-0.4 Motivation, Feature, Preferences</td>
-<td><code>commands/feature-config.md:289-338</code></td>
-</tr>
-<tr>
-<td>0.6 Detect Refactoring Mode</td>
-<td>0.6-0.7 Refactoring &amp; Complexity</td>
-<td><code>commands/feature-config.md:340-351</code></td>
-</tr>
-<tr>
-<td>0.7 Complexity Classification</td>
-<td>0.6-0.7 Refactoring &amp; Complexity</td>
-<td><code>commands/feature-config.md:353-431</code></td>
-</tr>
-<tr>
-<td>Route by Tier</td>
-<td>0.6-0.7 Refactoring &amp; Complexity</td>
-<td><code>commands/feature-config.md:422-431</code></td>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
 </tr>
 </tbody>
 </table>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>flowchart LR
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    L1[Process Step]
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    L2{Decision Point}
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    L3([Terminal/Exit])
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    style L1 fill:#4a9eff,color:#fff
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    style L2 fill:#ff6b6b,color:#fff
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    style L3 fill:#51cf66,color:#fff
-</code></pre></div>
 
 
 

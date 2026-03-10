@@ -18,7 +18,7 @@
         
       
       
-      <link rel="icon" href="../../../assets/book.svg">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
@@ -96,7 +96,8 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../../.." title="Spellbook" class="md-header__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -233,7 +234,8 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../../.." title="Spellbook" class="md-nav__button md-logo" aria-label="Spellbook" data-md-component="logo">
       
-  <img src="../../../assets/book.svg" alt="logo">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
     Spellbook
@@ -7208,65 +7210,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-1-strategic-planning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 1: Strategic Planning
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-2-context-analysis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 2: Context Analysis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-3-deep-review" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 3: Deep Review
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-4-verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 4: Verification
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-5-report-generation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 5: Report Generation
+        Legend
       
     </span>
   </a>
@@ -7278,17 +7225,6 @@
     <span class="md-ellipsis">
       
         Cross-Reference
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legend
       
     </span>
   </a>
@@ -7315,384 +7251,187 @@
   
 
 
-<!-- diagram-meta: {"source": "skills/advanced-code-review/SKILL.md", "source_hash": "sha256:c32c46fa5432e5b5bb6aaa3d0d2b2eb2a7d5d3c1780a215e62e1f24348f411b2", "generated_at": "2026-03-10T06:20:20Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/advanced-code-review/SKILL.md", "source_hash": "sha256:6892c6177bf9094ed4eed0dbc44f1f7b22276379d1697c9f748d855e541eb8fc", "generated_at": "2026-02-20T00:13:41Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-advanced-code-review">Diagram: advanced-code-review<a class="headerlink" href="#diagram-advanced-code-review" title="Permanent link">&para;</a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>Multi-phase code review with strategic planning, historical context analysis, deep multi-pass review, verification of findings, and final report generation. Each phase produces artifacts and must pass a self-check before proceeding.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    START([Start Review]) --&gt; INPUT[/Target + Options/]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    INPUT --&gt; ROUTER{Mode Router}
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ROUTER --&gt;|&quot;Local branch&quot;| LOCAL[Source: Local Files]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ROUTER --&gt;|&quot;PR # or URL&quot;| PR[Source: Diff Only]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ROUTER --&gt;|&quot;Any + --offline&quot;| OFFLINE[Source: Local, No Network]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    LOCAL --&gt; P1[Phase 1:&lt;br&gt;Strategic Planning]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    PR --&gt; P1
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    OFFLINE --&gt; P1
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    P1 --&gt; SC1{Self-Check 1&lt;br&gt;Pass?}
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    SC1 --&gt;|No| CB1([Circuit Breaker:&lt;br&gt;Stop + Report])
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    SC1 --&gt;|Yes| P2[Phase 2:&lt;br&gt;Context Analysis]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    P2 --&gt; SC2{Self-Check 2&lt;br&gt;Pass?}
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    SC2 --&gt;|&quot;Fail (non-blocking)&quot;| P3
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    SC2 --&gt;|Yes| P3[Phase 3:&lt;br&gt;Deep Review]
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    P3 --&gt; SC3{Self-Check 3&lt;br&gt;Pass?}
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    SC3 --&gt;|No| CB3([Stop: Incomplete])
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    SC3 --&gt;|Yes| P4[Phase 4:&lt;br&gt;Verification]
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    P4 --&gt; SC4{Self-Check 4&lt;br&gt;Pass?}
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    SC4 --&gt;|No| CB4([Stop: Unverified])
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    SC4 --&gt;|Yes| MEMORY1[Store Verified&lt;br&gt;Findings to Memory]
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    MEMORY1 --&gt; P5[Phase 5:&lt;br&gt;Report Generation]
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    P5 --&gt; SC5{Self-Check 5&lt;br&gt;Pass?}
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    SC5 --&gt;|No| CB5([Stop: Incomplete])
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    SC5 --&gt;|Yes| MEMORY2[Store Review&lt;br&gt;Summary to Memory]
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    MEMORY2 --&gt; DONE([Review Complete])
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Start Review])
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ModeRouter{Local or PR?}
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ResolveTarget[Resolve Target Ref]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    Phase1[&quot;/advanced-code-review-plan&quot;]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    P1Out[Manifest + Plan]
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    P1Gate{Phase 1 Self-Check}
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    Phase2[&quot;/advanced-code-review-context&quot;]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    P2Out[Context + Previous Items]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    P2Gate{Phase 2 Self-Check}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    P2Fail[Proceed Empty Context]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    Phase3[&quot;/advanced-code-review-review&quot;]
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    SecurityPass[Security Pass]
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    CorrectnessPass[Correctness Pass]
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    QualityPass[Quality Pass]
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    PolishPass[Polish Pass]
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    P3Out[Findings JSON + MD]
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    P3Gate{Phase 3 Self-Check}
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    Phase4[&quot;/advanced-code-review-verify&quot;]
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    VerifyFindings[Fact-Check Each Finding]
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    RemoveRefuted[Remove REFUTED]
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    FlagInconclusive[Flag INCONCLUSIVE]
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    P4Out[Verification Audit]
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    P4Gate{Phase 4 Self-Check}
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    Phase5[&quot;/advanced-code-review-report&quot;]
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    P5Out[Report + Summary JSON]
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    P5Gate{Phase 5 Self-Check}
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    subgraph Legend
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>        L1[Process Step]
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>        L2{Decision / Gate}
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>        L3([Terminal])
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>        L4[/Input-Output/]
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    end
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    style P1 fill:#4a9eff,color:#fff
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    style P2 fill:#4a9eff,color:#fff
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    style P3 fill:#4a9eff,color:#fff
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    style P4 fill:#4a9eff,color:#fff
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    style P5 fill:#4a9eff,color:#fff
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style SC1 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style SC2 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style SC3 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style SC4 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style SC5 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style DONE fill:#51cf66,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style CB1 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style CB3 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style CB4 fill:#ff6b6b,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style CB5 fill:#ff6b6b,color:#fff
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    FinalGate{All Artifacts Valid?}
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    Done([Review Complete])
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    CircuitBreak([Circuit Breaker Halt])
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    Start --&gt; ModeRouter
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    ModeRouter --&gt;|&quot;Branch name&quot;| ResolveTarget
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    ModeRouter --&gt;|&quot;PR # or URL&quot;| ResolveTarget
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    ResolveTarget --&gt; Phase1
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    Phase1 --&gt; P1Out --&gt; P1Gate
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>    P1Gate --&gt;|Pass| Phase2
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    P1Gate --&gt;|&quot;Fail: no target/changes&quot;| CircuitBreak
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    Phase2 --&gt; P2Out --&gt; P2Gate
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    P2Gate --&gt;|Pass| Phase3
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    P2Gate --&gt;|&quot;Non-blocking failure&quot;| P2Fail --&gt; Phase3
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    Phase3 --&gt; SecurityPass --&gt; CorrectnessPass --&gt; QualityPass --&gt; PolishPass
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    PolishPass --&gt; P3Out --&gt; P3Gate
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    P3Gate --&gt;|Pass| Phase4
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    P3Gate --&gt;|Fail| CircuitBreak
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    Phase4 --&gt; VerifyFindings --&gt; RemoveRefuted --&gt; FlagInconclusive
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    FlagInconclusive --&gt; P4Out --&gt; P4Gate
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    P4Gate --&gt;|Pass| Phase5
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    P4Gate --&gt;|&quot;&gt;3 failures&quot;| CircuitBreak
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    Phase5 --&gt; P5Out --&gt; P5Gate
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    P5Gate --&gt;|Pass| FinalGate
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    P5Gate --&gt;|Fail| CircuitBreak
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    FinalGate --&gt;|&quot;All 8 artifacts exist&quot;| Done
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    FinalGate --&gt;|&quot;Missing artifacts&quot;| CircuitBreak
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style Start fill:#4CAF50,color:#fff
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style Done fill:#4CAF50,color:#fff
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style Phase1 fill:#2196F3,color:#fff
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style Phase2 fill:#2196F3,color:#fff
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style Phase3 fill:#2196F3,color:#fff
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style Phase4 fill:#2196F3,color:#fff
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>    style Phase5 fill:#2196F3,color:#fff
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>    style SecurityPass fill:#2196F3,color:#fff
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>    style CorrectnessPass fill:#2196F3,color:#fff
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>    style QualityPass fill:#2196F3,color:#fff
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>    style PolishPass fill:#2196F3,color:#fff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>    style ResolveTarget fill:#2196F3,color:#fff
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>    style VerifyFindings fill:#2196F3,color:#fff
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    style RemoveRefuted fill:#2196F3,color:#fff
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    style FlagInconclusive fill:#2196F3,color:#fff
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    style ModeRouter fill:#FF9800,color:#fff
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    style P1Gate fill:#f44336,color:#fff
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    style P2Gate fill:#f44336,color:#fff
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    style P3Gate fill:#f44336,color:#fff
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    style P4Gate fill:#f44336,color:#fff
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>    style P5Gate fill:#f44336,color:#fff
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>    style FinalGate fill:#f44336,color:#fff
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>    style CircuitBreak fill:#f44336,color:#fff
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>    style P2Fail fill:#FF9800,color:#fff
 </code></pre></div>
-<h2 id="phase-1-strategic-planning">Phase 1: Strategic Planning<a class="headerlink" href="#phase-1-strategic-planning" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    START([Phase 1 Start]) --&gt; RESOLVE[1.1 Target Resolution]
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    RESOLVE --&gt; RESOLVE_OK{Target&lt;br&gt;Resolved?}
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    RESOLVE_OK --&gt;|&quot;E_TARGET_NOT_FOUND&quot;| FAIL1([List Similar Branches,&lt;br&gt;Exit])
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    RESOLVE_OK --&gt;|&quot;E_NO_DIFF&quot;| FAIL2([No Changes, Exit Clean])
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    RESOLVE_OK --&gt;|&quot;E_MERGE_BASE_FAILED&quot;| FALLBACK[Fallback: HEAD~10,&lt;br&gt;Warn User]
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    RESOLVE_OK --&gt;|Success| DIFF
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    FALLBACK --&gt; DIFF[1.2 Diff Acquisition]
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    DIFF --&gt; DIFF_MODE{Review&lt;br&gt;Mode?}
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    DIFF_MODE --&gt;|Local| GIT_DIFF[&quot;git diff --name-only&lt;br&gt;merge_base...HEAD&quot;]
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    DIFF_MODE --&gt;|PR| PR_FILES[&quot;pr_files(pr_result)&quot;]
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    GIT_DIFF --&gt; RISK
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    PR_FILES --&gt; RISK
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    RISK[1.3 Risk Categorization] --&gt; CATEGORIZE{File Pattern&lt;br&gt;Match}
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    CATEGORIZE --&gt;|&quot;auth/,security/,payment/&quot;| HIGH_RISK[HIGH Risk]
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    CATEGORIZE --&gt;|&quot;api/,config/,*.sql&quot;| MED_RISK[MEDIUM Risk]
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    CATEGORIZE --&gt;|&quot;tests/,docs/,*.css&quot;| LOW_RISK[LOW Risk]
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    HIGH_RISK --&gt; COMPLEX
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    MED_RISK --&gt; COMPLEX
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    LOW_RISK --&gt; COMPLEX
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    COMPLEX[1.4 Complexity Estimation] --&gt; EFFORT{Estimated&lt;br&gt;Minutes?}
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    EFFORT --&gt;|&quot;&lt;= 15&quot;| SMALL[Effort: Small]
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    EFFORT --&gt;|&quot;16-45&quot;| MEDIUM[Effort: Medium]
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    EFFORT --&gt;|&quot;&gt; 45&quot;| LARGE[Effort: Large]
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    SMALL --&gt; SCOPE
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    MEDIUM --&gt; SCOPE
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>    LARGE --&gt; SCOPE
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    SCOPE[1.5 Risk-Weighted Scope] --&gt; PRIORITY[1.6 Priority Ordering:&lt;br&gt;HIGH then MED then LOW]
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    PRIORITY --&gt; MEMORY[Memory Recall:&lt;br&gt;Prior Findings +&lt;br&gt;False Positives]
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    MEMORY --&gt; MANIFEST[1.7 Write&lt;br&gt;review-manifest.json]
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    MANIFEST --&gt; PLAN[1.8 Write&lt;br&gt;review-plan.md]
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    PLAN --&gt; SC{Self-Check&lt;br&gt;Pass?}
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    SC --&gt;|Yes| DONE([Phase 1 Complete])
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    SC --&gt;|No| STOP([Stop + Report])
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    style FAIL1 fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    style FAIL2 fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    style STOP fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>    style SC fill:#ff6b6b,color:#fff
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    style DONE fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="phase-2-context-analysis">Phase 2: Context Analysis<a class="headerlink" href="#phase-2-context-analysis" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    START([Phase 2 Start]) --&gt; DISCOVER[2.1 Previous Review&lt;br&gt;Discovery]
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    DISCOVER --&gt; FOUND{Previous&lt;br&gt;Review Found?}
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    FOUND --&gt;|Not Found| EMPTY_CTX[Empty Context]
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    FOUND --&gt;|&quot;Stale (&gt;30 days)&quot;| MEMORY_RECALL[memory_recall:&lt;br&gt;Review Decisions]
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    FOUND --&gt;|&quot;Incomplete&quot;| EMPTY_CTX
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    FOUND --&gt;|Valid| LOAD[2.2 Load Previous Items]
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    MEMORY_RECALL --&gt; EMPTY_CTX
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    LOAD --&gt; STATUS{Item&lt;br&gt;Status?}
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    STATUS --&gt;|DECLINED| DECLINED[Mark: Do NOT&lt;br&gt;Re-raise]
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    STATUS --&gt;|FIXED| FIXED[Mark: Resolved]
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    STATUS --&gt;|PARTIAL| PARTIAL[Note Pending&lt;br&gt;Parts Only]
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    STATUS --&gt;|ALTERNATIVE| ALT{Alternative&lt;br&gt;Accepted?}
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    STATUS --&gt;|PENDING| PENDING[Include If&lt;br&gt;Still Present]
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    ALT --&gt;|Yes| ALT_OK[Do Not Re-raise&lt;br&gt;Original]
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    ALT --&gt;|No| ALT_REJECT[Re-evaluate&lt;br&gt;Original Concern]
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    DECLINED --&gt; BUILD
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    FIXED --&gt; BUILD
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    PARTIAL --&gt; BUILD
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    ALT_OK --&gt; BUILD
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    ALT_REJECT --&gt; BUILD
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>    PENDING --&gt; BUILD
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>    EMPTY_CTX --&gt; ONLINE
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>    BUILD --&gt; ONLINE{Online&lt;br&gt;Mode?}
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>    ONLINE --&gt;|Yes| PR_FETCH[2.3 Fetch PR History&lt;br&gt;+ Comments]
-<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>    ONLINE --&gt;|No / Offline| SKIP_PR[Skip PR Context]
-<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    ONLINE --&gt;|&quot;Tool Failure&quot;| WARN[Log Warning,&lt;br&gt;Empty PR Context]
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>
-<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    PR_FETCH --&gt; RECHECK[2.4 Re-check Request&lt;br&gt;Detection]
-<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>    SKIP_PR --&gt; CTX_BUILD
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>    WARN --&gt; CTX_BUILD
-<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>    RECHECK --&gt; CTX_BUILD[2.5 Build Context Object]
-<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>
-<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>    CTX_BUILD --&gt; WRITE_CTX[2.6 Write&lt;br&gt;context-analysis.md]
-<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>    WRITE_CTX --&gt; WRITE_PREV[2.7 Write&lt;br&gt;previous-items.json]
-<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>    WRITE_PREV --&gt; SC{Self-Check&lt;br&gt;Pass?}
-<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>    SC --&gt;|Yes| DONE([Phase 2 Complete])
-<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>    SC --&gt;|&quot;No (non-blocking)&quot;| DONE_WARN([Proceed With&lt;br&gt;Warning])
-<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>
-<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>    style SC fill:#ff6b6b,color:#fff
-<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>    style DONE fill:#51cf66,color:#fff
-<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>    style DONE_WARN fill:#ffd43b,color:#000
-</code></pre></div>
-<h2 id="phase-3-deep-review">Phase 3: Deep Review<a class="headerlink" href="#phase-3-deep-review" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    START([Phase 3 Start]) --&gt; LOAD[Load Context +&lt;br&gt;Priority Order]
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    LOAD --&gt; FILE_LOOP[For Each File&lt;br&gt;in Priority Order]
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    FILE_LOOP --&gt; PASS1[Pass 1: Security&lt;br&gt;Critical + High]
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    PASS1 --&gt; PASS2[Pass 2: Correctness&lt;br&gt;High + Medium]
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    PASS2 --&gt; PASS3[Pass 3: Quality&lt;br&gt;Medium + Low]
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    PASS3 --&gt; PASS4[Pass 4: Polish&lt;br&gt;Low + Nit]
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    PASS4 --&gt; FILTER[Filter by Context:&lt;br&gt;Check Previous Items]
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    FILTER --&gt; PREV_CHECK{Previous&lt;br&gt;Item Match?}
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    PREV_CHECK --&gt;|Declined| SKIP_D[Skip: Respect&lt;br&gt;Decision]
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    PREV_CHECK --&gt;|&quot;Alternative Accepted&quot;| SKIP_A[Skip: Alternative&lt;br&gt;In Place]
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    PREV_CHECK --&gt;|&quot;Partial Pending&quot;| RAISE_P[Raise Pending&lt;br&gt;Parts Only]
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    PREV_CHECK --&gt;|No Match| RAISE[Raise Finding]
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    SKIP_D --&gt; CLASSIFY
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    SKIP_A --&gt; CLASSIFY
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    RAISE_P --&gt; CLASSIFY
-<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    RAISE --&gt; CLASSIFY
-<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
-<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    CLASSIFY[Severity Classification] --&gt; SEV_TREE{Severity&lt;br&gt;Decision Tree}
-<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    SEV_TREE --&gt;|&quot;Security/Data Loss&quot;| CRITICAL[CRITICAL]
-<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>    SEV_TREE --&gt;|&quot;Broken Functionality&quot;| HIGH[HIGH]
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    SEV_TREE --&gt;|&quot;Quality Concern&quot;| MEDIUM_S[MEDIUM]
-<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    SEV_TREE --&gt;|&quot;Minor Improvement&quot;| LOW_S[LOW]
-<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    SEV_TREE --&gt;|&quot;Purely Stylistic&quot;| NIT[NIT]
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    SEV_TREE --&gt;|&quot;Needs Input&quot;| QUESTION[QUESTION]
-<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    SEV_TREE --&gt;|&quot;Positive Pattern&quot;| PRAISE[PRAISE]
-<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>
-<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>    CRITICAL --&gt; COLLECT
-<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    HIGH --&gt; COLLECT
-<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    MEDIUM_S --&gt; COLLECT
-<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>    LOW_S --&gt; COLLECT
-<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>    NIT --&gt; COLLECT
-<a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>    QUESTION --&gt; COLLECT
-<a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>    PRAISE --&gt; COLLECT
-<a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>
-<a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>    COLLECT[Collect Finding with&lt;br&gt;Required Fields] --&gt; MORE{More&lt;br&gt;Files?}
-<a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a>    MORE --&gt;|Yes| FILE_LOOP
-<a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a>    MORE --&gt;|No| NOTEWORTHY[3.7 Noteworthy&lt;br&gt;Collection]
-<a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a>    NOTEWORTHY --&gt; WRITE_JSON[3.8 Write&lt;br&gt;findings.json]
-<a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a>    WRITE_JSON --&gt; WRITE_MD[3.9 Write&lt;br&gt;findings.md]
-<a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a>    WRITE_MD --&gt; SC{Self-Check&lt;br&gt;Pass?}
-<a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a>    SC --&gt;|Yes| DONE([Phase 3 Complete])
-<a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a>    SC --&gt;|No| STOP([Stop: Incomplete])
-<a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a>
-<a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a>    style SC fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-50" name="__codelineno-3-50" href="#__codelineno-3-50"></a>    style DONE fill:#51cf66,color:#fff
-<a id="__codelineno-3-51" name="__codelineno-3-51" href="#__codelineno-3-51"></a>    style STOP fill:#ff6b6b,color:#fff
-<a id="__codelineno-3-52" name="__codelineno-3-52" href="#__codelineno-3-52"></a>    style PASS1 fill:#4a9eff,color:#fff
-<a id="__codelineno-3-53" name="__codelineno-3-53" href="#__codelineno-3-53"></a>    style PASS2 fill:#4a9eff,color:#fff
-<a id="__codelineno-3-54" name="__codelineno-3-54" href="#__codelineno-3-54"></a>    style PASS3 fill:#4a9eff,color:#fff
-<a id="__codelineno-3-55" name="__codelineno-3-55" href="#__codelineno-3-55"></a>    style PASS4 fill:#4a9eff,color:#fff
-</code></pre></div>
-<h2 id="phase-4-verification">Phase 4: Verification<a class="headerlink" href="#phase-4-verification" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart TD
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    START([Phase 4 Start]) --&gt; PREFLIGHT[4.0 Pre-Flight:&lt;br&gt;Branch Safety Check]
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    PREFLIGHT --&gt; SOURCE{Review&lt;br&gt;Source?}
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    SOURCE --&gt;|&quot;LOCAL_FILES&lt;br&gt;(local branch)&quot;| LOCAL_MODE[Verify Against&lt;br&gt;Local Files]
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    SOURCE --&gt;|&quot;DIFF_ONLY&lt;br&gt;(PR, HEAD mismatch)&quot;| DIFF_MODE[All Findings:&lt;br&gt;INCONCLUSIVE]
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    DIFF_MODE --&gt; FLAG_ALL[Flag All with&lt;br&gt;NEEDS VERIFICATION]
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    FLAG_ALL --&gt; DEDUP
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    LOCAL_MODE --&gt; EXTRACT[4.3 Extract Claims&lt;br&gt;from Each Finding]
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    EXTRACT --&gt; CLAIM_TYPE{Claim&lt;br&gt;Type?}
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    CLAIM_TYPE --&gt;|line_content| VLC[4.4 verify_line_content:&lt;br&gt;Read Line, Pattern Match]
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    CLAIM_TYPE --&gt;|function_behavior| VFB[4.4 verify_function_behavior:&lt;br&gt;Read Func, Check Behavior]
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    CLAIM_TYPE --&gt;|call_pattern| VCP[4.4 verify_call_pattern:&lt;br&gt;Trace Callers]
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    CLAIM_TYPE --&gt;|pattern_violation| VPV[4.4 verify_pattern_violation:&lt;br&gt;Compare Two Locations]
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>    VLC --&gt; AGGREGATE
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    VFB --&gt; AGGREGATE
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>    VCP --&gt; AGGREGATE
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>    VPV --&gt; AGGREGATE
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    AGGREGATE[4.5 Aggregate Results] --&gt; VERDICT{Finding&lt;br&gt;Verdict?}
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    VERDICT --&gt;|&quot;Any REFUTED&quot;| REFUTED[REFUTED:&lt;br&gt;Remove + Log]
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    VERDICT --&gt;|&quot;Any INCONCLUSIVE&lt;br&gt;(no REFUTED)&quot;| INCONC[INCONCLUSIVE:&lt;br&gt;Flag NEEDS VERIFICATION]
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    VERDICT --&gt;|&quot;All VERIFIED&quot;| VERIFIED[VERIFIED:&lt;br&gt;Keep Finding]
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>    REFUTED --&gt; DEDUP
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    INCONC --&gt; DEDUP
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    VERIFIED --&gt; DEDUP
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>    DEDUP[4.6 Duplicate Detection] --&gt; VALIDATE[4.7 Line Number&lt;br&gt;Validation]
-<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>    VALIDATE --&gt; SNR[4.8 Signal-to-Noise&lt;br&gt;Calculation]
-<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a>    SNR --&gt; WRITE[4.11 Write&lt;br&gt;verification-audit.md]
-<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>    WRITE --&gt; UPDATE[Update findings.json&lt;br&gt;with Statuses]
-<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>    UPDATE --&gt; SC{Self-Check&lt;br&gt;Pass?}
-<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>    SC --&gt;|Yes| DONE([Phase 4 Complete])
-<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>    SC --&gt;|No| STOP([Stop: Unverified])
-<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a>
-<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>    style SC fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>    style DONE fill:#51cf66,color:#fff
-<a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>    style STOP fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>    style PREFLIGHT fill:#ffd43b,color:#000
-<a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>    style REFUTED fill:#ff6b6b,color:#fff
-<a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>    style VERIFIED fill:#51cf66,color:#fff
-<a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>    style INCONC fill:#ffd43b,color:#000
-</code></pre></div>
-<h2 id="phase-5-report-generation">Phase 5: Report Generation<a class="headerlink" href="#phase-5-report-generation" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>flowchart TD
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    START([Phase 5 Start]) --&gt; FILTER[5.1 Filter Findings:&lt;br&gt;Remove REFUTED]
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    FILTER --&gt; SORT[5.2 Sort by Severity:&lt;br&gt;CRITICAL first]
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    SORT --&gt; VERDICT[5.3 Determine Verdict]
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    VERDICT --&gt; VERDICT_TYPE{Verdict?}
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    VERDICT_TYPE --&gt;|&quot;CRITICAL or HIGH present&quot;| REQ_CHANGES[REQUEST_CHANGES]
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    VERDICT_TYPE --&gt;|&quot;MEDIUM present&lt;br&gt;(no CRITICAL/HIGH)&quot;| COMMENT[COMMENT]
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    VERDICT_TYPE --&gt;|&quot;Only LOW/NIT/PRAISE&quot;| APPROVE[APPROVE]
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    REQ_CHANGES --&gt; RENDER
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    COMMENT --&gt; RENDER
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    APPROVE --&gt; RENDER
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    RENDER[5.4 Template Rendering] --&gt; FINDINGS_SEC[Render Findings&lt;br&gt;by Severity Group]
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    FINDINGS_SEC --&gt; INCONC_FLAG{Any&lt;br&gt;INCONCLUSIVE?}
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    INCONC_FLAG --&gt;|Yes| MARK_NEEDS[Mark with&lt;br&gt;NEEDS VERIFICATION]
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    INCONC_FLAG --&gt;|No| ACTION
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    MARK_NEEDS --&gt; ACTION
-<a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    ACTION[5.5 Generate&lt;br&gt;Action Items] --&gt; ACTION_TYPE{Finding&lt;br&gt;Severity?}
-<a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>    ACTION_TYPE --&gt;|&quot;CRITICAL/HIGH&quot;| FIX[&quot;Fix: [summary]&quot;]
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    ACTION_TYPE --&gt;|MEDIUM| CONSIDER[&quot;Consider: [summary]&quot;]
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a>    ACTION_TYPE --&gt;|&quot;LOW/NIT&quot;| SKIP[Omit from Actions]
-<a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a>
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a>    FIX --&gt; PREV_CTX
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a>    CONSIDER --&gt; PREV_CTX
-<a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a>    SKIP --&gt; PREV_CTX
-<a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a>
-<a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a>    PREV_CTX[5.6 Previous Context&lt;br&gt;Section] --&gt; WRITE_REPORT[5.7 Write&lt;br&gt;review-report.md]
-<a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a>    WRITE_REPORT --&gt; WRITE_JSON[5.8 Write&lt;br&gt;review-summary.json]
-<a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a>    WRITE_JSON --&gt; WRITE_FILES[5.9 Write All&lt;br&gt;Artifacts to Dir]
-<a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a>    WRITE_FILES --&gt; SC{Self-Check&lt;br&gt;Pass?}
-<a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>    SC --&gt;|Yes| DONE([Phase 5 Complete])
-<a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>    SC --&gt;|No| STOP([Stop: Incomplete])
-<a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a>
-<a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>    style SC fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a>    style DONE fill:#51cf66,color:#fff
-<a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>    style STOP fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>    style REQ_CHANGES fill:#ff6b6b,color:#fff
-<a id="__codelineno-5-41" name="__codelineno-5-41" href="#__codelineno-5-41"></a>    style COMMENT fill:#ffd43b,color:#000
-<a id="__codelineno-5-42" name="__codelineno-5-42" href="#__codelineno-5-42"></a>    style APPROVE fill:#51cf66,color:#fff
-</code></pre></div>
-<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Overview Node</th>
-<th>Detail Section</th>
-<th>Source</th>
+<th>Color</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Phase 1: Strategic Planning</td>
-<td>Phase 1: Strategic Planning</td>
-<td><code>commands/advanced-code-review-plan.md</code></td>
+<td>Green (#4CAF50)</td>
+<td>Skill invocation</td>
 </tr>
 <tr>
-<td>Phase 2: Context Analysis</td>
-<td>Phase 2: Context Analysis</td>
-<td><code>commands/advanced-code-review-context.md</code></td>
+<td>Blue (#2196F3)</td>
+<td>Command/action</td>
 </tr>
 <tr>
-<td>Phase 3: Deep Review</td>
-<td>Phase 3: Deep Review</td>
-<td><code>commands/advanced-code-review-review.md</code></td>
+<td>Orange (#FF9800)</td>
+<td>Decision point</td>
 </tr>
 <tr>
-<td>Phase 4: Verification</td>
-<td>Phase 4: Verification</td>
-<td><code>commands/advanced-code-review-verify.md</code></td>
-</tr>
-<tr>
-<td>Phase 5: Report Generation</td>
-<td>Phase 5: Report Generation</td>
-<td><code>commands/advanced-code-review-report.md</code></td>
-</tr>
-<tr>
-<td>Mode Router</td>
-<td>Phase 1 (1.2 Diff Acquisition)</td>
-<td><code>skills/advanced-code-review/SKILL.md:76-83</code></td>
-</tr>
-<tr>
-<td>Circuit Breakers</td>
-<td>Phase 1 (Target Resolution errors)</td>
-<td><code>skills/advanced-code-review/SKILL.md:238-246</code></td>
-</tr>
-<tr>
-<td>Memory Store (Findings)</td>
-<td>Phase 4 (Persist Verified Findings)</td>
-<td><code>skills/advanced-code-review/SKILL.md:166-172</code></td>
-</tr>
-<tr>
-<td>Memory Store (Summary)</td>
-<td>Phase 5 (Persist Review Summary)</td>
-<td><code>skills/advanced-code-review/SKILL.md:183-187</code></td>
+<td>Red (#f44336)</td>
+<td>Quality gate</td>
 </tr>
 </tbody>
 </table>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>flowchart LR
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    L1[Process Step]
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    L2{Decision / Gate}
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    L3([Terminal])
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    L4[/Input-Output/]
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    L5[Phase Command]
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    L6[Quality Gate]
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    L7[Verified]
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    L8[Warning / Inconclusive]
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    style L1 fill:#f0f0f0,color:#000
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    style L2 fill:#f0f0f0,color:#000
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    style L3 fill:#f0f0f0,color:#000
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    style L4 fill:#f0f0f0,color:#000
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    style L5 fill:#4a9eff,color:#fff
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    style L6 fill:#ff6b6b,color:#fff
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    style L7 fill:#51cf66,color:#fff
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    style L8 fill:#ffd43b,color:#000
-</code></pre></div>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ModeRouter</td>
+<td>Mode Router table (lines 76-86)</td>
+</tr>
+<tr>
+<td>Phase1 / <code>/advanced-code-review-plan</code></td>
+<td>Phase 1: Strategic Planning (lines 101-109)</td>
+</tr>
+<tr>
+<td>Phase2 / <code>/advanced-code-review-context</code></td>
+<td>Phase 2: Context Analysis (lines 113-123)</td>
+</tr>
+<tr>
+<td>P2Fail (Proceed Empty Context)</td>
+<td>"Phase 2 failures are non-blocking" (line 123)</td>
+</tr>
+<tr>
+<td>Phase3 / <code>/advanced-code-review-review</code></td>
+<td>Phase 3: Deep Review (lines 127-136)</td>
+</tr>
+<tr>
+<td>SecurityPass, CorrectnessPass, QualityPass, PolishPass</td>
+<td>Multi-pass review order (line 129)</td>
+</tr>
+<tr>
+<td>Phase4 / <code>/advanced-code-review-verify</code></td>
+<td>Phase 4: Verification (lines 139-147)</td>
+</tr>
+<tr>
+<td>RemoveRefuted</td>
+<td>"REFUTED removed" (line 147)</td>
+</tr>
+<tr>
+<td>FlagInconclusive</td>
+<td>"INCONCLUSIVE flagged" (line 147)</td>
+</tr>
+<tr>
+<td>Phase5 / <code>/advanced-code-review-report</code></td>
+<td>Phase 5: Report Generation (lines 151-159)</td>
+</tr>
+<tr>
+<td>FinalGate</td>
+<td>Final Self-Check, Output Verification (lines 240-242)</td>
+</tr>
+<tr>
+<td>CircuitBreak</td>
+<td>Circuit Breakers (lines 210-218)</td>
+</tr>
+</tbody>
+</table>
 
 
 
