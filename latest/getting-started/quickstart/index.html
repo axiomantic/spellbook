@@ -525,6 +525,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#creating-an-entire-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating an Entire Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#debugging-an-issue" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7445,6 +7456,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#creating-an-entire-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating an Entire Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#debugging-an-issue" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7534,32 +7556,36 @@
 <p>Or use the Skill tool directly to list them.</p>
 <h3 id="2-invoke-a-skill">2. Invoke a Skill<a class="headerlink" href="#2-invoke-a-skill" title="Permanent link">&para;</a></h3>
 <p>When you need a structured workflow, invoke the relevant skill:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>I need to debug this issue. Use the systematic-debugging skill.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>I need to debug this issue. Use the debugging skill.
 </code></pre></div>
 <p>Or let the AI assistant detect when a skill applies automatically.</p>
 <h2 id="common-workflows">Common Workflows<a class="headerlink" href="#common-workflows" title="Permanent link">&para;</a></h2>
 <h3 id="starting-a-new-feature">Starting a New Feature<a class="headerlink" href="#starting-a-new-feature" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>Brainstorm first:</strong> Use <code>/brainstorm</code> or invoke <code>brainstorming</code> skill</li>
-<li><strong>Create a plan:</strong> Use <code>/write-plan</code> or invoke <code>writing-plans</code> skill</li>
-<li><strong>Execute the plan:</strong> Use <code>/execute-plan</code> or invoke <code>executing-plans</code> skill</li>
-</ol>
+<p>Use the <code>implementing-features</code> skill. It handles the entire lifecycle: discovery, design, planning, and implementation.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>I want to add user authentication. Use the implementing-features skill.
+</code></pre></div>
+<p>Or just describe what you want -- the skill is invoked automatically for any code change:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Add a REST API for managing projects
+</code></pre></div>
+<h3 id="creating-an-entire-project">Creating an Entire Project<a class="headerlink" href="#creating-an-entire-project" title="Permanent link">&para;</a></h3>
+<p>Use the <code>autonomous-roundtable</code> skill (Forge) for greenfield projects. It decomposes a project into features and executes them through parallel worktrees with roundtable quality gates.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Create a new CLI tool for managing database migrations. Use Forge.
+</code></pre></div>
 <h3 id="debugging-an-issue">Debugging an Issue<a class="headerlink" href="#debugging-an-issue" title="Permanent link">&para;</a></h3>
-<ol>
-<li>Invoke <code>systematic-debugging</code> skill</li>
-<li>Follow the hypothesis-driven debugging process</li>
-<li>Document findings and fixes</li>
-</ol>
+<p>Invoke the <code>debugging</code> skill, or just describe the problem:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>This endpoint returns 500 when the user has no profile. Debug it.
+</code></pre></div>
+<p>The skill triages the issue, selects a methodology (scientific or systematic), and verifies the fix.</p>
 <h3 id="code-review">Code Review<a class="headerlink" href="#code-review" title="Permanent link">&para;</a></h3>
-<p><strong>Requesting review:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Review my changes using the requesting-code-review skill
+<p><strong>Giving review:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Review this PR using the code-review skill
 </code></pre></div></p>
-<p><strong>Receiving feedback:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Address this PR feedback using the receiving-code-review skill
+<p><strong>Addressing feedback:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Address the PR feedback using the code-review skill
 </code></pre></div></p>
 <h2 id="autonomous-mode">Autonomous Mode<a class="headerlink" href="#autonomous-mode" title="Permanent link">&para;</a></h2>
 <p>For uninterrupted workflows, enable autonomous mode:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>/allowed-tools Bash(*)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>/allowed-tools Bash(*)
 </code></pre></div>
 <p>This allows skills to execute multi-step workflows (git operations, file changes, test runs) without constant approval prompts.</p>
 <div class="admonition warning">
@@ -7576,16 +7602,24 @@
 </thead>
 <tbody>
 <tr>
-<td>Design exploration</td>
-<td><code>brainstorming</code></td>
+<td>Build or modify features</td>
+<td><code>implementing-features</code></td>
 </tr>
 <tr>
-<td>Implementation planning</td>
-<td><code>writing-plans</code></td>
+<td>Create entire projects</td>
+<td><code>autonomous-roundtable</code> (Forge)</td>
 </tr>
 <tr>
-<td>Bug investigation</td>
-<td><code>systematic-debugging</code></td>
+<td>Debug issues</td>
+<td><code>debugging</code></td>
+</tr>
+<tr>
+<td>Review code</td>
+<td><code>code-review</code></td>
+</tr>
+<tr>
+<td>Deep research</td>
+<td><code>deep-research</code></td>
 </tr>
 <tr>
 <td>Test-first development</td>
@@ -7596,8 +7630,8 @@
 <td><code>using-git-worktrees</code></td>
 </tr>
 <tr>
-<td>Quality verification</td>
-<td><code>/verify</code> command</td>
+<td>Finish and ship a branch</td>
+<td><code>finishing-a-development-branch</code></td>
 </tr>
 </tbody>
 </table>
