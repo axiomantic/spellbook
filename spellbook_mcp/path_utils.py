@@ -1,6 +1,7 @@
 """Path encoding and project directory resolution for session storage."""
 
 import os
+import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
@@ -9,20 +10,68 @@ if TYPE_CHECKING:
     from fastmcp import Context
 
 
-def encode_cwd(cwd: str) -> str:
-    """
-    Encode current working directory for session storage path.
+def resolve_repo_root(path: str) -> str:
+    """Resolve a path to its git repository root, handling worktrees.
+
+    For worktrees, resolves to the main repository root so that
+    all worktrees of the same repo share a namespace.
+
+    Falls back to the input path if:
+    - Not in a git repository
+    - git commands fail or timeout
 
     Args:
-        cwd: Absolute path to working directory
+        path: Absolute filesystem path (may be in a worktree).
 
     Returns:
-        Encoded path with slashes replaced by dashes, leading dash stripped
+        Absolute path to the git repository root, or the input path.
+    """
+    try:
+        # git worktree list --porcelain gives the main worktree first
+        result = subprocess.run(
+            ["git", "worktree", "list", "--porcelain"],
+            cwd=path,
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            first_line = result.stdout.strip().split("\n")[0]
+            if first_line.startswith("worktree "):
+                return first_line[len("worktree "):]
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+
+    # Fallback: try --show-toplevel (works for non-worktree repos)
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=path,
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        pass
+
+    return path
+
+
+def encode_cwd(cwd: str, resolve_git_root: bool = True) -> str:
+    """Encode current working directory for session storage path.
+
+    Args:
+        cwd: Absolute path to working directory.
+        resolve_git_root: If True, resolve worktrees to repo root first.
+            This ensures all worktrees of the same repo share a namespace.
+
+    Returns:
+        Encoded path with slashes replaced by dashes, leading dash stripped.
 
     Examples:
-        >>> encode_cwd('/Users/alice/Development/spellbook')
+        >>> encode_cwd('/Users/alice/Development/spellbook', resolve_git_root=False)
         'Users-alice-Development-spellbook'
     """
+    if resolve_git_root:
+        cwd = resolve_repo_root(cwd)
     return cwd.replace('/', '-').lstrip('-')
 
 

@@ -33,6 +33,7 @@ def insert_memory(
     citations: List[Dict[str, Any]],
     importance: float = 1.0,
     extra_meta: Optional[Dict[str, Any]] = None,
+    branch: str = "",
 ) -> str:
     """Insert a memory, deduplicating by content_hash. Returns memory ID.
 
@@ -66,9 +67,9 @@ def insert_memory(
         meta.update(extra_meta)
 
     conn.execute(
-        "INSERT INTO memories (id, content, memory_type, namespace, importance, "
-        "created_at, status, content_hash, meta) VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?)",
-        (mem_id, content, memory_type, namespace, importance, now, c_hash,
+        "INSERT INTO memories (id, content, memory_type, namespace, branch, importance, "
+        "created_at, status, content_hash, meta) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)",
+        (mem_id, content, memory_type, namespace, branch, importance, now, c_hash,
          json.dumps(meta)),
     )
 
@@ -92,6 +93,15 @@ def insert_memory(
             cit.get("snippet"),
         )
 
+    # Populate junction table with origin association
+    if branch:
+        conn.execute(
+            "INSERT OR IGNORE INTO memory_branches "
+            "(memory_id, branch_name, association_type, created_at) "
+            "VALUES (?, ?, 'origin', ?)",
+            (mem_id, branch, now),
+        )
+
     conn.commit()
     log_audit(db_path, "create", mem_id, {"memory_type": memory_type})
     return mem_id
@@ -101,7 +111,7 @@ def get_memory(db_path: str, memory_id: str) -> Optional[Dict[str, Any]]:
     """Get a single memory by ID, including its citations. Returns None if not found."""
     conn = get_connection(db_path)
     cursor = conn.execute(
-        "SELECT id, content, memory_type, namespace, importance, created_at, "
+        "SELECT id, content, memory_type, namespace, branch, importance, created_at, "
         "accessed_at, status, deleted_at, content_hash, meta "
         "FROM memories WHERE id = ?",
         (memory_id,),
@@ -112,9 +122,9 @@ def get_memory(db_path: str, memory_id: str) -> Optional[Dict[str, Any]]:
 
     mem = {
         "id": row[0], "content": row[1], "memory_type": row[2],
-        "namespace": row[3], "importance": row[4], "created_at": row[5],
-        "accessed_at": row[6], "status": row[7], "deleted_at": row[8],
-        "content_hash": row[9], "meta": row[10],
+        "namespace": row[3], "branch": row[4], "importance": row[5],
+        "created_at": row[6], "accessed_at": row[7], "status": row[8],
+        "deleted_at": row[9], "content_hash": row[10], "meta": row[11],
     }
 
     # Fetch citations
@@ -204,14 +214,15 @@ def log_raw_event(
     subject: str,
     summary: str,
     tags: str,
+    branch: str = "",
 ) -> int:
     """Log a raw observation event. Returns the event ID."""
     conn = get_connection(db_path)
     now = _now_iso()
     cursor = conn.execute(
         "INSERT INTO raw_events (session_id, timestamp, project, event_type, "
-        "tool_name, subject, summary, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (session_id, now, project, event_type, tool_name, subject, summary, tags),
+        "tool_name, subject, summary, tags, branch) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (session_id, now, project, event_type, tool_name, subject, summary, tags, branch),
     )
     conn.commit()
     return cursor.lastrowid
@@ -227,14 +238,14 @@ def get_unconsolidated_events(
     if namespace:
         cursor = conn.execute(
             "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-            "subject, summary, tags FROM raw_events "
+            "subject, summary, tags, branch FROM raw_events "
             "WHERE consolidated = 0 AND project = ? ORDER BY id ASC LIMIT ?",
             (namespace, limit),
         )
     else:
         cursor = conn.execute(
             "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-            "subject, summary, tags FROM raw_events "
+            "subject, summary, tags, branch FROM raw_events "
             "WHERE consolidated = 0 ORDER BY id ASC LIMIT ?",
             (limit,),
         )
@@ -242,7 +253,7 @@ def get_unconsolidated_events(
         {
             "id": r[0], "session_id": r[1], "timestamp": r[2],
             "project": r[3], "event_type": r[4], "tool_name": r[5],
-            "subject": r[6], "summary": r[7], "tags": r[8],
+            "subject": r[6], "summary": r[7], "tags": r[8], "branch": r[9],
         }
         for r in cursor.fetchall()
     ]
@@ -262,7 +273,7 @@ def get_recently_consolidated_events(
     if namespace:
         cursor = conn.execute(
             "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-            "subject, summary, tags FROM raw_events "
+            "subject, summary, tags, branch FROM raw_events "
             "WHERE consolidated = 1 AND timestamp > datetime('now', '-24 hours') "
             "AND project = ? ORDER BY id ASC LIMIT ?",
             (namespace, limit),
@@ -270,7 +281,7 @@ def get_recently_consolidated_events(
     else:
         cursor = conn.execute(
             "SELECT id, session_id, timestamp, project, event_type, tool_name, "
-            "subject, summary, tags FROM raw_events "
+            "subject, summary, tags, branch FROM raw_events "
             "WHERE consolidated = 1 AND timestamp > datetime('now', '-24 hours') "
             "ORDER BY id ASC LIMIT ?",
             (limit,),
@@ -279,7 +290,7 @@ def get_recently_consolidated_events(
         {
             "id": r[0], "session_id": r[1], "timestamp": r[2],
             "project": r[3], "event_type": r[4], "tool_name": r[5],
-            "subject": r[6], "summary": r[7], "tags": r[8],
+            "subject": r[6], "summary": r[7], "tags": r[8], "branch": r[9],
         }
         for r in cursor.fetchall()
     ]
@@ -324,32 +335,69 @@ def recall_by_file_path(
     file_path: str,
     namespace: str,
     limit: int = 5,
+    branch: str = "",
+    repo_path: str = "",
 ) -> List[Dict[str, Any]]:
     """Recall memories by cited file path (inverted index lookup).
 
     Uses unified relevance score: importance * temporal_decay * status_penalty.
+    When branch and repo_path are provided, applies two-phase scoring:
+    1. SQL phase: over-fetch candidates with base score (no branch multiplier)
+    2. Python phase: apply ancestry-aware branch multiplier, re-sort, truncate
     """
+    from spellbook_mcp.branch_ancestry import (
+        BRANCH_MULTIPLIERS,
+        BranchRelationship,
+        get_branch_relationship,
+    )
+
     conn = get_connection(db_path)
+    fetch_limit = limit * 2 if branch else limit
+
     cursor = conn.execute(
         "SELECT m.id, m.content, m.memory_type, m.importance, m.status, m.meta, "
-        "m.created_at, m.accessed_at "
+        "m.created_at, m.accessed_at, m.branch, "
+        "m.importance * "
+        "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
+        "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
         "FROM memories m "
         "JOIN memory_citations mc ON m.id = mc.memory_id "
         "WHERE mc.file_path = ? AND m.namespace = ? AND m.status != 'deleted' "
-        "ORDER BY m.importance * "
-        "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
-        "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END DESC "
+        "ORDER BY _score DESC "
         "LIMIT ?",
-        (file_path, namespace, limit),
+        (file_path, namespace, fetch_limit),
     )
-    results = []
-    for r in cursor.fetchall():
-        results.append({
+    results = [
+        {
             "id": r[0], "content": r[1], "memory_type": r[2],
             "importance": r[3], "status": r[4], "meta": r[5],
-            "created_at": r[6], "accessed_at": r[7],
-        })
-    return results
+            "created_at": r[6], "accessed_at": r[7], "branch": r[8],
+            "_score": r[9],
+        }
+        for r in cursor.fetchall()
+    ]
+
+    if not branch or not repo_path:
+        for r in results:
+            r.pop("_score", None)
+        return results[:limit]
+
+    # Phase 2: Apply ancestry-aware branch weighting
+    for mem in results:
+        mem_branch = mem.get("branch", "")
+        relationship = get_branch_relationship(repo_path, branch, mem_branch)
+        multiplier = BRANCH_MULTIPLIERS.get(relationship, 1.0)
+        mem["_score"] = mem.get("_score", 1.0) * multiplier
+        mem["branch_relationship"] = relationship.value
+
+        # Lazy junction table population for ancestor relationships
+        if relationship == BranchRelationship.ANCESTOR and branch:
+            insert_branch_association(db_path, mem["id"], branch, "ancestor")
+
+    results.sort(key=lambda m: m.get("_score", 0), reverse=True)
+    for r in results:
+        r.pop("_score", None)
+    return results[:limit]
 
 
 def recall_by_query(
@@ -357,46 +405,96 @@ def recall_by_query(
     query: str,
     namespace: str,
     limit: int = 10,
+    branch: str = "",
+    repo_path: str = "",
 ) -> List[Dict[str, Any]]:
     """Recall memories by FTS5 query. Empty query returns recent+important.
 
     Uses unified relevance score: (-bm25) * importance * temporal_decay * status_penalty.
+    When branch and repo_path are provided, applies two-phase scoring:
+    1. SQL phase: over-fetch candidates
+    2. Python phase: apply branch multiplier, re-sort, truncate
+
     Escapes user input by wrapping in double-quotes to prevent FTS5 operator injection.
     """
+    from spellbook_mcp.branch_ancestry import (
+        BRANCH_MULTIPLIERS,
+        BranchRelationship,
+        get_branch_relationship,
+    )
+
     conn = get_connection(db_path)
+    fetch_limit = limit * 2 if branch else limit
+
     if not query.strip():
         cursor = conn.execute(
             "SELECT id, content, memory_type, importance, status, meta, "
-            "created_at, accessed_at "
+            "created_at, accessed_at, branch "
             "FROM memories WHERE namespace = ? AND status = 'active' "
             "ORDER BY importance DESC, created_at DESC LIMIT ?",
-            (namespace, limit),
+            (namespace, fetch_limit),
         )
+        results = [
+            {
+                "id": r[0], "content": r[1], "memory_type": r[2],
+                "importance": r[3], "status": r[4], "meta": r[5],
+                "created_at": r[6], "accessed_at": r[7], "branch": r[8],
+                "_score": r[3],  # importance as base score for empty query
+            }
+            for r in cursor.fetchall()
+        ]
     else:
         # Escape user input: wrap in double-quotes to force phrase matching
         # and prevent FTS5 operator injection (e.g., OR, AND, NOT, NEAR).
         safe_query = '"' + query.replace('"', '""') + '"'
         cursor = conn.execute(
             "SELECT m.id, m.content, m.memory_type, m.importance, m.status, "
-            "m.meta, m.created_at, m.accessed_at, "
-            "(-bm25(memories_fts, 5.0, 2.0, 1.0)) AS bm25_score "
+            "m.meta, m.created_at, m.accessed_at, m.branch, "
+            "(-bm25(memories_fts, 5.0, 2.0, 1.0)) * m.importance * "
+            "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
+            "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END AS _score "
             "FROM memories_fts fts "
             "JOIN memories m ON m.rowid = fts.rowid "
             "WHERE memories_fts MATCH ? AND m.namespace = ? AND m.status != 'deleted' "
-            "ORDER BY bm25_score * m.importance * "
-            "  exp(-0.0077 * (julianday('now') - julianday(m.created_at))) * "
-            "  CASE m.status WHEN 'active' THEN 1.0 ELSE 0.3 END DESC "
+            "ORDER BY _score DESC "
             "LIMIT ?",
-            (safe_query, namespace, limit),
+            (safe_query, namespace, fetch_limit),
         )
-    return [
-        {
-            "id": r[0], "content": r[1], "memory_type": r[2],
-            "importance": r[3], "status": r[4], "meta": r[5],
-            "created_at": r[6], "accessed_at": r[7],
-        }
-        for r in cursor.fetchall()
-    ]
+        results = [
+            {
+                "id": r[0], "content": r[1], "memory_type": r[2],
+                "importance": r[3], "status": r[4], "meta": r[5],
+                "created_at": r[6], "accessed_at": r[7], "branch": r[8],
+                "_score": r[9],
+            }
+            for r in cursor.fetchall()
+        ]
+
+    if not branch or not repo_path:
+        # Strip internal score before returning
+        for r in results:
+            r.pop("_score", None)
+        return results[:limit]
+
+    # Phase 2: Apply branch weighting
+    for mem in results:
+        mem_branch = mem.get("branch", "")
+        relationship = get_branch_relationship(repo_path, branch, mem_branch)
+        multiplier = BRANCH_MULTIPLIERS.get(relationship, 1.0)
+        mem["_score"] = mem.get("_score", 1.0) * multiplier
+        mem["branch_relationship"] = relationship.value
+
+        # Lazy junction table population for ancestor relationships
+        if relationship == BranchRelationship.ANCESTOR and branch:
+            insert_branch_association(db_path, mem["id"], branch, "ancestor")
+
+    results.sort(key=lambda m: m.get("_score", 0), reverse=True)
+
+    # Strip internal score before returning
+    for r in results:
+        r.pop("_score", None)
+
+    return results[:limit]
 
 
 def update_access(db_path: str, memory_id: str) -> None:
@@ -431,6 +529,7 @@ def purge_deleted(db_path: str, retention_days: int = 30) -> int:
         f"DELETE FROM memory_links WHERE memory_a IN ({placeholders}) OR memory_b IN ({placeholders})",
         ids + ids,
     )
+    conn.execute(f"DELETE FROM memory_branches WHERE memory_id IN ({placeholders})", ids)
     conn.execute(f"DELETE FROM memories WHERE id IN ({placeholders})", ids)
     conn.commit()
 
@@ -454,3 +553,37 @@ def log_audit(
         (now, action, memory_id, json.dumps(details) if details else None),
     )
     conn.commit()
+
+
+def insert_branch_association(
+    db_path: str,
+    memory_id: str,
+    branch_name: str,
+    association_type: str = "origin",
+) -> None:
+    """Insert a branch association for a memory. Idempotent (ignores duplicates)."""
+    conn = get_connection(db_path)
+    now = _now_iso()
+    conn.execute(
+        "INSERT OR IGNORE INTO memory_branches "
+        "(memory_id, branch_name, association_type, created_at) "
+        "VALUES (?, ?, ?, ?)",
+        (memory_id, branch_name, association_type, now),
+    )
+    conn.commit()
+
+
+def get_branch_associations(
+    db_path: str, memory_id: str
+) -> List[Dict[str, str]]:
+    """Get all branch associations for a memory."""
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "SELECT branch_name, association_type, created_at "
+        "FROM memory_branches WHERE memory_id = ?",
+        (memory_id,),
+    )
+    return [
+        {"branch": r[0], "type": r[1], "created_at": r[2]}
+        for r in cursor.fetchall()
+    ]

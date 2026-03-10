@@ -329,6 +329,10 @@ Dispatch subagent to invoke dehallucination skill on the understanding document.
 
 If hallucinations found: fix understanding document before proceeding to devil's advocate.
 
+**Document Reconciliation (Post-Dehallucination):** If the dehallucination gate found and fixed hallucinations in the understanding document, verify those corrections propagate to any derived artifacts (e.g., research notes, design assumptions list). Update any documents that referenced the corrected content.
+
+**Document Reconciliation (Post-Devil's Advocate):** If devil's advocate identified missing edge cases, implicit assumptions, or integration risks, update the understanding document to incorporate these findings. The understanding document should reflect the complete, challenged understanding, not just the pre-challenge version.
+
 ### After Phase 2 (Design):
 
 ```bash
@@ -355,6 +359,8 @@ Dispatch subagent to invoke fact-checking skill with scope limited to:
 - Claims in the design document that reference codebase patterns
 
 This closes the loop: devil's advocate flags assumptions, fact-checking verifies them, design proceeds with evidence.
+
+**Document Reconciliation (Post-Fact-Check):** If fact-checking invalidated assumptions or corrected claims, update both the understanding document and the design document to reflect verified facts. Remove or annotate any design decisions that were based on now-disproven assumptions.
 
 ### After Phase 3 (Implementation Planning):
 

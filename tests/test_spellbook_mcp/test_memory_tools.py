@@ -1310,6 +1310,7 @@ class TestMemoryToolsServerRegistration:
                 memories_json='{"memories": [{"content": "test"}]}',
                 event_ids_str="1,2",
                 namespace="test-ns",
+                branch="",
             )
             assert result == {
                 "status": "success",
@@ -1331,6 +1332,7 @@ class TestMemoryToolsServerRegistration:
 
         with patch.object(server, "get_db_path", return_value=db), \
              patch.object(server, "get_project_path_from_context", new_callable=AsyncMock, return_value=fake_project_path), \
+             patch.object(server, "get_current_branch", return_value="main"), \
              patch.object(server, "do_store_memories") as mock_do:
             mock_do.return_value = {
                 "status": "success",
@@ -1351,6 +1353,7 @@ class TestMemoryToolsServerRegistration:
                 memories_json="[]",
                 event_ids_str="",
                 namespace=expected_namespace,
+                branch="main",
             )
 
     @pytest.mark.asyncio

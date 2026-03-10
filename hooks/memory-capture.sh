@@ -83,8 +83,23 @@ desc = tool_input.get('description', '')
 if desc:
     summary += f' ({desc[:80]})'
 
+# Resolve worktree to repo root for consistent namespace
+import subprocess as _sp2
+_resolved_cwd = cwd
+try:
+    _wt_result = _sp2.run(
+        ['git', 'worktree', 'list', '--porcelain'],
+        cwd=cwd, capture_output=True, text=True, timeout=3,
+    )
+    if _wt_result.returncode == 0 and _wt_result.stdout.strip():
+        _first_line = _wt_result.stdout.strip().split('\\n')[0]
+        if _first_line.startswith('worktree '):
+            _resolved_cwd = _first_line[len('worktree '):]
+except Exception:
+    pass
+
 # Project namespace (project-encoded)
-namespace = cwd.replace('/', '-').lstrip('-') if cwd else 'unknown'
+namespace = _resolved_cwd.replace('/', '-').lstrip('-') if _resolved_cwd else 'unknown'
 
 # Build tags
 tags_list = [tool_name.lower()]
@@ -95,6 +110,16 @@ if subject:
     if len(parts) > 1:
         tags_list.append(parts[-1].lower())
 
+# Detect git branch
+import subprocess as _sp
+try:
+    _branch = _sp.run(
+        ['git', '-C', cwd, 'rev-parse', '--abbrev-ref', 'HEAD'],
+        capture_output=True, text=True, timeout=2
+    ).stdout.strip() if cwd else ''
+except Exception:
+    _branch = ''
+
 payload = {
     'session_id': session_id,
     'project': namespace,
@@ -103,6 +128,7 @@ payload = {
     'summary': summary[:500],
     'tags': ','.join(tags_list),
     'event_type': 'tool_use',
+    'branch': _branch,
 }
 print(json.dumps(payload))
 " 2>/dev/null) || exit 0

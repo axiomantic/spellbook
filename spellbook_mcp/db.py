@@ -5,7 +5,6 @@ import sqlite3
 import time
 import threading
 from pathlib import Path
-from typing import Optional
 
 
 def get_db_path() -> Path:
@@ -440,6 +439,7 @@ def init_db(db_path: str = None) -> None:
             content TEXT NOT NULL,
             memory_type TEXT,
             namespace TEXT NOT NULL,
+            branch TEXT DEFAULT '',
             importance REAL DEFAULT 1.0,
             created_at TEXT NOT NULL,
             accessed_at TEXT,
@@ -453,6 +453,11 @@ def init_db(db_path: str = None) -> None:
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_memories_namespace
         ON memories(namespace)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memories_branch
+        ON memories(branch)
     """)
 
     cursor.execute("""
@@ -492,12 +497,40 @@ def init_db(db_path: str = None) -> None:
         )
     """)
 
+    # Junction table for M:N branch-to-memory associations.
+    # A memory can be associated with multiple branches (origin, ancestor, manual).
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS memory_branches (
+            memory_id TEXT NOT NULL REFERENCES memories(id),
+            branch_name TEXT NOT NULL,
+            association_type TEXT NOT NULL DEFAULT 'origin',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            PRIMARY KEY (memory_id, branch_name)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memory_branches_branch
+        ON memory_branches(branch_name)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memory_branches_memory
+        ON memory_branches(memory_id)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_memory_branches_type
+        ON memory_branches(association_type)
+    """)
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS raw_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT,
             timestamp TEXT NOT NULL,
             project TEXT NOT NULL,
+            branch TEXT DEFAULT '',
             event_type TEXT,
             tool_name TEXT,
             subject TEXT,

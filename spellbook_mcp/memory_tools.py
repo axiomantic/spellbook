@@ -79,6 +79,8 @@ def do_memory_recall(
     namespace: str,
     limit: int = 10,
     file_path: Optional[str] = None,
+    branch: str = "",
+    repo_path: str = "",
 ) -> Dict[str, Any]:
     """Recall memories by query or file path.
 
@@ -88,14 +90,22 @@ def do_memory_recall(
         namespace: Project namespace for scoping.
         limit: Max results.
         file_path: If provided, search by cited file path instead of FTS5.
+        branch: Current git branch for branch-weighted scoring.
+        repo_path: Git repo root path for ancestry checks.
 
     Returns:
         Dict with 'memories' list and metadata.
     """
     if file_path:
-        results = recall_by_file_path(db_path, file_path, namespace, limit)
+        results = recall_by_file_path(
+            db_path, file_path, namespace, limit,
+            branch=branch, repo_path=repo_path,
+        )
     else:
-        results = recall_by_query(db_path, query, namespace, limit)
+        results = recall_by_query(
+            db_path, query, namespace, limit,
+            branch=branch, repo_path=repo_path,
+        )
 
     # Update access for returned memories
     for mem in results:
@@ -144,6 +154,7 @@ def do_log_event(
     summary: str,
     tags: str = "",
     event_type: str = "tool_use",
+    branch: str = "",
 ) -> Dict[str, Any]:
     """Log a raw observation event (called by hooks via REST endpoint).
 
@@ -156,6 +167,7 @@ def do_log_event(
         summary: One-line summary of what happened.
         tags: Comma-separated keywords.
         event_type: Event type (default: tool_use).
+        branch: Git branch name (default: empty).
 
     Returns:
         Dict with status and event_id.
@@ -169,6 +181,7 @@ def do_log_event(
         subject=subject,
         summary=summary,
         tags=tags,
+        branch=branch,
     )
     return {"status": "logged", "event_id": event_id}
 
@@ -227,6 +240,7 @@ def do_store_memories(
     memories_json: str,
     event_ids_str: str = "",
     namespace: str = "",
+    branch: str = "",
 ) -> Dict[str, Any]:
     """Store client-synthesized memories and mark source events consolidated.
 
@@ -235,6 +249,7 @@ def do_store_memories(
         memories_json: JSON string of memory objects matching MEMORY_STORE_SCHEMA.
         event_ids_str: Comma-separated event IDs to mark consolidated.
         namespace: Project namespace.
+        branch: Git branch name to associate with stored memories.
 
     Returns:
         Dict with status, memories_created, events_consolidated, memory_ids.
@@ -292,6 +307,7 @@ def do_store_memories(
             tags=mem["tags"],
             citations=mem["citations"],
             extra_meta={"source": "client_llm"},
+            branch=branch,
         )
         created_ids.append(mem_id)
 

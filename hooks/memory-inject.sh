@@ -64,14 +64,39 @@ elif tool_name == 'Glob':
 if not file_path:
     sys.exit(0)
 
-namespace = cwd.replace('/', '-').lstrip('-') if cwd else ''
+# Resolve worktree to repo root for consistent namespace
+import subprocess as _sp2
+_resolved_cwd = cwd
+try:
+    _wt_result = _sp2.run(
+        ['git', 'worktree', 'list', '--porcelain'],
+        cwd=cwd, capture_output=True, text=True, timeout=3,
+    )
+    if _wt_result.returncode == 0 and _wt_result.stdout.strip():
+        _first_line = _wt_result.stdout.strip().split('\\n')[0]
+        if _first_line.startswith('worktree '):
+            _resolved_cwd = _first_line[len('worktree '):]
+except Exception:
+    pass
+
+namespace = _resolved_cwd.replace('/', '-').lstrip('-') if _resolved_cwd else ''
 if not namespace:
     sys.exit(0)
+
+# Detect git branch
+import subprocess as _sp
+try:
+    _branch = _sp.run(
+        ['git', '-C', cwd, 'rev-parse', '--abbrev-ref', 'HEAD'],
+        capture_output=True, text=True, timeout=2
+    ).stdout.strip() if cwd else ''
+except Exception:
+    _branch = ''
 
 # Build the complete JSON payload for the recall API call.
 # Constructing the entire payload in Python avoids fragile inline
 # JSON escaping in bash (file paths may contain quotes, spaces, etc).
-payload = {'file_path': file_path, 'namespace': namespace, 'limit': 5}
+payload = {'file_path': file_path, 'namespace': namespace, 'branch': _branch, 'repo_path': _resolved_cwd, 'limit': 5}
 print(json.dumps(payload))
 " 2>/dev/null) || exit 0
 
