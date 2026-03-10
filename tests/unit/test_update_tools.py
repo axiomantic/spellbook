@@ -235,7 +235,6 @@ class TestCheckForUpdates:
         spellbook_dir = tmp_path / "spellbook"
         spellbook_dir.mkdir()
         (spellbook_dir / ".version").write_text("0.9.9\n")
-        (spellbook_dir / "CHANGELOG.md").write_text(SAMPLE_CHANGELOG)
 
         with patch("spellbook_mcp.update_tools.subprocess.run") as mock_run, \
              patch("spellbook_mcp.update_tools.config_get") as mock_config_get, \
@@ -262,6 +261,7 @@ class TestCheckForUpdates:
             # and check_for_updates reports no update (no fallback to git show)
             assert result["update_available"] is False
             assert result["current_version"] == "0.9.9"
+            assert result["remote_version"] is None
             assert result["error"] is None
 
     def test_no_update_available(self, tmp_path):
