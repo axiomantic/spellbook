@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.1] - 2026-03-10
+
+### Fixed
+- **Database migration for branch column** - Existing installations crashed on daemon startup because the new `branch` column was missing from the `memories` table. Added `ALTER TABLE` migration that checks for the column before creating the index.
+
 ## [0.30.0] - 2026-03-10
 
 ### Added
