@@ -14,10 +14,7 @@ def mock_git_repo(tmp_path):
     """Create a mock spellbook git repo with remote.
 
     Populates the bare remote BEFORE cloning so that the clone creates
-    proper remote-tracking refs (refs/remotes/origin/main).  Cloning an
-    empty bare repo and then pushing leaves some git versions without a
-    usable tracking ref, which breaks ``git show origin/main:.version``
-    after a subsequent ``git fetch``.
+    proper remote-tracking refs (refs/remotes/origin/main).
     """
     seed = tmp_path / "seed"
     remote = tmp_path / "remote"
@@ -75,33 +72,16 @@ def mock_git_repo(tmp_path):
 class TestFullUpdateDetection:
     """Integration tests for update detection with real git repos."""
 
-    def test_detects_new_version(self, mock_git_repo, tmp_path):
-        """Create repo, push new version, detect update."""
+    def test_detects_new_version(self, mock_git_repo):
+        """Detect update when GitHub releases API reports a newer version."""
         from spellbook_mcp.update_tools import check_for_updates
 
         repo = mock_git_repo["repo"]
-        remote = mock_git_repo["remote"]
-        env = mock_git_repo["env"]
 
-        # Push a new version to the remote
-        clone2 = tmp_path / "clone2"
-        subprocess.run(["git", "clone", str(remote), str(clone2)], check=True, env=env, timeout=30)
-        (clone2 / ".version").write_text("0.9.10\n")
-        subprocess.run(["git", "-C", str(clone2), "add", ".version"], check=True, env=env, timeout=30)
-        subprocess.run(
-            ["git", "-C", str(clone2), "commit", "-m", "bump version"],
-            check=True,
-            env=env,
-            timeout=30,
-        )
-        subprocess.run(["git", "-C", str(clone2), "push"], check=True, env=env, timeout=30)
-
-        # Now check from the original repo
-        # Mock _get_latest_release_version to None so we always exercise the
-        # git-show fallback path (gh may or may not be authenticated in CI).
+        # Mock _get_latest_release_version to simulate a new release on GitHub
         with (
             patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
-            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value=None),
+            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value="0.9.10"),
         ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
@@ -122,9 +102,10 @@ class TestFullUpdateDetection:
 
         repo = mock_git_repo["repo"]
 
+        # Mock _get_latest_release_version to return the same version as local
         with (
             patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
-            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value=None),
+            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value="0.9.9"),
         ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
@@ -136,30 +117,16 @@ class TestFullUpdateDetection:
         assert result["update_available"] is False
         assert result["error"] is None
 
-    def test_version_classification_integration(self, mock_git_repo, tmp_path):
+    def test_version_classification_integration(self, mock_git_repo):
         """Major version bump is correctly detected."""
         from spellbook_mcp.update_tools import check_for_updates
 
         repo = mock_git_repo["repo"]
-        remote = mock_git_repo["remote"]
-        env = mock_git_repo["env"]
 
-        # Push a major version bump
-        clone2 = tmp_path / "clone2"
-        subprocess.run(["git", "clone", str(remote), str(clone2)], check=True, env=env, timeout=30)
-        (clone2 / ".version").write_text("1.0.0\n")
-        subprocess.run(["git", "-C", str(clone2), "add", ".version"], check=True, env=env, timeout=30)
-        subprocess.run(
-            ["git", "-C", str(clone2), "commit", "-m", "major bump"],
-            check=True,
-            env=env,
-            timeout=30,
-        )
-        subprocess.run(["git", "-C", str(clone2), "push"], check=True, env=env, timeout=30)
-
+        # Mock _get_latest_release_version to simulate a major version bump
         with (
             patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
-            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value=None),
+            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value="1.0.0"),
         ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",

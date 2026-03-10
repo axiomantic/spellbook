@@ -223,11 +223,12 @@ def _get_latest_release_version(spellbook_dir: Path) -> Optional[str]:
 def check_for_updates(spellbook_dir: Path) -> dict:
     """Perform an on-demand update check.
 
-    Prefers the GitHub releases API (``/releases/latest``) to determine the
-    latest non-pre-release version. Falls back to ``git show`` on
-    ``origin/main:.version`` if ``gh`` is unavailable or the API call fails.
+    Uses the GitHub releases API (``/releases/latest``) to determine the
+    latest non-pre-release version. If the API is unavailable (no ``gh`` CLI
+    or network failure), reports no update rather than falling back to
+    unreleased versions on main.
 
-    Always runs ``git fetch`` so that changelog extraction (which still uses
+    Always runs ``git fetch`` so that changelog extraction (which uses
     ``git show``) has up-to-date refs.
 
     Args:
@@ -272,14 +273,10 @@ def check_for_updates(spellbook_dir: Path) -> dict:
     except subprocess.SubprocessError:
         pass  # If we can't list remotes, proceed anyway
 
-    # Git fetch to update remote tracking refs.
-    # Use bare "git fetch <remote>" so the remote's configured refspec
-    # (typically +refs/heads/*:refs/remotes/origin/*) handles ref updates.
-    # Explicit refspecs like "main:refs/remotes/origin/main" can silently
-    # fail on some git versions/configurations in CI environments.
+    # Git fetch (needed for changelog extraction and as fallback for version)
     try:
         fetch_proc = subprocess.run(
-            ["git", "-C", str(spellbook_dir), "fetch", remote],
+            ["git", "-C", str(spellbook_dir), "fetch", remote, branch],
             capture_output=True,
             text=True,
             timeout=60,
@@ -294,29 +291,16 @@ def check_for_updates(spellbook_dir: Path) -> dict:
         result["error"] = f"git fetch error: {e}"
         return result
 
-    # Determine remote version: prefer GitHub releases API, fall back to git show
+    # Determine remote version from GitHub releases API only.
+    # This ensures pre-releases are never offered as updates.
+    # If the API is unavailable (no gh CLI, no network), we simply
+    # report no update rather than falling back to git show (which
+    # would see unreleased versions on main).
     remote_version = _get_latest_release_version(spellbook_dir)
 
     if remote_version is None:
-        # Fallback: read .version from remote branch via git show
-        try:
-            show_proc = subprocess.run(
-                ["git", "-C", str(spellbook_dir), "show",
-                 f"{remote}/{branch}:.version"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            if show_proc.returncode != 0:
-                result["error"] = f"Could not read remote .version: {show_proc.stderr.strip()}"
-                return result
-            remote_version = show_proc.stdout.strip()
-        except subprocess.TimeoutExpired:
-            result["error"] = "git show timed out (30s)"
-            return result
-        except OSError as e:
-            result["error"] = f"git show error: {e}"
-            return result
+        # Cannot determine latest release; report no update available
+        return result
 
     result["remote_version"] = remote_version
 
@@ -423,12 +407,10 @@ def apply_update(
         return result
 
     try:
-        # Fetch remote refs before pull.
-        # Use bare "git fetch <remote>" for maximum portability across
-        # git versions and CI environments.
+        # Fetch remote refs before pull
         try:
             fetch_proc = subprocess.run(
-                ["git", "-C", str(spellbook_dir), "fetch", remote],
+                ["git", "-C", str(spellbook_dir), "fetch", remote, branch],
                 capture_output=True,
                 text=True,
                 timeout=60,
