@@ -343,6 +343,67 @@ digraph G {
 | "The completeness check takes too long" | Completeness check catches missing edges every time. 2 minutes to check vs. delivering wrong diagram. |
 | "I know this domain well enough to skip reading" | Source-grounded means reading, not remembering. Read or mark out-of-scope. |
 
+## Modes
+
+### `--headless`
+
+Invoked as: `/generating-diagrams --headless`
+
+<CRITICAL>
+When `--headless` is specified, the calling script captures your raw text output and saves it directly as a file. Your output IS the file content.
+
+Rules:
+1. Do ALL analysis, extraction, and verification work SILENTLY. Do not output your Phase 1/2/4 work.
+2. Do NOT read, compare against, or reference any existing diagram files. Always generate fresh from the source.
+3. Do NOT output "no changes needed" or "the diagram is accurate". Always output the full diagram.
+4. Do NOT output any prose, preamble, summary, or description of what you did.
+5. ONLY output markdown headings, mermaid code blocks, and cross-reference tables.
+
+Your output must match this template exactly:
+</CRITICAL>
+
+```
+## Overview
+
+\`\`\`mermaid
+flowchart TD
+    A[Phase 1] --> B[Phase 2]
+\`\`\`
+
+## Phase 1: Name
+
+\`\`\`mermaid
+flowchart TD
+    A[Step 1] --> B{Decision}
+    B -->|Yes| C[Action]
+    B -->|No| D[Other]
+\`\`\`
+
+## Cross-Reference
+
+| Overview Node | Detail Section | Source |
+|---|---|---|
+| A | Phase 1: Name | `path/to/source` |
+
+## Legend
+
+\`\`\`mermaid
+flowchart LR
+    L1[Process Step]
+    L2{Decision Point}
+    L3([Terminal])
+    style L1 fill:#4a9eff,color:#fff
+    style L2 fill:#ff6b6b,color:#fff
+    style L3 fill:#51cf66,color:#fff
+\`\`\`
+```
+
+If the very first characters of your output are not `## Overview`, you are doing it wrong.
+
+### Default (interactive)
+
+When `--headless` is NOT specified, write the diagram to the appropriate file path using Write or Edit tools. Confirm the output path with the user if not obvious from context.
+
 <FORBIDDEN>
 - Placeholder nodes ("...", "etc.", "and more")
 - Duplicate nodes for the same entity in relationship diagrams
@@ -353,6 +414,7 @@ digraph G {
 - Hybrid diagrams mixing process flow with relationship data (use separate diagrams)
 - Handwaving over nested references ("see X for details" without tracing X)
 - Rationalizing that "this is simple enough" to skip any phase
+- In headless mode: any text output that is not a markdown heading, mermaid code block, or cross-reference table
 </FORBIDDEN>
 
 <FINAL_EMPHASIS>

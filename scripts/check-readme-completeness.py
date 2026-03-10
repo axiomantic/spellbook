@@ -37,7 +37,7 @@ def main():
     # Find all commands (exclude files starting with underscore or crystallized2)
     commands = []
     for cmd_file in commands_dir.glob("*.md"):
-        if not cmd_file.name.startswith("_") and "crystallized2" not in cmd_file.name:
+        if not cmd_file.name.startswith("_") and "crystallized2" not in cmd_file.name and not cmd_file.name.startswith("DIAGRAM."):
             commands.append(cmd_file.stem)
 
     # Find all skills (directories with SKILL.md, exclude underscore prefix)

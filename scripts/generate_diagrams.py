@@ -332,24 +332,10 @@ def build_prompt(item: SourceItem) -> str:
     source_rel = item.source_path.relative_to(REPO_ROOT)
     kind_label = item.kind  # "skill", "command", or "agent"
 
-    return f"""You are generating a diagram for the {kind_label} "{item.name}".
-
-Follow the generating-diagrams skill workflow:
-
-1. **Phase 1 - Analysis**: Read the source file at `{source_rel}`. Identify the subject type (process/workflow, dependencies, states, etc.), scope the traversal to the file and any commands/skills it references, and select Mermaid as the format (unless node count exceeds ~100, then decompose).
-
-2. **Phase 2 - Content Extraction**: Perform systematic depth-first traversal of the source. Extract all decision points, phase transitions, subagent dispatches, skill/command invocations, quality gates, loop/retry logic, terminal conditions, and conditional branches. Verify completeness: no orphan nodes, all branches represented, no placeholders.
-
-3. **Phase 3 - Diagram Generation**: Generate Mermaid diagram code blocks. For complex multi-phase {kind_label}s, decompose into:
-   - An overview diagram showing the high-level phases/flow
-   - Detailed diagrams for each major phase
-   Include a legend subgraph in each diagram. Use appropriate node shapes (rectangles for processes, diamonds for decisions, stadiums for terminals). Use colors: blue (#4a9eff) for subagent dispatches, red (#ff6b6b) for quality gates, green (#51cf66) for success terminals. Add a cross-reference table mapping overview nodes to detail diagrams if decomposed.
-
-4. **Phase 4 - Verification**: Verify syntax (matched braces, subgraph/end pairs, valid node IDs, correct edge label quoting). Verify every node traces to source material. Verify all decision branches are represented.
-
-Output ONLY the diagram content: Mermaid code blocks with brief descriptions, legends, and cross-reference tables. No preamble, no meta-commentary about the process. The output will be saved directly as a diagram markdown file.
-
-Source file: `{source_rel}`"""
+    return (
+        f'/generating-diagrams --headless for the {kind_label} "{item.name}" '
+        f"at `{source_rel}`."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -374,17 +360,17 @@ def generate_diagram(
         "claude",
         "--print",
         "--dangerously-skip-permissions",
-        prompt,
+        "--disallowedTools", "Write,Edit,Bash,NotebookEdit",
     ]
 
     if verbose:
-        print(f"  Command: {' '.join(cmd[:3])} [prompt truncated]")
-        print(f"  Stdin: {item.source_path}")
+        print(f"  Command: {' '.join(cmd)}")
+        print(f"  Prompt length: {len(prompt)} chars")
 
     try:
         result = subprocess.run(
             cmd,
-            stdin=subprocess.DEVNULL,
+            input=prompt,
             capture_output=True,
             text=True,
             timeout=CLAUDE_TIMEOUT_SECONDS,
@@ -405,25 +391,39 @@ def generate_diagram(
 
     if result.returncode != 0:
         stderr_snippet = result.stderr.strip()[:500] if result.stderr else "(no stderr)"
+        stdout_snippet = result.stdout.strip()[:1000] if result.stdout else "(no stdout)"
         return GenerationResult(
             item=item,
             status="failed",
-            message=f"Claude exited with code {result.returncode}: {stderr_snippet}",
+            message=(
+                f"Claude exited with code {result.returncode}\n"
+                f"         stderr: {stderr_snippet}\n"
+                f"         stdout: {stdout_snippet}"
+            ),
         )
 
     diagram_content = result.stdout.strip()
     if not diagram_content:
+        stderr_snippet = result.stderr.strip()[:500] if result.stderr else "(no stderr)"
         return GenerationResult(
             item=item,
             status="failed",
-            message="Claude returned empty output",
+            message=f"Claude returned empty output\n         stderr: {stderr_snippet}",
         )
 
     if "```mermaid" not in diagram_content:
+        # Show the actual output so the user can diagnose what went wrong
+        output_preview = diagram_content[:2000]
+        if len(diagram_content) > 2000:
+            output_preview += f"\n         ... ({len(diagram_content) - 2000} more chars)"
         return GenerationResult(
             item=item,
             status="failed",
-            message="Claude output does not contain a ```mermaid code block",
+            message=(
+                f"Claude output does not contain a ```mermaid code block\n"
+                f"         Output was:\n"
+                f"         {output_preview}"
+            ),
         )
 
     # Build the output file with metadata header
