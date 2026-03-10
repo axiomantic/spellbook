@@ -7210,6 +7210,61 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-presentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5: Presentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-6-application-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 6: Application Phase
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7240,110 +7295,209 @@
   
 
 
-<!-- diagram-meta: {"source": "commands/simplify-transform.md", "source_hash": "sha256:777e5712f84312846e2b11413c5fae8f58062d04c593321c4810f9cece938ac1", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/simplify-transform.md", "source_hash": "sha256:71b593cbcbd7607080bdabd9147f7c0153ec9d8f5328d6bd7392374513a31f9f", "generated_at": "2026-03-10T06:28:48Z", "generator": "generate_diagrams.py"} -->
 <h1 id="diagram-simplify-transform">Diagram: simplify-transform<a class="headerlink" href="#diagram-simplify-transform" title="Permanent link">&para;</a></h1>
-<p>Present and apply verified simplifications with multi-mode workflow and git integration. Handles automated, wizard, and report-only presentation modes.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>flowchart TD
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Start([Verified Candidates]) --&gt; GenReport[&quot;Generate\nSimplification Report&quot;]
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    GenReport --&gt; ModeSwitch{&quot;Presentation\nMode?&quot;}
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    ModeSwitch --&gt;|Automated| ShowBatch[&quot;Show Batch Report&quot;]
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    ModeSwitch --&gt;|Wizard| WizardLoop[&quot;Present One\nSimplification&quot;]
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ModeSwitch --&gt;|Report Only| ShowFull[&quot;Show Full Report&quot;]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    ShowBatch --&gt; AutoApproval{&quot;User Approval?&quot;}
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    AutoApproval --&gt;|Apply All| ApplyPhase[&quot;Step 6: Application&quot;]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    AutoApproval --&gt;|Review Each| WizardLoop
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    AutoApproval --&gt;|Export| SaveReport[&quot;Save Report\nand Exit&quot;]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    WizardLoop --&gt; WizardChoice{&quot;Apply This\nChange?&quot;}
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    WizardChoice --&gt;|Yes| ApplySingle[&quot;Apply Transform&quot;]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    WizardChoice --&gt;|No| SkipOne[&quot;Skip This One&quot;]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    WizardChoice --&gt;|More Context| ShowContext[&quot;Show +/- 20 Lines&quot;]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    WizardChoice --&gt;|Apply Remaining| ApplyPhase
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    WizardChoice --&gt;|Stop| WizardSummary[&quot;Exit with Summary&quot;]
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    ShowContext --&gt; WizardLoop
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    ApplySingle --&gt; MoreWizard{&quot;More Items?&quot;}
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    SkipOne --&gt; MoreWizard
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    MoreWizard --&gt;|Yes| WizardLoop
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    MoreWizard --&gt;|No| ApplyPhase
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    ShowFull --&gt; SaveReport
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    ApplyPhase --&gt; ReadFile[&quot;Read Current File&quot;]
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    ReadFile --&gt; ApplyChange[&quot;Apply Transformation&quot;]
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    ApplyChange --&gt; PostVerify{&quot;Post-Apply\nVerification?&quot;}
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    PostVerify --&gt;|Fail| RevertChange[&quot;Revert Change&quot;]
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    PostVerify --&gt;|Pass| NextChange{&quot;More Changes?&quot;}
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    RevertChange --&gt; NextChange
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    NextChange --&gt;|Yes| ReadFile
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    NextChange --&gt;|No| RunTests[&quot;Run Full Test Suite&quot;]
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    RunTests --&gt; TestGate{&quot;All Tests Pass?&quot;}
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    TestGate --&gt;|No| IdentifyFail[&quot;Identify Failing\nTransform&quot;]
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    IdentifyFail --&gt; RevertChange
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    TestGate --&gt;|Yes| CommitChoice{&quot;Commit Strategy?&quot;}
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>    CommitChoice --&gt;|Atomic/File| AtomicCommit[&quot;Commit Per File\nWith Approval&quot;]
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    CommitChoice --&gt;|Batch| BatchCommit[&quot;Single Batch\nCommit&quot;]
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>    CommitChoice --&gt;|No Commit| LeaveUnstaged[&quot;Leave Unstaged&quot;]
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>    AtomicCommit --&gt; FinalSummary[&quot;Display Final\nSummary&quot;]
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>    BatchCommit --&gt; FinalSummary
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>    LeaveUnstaged --&gt; FinalSummary
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    WizardSummary --&gt; FinalSummary
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    SaveReport --&gt; Done([Complete])
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>    FinalSummary --&gt; Done
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    style Start fill:#4CAF50,color:#fff
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>    style Done fill:#4CAF50,color:#fff
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>    style GenReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    style ShowBatch fill:#2196F3,color:#fff
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    style WizardLoop fill:#2196F3,color:#fff
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    style ShowFull fill:#2196F3,color:#fff
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    style ApplyPhase fill:#2196F3,color:#fff
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    style ApplySingle fill:#2196F3,color:#fff
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    style SkipOne fill:#2196F3,color:#fff
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    style ShowContext fill:#2196F3,color:#fff
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>    style WizardSummary fill:#2196F3,color:#fff
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>    style SaveReport fill:#2196F3,color:#fff
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    style ReadFile fill:#2196F3,color:#fff
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    style ApplyChange fill:#2196F3,color:#fff
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    style RevertChange fill:#2196F3,color:#fff
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    style RunTests fill:#2196F3,color:#fff
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>    style IdentifyFail fill:#2196F3,color:#fff
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>    style AtomicCommit fill:#2196F3,color:#fff
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>    style BatchCommit fill:#2196F3,color:#fff
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>    style LeaveUnstaged fill:#2196F3,color:#fff
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>    style FinalSummary fill:#2196F3,color:#fff
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>    style ModeSwitch fill:#FF9800,color:#fff
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>    style AutoApproval fill:#FF9800,color:#fff
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>    style WizardChoice fill:#FF9800,color:#fff
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>    style MoreWizard fill:#FF9800,color:#fff
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>    style NextChange fill:#FF9800,color:#fff
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>    style CommitChoice fill:#FF9800,color:#fff
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>    style PostVerify fill:#f44336,color:#fff
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>    style TestGate fill:#f44336,color:#fff
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    ENTRY([Entry:&lt;br/&gt;After /simplify-verify]) --&gt; S5[Step 5:&lt;br/&gt;Presentation]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    S5 --&gt; S6[Step 6:&lt;br/&gt;Application Phase]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    S5 --&gt;|Report-Only mode| EXIT_REPORT([Exit:&lt;br/&gt;No Changes])
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    S6 --&gt; DONE([Complete:&lt;br/&gt;Final Summary])
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    S5 --&gt;|Error| ERR[Error Handling]
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    S6 --&gt;|Error| ERR
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    ERR --&gt; EXIT_ERR([Exit:&lt;br/&gt;Error])
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    subgraph Legend
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        L1[Process Step]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        L2{Decision Point}
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        L3([Terminal])
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        L4[/User Prompt/]
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    end
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    style ENTRY fill:#4a9eff,color:#fff
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    style EXIT_REPORT fill:#51cf66,color:#fff
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    style DONE fill:#51cf66,color:#fff
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    style EXIT_ERR fill:#ff6b6b,color:#fff
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    style ERR fill:#ff6b6b,color:#fff
 </code></pre></div>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<h2 id="step-5-presentation">Step 5: Presentation<a class="headerlink" href="#step-5-presentation" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>flowchart TD
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    S5([Entry: Step 5]) --&gt; GEN_REPORT[5.1: Generate&lt;br/&gt;Simplification Report]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    GEN_REPORT --&gt; MODE{Select Mode}
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    MODE --&gt;|Automated| AUTO_PRESENT[5.2: Show Full&lt;br/&gt;Report + Summary]
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    MODE --&gt;|Wizard| WIZ_PRESENT[5.3: Present First&lt;br/&gt;Simplification]
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    MODE --&gt;|Report-Only| RPT_PRESENT[5.4: Display&lt;br/&gt;Complete Report]
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    AUTO_PRESENT --&gt; AUTO_ASK{/User: How&lt;br/&gt;to proceed?/}
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    AUTO_ASK --&gt;|Apply all| TO_STEP6([To Step 6:&lt;br/&gt;Application])
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    AUTO_ASK --&gt;|Review individually| WIZ_PRESENT
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    AUTO_ASK --&gt;|Export report| SAVE_REPORT[5.5: Save Report]
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    SAVE_REPORT --&gt; EXIT_NO_CHANGE([Exit:&lt;br/&gt;No Changes])
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    WIZ_PRESENT --&gt; WIZ_SHOW[Show Before/After,&lt;br/&gt;Verification Status]
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    WIZ_SHOW --&gt; WIZ_ASK{/User: Apply this&lt;br/&gt;simplification?/}
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    WIZ_ASK --&gt;|Yes| WIZ_APPLY[Apply Transform,&lt;br/&gt;Show Confirmation]
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    WIZ_ASK --&gt;|No| WIZ_SKIP[Skip This One]
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    WIZ_ASK --&gt;|Show more context| WIZ_CTX[Show +/-20 Lines]
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    WIZ_CTX --&gt; WIZ_ASK
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    WIZ_ASK --&gt;|Apply all remaining| TO_STEP6
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    WIZ_ASK --&gt;|Stop wizard| WIZ_EXIT([Exit:&lt;br/&gt;Summary of Applied])
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    WIZ_APPLY --&gt; WIZ_MORE{More&lt;br/&gt;Remaining?}
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    WIZ_SKIP --&gt; WIZ_MORE
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    WIZ_MORE --&gt;|Yes| WIZ_PRESENT
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    WIZ_MORE --&gt;|No| TO_STEP6
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    RPT_PRESENT --&gt; RPT_SAVE{--save-report&lt;br/&gt;specified?}
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>    RPT_SAVE --&gt;|Yes| SAVE_RPT_FILE[Save to File]
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>    RPT_SAVE --&gt;|No| EXIT_RPT([Exit:&lt;br/&gt;No Changes])
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    SAVE_RPT_FILE --&gt; RPT_JSON{--json flag?}
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    RPT_JSON --&gt;|Yes| SAVE_JSON[Save as JSON]
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>    RPT_JSON --&gt;|No| SAVE_MD[Save as Markdown]
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>    SAVE_JSON --&gt; EXIT_RPT
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    SAVE_MD --&gt; EXIT_RPT
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    style S5 fill:#4a9eff,color:#fff
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>    style TO_STEP6 fill:#4a9eff,color:#fff
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>    style EXIT_NO_CHANGE fill:#51cf66,color:#fff
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    style EXIT_RPT fill:#51cf66,color:#fff
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    style WIZ_EXIT fill:#51cf66,color:#fff
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>    style AUTO_ASK fill:#e8daef
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>    style WIZ_ASK fill:#e8daef
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    classDef decision fill:#ff6b6b,color:#fff
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>    class MODE,RPT_SAVE,RPT_JSON,WIZ_MORE decision
+</code></pre></div>
+<h2 id="step-6-application-phase">Step 6: Application Phase<a class="headerlink" href="#step-6-application-phase" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart TD
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    S6([Entry: Step 6]) --&gt; APPLY_LOOP[6.1: For Each&lt;br/&gt;Approved Simplification]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    APPLY_LOOP --&gt; READ[Read Current&lt;br/&gt;File Content]
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    READ --&gt; EDIT[Apply Transform&lt;br/&gt;via Edit Tool]
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    EDIT --&gt; VERIFY{Post-Apply&lt;br/&gt;Verification}
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    VERIFY --&gt;|Pass| KEEP[Keep Change]
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    VERIFY --&gt;|Fail| REVERT[Revert Change,&lt;br/&gt;Mark Failed]
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    KEEP --&gt; MORE_APPLY{More&lt;br/&gt;Transforms?}
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    REVERT --&gt; MORE_APPLY
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    MORE_APPLY --&gt;|Yes| APPLY_LOOP
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    MORE_APPLY --&gt;|No| FULL_TEST[6.2: Run Full&lt;br/&gt;Test Suite]
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    FULL_TEST --&gt; TEST_RESULT{All Tests&lt;br/&gt;Pass?}
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    TEST_RESULT --&gt;|Yes| METRICS[Calculate Final&lt;br/&gt;Complexity Metrics]
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    TEST_RESULT --&gt;|No| FIND_CAUSE[Identify Failing&lt;br/&gt;Transformation]
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    FIND_CAUSE --&gt; REVERT_CAUSE[Revert Causing&lt;br/&gt;Transformation]
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    REVERT_CAUSE --&gt; FULL_TEST
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    METRICS --&gt; GIT_ASK{/6.3: Commit&lt;br/&gt;Strategy?/}
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    GIT_ASK --&gt;|Atomic per file| ATOMIC[Per-File Commits]
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    GIT_ASK --&gt;|Single batch| BATCH[Single Commit]
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>    GIT_ASK --&gt;|No commit| NO_COMMIT[Leave Unstaged]
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>    ATOMIC --&gt; ATOM_SHOW[Show Proposed&lt;br/&gt;Commit Message]
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>    ATOM_SHOW --&gt; ATOM_ASK{/Approve This&lt;br/&gt;Commit?/}
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    ATOM_ASK --&gt;|Yes| ATOM_EXEC[git add + commit]
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>    ATOM_ASK --&gt;|Edit message| ATOM_EDIT[Edit Message]
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>    ATOM_EDIT --&gt; ATOM_ASK
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>    ATOM_ASK --&gt;|Skip| ATOM_MORE{More Files?}
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    ATOM_ASK --&gt;|Stop| SUMMARY
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>    ATOM_EXEC --&gt; ATOM_MORE
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>    ATOM_MORE --&gt;|Yes| ATOM_SHOW
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>    ATOM_MORE --&gt;|No| SUMMARY
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>    BATCH --&gt; BATCH_SHOW[Show Proposed&lt;br/&gt;Batch Message]
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>    BATCH_SHOW --&gt; BATCH_ASK{/Approve Batch&lt;br/&gt;Commit?/}
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>    BATCH_ASK --&gt;|Yes| BATCH_EXEC[git add all +&lt;br/&gt;commit]
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>    BATCH_ASK --&gt;|Edit message| BATCH_EDIT[Edit Message]
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>    BATCH_EDIT --&gt; BATCH_ASK
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>    BATCH_ASK --&gt;|Switch to atomic| ATOMIC
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>    BATCH_ASK --&gt;|No commit| NO_COMMIT
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>    BATCH_EXEC --&gt; SUMMARY
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>    NO_COMMIT --&gt; SUMMARY[6.4: Final Summary]
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>    SUMMARY --&gt; DONE([Complete])
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>    style S6 fill:#4a9eff,color:#fff
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>    style DONE fill:#51cf66,color:#fff
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>    style GIT_ASK fill:#e8daef
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>    style ATOM_ASK fill:#e8daef
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>    style BATCH_ASK fill:#e8daef
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>    classDef decision fill:#ff6b6b,color:#fff
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>    class VERIFY,TEST_RESULT,MORE_APPLY,ATOM_MORE decision
+</code></pre></div>
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>flowchart TD
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    ERR([Error Encountered]) --&gt; ERR_TYPE{Error Type}
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    ERR_TYPE --&gt;|No functions found| NO_FUNC[Report: No&lt;br/&gt;Opportunities Found]
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    NO_FUNC --&gt; SUGGEST_LOWER[Suggest: Lower&lt;br/&gt;--min-complexity]
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    SUGGEST_LOWER --&gt; EXIT_ERR([Exit])
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    ERR_TYPE --&gt;|Parse error| PARSE[Report: Syntax&lt;br/&gt;Error in File]
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    PARSE --&gt; EXIT_ERR
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    ERR_TYPE --&gt;|Test failure&lt;br/&gt;during verify| TEST_FAIL[Report: Transform&lt;br/&gt;Would Break Tests]
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    TEST_FAIL --&gt; SKIP_ASK{/Continue with&lt;br/&gt;remaining?/}
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    SKIP_ASK --&gt;|Yes| CONTINUE([Continue])
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    SKIP_ASK --&gt;|No| EXIT_ERR
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    ERR_TYPE --&gt;|Missing test command| NO_CMD[Report: Test&lt;br/&gt;Command Not Found]
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    NO_CMD --&gt; CMD_OPTS[Options: Configure,&lt;br/&gt;--dry-run, --allow-uncovered]
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    CMD_OPTS --&gt; EXIT_ERR
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    ERR_TYPE --&gt;|Git repo issues| GIT_ERR{Specific Issue}
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    GIT_ERR --&gt;|Not in repo| NOT_REPO[Suggest: Use&lt;br/&gt;Explicit Path]
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    GIT_ERR --&gt;|Base not found| NO_BASE[Suggest:&lt;br/&gt;--base=branch]
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>    NOT_REPO --&gt; EXIT_ERR
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    NO_BASE --&gt; EXIT_ERR
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    ERR_TYPE --&gt;|Unsupported language| LANG[Report: Language&lt;br/&gt;Not Supported]
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>    LANG --&gt; LANG_NOTE[Note: Generic&lt;br/&gt;Simplifications Available]
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    LANG_NOTE --&gt; EXIT_ERR
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    style ERR fill:#ff6b6b,color:#fff
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>    style EXIT_ERR fill:#ff6b6b,color:#fff
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>    style CONTINUE fill:#51cf66,color:#fff
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    style SKIP_ASK fill:#e8daef
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    classDef decision fill:#ff6b6b,color:#fff
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>    class ERR_TYPE,GIT_ERR decision
+</code></pre></div>
+<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
-<th>Meaning</th>
+<th>Overview Node</th>
+<th>Detail Section</th>
+<th>Source</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td>Step 5: Presentation</td>
+<td>Step 5: Presentation</td>
+<td><code>commands/simplify-transform.md:37-252</code></td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td>Step 6: Application Phase</td>
+<td>Step 6: Application Phase</td>
+<td><code>commands/simplify-transform.md:296-457</code></td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
-</tr>
-<tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
+<td>Error Handling</td>
+<td>Error Handling</td>
+<td><code>commands/simplify-transform.md:461-543</code></td>
 </tr>
 </tbody>
 </table>
+<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>flowchart LR
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    L1[Process Step]
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    L2{Decision Point}
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    L3([Terminal])
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    L4[/User Prompt/]
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    style L1 fill:#4a9eff,color:#fff
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    style L2 fill:#ff6b6b,color:#fff
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    style L3 fill:#51cf66,color:#fff
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    style L4 fill:#e8daef
+</code></pre></div>
 
 
 
