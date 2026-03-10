@@ -11,9 +11,17 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_git_repo(tmp_path):
-    """Create a mock spellbook git repo with remote."""
-    repo = tmp_path / "spellbook"
+    """Create a mock spellbook git repo with remote.
+
+    Populates the bare remote BEFORE cloning so that the clone creates
+    proper remote-tracking refs (refs/remotes/origin/main).  Cloning an
+    empty bare repo and then pushing leaves some git versions without a
+    usable tracking ref, which breaks ``git show origin/main:.version``
+    after a subsequent ``git fetch``.
+    """
+    seed = tmp_path / "seed"
     remote = tmp_path / "remote"
+    repo = tmp_path / "spellbook"
     env = {
         **os.environ,
         "GIT_AUTHOR_NAME": "test",
@@ -30,19 +38,36 @@ def mock_git_repo(tmp_path):
         timeout=30,
     )
 
-    # Clone to create local repo
-    subprocess.run(["git", "clone", str(remote), str(repo)], check=True, env=env, timeout=30)
-
-    # Add .version file
-    (repo / ".version").write_text("0.9.9\n")
-    subprocess.run(["git", "-C", str(repo), "add", ".version"], check=True, env=env, timeout=30)
+    # Seed the remote with an initial commit so it is non-empty
     subprocess.run(
-        ["git", "-C", str(repo), "commit", "-m", "initial"],
+        ["git", "-c", "init.defaultBranch=main", "init", str(seed)],
         check=True,
         env=env,
         timeout=30,
     )
-    subprocess.run(["git", "-C", str(repo), "push"], check=True, env=env, timeout=30)
+    (seed / ".version").write_text("0.9.9\n")
+    subprocess.run(["git", "-C", str(seed), "add", ".version"], check=True, env=env, timeout=30)
+    subprocess.run(
+        ["git", "-C", str(seed), "commit", "-m", "initial"],
+        check=True,
+        env=env,
+        timeout=30,
+    )
+    subprocess.run(
+        ["git", "-C", str(seed), "remote", "add", "origin", str(remote)],
+        check=True,
+        env=env,
+        timeout=30,
+    )
+    subprocess.run(
+        ["git", "-C", str(seed), "push", "-u", "origin", "main"],
+        check=True,
+        env=env,
+        timeout=30,
+    )
+
+    # Clone the now-populated remote; this creates proper tracking refs
+    subprocess.run(["git", "clone", str(remote), str(repo)], check=True, env=env, timeout=30)
 
     return {"repo": repo, "remote": remote, "env": env}
 
@@ -72,7 +97,12 @@ class TestFullUpdateDetection:
         subprocess.run(["git", "-C", str(clone2), "push"], check=True, env=env, timeout=30)
 
         # Now check from the original repo
-        with patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        # Mock _get_latest_release_version to None so we always exercise the
+        # git-show fallback path (gh may or may not be authenticated in CI).
+        with (
+            patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
+            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value=None),
+        ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
                 "auto_update_branch": "main",
@@ -92,7 +122,10 @@ class TestFullUpdateDetection:
 
         repo = mock_git_repo["repo"]
 
-        with patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        with (
+            patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
+            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value=None),
+        ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
                 "auto_update_branch": "main",
@@ -124,7 +157,10 @@ class TestFullUpdateDetection:
         )
         subprocess.run(["git", "-C", str(clone2), "push"], check=True, env=env, timeout=30)
 
-        with patch("spellbook_mcp.update_tools.config_get") as mock_config_get:
+        with (
+            patch("spellbook_mcp.update_tools.config_get") as mock_config_get,
+            patch("spellbook_mcp.update_tools._get_latest_release_version", return_value=None),
+        ):
             mock_config_get.side_effect = lambda key: {
                 "auto_update_remote": "origin",
                 "auto_update_branch": "main",
