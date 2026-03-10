@@ -273,9 +273,13 @@ def check_for_updates(spellbook_dir: Path) -> dict:
         pass  # If we can't list remotes, proceed anyway
 
     # Git fetch (needed for changelog extraction and as fallback for version)
+    # Use explicit refspec to ensure remote tracking ref is updated.
+    # Plain "git fetch origin main" only updates FETCH_HEAD on some git
+    # versions, leaving origin/main stale.
+    refspec = f"{branch}:refs/remotes/{remote}/{branch}"
     try:
         fetch_proc = subprocess.run(
-            ["git", "-C", str(spellbook_dir), "fetch", remote, branch],
+            ["git", "-C", str(spellbook_dir), "fetch", remote, refspec],
             capture_output=True,
             text=True,
             timeout=60,
@@ -420,9 +424,11 @@ def apply_update(
 
     try:
         # Fetch remote refs before pull
+        # Use explicit refspec to update the remote tracking ref reliably
+        refspec = f"{branch}:refs/remotes/{remote}/{branch}"
         try:
             fetch_proc = subprocess.run(
-                ["git", "-C", str(spellbook_dir), "fetch", remote, branch],
+                ["git", "-C", str(spellbook_dir), "fetch", remote, refspec],
                 capture_output=True,
                 text=True,
                 timeout=60,
