@@ -109,7 +109,7 @@ class TestEncodeCwdWithGitRoot:
         path = str(tmp_path / "plain_dir")
         os.makedirs(path)
         # Should encode the path as-is (resolve_repo_root falls back to input)
-        expected = path.replace("/", "-").lstrip("-")
+        expected = path.replace("\\", "-").replace("/", "-").lstrip("-")
         result = encode_cwd(path)
         assert result == expected
 
@@ -117,12 +117,12 @@ class TestEncodeCwdWithGitRoot:
         """encode_cwd with resolve_git_root=True encodes the repo root, not a subdir."""
         subdir = os.path.join(git_repo, "src", "deep")
         os.makedirs(subdir)
-        expected = git_repo.replace("/", "-").lstrip("-")
+        expected = git_repo.replace("\\", "-").replace("/", "-").lstrip("-")
         assert encode_cwd(subdir) == expected
 
     def test_resolve_git_root_false_encodes_exact_path(self, git_repo):
         """encode_cwd with resolve_git_root=False encodes the exact path given."""
         subdir = os.path.join(git_repo, "src")
         os.makedirs(subdir)
-        expected = subdir.replace("/", "-").lstrip("-")
+        expected = subdir.replace("\\", "-").replace("/", "-").lstrip("-")
         assert encode_cwd(subdir, resolve_git_root=False) == expected

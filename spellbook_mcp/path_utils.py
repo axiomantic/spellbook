@@ -36,7 +36,7 @@ def resolve_repo_root(path: str) -> str:
         if result.returncode == 0 and result.stdout.strip():
             first_line = result.stdout.strip().split("\n")[0]
             if first_line.startswith("worktree "):
-                return first_line[len("worktree "):]
+                return os.path.normpath(first_line[len("worktree "):])
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         pass
 
@@ -48,7 +48,7 @@ def resolve_repo_root(path: str) -> str:
             capture_output=True, text=True, timeout=5,
         )
         if result.returncode == 0:
-            return result.stdout.strip()
+            return os.path.normpath(result.stdout.strip())
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         pass
 
@@ -72,7 +72,7 @@ def encode_cwd(cwd: str, resolve_git_root: bool = True) -> str:
     """
     if resolve_git_root:
         cwd = resolve_repo_root(cwd)
-    return cwd.replace('/', '-').lstrip('-')
+    return cwd.replace('\\', '-').replace('/', '-').lstrip('-')
 
 
 def get_spellbook_config_dir() -> Path:

@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+import sys
 
 import pytest
 
@@ -40,6 +41,7 @@ HOOKS_DIR = os.path.join(
 )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Bash hooks require Unix shell")
 class TestMemoryCaptureNamespace:
     def test_worktree_and_main_repo_same_namespace(self, git_repo_with_worktree):
         """memory-capture.sh should produce same namespace for worktree and main repo."""
