@@ -73,7 +73,7 @@ try:
         cwd=cwd, capture_output=True, text=True, timeout=3,
     )
     if _wt_result.returncode == 0 and _wt_result.stdout.strip():
-        _first_line = _wt_result.stdout.strip().split('\\n')[0]
+        _first_line = _wt_result.stdout.strip().split('\n')[0]
         if _first_line.startswith('worktree '):
             _resolved_cwd = _first_line[len('worktree '):]
 except Exception:

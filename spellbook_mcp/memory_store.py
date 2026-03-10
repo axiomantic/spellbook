@@ -330,6 +330,42 @@ def mark_events_consolidated(
     return cursor.rowcount
 
 
+def _apply_branch_scoring(
+    db_path: str,
+    results: List[Dict[str, Any]],
+    branch: str,
+    repo_path: str,
+    limit: int,
+) -> List[Dict[str, Any]]:
+    """Apply ancestry-aware branch weighting to recall results.
+
+    Phase 2 of two-phase scoring: multiplies _score by branch relationship
+    multiplier, re-sorts, strips internal score, and truncates to limit.
+    Also lazily populates the junction table for ancestor relationships.
+    """
+    from spellbook_mcp.branch_ancestry import (
+        BRANCH_MULTIPLIERS,
+        BranchRelationship,
+        get_branch_relationship,
+    )
+
+    for mem in results:
+        mem_branch = mem.get("branch", "")
+        relationship = get_branch_relationship(repo_path, branch, mem_branch)
+        multiplier = BRANCH_MULTIPLIERS.get(relationship, 1.0)
+        mem["_score"] = mem.get("_score", 1.0) * multiplier
+        mem["branch_relationship"] = relationship.value
+
+        # Lazy junction table population for ancestor relationships
+        if relationship == BranchRelationship.ANCESTOR and branch:
+            insert_branch_association(db_path, mem["id"], branch, "ancestor")
+
+    results.sort(key=lambda m: m.get("_score", 0), reverse=True)
+    for r in results:
+        r.pop("_score", None)
+    return results[:limit]
+
+
 def recall_by_file_path(
     db_path: str,
     file_path: str,
@@ -345,12 +381,6 @@ def recall_by_file_path(
     1. SQL phase: over-fetch candidates with base score (no branch multiplier)
     2. Python phase: apply ancestry-aware branch multiplier, re-sort, truncate
     """
-    from spellbook_mcp.branch_ancestry import (
-        BRANCH_MULTIPLIERS,
-        BranchRelationship,
-        get_branch_relationship,
-    )
-
     conn = get_connection(db_path)
     fetch_limit = limit * 2 if branch else limit
 
@@ -383,21 +413,7 @@ def recall_by_file_path(
         return results[:limit]
 
     # Phase 2: Apply ancestry-aware branch weighting
-    for mem in results:
-        mem_branch = mem.get("branch", "")
-        relationship = get_branch_relationship(repo_path, branch, mem_branch)
-        multiplier = BRANCH_MULTIPLIERS.get(relationship, 1.0)
-        mem["_score"] = mem.get("_score", 1.0) * multiplier
-        mem["branch_relationship"] = relationship.value
-
-        # Lazy junction table population for ancestor relationships
-        if relationship == BranchRelationship.ANCESTOR and branch:
-            insert_branch_association(db_path, mem["id"], branch, "ancestor")
-
-    results.sort(key=lambda m: m.get("_score", 0), reverse=True)
-    for r in results:
-        r.pop("_score", None)
-    return results[:limit]
+    return _apply_branch_scoring(db_path, results, branch, repo_path, limit)
 
 
 def recall_by_query(
@@ -417,12 +433,6 @@ def recall_by_query(
 
     Escapes user input by wrapping in double-quotes to prevent FTS5 operator injection.
     """
-    from spellbook_mcp.branch_ancestry import (
-        BRANCH_MULTIPLIERS,
-        BranchRelationship,
-        get_branch_relationship,
-    )
-
     conn = get_connection(db_path)
     fetch_limit = limit * 2 if branch else limit
 
@@ -477,24 +487,7 @@ def recall_by_query(
         return results[:limit]
 
     # Phase 2: Apply branch weighting
-    for mem in results:
-        mem_branch = mem.get("branch", "")
-        relationship = get_branch_relationship(repo_path, branch, mem_branch)
-        multiplier = BRANCH_MULTIPLIERS.get(relationship, 1.0)
-        mem["_score"] = mem.get("_score", 1.0) * multiplier
-        mem["branch_relationship"] = relationship.value
-
-        # Lazy junction table population for ancestor relationships
-        if relationship == BranchRelationship.ANCESTOR and branch:
-            insert_branch_association(db_path, mem["id"], branch, "ancestor")
-
-    results.sort(key=lambda m: m.get("_score", 0), reverse=True)
-
-    # Strip internal score before returning
-    for r in results:
-        r.pop("_score", None)
-
-    return results[:limit]
+    return _apply_branch_scoring(db_path, results, branch, repo_path, limit)
 
 
 def update_access(db_path: str, memory_id: str) -> None:
