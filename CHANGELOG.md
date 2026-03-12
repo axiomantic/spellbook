@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2] - 2026-03-11
+
+### Fixed
+- **MCP auth header missing from installer** - The MCP server requires bearer token authentication, but `register_mcp_http_server` and all platform installers omitted the `Authorization` header when registering the server. Clients received 401 Unauthorized on every request. All platforms (Claude Code, OpenCode, Codex, Crush) now read the token from `~/.local/spellbook/.mcp-token` and include it in the MCP registration.
+
 ## [0.30.1] - 2026-03-10
 
 ### Fixed

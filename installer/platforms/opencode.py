@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
 from ..components.context_files import generate_codex_context
-from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT
+from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
 from ..components.symlinks import create_symlink, remove_symlink
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
@@ -87,11 +87,15 @@ def _update_opencode_config(
         action = f"registered MCP server (HTTP: {daemon_url})"
 
     # Add or update the spellbook MCP server config to use remote HTTP
-    config["mcp"]["spellbook"] = {
+    server_config = {
         "type": "remote",
         "url": daemon_url,
         "enabled": True,
     }
+    token = get_mcp_auth_token()
+    if token:
+        server_config["headers"] = {"Authorization": f"Bearer {token}"}
+    config["mcp"]["spellbook"] = server_config
 
     # Ensure schema is set to OpenCode schema
     if "$schema" not in config:

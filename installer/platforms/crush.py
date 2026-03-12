@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 from ..components.context_files import generate_codex_context
-from ..components.mcp import get_spellbook_server_url
+from ..components.mcp import get_mcp_auth_token, get_spellbook_server_url
 from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
@@ -96,10 +96,14 @@ def _update_crush_config(
     else:
         action_msg = "registered MCP server"
 
-    config["mcp"]["spellbook"] = {
+    server_config = {
         "type": "http",
         "url": daemon_url,
     }
+    token = get_mcp_auth_token()
+    if token:
+        server_config["headers"] = {"Authorization": f"Bearer {token}"}
+    config["mcp"]["spellbook"] = server_config
     actions.append(action_msg)
 
     # Write config
