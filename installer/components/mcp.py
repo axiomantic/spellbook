@@ -119,7 +119,7 @@ def register_mcp_server(
     try:
         # Always try to remove first (ignore errors)
         subprocess.run(
-            ["claude", "mcp", "remove", name],
+            ["claude", "mcp", "remove", name, "-s", "user"],
             capture_output=True,
             timeout=10,
         )
@@ -166,7 +166,7 @@ def unregister_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
             return (True, "was not registered")
 
         result = subprocess.run(
-            ["claude", "mcp", "remove", name],
+            ["claude", "mcp", "remove", name, "-s", "user"],
             capture_output=True,
             text=True,
             timeout=10,
@@ -934,17 +934,17 @@ def register_mcp_http_server(
     try:
         # Always try to remove first (ignore errors)
         subprocess.run(
-            ["claude", "mcp", "remove", name],
+            ["claude", "mcp", "remove", name, "-s", "user"],
             capture_output=True,
             timeout=10,
         )
 
         # Add the MCP server with HTTP transport and user scope (global, not per-project)
-        # Name and URL must come after all flags for claude CLI to parse correctly
-        cmd = ["claude", "mcp", "add", "--transport", "http", "--scope", "user"]
+        # --header is variadic (<header...>) in claude CLI, so it must come AFTER
+        # positional args (name, url) to avoid consuming them as header values.
+        cmd = ["claude", "mcp", "add", "--transport", "http", "--scope", "user", name, url]
         if auth_header:
             cmd.extend(["--header", auth_header])
-        cmd.extend([name, url])
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:

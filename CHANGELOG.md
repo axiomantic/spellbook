@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.3] - 2026-03-12
+
+### Fixed
+- **MCP registration arg ordering** - `claude mcp add`'s `--header` option is variadic and was consuming positional arguments (`name`, `url`) when placed before them, causing "missing required argument 'name'" errors. Moved `--header` after positional args to match CLI's documented usage. Also added `-s user` scope to `claude mcp remove` calls so they correctly target user-scoped registrations.
+
 ## [0.30.2] - 2026-03-11
 
 ### Fixed
