@@ -55,7 +55,6 @@
 - [Serious Fun](#serious-fun)
 - [Platform Support](#platform-support)
   - [Operating Systems](#operating-systems)
-  - [Coding Assistants](#coding-assistants)
   - [YOLO Mode](#yolo-mode)
 - [Playbooks](#playbooks)
   - [Implementing a Feature](#implementing-a-feature)
@@ -523,18 +522,6 @@ See [full citations](https://axiomantic.github.io/spellbook/reference/citations/
 | **Windows** | Beta | Windows Task Scheduler |
 
 > **Windows users:** Windows support is experimental. The installer, MCP server, and skills all work on Windows. Symlinks require Developer Mode enabled (falls back to junctions or copies otherwise). See [Windows quickstart](#windows-quickstart) below.
-
-### Coding Assistants
-
-| Assistant | Status | Details |
-|-----------|--------|---------|
-| Claude Code | Full | Native agent skills |
-| OpenCode | Full | Native agent skills |
-| Codex | Full | Native agent skills |
-| Gemini CLI | Full[^1] | Native agent skills |
-| Crush | Full | Native agent skills |
-
-[^1]: Gemini does not yet support agent skills, but it is actively being worked on by the Gemini team. Spellbook skills are already installed to ~/.gemini/extensions/spellbook/skills and should begin working as soon as Gemini releases the feature. You can follow the epic's progress here: https://github.com/google-gemini/gemini-cli/issues/15327
 
 ### YOLO Mode
 

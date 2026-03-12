@@ -29,15 +29,6 @@ curl -fsSL https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap
 
 See [Installation Guide](getting-started/installation.md) for options and manual installation.
 
-## Platform Support
-
-| Platform | Status | Method |
-|----------|--------|--------|
-| Claude Code | Full | Native skills + MCP server |
-| OpenCode | Full | Skill symlinks |
-| Codex | Full | Bootstrap + MCP |
-| Gemini CLI | Partial | MCP server + context file |
-
 ## Attribution
 
 Spellbook includes skills, commands, agents, and hooks from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. See [Acknowledgments](acknowledgments.md) for full details.

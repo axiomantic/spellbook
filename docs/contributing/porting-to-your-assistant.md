@@ -287,7 +287,7 @@ tests/claude-code/run-all-tests.sh
 ### Phase 6: Documentation
 
 Update:
-- `README.md`: Add to Platform Support table
+- `README.md`: Add platform to the supported assistants list
 - `docs/getting-started/platforms.md`: Add platform section with installation instructions
 
 ### Phase 7: Completion
