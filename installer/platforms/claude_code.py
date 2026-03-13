@@ -248,7 +248,8 @@ class ClaudeCodeInstaller(PlatformInstaller):
             if check_claude_cli_available():
                 server_url = get_spellbook_server_url()
                 reg_success, reg_msg = register_mcp_http_server(
-                    "spellbook", server_url, dry_run=self.dry_run
+                    "spellbook", server_url, dry_run=self.dry_run,
+                    config_dir=self.config_dir,
                 )
                 results.append(
                     InstallResult(

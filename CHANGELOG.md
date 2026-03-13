@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.5] - 2026-03-12
+
+### Fixed
+- **MCP auth: hooks sent unauthenticated requests** - All hooks that call the MCP daemon's REST API (`memory-capture`, `memory-inject`, `tts-notify`, `pre-compact-save`, `post-compact-recover`) were missing the `Authorization: Bearer` header, causing 401 Unauthorized on every request. Both bash and PowerShell variants now read the token from `~/.local/spellbook/.mcp-token`.
+- **MCP auth: token regenerated on every daemon restart** - `generate_and_store_token()` generated a fresh random token on each startup, invalidating any previously registered auth headers in Claude Code configs. Now reuses the existing token from disk if present, only generating on first install.
+- **MCP registration: auth header missing from `.claude.json`** - The spellbook MCP entry in `.claude.json` had no `headers` field, so Claude Code sent unauthenticated requests to the daemon. The installer now passes `--header "Authorization: Bearer <token>"` during registration.
+- **MCP registration: non-default config dirs ignored** - `register_mcp_http_server()` always targeted the default `~/.claude` config. Added `config_dir` parameter so the installer correctly registers for each target config directory (e.g., `~/.claude-work`).
+- **Docker test collection error** - `tests/docker/test_bootstrap.py` failed to collect due to missing `tests/__init__.py` needed for the `from tests.docker.conftest import ...` import.
+
+## [0.30.4] - 2026-03-12
+
+### Changed
+- **Removed outdated platform support tables** from README and docs index.
+
 ## [0.30.3] - 2026-03-12
 
 ### Fixed

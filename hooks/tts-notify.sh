@@ -22,6 +22,11 @@ THRESHOLD="${SPELLBOOK_TTS_THRESHOLD:-30}"
 MCP_PORT="${SPELLBOOK_MCP_PORT:-8765}"
 MCP_HOST="${SPELLBOOK_MCP_HOST:-127.0.0.1}"
 SPEAK_URL="http://${MCP_HOST}:${MCP_PORT}/api/speak"
+TOKEN_FILE="${HOME}/.local/spellbook/.mcp-token"
+AUTH_HEADER=""
+if [[ -f "${TOKEN_FILE}" ]]; then
+    AUTH_HEADER="Authorization: Bearer $(cat "${TOKEN_FILE}")"
+fi
 
 # ---------------------------------------------------------------------------
 # Tool blacklist: interactive tools that should NOT trigger notifications
@@ -119,6 +124,7 @@ fi
 # ---------------------------------------------------------------------------
 curl -s -m 10 -X POST "${SPEAK_URL}" \
     -H "Content-Type: application/json" \
+    ${AUTH_HEADER:+-H "${AUTH_HEADER}"} \
     -d "{\"text\": $(echo "${MESSAGE}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))')}" \
     >/dev/null 2>&1 || true
 

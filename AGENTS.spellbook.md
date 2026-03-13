@@ -458,6 +458,8 @@ When the full suite fails after targeted tests passed:
 
 <RULE>If an MCP tool appears in your available tools list, call it directly. Do not run diagnostic commands (like `claude mcp list`) to verify availability. Your tools list is the source of truth.</RULE>
 
+**Configuration location (Claude Code only):** User-scoped MCP servers are defined in `~/.claude.json`, NOT in `~/.claude/` (which is a directory for other Claude Code state). Project-scoped MCP servers are defined in `.mcp.json` at the project root.
+
 ## File Reading
 
 <RULE>Before reading any file or command output of unknown size, check line count first (`wc -l`). Never truncate with `head`, `tail -n`, or pipes that discard data.</RULE>
@@ -513,6 +515,19 @@ When writing mermaid diagrams inside markdown files, use `<br>` for newlines wit
 ## Worktrees
 
 When working in a worktree: NEVER make changes to the main repo's files or git state without explicit confirmation. The inverse is also true.
+
+### Worktree Command Discipline
+
+<CRITICAL>
+When a worktree is active, ALL git commands (read-only included: `git diff`, `git log`, `git show`, `git branch`) MUST run from the worktree path. Git commands run from the main repo reflect a different branch and produce silently wrong results (e.g., empty diffs that look like "not in the branch" when the code is actually there).
+
+Before running any git command for worktree work, verify the working directory:
+```bash
+cd <worktree-path> && pwd && git branch --show-current
+```
+
+This applies to the orchestrator AND to subagents. When dispatching a subagent to work in a worktree, include a verification preamble in the prompt (see dispatching-parallel-agents skill, Worktree Dispatch section).
+</CRITICAL>
 
 ## Language-Specific
 

@@ -23,6 +23,11 @@ command -v python3 >/dev/null 2>&1 || exit 0
 MCP_PORT="${SPELLBOOK_MCP_PORT:-8765}"
 MCP_HOST="${SPELLBOOK_MCP_HOST:-127.0.0.1}"
 RECALL_URL="http://${MCP_HOST}:${MCP_PORT}/api/memory/recall"
+TOKEN_FILE="${HOME}/.local/spellbook/.mcp-token"
+AUTH_HEADER=""
+if [[ -f "${TOKEN_FILE}" ]]; then
+    AUTH_HEADER="Authorization: Bearer $(cat "${TOKEN_FILE}")"
+fi
 
 # ---------------------------------------------------------------------------
 # Read stdin
@@ -109,6 +114,7 @@ fi
 # ---------------------------------------------------------------------------
 RESPONSE=$(curl -s -m 3 -X POST "${RECALL_URL}" \
     -H "Content-Type: application/json" \
+    ${AUTH_HEADER:+-H "${AUTH_HEADER}"} \
     -d "${RECALL_PAYLOAD}" \
     2>/dev/null) || exit 0
 

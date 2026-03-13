@@ -472,6 +472,47 @@ Summary format:
 - Pattern 10 violations (partial-to-partial): N
 ```
 
+### Branch-Scoped Review Template
+
+When dispatching a subagent to review a branch's changes (not a GitHub PR, but a local branch diff), the subagent MUST receive the actual diff, not just file paths.
+
+**Why:** A file path points to the entire file. The subagent cannot distinguish code this branch changed from pre-existing code. It will flag pre-existing gaps as branch regressions, producing confidently wrong findings.
+
+**Step 1: Compute the diff before dispatch:**
+
+```bash
+cd <worktree-or-repo-path> && git diff origin/master...HEAD
+```
+
+**Step 2: Include in subagent prompt:**
+
+```markdown
+## Branch Review Context (MANDATORY)
+
+- Branch: <branch-name>
+- Working directory: <absolute-path>
+- Merge base: origin/master
+
+SCOPE CONSTRAINT: Only analyze code that appears in the diff below. Functions in
+changed files that were NOT modified by this branch are OUT OF SCOPE. Do not flag
+pre-existing issues as branch regressions.
+
+VERIFICATION PREAMBLE: Before any other work, run:
+  cd <working-directory> && pwd && git branch --show-current
+Verify you are in the correct directory on the correct branch. If not, stop and report the mismatch.
+
+## Diff
+
+<paste diff output here, or for large diffs, paste the --stat and
+ provide per-file diffs as separate sections>
+```
+
+If the diff is too large to inline, pre-compute the list of changed functions:
+```bash
+git diff origin/master...HEAD | grep -E '^\+.*def |^\+.*class |^@@' | head -50
+```
+Pass this as an explicit allow-list: "The following functions were added or modified. Only these are in scope."
+
 ### PR Review Subagent Template
 
 REQUIRED when dispatching any subagent to review a PR (target is a PR number or URL, not a local branch).
@@ -540,6 +581,8 @@ REVIEW MODE INSTRUCTIONS:
 - Integrating without running full test suite
 - Dispatching exploratory work (unknown scope)
 - Parallel dispatch when failures might be related
+- Dispatching a branch review subagent with file paths instead of diffs (subagent cannot distinguish branch changes from pre-existing code)
+- Dispatching a worktree subagent without the verification preamble (subagent may operate in the wrong directory)
 </FORBIDDEN>
 
 ---
@@ -643,6 +686,21 @@ Then follow its complete workflow.
 | `yolo-focused` | `yolo-focused` | Inherit focused autonomous permissions |
 | `general` or unknown | `general` | Default behavior |
 | Any (exploration only) | `explore` | Read-only exploration tasks |
+
+### Worktree Dispatch
+
+When dispatching a subagent to work in a worktree or alternate directory, include a verification preamble at the start of the prompt:
+
+```markdown
+VERIFICATION PREAMBLE: Before any other work, run:
+  cd <worktree-path> && pwd && git branch --show-current
+Verify you are at `<worktree-path>` on branch `<branch-name>`.
+ALL file reads must use `<worktree-path>` as the base path.
+ALL git commands must run from `<worktree-path>`.
+Do NOT read files from `<main-repo-path>` -- that is a DIFFERENT branch.
+```
+
+This prevents the silent wrong-directory failure where a subagent reads files or runs git commands from the main repo (which is on a different branch) and produces wrong results with high confidence.
 
 ### WRONG vs RIGHT Examples
 

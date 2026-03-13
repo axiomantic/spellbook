@@ -23,6 +23,11 @@ command -v python3 >/dev/null 2>&1 || exit 0
 MCP_PORT="${SPELLBOOK_MCP_PORT:-8765}"
 MCP_HOST="${SPELLBOOK_MCP_HOST:-127.0.0.1}"
 EVENT_URL="http://${MCP_HOST}:${MCP_PORT}/api/memory/event"
+TOKEN_FILE="${HOME}/.local/spellbook/.mcp-token"
+AUTH_HEADER=""
+if [[ -f "${TOKEN_FILE}" ]]; then
+    AUTH_HEADER="Authorization: Bearer $(cat "${TOKEN_FILE}")"
+fi
 
 # ---------------------------------------------------------------------------
 # Tool blacklist: tools that should NOT be captured
@@ -150,6 +155,7 @@ fi
 # ---------------------------------------------------------------------------
 curl -s -m 5 -X POST "${EVENT_URL}" \
     -H "Content-Type: application/json" \
+    ${AUTH_HEADER:+-H "${AUTH_HEADER}"} \
     -d "${PAYLOAD}" \
     >/dev/null 2>&1 || true
 

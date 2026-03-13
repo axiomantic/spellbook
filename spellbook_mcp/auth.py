@@ -14,7 +14,20 @@ TOKEN_PATH = Path.home() / ".local" / "spellbook" / ".mcp-token"
 
 
 def generate_and_store_token() -> str:
-    """Generate auth token, write to file with 0600 perms atomically, return token."""
+    """Load existing token or generate a new one.
+
+    Reuses the token from TOKEN_PATH if it already exists and is non-empty,
+    so that the token remains stable across daemon restarts. Clients that
+    registered with the token (e.g., via ``claude mcp add --header``) will
+    continue to authenticate without re-registration.
+
+    Only generates a fresh token when no token file exists yet (first
+    install) or the file is empty/unreadable.
+    """
+    existing = load_token()
+    if existing:
+        return existing
+
     token = secrets.token_urlsafe(32)
     TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
 

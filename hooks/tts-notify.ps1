@@ -71,10 +71,16 @@ try {
     $mcpHost = if ($env:SPELLBOOK_MCP_HOST) { $env:SPELLBOOK_MCP_HOST } else { "127.0.0.1" }
     $mcpPort = if ($env:SPELLBOOK_MCP_PORT) { $env:SPELLBOOK_MCP_PORT } else { "8765" }
     $speakUrl = "http://${mcpHost}:${mcpPort}/api/speak"
+    $tokenFile = Join-Path $HOME ".local" "spellbook" ".mcp-token"
+    $authHeaders = @{}
+    if (Test-Path $tokenFile) {
+        $tkn = (Get-Content $tokenFile -Raw).Trim()
+        if ($tkn) { $authHeaders["Authorization"] = "Bearer $tkn" }
+    }
 
     $body = @{ text = $message } | ConvertTo-Json -Compress
     try {
-        Invoke-WebRequest -Uri $speakUrl -Method Post -Body $body -ContentType "application/json" -TimeoutSec 10 | Out-Null
+        Invoke-WebRequest -Uri $speakUrl -Method Post -Body $body -ContentType "application/json" -Headers $authHeaders -TimeoutSec 10 | Out-Null
     } catch { }
 
     exit 0

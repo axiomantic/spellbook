@@ -43,8 +43,8 @@ class TestTokenGeneration:
         finally:
             auth.TOKEN_PATH = original
 
-    def test_generates_unique_tokens(self, tmp_path):
-        """Each call must produce a different token."""
+    def test_reuses_existing_token(self, tmp_path):
+        """Repeated calls must return the same stable token."""
         from spellbook_mcp import auth
 
         token_path = tmp_path / ".mcp-token"
@@ -53,7 +53,7 @@ class TestTokenGeneration:
         try:
             token1 = auth.generate_and_store_token()
             token2 = auth.generate_and_store_token()
-            assert token1 != token2
+            assert token1 == token2
         finally:
             auth.TOKEN_PATH = original
 
@@ -70,18 +70,33 @@ class TestTokenGeneration:
         finally:
             auth.TOKEN_PATH = original
 
-    def test_overwrites_existing_token_file(self, tmp_path):
-        """Calling generate_and_store_token again must overwrite old token."""
+    def test_reuses_existing_token_from_file(self, tmp_path):
+        """Must reuse a valid token already on disk."""
         from spellbook_mcp import auth
 
         token_path = tmp_path / ".mcp-token"
-        token_path.write_text("old-token-value")
+        token_path.write_text("pre-existing-token-value")
+        original = auth.TOKEN_PATH
+        auth.TOKEN_PATH = token_path
+        try:
+            loaded_token = auth.generate_and_store_token()
+            assert loaded_token == "pre-existing-token-value"
+            assert token_path.read_text() == "pre-existing-token-value"
+        finally:
+            auth.TOKEN_PATH = original
+
+    def test_generates_new_token_when_file_empty(self, tmp_path):
+        """Must generate a new token when file exists but is empty."""
+        from spellbook_mcp import auth
+
+        token_path = tmp_path / ".mcp-token"
+        token_path.write_text("")
         original = auth.TOKEN_PATH
         auth.TOKEN_PATH = token_path
         try:
             new_token = auth.generate_and_store_token()
+            assert new_token
             assert token_path.read_text() == new_token
-            assert new_token != "old-token-value"
         finally:
             auth.TOKEN_PATH = original
 

@@ -10,12 +10,15 @@ Discovers all skills and commands, classifies them into mandatory/optional tiers
 detects staleness via SHA256 hash comparison, and regenerates stale or missing
 diagrams using Claude headless with the generating-diagrams skill.
 
+By default, only mandatory-tier items are processed. Use --all to include optional items.
+
 Usage:
-    python3 scripts/generate_diagrams.py
+    python3 scripts/generate_diagrams.py              # mandatory only (default)
+    python3 scripts/generate_diagrams.py --all         # include optional tier
+    python3 scripts/generate_diagrams.py --interactive  # review each diff before accepting
     python3 scripts/generate_diagrams.py --dry-run
     python3 scripts/generate_diagrams.py --force
     python3 scripts/generate_diagrams.py --filter "implementing-*"
-    python3 scripts/generate_diagrams.py --mandatory-only
     python3 scripts/generate_diagrams.py --verbose
 """
 
@@ -363,10 +366,16 @@ def generate_diagram(
     current_hash: str,
     *,
     verbose: bool = False,
-) -> GenerationResult:
+    write: bool = True,
+) -> tuple[GenerationResult, str | None]:
     """Generate a diagram for a single item via Claude headless.
 
-    Returns a GenerationResult indicating success or failure.
+    Args:
+        write: If True, write the diagram file. If False, return the content
+               without writing (for interactive mode).
+
+    Returns (GenerationResult, output_content). output_content is the full
+    file content when generation succeeds, None otherwise.
     """
     prompt = build_prompt(item)
     source_rel = str(item.source_path.relative_to(REPO_ROOT))
@@ -401,13 +410,13 @@ def generate_diagram(
             item=item,
             status="failed",
             message=f"Claude timed out after {CLAUDE_TIMEOUT_SECONDS}s",
-        )
+        ), None
     except FileNotFoundError:
         return GenerationResult(
             item=item,
             status="failed",
             message="'claude' command not found. Is Claude Code installed and on PATH?",
-        )
+        ), None
 
     if result.returncode != 0:
         stderr_snippet = result.stderr.strip()[:500] if result.stderr else "(no stderr)"
@@ -415,22 +424,59 @@ def generate_diagram(
             item=item,
             status="failed",
             message=f"Claude exited with code {result.returncode}: {stderr_snippet}",
-        )
+        ), None
 
     diagram_content = result.stdout.strip()
+
+    # Check if Claude wrote to a DIAGRAM.md file instead of stdout.
+    # Common locations: source directory, repo root, or diagrams dir.
+    diagram_file_candidates = [
+        item.source_path.parent / "DIAGRAM.md",
+        REPO_ROOT / "DIAGRAM.md",
+        item.diagram_path.parent / f"{item.name}-DIAGRAM.md",
+    ]
+    for candidate in diagram_file_candidates:
+        if candidate.exists():
+            file_content = candidate.read_text(encoding="utf-8").strip()
+            if file_content:
+                if verbose:
+                    print(f"  Found LLM-written file: {candidate}")
+                if not diagram_content or "mermaid" not in diagram_content:
+                    diagram_content = file_content
+                candidate.unlink()
+            else:
+                candidate.unlink()
+
     if not diagram_content:
         return GenerationResult(
             item=item,
             status="failed",
             message="Claude returned empty output",
-        )
+        ), None
 
-    if "```mermaid" not in diagram_content:
+    # Accept both fenced (```mermaid) and raw mermaid output.
+    # Raw mermaid starts with a diagram type keyword (graph, flowchart,
+    # sequenceDiagram, stateDiagram, classDiagram, erDiagram, gantt, pie,
+    # journey, gitGraph, mindmap, timeline, etc.)
+    has_fenced = "```mermaid" in diagram_content
+    mermaid_keywords = (
+        "graph ", "graph\n", "flowchart ", "flowchart\n",
+        "sequenceDiagram", "stateDiagram", "classDiagram",
+        "erDiagram", "gantt", "pie", "journey", "gitGraph",
+        "mindmap", "timeline", "sankey", "xychart", "block-beta",
+    )
+    has_raw = any(diagram_content.lstrip().startswith(kw) for kw in mermaid_keywords)
+
+    if not has_fenced and not has_raw:
         return GenerationResult(
             item=item,
             status="failed",
-            message="Claude output does not contain a ```mermaid code block",
-        )
+            message="Claude output does not contain mermaid content",
+        ), None
+
+    # Wrap raw mermaid in a fenced code block if needed
+    if has_raw and not has_fenced:
+        diagram_content = f"```mermaid\n{diagram_content}\n```"
 
     # Build the output file with metadata header
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -444,17 +490,185 @@ def generate_diagram(
 
     output = f"{meta_line}\n# Diagram: {item.name}\n\n{diagram_content}\n"
 
-    # Ensure parent directory exists
-    item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Write the diagram file
-    item.diagram_path.write_text(output, encoding="utf-8")
+    if write:
+        # Ensure parent directory exists
+        item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
+        item.diagram_path.write_text(output, encoding="utf-8")
 
     return GenerationResult(
         item=item,
         status="generated",
         message=str(item.diagram_path.relative_to(REPO_ROOT)),
-    )
+    ), output
+
+
+# ---------------------------------------------------------------------------
+# Stamp existing diagram as fresh (update hash without changing content)
+# ---------------------------------------------------------------------------
+
+
+def stamp_as_fresh(item: SourceItem, current_hash: str) -> None:
+    """Update the source_hash in an existing diagram's metadata without changing content.
+
+    This marks the diagram as "reviewed and accepted" for the current source,
+    so it won't show as stale in future runs.
+    """
+    if not item.diagram_path.exists():
+        return
+
+    content = item.diagram_path.read_text(encoding="utf-8")
+    lines = content.split("\n", 1)
+
+    prefix = "<!-- diagram-meta: "
+    suffix = " -->"
+    if lines[0].startswith(prefix) and lines[0].rstrip().endswith(suffix):
+        meta = parse_diagram_meta(item.diagram_path)
+        meta["source_hash"] = f"sha256:{current_hash}"
+        meta["stamped_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        new_meta_line = f"{prefix}{json.dumps(meta)}{suffix}"
+        rest = lines[1] if len(lines) > 1 else ""
+        item.diagram_path.write_text(f"{new_meta_line}\n{rest}", encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Source change display (pre-generation)
+# ---------------------------------------------------------------------------
+
+
+def show_source_changes(item: SourceItem) -> None:
+    """Show a single combined diff of source changes since the diagram was last generated."""
+    import shutil
+
+    term_width = shutil.get_terminal_size().columns
+    source_rel = item.source_path.relative_to(REPO_ROOT)
+
+    print("-" * min(term_width, 80))
+    print(f"  Source changes: {source_rel}")
+    print("-" * min(term_width, 80))
+
+    # Find the commit where the diagram was last generated/stamped
+    base_commit = None
+    if item.diagram_path.exists():
+        meta = parse_diagram_meta(item.diagram_path)
+        generated_at = meta.get("generated_at") or meta.get("stamped_at")
+        if generated_at:
+            # Find the oldest commit after the diagram timestamp
+            try:
+                result = subprocess.run(
+                    ["git", "log", "--format=%H", "--after=" + generated_at,
+                     "--reverse", "--", str(source_rel)],
+                    capture_output=True, text=True, cwd=REPO_ROOT,
+                )
+                commits = result.stdout.strip().splitlines()
+                if commits:
+                    base_commit = commits[0] + "~1"
+            except OSError:
+                pass
+
+    # Single combined diff: base_commit..HEAD (or last 3 commits if no base)
+    if base_commit:
+        diff_cmd = ["git", "diff", "--color=always", "--no-ext-diff",
+                     base_commit, "HEAD", "--", str(source_rel)]
+    else:
+        diff_cmd = ["git", "diff", "--color=always", "--no-ext-diff",
+                     "HEAD~3", "HEAD", "--", str(source_rel)]
+
+    shown = False
+    try:
+        diff_result = subprocess.run(
+            diff_cmd, capture_output=True, text=True, cwd=REPO_ROOT,
+        )
+        if diff_result.stdout.strip():
+            lines = diff_result.stdout.splitlines()
+            # Skip git diff header lines (diff --git, index, ---/+++ lines)
+            content_lines = []
+            for line in lines:
+                stripped = line.lstrip("\x1b[0123456789;m")
+                if stripped.startswith(("diff --git", "index ", "--- ", "+++ ")):
+                    continue
+                content_lines.append(line)
+            for line in content_lines[:100]:
+                print(f"  {line}")
+            if len(content_lines) > 100:
+                print(f"  ... ({len(content_lines) - 100} more lines)")
+            shown = bool(content_lines)
+    except OSError:
+        pass
+
+    # Fall back to uncommitted changes if nothing from git history
+    if not shown:
+        try:
+            unstaged = subprocess.run(
+                ["git", "diff", "--color=always", "--", str(source_rel)],
+                capture_output=True, text=True, cwd=REPO_ROOT,
+            )
+            staged = subprocess.run(
+                ["git", "diff", "--cached", "--color=always", "--", str(source_rel)],
+                capture_output=True, text=True, cwd=REPO_ROOT,
+            )
+            combined = (staged.stdout.strip() + "\n" + unstaged.stdout.strip()).strip()
+            if combined:
+                for line in combined.splitlines()[:100]:
+                    print(f"  {line}")
+            else:
+                print("  (no diff available)")
+        except OSError:
+            print("  (git not available)")
+
+    print()
+
+
+# ---------------------------------------------------------------------------
+# Interactive diff display (post-generation)
+# ---------------------------------------------------------------------------
+
+
+def show_diff_and_prompt(item: SourceItem, new_content: str) -> bool:
+    """Show a diff between existing and new diagram content, prompt user.
+
+    Returns True to accept the new content, False to skip (stamp as fresh).
+    For missing diagrams, shows the new content directly.
+    """
+    import difflib
+    import shutil
+
+    term_width = shutil.get_terminal_size().columns
+
+    print()
+    print("=" * min(term_width, 80))
+    print(f"  {item.kind}: {item.name}")
+    print("=" * min(term_width, 80))
+
+    if item.diagram_path.exists():
+        old_lines = item.diagram_path.read_text(encoding="utf-8").splitlines(keepends=True)
+        new_lines = new_content.splitlines(keepends=True)
+        diff = difflib.unified_diff(
+            old_lines, new_lines,
+            fromfile=f"existing/{item.name}.md",
+            tofile=f"generated/{item.name}.md",
+        )
+        diff_text = "".join(diff)
+        if diff_text:
+            print(diff_text)
+        else:
+            print("  (no differences)")
+    else:
+        # New diagram, show first 60 lines
+        preview_lines = new_content.splitlines()
+        shown = preview_lines[:60]
+        for line in shown:
+            print(f"+ {line}")
+        if len(preview_lines) > 60:
+            print(f"  ... ({len(preview_lines) - 60} more lines)")
+
+    print()
+    while True:
+        answer = input("  Accept new diagram? [y]es / [s]kip (mark as reviewed): ").strip().lower()
+        if answer in ("y", "yes"):
+            return True
+        if answer in ("s", "skip"):
+            return False
+        print("  Please enter 'y' or 's'.")
 
 
 # ---------------------------------------------------------------------------
@@ -495,9 +709,14 @@ def main() -> int:
         help="Only process items matching glob pattern (e.g., 'implementing-*')",
     )
     parser.add_argument(
-        "--mandatory-only",
+        "--all",
         action="store_true",
-        help="Only process mandatory tier items",
+        help="Process all items including optional tier (default: mandatory only)",
+    )
+    parser.add_argument(
+        "--interactive", "-i",
+        action="store_true",
+        help="Show diff for each generated diagram and prompt to accept or skip",
     )
     parser.add_argument(
         "--verbose",
@@ -527,11 +746,11 @@ def main() -> int:
     all_items = all_skills + all_commands + all_agents
     filtered_items = apply_filters(
         all_items,
-        mandatory_only=args.mandatory_only,
+        mandatory_only=not args.all,
         filter_pattern=args.filter,
     )
 
-    if args.filter or args.mandatory_only:
+    if args.filter or not args.all:
         print(f"After filtering: {len(filtered_items)} items")
 
     # Determine which items need regeneration
@@ -573,13 +792,90 @@ def main() -> int:
         print(f"Dry run complete. {len(work_items)} diagrams would be generated.")
         return 0
 
+    # ----- Interactive triage: collect decisions upfront, then batch -----
+    if args.interactive:
+        approved: list[tuple[SourceItem, str]] = []
+        skipped: list[tuple[SourceItem, str]] = []
+
+        for i, (item, current_hash) in enumerate(work_items, 1):
+            reason = is_stale(item)[2]
+            print(f"\n[{i}/{len(work_items)}] {item.name} ({item.kind}, {reason})")
+            show_source_changes(item)
+            while True:
+                answer = input("  Generate this diagram? [y]es / [s]kip / [q]uit: ").strip().lower()
+                if answer in ("y", "yes"):
+                    approved.append((item, current_hash))
+                    break
+                if answer in ("s", "skip"):
+                    skipped.append((item, current_hash))
+                    print(f"  -> Will skip (stamp on completion)")
+                    break
+                if answer in ("q", "quit"):
+                    print(f"\nAborted. No changes made.")
+                    return 0
+                print("  Please enter 'y', 's', or 'q'.")
+
+        if not approved:
+            # Stamp skips only after successful triage (no abort)
+            for item, current_hash in skipped:
+                stamp_as_fresh(item, current_hash)
+            print(f"\nNothing to generate. {len(skipped)} skipped and stamped.")
+            return 0
+
+        print(f"\n{'=' * 60}")
+        print(f"  Generating {len(approved)} diagrams (batch mode, no further input needed)")
+        print(f"{'=' * 60}\n")
+
+        generated_count = 0
+        failed_count = 0
+
+        for i, (item, current_hash) in enumerate(approved, 1):
+            print(f"[{i}/{len(approved)}] Generating: {item.name}...", end="", flush=True)
+
+            result, output_content = generate_diagram(
+                item, current_hash,
+                verbose=args.verbose,
+                write=False,
+            )
+
+            if result.status == "generated" and output_content is not None:
+                item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
+                item.diagram_path.write_text(output_content, encoding="utf-8")
+                generated_count += 1
+                print(f" done ({result.message})")
+            elif result.status == "failed":
+                failed_count += 1
+                print(f" FAILED")
+                print(f"         Error: {result.message}")
+            else:
+                print(f" {result.status}: {result.message}")
+
+        # Stamp skipped items now that batch completed successfully
+        for item, current_hash in skipped:
+            stamp_as_fresh(item, current_hash)
+
+        print()
+        parts = [f"{generated_count} generated", f"{failed_count} failed"]
+        if skipped:
+            parts.insert(1, f"{len(skipped)} skipped")
+        print(f"Done: {', '.join(parts)}")
+
+        if failed_count > 0:
+            return 1
+        return 0
+
+    # ----- Non-interactive: generate immediately -----
     generated_count = 0
     failed_count = 0
 
     for i, (item, current_hash) in enumerate(work_items, 1):
         print(f"[{i}/{len(work_items)}] Generating: {item.name}...", end="", flush=True)
 
-        result = generate_diagram(item, current_hash, verbose=args.verbose)
+        result, output_content = generate_diagram(
+            item, current_hash,
+            verbose=args.verbose,
+            write=True,
+        )
 
         if result.status == "generated":
             generated_count += 1

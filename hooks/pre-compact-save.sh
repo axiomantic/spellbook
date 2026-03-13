@@ -33,6 +33,11 @@ trap 'exit 0' ERR
 MCP_HOST="${SPELLBOOK_MCP_HOST:-127.0.0.1}"
 MCP_PORT="${SPELLBOOK_MCP_PORT:-8765}"
 MCP_URL="http://${MCP_HOST}:${MCP_PORT}/mcp"
+TOKEN_FILE="${HOME}/.local/spellbook/.mcp-token"
+AUTH_HEADER=""
+if [[ -f "${TOKEN_FILE}" ]]; then
+    AUTH_HEADER="Authorization: Bearer $(cat "${TOKEN_FILE}")"
+fi
 LOG_DIR="${HOME}/.local/spellbook/logs"
 LOG_FILE="${LOG_DIR}/pre-compact.log"
 
@@ -103,6 +108,7 @@ print(json.dumps({
         -X POST "${MCP_URL}" \
         -H "Content-Type: application/json" \
         -H "Accept: application/json, text/event-stream" \
+        ${AUTH_HEADER:+-H "${AUTH_HEADER}"} \
         -d "${body}" 2>/dev/null) || { log "curl failed for ${tool_name}"; return 1; }
 
     # Parse SSE response: extract data lines and find the result

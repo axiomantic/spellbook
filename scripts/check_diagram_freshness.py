@@ -367,7 +367,9 @@ def format_console(results: list[CheckResult], include_optional: bool) -> str:
     lines.append(f"Summary: {fresh_count} fresh, {stale_count} stale, {optional_missing_count} optional-missing")
 
     if mandatory_stale:
-        lines.append(f"ERROR: {stale_count} mandatory diagrams are stale. Run: uv run scripts/generate_diagrams.py")
+        lines.append(f"ERROR: {stale_count} mandatory diagrams are stale.")
+        lines.append("The user must manually run: uv run scripts/generate_diagrams.py --interactive")
+        lines.append("Do NOT run generate_diagrams.py automatically. Tell the user to run it.")
 
     return "\n".join(lines) + "\n"
 

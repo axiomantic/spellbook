@@ -8,6 +8,12 @@ $ErrorActionPreference = "SilentlyContinue"
 $MCP_PORT = if ($env:SPELLBOOK_MCP_PORT) { $env:SPELLBOOK_MCP_PORT } else { "8765" }
 $MCP_HOST = if ($env:SPELLBOOK_MCP_HOST) { $env:SPELLBOOK_MCP_HOST } else { "127.0.0.1" }
 $RECALL_URL = "http://${MCP_HOST}:${MCP_PORT}/api/memory/recall"
+$TOKEN_FILE = Join-Path $HOME ".local" "spellbook" ".mcp-token"
+$AUTH_HEADERS = @{}
+if (Test-Path $TOKEN_FILE) {
+    $token = (Get-Content $TOKEN_FILE -Raw).Trim()
+    if ($token) { $AUTH_HEADERS["Authorization"] = "Bearer $token" }
+}
 
 $FILE_TOOLS = @("Read", "Edit", "Grep", "Glob")
 
@@ -37,7 +43,7 @@ if ([string]::IsNullOrWhiteSpace($namespace)) { exit 0 }
 $payload = @{ file_path = $filePath; namespace = $namespace; limit = 5 } | ConvertTo-Json -Compress
 
 try {
-    $response = Invoke-RestMethod -Uri $RECALL_URL -Method Post -Body $payload -ContentType "application/json" -TimeoutSec 3
+    $response = Invoke-RestMethod -Uri $RECALL_URL -Method Post -Body $payload -ContentType "application/json" -Headers $AUTH_HEADERS -TimeoutSec 3
     $memories = $response.memories
     if ($memories.Count -gt 0) {
         Write-Output "<spellbook-memory>"

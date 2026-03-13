@@ -7,6 +7,12 @@ $ErrorActionPreference = "Stop"
 $McpHost = if ($env:SPELLBOOK_MCP_HOST) { $env:SPELLBOOK_MCP_HOST } else { "127.0.0.1" }
 $McpPort = if ($env:SPELLBOOK_MCP_PORT) { $env:SPELLBOOK_MCP_PORT } else { "8765" }
 $McpUrl = "http://${McpHost}:${McpPort}/mcp"
+$TokenFile = Join-Path $HOME ".local" "spellbook" ".mcp-token"
+$McpAuthHeaders = @{ Accept = "application/json, text/event-stream" }
+if (Test-Path $TokenFile) {
+    $tkn = (Get-Content $TokenFile -Raw).Trim()
+    if ($tkn) { $McpAuthHeaders["Authorization"] = "Bearer $tkn" }
+}
 $LogDir = Join-Path $HOME ".local" "spellbook" "logs"
 $LogFile = Join-Path $LogDir "post-compact.log"
 
@@ -45,7 +51,7 @@ function Invoke-McpTool {
 
     $response = Invoke-WebRequest -Uri $McpUrl -Method Post -Body $body `
         -ContentType "application/json" `
-        -Headers @{ Accept = "application/json, text/event-stream" } `
+        -Headers $McpAuthHeaders `
         -TimeoutSec 3
 
     $result = $null

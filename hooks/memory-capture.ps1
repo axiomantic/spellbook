@@ -8,6 +8,12 @@ $ErrorActionPreference = "SilentlyContinue"
 $MCP_PORT = if ($env:SPELLBOOK_MCP_PORT) { $env:SPELLBOOK_MCP_PORT } else { "8765" }
 $MCP_HOST = if ($env:SPELLBOOK_MCP_HOST) { $env:SPELLBOOK_MCP_HOST } else { "127.0.0.1" }
 $EVENT_URL = "http://${MCP_HOST}:${MCP_PORT}/api/memory/event"
+$TOKEN_FILE = Join-Path $HOME ".local" "spellbook" ".mcp-token"
+$AUTH_HEADERS = @{}
+if (Test-Path $TOKEN_FILE) {
+    $token = (Get-Content $TOKEN_FILE -Raw).Trim()
+    if ($token) { $AUTH_HEADERS["Authorization"] = "Bearer $token" }
+}
 
 $BLACKLIST = @("AskUserQuestion", "TodoRead", "TodoWrite", "TaskCreate", "TaskUpdate", "TaskGet", "TaskList")
 
@@ -71,7 +77,7 @@ $payload = @{
 } | ConvertTo-Json -Compress
 
 try {
-    Invoke-RestMethod -Uri $EVENT_URL -Method Post -Body $payload -ContentType "application/json" -TimeoutSec 5 | Out-Null
+    Invoke-RestMethod -Uri $EVENT_URL -Method Post -Body $payload -ContentType "application/json" -Headers $AUTH_HEADERS -TimeoutSec 5 | Out-Null
 } catch { }
 
 exit 0

@@ -906,7 +906,8 @@ def install_daemon(spellbook_dir: Path, dry_run: bool = False) -> Tuple[bool, st
 
 
 def register_mcp_http_server(
-    name: str, url: str, dry_run: bool = False
+    name: str, url: str, dry_run: bool = False,
+    config_dir: Optional[Path] = None,
 ) -> Tuple[bool, str]:
     """
     Register an MCP server with HTTP transport using claude CLI.
@@ -918,6 +919,8 @@ def register_mcp_http_server(
         name: Server name
         url: HTTP URL for the server
         dry_run: If True, don't actually register
+        config_dir: If provided, set CLAUDE_CONFIG_DIR so the registration
+            targets this specific config directory instead of the default.
 
     Returns: (success, message)
     """
@@ -931,12 +934,18 @@ def register_mcp_http_server(
     token = get_mcp_auth_token()
     auth_header = f"Authorization: Bearer {token}" if token else None
 
+    # Build environment with optional config dir override
+    env = None
+    if config_dir is not None:
+        env = {**os.environ, "CLAUDE_CONFIG_DIR": str(config_dir)}
+
     try:
         # Always try to remove first (ignore errors)
         subprocess.run(
             ["claude", "mcp", "remove", name, "-s", "user"],
             capture_output=True,
             timeout=10,
+            env=env,
         )
 
         # Add the MCP server with HTTP transport and user scope (global, not per-project)
@@ -945,7 +954,7 @@ def register_mcp_http_server(
         cmd = ["claude", "mcp", "add", "--transport", "http", "--scope", "user", name, url]
         if auth_header:
             cmd.extend(["--header", auth_header])
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, env=env)
 
         if result.returncode == 0:
             return (True, "registered successfully")
