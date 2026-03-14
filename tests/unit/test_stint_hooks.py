@@ -327,3 +327,19 @@ class TestMemoryCapture:
                 "tool_result": "result",
             })
             assert proc.returncode == 0
+
+
+class TestWindowsParityScript:
+    """Verify spellbook_hook.ps1 exists and has correct structure."""
+
+    def test_ps1_script_exists(self):
+        ps1_path = os.path.join(PROJECT_ROOT, "hooks", "spellbook_hook.ps1")
+        assert os.path.isfile(ps1_path), f"spellbook_hook.ps1 not found at {ps1_path}"
+
+    def test_ps1_script_references_python_hook(self):
+        """PS1 wrapper must delegate to the Python hook script."""
+        ps1_path = os.path.join(PROJECT_ROOT, "hooks", "spellbook_hook.ps1")
+        content = Path(ps1_path).read_text()
+        assert "spellbook_hook.py" in content, (
+            "PS1 wrapper must reference spellbook_hook.py"
+        )
