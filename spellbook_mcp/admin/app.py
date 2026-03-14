@@ -26,8 +26,18 @@ def create_admin_app() -> FastAPI:
 
     # Register route modules
     from spellbook_mcp.admin.routes import auth as auth_routes
+    from spellbook_mcp.admin.routes import config as config_routes
+    from spellbook_mcp.admin.routes import dashboard as dashboard_routes
+    from spellbook_mcp.admin.routes import memory as memory_routes
+    from spellbook_mcp.admin.routes import security as security_routes
+    from spellbook_mcp.admin.routes import sessions as sessions_routes
 
     app.include_router(auth_routes.router, prefix="/api")
+    app.include_router(config_routes.router, prefix="/api")
+    app.include_router(dashboard_routes.router, prefix="/api")
+    app.include_router(memory_routes.router, prefix="/api")
+    app.include_router(security_routes.router, prefix="/api")
+    app.include_router(sessions_routes.router, prefix="/api")
 
     # Serve static frontend (must be last -- catch-all)
     static_dir = Path(__file__).parent / "static"
