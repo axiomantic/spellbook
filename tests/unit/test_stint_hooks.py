@@ -540,6 +540,110 @@ class TestDepthReminderFormat:
             spellbook_hook._get_config_value = original_config
 
 
+# ---------------------------------------------------------------------------
+# Phase 3, Task 10: Auto-push on Skill invocation tests
+# ---------------------------------------------------------------------------
+
+
+class TestAutoPushOnSkill:
+    """Test auto-push when Skill tool is invoked."""
+
+    def test_auto_push_calls_stint_push(self):
+        """Skill invocation with name and cwd pushes a stint."""
+        from spellbook_hook import _stint_auto_push
+
+        import spellbook_hook
+        calls = []
+        original = spellbook_hook._mcp_call
+        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args)) or {"success": True}
+
+        try:
+            _stint_auto_push({
+                "tool_input": {"skill": "implementing-features"},
+                "cwd": "/test/project",
+            })
+            assert len(calls) == 1
+            assert calls[0] == ("stint_push", {
+                "project_path": "/test/project",
+                "name": "implementing-features",
+                "type": "skill",
+                "purpose": "Skill invocation: implementing-features",
+                "success_criteria": "Skill workflow complete",
+            })
+        finally:
+            spellbook_hook._mcp_call = original
+
+    def test_auto_push_with_args(self):
+        """Skill invocation with args still pushes correctly."""
+        from spellbook_hook import _stint_auto_push
+
+        import spellbook_hook
+        calls = []
+        original = spellbook_hook._mcp_call
+        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args)) or {"success": True}
+
+        try:
+            _stint_auto_push({
+                "tool_input": {"skill": "code-review", "args": "--give"},
+                "cwd": "/my/project",
+            })
+            assert len(calls) == 1
+            assert calls[0] == ("stint_push", {
+                "project_path": "/my/project",
+                "name": "code-review",
+                "type": "skill",
+                "purpose": "Skill invocation: code-review",
+                "success_criteria": "Skill workflow complete",
+            })
+        finally:
+            spellbook_hook._mcp_call = original
+
+    def test_auto_push_no_skill_name_does_nothing(self):
+        """Empty tool_input with no skill key does not push."""
+        from spellbook_hook import _stint_auto_push
+
+        import spellbook_hook
+        calls = []
+        original = spellbook_hook._mcp_call
+        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args))
+
+        try:
+            _stint_auto_push({"tool_input": {}, "cwd": "/test/project"})
+            assert calls == []
+        finally:
+            spellbook_hook._mcp_call = original
+
+    def test_auto_push_no_cwd_does_nothing(self):
+        """Missing cwd does not push."""
+        from spellbook_hook import _stint_auto_push
+
+        import spellbook_hook
+        calls = []
+        original = spellbook_hook._mcp_call
+        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args))
+
+        try:
+            _stint_auto_push({"tool_input": {"skill": "debug"}})
+            assert calls == []
+        finally:
+            spellbook_hook._mcp_call = original
+
+    def test_auto_push_empty_skill_name_does_nothing(self):
+        """Empty string skill name does not push."""
+        from spellbook_hook import _stint_auto_push
+
+        import spellbook_hook
+        calls = []
+        original = spellbook_hook._mcp_call
+        spellbook_hook._mcp_call = lambda tool, args=None: calls.append((tool, args))
+
+        try:
+            _stint_auto_push({"tool_input": {"skill": ""}, "cwd": "/test/project"})
+            assert calls == []
+        finally:
+            spellbook_hook._mcp_call = original
+
+
 class TestWindowsParityScript:
     """Verify spellbook_hook.ps1 exists and has correct structure."""
 

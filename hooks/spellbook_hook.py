@@ -538,8 +538,26 @@ def _memory_capture(tool_name: str, data: dict) -> None:
 
 
 def _stint_auto_push(data: dict) -> None:
-    """Auto-push a stint when a Skill tool is invoked. Placeholder for Phase 3."""
-    pass
+    """Auto-push a stint when a Skill tool is invoked.
+
+    Best-effort (fail-open). If MCP is unreachable, silently skips.
+    """
+    tool_input = data.get("tool_input", {})
+    skill_name = tool_input.get("skill", "")
+    if not skill_name:
+        return
+
+    project_path = data.get("cwd", "")
+    if not project_path:
+        return
+
+    _mcp_call("stint_push", {
+        "project_path": project_path,
+        "name": skill_name,
+        "type": "skill",
+        "purpose": f"Skill invocation: {skill_name}",
+        "success_criteria": "Skill workflow complete",
+    })
 
 
 def _stint_depth_check(data: dict) -> str | None:
