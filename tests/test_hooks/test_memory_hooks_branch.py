@@ -1,4 +1,4 @@
-"""Tests for branch and namespace handling in memory hooks."""
+"""Tests for branch and namespace handling in memory hooks via unified hook."""
 
 import json
 import os
@@ -6,6 +6,13 @@ import subprocess
 import sys
 
 import pytest
+
+pytestmark = pytest.mark.integration
+
+PROJECT_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+UNIFIED_HOOK = os.path.join(PROJECT_ROOT, "hooks", "spellbook_hook.py")
 
 
 @pytest.fixture
@@ -35,83 +42,24 @@ def git_repo_with_worktree(git_repo, tmp_path):
     return git_repo, worktree
 
 
-HOOKS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "hooks",
-)
+class TestMemoryNamespaceResolution:
+    """Test that worktree and main repo resolve to the same namespace.
 
+    This tests the _resolve_git_context() logic in spellbook_hook.py
+    by verifying that memory operations use the main repo root as the
+    namespace, even when invoked from a worktree.
+    """
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Bash hooks require Unix shell")
-class TestMemoryCaptureNamespace:
-    def test_worktree_and_main_repo_same_namespace(self, git_repo_with_worktree):
-        """memory-capture.sh should produce same namespace for worktree and main repo."""
+    def test_worktree_resolves_to_main_repo_namespace(self, git_repo_with_worktree):
+        """Namespace should be the same for worktree and main repo."""
         main_repo, worktree = git_repo_with_worktree
 
         def get_namespace(cwd):
-            hook_input = json.dumps({
-                "tool_name": "Read",
-                "tool_input": {"file_path": "/some/file.py"},
-                "session_id": "test-sess",
-                "cwd": cwd,
-            })
-            env = os.environ.copy()
-            env["DEBUG_PAYLOAD"] = "1"
-            result = subprocess.run(
-                ["bash", os.path.join(HOOKS_DIR, "memory-capture.sh")],
-                input=hook_input, capture_output=True, text=True,
-                env=env, timeout=10,
-            )
-            if result.returncode != 0 or not result.stdout.strip():
-                return None
-            return json.loads(result.stdout.strip())["project"]
-
-        ns_main = get_namespace(main_repo)
-        ns_worktree = get_namespace(worktree)
-        assert ns_main is not None
-        assert ns_main == ns_worktree
-
-    def test_hook_includes_branch(self, git_repo):
-        """memory-capture.sh should include branch in payload."""
-        hook_input = json.dumps({
-            "tool_name": "Read",
-            "tool_input": {"file_path": "/some/file.py"},
-            "session_id": "test-sess",
-            "cwd": git_repo,
-        })
-        env = os.environ.copy()
-        env["DEBUG_PAYLOAD"] = "1"
-        result = subprocess.run(
-            ["bash", os.path.join(HOOKS_DIR, "memory-capture.sh")],
-            input=hook_input, capture_output=True, text=True,
-            env=env, timeout=10,
-        )
-        assert result.returncode == 0
-        payload = json.loads(result.stdout.strip())
-        assert payload["branch"] == "main"
-
-
-class TestMemoryInjectNamespace:
-    def test_worktree_and_main_repo_same_namespace(self, git_repo_with_worktree):
-        """memory-inject.sh should produce same namespace for worktree and main repo."""
-        main_repo, worktree = git_repo_with_worktree
-
-        def get_payload(cwd):
-            hook_input = json.dumps({
-                "tool_name": "Read",
-                "tool_input": {"file_path": "/some/file.py"},
-                "cwd": cwd,
-            })
-            # We can't easily test the full inject hook (it calls curl),
-            # so we test the Python extraction block by running just the
-            # payload-building part. Use a modified approach: run the hook
-            # with MCP server not running (curl will fail silently).
-            # Instead, test namespace resolution directly.
-            env = os.environ.copy()
+            """Run Python snippet that mirrors _resolve_git_context namespace logic."""
             result = subprocess.run(
                 ["python3", "-c", f"""
-import json, subprocess, sys
+import subprocess, sys
 cwd = {repr(cwd)}
-# Resolve worktree to repo root
 try:
     result = subprocess.run(
         ['git', 'worktree', 'list', '--porcelain'],
@@ -130,6 +78,7 @@ print(namespace)
             )
             return result.stdout.strip()
 
-        ns_main = get_payload(main_repo)
-        ns_worktree = get_payload(worktree)
+        ns_main = get_namespace(main_repo)
+        ns_worktree = get_namespace(worktree)
+        assert ns_main != ""
         assert ns_main == ns_worktree

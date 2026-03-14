@@ -1,21 +1,14 @@
-"""Tests for PowerShell (.ps1) hook files and hook transformation logic on Windows.
+"""Tests for unified hook and hook transformation logic on Windows.
 
-The hook system has 5 security hooks, each with a .sh (bash) and .ps1 (PowerShell) variant:
-  - bash-gate: blocks dangerous bash commands (PreToolUse, fail-closed)
-  - spawn-guard: blocks injection in spawn prompts (PreToolUse, fail-closed)
-  - state-sanitize: blocks injection in workflow state (PreToolUse, fail-closed)
-  - audit-log: logs tool calls (PostToolUse, fail-open)
-  - canary-check: scans for canary tokens (PostToolUse, fail-open)
-
-On Unix the .sh hooks run natively.
-On Windows the .ps1 hooks are invoked via PowerShell.
+The hook system uses a single Python entrypoint (spellbook_hook.py) with
+a PowerShell wrapper (spellbook_hook.ps1) on Windows.
 
 This test module validates:
-  1. Existence and basic structure of the .ps1 hook files (ALL platforms)
+  1. Existence of the unified hook files (ALL platforms)
   2. Hook path transformation logic (ALL platforms)
   3. Cross-platform behavioral tests using the check module directly
 
-The companion test_hooks.py covers bash (.sh) hooks and is skipped on Windows.
+The companion test_hooks.py covers behavior via subprocess invocation.
 """
 
 import json
@@ -33,52 +26,43 @@ pytestmark = pytest.mark.integration
 # Path constants
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
-
 HOOKS_DIR = os.path.join(PROJECT_ROOT, "hooks")
 
-PS1_HOOK_SCRIPTS = {
-    "bash-gate": os.path.join(HOOKS_DIR, "bash-gate.ps1"),
-    "spawn-guard": os.path.join(HOOKS_DIR, "spawn-guard.ps1"),
-    "state-sanitize": os.path.join(HOOKS_DIR, "state-sanitize.ps1"),
-    "audit-log": os.path.join(HOOKS_DIR, "audit-log.ps1"),
-    "canary-check": os.path.join(HOOKS_DIR, "canary-check.ps1"),
-}
-
-# Hooks that use fail-closed semantics (exit 2 on error)
-FAIL_CLOSED_HOOKS = ["bash-gate", "spawn-guard", "state-sanitize"]
-
-# Hooks that use fail-open semantics (always exit 0)
-FAIL_OPEN_HOOKS = ["audit-log", "canary-check"]
-
-ALL_HOOK_NAMES = list(PS1_HOOK_SCRIPTS.keys())
-
 
 # #############################################################################
-# SECTION 1: PS1 file validation (runs on ALL platforms)
+# SECTION 1: Unified hook file validation (runs on ALL platforms)
 # #############################################################################
 
 
-class TestPs1HookFiles:
-    """Verify that every .ps1 hook file exists and has correct structure."""
+class TestUnifiedHookFiles:
+    """Verify that the unified hook files exist and have correct structure."""
 
-    @pytest.mark.parametrize("hook_name", ALL_HOOK_NAMES)
-    def test_hook_file_exists(self, hook_name):
-        path = PS1_HOOK_SCRIPTS[hook_name]
-        assert os.path.isfile(path), f"{hook_name}.ps1 not found at {path}"
+    def test_spellbook_hook_py_exists(self):
+        path = os.path.join(HOOKS_DIR, "spellbook_hook.py")
+        assert os.path.isfile(path), f"spellbook_hook.py not found at {path}"
 
-    @pytest.mark.parametrize("hook_name", ALL_HOOK_NAMES)
-    def test_hook_has_comment_header_and_error_preference(self, hook_name):
-        """Each PS1 hook must start with a comment header and set ErrorActionPreference."""
-        path = PS1_HOOK_SCRIPTS[hook_name]
-        content = open(path).read()
-        lines = content.splitlines()
-        assert lines[0] == f"# hooks/{hook_name}.ps1", (
-            f"{hook_name}.ps1 first line should be '# hooks/{hook_name}.ps1', got: {lines[0]}"
-        )
-        assert lines[4] == '$ErrorActionPreference = "Stop"', (
-            f"{hook_name}.ps1 line 5 should be '$ErrorActionPreference = \"Stop\"', "
-            f"got: {lines[4]}"
-        )
+    def test_spellbook_hook_ps1_exists(self):
+        path = os.path.join(HOOKS_DIR, "spellbook_hook.ps1")
+        assert os.path.isfile(path), f"spellbook_hook.ps1 not found at {path}"
+
+    def test_spellbook_hook_py_has_python_shebang(self):
+        path = os.path.join(HOOKS_DIR, "spellbook_hook.py")
+        with open(path) as f:
+            first_line = f.readline()
+        assert first_line.strip() == "#!/usr/bin/env python3"
+
+    def test_no_old_individual_hooks_exist(self):
+        """Old individual hook files should not exist."""
+        old_hooks = [
+            "bash-gate.sh", "spawn-guard.sh", "state-sanitize.sh",
+            "audit-log.sh", "canary-check.sh", "tts-timer-start.sh",
+            "tts-notify.sh", "notify-on-complete.sh",
+            "memory-capture.sh", "memory-inject.sh",
+            "pre-compact-save.sh", "post-compact-recover.sh",
+        ]
+        for hook in old_hooks:
+            path = os.path.join(HOOKS_DIR, hook)
+            assert not os.path.exists(path), f"Old hook still exists: {path}"
 
 
 # #############################################################################
@@ -90,36 +74,20 @@ class TestHookTransformationLogic:
     """Verify _transform_hook_for_platform() and _get_hook_path_for_platform()."""
 
     def test_get_hook_path_unix_unchanged(self):
-        """On non-Windows, .sh paths are returned unchanged."""
+        """On non-Windows, .py paths are returned unchanged."""
         from installer.components.hooks import _get_hook_path_for_platform
 
         with mock.patch("sys.platform", "darwin"):
-            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/bash-gate.sh")
-            assert result == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
+            assert result == "$SPELLBOOK_DIR/hooks/spellbook_hook.py"
 
     def test_get_hook_path_windows_converts_to_ps1(self):
-        """On Windows, .sh paths are converted to PowerShell invocation with .ps1."""
+        """On Windows, .py paths are converted to PowerShell invocation with .ps1."""
         from installer.components.hooks import _get_hook_path_for_platform
 
         with mock.patch("sys.platform", "win32"):
-            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/bash-gate.sh")
-            assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1"
-
-    def test_transform_string_hook_unix(self):
-        """String hooks are unchanged on Unix."""
-        from installer.components.hooks import _transform_hook_for_platform
-
-        with mock.patch("sys.platform", "linux"):
-            result = _transform_hook_for_platform("$SPELLBOOK_DIR/hooks/spawn-guard.sh")
-            assert result == "$SPELLBOOK_DIR/hooks/spawn-guard.sh"
-
-    def test_transform_string_hook_windows(self):
-        """String hooks get .sh -> PowerShell .ps1 wrapper on Windows."""
-        from installer.components.hooks import _transform_hook_for_platform
-
-        with mock.patch("sys.platform", "win32"):
-            result = _transform_hook_for_platform("$SPELLBOOK_DIR/hooks/spawn-guard.sh")
-            assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/spawn-guard.ps1"
+            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
+            assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/spellbook_hook.ps1"
 
     def test_transform_dict_hook_unix(self):
         """Dict hooks with 'command' key are unchanged on Unix."""
@@ -127,15 +95,16 @@ class TestHookTransformationLogic:
 
         hook = {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/audit-log.sh",
-            "async": True,
-            "timeout": 10,
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 15,
         }
         with mock.patch("sys.platform", "darwin"):
             result = _transform_hook_for_platform(hook)
-            assert result["command"] == "$SPELLBOOK_DIR/hooks/audit-log.sh"
-            assert result["async"] is True
-            assert result["timeout"] == 10
+            assert result == {
+                "type": "command",
+                "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+                "timeout": 15,
+            }
 
     def test_transform_dict_hook_windows(self):
         """Dict hooks with 'command' key get PowerShell .ps1 wrapper on Windows."""
@@ -143,13 +112,13 @@ class TestHookTransformationLogic:
 
         hook = {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/canary-check.sh",
-            "timeout": 10,
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 15,
         }
         with mock.patch("sys.platform", "win32"):
             result = _transform_hook_for_platform(hook)
-            assert result["command"] == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/canary-check.ps1"
-            assert result["timeout"] == 10
+            assert result["command"] == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/spellbook_hook.ps1"
+            assert result["timeout"] == 15
 
     def test_transform_preserves_other_dict_keys(self):
         """Transformation must not drop extra keys from dict hooks."""
@@ -157,7 +126,7 @@ class TestHookTransformationLogic:
 
         hook = {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/state-sanitize.sh",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
             "timeout": 15,
             "custom_key": "preserved",
         }
@@ -172,20 +141,12 @@ class TestHookTransformationLogic:
 
         hook = {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
         }
         with mock.patch("sys.platform", "win32"):
             result = _transform_hook_for_platform(hook)
             assert result is not hook
-            assert hook["command"].endswith(".sh")  # original unchanged
-
-    @pytest.mark.parametrize("hook_name", ALL_HOOK_NAMES)
-    def test_each_sh_hook_has_ps1_counterpart(self, hook_name):
-        """For every .sh hook, a corresponding .ps1 file must exist."""
-        sh_path = os.path.join(HOOKS_DIR, f"{hook_name}.sh")
-        ps1_path = os.path.join(HOOKS_DIR, f"{hook_name}.ps1")
-        assert os.path.isfile(sh_path), f"{hook_name}.sh not found"
-        assert os.path.isfile(ps1_path), f"{hook_name}.ps1 not found"
+            assert hook["command"].endswith(".py")  # original unchanged
 
     def test_all_hook_definitions_are_transformable(self):
         """Every hook in HOOK_DEFINITIONS can be transformed for Windows."""
@@ -240,28 +201,15 @@ class TestHookTransformationLogic:
                     elif isinstance(hook, dict) and "command" in hook:
                         all_paths.append(hook["command"])
 
-        assert len(all_paths) == 12, (
-            f"Expected 12 hook paths installed, got {len(all_paths)}: {all_paths}"
+        # 4 phases, 1 unified hook each = 4 paths
+        assert len(all_paths) == 4, (
+            f"Expected 4 hook paths installed, got {len(all_paths)}: {all_paths}"
         )
-        expected_paths = [
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/bash-gate.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/spawn-guard.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/state-sanitize.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-timer-start.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/audit-log.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/canary-check.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/memory-inject.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/notify-on-complete.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-notify.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/memory-capture.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/pre-compact-save.ps1",
-            "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/post-compact-recover.ps1",
-        ]
-        assert sorted(all_paths) == sorted(expected_paths), (
-            f"Installed hook paths do not match expected.\n"
-            f"Got: {sorted(all_paths)}\n"
-            f"Expected: {sorted(expected_paths)}"
-        )
+        expected_path = "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/spellbook_hook.ps1"
+        for path in all_paths:
+            assert path == expected_path, (
+                f"Expected all hooks to be unified PS1 wrapper, got: {path}"
+            )
 
 
 # #############################################################################

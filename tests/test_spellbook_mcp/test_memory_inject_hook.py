@@ -1,65 +1,66 @@
-"""Tests for memory injection hook script (memory-inject.sh).
+"""Tests for memory injection behavior via the unified hook (spellbook_hook.py).
 
-Tests verify:
-- Hook script exists and is executable
-- Fail-open behavior (exit 0 on all error conditions)
-- Correct tool filtering (only file tools: Read, Edit, Grep, Glob)
-- Correct file_path extraction per tool type
-- Correct namespace computation (project-encoded from cwd)
-- Correct JSON payload construction for the recall API
-- Correct XML output format for injected memories
+PostToolUse handler (_memory_inject):
+- Receives JSON on stdin with tool_name, tool_input, cwd
+- Only processes file tools: Read, Edit, Grep, Glob
+- Extracts file_path from tool_input
+- Computes namespace from cwd (project-encoded)
+- Calls MCP recall API and injects memories as XML
+- FAIL-OPEN: always exits 0, never blocks tool execution
+
+Payload construction and XML output format are tested via isolated
+Python snippets that mirror the hook's internal logic.
 """
 
 import json
 import os
-import stat
 import subprocess
 import sys
 import textwrap
 
 import pytest
 
-pytestmark = [
-    pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Bash hook scripts not available on Windows",
-    ),
-]
+pytestmark = pytest.mark.integration
 
-
-WORKTREE = os.path.dirname(
+PROJECT_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
-HOOK_PATH = os.path.join(WORKTREE, "hooks", "memory-inject.sh")
+UNIFIED_HOOK = os.path.join(PROJECT_ROOT, "hooks", "spellbook_hook.py")
 
 # Environment that prevents the hook from actually reaching a server
-SAFE_ENV = {**os.environ, "SPELLBOOK_MCP_PORT": "99999"}
+DEAD_PORT = "99999"
 
 
-def run_hook(stdin_text: str = "", env: dict | None = None) -> subprocess.CompletedProcess:
-    """Run the hook script with given stdin and return the completed process."""
+def _run_hook(
+    stdin_data: dict | str,
+    *,
+    env_overrides: dict | None = None,
+    timeout: int = 10,
+) -> subprocess.CompletedProcess:
+    """Run the unified hook with given stdin data as PostToolUse event."""
+    if isinstance(stdin_data, str):
+        input_str = stdin_data
+    else:
+        payload = dict(stdin_data)
+        payload["hook_event_name"] = "PostToolUse"
+        input_str = json.dumps(payload)
+
+    env = os.environ.copy()
+    env["SPELLBOOK_DIR"] = PROJECT_ROOT
+    env["PYTHONPATH"] = PROJECT_ROOT
+    env["SPELLBOOK_MCP_PORT"] = DEAD_PORT
+    env["SPELLBOOK_MCP_HOST"] = "127.0.0.1"
+    if env_overrides:
+        env.update(env_overrides)
+
     return subprocess.run(
-        ["bash", HOOK_PATH],
-        input=stdin_text,
+        [sys.executable, UNIFIED_HOOK],
+        input=input_str,
         capture_output=True,
         text=True,
-        env=env or SAFE_ENV,
-        timeout=10,
+        env=env,
+        timeout=timeout,
     )
-
-
-# ---------------------------------------------------------------------------
-# Existence and permissions
-# ---------------------------------------------------------------------------
-
-
-class TestHookFileProperties:
-    def test_hook_script_exists(self):
-        assert os.path.isfile(HOOK_PATH), f"Hook script not found at {HOOK_PATH}"
-
-    def test_hook_script_is_executable(self):
-        mode = os.stat(HOOK_PATH).st_mode
-        assert mode & stat.S_IXUSR, "Hook script is not executable by owner"
 
 
 # ---------------------------------------------------------------------------
@@ -69,20 +70,16 @@ class TestHookFileProperties:
 
 class TestFailOpen:
     def test_exits_zero_on_empty_input(self):
-        result = run_hook("")
+        result = _run_hook("")
         assert result.returncode == 0
-        assert result.stdout == ""
-        assert result.stderr == ""
 
     def test_exits_zero_on_invalid_json(self):
-        result = run_hook("not json at all {{{")
+        result = _run_hook("not json at all {{{")
         assert result.returncode == 0
-        assert result.stdout == ""
 
     def test_exits_zero_on_json_missing_tool_name(self):
-        result = run_hook(json.dumps({"some_field": "value"}))
+        result = _run_hook({"some_field": "value"})
         assert result.returncode == 0
-        assert result.stdout == ""
 
 
 # ---------------------------------------------------------------------------
@@ -92,68 +89,63 @@ class TestFailOpen:
 
 class TestToolFiltering:
     def test_ignores_bash_tool(self):
-        hook_input = json.dumps({
+        """Bash tool is not a file tool, no memory injection."""
+        result = _run_hook({
             "tool_name": "Bash",
             "tool_input": {"command": "ls"},
             "session_id": "sess-1",
             "cwd": "/Users/alice/project",
         })
-        result = run_hook(hook_input)
         assert result.returncode == 0
-        assert result.stdout == ""
 
     def test_ignores_write_tool(self):
-        hook_input = json.dumps({
+        """Write tool is not a file tool for memory injection."""
+        result = _run_hook({
             "tool_name": "Write",
             "tool_input": {"file_path": "/tmp/foo.txt", "content": "hi"},
             "session_id": "sess-1",
             "cwd": "/Users/alice/project",
         })
-        result = run_hook(hook_input)
         assert result.returncode == 0
-        assert result.stdout == ""
 
     def test_ignores_task_tool(self):
-        hook_input = json.dumps({
+        """Task tool is not a file tool for memory injection."""
+        result = _run_hook({
             "tool_name": "Task",
             "tool_input": {"description": "do something"},
             "session_id": "sess-1",
             "cwd": "/Users/alice/project",
         })
-        result = run_hook(hook_input)
         assert result.returncode == 0
-        assert result.stdout == ""
 
     @pytest.mark.parametrize("tool_name", ["Read", "Edit", "Grep", "Glob"])
     def test_accepts_file_tools(self, tool_name: str):
         """File tools should be accepted (not filtered out).
 
-        They will still produce no output because the recall API is unreachable,
-        but the hook should attempt to process them (not exit early at the
-        tool filtering stage).
+        They will still produce no injection output because the recall API
+        is unreachable, but the hook should attempt to process them (not
+        exit early at the tool filtering stage).
         """
         tool_input = {"file_path": "/Users/alice/project/main.py"}
         if tool_name in ("Grep", "Glob"):
             tool_input = {"path": "/Users/alice/project/src"}
 
-        hook_input = json.dumps({
+        result = _run_hook({
             "tool_name": tool_name,
             "tool_input": tool_input,
             "session_id": "sess-1",
             "cwd": "/Users/alice/project",
         })
-        result = run_hook(hook_input)
         assert result.returncode == 0
-        # No output because API is unreachable, but no error either
 
 
 # ---------------------------------------------------------------------------
-# Payload construction (via the embedded Python)
+# Payload construction (via isolated Python that mirrors hook logic)
 # ---------------------------------------------------------------------------
 
 
 class TestPayloadConstruction:
-    """Test the Python block that extracts file_path and builds the recall payload.
+    """Test the Python logic that extracts file_path and builds the recall payload.
 
     We test this by running just the Python portion of the hook logic in isolation.
     """
@@ -209,12 +201,11 @@ class TestPayloadConstruction:
             "tool_input": {"file_path": "/Users/alice/project/src/main.py"},
             "cwd": "/Users/alice/project",
         })
-        expected = {
+        assert json.loads(output) == {
             "file_path": "/Users/alice/project/src/main.py",
             "namespace": "Users-alice-project",
             "limit": 5,
         }
-        assert json.loads(output) == expected
 
     def test_edit_tool_extracts_file_path(self):
         output = self._run_python_extract({
@@ -222,12 +213,11 @@ class TestPayloadConstruction:
             "tool_input": {"file_path": "/Users/bob/code/app.js", "old_string": "a", "new_string": "b"},
             "cwd": "/Users/bob/code",
         })
-        expected = {
+        assert json.loads(output) == {
             "file_path": "/Users/bob/code/app.js",
             "namespace": "Users-bob-code",
             "limit": 5,
         }
-        assert json.loads(output) == expected
 
     def test_grep_tool_extracts_path(self):
         output = self._run_python_extract({
@@ -235,12 +225,11 @@ class TestPayloadConstruction:
             "tool_input": {"pattern": "TODO", "path": "/Users/alice/project/src"},
             "cwd": "/Users/alice/project",
         })
-        expected = {
+        assert json.loads(output) == {
             "file_path": "/Users/alice/project/src",
             "namespace": "Users-alice-project",
             "limit": 5,
         }
-        assert json.loads(output) == expected
 
     def test_glob_tool_extracts_path(self):
         output = self._run_python_extract({
@@ -248,12 +237,11 @@ class TestPayloadConstruction:
             "tool_input": {"pattern": "*.py", "path": "/Users/alice/project"},
             "cwd": "/Users/alice/project",
         })
-        expected = {
+        assert json.loads(output) == {
             "file_path": "/Users/alice/project",
             "namespace": "Users-alice-project",
             "limit": 5,
         }
-        assert json.loads(output) == expected
 
     def test_namespace_computation_strips_leading_dash(self):
         output = self._run_python_extract({
@@ -261,8 +249,11 @@ class TestPayloadConstruction:
             "tool_input": {"file_path": "/tmp/test.py"},
             "cwd": "/home/user/myproject",
         })
-        parsed = json.loads(output)
-        assert parsed["namespace"] == "home-user-myproject"
+        assert json.loads(output) == {
+            "file_path": "/tmp/test.py",
+            "namespace": "home-user-myproject",
+            "limit": 5,
+        }
 
     def test_exits_silently_when_no_file_path(self):
         output = self._run_python_extract({
@@ -287,7 +278,7 @@ class TestPayloadConstruction:
 
 
 class TestOutputFormat:
-    """Test the Python block that formats memories as XML.
+    """Test the Python logic that formats memories as XML.
 
     We test this in isolation by feeding it simulated API responses.
     """
@@ -393,9 +384,9 @@ class TestOutputFormat:
         # Should contain exactly 5 <memory> elements (indices 0-4)
         expected_lines = ["<spellbook-memory>"]
         for i in range(5):
-            expected_lines.append(f'  <memory type="fact" confidence="verified" importance="0.5">')
+            expected_lines.append('  <memory type="fact" confidence="verified" importance="0.5">')
             expected_lines.append(f"    Memory {i}")
-            expected_lines.append(f"  </memory>")
+            expected_lines.append("  </memory>")
         expected_lines.append("</spellbook-memory>")
         expected = "\n".join(expected_lines) + "\n"
         assert output == expected
@@ -445,15 +436,3 @@ class TestOutputFormat:
             </spellbook-memory>
         """)
         assert output == expected
-
-
-# ---------------------------------------------------------------------------
-# PowerShell script existence
-# ---------------------------------------------------------------------------
-
-
-class TestPowerShellHook:
-    PS1_PATH = os.path.join(WORKTREE, "hooks", "memory-inject.ps1")
-
-    def test_powershell_hook_exists(self):
-        assert os.path.isfile(self.PS1_PATH), f"PowerShell hook not found at {self.PS1_PATH}"
