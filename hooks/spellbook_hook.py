@@ -718,14 +718,37 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
 
 
 def _handle_pre_compact(data: dict) -> None:
-    """Save workflow state before compaction."""
+    """Save workflow state and stint stack before compaction."""
     project_path = data.get("cwd", "")
     if not project_path:
         return
 
+    # Load current stint stack
+    stack = _mcp_call("stint_check", {"project_path": project_path})
+
+    # Load existing workflow state and merge stint_stack into it
+    ws = _mcp_call("workflow_state_load", {
+        "project_path": project_path,
+        "max_age_hours": 24,
+    })
+    existing_state = {}
+    if ws and ws.get("found"):
+        existing_state = ws.get("state", {})
+
+    if stack and stack.get("success"):
+        existing_state["stint_stack"] = stack.get("stack", [])
+
+    existing_state["compaction_flag"] = True
+
+    _mcp_call("workflow_state_save", {
+        "project_path": project_path,
+        "state": existing_state,
+        "trigger": "auto",
+    })
+
 
 def _handle_session_start(data: dict) -> dict | None:
-    """Post-compaction recovery."""
+    """Post-compaction recovery including stint stack restoration."""
     source = data.get("source", "")
     if source != "compact":
         return None
@@ -743,7 +766,23 @@ def _handle_session_start(data: dict) -> dict | None:
         return _fallback_directive()
 
     state = ws.get("state", {})
+
+    # Restore stint stack if present
+    saved_stack = state.get("stint_stack", [])
+    if saved_stack:
+        _mcp_call("stint_replace", {
+            "project_path": project_path,
+            "stack": saved_stack,
+            "reason": "post-compaction restoration",
+        })
+
     directive = _build_recovery_directive(state)
+
+    # Append stint stack info to directive
+    if saved_stack:
+        directive += "\n\n### Focus Stack (restored)\n"
+        for i, entry in enumerate(saved_stack):
+            directive += f"  {i+1}. {entry['name']} - {entry.get('purpose', '')}\n"
 
     return {
         "hookSpecificOutput": {
