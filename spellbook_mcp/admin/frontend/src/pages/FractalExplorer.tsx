@@ -18,7 +18,7 @@ export function FractalExplorer() {
     maxDepth
   )
 
-  const handleNodeClick = useCallback((nodeId: string, nodeData: Record<string, unknown>) => {
+  const handleNodeClick = useCallback((_nodeId: string, nodeData: Record<string, unknown>) => {
     setSelectedNode(nodeData)
   }, [])
 

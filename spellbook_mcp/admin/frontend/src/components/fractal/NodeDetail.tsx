@@ -42,7 +42,7 @@ export function NodeDetail({ nodeData, onClose }: NodeDetailProps) {
           </div>
         </div>
 
-        {nodeData.owner && (
+        {Boolean(nodeData.owner) && (
           <div>
             <div className="font-mono text-xs text-text-dim mb-1">OWNER</div>
             <div className="font-mono text-sm text-text-primary">
@@ -58,7 +58,7 @@ export function NodeDetail({ nodeData, onClose }: NodeDetailProps) {
           </div>
         </div>
 
-        {nodeData.parent_id && (
+        {Boolean(nodeData.parent_id) && (
           <div>
             <div className="font-mono text-xs text-text-dim mb-1">PARENT</div>
             <div className="font-mono text-sm text-accent-cyan break-all">

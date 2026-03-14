@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useRef } from 'react'
 import { Badge } from '../shared/Badge'
+import { useWebSocketContext } from '../../contexts/WebSocketContext'
 import type { WSEvent } from '../../api/types'
 
 interface ActivityFeedProps {
@@ -33,26 +34,16 @@ interface FeedItem {
 const MAX_ITEMS = 50
 
 export function ActivityFeed({ initialItems = [] }: ActivityFeedProps) {
-  const [liveItems, setLiveItems] = useState<FeedItem[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
+  const { events } = useWebSocketContext()
 
-  const addEvent = useCallback((event: WSEvent) => {
-    const item: FeedItem = {
-      type: `${event.subsystem}.${event.event}`,
-      timestamp: event.timestamp,
-      summary: summarizeEvent(event),
-      live: true,
-    }
-    setLiveItems((prev) => [item, ...prev].slice(0, MAX_ITEMS))
-  }, [])
-
-  // Expose addEvent for parent components
-  useEffect(() => {
-    ;(window as unknown as Record<string, unknown>).__activityFeedAddEvent = addEvent
-    return () => {
-      delete (window as unknown as Record<string, unknown>).__activityFeedAddEvent
-    }
-  }, [addEvent])
+  // Convert live WebSocket events to feed items
+  const liveItems: FeedItem[] = events.map((event) => ({
+    type: `${event.subsystem}.${event.event}`,
+    timestamp: event.timestamp,
+    summary: summarizeEvent(event),
+    live: true,
+  }))
 
   const allItems = [...liveItems, ...initialItems.map((i) => ({ ...i, live: false }))]
     .slice(0, MAX_ITEMS)

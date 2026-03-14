@@ -1,9 +1,7 @@
 import { useDashboard } from '../hooks/useDashboard'
-import { useEventStream } from '../hooks/useEventStream'
+import { useWebSocketContext } from '../contexts/WebSocketContext'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
-import { Badge } from '../components/shared/Badge'
 import { ActivityFeed } from '../components/dashboard/ActivityFeed'
-import type { ActivityItem } from '../api/types'
 
 function formatUptime(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)}s`
@@ -17,22 +15,6 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-function formatTimestamp(ts: string): string {
-  try {
-    const date = new Date(ts)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMin = Math.floor(diffMs / 60000)
-    if (diffMin < 1) return 'just now'
-    if (diffMin < 60) return `${diffMin}m ago`
-    const diffHr = Math.floor(diffMin / 60)
-    if (diffHr < 24) return `${diffHr}h ago`
-    return date.toLocaleDateString()
-  } catch {
-    return ts
-  }
 }
 
 interface StatCardProps {
@@ -54,23 +36,10 @@ function StatCard({ label, value, accent }: StatCardProps) {
   )
 }
 
-function ActivityRow({ item }: { item: ActivityItem }) {
-  return (
-    <div className="flex items-start gap-3 py-2 border-b border-bg-border last:border-b-0">
-      <Badge label={item.type} />
-      <span className="text-text-primary text-sm font-mono flex-1 truncate">
-        {item.summary}
-      </span>
-      <span className="text-text-dim text-xs font-mono whitespace-nowrap">
-        {formatTimestamp(item.timestamp)}
-      </span>
-    </div>
-  )
-}
 
 export default function Dashboard() {
   const { data, isLoading, error } = useDashboard()
-  const { state: wsState } = useEventStream()
+  const { connectionState } = useWebSocketContext()
 
   if (isLoading) {
     return (
@@ -150,8 +119,8 @@ export default function Dashboard() {
           <StatCard label="DROPPED" value={health.event_bus_dropped_events} accent={health.event_bus_dropped_events > 0} />
           <StatCard
             label="WEBSOCKET"
-            value={wsState.toUpperCase()}
-            accent={wsState === 'connected'}
+            value={connectionState.toUpperCase()}
+            accent={connectionState === 'connected'}
           />
         </div>
       </div>
