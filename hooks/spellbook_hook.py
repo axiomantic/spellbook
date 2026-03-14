@@ -543,8 +543,48 @@ def _stint_auto_push(data: dict) -> None:
 
 
 def _stint_depth_check(data: dict) -> str | None:
-    """Check stint stack depth and emit reminder. Placeholder for Phase 3."""
-    return None
+    """Check stint stack depth and emit reminder if threshold exceeded.
+
+    Queries the stint stack via MCP and, if the depth meets or exceeds
+    the configurable threshold (default 5), returns a compact numbered
+    tree with a 'you are here' pointer in XML tags. FAIL-OPEN: returns
+    None on any error.
+    """
+    excluded = {
+        "AskUserQuestion", "TodoRead", "TodoWrite",
+        "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
+    }
+    tool_name = data.get("tool_name", "")
+    if tool_name in excluded:
+        return None
+
+    project_path = data.get("cwd", "")
+    if not project_path:
+        return None
+
+    stack = _mcp_call("stint_check", {"project_path": project_path})
+    if not stack or not stack.get("success"):
+        return None
+
+    entries = stack.get("stack", [])
+    depth = len(entries)
+
+    threshold = _get_config_value("stint_depth_threshold", default=5)
+    if depth < threshold:
+        return None
+
+    lines = [f'<stint-check depth="{depth}">']
+    for i, entry in enumerate(entries):
+        indent = "  " * (i + 1)
+        marker = "        <-- you are here" if i == len(entries) - 1 else ""
+        lines.append(f"  {i+1}. {indent}{entry['name']}{marker}")
+        lines.append(f"     {indent}purpose: {entry.get('purpose', '') or 'unspecified'}")
+    lines.append("")
+    lines.append("  Verify this matches your current work.")
+    lines.append("  Close completed stints with stint_pop.")
+    lines.append("</stint-check>")
+
+    return "\n".join(lines)
 
 
 def _build_recovery_directive(state: dict) -> str:

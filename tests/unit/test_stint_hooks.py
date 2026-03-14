@@ -329,6 +329,217 @@ class TestMemoryCapture:
             assert proc.returncode == 0
 
 
+# ---------------------------------------------------------------------------
+# Phase 3, Task 9: Depth reminder tests
+# ---------------------------------------------------------------------------
+
+# Import hook module for direct unit testing
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
+
+
+class TestDepthReminderFormat:
+    """Test depth reminder output format."""
+
+    def test_reminder_format_at_threshold(self):
+        """At threshold depth, emit compact numbered tree with 'you are here' pointer."""
+        from spellbook_hook import _stint_depth_check
+
+        import spellbook_hook
+        original_mcp = spellbook_hook._mcp_call
+        original_config = spellbook_hook._get_config_value
+
+        stack = [
+            {"name": "implementing-features", "purpose": "build auth"},
+            {"name": "feature-research", "purpose": "investigate patterns"},
+            {"name": "debugging", "purpose": "fix test import"},
+            {"name": "explore", "purpose": "find auth module"},
+            {"name": "read-file", "purpose": "check imports"},
+        ]
+
+        spellbook_hook._mcp_call = lambda tool, args=None: {
+            "success": True,
+            "stack": stack,
+        }
+        spellbook_hook._get_config_value = lambda k, default=None: 5 if k == "stint_depth_threshold" else default
+
+        try:
+            result = _stint_depth_check({
+                "tool_name": "Read",
+                "cwd": "/test/project",
+            })
+
+            expected = (
+                '<stint-check depth="5">\n'
+                "  1.   implementing-features\n"
+                "       purpose: build auth\n"
+                "  2.     feature-research\n"
+                "         purpose: investigate patterns\n"
+                "  3.       debugging\n"
+                "           purpose: fix test import\n"
+                "  4.         explore\n"
+                "             purpose: find auth module\n"
+                "  5.           read-file        <-- you are here\n"
+                "               purpose: check imports\n"
+                "\n"
+                "  Verify this matches your current work.\n"
+                "  Close completed stints with stint_pop.\n"
+                "</stint-check>"
+            )
+            assert result == expected
+        finally:
+            spellbook_hook._mcp_call = original_mcp
+            spellbook_hook._get_config_value = original_config
+
+    def test_no_reminder_below_threshold(self):
+        """Below threshold depth, return None."""
+        from spellbook_hook import _stint_depth_check
+
+        import spellbook_hook
+        original_mcp = spellbook_hook._mcp_call
+        original_config = spellbook_hook._get_config_value
+
+        spellbook_hook._mcp_call = lambda tool, args=None: {
+            "success": True,
+            "stack": [
+                {"name": "task-1", "purpose": "do thing"},
+            ],
+        }
+        spellbook_hook._get_config_value = lambda k, default=None: 5 if k == "stint_depth_threshold" else default
+
+        try:
+            result = _stint_depth_check({
+                "tool_name": "Read",
+                "cwd": "/test/project",
+            })
+            assert result is None
+        finally:
+            spellbook_hook._mcp_call = original_mcp
+            spellbook_hook._get_config_value = original_config
+
+    def test_excluded_tools_skip_reminder(self):
+        """Excluded interactive tools always return None without calling MCP."""
+        from spellbook_hook import _stint_depth_check
+
+        for tool in ("AskUserQuestion", "TodoRead", "TodoWrite",
+                     "TaskCreate", "TaskUpdate", "TaskGet", "TaskList"):
+            result = _stint_depth_check({
+                "tool_name": tool,
+                "cwd": "/test/project",
+            })
+            assert result is None, f"Expected None for excluded tool {tool}"
+
+    def test_no_cwd_returns_none(self):
+        """Missing cwd returns None without calling MCP."""
+        from spellbook_hook import _stint_depth_check
+
+        result = _stint_depth_check({"tool_name": "Read"})
+        assert result is None
+
+    def test_mcp_failure_returns_none(self):
+        """MCP call returning None (unreachable) returns None gracefully."""
+        from spellbook_hook import _stint_depth_check
+
+        import spellbook_hook
+        original_mcp = spellbook_hook._mcp_call
+        spellbook_hook._mcp_call = lambda tool, args=None: None
+
+        try:
+            result = _stint_depth_check({
+                "tool_name": "Read",
+                "cwd": "/test/project",
+            })
+            assert result is None
+        finally:
+            spellbook_hook._mcp_call = original_mcp
+
+    def test_reminder_at_depth_above_threshold(self):
+        """Above threshold (7 > 5), still emit reminder."""
+        from spellbook_hook import _stint_depth_check
+
+        import spellbook_hook
+        original_mcp = spellbook_hook._mcp_call
+        original_config = spellbook_hook._get_config_value
+
+        stack = [
+            {"name": f"stint-{i}", "purpose": f"purpose-{i}"}
+            for i in range(7)
+        ]
+
+        spellbook_hook._mcp_call = lambda tool, args=None: {
+            "success": True,
+            "stack": stack,
+        }
+        spellbook_hook._get_config_value = lambda k, default=None: 5 if k == "stint_depth_threshold" else default
+
+        try:
+            result = _stint_depth_check({
+                "tool_name": "Read",
+                "cwd": "/test/project",
+            })
+
+            expected_lines = ['<stint-check depth="7">']
+            for i in range(7):
+                indent = "  " * (i + 1)
+                marker = "        <-- you are here" if i == 6 else ""
+                expected_lines.append(f"  {i+1}. {indent}stint-{i}{marker}")
+                expected_lines.append(f"     {indent}purpose: purpose-{i}")
+            expected_lines.append("")
+            expected_lines.append("  Verify this matches your current work.")
+            expected_lines.append("  Close completed stints with stint_pop.")
+            expected_lines.append("</stint-check>")
+            expected = "\n".join(expected_lines)
+
+            assert result == expected
+        finally:
+            spellbook_hook._mcp_call = original_mcp
+            spellbook_hook._get_config_value = original_config
+
+    def test_empty_purpose_shows_unspecified(self):
+        """Entries with no purpose show 'unspecified'."""
+        from spellbook_hook import _stint_depth_check
+
+        import spellbook_hook
+        original_mcp = spellbook_hook._mcp_call
+        original_config = spellbook_hook._get_config_value
+
+        stack = [
+            {"name": f"stint-{i}", "purpose": ""} if i == 0
+            else {"name": f"stint-{i}", "purpose": f"p{i}"}
+            for i in range(5)
+        ]
+
+        spellbook_hook._mcp_call = lambda tool, args=None: {
+            "success": True,
+            "stack": stack,
+        }
+        spellbook_hook._get_config_value = lambda k, default=None: 5 if k == "stint_depth_threshold" else default
+
+        try:
+            result = _stint_depth_check({
+                "tool_name": "Read",
+                "cwd": "/test/project",
+            })
+            # First entry has empty purpose, should show "unspecified"
+            expected_lines = ['<stint-check depth="5">']
+            expected_lines.append("  1.   stint-0")
+            expected_lines.append("       purpose: unspecified")
+            for i in range(1, 5):
+                indent = "  " * (i + 1)
+                marker = "        <-- you are here" if i == 4 else ""
+                expected_lines.append(f"  {i+1}. {indent}stint-{i}{marker}")
+                expected_lines.append(f"     {indent}purpose: p{i}")
+            expected_lines.append("")
+            expected_lines.append("  Verify this matches your current work.")
+            expected_lines.append("  Close completed stints with stint_pop.")
+            expected_lines.append("</stint-check>")
+            expected = "\n".join(expected_lines)
+
+            assert result == expected
+        finally:
+            spellbook_hook._mcp_call = original_mcp
+            spellbook_hook._get_config_value = original_config
+
+
 class TestWindowsParityScript:
     """Verify spellbook_hook.ps1 exists and has correct structure."""
 
