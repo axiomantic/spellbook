@@ -2057,6 +2057,121 @@ def workflow_state_update(
 
 
 # ============================================================================
+# Stint Stack Tools (Zeigarnik focus tracking)
+# ============================================================================
+
+
+@mcp.tool()
+@inject_recovery_context
+def stint_push(
+    project_path: str,
+    name: str,
+    type: str = "custom",
+    purpose: str = "",
+    success_criteria: str = "",
+    metadata: dict | None = None,
+) -> dict:
+    """Push a new stint onto the focus stack.
+
+    Declares entry into a new unit of work. The new stint becomes the
+    current active stint. Previous top-of-stack stint is implicitly
+    suspended (but not exited).
+
+    Args:
+        project_path: Absolute path to project directory
+        name: Identifier for this stint (e.g., skill name, task description)
+        type: "skill" | "subagent" | "custom"
+        purpose: Why this stint is being entered
+        success_criteria: What "done" looks like for this stint
+        metadata: Optional key-value pairs for additional context
+
+    Returns:
+        {"success": True, "depth": int, "stack": list}
+    """
+    from spellbook_mcp.stint_tools import push_stint
+    return push_stint(
+        project_path=project_path,
+        name=name,
+        stint_type=type,
+        purpose=purpose,
+        success_criteria=success_criteria,
+        metadata=metadata,
+    )
+
+
+@mcp.tool()
+@inject_recovery_context
+def stint_pop(
+    project_path: str,
+    name: str | None = None,
+) -> dict:
+    """Pop the top stint from the focus stack.
+
+    Marks the top stint as completed. If name is provided, verifies it
+    matches the top of stack. A mismatch logs a correction event but
+    still pops (LLM intent takes priority).
+
+    Args:
+        project_path: Absolute path to project directory
+        name: Optional name to verify matches top of stack
+
+    Returns:
+        {"success": True, "popped": dict, "depth": int, "mismatch": bool}
+    """
+    from spellbook_mcp.stint_tools import pop_stint
+    return pop_stint(project_path=project_path, name=name)
+
+
+@mcp.tool()
+@inject_recovery_context
+def stint_check(
+    project_path: str,
+) -> dict:
+    """Return the current stint stack for verification.
+
+    No side effects. Use to verify tracked state matches actual
+    working context.
+
+    Args:
+        project_path: Absolute path to project directory
+
+    Returns:
+        {"success": True, "depth": int, "stack": list}
+    """
+    from spellbook_mcp.stint_tools import check_stint
+    return check_stint(project_path=project_path)
+
+
+@mcp.tool()
+@inject_recovery_context
+def stint_replace(
+    project_path: str,
+    stack: list[dict],
+    reason: str = "",
+) -> dict:
+    """Replace the entire stint stack with a corrected version.
+
+    The LLM is the authority over its own focus state. When tracked
+    state diverges from reality, this tool corrects it. Logs a
+    correction event with classification.
+
+    Args:
+        project_path: Absolute path to project directory
+        stack: New stack state (list of stint entry dicts)
+        reason: Why the correction was needed
+
+    Returns:
+        {"success": True, "depth": int, "correction_logged": True}
+    """
+    from spellbook_mcp.stint_tools import replace_stint
+    return replace_stint(
+        project_path=project_path,
+        stack=stack,
+        reason=reason,
+    )
+
+
+# ============================================================================
 # Skill Analysis Tools
 # ============================================================================
 
