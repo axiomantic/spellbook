@@ -1,24 +1,15 @@
-"""Tests for Claude Code security and TTS hook registration in the installer.
+"""Tests for Claude Code hook registration in the installer.
 
-The installer should register PreToolUse and PostToolUse hooks in
-~/.claude/settings.json that point to spellbook security scripts
-and TTS notification hooks.
+The installer registers a unified hook (spellbook_hook.py) across all four
+phases in ~/.claude/settings.json. Each phase has a single catch-all entry
+(no matcher) pointing to the same script:
 
-Tier 1 (PreToolUse):
-  - Bash -> bash-gate.sh
-  - spawn_claude_session -> spawn-guard.sh
+  PreToolUse:  spellbook_hook.py (timeout: 15)
+  PostToolUse: spellbook_hook.py (timeout: 15)
+  PreCompact:  spellbook_hook.py (timeout: 5)
+  SessionStart: spellbook_hook.py (timeout: 10)
 
-Tier 2 (PreToolUse + PostToolUse):
-  - mcp__spellbook__workflow_state_save -> state-sanitize.sh (PreToolUse, timeout: 15)
-  - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (PostToolUse, async: true, timeout: 10)
-  - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (PostToolUse, timeout: 10)
-
-TTS (PreToolUse + PostToolUse):
-  - (catch-all, no matcher) -> tts-timer-start.sh (PreToolUse, async: true, timeout: 5)
-  - (catch-all, no matcher) -> tts-notify.sh (PostToolUse, async: true, timeout: 15)
-
-Notification (PostToolUse):
-  - (catch-all, no matcher) -> notify-on-complete.sh (PostToolUse, async: true, timeout: 10)
+The unified hook dispatches internally based on event type and tool name.
 """
 
 import json
@@ -101,89 +92,88 @@ def _expected_ext():
     return ".ps1" if sys.platform == "win32" else ".sh"
 
 
+def _expected_unified_command(prefix):
+    """Return the expected unified hook command string for the current platform.
+
+    On Windows, the .py hook uses the .ps1 wrapper.
+    On Unix, the .py hook is invoked directly.
+    """
+    if sys.platform == "win32":
+        return f"powershell -ExecutionPolicy Bypass -File {prefix}/hooks/spellbook_hook.ps1"
+    return f"{prefix}/hooks/spellbook_hook.py"
+
+
 # --- HOOK_DEFINITIONS tests ---
 
 
 class TestHookDefinitions:
-    """HOOK_DEFINITIONS should declare hooks grouped by phase."""
+    """HOOK_DEFINITIONS should declare unified hook for all phases."""
 
-    def test_has_pre_tool_use_phase(self):
-        assert "PreToolUse" in HOOK_DEFINITIONS
+    def test_has_all_four_phases(self):
+        assert set(HOOK_DEFINITIONS.keys()) == {
+            "PreToolUse", "PostToolUse", "PreCompact", "SessionStart",
+        }
 
-    def test_has_post_tool_use_phase(self):
-        assert "PostToolUse" in HOOK_DEFINITIONS
+    def test_pre_tool_use_has_unified_hook(self):
+        entries = HOOK_DEFINITIONS["PreToolUse"]
+        assert len(entries) == 1
+        hooks = entries[0]["hooks"]
+        assert len(hooks) == 1
+        assert hooks[0] == {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 15,
+        }
 
-    def test_pre_tool_use_has_bash_hook(self):
-        matchers = [h.get("matcher") for h in HOOK_DEFINITIONS["PreToolUse"]]
-        assert "Bash" in matchers
+    def test_post_tool_use_has_unified_hook(self):
+        entries = HOOK_DEFINITIONS["PostToolUse"]
+        assert len(entries) == 1
+        hooks = entries[0]["hooks"]
+        assert len(hooks) == 1
+        assert hooks[0] == {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 15,
+        }
 
-    def test_pre_tool_use_has_spawn_hook(self):
-        matchers = [h.get("matcher") for h in HOOK_DEFINITIONS["PreToolUse"]]
-        assert "spawn_claude_session" in matchers
+    def test_pre_compact_has_unified_hook(self):
+        entries = HOOK_DEFINITIONS["PreCompact"]
+        assert len(entries) == 1
+        hooks = entries[0]["hooks"]
+        assert len(hooks) == 1
+        assert hooks[0] == {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 5,
+        }
 
-    def test_pre_tool_use_has_state_sanitize_hook(self):
-        matchers = [h.get("matcher") for h in HOOK_DEFINITIONS["PreToolUse"]]
-        assert "mcp__spellbook__workflow_state_save" in matchers
+    def test_session_start_has_unified_hook(self):
+        entries = HOOK_DEFINITIONS["SessionStart"]
+        assert len(entries) == 1
+        hooks = entries[0]["hooks"]
+        assert len(hooks) == 1
+        assert hooks[0] == {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 10,
+        }
 
-    def test_bash_hook_references_correct_script(self):
-        bash_hook = next(
-            h for h in HOOK_DEFINITIONS["PreToolUse"] if h.get("matcher") == "Bash"
-        )
-        assert len(bash_hook["hooks"]) == 1
-        entry = bash_hook["hooks"][0]
-        assert entry["type"] == "command"
-        assert entry["command"] == "$SPELLBOOK_DIR/hooks/bash-gate.sh"
+    def test_no_async_on_any_unified_hook(self):
+        """The unified hook handles async internally via daemon threads."""
+        for phase, entries in HOOK_DEFINITIONS.items():
+            for entry in entries:
+                for hook in entry["hooks"]:
+                    assert hook.get("async") is not True, (
+                        f"Unified hook in {phase} must not have async=True"
+                    )
 
-    def test_spawn_hook_references_correct_script(self):
-        spawn_hook = next(
-            h for h in HOOK_DEFINITIONS["PreToolUse"]
-            if h.get("matcher") == "spawn_claude_session"
-        )
-        assert len(spawn_hook["hooks"]) == 1
-        entry = spawn_hook["hooks"][0]
-        assert entry["type"] == "command"
-        assert entry["command"] == "$SPELLBOOK_DIR/hooks/spawn-guard.sh"
-
-    def test_state_sanitize_hook_references_correct_script(self):
-        hook = next(
-            h for h in HOOK_DEFINITIONS["PreToolUse"]
-            if h.get("matcher") == "mcp__spellbook__workflow_state_save"
-        )
-        assert len(hook["hooks"]) == 1
-        entry = hook["hooks"][0]
-        assert entry["type"] == "command"
-        assert entry["command"] == "$SPELLBOOK_DIR/hooks/state-sanitize.sh"
-        assert entry["timeout"] == 15
-
-    def test_post_tool_use_has_audit_and_canary_hooks(self):
-        post_hooks = HOOK_DEFINITIONS["PostToolUse"]
-        assert len(post_hooks) == 3  # audit/canary matcher + memory-inject matcher + notify/tts/memory-capture catch-all
-        entry = post_hooks[0]
-        assert entry["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
-        assert len(entry["hooks"]) == 2
-
-    def test_audit_log_hook_properties(self):
-        post_entry = HOOK_DEFINITIONS["PostToolUse"][0]
-        audit_hook = next(
-            h for h in post_entry["hooks"]
-            if h["command"].endswith("audit-log.sh")
-        )
-        assert audit_hook["type"] == "command"
-        assert audit_hook["command"] == "$SPELLBOOK_DIR/hooks/audit-log.sh"
-        assert audit_hook["async"] is True
-        assert audit_hook["timeout"] == 10
-
-    def test_canary_check_hook_properties(self):
-        post_entry = HOOK_DEFINITIONS["PostToolUse"][0]
-        canary_hook = next(
-            h for h in post_entry["hooks"]
-            if h["command"].endswith("canary-check.sh")
-        )
-        assert canary_hook["type"] == "command"
-        assert canary_hook["command"] == "$SPELLBOOK_DIR/hooks/canary-check.sh"
-        assert canary_hook["timeout"] == 10
-        # canary-check is NOT async (synchronous by default)
-        assert "async" not in canary_hook or canary_hook.get("async") is not True
+    def test_no_matchers_on_unified_hooks(self):
+        """Unified hook is catch-all (no matcher), dispatches internally."""
+        for phase, entries in HOOK_DEFINITIONS.items():
+            for entry in entries:
+                assert "matcher" not in entry, (
+                    f"Unified hook in {phase} should not have a matcher"
+                )
 
 
 # --- install_hooks() tests ---
@@ -217,8 +207,8 @@ class TestInstallHooks:
         assert "PreToolUse" in settings["hooks"]
         assert "PostToolUse" in settings["hooks"]
 
-    def test_pre_tool_use_has_four_entries(self, tmp_path):
-        """PreToolUse should have 4 matcher entries (Bash, spawn, state-sanitize, tts-timer-start)."""
+    def test_pre_tool_use_has_one_unified_entry(self, tmp_path):
+        """PreToolUse should have 1 entry (unified hook, catch-all)."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -228,10 +218,12 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
         assert isinstance(pre_tool_use, list)
-        assert len(pre_tool_use) == 4
+        assert len(pre_tool_use) == 1
+        assert len(pre_tool_use[0]["hooks"]) == 1
+        assert "spellbook_hook.py" in pre_tool_use[0]["hooks"][0]["command"]
 
-    def test_post_tool_use_has_three_entries(self, tmp_path):
-        """PostToolUse should have 3 matcher entries (audit/canary + memory-inject + catch-all)."""
+    def test_post_tool_use_has_one_unified_entry(self, tmp_path):
+        """PostToolUse should have 1 entry (unified hook, catch-all)."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -241,17 +233,12 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
         assert isinstance(post_tool_use, list)
-        assert len(post_tool_use) == 3
-        assert post_tool_use[0]["matcher"] == "Bash|Read|WebFetch|Grep|mcp__.*"
-        assert len(post_tool_use[0]["hooks"]) == 2
-        assert post_tool_use[1]["matcher"] == "Read|Edit|Grep|Glob"
-        assert len(post_tool_use[1]["hooks"]) == 1  # memory-inject
-        # Catch-all entry: matcher key is omitted (not ".*")
-        assert "matcher" not in post_tool_use[2]
-        assert len(post_tool_use[2]["hooks"]) == 3  # notify-on-complete + tts-notify + memory-capture
+        assert len(post_tool_use) == 1
+        assert len(post_tool_use[0]["hooks"]) == 1
+        assert "spellbook_hook.py" in post_tool_use[0]["hooks"][0]["command"]
 
-    def test_bash_hook_entry_correct(self, tmp_path):
-        """The Bash hook entry should have correct matcher and hook path."""
+    def test_unified_hook_entry_correct_in_pre_tool_use(self, tmp_path):
+        """The unified hook entry in PreToolUse should have correct properties."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -260,57 +247,19 @@ class TestInstallHooks:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(
-            (e for e in pre_tool_use if e.get("matcher") == "Bash"), None
-        )
-        assert bash_entry is not None
-        assert len(bash_entry["hooks"]) == 1
-        assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == _expected_command("$SPELLBOOK_DIR", "bash-gate")
+        assert len(pre_tool_use) == 1
+        entry = pre_tool_use[0]
+        assert "matcher" not in entry  # catch-all
+        assert len(entry["hooks"]) == 1
+        hook = entry["hooks"][0]
+        assert hook == {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 15,
+        }
 
-    def test_spawn_hook_entry_correct(self, tmp_path):
-        """The spawn_claude_session hook entry should have correct matcher and hook path."""
-        config_dir = tmp_path / ".claude"
-        config_dir.mkdir(parents=True)
-        settings_path = config_dir / "settings.local.json"
-
-        install_hooks(settings_path, dry_run=False)
-
-        settings = _read_settings(settings_path)
-        pre_tool_use = settings["hooks"]["PreToolUse"]
-        spawn_entry = next(
-            (e for e in pre_tool_use if e.get("matcher") == "spawn_claude_session"),
-            None,
-        )
-        assert spawn_entry is not None
-        assert len(spawn_entry["hooks"]) == 1
-        assert spawn_entry["hooks"][0]["type"] == "command"
-        assert spawn_entry["hooks"][0]["command"] == _expected_command("$SPELLBOOK_DIR", "spawn-guard")
-
-    def test_state_sanitize_hook_entry_correct(self, tmp_path):
-        """The state-sanitize hook should be in PreToolUse with timeout."""
-        config_dir = tmp_path / ".claude"
-        config_dir.mkdir(parents=True)
-        settings_path = config_dir / "settings.local.json"
-
-        install_hooks(settings_path, dry_run=False)
-
-        settings = _read_settings(settings_path)
-        pre_tool_use = settings["hooks"]["PreToolUse"]
-        state_entry = next(
-            (e for e in pre_tool_use
-             if e.get("matcher") == "mcp__spellbook__workflow_state_save"),
-            None,
-        )
-        assert state_entry is not None
-        assert len(state_entry["hooks"]) == 1
-        hook = state_entry["hooks"][0]
-        assert hook["type"] == "command"
-        assert hook["command"] == _expected_command("$SPELLBOOK_DIR", "state-sanitize")
-        assert hook["timeout"] == 15
-
-    def test_audit_log_hook_entry_correct(self, tmp_path):
-        """The audit-log PostToolUse hook should have async and timeout."""
+    def test_unified_hook_entry_correct_in_post_tool_use(self, tmp_path):
+        """The unified hook entry in PostToolUse should have correct properties."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -319,38 +268,16 @@ class TestInstallHooks:
 
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
-        post_entry = post_tool_use[0]
-        ext = _expected_ext()
-        audit_hook = next(
-            (h for h in post_entry["hooks"]
-             if isinstance(h, dict) and _get_hook_path(h).endswith(f"audit-log{ext}")),
-            None,
-        )
-        assert audit_hook is not None
-        assert audit_hook["type"] == "command"
-        assert audit_hook["async"] is True
-        assert audit_hook["timeout"] == 10
-
-    def test_canary_check_hook_entry_correct(self, tmp_path):
-        """The canary-check PostToolUse hook should have timeout but not async."""
-        config_dir = tmp_path / ".claude"
-        config_dir.mkdir(parents=True)
-        settings_path = config_dir / "settings.local.json"
-
-        install_hooks(settings_path, dry_run=False)
-
-        settings = _read_settings(settings_path)
-        post_tool_use = settings["hooks"]["PostToolUse"]
-        post_entry = post_tool_use[0]
-        ext = _expected_ext()
-        canary_hook = next(
-            (h for h in post_entry["hooks"]
-             if isinstance(h, dict) and _get_hook_path(h).endswith(f"canary-check{ext}")),
-            None,
-        )
-        assert canary_hook is not None
-        assert canary_hook["type"] == "command"
-        assert canary_hook["timeout"] == 10
+        assert len(post_tool_use) == 1
+        entry = post_tool_use[0]
+        assert "matcher" not in entry  # catch-all
+        assert len(entry["hooks"]) == 1
+        hook = entry["hooks"][0]
+        assert hook == {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 15,
+        }
 
     def test_preserves_existing_settings(self, tmp_path):
         """Existing non-hook settings should be preserved."""
@@ -395,10 +322,15 @@ class TestInstallHooks:
         write_hooks = [e for e in pre_tool_use if e.get("matcher") == "Write"]
         assert len(write_hooks) == 1
         assert write_hooks[0]["hooks"] == ["/usr/local/bin/my-custom-hook.sh"]
-        # Spellbook hooks should also be present
-        matchers = [e.get("matcher") for e in pre_tool_use]
-        assert "Bash" in matchers
-        assert "spawn_claude_session" in matchers
+        # Unified spellbook hook should also be present (catch-all, no matcher)
+        unified = [
+            e for e in pre_tool_use
+            if any(
+                isinstance(h, dict) and "spellbook_hook" in h.get("command", "")
+                for h in e.get("hooks", [])
+            )
+        ]
+        assert len(unified) == 1
 
     def test_preserves_user_post_tool_use_hooks(self, tmp_path):
         """Existing user PostToolUse hooks should be preserved alongside spellbook hooks."""
@@ -422,15 +354,18 @@ class TestInstallHooks:
         write_hooks = [e for e in post_tool_use if e.get("matcher") == "Write"]
         assert len(write_hooks) == 1
         assert write_hooks[0]["hooks"] == ["/usr/local/bin/post-write.sh"]
-        # Spellbook PostToolUse hooks should also be present
-        spellbook_matchers = [
-            e.get("matcher") for e in post_tool_use
-            if e.get("matcher") == "Bash|Read|WebFetch|Grep|mcp__.*"
+        # Unified spellbook hook should also be present (catch-all, no matcher)
+        unified = [
+            e for e in post_tool_use
+            if any(
+                isinstance(h, dict) and "spellbook_hook" in h.get("command", "")
+                for h in e.get("hooks", [])
+            )
         ]
-        assert len(spellbook_matchers) == 1
+        assert len(unified) == 1
 
     def test_preserves_user_hooks_on_shared_post_matcher(self, tmp_path):
-        """If user already has hooks on the same PostToolUse matcher, both coexist."""
+        """If user already has hooks on a PostToolUse matcher, user hooks coexist with unified hook."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -450,21 +385,22 @@ class TestInstallHooks:
 
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
+        # User's matcher entry should be preserved
         matching = [
             e for e in post_tool_use
             if e.get("matcher") == "Bash|Read|WebFetch|Grep|mcp__.*"
         ]
         assert len(matching) == 1
-        hooks_list = matching[0]["hooks"]
-        # User hook preserved
-        assert "/usr/local/bin/my-post-hook.sh" in hooks_list
-        # Spellbook hooks added
-        commands = [
-            _get_hook_path(h) for h in hooks_list if isinstance(h, dict) and "command" in h
+        assert matching[0]["hooks"] == ["/usr/local/bin/my-post-hook.sh"]
+        # Unified hook added as a separate catch-all entry (no matcher)
+        catchall = [e for e in post_tool_use if "matcher" not in e]
+        assert len(catchall) == 1
+        unified_cmds = [
+            _get_hook_path(h) for h in catchall[0]["hooks"]
+            if isinstance(h, dict) and "command" in h
         ]
-        ext = _expected_ext()
-        assert any(c.endswith(f"audit-log{ext}") for c in commands)
-        assert any(c.endswith(f"canary-check{ext}") for c in commands)
+        assert len(unified_cmds) == 1
+        assert unified_cmds[0].endswith("spellbook_hook.py")
 
     def test_idempotent_no_duplicates(self, tmp_path):
         """Running install_hooks twice should not create duplicate entries."""
@@ -476,42 +412,29 @@ class TestInstallHooks:
         install_hooks(settings_path, dry_run=False)
 
         settings = _read_settings(settings_path)
-        pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
-        spawn_entries = [
-            e for e in pre_tool_use if e.get("matcher") == "spawn_claude_session"
-        ]
-        state_entries = [
-            e for e in pre_tool_use
-            if e.get("matcher") == "mcp__spellbook__workflow_state_save"
-        ]
-        assert len(bash_entries) == 1
-        assert len(spawn_entries) == 1
-        assert len(state_entries) == 1
-
-        # PostToolUse idempotency
-        post_tool_use = settings["hooks"]["PostToolUse"]
-        post_entries = [
-            e for e in post_tool_use
-            if e.get("matcher") == "Bash|Read|WebFetch|Grep|mcp__.*"
-        ]
-        assert len(post_entries) == 1
-        # Should have exactly 2 hooks, not 4
-        assert len(post_entries[0]["hooks"]) == 2
+        # Each phase should have exactly 1 entry with 1 hook (unified hook)
+        for phase in ("PreToolUse", "PostToolUse", "PreCompact", "SessionStart"):
+            entries = settings["hooks"][phase]
+            assert len(entries) == 1, f"{phase} should have 1 entry, got {len(entries)}"
+            assert len(entries[0]["hooks"]) == 1, (
+                f"{phase} should have 1 hook, got {len(entries[0]['hooks'])}"
+            )
 
     def test_updates_existing_spellbook_hook_path(self, tmp_path):
-        """If a spellbook hook entry exists with an old path, it should be updated."""
+        """Old individual spellbook hooks are replaced by the unified hook on reinstall."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
 
-        # Old spellbook hook with different path
+        # Old spellbook hook with per-tool matcher
         _make_settings_file(settings_path, {
             "hooks": {
                 "PreToolUse": [
                     {
                         "matcher": "Bash",
-                        "hooks": ["/old/path/hooks/bash-gate.sh"],
+                        "hooks": [
+                            {"type": "command", "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh"},
+                        ],
                     },
                 ],
             },
@@ -521,19 +444,17 @@ class TestInstallHooks:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
+        # Old "Bash" matcher entry should be cleaned (spellbook hook removed, entry dropped)
         bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
-        assert len(bash_entries) == 1
-        # The hook list should contain the spellbook path as an object (platform-appropriate extension)
-        ext = _expected_ext()
-        spellbook_hooks = [
-            h for h in bash_entries[0]["hooks"]
-            if isinstance(h, dict) and _get_hook_path(h).endswith(f"bash-gate{ext}")
-        ]
-        assert len(spellbook_hooks) == 1
-        assert spellbook_hooks[0]["command"] == _expected_command("$SPELLBOOK_DIR", "bash-gate")
+        assert len(bash_entries) == 0
+        # Unified catch-all entry should exist
+        catchall = [e for e in pre_tool_use if "matcher" not in e]
+        assert len(catchall) == 1
+        assert len(catchall[0]["hooks"]) == 1
+        assert _get_hook_path(catchall[0]["hooks"][0]).endswith("spellbook_hook.py")
 
     def test_merges_hooks_into_existing_matcher(self, tmp_path):
-        """If a user has their own Bash hook, spellbook adds its hook to the same entry's hooks list."""
+        """If a user has their own Bash hook, the unified hook is added as a separate catch-all entry."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -554,17 +475,14 @@ class TestInstallHooks:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
+        # User's Bash matcher entry should be preserved
         bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
         assert len(bash_entries) == 1
-        # Both hooks should be in the list (user's string hook + spellbook's object hook)
-        hooks_list = bash_entries[0]["hooks"]
-        assert "/usr/local/bin/my-bash-hook.sh" in hooks_list
-        ext = _expected_ext()
-        spellbook_hooks = [
-            h for h in hooks_list
-            if isinstance(h, dict) and _get_hook_path(h).endswith(f"bash-gate{ext}")
-        ]
-        assert len(spellbook_hooks) == 1
+        assert bash_entries[0]["hooks"] == ["/usr/local/bin/my-bash-hook.sh"]
+        # Unified hook should be a separate catch-all entry
+        catchall = [e for e in pre_tool_use if "matcher" not in e]
+        assert len(catchall) == 1
+        assert _get_hook_path(catchall[0]["hooks"][0]).endswith("spellbook_hook.py")
 
     def test_dry_run_does_not_write(self, tmp_path):
         """In dry_run mode, no file should be created or modified."""
@@ -639,8 +557,8 @@ class TestInstallHooks:
         assert result.action == "installed"
         assert result.component == "hooks"
 
-    def test_total_hook_count_is_ten(self, tmp_path):
-        """All 10 hooks should be installed: 4 PreToolUse + 6 PostToolUse."""
+    def test_total_hook_count_is_four(self, tmp_path):
+        """4 hooks total: 1 unified hook per phase (PreToolUse, PostToolUse, PreCompact, SessionStart)."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -650,13 +568,13 @@ class TestInstallHooks:
         settings = _read_settings(settings_path)
         # Count individual hook scripts across all phases
         total_hooks = 0
-        for phase in ["PreToolUse", "PostToolUse"]:
+        for phase in ("PreToolUse", "PostToolUse", "PreCompact", "SessionStart"):
             for entry in settings["hooks"].get(phase, []):
                 total_hooks += len(entry["hooks"])
-        assert total_hooks == 10
+        assert total_hooks == 4
 
     def test_upgrades_old_string_format_spellbook_hooks(self, tmp_path):
-        """Old string-format spellbook hooks should be replaced cleanly on reinstall."""
+        """Old string-format spellbook hooks should be replaced cleanly by unified hook on reinstall."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -674,12 +592,17 @@ class TestInstallHooks:
         install_hooks(settings_path, dry_run=False)
 
         settings = _read_settings(settings_path)
-        # Should now have all 10 hooks across both phases
+        # Old per-tool entries should be removed; unified hook replaces them
         pre = settings["hooks"]["PreToolUse"]
         post = settings["hooks"]["PostToolUse"]
-        assert len(pre) == 4  # Bash, spawn, state-sanitize, tts-timer-start
-        assert len(post) == 3  # audit/canary matcher + memory-inject matcher + notify/tts/memory-capture catch-all
-        assert len(post[0]["hooks"]) == 2
+        # PreToolUse: old Bash + spawn entries cleaned, 1 catch-all unified entry
+        assert len(pre) == 1
+        assert "matcher" not in pre[0]
+        assert _get_hook_path(pre[0]["hooks"][0]).endswith("spellbook_hook.py")
+        # PostToolUse: 1 catch-all unified entry
+        assert len(post) == 1
+        assert "matcher" not in post[0]
+        assert _get_hook_path(post[0]["hooks"][0]).endswith("spellbook_hook.py")
 
 
 # --- uninstall_hooks() tests ---
@@ -893,8 +816,8 @@ class TestClaudeCodeInstallerHookIntegration:
         assert len(hook_results) == 1
         assert hook_results[0].success
 
-    def test_install_registers_all_ten_hooks(self, tmp_path):
-        """Full installer should register all 10 hooks (4 PreToolUse + 6 PostToolUse)."""
+    def test_install_registers_unified_hooks(self, tmp_path):
+        """Full installer should register unified hooks (1 per phase, 4 total)."""
         from installer.platforms.claude_code import ClaudeCodeInstaller
 
         spellbook_dir = self._make_installer_spellbook_dir(tmp_path)
@@ -909,12 +832,12 @@ class TestClaudeCodeInstallerHookIntegration:
         settings_path = config_dir / "settings.json"
         settings = _read_settings(settings_path)
 
-        # Count all individual hook scripts
+        # Count all individual hook scripts across all 4 phases
         total_hooks = 0
-        for phase in ["PreToolUse", "PostToolUse"]:
+        for phase in ("PreToolUse", "PostToolUse", "PreCompact", "SessionStart"):
             for entry in settings["hooks"].get(phase, []):
                 total_hooks += len(entry["hooks"])
-        assert total_hooks == 10
+        assert total_hooks == 4
 
     def test_uninstall_removes_hooks(self, tmp_path):
         """Full uninstaller should remove security hooks from settings.json."""
@@ -961,13 +884,16 @@ class TestClaudeCodeInstallerHookIntegration:
         assert json.dumps(str(spellbook_dir))[1:-1] in content
 
         settings = _read_settings(settings_path)
-        # Verify specific hook paths are expanded
+        # Verify the unified hook path is expanded
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
-        expected_path = _expected_command(str(spellbook_dir), "bash-gate")
-        assert len(bash_entry["hooks"]) == 1
-        assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == expected_path
+        assert len(pre_tool_use) == 1
+        catchall_entry = pre_tool_use[0]
+        assert "matcher" not in catchall_entry
+        assert len(catchall_entry["hooks"]) == 1
+        hook = catchall_entry["hooks"][0]
+        assert hook["type"] == "command"
+        expected_path = _expected_unified_command(str(spellbook_dir))
+        assert hook["command"] == expected_path
 
 
 # --- _expand_spellbook_dir() tests ---
@@ -1070,7 +996,7 @@ class TestInstallHooksWithSpellbookDir:
         # Use json.dumps to get the JSON-escaped version (handles Windows backslashes)
         assert json.dumps(str(spellbook_dir))[1:-1] in content
 
-    def test_expanded_bash_hook_correct(self, tmp_path):
+    def test_expanded_unified_hook_correct(self, tmp_path):
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
@@ -1080,12 +1006,14 @@ class TestInstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
-        assert len(bash_entry["hooks"]) == 1
-        assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == _expected_command(str(spellbook_dir), "bash-gate")
+        assert len(pre_tool_use) == 1
+        catchall_entry = pre_tool_use[0]
+        assert "matcher" not in catchall_entry
+        assert len(catchall_entry["hooks"]) == 1
+        assert catchall_entry["hooks"][0]["type"] == "command"
+        assert catchall_entry["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir))
 
-    def test_expanded_dict_hook_correct(self, tmp_path):
+    def test_expanded_post_tool_use_hook_correct(self, tmp_path):
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
@@ -1095,15 +1023,13 @@ class TestInstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
+        assert len(post_tool_use) == 1
         post_entry = post_tool_use[0]
-        ext = _expected_ext()
-        audit_hook = next(
-            h for h in post_entry["hooks"]
-            if isinstance(h, dict) and _get_hook_path(h).endswith(f"audit-log{ext}")
-        )
-        assert audit_hook["command"] == _expected_command(str(spellbook_dir), "audit-log")
-        assert audit_hook["async"] is True
-        assert audit_hook["timeout"] == 10
+        assert "matcher" not in post_entry
+        assert len(post_entry["hooks"]) == 1
+        hook = post_entry["hooks"][0]
+        assert hook["command"] == _expected_unified_command(str(spellbook_dir))
+        assert hook["timeout"] == 15
 
     def test_idempotent_with_expanded_paths(self, tmp_path):
         """Running install_hooks with spellbook_dir twice should not create duplicates."""
@@ -1116,10 +1042,13 @@ class TestInstallHooksWithSpellbookDir:
         install_hooks(settings_path, spellbook_dir=spellbook_dir, dry_run=False)
 
         settings = _read_settings(settings_path)
-        pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
-        assert len(bash_entries) == 1
-        assert len(bash_entries[0]["hooks"]) == 1
+        # Each phase should have exactly 1 entry with 1 hook
+        for phase in ("PreToolUse", "PostToolUse", "PreCompact", "SessionStart"):
+            entries = settings["hooks"][phase]
+            assert len(entries) == 1, f"{phase} should have 1 entry, got {len(entries)}"
+            assert len(entries[0]["hooks"]) == 1, (
+                f"{phase} should have 1 hook, got {len(entries[0]['hooks'])}"
+            )
 
     def test_replaces_old_literal_paths_with_expanded(self, tmp_path):
         """If settings has old literal $SPELLBOOK_DIR paths, they should be replaced."""
@@ -1145,16 +1074,18 @@ class TestInstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
-        assert len(bash_entry["hooks"]) == 1
-        assert bash_entry["hooks"][0]["type"] == "command"
-        assert bash_entry["hooks"][0]["command"] == _expected_command(str(spellbook_dir), "bash-gate")
+        # Old per-tool entries should be cleaned, only unified catch-all remains
+        assert len(pre_tool_use) == 1
+        assert "matcher" not in pre_tool_use[0]
+        assert len(pre_tool_use[0]["hooks"]) == 1
+        assert pre_tool_use[0]["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir))
 
     def test_preserves_user_hooks_with_expanded_paths(self, tmp_path):
         """User hooks should be preserved when installing with expanded paths."""
         spellbook_dir = _make_spellbook_dir(tmp_path)
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
+
         settings_path = config_dir / "settings.local.json"
 
         _make_settings_file(settings_path, {
@@ -1169,14 +1100,14 @@ class TestInstallHooksWithSpellbookDir:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        bash_entry = next(e for e in pre_tool_use if e.get("matcher") == "Bash")
-        assert "/usr/local/bin/my-bash-hook.sh" in bash_entry["hooks"]
-        expected_cmd = _expected_command(str(spellbook_dir), "bash-gate")
-        spellbook_hooks = [
-            h for h in bash_entry["hooks"]
-            if isinstance(h, dict) and h.get("command") == expected_cmd
-        ]
-        assert len(spellbook_hooks) == 1
+        # User's Bash matcher entry preserved
+        bash_entries = [e for e in pre_tool_use if e.get("matcher") == "Bash"]
+        assert len(bash_entries) == 1
+        assert bash_entries[0]["hooks"] == ["/usr/local/bin/my-bash-hook.sh"]
+        # Unified hook added as catch-all entry
+        catchall = [e for e in pre_tool_use if "matcher" not in e]
+        assert len(catchall) == 1
+        assert catchall[0]["hooks"][0]["command"] == _expected_unified_command(str(spellbook_dir))
 
 
 # --- uninstall_hooks() with spellbook_dir tests ---
@@ -1295,7 +1226,7 @@ class TestLegacyCatchallMigration:
     to the omitted-matcher form on reinstall."""
 
     def test_migrates_dotstar_matcher(self, tmp_path):
-        """Re-installing should convert '.*' catch-all to omitted matcher."""
+        """Re-installing should convert '.*' catch-all to omitted matcher with unified hook."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -1324,17 +1255,15 @@ class TestLegacyCatchallMigration:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        # Find the catch-all entry (should be the one with tts-timer-start)
-        catchall_entries = [
-            e for e in pre_tool_use
-            if any("tts-timer-start" in str(h) for h in e.get("hooks", []))
-        ]
+        # Old Bash entry cleaned (spellbook hook removed), ".*" entry migrated
+        # to omitted-matcher and replaced with unified hook
+        catchall_entries = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall_entries) == 1
-        # matcher key should be removed (migrated from ".*")
-        assert "matcher" not in catchall_entries[0]
+        # The unified hook should be present (tts-timer-start replaced by spellbook_hook.py)
+        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith("spellbook_hook.py")
 
     def test_migrates_star_matcher(self, tmp_path):
-        """Re-installing should convert '*' catch-all to omitted matcher."""
+        """Re-installing should convert '*' catch-all to omitted matcher with unified hook."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -1361,15 +1290,13 @@ class TestLegacyCatchallMigration:
 
         settings = _read_settings(settings_path)
         post_tool_use = settings["hooks"]["PostToolUse"]
-        catchall_entries = [
-            e for e in post_tool_use
-            if any("tts-notify" in str(h) for h in e.get("hooks", []))
-        ]
+        # "*" matcher migrated to omitted-key form, old hook replaced by unified
+        catchall_entries = [e for e in post_tool_use if "matcher" not in e]
         assert len(catchall_entries) == 1
-        assert "matcher" not in catchall_entries[0]
+        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith("spellbook_hook.py")
 
     def test_migrates_empty_string_matcher(self, tmp_path):
-        """Re-installing should convert '' catch-all to omitted matcher."""
+        """Re-installing should convert '' catch-all to omitted matcher with unified hook."""
         config_dir = tmp_path / ".claude"
         config_dir.mkdir(parents=True)
         settings_path = config_dir / "settings.local.json"
@@ -1396,12 +1323,10 @@ class TestLegacyCatchallMigration:
 
         settings = _read_settings(settings_path)
         pre_tool_use = settings["hooks"]["PreToolUse"]
-        catchall_entries = [
-            e for e in pre_tool_use
-            if any("tts-timer-start" in str(h) for h in e.get("hooks", []))
-        ]
+        # "" matcher migrated to omitted-key form, old hook replaced by unified
+        catchall_entries = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall_entries) == 1
-        assert "matcher" not in catchall_entries[0]
+        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith("spellbook_hook.py")
 
     def test_preserves_user_hooks_in_legacy_catchall(self, tmp_path):
         """User hooks in a legacy '.*' entry should be preserved during migration."""
@@ -1429,11 +1354,12 @@ class TestLegacyCatchallMigration:
         pre_tool_use = settings["hooks"]["PreToolUse"]
         catchall_entries = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall_entries) == 1
-        hook_strs = [str(h) for h in catchall_entries[0]["hooks"]]
+        hooks = catchall_entries[0]["hooks"]
+        hook_strs = [str(h) for h in hooks]
         # User hook should be preserved
         assert any("/usr/local/bin/my-catchall-hook.sh" in s for s in hook_strs)
-        # Spellbook hook should be present (possibly updated)
-        assert any("tts-timer-start" in s for s in hook_strs)
+        # Unified hook should replace the old tts-timer-start
+        assert any("spellbook_hook" in s for s in hook_strs)
 
 
 # --- PowerShell command format path extraction tests ---
@@ -1573,7 +1499,7 @@ class TestTwoTierPathResolution:
         assert not hasattr(hooks_mod, "_SHELL_TO_NIM_BINARY")
 
     def test_install_hooks_produces_platform_appropriate_paths(self, tmp_path):
-        """install_hooks should produce platform-appropriate hook paths (no nim/bin/, no .py)."""
+        """install_hooks should produce platform-appropriate hook paths (no nim/bin/)."""
         settings_path = tmp_path / "settings.json"
         spellbook_dir = _make_spellbook_dir(tmp_path)
 
@@ -1589,15 +1515,16 @@ class TestTwoTierPathResolution:
                     cmd = _get_hook_command(hook)
                     all_commands.append(cmd)
 
-        ext = _expected_ext()
-        # All hook paths should use the platform-appropriate extension (no nim/bin/, no .py)
+        # All hook paths should be the unified hook (no nim/bin/, no old .sh scripts)
         for cmd in all_commands:
-            # Extract the actual file path (handles PowerShell wrapper on Windows)
             path = _get_hook_path(cmd)
             normalized = path.replace("\\", "/")
             assert "/nim/bin/" not in normalized, f"Nim path found: {cmd}"
-            assert not normalized.endswith(".py"), f".py path found: {cmd}"
-            assert normalized.endswith(ext), f"Expected {ext} path, found: {cmd}"
+            # On Unix: spellbook_hook.py, on Windows: spellbook_hook.ps1 via PS wrapper
+            if sys.platform == "win32":
+                assert normalized.endswith("spellbook_hook.ps1"), f"Expected .ps1 path, found: {cmd}"
+            else:
+                assert normalized.endswith("spellbook_hook.py"), f"Expected .py path, found: {cmd}"
 
 
 # --- Legacy hook detection and cleanup tests ---
@@ -1878,7 +1805,7 @@ class TestInstallHooksLegacyCleanup:
         assert nim_commands == [], f"Nim paths still present: {nim_commands}"
 
     def test_legacy_py_hooks_cleaned_before_registration(self, tmp_path):
-        """Pre-existing .py wrapper hooks should be removed during install."""
+        """Pre-existing .py wrapper hooks should be removed during install (except spellbook_hook.py)."""
         settings_path = tmp_path / "settings.json"
         spellbook_dir = _make_spellbook_dir(tmp_path)
 
@@ -1909,8 +1836,13 @@ class TestInstallHooksLegacyCleanup:
                 for hook in entry.get("hooks", []):
                     cmd = _get_hook_command(hook)
                     all_commands.append(cmd)
-        py_commands = [c for c in all_commands if c.endswith(".py")]
-        assert py_commands == [], f".py paths still present: {py_commands}"
+        # Old .py hooks should be gone, but spellbook_hook.py is the new unified hook
+        legacy_py = [c for c in all_commands if c.endswith(".py") and "spellbook_hook.py" not in c]
+        assert legacy_py == [], f"Legacy .py paths still present: {legacy_py}"
+        # spellbook_hook.py should be present (on Unix)
+        if sys.platform != "win32":
+            unified_py = [c for c in all_commands if "spellbook_hook.py" in c]
+            assert len(unified_py) == 4, f"Expected 4 unified hooks, found {len(unified_py)}"
 
 
 class TestInstallHooksPowerShellCheck:
