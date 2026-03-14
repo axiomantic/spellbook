@@ -197,15 +197,18 @@ class TestStintCompactionSurvival:
                 "reason": "post-compaction restoration",
             })
 
-            # Verify recovery directive contains stint stack info
+            # Verify recovery directive exact content
             context = result["hookSpecificOutput"]["additionalContext"]
-            expected_focus_section = (
-                "\n\n### Focus Stack (restored)\n"
+            expected_context = (
+                "### Active Skill: implementing-features\n"
+                "Resume with: `Skill(skill='implementing-features', --resume )`\n"
+                "\n### Focus Stack (restored)\n"
                 "  1. implementing-features - build auth\n"
                 "  2. debugging - fix test\n"
             )
-            assert context.endswith(expected_focus_section)
-            assert "### Active Skill: implementing-features" in context
+            assert context == expected_context, (
+                f"Expected context:\n{expected_context!r}\n\nGot:\n{context!r}"
+            )
         finally:
             spellbook_hook._mcp_call = original
 

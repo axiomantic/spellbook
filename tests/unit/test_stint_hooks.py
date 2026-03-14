@@ -51,30 +51,61 @@ class TestEventDetection:
     """Test that the hook correctly identifies event types."""
 
     def test_pre_tool_use_detected(self):
-        """PreToolUse: has tool_name but no tool_result."""
-        proc = _run_hook({"tool_name": "Bash", "tool_input": {"command": "ls"}})
-        assert proc.returncode == 0
-
-    def test_post_tool_use_detected(self):
-        """PostToolUse: has tool_result."""
+        """PreToolUse: has tool_name but no tool_result. Verify timer files created."""
+        tool_use_id = "detect-pre-tool-use-test"
         proc = _run_hook({
-            "tool_name": "Bash",
-            "tool_input": {"command": "ls"},
-            "tool_result": "file1.py\nfile2.py",
+            "tool_name": "Read",
+            "tool_input": {"file_path": "/some/file.py"},
+            "tool_use_id": tool_use_id,
         })
         assert proc.returncode == 0
+        # Timer file creation proves PreToolUse handler was dispatched
+        tts_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
+        notify_file = Path(f"/tmp/claude-notify-start-{tool_use_id}")
+        assert tts_file.exists(), "PreToolUse handler not dispatched: TTS timer file missing"
+        assert notify_file.exists(), "PreToolUse handler not dispatched: notify timer file missing"
+        tts_file.unlink(missing_ok=True)
+        notify_file.unlink(missing_ok=True)
+
+    def test_post_tool_use_detected(self):
+        """PostToolUse: has tool_result. Timer files should NOT be created (PostToolUse
+        does not call _record_tool_start, only PreToolUse does)."""
+        tool_use_id = "detect-post-tool-use-test"
+        tts_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
+        notify_file = Path(f"/tmp/claude-notify-start-{tool_use_id}")
+        # Clean up any leftover files
+        tts_file.unlink(missing_ok=True)
+        notify_file.unlink(missing_ok=True)
+        proc = _run_hook({
+            "tool_name": "Read",
+            "tool_input": {"file_path": "/some/file.py"},
+            "tool_result": "file1.py\nfile2.py",
+            "tool_use_id": tool_use_id,
+        })
+        assert proc.returncode == 0
+        # PostToolUse should NOT create timer files (only PreToolUse does)
+        assert not tts_file.exists(), (
+            "PostToolUse incorrectly dispatched to PreToolUse: timer file created"
+        )
+        assert not notify_file.exists(), (
+            "PostToolUse incorrectly dispatched to PreToolUse: notify file created"
+        )
 
     def test_pre_compact_detected(self):
-        """PreCompact: has hook_event_name."""
+        """PreCompact: has hook_event_name. Exits 0 with no stdout (MCP unreachable)."""
         proc = _run_hook({
             "hook_event_name": "PreCompact",
             "cwd": "/tmp/test",
             "trigger": "auto",
         })
         assert proc.returncode == 0
+        # PreCompact with dead MCP port produces no stdout (all MCP calls fail silently)
+        assert proc.stdout.strip() == "", (
+            f"Expected no stdout from PreCompact with dead MCP, got: {proc.stdout!r}"
+        )
 
     def test_session_start_detected(self):
-        """SessionStart: has hook_event_name."""
+        """SessionStart: has hook_event_name. Produces fallback directive on dead MCP."""
         proc = _run_hook({
             "hook_event_name": "SessionStart",
             "cwd": "/tmp/test",
@@ -82,6 +113,18 @@ class TestEventDetection:
             "session_id": "test-123",
         })
         assert proc.returncode == 0
+        # SessionStart with dead MCP should produce a fallback directive JSON
+        output = json.loads(proc.stdout)
+        assert output == {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": (
+                    "Session resumed after compaction. Workflow state could not "
+                    "be loaded. Re-read any planning documents, check your todo "
+                    "list, and verify your current working context."
+                ),
+            }
+        }
 
     def test_empty_stdin_exits_zero(self):
         proc = _run_hook("")
@@ -242,91 +285,237 @@ class TestRecordToolStart:
 
 
 class TestPostToolUseMemoryInject:
-    """Test memory injection in PostToolUse (fail-open)."""
+    """Test memory injection in PostToolUse (fail-open).
 
-    def test_memory_inject_exits_zero_on_daemon_unreachable(self):
-        proc = _run_hook({
-            "tool_name": "Read",
-            "tool_input": {"file_path": "/some/file.py"},
-            "tool_result": "file contents here",
-            "cwd": "/tmp/test-project",
-        })
-        assert proc.returncode == 0
+    Memory inject calls _http_post to /api/memory/recall. With a dead MCP port,
+    the call fails and returns None, producing no output. We mock at the Python
+    level to verify the handler attempts the call.
+    """
+
+    def test_memory_inject_attempts_recall_for_file_tool(self):
+        """Read tool should attempt memory recall via _memory_inject."""
+        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
+        import spellbook_hook
+
+        calls = []
+        original_http = spellbook_hook._http_post
+        spellbook_hook._http_post = lambda url, payload, timeout=5: (
+            calls.append(("http_post", url, payload)) or None
+        )
+
+        try:
+            outputs = spellbook_hook._handle_post_tool_use("Read", {
+                "tool_input": {"file_path": "/some/file.py"},
+                "tool_result": "file contents here",
+                "cwd": "/tmp/test-project",
+            })
+            # Memory inject should have attempted an HTTP POST to the recall endpoint
+            recall_calls = [c for c in calls if "/api/memory/recall" in c[1]]
+            assert len(recall_calls) == 1, (
+                f"Expected 1 memory recall call, got {len(recall_calls)}. All calls: {calls}"
+            )
+            assert recall_calls[0][2]["file_path"] == "/some/file.py"
+        finally:
+            spellbook_hook._http_post = original_http
 
     def test_non_file_tool_skips_memory_inject(self):
         """Bash tool should not trigger memory injection."""
-        proc = _run_hook({
-            "tool_name": "Bash",
-            "tool_input": {"command": "echo hello"},
-            "tool_result": "hello",
-        })
-        assert proc.returncode == 0
+        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
+        import spellbook_hook
+
+        calls = []
+        original_http = spellbook_hook._http_post
+        spellbook_hook._http_post = lambda url, payload, timeout=5: (
+            calls.append(("http_post", url, payload)) or None
+        )
+
+        try:
+            spellbook_hook._handle_post_tool_use("Bash", {
+                "tool_input": {"command": "echo hello"},
+                "tool_result": "hello",
+            })
+            # No recall calls for non-file tools
+            recall_calls = [c for c in calls if "/api/memory/recall" in c[1]]
+            assert recall_calls == [], (
+                f"Bash tool should not trigger memory recall, got: {recall_calls}"
+            )
+        finally:
+            spellbook_hook._http_post = original_http
 
 
 class TestNotifyOnComplete:
-    """Test OS notification handler (fail-open)."""
+    """Test OS notification handler (fail-open).
+
+    Tests mock _send_os_notification to verify the handler logic
+    without sending actual OS notifications.
+    """
 
     def test_notification_skipped_for_blacklisted_tools(self):
         """Blacklisted interactive tools should never trigger notifications."""
-        for tool in ("AskUserQuestion", "TodoRead", "TodoWrite",
-                     "TaskCreate", "TaskUpdate", "TaskGet", "TaskList"):
-            proc = _run_hook({
-                "tool_name": tool,
-                "tool_input": {},
-                "tool_result": "result",
-                "tool_use_id": "valid-id",
-            })
-            assert proc.returncode == 0
+        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
+        import spellbook_hook
 
-    def test_notification_exits_zero_when_disabled(self):
+        notifications = []
+        original = spellbook_hook._send_os_notification
+        spellbook_hook._send_os_notification = lambda title, body: notifications.append((title, body))
+
+        try:
+            for tool in ("AskUserQuestion", "TodoRead", "TodoWrite",
+                         "TaskCreate", "TaskUpdate", "TaskGet", "TaskList"):
+                # Create a timer file so threshold logic would fire
+                tool_use_id = f"blacklist-test-{tool}"
+                Path(f"/tmp/claude-notify-start-{tool_use_id}").write_text("0")
+                spellbook_hook._notify_on_complete(tool, {
+                    "tool_input": {},
+                    "tool_result": "result",
+                    "tool_use_id": tool_use_id,
+                })
+                Path(f"/tmp/claude-notify-start-{tool_use_id}").unlink(missing_ok=True)
+            assert notifications == [], (
+                f"Blacklisted tools should not trigger notifications, got: {notifications}"
+            )
+        finally:
+            spellbook_hook._send_os_notification = original
+
+    def test_notification_skipped_when_disabled(self):
         """SPELLBOOK_NOTIFY_ENABLED=false should skip notifications."""
-        proc = _run_hook(
-            {
-                "tool_name": "Bash",
+        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
+        import spellbook_hook
+
+        notifications = []
+        original_notify = spellbook_hook._send_os_notification
+        spellbook_hook._send_os_notification = lambda title, body: notifications.append((title, body))
+        original_env = os.environ.get("SPELLBOOK_NOTIFY_ENABLED")
+        os.environ["SPELLBOOK_NOTIFY_ENABLED"] = "false"
+
+        try:
+            tool_use_id = "disabled-test"
+            Path(f"/tmp/claude-notify-start-{tool_use_id}").write_text("0")
+            spellbook_hook._notify_on_complete("Bash", {
                 "tool_input": {"command": "sleep 60"},
                 "tool_result": "done",
-                "tool_use_id": "valid-id",
-            },
-            env_overrides={"SPELLBOOK_NOTIFY_ENABLED": "false"},
-        )
-        assert proc.returncode == 0
+                "tool_use_id": tool_use_id,
+            })
+            assert notifications == [], (
+                f"Notifications should be skipped when disabled, got: {notifications}"
+            )
+            # Timer file should NOT be consumed when disabled (early return)
+            Path(f"/tmp/claude-notify-start-{tool_use_id}").unlink(missing_ok=True)
+        finally:
+            spellbook_hook._send_os_notification = original_notify
+            if original_env is None:
+                os.environ.pop("SPELLBOOK_NOTIFY_ENABLED", None)
+            else:
+                os.environ["SPELLBOOK_NOTIFY_ENABLED"] = original_env
 
 
 class TestTtsNotify:
-    """Test TTS notification handler (fail-open)."""
+    """Test TTS notification handler (fail-open).
 
-    def test_tts_exits_zero_on_unreachable_server(self):
-        """TTS handler should fail-open when MCP server is unreachable."""
-        proc = _run_hook({
-            "tool_name": "Bash",
-            "tool_input": {"command": "make build"},
-            "tool_result": "build complete",
-            "tool_use_id": "valid-id",
-        })
-        assert proc.returncode == 0
+    Tests mock _http_post to verify the handler attempts to POST
+    to the /api/speak endpoint when threshold is exceeded.
+    """
+
+    def test_tts_attempts_speak_when_threshold_exceeded(self):
+        """TTS handler should attempt POST to /api/speak for long-running tools."""
+        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
+        import spellbook_hook
+
+        calls = []
+        original_http = spellbook_hook._http_post
+        spellbook_hook._http_post = lambda url, payload, timeout=5: (
+            calls.append(("http_post", url, payload)) or None
+        )
+
+        tool_use_id = "tts-test-threshold"
+        # Create timer file with timestamp 0 (ancient) to exceed threshold
+        Path(f"/tmp/claude-tool-start-{tool_use_id}").write_text("0")
+
+        try:
+            spellbook_hook._tts_notify("Bash", {
+                "tool_input": {"command": "make build"},
+                "tool_result": "build complete",
+                "tool_use_id": tool_use_id,
+                "cwd": "/tmp/test-project",
+            })
+            speak_calls = [c for c in calls if "/api/speak" in c[1]]
+            assert len(speak_calls) == 1, (
+                f"Expected 1 speak call, got {len(speak_calls)}. All calls: {calls}"
+            )
+            assert "text" in speak_calls[0][2]
+            assert "make" in speak_calls[0][2]["text"]
+        finally:
+            spellbook_hook._http_post = original_http
+            Path(f"/tmp/claude-tool-start-{tool_use_id}").unlink(missing_ok=True)
 
 
 class TestMemoryCapture:
-    """Test memory capture handler (fail-open)."""
+    """Test memory capture handler (fail-open).
 
-    def test_capture_exits_zero_on_unreachable_server(self):
-        """Memory capture should fail-open when MCP server is unreachable."""
-        proc = _run_hook({
-            "tool_name": "Read",
-            "tool_input": {"file_path": "/some/file.py"},
-            "tool_result": "file contents",
-            "cwd": "/tmp/test",
-        })
-        assert proc.returncode == 0
+    Tests mock _http_post to verify the handler attempts to POST
+    to the /api/memory/event endpoint.
+    """
+
+    def test_capture_attempts_event_post_for_file_tool(self):
+        """Memory capture should attempt POST to /api/memory/event."""
+        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
+        import spellbook_hook
+
+        calls = []
+        original_http = spellbook_hook._http_post
+        original_resolve = spellbook_hook._resolve_git_context
+        spellbook_hook._http_post = lambda url, payload, timeout=5: (
+            calls.append(("http_post", url, payload)) or None
+        )
+        spellbook_hook._resolve_git_context = lambda cwd: (cwd, "main")
+
+        try:
+            spellbook_hook._memory_capture("Read", {
+                "tool_input": {"file_path": "/some/file.py"},
+                "tool_result": "file contents",
+                "cwd": "/tmp/test",
+            })
+            event_calls = [c for c in calls if "/api/memory/event" in c[1]]
+            assert len(event_calls) == 1, (
+                f"Expected 1 event call, got {len(event_calls)}. All calls: {calls}"
+            )
+            payload = event_calls[0][2]
+            assert payload == {
+                "session_id": "",
+                "project": "tmp-test",
+                "tool_name": "Read",
+                "subject": "/some/file.py",
+                "summary": "Read: /some/file.py",
+                "tags": "read,file.py",
+                "event_type": "tool_use",
+                "branch": "main",
+            }
+        finally:
+            spellbook_hook._http_post = original_http
+            spellbook_hook._resolve_git_context = original_resolve
 
     def test_capture_skips_blacklisted_tools(self):
-        for tool in ("AskUserQuestion", "TodoRead", "TodoWrite"):
-            proc = _run_hook({
-                "tool_name": tool,
-                "tool_input": {},
-                "tool_result": "result",
-            })
-            assert proc.returncode == 0
+        """Blacklisted tools should not trigger memory capture."""
+        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
+        import spellbook_hook
+
+        calls = []
+        original_http = spellbook_hook._http_post
+        spellbook_hook._http_post = lambda url, payload, timeout=5: (
+            calls.append(("http_post", url, payload)) or None
+        )
+
+        try:
+            for tool in ("AskUserQuestion", "TodoRead", "TodoWrite"):
+                spellbook_hook._memory_capture(tool, {
+                    "tool_input": {},
+                    "tool_result": "result",
+                })
+            assert calls == [], (
+                f"Blacklisted tools should not trigger capture, got: {calls}"
+            )
+        finally:
+            spellbook_hook._http_post = original_http
 
 
 # ---------------------------------------------------------------------------
@@ -652,9 +841,44 @@ class TestWindowsParityScript:
         assert os.path.isfile(ps1_path), f"spellbook_hook.ps1 not found at {ps1_path}"
 
     def test_ps1_script_references_python_hook(self):
-        """PS1 wrapper must delegate to the Python hook script."""
+        """PS1 wrapper must delegate to the Python hook script via Join-Path invocation."""
         ps1_path = os.path.join(PROJECT_ROOT, "hooks", "spellbook_hook.ps1")
         content = Path(ps1_path).read_text()
-        assert "spellbook_hook.py" in content, (
-            "PS1 wrapper must reference spellbook_hook.py"
+        expected_content = (
+            '# Unified spellbook hook entrypoint (Windows)\n'
+            '# Delegates to spellbook_hook.py for all hook logic.\n'
+            '\n'
+            '$ErrorActionPreference = "SilentlyContinue"\n'
+            '\n'
+            '# Read stdin\n'
+            '$input = [Console]::In.ReadToEnd()\n'
+            '\n'
+            '# Find Python\n'
+            '$python = Get-Command python3 -ErrorAction SilentlyContinue\n'
+            'if (-not $python) {\n'
+            '    $python = Get-Command python -ErrorAction SilentlyContinue\n'
+            '}\n'
+            'if (-not $python) {\n'
+            '    exit 0\n'
+            '}\n'
+            '\n'
+            '# Run the Python hook\n'
+            '$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\n'
+            '$hookScript = Join-Path $scriptDir "spellbook_hook.py"\n'
+            '\n'
+            'if (-not (Test-Path $hookScript)) {\n'
+            '    exit 0\n'
+            '}\n'
+            '\n'
+            '$result = $input | & $python.Source $hookScript 2>$null\n'
+            '$exitCode = $LASTEXITCODE\n'
+            '\n'
+            'if ($result) {\n'
+            '    Write-Output $result\n'
+            '}\n'
+            '\n'
+            'exit $exitCode\n'
+        )
+        assert content == expected_content, (
+            f"PS1 wrapper content does not match expected. Got:\n{content!r}"
         )

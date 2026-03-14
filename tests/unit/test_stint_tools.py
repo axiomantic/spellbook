@@ -123,14 +123,22 @@ class TestPushStint:
             success_criteria="auth endpoints working",
             db_path=isolated_db,
         )
-        assert result["success"] is True
-        assert result["depth"] == 1
-        assert len(result["stack"]) == 1
-        assert result["stack"][0]["name"] == "implementing-features"
-        assert result["stack"][0]["type"] == "skill"
-        assert result["stack"][0]["purpose"] == "build auth system"
-        assert result["stack"][0]["parent"] is None
-        assert result["stack"][0]["exited_at"] is None
+        assert result == {
+            "success": True,
+            "depth": 1,
+            "stack": [{
+                "type": "skill",
+                "name": "implementing-features",
+                "parent": None,
+                "purpose": "build auth system",
+                "success_criteria": "auth endpoints working",
+                "metadata": {},
+                "entered_at": result["stack"][0]["entered_at"],
+                "exited_at": None,
+            }],
+        }
+        # Verify entered_at is a valid ISO timestamp
+        datetime.fromisoformat(result["stack"][0]["entered_at"])
 
     def test_push_sets_parent(self, isolated_db):
         push_stint(
@@ -146,8 +154,32 @@ class TestPushStint:
             purpose="fix test import",
             db_path=isolated_db,
         )
-        assert result["depth"] == 2
-        assert result["stack"][1]["parent"] == "implementing-features"
+        assert result == {
+            "success": True,
+            "depth": 2,
+            "stack": [
+                {
+                    "type": "skill",
+                    "name": "implementing-features",
+                    "parent": None,
+                    "purpose": "",
+                    "success_criteria": "",
+                    "metadata": {},
+                    "entered_at": result["stack"][0]["entered_at"],
+                    "exited_at": None,
+                },
+                {
+                    "type": "custom",
+                    "name": "debugging",
+                    "parent": "implementing-features",
+                    "purpose": "fix test import",
+                    "success_criteria": "",
+                    "metadata": {},
+                    "entered_at": result["stack"][1]["entered_at"],
+                    "exited_at": None,
+                },
+            ],
+        }
 
     def test_push_persists_to_db(self, isolated_db):
         push_stint(
@@ -167,7 +199,17 @@ class TestPushStint:
         assert row is not None
         stack = json.loads(row[0])
         assert len(stack) == 1
-        assert stack[0]["name"] == "task-1"
+        assert stack[0] == {
+            "type": "custom",
+            "name": "task-1",
+            "parent": None,
+            "purpose": "",
+            "success_criteria": "",
+            "metadata": {},
+            "entered_at": stack[0]["entered_at"],
+            "exited_at": None,
+        }
+        datetime.fromisoformat(stack[0]["entered_at"])
 
     def test_push_with_metadata(self, isolated_db):
         result = push_stint(
@@ -186,8 +228,10 @@ class TestPushStint:
             stint_type="custom",
             db_path=isolated_db,
         )
-        assert result["success"] is False
-        assert "injection" in result.get("error", "").lower() or "Injection" in result.get("error", "")
+        assert result == {
+            "success": False,
+            "error": "Injection pattern detected in 'name'",
+        }
 
 
 class TestPopStint:
@@ -198,8 +242,10 @@ class TestPopStint:
             project_path="/test/project",
             db_path=isolated_db,
         )
-        assert result["success"] is False
-        assert "empty" in result.get("error", "").lower()
+        assert result == {
+            "success": False,
+            "error": "stack empty",
+        }
 
     def test_pop_removes_top_entry(self, isolated_db):
         push_stint(
@@ -218,9 +264,23 @@ class TestPopStint:
             project_path="/test/project",
             db_path=isolated_db,
         )
-        assert result["success"] is True
-        assert result["popped"]["name"] == "task-2"
-        assert result["depth"] == 1
+        assert result == {
+            "success": True,
+            "popped": {
+                "type": "custom",
+                "name": "task-2",
+                "parent": "task-1",
+                "purpose": "",
+                "success_criteria": "",
+                "metadata": {},
+                "entered_at": result["popped"]["entered_at"],
+                "exited_at": result["popped"]["exited_at"],
+            },
+            "depth": 1,
+            "mismatch": False,
+        }
+        datetime.fromisoformat(result["popped"]["entered_at"])
+        datetime.fromisoformat(result["popped"]["exited_at"])
 
     def test_pop_with_matching_name(self, isolated_db):
         push_stint(
@@ -234,8 +294,23 @@ class TestPopStint:
             name="debugging",
             db_path=isolated_db,
         )
-        assert result["success"] is True
-        assert result["mismatch"] is False
+        assert result == {
+            "success": True,
+            "popped": {
+                "type": "custom",
+                "name": "debugging",
+                "parent": None,
+                "purpose": "",
+                "success_criteria": "",
+                "metadata": {},
+                "entered_at": result["popped"]["entered_at"],
+                "exited_at": result["popped"]["exited_at"],
+            },
+            "depth": 0,
+            "mismatch": False,
+        }
+        datetime.fromisoformat(result["popped"]["entered_at"])
+        datetime.fromisoformat(result["popped"]["exited_at"])
 
     def test_pop_with_mismatched_name_logs_correction(self, isolated_db):
         push_stint(
@@ -249,18 +324,40 @@ class TestPopStint:
             name="exploring",
             db_path=isolated_db,
         )
-        assert result["success"] is True
-        assert result["mismatch"] is True
-        # Verify correction event was logged
+        assert result == {
+            "success": True,
+            "popped": {
+                "type": "custom",
+                "name": "debugging",
+                "parent": None,
+                "purpose": "",
+                "success_criteria": "",
+                "metadata": {},
+                "entered_at": result["popped"]["entered_at"],
+                "exited_at": result["popped"]["exited_at"],
+            },
+            "depth": 0,
+            "mismatch": True,
+        }
+        datetime.fromisoformat(result["popped"]["entered_at"])
+        datetime.fromisoformat(result["popped"]["exited_at"])
+        # Verify correction event was logged with all DB columns
         conn = get_connection(isolated_db)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT correction_type FROM stint_correction_events WHERE project_path = ?",
+            "SELECT id, project_path, correction_type, old_stack_json, new_stack_json, diff_summary "
+            "FROM stint_correction_events WHERE project_path = ?",
             ("/test/project",),
         )
         row = cursor.fetchone()
         assert row is not None
-        assert row[0] == "mcp_wrong"
+        assert row[1] == "/test/project"
+        assert row[2] == "mcp_wrong"
+        old_stack = json.loads(row[3])
+        assert len(old_stack) == 1
+        assert old_stack[0]["name"] == "debugging"
+        assert json.loads(row[4]) == []
+        assert row[5] == "Pop name mismatch: expected 'exploring', found 'debugging'"
 
     def test_pop_sets_exited_at_on_popped_entry(self, isolated_db):
         push_stint(
@@ -273,7 +370,26 @@ class TestPopStint:
             project_path="/test/project",
             db_path=isolated_db,
         )
-        assert result["popped"]["exited_at"] is not None
+        assert result == {
+            "success": True,
+            "popped": {
+                "type": "custom",
+                "name": "task-1",
+                "parent": None,
+                "purpose": "",
+                "success_criteria": "",
+                "metadata": {},
+                "entered_at": result["popped"]["entered_at"],
+                "exited_at": result["popped"]["exited_at"],
+            },
+            "depth": 0,
+            "mismatch": False,
+        }
+        # Verify exited_at is a valid ISO timestamp (not None)
+        exited_at = result["popped"]["exited_at"]
+        assert exited_at is not None, "exited_at should be set on pop"
+        parsed = datetime.fromisoformat(exited_at)
+        assert parsed.tzinfo is not None, "exited_at should be timezone-aware"
 
 
 class TestCheckStint:
@@ -305,10 +421,32 @@ class TestCheckStint:
             project_path="/test/project",
             db_path=isolated_db,
         )
-        assert result["depth"] == 2
-        assert len(result["stack"]) == 2
-        assert result["stack"][0]["name"] == "task-1"
-        assert result["stack"][1]["name"] == "task-2"
+        assert result == {
+            "success": True,
+            "depth": 2,
+            "stack": [
+                {
+                    "type": "custom",
+                    "name": "task-1",
+                    "parent": None,
+                    "purpose": "",
+                    "success_criteria": "",
+                    "metadata": {},
+                    "entered_at": result["stack"][0]["entered_at"],
+                    "exited_at": None,
+                },
+                {
+                    "type": "custom",
+                    "name": "task-2",
+                    "parent": "task-1",
+                    "purpose": "",
+                    "success_criteria": "",
+                    "metadata": {},
+                    "entered_at": result["stack"][1]["entered_at"],
+                    "exited_at": None,
+                },
+            ],
+        }
 
 
 class TestReplaceStint:
@@ -356,21 +494,33 @@ class TestReplaceStint:
             stint_type="custom",
             db_path=isolated_db,
         )
-        new_stack = []
-        replace_stint(
+        result = replace_stint(
             project_path="/test/project",
-            stack=new_stack,
+            stack=[],
             reason="clearing stale stints",
             db_path=isolated_db,
         )
+        assert result == {
+            "success": True,
+            "depth": 0,
+            "correction_logged": True,
+        }
         conn = get_connection(isolated_db)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT correction_type, diff_summary FROM stint_correction_events WHERE project_path = ?",
+            "SELECT id, project_path, correction_type, old_stack_json, new_stack_json, diff_summary "
+            "FROM stint_correction_events WHERE project_path = ?",
             ("/test/project",),
         )
         row = cursor.fetchone()
         assert row is not None
+        assert row[1] == "/test/project"
+        assert row[2] == "llm_wrong"
+        old_stack = json.loads(row[3])
+        assert len(old_stack) == 1
+        assert old_stack[0]["name"] == "task-1"
+        assert json.loads(row[4]) == []
+        assert row[5] == "clearing stale stints"
 
     def test_replace_with_empty_old_stack(self, isolated_db):
         new_stack = [
@@ -391,8 +541,26 @@ class TestReplaceStint:
             reason="post-compaction restoration",
             db_path=isolated_db,
         )
-        assert result["success"] is True
-        assert result["depth"] == 1
+        assert result == {
+            "success": True,
+            "depth": 1,
+            "correction_logged": True,
+        }
+        # Verify correction event was logged
+        conn = get_connection(isolated_db)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT correction_type, old_stack_json, new_stack_json, diff_summary "
+            "FROM stint_correction_events WHERE project_path = ?",
+            ("/test/project",),
+        )
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == "mcp_wrong"
+        assert json.loads(row[1]) == []
+        assert len(json.loads(row[2])) == 1
+        assert json.loads(row[2])[0]["name"] == "task-1"
+        assert row[3] == "post-compaction restoration"
 
 
 class TestClassifyCorrection:
@@ -505,12 +673,32 @@ class TestConcurrentStintOperations:
         for t in threads:
             t.join()
 
-        assert len(errors) == 0, f"Errors during concurrent pushes: {errors}"
+        assert errors == [], f"Errors during concurrent pushes: {errors}"
 
         result = check_stint(
             project_path="/test/concurrent",
             db_path=isolated_db,
         )
+        assert result["success"] is True
         assert result["depth"] == num_threads, (
             f"Expected {num_threads} entries, got {result['depth']}"
         )
+        # Verify all task names are present (order may vary due to concurrency)
+        actual_names = sorted(entry["name"] for entry in result["stack"])
+        expected_names = sorted(f"task-{i}" for i in range(num_threads))
+        assert actual_names == expected_names, (
+            f"Missing or extra task names. Expected: {expected_names}, Got: {actual_names}"
+        )
+        # Verify every entry has the expected structure
+        for entry in result["stack"]:
+            assert entry == {
+                "type": "custom",
+                "name": entry["name"],
+                "parent": entry["parent"],  # parent depends on push order
+                "purpose": "",
+                "success_criteria": "",
+                "metadata": {},
+                "entered_at": entry["entered_at"],
+                "exited_at": None,
+            }
+            datetime.fromisoformat(entry["entered_at"])
