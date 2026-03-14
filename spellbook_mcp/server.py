@@ -3549,6 +3549,35 @@ async def api_memory_recall(request: Request) -> JSONResponse:
     return JSONResponse(result)
 
 
+# --- Admin Web Interface ---
+def _mount_admin_app():
+    """Mount the admin web interface if admin_enabled config is true."""
+    import logging as _admin_logging
+
+    _admin_logger = _admin_logging.getLogger(__name__)
+    try:
+        from spellbook_mcp.config_tools import config_get
+
+        admin_enabled = config_get("admin_enabled")
+        if admin_enabled is not None and not admin_enabled:
+            _admin_logger.debug("Admin interface disabled via admin_enabled config")
+            return
+
+        from spellbook_mcp.admin.app import create_admin_app
+        from starlette.routing import Mount
+
+        admin_app = create_admin_app()
+        mcp._additional_http_routes.append(Mount("/admin", app=admin_app))
+        _admin_logger.info("Admin web interface mounted at /admin")
+    except ImportError:
+        _admin_logger.debug("Admin package not available, skipping mount")
+    except Exception:
+        _admin_logger.warning("Failed to mount admin interface", exc_info=True)
+
+
+_mount_admin_app()
+
+
 if __name__ == "__main__":
     # Initialize database and start watcher thread
     db_path = str(get_db_path())
