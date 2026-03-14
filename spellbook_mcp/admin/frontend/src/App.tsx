@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import { MemoryBrowser } from './pages/MemoryBrowser'
 import { SecurityLog } from './pages/SecurityLog'
 import { Sessions } from './pages/Sessions'
+import { FractalExplorer } from './pages/FractalExplorer'
 
 export default function App() {
   return (
@@ -18,7 +19,7 @@ export default function App() {
             <Route path="/security" element={<SecurityLog />} />
             <Route path="/sessions" element={<Sessions />} />
             <Route path="/config" element={<ConfigEditor />} />
-            <Route path="/fractal" element={<div className="p-8"><h1 className="text-2xl font-sans">// FRACTAL</h1></div>} />
+            <Route path="/fractal" element={<FractalExplorer />} />
           </Routes>
         </AppShell>
       </BrowserRouter>

@@ -1,6 +1,8 @@
 import { useDashboard } from '../hooks/useDashboard'
+import { useEventStream } from '../hooks/useEventStream'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { Badge } from '../components/shared/Badge'
+import { ActivityFeed } from '../components/dashboard/ActivityFeed'
 import type { ActivityItem } from '../api/types'
 
 function formatUptime(seconds: number): string {
@@ -68,6 +70,7 @@ function ActivityRow({ item }: { item: ActivityItem }) {
 
 export default function Dashboard() {
   const { data, isLoading, error } = useDashboard()
+  const { state: wsState } = useEventStream()
 
   if (isLoading) {
     return (
@@ -142,27 +145,24 @@ export default function Dashboard() {
         <h2 className="font-mono text-xs uppercase tracking-widest text-text-dim mb-3">
           // EVENT BUS
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           <StatCard label="SUBSCRIBERS" value={health.event_bus_subscribers} />
           <StatCard label="DROPPED" value={health.event_bus_dropped_events} accent={health.event_bus_dropped_events > 0} />
+          <StatCard
+            label="WEBSOCKET"
+            value={wsState.toUpperCase()}
+            accent={wsState === 'connected'}
+          />
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Activity (live + polled) */}
       <div>
         <h2 className="font-mono text-xs uppercase tracking-widest text-text-dim mb-3">
           // RECENT ACTIVITY
         </h2>
         <div className="bg-bg-surface border border-bg-border p-4">
-          {recent_activity.length === 0 ? (
-            <p className="text-text-dim text-sm font-mono">No recent activity.</p>
-          ) : (
-            <div className="max-h-96 overflow-y-auto">
-              {recent_activity.map((item, i) => (
-                <ActivityRow key={`${item.timestamp}-${i}`} item={item} />
-              ))}
-            </div>
-          )}
+          <ActivityFeed initialItems={recent_activity} />
         </div>
       </div>
     </div>

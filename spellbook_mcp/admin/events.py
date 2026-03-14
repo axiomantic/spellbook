@@ -105,3 +105,32 @@ class EventBus:
 
 # Singleton
 event_bus = EventBus()
+
+
+def publish_sync(
+    event: Event,
+    bus: Optional[EventBus] = None,
+    loop: Optional[asyncio.AbstractEventLoop] = None,
+) -> None:
+    """Thread-safe wrapper for publishing events from sync MCP tool handlers.
+
+    Schedules publish() on the given (or running) event loop from any thread.
+    Fire-and-forget: errors are logged but never propagated to the caller.
+    """
+    target_bus = bus or event_bus
+    try:
+        target_loop = loop or asyncio.get_running_loop()
+    except RuntimeError:
+        # No running loop available, try to get the main loop
+        try:
+            target_loop = asyncio.get_event_loop()
+        except RuntimeError:
+            logger.warning("No event loop available for publish_sync, dropping event")
+            return
+
+    if target_loop.is_running():
+        # Schedule from another thread
+        asyncio.run_coroutine_threadsafe(target_bus.publish(event), target_loop)
+    else:
+        # Loop exists but isn't running (unusual, but handle gracefully)
+        logger.warning("Event loop not running for publish_sync, dropping event")

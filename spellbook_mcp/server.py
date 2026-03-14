@@ -755,7 +755,20 @@ def spellbook_config_set(key: str, value) -> dict:
     Returns:
         {"status": "ok", "config": <full updated config>}
     """
-    return config_set(key, value)
+    result = config_set(key, value)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.CONFIG,
+                event_type="config.updated",
+                data={"key": key, "value": str(value)[:200]},
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
@@ -3340,7 +3353,20 @@ async def memory_forget(ctx: Context, memory_id: str) -> dict:
         Dict with status ('deleted' or 'not_found').
     """
     db_path = str(get_db_path())
-    return do_memory_forget(db_path=db_path, memory_id=memory_id)
+    result = do_memory_forget(db_path=db_path, memory_id=memory_id)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+
+        await event_bus.publish(
+            Event(
+                subsystem=Subsystem.MEMORY,
+                event_type="memory.deleted",
+                data={"memory_id": memory_id},
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3451,13 +3477,30 @@ async def memory_store_memories(
     # Detect current branch
     branch = get_current_branch(project_path) if project_path else ""
 
-    return do_store_memories(
+    result = do_store_memories(
         db_path=db_path,
         memories_json=memories,
         event_ids_str=event_ids,
         namespace=namespace,
         branch=branch,
     )
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+
+        await event_bus.publish(
+            Event(
+                subsystem=Subsystem.MEMORY,
+                event_type="memory.created",
+                data={
+                    "namespace": namespace,
+                    "count": result.get("memories_created", 0),
+                },
+                namespace=namespace,
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 # --- Memory Event REST Endpoint ---
