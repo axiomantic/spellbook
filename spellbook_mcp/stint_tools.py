@@ -16,6 +16,8 @@ entered_at, exited_at.
 """
 
 import json
+import sqlite3
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -125,45 +127,78 @@ def _log_correction_event(
 def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
     """Read-modify-write the stint stack atomically.
 
-    Uses BEGIN IMMEDIATE to acquire a write lock at transaction start,
-    preventing concurrent read-modify-write races.
+    Uses a dedicated connection with BEGIN IMMEDIATE to acquire a write
+    lock at transaction start, preventing concurrent read-modify-write
+    races. A dedicated (non-cached) connection is required because the
+    shared connection from get_connection() cannot handle concurrent
+    BEGIN IMMEDIATE calls from multiple threads (SQLite does not allow
+    nested transactions on a single connection).
+
+    Retries up to 10 times with exponential backoff when the database
+    is locked by another thread's transaction.
 
     Args:
         project_path: Project key for the stack row.
-        mutate_fn: Callable(stack: list) -> (result_dict, new_stack).
-            Receives the current stack, returns the tool result and
+        mutate_fn: Callable(stack, cursor) -> (result_dict, new_stack).
+            Receives the current stack and cursor for additional SQL
+            within the same transaction. Returns the tool result and
             the new stack to persist. If new_stack is None, no write.
         db_path: Optional database path (for testing).
     """
-    conn = get_connection(db_path)
-    try:
-        conn.execute("BEGIN IMMEDIATE")
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT stack_json FROM stint_stack WHERE project_path = ?",
-            (project_path,),
-        )
-        row = cursor.fetchone()
-        stack = json.loads(row[0]) if row else []
+    from spellbook_mcp.db import get_db_path
 
-        result, new_stack = mutate_fn(stack)
+    actual_path = db_path if db_path else str(get_db_path())
+    max_retries = 10
+    base_delay = 0.01  # 10ms
 
-        if new_stack is not None:
+    for attempt in range(max_retries):
+        conn = sqlite3.connect(actual_path, timeout=5.0)
+        conn.execute("PRAGMA journal_mode=WAL")
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            cursor = conn.cursor()
             cursor.execute(
-                """
-                INSERT INTO stint_stack (project_path, stack_json, updated_at)
-                VALUES (?, ?, CURRENT_TIMESTAMP)
-                ON CONFLICT(project_path) DO UPDATE SET
-                    stack_json = excluded.stack_json,
-                    updated_at = excluded.updated_at
-                """,
-                (project_path, json.dumps(new_stack)),
+                "SELECT stack_json FROM stint_stack WHERE project_path = ?",
+                (project_path,),
             )
-        conn.commit()
-        return result
-    except Exception:
-        conn.rollback()
-        raise
+            row = cursor.fetchone()
+            stack = json.loads(row[0]) if row else []
+
+            result, new_stack = mutate_fn(stack, cursor)
+
+            if new_stack is not None:
+                cursor.execute(
+                    """
+                    INSERT INTO stint_stack (project_path, stack_json, updated_at)
+                    VALUES (?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(project_path) DO UPDATE SET
+                        stack_json = excluded.stack_json,
+                        updated_at = excluded.updated_at
+                    """,
+                    (project_path, json.dumps(new_stack)),
+                )
+            conn.commit()
+            return result
+        except sqlite3.OperationalError as e:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            if "database is locked" in str(e) and attempt < max_retries - 1:
+                delay = base_delay * (2 ** attempt)
+                time.sleep(delay)
+                continue
+            raise
+        except Exception:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            raise
+        finally:
+            conn.close()
+
+    raise sqlite3.OperationalError("Failed to acquire lock after max retries")
 
 
 def push_stint(
@@ -197,7 +232,7 @@ def push_stint(
     if not valid:
         return {"success": False, "error": msg}
 
-    def mutate(stack: list) -> tuple[dict, list]:
+    def mutate(stack: list, cursor) -> tuple[dict, list]:
         entry["parent"] = stack[-1]["name"] if stack else None
         stack.append(entry)
         return {"success": True, "depth": len(stack), "stack": list(stack)}, stack
@@ -219,7 +254,7 @@ def pop_stint(
         {"success": True, "popped": dict, "depth": int, "mismatch": bool}
         {"success": False, "error": str} if stack is empty.
     """
-    def mutate(stack: list) -> tuple[dict, list | None]:
+    def mutate(stack: list, cursor) -> tuple[dict, list | None]:
         if not stack:
             return {"success": False, "error": "stack empty"}, None
 
@@ -262,7 +297,7 @@ def check_stint(
     Returns:
         {"success": True, "depth": int, "stack": list}
     """
-    def mutate(stack: list) -> tuple[dict, list | None]:
+    def mutate(stack: list, cursor) -> tuple[dict, list | None]:
         return {"success": True, "depth": len(stack), "stack": list(stack)}, None
 
     return _update_stack(project_path, mutate, db_path)
@@ -288,13 +323,11 @@ def replace_stint(
         if not valid:
             return {"success": False, "error": msg}
 
-    def mutate(old_stack: list) -> tuple[dict, list]:
+    def mutate(old_stack: list, cursor) -> tuple[dict, list]:
         # Classify correction
         correction_type = classify_correction(old_stack, stack)
 
         # Log correction event (inside transaction for consistency)
-        conn = get_connection(db_path)
-        cursor = conn.cursor()
         cursor.execute(
             """
             INSERT INTO stint_correction_events

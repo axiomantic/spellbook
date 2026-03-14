@@ -475,3 +475,42 @@ class TestValidateStintEntry:
         })
         assert valid is False
         assert "name" in msg.lower() or "injection" in msg.lower()
+
+
+import threading
+
+
+class TestConcurrentStintOperations:
+    """Test that IMMEDIATE transactions prevent read-modify-write races."""
+
+    def test_concurrent_pushes_do_not_lose_entries(self, isolated_db):
+        """Multiple threads pushing simultaneously should not lose any entries."""
+        num_threads = 10
+        errors = []
+
+        def push_one(i):
+            try:
+                push_stint(
+                    project_path="/test/concurrent",
+                    name=f"task-{i}",
+                    stint_type="custom",
+                    db_path=isolated_db,
+                )
+            except Exception as e:
+                errors.append(e)
+
+        threads = [threading.Thread(target=push_one, args=(i,)) for i in range(num_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(errors) == 0, f"Errors during concurrent pushes: {errors}"
+
+        result = check_stint(
+            project_path="/test/concurrent",
+            db_path=isolated_db,
+        )
+        assert result["depth"] == num_threads, (
+            f"Expected {num_threads} entries, got {result['depth']}"
+        )
