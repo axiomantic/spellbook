@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: design-assessment
-
 Generate assessment frameworks (dimensions, severity levels, verdicts, finding schemas) for evaluative skills and commands.
 
 ```mermaid

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: execute-work-packet
-
 Execute a single work packet: parse, check dependencies, run TDD tasks with review and fact-check gates, then mark complete.
 
 ```mermaid

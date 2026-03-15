@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: encyclopedia-validate
-
 Assemble and validate encyclopedia content, then write to the output path (Phase 6).
 
 ```mermaid

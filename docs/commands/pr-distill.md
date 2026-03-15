@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: pr-distill
-
 Analyze a PR and generate a review distillation report. Runs heuristic pattern matching first, then AI analysis for unmatched files.
 
 ```mermaid

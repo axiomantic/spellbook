@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: dead-code-report
-
 Generate a comprehensive dead code report with categorized findings, evidence, risk assessment, and an ordered implementation plan for safe deletion. Runs after `/dead-code-analyze`.
 
 ```mermaid

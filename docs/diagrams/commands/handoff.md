@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/handoff.md", "source_hash": "sha256:7997b72a7f1fcb520457ff2d5462dd089492cbb0d989488efecbaf0c1af54f6e", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/handoff.md","source_hash": "sha256:84efb2337b7c97d7cd867c7c1c477d11d0e3db6fec204508121b745d7ee607b9","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: handoff
 
 Session state transfer command that produces a structured handoff document enabling a successor instance to resume mid-stride with zero context loss. Supports manual, auto, and checkpoint invocation modes.

@@ -95,7 +95,7 @@ Execute IMMEDIATELY before reading any other content. Not suggestions. Mandatory
 ### 0.1 Workflow Restoration (EXECUTE FIRST)
 ```
 Skill("[skill-name]", "[exact resume args]")
-# Example: Skill("implementing-features", "--resume Phase3.Task7 --impl-plan /absolute/path/impl.md --skip-phases 0,1,2")
+# Example: Skill("develop", "--resume Phase3.Task7 --impl-plan /absolute/path/impl.md --skip-phases 0,1,2")
 ```
 If no active skill: "NO ACTIVE SKILL - proceed to 0.2". DO NOT do implementation work until skill invoked.
 
@@ -140,7 +140,7 @@ If directly implementing without specified skill active: STOP. You skipped workf
 
 | Skill | Parent | Phase/Step | Resume Command |
 |-------|--------|------------|----------------|
-| [implementing-features] | [user] | [Phase 4, Task 10] | `Skill("implementing-features", "--resume ...")` |
+| [develop] | [user] | [Phase 4, Task 10] | `Skill("develop", "--resume ...")` |
 
 ```
 [top-level skill] (Phase X)
@@ -289,7 +289,7 @@ Read("/path/to/design.md") # Extract: key decisions affecting implementation
 ### 1.14 Skill Resume Commands
 
 ```
-Skill("implementing-features", "--resume Phase[N].Task[M] --impl-plan /path --skip-phases 0,1,2")
+Skill("develop", "--resume Phase[N].Task[M] --impl-plan /path --skip-phases 0,1,2")
 ```
 
 **If no --resume support:**
@@ -525,9 +525,9 @@ workflow_state_save({
 
 ### 1.23 Skill Re-Entry Protocol
 
-**implementing-features:**
+**develop:**
 ```
-Skill("implementing-features", "--resume-from Phase[N].Task[M] --design-doc [path] --impl-plan [path] --skip-phases [0,1,2]")
+Skill("develop", "--resume-from Phase[N].Task[M] --design-doc [path] --impl-plan [path] --skip-phases [0,1,2]")
 Context: Plans APPROVED. Completed: [list]. Position: [task]. Next: [action]. DO NOT re-run/re-ask.
 ```
 

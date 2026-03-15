@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: review-plan-behavior
-
 Phase 3 of reviewing-impl-plans: audits every code reference in the plan to ensure behaviors are verified from source rather than assumed from method names, flags the fabrication anti-pattern, and detects trial-and-error loop indicators.
 
 ```mermaid

@@ -37,7 +37,7 @@ class TestWorkflowStateSave:
 
         project_path = "/test/project"
         state = {
-            "active_skill": "implementing-features",
+            "active_skill": "develop",
             "todos": [{"id": "1", "text": "Task 1", "status": "pending"}],
         }
 
@@ -63,7 +63,7 @@ class TestWorkflowStateSave:
         row = cursor.fetchone()
         assert row is not None
         loaded_state = json.loads(row[0])
-        assert loaded_state["active_skill"] == "implementing-features"
+        assert loaded_state["active_skill"] == "develop"
         assert row[1] == "manual"
 
     def test_save_updates_existing_record(self, tmp_path):
@@ -80,7 +80,7 @@ class TestWorkflowStateSave:
             workflow_state_save.fn(project_path=project_path, state=state1, trigger="manual")
 
             # Second save (update)
-            state2 = {"active_skill": "implementing-features"}
+            state2 = {"active_skill": "develop"}
             result = workflow_state_save.fn(
                 project_path=project_path, state=state2, trigger="auto"
             )
@@ -97,7 +97,7 @@ class TestWorkflowStateSave:
         row = cursor.fetchone()
         assert row[0] == 1  # Only one record
         loaded_state = json.loads(row[1])
-        assert loaded_state["active_skill"] == "implementing-features"
+        assert loaded_state["active_skill"] == "develop"
         assert row[2] == "auto"  # Trigger updated
 
     def test_save_with_different_triggers(self, tmp_path):
@@ -183,7 +183,7 @@ class TestWorkflowStateSave:
 
         project_path = "/test/project"
         state = {
-            "active_skill": "implementing-features",
+            "active_skill": "develop",
             "todos": [
                 {"id": "1", "text": "Task 1", "status": "completed"},
                 {"id": "2", "text": "Task 2", "status": "pending"},
@@ -989,7 +989,7 @@ class TestWorkflowStateIntegration:
                 project_path=project_path,
                 updates={
                     "recent_files": ["src/main.py"],
-                    "active_skill": "implementing-features",
+                    "active_skill": "develop",
                 },
             )
 

@@ -212,7 +212,7 @@ class TestPreToolUseStateSanitize:
             "tool_name": "mcp__spellbook__workflow_state_save",
             "tool_input": {
                 "project_path": "/test",
-                "state": {"active_skill": "implementing-features"},
+                "state": {"active_skill": "develop"},
             },
         })
         assert proc.returncode == 0
@@ -539,7 +539,7 @@ class TestDepthReminderFormat:
         original_config = spellbook_hook._get_config_value
 
         stack = [
-            {"name": "implementing-features", "purpose": "build auth"},
+            {"name": "develop", "purpose": "build auth"},
             {"name": "feature-research", "purpose": "investigate patterns"},
             {"name": "debugging", "purpose": "fix test import"},
             {"name": "explore", "purpose": "find auth module"},
@@ -560,7 +560,7 @@ class TestDepthReminderFormat:
 
             expected = (
                 '<stint-check depth="5">\n'
-                "  1.   implementing-features\n"
+                "  1.   develop\n"
                 "       purpose: build auth\n"
                 "  2.     feature-research\n"
                 "         purpose: investigate patterns\n"
@@ -749,19 +749,19 @@ class TestAutoPushOnSkill:
 
         try:
             _stint_auto_push({
-                "tool_input": {"skill": "implementing-features"},
+                "tool_input": {"skill": "develop"},
                 "cwd": "/test/project",
             })
             assert len(calls) == 2
             assert calls[0] == ("skill_instructions_get", {
-                "skill_name": "implementing-features",
+                "skill_name": "develop",
                 "sections": ["BEHAVIORAL_MODE"],
             })
             assert calls[1] == ("stint_push", {
                 "project_path": "/test/project",
-                "name": "implementing-features",
+                "name": "develop",
                 "type": "skill",
-                "purpose": "Skill invocation: implementing-features",
+                "purpose": "Skill invocation: develop",
                 "behavioral_mode": "",
                 "success_criteria": "Skill workflow complete",
             })
@@ -874,19 +874,19 @@ class TestAutoPushBehavioralMode:
 
         try:
             _stint_auto_push({
-                "tool_input": {"skill": "implementing-features"},
+                "tool_input": {"skill": "develop"},
                 "cwd": "/test/project",
             })
             assert len(calls) == 2
             assert calls[0] == ("skill_instructions_get", {
-                "skill_name": "implementing-features",
+                "skill_name": "develop",
                 "sections": ["BEHAVIORAL_MODE"],
             })
             assert calls[1] == ("stint_push", {
                 "project_path": "/test/project",
-                "name": "implementing-features",
+                "name": "develop",
                 "type": "skill",
-                "purpose": "Skill invocation: implementing-features",
+                "purpose": "Skill invocation: develop",
                 "behavioral_mode": "ORCHESTRATOR: Dispatch subagents",
                 "success_criteria": "Skill workflow complete",
             })
@@ -1053,7 +1053,7 @@ class TestDepthCheckBehavioralMode:
         spellbook_hook._mcp_call = lambda tool, args=None: {
             "success": True,
             "stack": [
-                {"name": "implementing-features", "purpose": "build auth",
+                {"name": "develop", "purpose": "build auth",
                  "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
             ],
         }
@@ -1218,21 +1218,21 @@ class TestBuildRecoveryDirectiveBugFixes:
 
         try:
             result = _build_recovery_directive({
-                "active_skill": "implementing-features",
+                "active_skill": "develop",
                 "skill_phase": "DESIGN",
             })
             # Verify it called skill_instructions_get with sections param
             sig_calls = [c for c in calls if c[0] == "skill_instructions_get"]
             assert len(sig_calls) == 1
             assert sig_calls[0] == ("skill_instructions_get", {
-                "skill_name": "implementing-features",
+                "skill_name": "develop",
                 "sections": ["FORBIDDEN", "REQUIRED"],
             })
             # Verify constraints appear in output (from "content" key, not "constraints")
             expected = (
-                "### Active Skill: implementing-features\n"
+                "### Active Skill: develop\n"
                 "Phase: DESIGN\n"
-                "Resume with: `Skill(skill='implementing-features', --resume DESIGN)`\n"
+                "Resume with: `Skill(skill='develop', --resume DESIGN)`\n"
                 "\n### Skill Constraints\n"
                 "<FORBIDDEN>\n"
                 "Do not skip steps\n"
@@ -1273,13 +1273,13 @@ class TestBuildRecoveryDirectiveBugFixes:
 
         try:
             result = _build_recovery_directive({
-                "active_skill": "implementing-features",
+                "active_skill": "develop",
                 "skill_phase": "DESIGN",
             })
             expected = (
-                "### Active Skill: implementing-features\n"
+                "### Active Skill: develop\n"
                 "Phase: DESIGN\n"
-                "Resume with: `Skill(skill='implementing-features', --resume DESIGN)`"
+                "Resume with: `Skill(skill='develop', --resume DESIGN)`"
             )
             assert result == expected
         finally:
@@ -1326,7 +1326,7 @@ class TestBuildRecoveryDirectiveBugFixes:
 
         try:
             result = _build_recovery_directive({
-                "active_skill": "implementing-features",
+                "active_skill": "develop",
                 "skill_phase": "PLANNING",
                 "binding_decisions": ["TDD approach"],
                 "next_action": "Write tests",
@@ -1338,9 +1338,9 @@ class TestBuildRecoveryDirectiveBugFixes:
                 "recent_files": ["/src/main.py"],
             })
             expected = (
-                "### Active Skill: implementing-features\n"
+                "### Active Skill: develop\n"
                 "Phase: PLANNING\n"
-                "Resume with: `Skill(skill='implementing-features', --resume PLANNING)`\n"
+                "Resume with: `Skill(skill='develop', --resume PLANNING)`\n"
                 "\n### Skill Constraints\nFORBIDDEN content\n"
                 "\n### Binding Decisions\n"
                 "- TDD approach\n"
@@ -1373,10 +1373,10 @@ class TestSessionStartFocusStackBehavioralMode:
                 return {
                     "found": True,
                     "state": {
-                        "active_skill": "implementing-features",
+                        "active_skill": "develop",
                         "skill_phase": "DESIGN",
                         "stint_stack": [
-                            {"name": "implementing-features", "purpose": "build auth",
+                            {"name": "develop", "purpose": "build auth",
                              "behavioral_mode": "ORCHESTRATOR: Dispatch subagents via Task tool"},
                             {"name": "tdd-cycle", "purpose": "write tests",
                              "behavioral_mode": ""},
@@ -1396,11 +1396,11 @@ class TestSessionStartFocusStackBehavioralMode:
             })
             directive = result["hookSpecificOutput"]["additionalContext"]
             expected = (
-                "### Active Skill: implementing-features\n"
+                "### Active Skill: develop\n"
                 "Phase: DESIGN\n"
-                "Resume with: `Skill(skill='implementing-features', --resume DESIGN)`\n"
+                "Resume with: `Skill(skill='develop', --resume DESIGN)`\n"
                 "\n### Focus Stack (restored)\n"
-                "  1. implementing-features - build auth [MODE: ORCHESTRATOR: Dispatch subagents via Task tool]\n"
+                "  1. develop - build auth [MODE: ORCHESTRATOR: Dispatch subagents via Task tool]\n"
                 "  2. tdd-cycle - write tests\n"
             )
             assert directive == expected

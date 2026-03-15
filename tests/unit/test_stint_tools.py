@@ -117,7 +117,7 @@ class TestPushStint:
     def test_push_to_empty_stack(self, isolated_db):
         result = push_stint(
             project_path="/test/project",
-            name="implementing-features",
+            name="develop",
             stint_type="skill",
             purpose="build auth system",
             success_criteria="auth endpoints working",
@@ -128,7 +128,7 @@ class TestPushStint:
             "depth": 1,
             "stack": [{
                 "type": "skill",
-                "name": "implementing-features",
+                "name": "develop",
                 "parent": None,
                 "purpose": "build auth system",
                 "behavioral_mode": "",
@@ -144,7 +144,7 @@ class TestPushStint:
     def test_push_sets_parent(self, isolated_db):
         push_stint(
             project_path="/test/project",
-            name="implementing-features",
+            name="develop",
             stint_type="skill",
             db_path=isolated_db,
         )
@@ -161,7 +161,7 @@ class TestPushStint:
             "stack": [
                 {
                     "type": "skill",
-                    "name": "implementing-features",
+                    "name": "develop",
                     "parent": None,
                     "purpose": "",
                     "behavioral_mode": "",
@@ -173,7 +173,7 @@ class TestPushStint:
                 {
                     "type": "custom",
                     "name": "debugging",
-                    "parent": "implementing-features",
+                    "parent": "develop",
                     "purpose": "fix test import",
                     "behavioral_mode": "",
                     "success_criteria": "",
@@ -228,7 +228,7 @@ class TestPushStint:
     def test_push_with_behavioral_mode(self, isolated_db):
         result = push_stint(
             project_path="/test/project",
-            name="implementing-features",
+            name="develop",
             stint_type="skill",
             purpose="build auth",
             behavioral_mode="methodical, careful",
@@ -239,7 +239,7 @@ class TestPushStint:
             "depth": 1,
             "stack": [{
                 "type": "skill",
-                "name": "implementing-features",
+                "name": "develop",
                 "parent": None,
                 "purpose": "build auth",
                 "behavioral_mode": "methodical, careful",
@@ -531,7 +531,7 @@ class TestReplaceStint:
         new_stack = [
             {
                 "type": "skill",
-                "name": "implementing-features",
+                "name": "develop",
                 "parent": None,
                 "purpose": "build auth",
                 "success_criteria": "tests pass",
@@ -684,7 +684,7 @@ class TestValidateStintEntry:
 
     def test_valid_entry_passes(self):
         valid, msg = _validate_stint_entry({
-            "name": "implementing-features",
+            "name": "develop",
             "purpose": "build auth system",
             "success_criteria": "tests pass",
         })

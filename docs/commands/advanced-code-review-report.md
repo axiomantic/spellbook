@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: advanced-code-review-report
-
 Phase 5 of advanced-code-review: Report generation that filters verified findings, determines verdict, renders the final Markdown report and machine-readable JSON summary with action items.
 
 ```mermaid

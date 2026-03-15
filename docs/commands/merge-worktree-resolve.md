@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: merge-worktree-resolve
-
 Phase 3 of merging-worktrees: delegates merge conflicts to the resolving-merge-conflicts skill with interface contract context, then verifies that resolved code matches contract specifications for type signatures and function behavior before continuing.
 
 ```mermaid

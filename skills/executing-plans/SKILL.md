@@ -1,6 +1,8 @@
 ---
 name: executing-plans
 description: "Use when you have a written implementation plan to execute"
+intro: |
+  Executes implementation plans task by task, dispatching subagents for each step and verifying results before advancing. Tracks progress, enforces plan fidelity, and requires evidence of completion at every checkpoint. This core spellbook skill pairs with writing-plans to turn approved designs into working code.
 ---
 
 # Executing Plans

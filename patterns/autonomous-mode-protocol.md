@@ -110,7 +110,7 @@ Skills MUST define all three. A skill missing any one MUST NOT be used in autono
 ## Related
 
 - [Adaptive Response Handler](adaptive-response-handler.md) - Processing user responses
-- Skills using protocol: `brainstorming`, `implementing-features`, `executing-plans`, `writing-plans`, `using-git-worktrees`
+- Skills using protocol: `brainstorming`, `develop`, `executing-plans`, `writing-plans`, `using-git-worktrees`
 
 <FINAL_EMPHASIS>
 Autonomous mode eliminates unnecessary interruption, not judgment. When a circuit breaker fires: halt completely, report fully, wait. A halted agent that reports clearly is the protocol working. Never suppress a circuit breaker. Never proceed after triggering one.

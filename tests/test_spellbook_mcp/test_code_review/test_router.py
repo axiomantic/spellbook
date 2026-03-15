@@ -264,14 +264,6 @@ class TestDeprecationWarnings:
         assert "deprecated" in result.warnings[0].lower()
         assert "code-review --self" in result.warnings[0]
 
-    def test_receiving_code_review_deprecated(self) -> None:
-        """Emits warning when invoked from receiving-code-review skill."""
-        args = CodeReviewArgs(feedback=True)
-        result = route_to_handler(args, source_skill="receiving-code-review")
-        assert len(result.warnings) == 1
-        assert "receiving-code-review" in result.warnings[0]
-        assert "code-review --feedback" in result.warnings[0]
-
     def test_code_review_not_deprecated(self) -> None:
         """No warning when invoked from code-review skill."""
         args = CodeReviewArgs(self_review=True)

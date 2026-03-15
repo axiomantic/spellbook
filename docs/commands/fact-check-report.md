@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: fact-check-report
-
 Generate a fact-checking report with traceable bibliography, actionable findings, optional clarity-mode glossary injection, and learning trajectory persistence for future sessions.
 
 ```mermaid

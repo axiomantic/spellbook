@@ -68,9 +68,10 @@ class BearerAuthMiddleware:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
-            # Allow health check endpoint without auth
+            # Allow health check and admin interface without bearer auth
+            # (admin has its own cookie-based session auth)
             path = scope.get("path", "")
-            if path == "/health":
+            if path == "/health" or path.startswith("/admin"):
                 return await self.app(scope, receive, send)
 
             # Extract Authorization header

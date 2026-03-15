@@ -1,6 +1,8 @@
 ---
 name: autonomous-roundtable
 description: "Meta-orchestrator for Forged autonomous development: decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills."
+intro: |
+  Multi-perspective project decomposition using archetypal roles to surface blind spots and generate balanced designs. Decomposes projects into features and drives each through discovery, design, planning, and implementation with roundtable consensus at decision points. This core spellbook skill powers the Forge autonomous development workflow.
 ---
 
 # Autonomous Roundtable
@@ -64,7 +66,7 @@ Per feature: forge_iteration_start → forge_select_skill → Skill → roundtab
 | DISCOVER  | gathering-requirements | Requirements |
 | DESIGN    | brainstorming          | Design doc   |
 | PLAN      | writing-plans          | Impl plan    |
-| IMPLEMENT | implementing-features  | Code+tests   |
+| IMPLEMENT | develop  | Code+tests   |
 | COMPLETE  | (final roundtable)     | Report       |
 
 ## MCP Tools

@@ -9,6 +9,8 @@ description: |
   "what am I missing". Also invoked programmatically with a seed, intensity, and
   checkpoint mode. NOT for: simple questions with known answers, linear task
   execution, or file-by-file code review.
+intro: |
+  Recursive question decomposition that builds a persistent graph of questions and answers, exploring topics at configurable depth with parallel workers. Breaks complex questions into sub-questions, answers them bottom-up, and synthesizes findings into coherent conclusions. This core spellbook skill is invoked by other skills when they need deep certainty about multi-faceted problems.
 ---
 
 # Fractal Thinking

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: mode
-
 Manages spellbook session modes (fun, tarot, off). Handles status queries, mode switching with permanence preference, and skill loading for creative dialogue modes.
 
 ```mermaid

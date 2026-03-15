@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: deep-research-investigate
-
 Execute iterative web research for a single thread using the Triplet Engine (Scope, Search, Extract) with plateau detection, drift guards, and micro-report generation each round.
 
 ```mermaid

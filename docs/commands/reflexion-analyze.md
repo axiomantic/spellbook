@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: reflexion-analyze
-
 Analyzes ITERATE feedback from roundtable validation: parses feedback items, categorizes root causes, stores reflections in forged.db, detects failure patterns, and generates retry guidance.
 
 ```mermaid

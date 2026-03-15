@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: scientific-debugging
-
 Rigorous theory-experiment debugging methodology. Forms exactly 3 theories from the symptom alone (no data gathering first, no ranking), designs 3+ experiments per theory with explicit prove/disprove criteria, tests one theory at a time, and cycles until root cause is confirmed.
 
 ```mermaid

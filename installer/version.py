@@ -111,3 +111,98 @@ def get_changelog_versions(changelog_path: Path) -> List[str]:
     content = changelog_path.read_text(encoding="utf-8")
     # Match [X.X.X] headers
     return re.findall(r"\[(\d+\.\d+\.\d+)\]", content)
+
+
+def get_changelog_between_versions(
+    changelog_path: Path,
+    from_version: Optional[str],
+    to_version: Optional[str] = None,
+) -> str:
+    """Extract changelog entries between two versions.
+
+    Returns the raw markdown text of changelog sections that fall between
+    from_version (exclusive) and to_version (inclusive). If from_version
+    is None, returns everything up to and including to_version (or all
+    [Unreleased] content). If to_version is None, includes [Unreleased].
+
+    Args:
+        changelog_path: Path to CHANGELOG.md.
+        from_version: The old/installed version (exclusive). None for fresh install.
+        to_version: The new version (inclusive). None to include [Unreleased].
+
+    Returns:
+        Extracted changelog text, or empty string if nothing found.
+    """
+    if not changelog_path.exists():
+        return ""
+
+    content = changelog_path.read_text(encoding="utf-8")
+    lines = content.splitlines()
+
+    # Parse into sections: each section starts with ## [version] or ## [Unreleased]
+    sections: List[Tuple[Optional[str], str]] = []  # (version_or_none, text)
+    current_version: Optional[str] = None
+    current_lines: List[str] = []
+    in_section = False  # Don't capture text before the first ## header
+    header_pattern = re.compile(r"^## \[([^\]]+)\]")
+
+    for line in lines:
+        match = header_pattern.match(line)
+        if match:
+            # Save previous section
+            if in_section and current_lines:
+                sections.append((current_version, "\n".join(current_lines)))
+            tag = match.group(1)
+            current_version = None if tag.lower() == "unreleased" else tag
+            current_lines = []
+            in_section = True
+        elif in_section:
+            current_lines.append(line)
+
+    # Save last section
+    if in_section and current_lines:
+        sections.append((current_version, "\n".join(current_lines)))
+
+    # Filter sections between from_version (exclusive) and to_version (inclusive)
+    result_parts: List[str] = []
+    for ver, text in sections:
+        text = text.strip()
+        if not text:
+            continue
+
+        # Skip the from_version section itself and anything older
+        if from_version and ver is not None:
+            try:
+                ver_parts = [int(x) for x in ver.split(".")]
+                from_parts = [int(x) for x in from_version.split(".")]
+                max_len = max(len(ver_parts), len(from_parts))
+                ver_parts.extend([0] * (max_len - len(ver_parts)))
+                from_parts.extend([0] * (max_len - len(from_parts)))
+                if ver_parts <= from_parts:
+                    continue
+            except ValueError:
+                # String comparison is unreliable for version ordering;
+                # only skip exact matches (the numeric path handles ordering)
+                if ver == from_version:
+                    continue
+
+        # Include [Unreleased] only if to_version is None
+        if ver is None and to_version is not None:
+            continue
+
+        # Skip versions newer than to_version
+        if to_version and ver is not None:
+            try:
+                ver_parts = [int(x) for x in ver.split(".")]
+                to_parts = [int(x) for x in to_version.split(".")]
+                max_len = max(len(ver_parts), len(to_parts))
+                ver_parts.extend([0] * (max_len - len(ver_parts)))
+                to_parts.extend([0] * (max_len - len(to_parts)))
+                if ver_parts > to_parts:
+                    continue
+            except ValueError:
+                pass
+
+        result_parts.append(text)
+
+    return "\n\n".join(result_parts)

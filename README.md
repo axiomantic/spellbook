@@ -43,7 +43,7 @@
   - [Security as first-class architecture](#security-as-first-class-architecture)
 - [Quick Install](#quick-install)
   - [Windows Quickstart](#windows-quickstart)
-- [The Magic of `implementing-features`](#the-magic-of-implementing-features)
+- [The Magic of `develop`](#the-magic-of-develop)
   - [How it works](#how-it-works)
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
@@ -66,6 +66,8 @@
 - [Recommended Companion Tools](#recommended-companion-tools)
   - [Heads Up Claude](#heads-up-claude)
   - [MCP Language Server](#mcp-language-server)
+- [Signature Spells](#signature-spells)
+- [Web Admin Interface](#web-admin-interface)
 - [Development](#development)
   - [Serve Documentation Locally](#serve-documentation-locally)
   - [Run MCP Server Directly](#run-mcp-server-directly)
@@ -112,7 +114,7 @@ These gates cannot be bypassed -- not by YOLO mode, not by autonomy settings, no
 
 ### Composition
 
-Skills invoke skills. [`implementing-features`][implementing-features] orchestrates [brainstorming], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its limits, it splits into a thin orchestrator and supporting commands.
+Skills invoke skills. [`develop`][develop] orchestrates [brainstorming], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its limits, it splits into a thin orchestrator and supporting commands.
 
 The hierarchy mirrors good organizations: strategic coordination, tactical management, individual execution. Meta-skills compose domain skills which invoke atomic disciplines.
 
@@ -154,11 +156,11 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 - Service management uses **Windows Task Scheduler**
 - Install location: `%LOCALAPPDATA%\spellbook`
 
-## The Magic of `implementing-features`
+## The Magic of `develop`
 
 You say "add dark mode" or "migrate the auth system to OAuth2" or "build a webhook delivery pipeline with retry logic." What happens next is the same thing that would happen at the best engineering org you've ever worked at -- research, design, planning, TDD, code review, verification -- except it takes minutes, and you decide how much of it you want to watch.
 
-The [`implementing-features`][implementing-features] skill orchestrates your entire feature lifecycle through 20+ specialized skills and commands. The first question it asks: how involved do you want to be?
+The [`develop`][develop] skill orchestrates your entire feature lifecycle through 20+ specialized skills and commands. The first question it asks: how involved do you want to be?
 
 **Fully autonomous.** Describe the feature and walk away. It researches your codebase, surfaces its own ambiguities, resolves them, designs the architecture, writes a detailed implementation plan, builds with test-driven development, reviews its own code, fact-checks its own claims, audits its own tests for false confidence, and opens a PR. Every step runs in a fresh subagent with a fresh perspective. Every step has a quality gate that cannot be bypassed.
 
@@ -205,8 +207,8 @@ Reusable workflows for structured development:
 | Category | Skills |
 |----------|--------|
 | **Core Workflow** | [brainstorming]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
-| **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [receiving-code-review]†, [requesting-code-review]† |
-| **Feature Dev** | [implementing-features], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
+| **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
+| **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools] |
@@ -228,9 +230,8 @@ Reusable workflows for structured development:
 [fixing-tests]: https://axiomantic.github.io/spellbook/latest/skills/fixing-tests/
 [fact-checking]: https://axiomantic.github.io/spellbook/latest/skills/fact-checking/
 [finding-dead-code]: https://axiomantic.github.io/spellbook/latest/skills/finding-dead-code/
-[receiving-code-review]: https://axiomantic.github.io/spellbook/latest/skills/receiving-code-review/
 [requesting-code-review]: https://axiomantic.github.io/spellbook/latest/skills/requesting-code-review/
-[implementing-features]: https://axiomantic.github.io/spellbook/latest/skills/implementing-features/
+[develop]: https://axiomantic.github.io/spellbook/latest/skills/develop/
 [reviewing-design-docs]: https://axiomantic.github.io/spellbook/latest/skills/reviewing-design-docs/
 [reviewing-impl-plans]: https://axiomantic.github.io/spellbook/latest/skills/reviewing-impl-plans/
 [reviewing-prs]: https://axiomantic.github.io/spellbook/latest/skills/reviewing-prs/
@@ -581,7 +582,7 @@ The core workflow: request a feature, answer a few questions, and let the skill 
 │ > Add dark mode toggle to settings                                          │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
-⏺ Skill(implementing-features)
+⏺ Skill(develop)
 
   I'll help implement dark mode. First, let me gather preferences.
 
@@ -710,7 +711,7 @@ When implementing a complex feature, context can fill up before work completes. 
 │ > Implement webhook delivery with retry logic and dead letter queue         │
 ╰─────────────────────────────────────────────────────────────────────────────╯
 
-⏺ Skill(implementing-features)
+⏺ Skill(develop)
 
   I'll help you implement the webhook delivery system. Let me first
   understand the current codebase architecture and gather requirements.
@@ -807,7 +808,7 @@ Start fresh and resume exactly where you left off:
 
   Executing restoration sequence...
 
-⏺ Skill(implementing-features, --resume-from Phase3.Task4)
+⏺ Skill(develop, --resume-from Phase3.Task4)
 
   Resuming webhook delivery implementation.
 
@@ -1009,13 +1010,62 @@ git clone https://github.com/axiomantic/mcp-language-server.git ~/Development/mc
 cd ~/Development/mcp-language-server && go build
 ```
 
+## Signature Spells
+
+Five skills that define what Spellbook does differently.
+
+**develop** -- *Full-lifecycle feature orchestrator.*
+Takes a feature from idea to merged code through research, requirements discovery, design, planning, TDD implementation, code review, and branch finishing. Automatically classifies complexity (trivial through epic) and enforces quality gates at every phase transition. The most comprehensive skill in the collection, and the one most other skills feed into.
+
+**fractal-thinking** -- *Recursive question decomposition.*
+Decomposes any question into a persistent graph of sub-questions, dispatches parallel workers to explore each branch, detects convergence and contradiction across branches, and synthesizes answers bottom-up. The graph persists in SQLite and survives context compaction, so exploration can resume across sessions.
+
+**auditing-green-mirage** -- *Test integrity auditor.*
+Finds tests that pass but prove nothing: empty assertions, tautological checks, over-mocked reality, tests that cannot fail. If your CI is green but your code is broken, this skill identifies where the illusion lives and why.
+
+**fact-checking** -- *Claim verification engine.*
+Extracts factual claims from documents, designs, or code comments, then dispatches parallel verification agents to trace each claim to evidence in the codebase. Produces a graded trust report with sourced verdicts. No claim survives without proof.
+
+**advanced-code-review** -- *Multi-phase deep review.*
+Builds a semantic model of the codebase, generates a review plan, and executes deep analysis across architectural, security, performance, and correctness dimensions. Then verifies its own findings against the code before reporting, reducing false positives.
+
+## Web Admin Interface
+
+Spellbook includes a browser-based admin interface served from the MCP daemon at `http://localhost:8765/admin/`.
+
+![Spellbook Admin Dashboard](docs/admin/screenshots/dashboard.png)
+
+Install the admin extra and open it:
+
+```bash
+uv pip install -e ".[admin]"
+spellbook admin open
+```
+
+Ten pages cover the full operational surface:
+
+| Page | What it shows |
+|------|--------------|
+| **Dashboard** | Server status, database sizes, focus tracking summary, live event feed |
+| **Memory** | Stored memories with search, type filtering, and citation details |
+| **Security** | Security event log with severity and event type filters |
+| **Sessions** | Tracked sessions with multi-project filtering and content search |
+| **Analytics** | Tool call frequency, error rates, and timeline from security events |
+| **Health** | Database health matrix across all 4 SQLite databases |
+| **Events** | Live WebSocket event bus monitor with subsystem filtering |
+| **Focus** | Zeigarnik focus stacks and correction event log |
+| **Config** | Runtime configuration editor (TTS, notifications, general) |
+| **Fractal** | Interactive Cytoscape.js graph explorer for fractal-thinking |
+
+Authentication uses the MCP bearer token from `~/.local/spellbook/.mcp-token`. Full documentation: [docs/admin/](docs/admin/index.md).
+
 ## Development
 
 ### Serve Documentation Locally
 
 ```bash
-cd ~/.local/share/spellbook
-uvx mkdocs serve
+uv pip install -e ".[docs]"
+mkdocs serve
 ```
 
 Then open http://127.0.0.1:8000
@@ -1061,7 +1111,6 @@ Spellbook includes content derived from [obra/superpowers](https://github.com/ob
 | Skill | dispatching-parallel-agents | dispatching-parallel-agents |
 | Skill | executing-plans | executing-plans + subagent-driven-development |
 | Skill | finishing-a-development-branch | finishing-a-development-branch |
-| Skill | receiving-code-review | receiving-code-review |
 | Skill | requesting-code-review | requesting-code-review |
 | Skill | test-driven-development | test-driven-development |
 | Skill | using-git-worktrees | using-git-worktrees |

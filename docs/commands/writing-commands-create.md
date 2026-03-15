@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: writing-commands-create
-
 Create a new command file following the command schema. Applies file naming conventions, YAML frontmatter, required sections (MISSION, ROLE, Invariant Principles, execution steps, Output, FORBIDDEN, analysis, reflection), and token efficiency targets.
 
 ```mermaid

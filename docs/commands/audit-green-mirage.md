@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: audit-green-mirage
-
 Audit test suites for Green Mirage anti-patterns: tests that pass but do not verify behavior.
 
 ```mermaid

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: chariot-implementer
-
 Focused implementation agent that executes specifications with absolute precision. Drives implementation forward without deviation, mapping every line of code to a requirement.
 
 ```mermaid

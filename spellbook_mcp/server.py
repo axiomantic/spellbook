@@ -755,7 +755,20 @@ def spellbook_config_set(key: str, value) -> dict:
     Returns:
         {"status": "ok", "config": <full updated config>}
     """
-    return config_set(key, value)
+    result = config_set(key, value)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.CONFIG,
+                event_type="config.updated",
+                data={"key": key, "value": str(value)[:200]},
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
@@ -1676,7 +1689,7 @@ def skill_instructions_get(
     If sections specified, returns only those sections.
 
     Args:
-        skill_name: Name of the skill (e.g., "implementing-features")
+        skill_name: Name of the skill (e.g., "develop")
         sections: Optional list of section names to extract (e.g., ["FORBIDDEN", "REQUIRED", "ROLE"])
                   If None, returns full content.
 
@@ -2091,7 +2104,7 @@ def stint_push(
         {"success": True, "depth": int, "stack": list}
     """
     from spellbook_mcp.stint_tools import push_stint
-    return push_stint(
+    result = push_stint(
         project_path=project_path,
         name=name,
         stint_type=type,
@@ -2100,6 +2113,24 @@ def stint_push(
         success_criteria=success_criteria,
         metadata=metadata,
     )
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FOCUS,
+                event_type="focus.stint_pushed",
+                data={
+                    "project_path": project_path,
+                    "name": name,
+                    "type": type,
+                    "depth": result.get("depth"),
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -2122,7 +2153,26 @@ def stint_pop(
         {"success": True, "popped": dict, "depth": int, "mismatch": bool}
     """
     from spellbook_mcp.stint_tools import pop_stint
-    return pop_stint(project_path=project_path, name=name)
+    result = pop_stint(project_path=project_path, name=name)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        popped = result.get("popped", {})
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FOCUS,
+                event_type="focus.stint_popped",
+                data={
+                    "project_path": project_path,
+                    "name": popped.get("name") if isinstance(popped, dict) else name,
+                    "depth": result.get("depth"),
+                    "mismatch": result.get("mismatch", False),
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -2167,11 +2217,28 @@ def stint_replace(
         {"success": True, "depth": int, "correction_logged": True}
     """
     from spellbook_mcp.stint_tools import replace_stint
-    return replace_stint(
+    result = replace_stint(
         project_path=project_path,
         stack=stack,
         reason=reason,
     )
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FOCUS,
+                event_type="focus.stint_replaced",
+                data={
+                    "project_path": project_path,
+                    "reason": reason[:200] if reason else "",
+                    "depth": result.get("depth"),
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 # ============================================================================
@@ -2326,7 +2393,7 @@ def experiment_create(
 
     Args:
         name: Human-readable unique identifier (1-100 chars)
-        skill_name: Target skill to test (e.g., "implementing-features")
+        skill_name: Target skill to test (e.g., "develop")
         variants: List of variant dicts with:
             - name: Variant name (e.g., "control", "treatment")
             - skill_version: Optional version string (None for control)
@@ -2583,7 +2650,7 @@ def security_log_event(
         {"success": True, "event_id": int} on success, or
         {"success": True, "degraded": True, "warning": "..."} if DB unavailable.
     """
-    return do_log_event(
+    result = do_log_event(
         event_type=event_type,
         severity=severity,
         source=source,
@@ -2592,6 +2659,24 @@ def security_log_event(
         tool_name=tool_name,
         action_taken=action_taken,
     )
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.SECURITY,
+                event_type="security.event_logged",
+                data={
+                    "event_type": event_type,
+                    "severity": severity,
+                    "source": source,
+                    "event_id": result.get("event_id"),
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3230,7 +3315,24 @@ async def api_speak(request: Request) -> JSONResponse:
 @inject_recovery_context
 def fractal_create_graph(seed: str, intensity: str, checkpoint_mode: str, metadata: str = None):
     """Create a new fractal thinking graph with a seed question."""
-    return do_fractal_create_graph(seed=seed, intensity=intensity, checkpoint_mode=checkpoint_mode, metadata_json=metadata)
+    result = do_fractal_create_graph(seed=seed, intensity=intensity, checkpoint_mode=checkpoint_mode, metadata_json=metadata)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.graph_created",
+                data={
+                    "graph_id": result.get("graph_id"),
+                    "seed": seed[:200],
+                    "intensity": intensity,
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3244,7 +3346,20 @@ def fractal_resume_graph(graph_id: str):
 @inject_recovery_context
 def fractal_delete_graph(graph_id: str):
     """Delete a fractal thinking graph and all its nodes/edges."""
-    return do_fractal_delete_graph(graph_id=graph_id)
+    result = do_fractal_delete_graph(graph_id=graph_id)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.graph_deleted",
+                data={"graph_id": graph_id},
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3259,9 +3374,27 @@ def fractal_update_graph_status(graph_id: str, status: str, reason: str = None):
 def fractal_add_node(graph_id: str, parent_id: str, node_type: str, text: str, owner: str = None, metadata: str = None):
     """Add a new node to a fractal thinking graph."""
     try:
-        return do_fractal_add_node(graph_id=graph_id, parent_id=parent_id, node_type=node_type, text=text, owner=owner, metadata_json=metadata)
+        result = do_fractal_add_node(graph_id=graph_id, parent_id=parent_id, node_type=node_type, text=text, owner=owner, metadata_json=metadata)
     except ValueError as e:
         return {"error": str(e)}
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.node_added",
+                data={
+                    "graph_id": graph_id,
+                    "node_id": result.get("node_id"),
+                    "node_type": node_type,
+                    "parent_id": parent_id,
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3279,9 +3412,26 @@ def fractal_update_node(graph_id: str, node_id: str, metadata: str):
 def fractal_mark_saturated(graph_id: str, node_id: str, reason: str):
     """Mark a node as saturated in a fractal thinking graph."""
     try:
-        return do_fractal_mark_saturated(graph_id=graph_id, node_id=node_id, reason=reason)
+        result = do_fractal_mark_saturated(graph_id=graph_id, node_id=node_id, reason=reason)
     except ValueError as e:
         return {"error": str(e)}
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.node_saturated",
+                data={
+                    "graph_id": graph_id,
+                    "node_id": node_id,
+                    "reason": reason[:200],
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3328,10 +3478,13 @@ def fractal_get_saturation_status(graph_id: str):
 
 @mcp.tool()
 @inject_recovery_context
-def fractal_claim_work(graph_id: str, worker_id: str):
-    """Atomically claim the next available question node for a worker. Returns node data with branch affinity preference, or graph_done status."""
+def fractal_claim_work(graph_id: str, worker_id: str, session_id: str = ""):
+    """Atomically claim the next available question node for a worker. Returns node data with branch affinity preference, or graph_done status. Pass session_id (Claude Code session UUID) for chat log linking in the admin UI."""
     try:
-        return do_fractal_claim_work(graph_id=graph_id, worker_id=worker_id)
+        return do_fractal_claim_work(
+            graph_id=graph_id, worker_id=worker_id,
+            session_id=session_id or None,
+        )
     except ValueError as e:
         return {"error": str(e)}
 
@@ -3341,9 +3494,25 @@ def fractal_claim_work(graph_id: str, worker_id: str):
 def fractal_synthesize_node(graph_id: str, node_id: str, synthesis_text: str):
     """Mark a node as synthesized with synthesis text. Validates all child questions are complete."""
     try:
-        return do_fractal_synthesize_node(graph_id=graph_id, node_id=node_id, synthesis_text=synthesis_text)
+        result = do_fractal_synthesize_node(graph_id=graph_id, node_id=node_id, synthesis_text=synthesis_text)
     except ValueError as e:
         return {"error": str(e)}
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.node_synthesized",
+                data={
+                    "graph_id": graph_id,
+                    "node_id": node_id,
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3458,7 +3627,20 @@ async def memory_forget(ctx: Context, memory_id: str) -> dict:
         Dict with status ('deleted' or 'not_found').
     """
     db_path = str(get_db_path())
-    return do_memory_forget(db_path=db_path, memory_id=memory_id)
+    result = do_memory_forget(db_path=db_path, memory_id=memory_id)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+
+        await event_bus.publish(
+            Event(
+                subsystem=Subsystem.MEMORY,
+                event_type="memory.deleted",
+                data={"memory_id": memory_id},
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3569,13 +3751,30 @@ async def memory_store_memories(
     # Detect current branch
     branch = get_current_branch(project_path) if project_path else ""
 
-    return do_store_memories(
+    result = do_store_memories(
         db_path=db_path,
         memories_json=memories,
         event_ids_str=event_ids,
         namespace=namespace,
         branch=branch,
     )
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+
+        await event_bus.publish(
+            Event(
+                subsystem=Subsystem.MEMORY,
+                event_type="memory.created",
+                data={
+                    "namespace": namespace,
+                    "count": result.get("memories_created", 0),
+                },
+                namespace=namespace,
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 # --- Memory Event REST Endpoint ---
@@ -3665,6 +3864,35 @@ async def api_memory_recall(request: Request) -> JSONResponse:
         repo_path=repo_path,
     )
     return JSONResponse(result)
+
+
+# --- Admin Web Interface ---
+def _mount_admin_app():
+    """Mount the admin web interface if admin_enabled config is true."""
+    import logging as _admin_logging
+
+    _admin_logger = _admin_logging.getLogger(__name__)
+    try:
+        from spellbook_mcp.config_tools import config_get
+
+        admin_enabled = config_get("admin_enabled")
+        if admin_enabled is not None and not admin_enabled:
+            _admin_logger.debug("Admin interface disabled via admin_enabled config")
+            return
+
+        from spellbook_mcp.admin.app import create_admin_app
+        from starlette.routing import Mount
+
+        admin_app = create_admin_app()
+        mcp._additional_http_routes.append(Mount("/admin", app=admin_app))
+        _admin_logger.info("Admin web interface mounted at /admin")
+    except ImportError:
+        _admin_logger.debug("Admin package not available, skipping mount")
+    except Exception:
+        _admin_logger.warning("Failed to mount admin interface", exc_info=True)
+
+
+_mount_admin_app()
 
 
 if __name__ == "__main__":

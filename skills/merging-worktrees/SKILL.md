@@ -1,6 +1,8 @@
 ---
 name: merging-worktrees
 description: "Use when merging parallel worktrees back together after parallel implementation, combining parallel development tracks, or unifying branches from dispatched parallel agents. Triggers: 'merge worktrees', 'combine parallel branches', 'integrate parallel work', 'all tracks complete', 'bring everything together'."
+intro: |
+  Merges parallel worktrees back together with conflict detection, 3-way analysis, and ordered resolution. Ensures no feature is lost and no bug is introduced during integration of concurrent development tracks. This core spellbook skill handles the integration phase after parallel implementation completes.
 ---
 
 # Worktree Merge

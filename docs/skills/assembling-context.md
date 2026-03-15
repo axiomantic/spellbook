@@ -1,10 +1,10 @@
 # assembling-context
 
-Prepare tiered context packages for subagents and manage token budgets. Triggered by 'prepare context for', 'assemble context', 'token budget', or invoked by implementing-features Phase 3.5/4.2.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Prepare tiered context packages for subagents and manage token budgets. Triggered by 'prepare context for', 'assemble context', 'token budget', or invoked by develop Phase 3.5/4.2.
 
 ## Workflow Diagram
-
-# Diagram: assembling-context
 
 Workflow for curating and assembling tiered context packages for subagents, handoffs, and other consumers. Budget-first approach with intelligent truncation.
 

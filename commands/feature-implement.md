@@ -1,10 +1,10 @@
 ---
-description: "Phase 3-4 of implementing-features: Plan and execute implementation"
+description: "Phase 3-4 of develop: Plan and execute implementation"
 ---
 
 # /feature-implement
 
-Phases 3-4 of the implementing-features workflow. Run after `/feature-design` completes (Phase 2 approved).
+Phases 3-4 of the develop workflow. Run after `/feature-design` completes (Phase 2 approved).
 
 <CRITICAL>
 ## Prerequisite Verification

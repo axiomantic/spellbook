@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: fix-tests-parse
-
 Parse audit reports or test failure output into structured work items, honor dependency ordering from remediation plans, and select a commit strategy before execution begins.
 
 ```mermaid

@@ -341,13 +341,13 @@ class TestGenerateBootPrompt:
             "session_id": "session-1",
             "project_path": "/test/project",
             "bound_at": "2026-01-27T10:00:00",
-            "active_skill": "implementing-features",
+            "active_skill": "develop",
             "skill_phase": "DESIGN",
         }
 
         result = generate_boot_prompt(soul)
 
-        assert 'Skill("implementing-features"' in result
+        assert 'Skill("develop"' in result
         assert '--resume DESIGN' in result
 
     def test_boot_prompt_with_skill_no_phase(self):
@@ -535,7 +535,7 @@ class TestGetResumeFields:
             "session-1",
             "/test/project",
             datetime.now().isoformat(),
-            "implementing-features",
+            "develop",
             "DESIGN",
             json.dumps([{"content": "Task 1", "status": "pending"}]),
         ))
@@ -545,7 +545,7 @@ class TestGetResumeFields:
 
         assert result["resume_available"] is True
         assert result["resume_session_id"] == "soul-1"
-        assert result["resume_active_skill"] == "implementing-features"
+        assert result["resume_active_skill"] == "develop"
         assert result["resume_skill_phase"] == "DESIGN"
         assert result["resume_pending_todos"] == 1
         assert result["resume_boot_prompt"] is not None
@@ -752,7 +752,7 @@ class TestIntegrationEndToEnd:
             "prior-session",
             str(tmp_path),
             datetime.now().isoformat(),
-            "implementing-features",
+            "develop",
             "IMPLEMENT",
             json.dumps([{"content": "Complete task 3", "status": "pending"}]),
             json.dumps([str(plan_doc)]),
@@ -769,7 +769,7 @@ class TestIntegrationEndToEnd:
 
         # Resume should be available
         assert result["resume_available"] is True
-        assert result["resume_active_skill"] == "implementing-features"
+        assert result["resume_active_skill"] == "develop"
         assert result["resume_skill_phase"] == "IMPLEMENT"
         assert result["resume_pending_todos"] == 1
         assert result["resume_workflow_pattern"] == "TDD"
@@ -777,7 +777,7 @@ class TestIntegrationEndToEnd:
         # Boot prompt should contain restoration instructions
         boot_prompt = result["resume_boot_prompt"]
         assert "SECTION 0" in boot_prompt
-        assert 'Skill("implementing-features"' in boot_prompt
+        assert 'Skill("develop"' in boot_prompt
         assert "--resume IMPLEMENT" in boot_prompt
         assert "TodoWrite(" in boot_prompt
         assert "workflow pattern: TDD" in boot_prompt
@@ -1170,7 +1170,7 @@ class TestGenerateBootPromptAllNewSections:
         from spellbook_mcp.resume import generate_boot_prompt
 
         soul = {
-            "active_skill": "implementing-features",
+            "active_skill": "develop",
             "skill_phase": "IMPLEMENT",
             "workflow_pattern": "TDD",
         }
@@ -1258,7 +1258,7 @@ class TestBootPromptTokenBudget:
         from spellbook_mcp.resume import generate_boot_prompt
 
         soul = {
-            "active_skill": "implementing-features",
+            "active_skill": "develop",
             "skill_phase": "IMPLEMENT",
             "todos": json.dumps([
                 {"content": f"Task {i}", "status": "pending"}
@@ -1392,7 +1392,7 @@ class TestBootPromptContextAwareValidation:
         from spellbook_mcp.resume import _validate_boot_prompt
 
         boot_prompt = (
-            'Skill("implementing-features", "--resume DESIGN")\n'
+            'Skill("develop", "--resume DESIGN")\n'
             'Read("/path/to/plan.md")\n'
             'TodoWrite([{\n'
             '  "content": "Implement auth module",\n'
@@ -1416,7 +1416,7 @@ class TestBootPromptContextAwareValidation:
         from spellbook_mcp.resume import _validate_boot_prompt
 
         boot_prompt = (
-            'Skill("implementing-features", "--resume PLANNING")\n'
+            'Skill("develop", "--resume PLANNING")\n'
             'Read("/Users/user/project/plan.md")\n'
         )
         findings = _validate_boot_prompt(boot_prompt)
@@ -1465,7 +1465,7 @@ class TestRemoveSection:
 class TestGetResumeFieldsIncludesWorkflowState:
     """Tests for get_resume_fields() with workflow_state integration (T9)."""
 
-    def _setup_db_with_soul(self, tmp_path, active_skill="implementing-features"):
+    def _setup_db_with_soul(self, tmp_path, active_skill="develop"):
         """Helper to create a DB with a recent soul record."""
         from spellbook_mcp.db import init_db, get_connection
         from datetime import datetime

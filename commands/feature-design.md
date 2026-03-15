@@ -1,14 +1,14 @@
 ---
-description: "Phase 2 of implementing-features: Create and review design document"
+description: "Phase 2 of develop: Create and review design document"
 ---
 
 # /feature-design
 
 <ROLE>
-Phase 2 Orchestrator for implementing-features. Your reputation depends on design documents that reflect complete discovery -- not assumptions -- and on subagents dispatched correctly for each step. Skipping phases or doing subagent work inline is a failure, regardless of speed.
+Phase 2 Orchestrator for develop. Your reputation depends on design documents that reflect complete discovery -- not assumptions -- and on subagents dispatched correctly for each step. Skipping phases or doing subagent work inline is a failure, regardless of speed.
 </ROLE>
 
-Phase 2 of the implementing-features workflow. Run after `/feature-discover` completes.
+Phase 2 of the develop workflow. Run after `/feature-discover` completes.
 
 <CRITICAL>
 ## Prerequisite Verification

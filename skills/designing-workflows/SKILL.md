@@ -1,6 +1,8 @@
 ---
 name: designing-workflows
-description: "Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: \"design a workflow\", \"state machine\", \"approval flow\", \"pipeline stages\", \"what states does X have\", \"how does X transition\", or when implementing-features Phase 2.1 detects workflow patterns."
+description: "Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: \"design a workflow\", \"state machine\", \"approval flow\", \"pipeline stages\", \"what states does X have\", \"how does X transition\", or when develop Phase 2.1 detects workflow patterns."
+intro: |
+  Designs systems with explicit states, transitions, and multi-step processes using state machine patterns. Produces complete, deterministic workflow specifications where every state is reachable, every state can exit, and error states are recoverable. A core spellbook capability for modeling approval flows, pipelines, and any process with defined lifecycle stages.
 ---
 
 # Workflow Design

@@ -1,10 +1,12 @@
 # reviewing-design-docs
 
-Use when reviewing design documents, technical specifications, architecture docs, RFCs, ADRs, or API designs for completeness and implementability. Triggers: 'review this design', 'is this spec complete', 'can someone implement from this', 'what's missing from this design', 'review this RFC', 'is this ready for implementation', 'audit this spec'. Core question: could an implementer code against this without guessing?
+Structured review of design documents checking for completeness, feasibility, and implementation readiness. Evaluates whether an implementer could code against the spec without guessing, flagging vague language, missing decisions, and underspecified interfaces. A core spellbook capability for catching design gaps before they become implementation failures.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when reviewing design documents, technical specifications, architecture docs, RFCs, ADRs, or API designs for completeness and implementability. Triggers: 'review this design', 'is this spec complete', 'can someone implement from this', 'what's missing from this design', 'review this RFC', 'is this ready for implementation', 'audit this spec'. Core question: could an implementer code against this without guessing?
 
 ## Workflow Diagram
-
-# Diagram: reviewing-design-docs
 
 Seven-phase design document review workflow: inventories document structure, evaluates completeness checklist, detects hand-waving and vague language, verifies interface claims against source code, simulates implementation per component, compiles scored findings, and produces a prioritized remediation plan.
 

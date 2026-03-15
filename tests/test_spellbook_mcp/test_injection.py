@@ -337,7 +337,7 @@ class TestBuildRecoveryContextSkillPhase:
             INSERT INTO souls (id, project_path, active_skill, skill_phase)
             VALUES (?, ?, ?, ?)
         """,
-            ("soul-1", "/test/project", "implementing-features", "Phase 2: Design"),
+            ("soul-1", "/test/project", "develop", "Phase 2: Design"),
         )
         conn.commit()
 
@@ -347,7 +347,7 @@ class TestBuildRecoveryContextSkillPhase:
         assert "Skill Phase" in context
         assert "Phase 2: Design" in context
 
-        # Verify format matches skill parser expectation (from implementing-features SKILL.md)
+        # Verify format matches skill parser expectation (from develop SKILL.md)
         import re
         phase_pattern = r'\*\*Skill Phase:\*\*\s*(.+?)(?:\n|$)'
         match = re.search(phase_pattern, context)

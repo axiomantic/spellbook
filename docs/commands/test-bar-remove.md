@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: test-bar-remove
-
 Cleanly remove all test apparatus code injected by /test-bar. Reads the manifest, checks for user modifications, reverts modified files, deletes created files, verifies clean state, and removes the manifest.
 
 ```mermaid

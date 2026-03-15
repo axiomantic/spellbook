@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: emperor-governor
-
 Resource governance agent that tracks scope creep, token usage, and project drift. Reports pure measurements without opinions or recommendations.
 
 ```mermaid

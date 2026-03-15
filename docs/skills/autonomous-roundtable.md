@@ -1,10 +1,12 @@
 # autonomous-roundtable
 
-Meta-orchestrator for Forged autonomous development: decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills.
+Multi-perspective project decomposition using archetypal roles to surface blind spots and generate balanced designs. Decomposes projects into features and drives each through discovery, design, planning, and implementation with roundtable consensus at decision points. This core spellbook skill powers the Forge autonomous development workflow.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Meta-orchestrator for Forged autonomous development: decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills.
 
 ## Workflow Diagram
-
-# Diagram: autonomous-roundtable
 
 Workflow for the autonomous-roundtable skill (Forged system). A meta-orchestrator that decomposes projects into features, processes each through DISCOVER, DESIGN, PLAN, IMPLEMENT, COMPLETE stages with roundtable consensus gating. Runs exclusively as a subagent, with handoff protocol for context overflow.
 
@@ -29,7 +31,7 @@ flowchart TD
         Discover["gathering-requirements"]
         Design["brainstorming"]
         Plan["writing-plans"]
-        Implement["implementing-features"]
+        Implement["develop"]
         Complete["Final roundtable"]
     end
 
@@ -122,7 +124,7 @@ flowchart TD
 | gathering-requirements | SKILL.md: Stages table - DISCOVER stage |
 | brainstorming | SKILL.md: Stages table - DESIGN stage |
 | writing-plans | SKILL.md: Stages table - PLAN stage |
-| implementing-features | SKILL.md: Stages table - IMPLEMENT stage |
+| develop | SKILL.md: Stages table - IMPLEMENT stage |
 | Final roundtable | SKILL.md: Stages table - COMPLETE stage |
 | roundtable_convene | SKILL.md: MCP Tools - Roundtable convene |
 | Verdict (APPROVE/ITERATE) | SKILL.md: Forge Loop - roundtable outcomes |
@@ -197,7 +199,7 @@ Per feature: forge_iteration_start → forge_select_skill → Skill → roundtab
 | DISCOVER  | gathering-requirements | Requirements |
 | DESIGN    | brainstorming          | Design doc   |
 | PLAN      | writing-plans          | Impl plan    |
-| IMPLEMENT | implementing-features  | Code+tests   |
+| IMPLEMENT | develop  | Code+tests   |
 | COMPLETE  | (final roundtable)     | Report       |
 
 ## MCP Tools

@@ -1,10 +1,12 @@
 # isolated-testing
 
-Use when testing theories during debugging, or when chaos is detected. Triggers: "let me try", "maybe if I", "what about", "quick test", "see if", rapid context switching, multiple changes without isolation. Enforces one-theory-one-test discipline. Invoked automatically by debugging, scientific-debugging, systematic-debugging before any experiment execution.
+Creates minimal reproduction cases outside the main codebase to test theories in isolation during debugging. Enforces one-theory-one-test discipline, preventing the chaos of mixing multiple changes. This core spellbook skill is invoked automatically by the debugging skills before any experiment execution, or manually when you need a clean environment to test a hypothesis.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when testing theories during debugging, or when chaos is detected. Triggers: "let me try", "maybe if I", "what about", "quick test", "see if", rapid context switching, multiple changes without isolation. Enforces one-theory-one-test discipline. Invoked automatically by debugging, scientific-debugging, systematic-debugging before any experiment execution.
 
 ## Workflow Diagram
-
-# Diagram: isolated-testing
 
 Disciplined one-theory-one-test protocol for debugging. Enforces strict queue ordering, requires full test design before execution, and halts investigation immediately upon reproduction. Detects and prevents chaos patterns.
 

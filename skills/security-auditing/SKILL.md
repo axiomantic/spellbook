@@ -1,6 +1,8 @@
 ---
 name: security-auditing
-description: "Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools'. Integrates with code-review --audit, implementing-features Phase 4, and distilling-prs for PR security review."
+description: "Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools'. Integrates with code-review --audit, develop Phase 4, and distilling-prs for PR security review."
+intro: |
+  Audits skills, commands, hooks, and MCP tools for injection risks, privilege escalation, and prompt manipulation vulnerabilities. Combines static analysis scanning with human-guided triage across six ordered phases. A core spellbook capability for systematic security review of the spellbook ecosystem and project code.
 ---
 
 # Security Auditing
@@ -267,9 +269,9 @@ Enforce the audit verdict as a quality gate.
 2. This skill handles the security pass specifically
 3. Findings from both are combined in the final audit report
 
-### With `implementing-features` Phase 4
+### With `develop` Phase 4
 
-1. `implementing-features` Phase 4 dispatches a subagent that invokes this skill
+1. `develop` Phase 4 dispatches a subagent that invokes this skill
 2. Scope is set to the changeset (branch diff against base)
 3. FAIL verdict blocks the feature from proceeding to merge
 4. WARN verdict requires the implementer to acknowledge findings

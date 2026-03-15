@@ -207,8 +207,7 @@ class TestTarotModifierWorkflow:
 class TestDeprecationRouting:
     """E2E tests for deprecated skill argument routing.
 
-    Old skills (requesting-code-review, receiving-code-review) should
-    be translatable to new modes.
+    Old skill (requesting-code-review) should be translatable to new modes.
     """
 
     def test_old_requesting_code_review_maps_to_self(self) -> None:
@@ -222,11 +221,8 @@ class TestDeprecationRouting:
         handler = route_to_handler(args)
         assert handler.name == "self"
 
-    def test_old_receiving_code_review_maps_to_feedback(self) -> None:
-        """Old receiving-code-review behavior maps to --feedback.
-
-        When translating, --feedback should be added.
-        """
+    def test_feedback_flag_maps_to_feedback(self) -> None:
+        """The --feedback flag routes to feedback handler."""
         args = parse_args("--feedback")
         handler = route_to_handler(args)
         assert handler.name == "feedback"

@@ -2,9 +2,7 @@
 
 ## Workflow Diagram
 
-# Diagram: feature-research
-
-Phase 1 of implementing-features: Research strategy planning, codebase exploration via subagent, ambiguity extraction, and quality scoring with a 100% threshold gate.
+Phase 1 of develop: Research strategy planning, codebase exploration via subagent, ambiguity extraction, and quality scoring with a 100% threshold gate.
 
 ```mermaid
 flowchart TD

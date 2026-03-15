@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: sharpen-improve
-
 Rewrites ambiguous LLM prompts to eliminate guesswork. Runs an internal audit first, triages findings, asks clarifying questions when needed, applies sharpening patterns, and produces the improved prompt with a change log.
 
 ```mermaid

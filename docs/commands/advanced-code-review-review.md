@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: advanced-code-review-review
-
 Phase 3 of advanced-code-review: Deep multi-pass code review that analyzes each file through security, correctness, quality, and polish passes, integrates previous item context, and generates structured findings.
 
 ```mermaid

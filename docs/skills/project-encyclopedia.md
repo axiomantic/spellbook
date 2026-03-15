@@ -1,10 +1,10 @@
 # project-encyclopedia
 
-[DEPRECATED] <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> [DEPRECATED] <ONBOARD> Use on first session in a project, or when user asks for codebase overview. Creates persistent glossary, architecture maps, and decision records to solve agent amnesia.
 
 ## Workflow Diagram
-
-# Diagram: project-encyclopedia
 
 Create or refresh persistent project encyclopedias with glossary, architecture maps, and decision records to solve agent amnesia across sessions.
 

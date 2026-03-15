@@ -1,6 +1,8 @@
 ---
 name: brainstorming
-description: "Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also used in SYNTHESIS mode when implementing-features provides discovery context for autonomous design."
+description: "Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also used in SYNTHESIS mode when develop provides discovery context for autonomous design."
+intro: |
+  Structured design exploration that evaluates multiple approaches against trade-offs before committing to an architecture. Generates 2-3 candidate designs with explicit pros, cons, and risk profiles so you can make informed decisions. A core spellbook capability, invocable with `/brainstorm` or by asking to explore options for a technical problem.
 ---
 
 # Brainstorming Ideas Into Designs

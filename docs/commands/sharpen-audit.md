@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: sharpen-audit
-
 Audits LLM prompts and instructions for ambiguity through a 6-phase protocol: inventory, line-by-line scan, categorize findings, generate executor predictions, draft clarification questions, and compile a structured report with severity ratings and verdict.
 
 ```mermaid

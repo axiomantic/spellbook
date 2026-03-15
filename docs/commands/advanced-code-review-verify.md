@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: advanced-code-review-verify
-
 Phase 4 of advanced-code-review: Verification that fact-checks every finding against the actual codebase, removes false positives, flags inconclusive items, detects duplicates, and calculates signal-to-noise ratio.
 
 ```mermaid

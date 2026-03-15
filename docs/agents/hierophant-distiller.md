@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: hierophant-distiller
-
 Wisdom extraction agent that distills enduring lessons from completed projects. Finds the single most profound insight and transforms ephemeral history into permanent doctrine.
 
 ```mermaid

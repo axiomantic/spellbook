@@ -93,3 +93,13 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
+
+  # Node - Admin frontend
+  - package-ecosystem: "npm"
+    directory: "/spellbook_mcp/admin/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "admin"

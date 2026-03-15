@@ -1,10 +1,10 @@
 # smart-reading
 
-Use when reading files or command output of unknown size to avoid blind truncation and context loss. Triggers: 'this file is huge', 'output was cut off', 'large file', 'how should I read this', or when about to use head/tail to truncate output. Also loaded as behavioral protocol for all file reading operations.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when reading files or command output of unknown size to avoid blind truncation and context loss. Triggers: 'this file is huge', 'output was cut off', 'large file', 'how should I read this', or when about to use head/tail to truncate output. Also loaded as behavioral protocol for all file reading operations.
 
 ## Workflow Diagram
-
-# Diagram: smart-reading
 
 Protocol for reading files and command output without blind truncation or silent data loss. Decides approach based on content size and intent.
 

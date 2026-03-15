@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/devils-advocate/SKILL.md", "source_hash": "sha256:e6a7bbc64b37c5e4733985744cf9782896b454ab1b79a077d3a45cf01af19b8a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/devils-advocate/SKILL.md","source_hash": "sha256:f7b4a1d005c6db12c521951eb8dc1c8027937d8145a7ab3cb6fcae3a167ace32","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: devils-advocate
 
 Workflow for adversarial review of design documents, architecture decisions, and technical artifacts. Challenges assumptions, surfaces risks, and stress-tests decisions.

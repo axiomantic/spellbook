@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: crystallize
-
 Transform verbose SOPs into high-performance agentic prompts via principled compression across five phases with iterative verification.
 
 ```mermaid

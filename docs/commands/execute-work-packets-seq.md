@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: execute-work-packets-seq
-
 Execute all work packets in dependency order, one at a time, with context compaction between tracks.
 
 ```mermaid

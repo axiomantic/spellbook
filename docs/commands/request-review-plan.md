@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: request-review-plan
-
 Planning and context assembly phases for code review requests. Determines git range, builds file list, and assembles reviewer context bundle.
 
 ```mermaid

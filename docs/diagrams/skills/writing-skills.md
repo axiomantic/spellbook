@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/writing-skills/SKILL.md", "source_hash": "sha256:9b9d3a9aac786ada8ea7879e40ff66d37869bd2b5e753e89e770ef1eeaf1f1df", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/writing-skills/SKILL.md","source_hash": "sha256:fb927c54f1281ccd8ce1b3824aba46b661ff49907b4f088a9e1f5604a48a0474","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: writing-skills
 
 TDD-driven skill creation workflow using RED-GREEN-REFACTOR cycle. Enforces baseline failure documentation before writing, verification after writing, and loophole closure through rationalization tables.

@@ -1,10 +1,12 @@
 # analyzing-domains
 
-Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when implementing-features Phase 1.2 detects unfamiliar domain.
+Domain modeling for unfamiliar problem spaces, building glossaries, entity maps, and business rule catalogs using Domain-Driven Design principles. Extracts essential concepts, identifies natural boundaries, and maps relationships so that code structure reflects the business domain. A core spellbook capability for when you need to understand a problem space before writing code.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when develop Phase 1.2 detects unfamiliar domain.
 
 ## Workflow Diagram
-
-# Diagram: analyzing-domains
 
 Performs Domain-Driven Design analysis: mining ubiquitous language, classifying entities and value objects, detecting aggregate boundaries, identifying domain events, mapping bounded contexts, and producing agent/skill recommendations based on domain characteristics.
 
@@ -205,7 +207,7 @@ Problem: "E-commerce order management"
 5. **Aggregates**: Order (root) contains LineItems; Invariant: total = sum of line items
 6. **Events**: OrderPlaced, OrderShipped, PaymentReceived
 7. **Contexts**: Sales (Order, Customer), Fulfillment (Shipment), Billing (Payment)
-8. **Recommendation**: Medium complexity (matches multiple Phase 7 rows) → design doc first, implementing-features Phase 1-4
+8. **Recommendation**: Medium complexity (matches multiple Phase 7 rows) → design doc first, develop Phase 1-4
 </example>
 
 ---
