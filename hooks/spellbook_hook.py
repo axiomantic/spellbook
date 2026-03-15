@@ -368,7 +368,7 @@ def _memory_inject(tool_name: str, data: dict) -> str | None:
 
     # Resolve worktree and branch (best-effort)
     resolved_cwd, branch = _resolve_git_context(cwd)
-    namespace = resolved_cwd.replace("/", "-").lstrip("-") if resolved_cwd else ""
+    namespace = resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-") if resolved_cwd else ""
     if not namespace:
         return None
 
@@ -520,7 +520,7 @@ def _memory_capture(tool_name: str, data: dict) -> None:
         summary += f" ({desc[:80]})"
 
     resolved_cwd, branch = _resolve_git_context(cwd)
-    namespace = resolved_cwd.replace("/", "-").lstrip("-") if resolved_cwd else "unknown"
+    namespace = resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-") if resolved_cwd else "unknown"
 
     tags_list = [tool_name.lower()]
     if subject:
@@ -577,12 +577,8 @@ def _stint_depth_check(data: dict) -> str | None:
     tree with a 'you are here' pointer in XML tags. FAIL-OPEN: returns
     None on any error.
     """
-    excluded = {
-        "AskUserQuestion", "TodoRead", "TodoWrite",
-        "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
-    }
     tool_name = data.get("tool_name", "")
-    if tool_name in excluded:
+    if tool_name in _EXCLUDED_TOOLS:
         return None
 
     project_path = data.get("cwd", "")
@@ -624,7 +620,10 @@ def _build_recovery_directive(state: dict) -> str:
         parts.append(f"### Active Skill: {active_skill}")
         if skill_phase:
             parts.append(f"Phase: {skill_phase}")
-        parts.append(f"Resume with: `Skill(skill='{active_skill}', --resume {skill_phase})`")
+        if skill_phase:
+            parts.append(f"Resume with: `Skill(skill='{active_skill}', --resume {skill_phase})`")
+        else:
+            parts.append(f"Resume with: `Skill(skill='{active_skill}')`")
 
         # Fetch skill constraints (FORBIDDEN/REQUIRED sections)
         skill_info = _mcp_call("skill_instructions_get", {"skill_name": active_skill})

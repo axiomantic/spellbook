@@ -201,7 +201,7 @@ class TestStintCompactionSurvival:
             context = result["hookSpecificOutput"]["additionalContext"]
             expected_context = (
                 "### Active Skill: implementing-features\n"
-                "Resume with: `Skill(skill='implementing-features', --resume )`\n"
+                "Resume with: `Skill(skill='implementing-features')`\n"
                 "\n### Focus Stack (restored)\n"
                 "  1. implementing-features - build auth\n"
                 "  2. debugging - fix test\n"
