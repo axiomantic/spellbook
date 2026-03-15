@@ -66,6 +66,7 @@
 - [Recommended Companion Tools](#recommended-companion-tools)
   - [Heads Up Claude](#heads-up-claude)
   - [MCP Language Server](#mcp-language-server)
+- [Web Admin Interface](#web-admin-interface)
 - [Development](#development)
   - [Serve Documentation Locally](#serve-documentation-locally)
   - [Run MCP Server Directly](#run-mcp-server-directly)
@@ -1008,6 +1009,36 @@ LSP integration for semantic code navigation, refactoring, and more.
 git clone https://github.com/axiomantic/mcp-language-server.git ~/Development/mcp-language-server
 cd ~/Development/mcp-language-server && go build
 ```
+
+## Web Admin Interface
+
+Spellbook includes a browser-based admin interface served from the MCP daemon at `http://localhost:8765/admin/`.
+
+![Spellbook Admin Dashboard](docs/admin/screenshots/dashboard.png)
+
+Install the admin extra and open it:
+
+```bash
+uv pip install -e ".[admin]"
+spellbook admin open
+```
+
+Ten pages cover the full operational surface:
+
+| Page | What it shows |
+|------|--------------|
+| **Dashboard** | Server status, database sizes, focus tracking summary, live event feed |
+| **Memory** | Stored memories with search, type filtering, and citation details |
+| **Security** | Security event log with severity and event type filters |
+| **Sessions** | Tracked sessions with multi-project filtering and content search |
+| **Analytics** | Tool call frequency, error rates, and timeline from security events |
+| **Health** | Database health matrix across all 4 SQLite databases |
+| **Events** | Live WebSocket event bus monitor with subsystem filtering |
+| **Focus** | Zeigarnik focus stacks and correction event log |
+| **Config** | Runtime configuration editor (TTS, notifications, general) |
+| **Fractal** | Interactive Cytoscape.js graph explorer for fractal-thinking |
+
+Authentication uses the MCP bearer token from `~/.local/spellbook/.mcp-token`. Full documentation: [docs/admin/](docs/admin/index.md).
 
 ## Development
 
