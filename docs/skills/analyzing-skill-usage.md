@@ -1,10 +1,10 @@
 # analyzing-skill-usage
 
-Analyze session transcripts to extract skill invocation patterns, score invocations, and produce comparative metrics for skill improvement decisions.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Analyze session transcripts to extract skill invocation patterns, score invocations, and produce comparative metrics for skill improvement decisions.
 
 ## Workflow Diagram
-
-# Diagram: analyzing-skill-usage
 
 Workflow for analyzing skill invocation patterns across session transcripts. Supports two analysis modes: identifying weak skills and A/B testing skill versions.
 

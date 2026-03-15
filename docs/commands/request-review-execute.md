@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: request-review-execute
-
 Dispatch, triage, execute, and gate phases for code review. Invokes code-reviewer agent, triages findings by severity, applies fixes, and enforces quality gate.
 
 ```mermaid

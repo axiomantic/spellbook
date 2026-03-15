@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: merge-work-packets
-
 Integrates completed work packets by verifying all tracks, invoking the merging-worktrees skill, handling conflicts, running QA gates, and reporting final integration status.
 
 ```mermaid

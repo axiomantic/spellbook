@@ -1,10 +1,10 @@
 # dehallucination
 
-Verify claims, references, and assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by roundtable feedback, Forge workflow, and after deep-research verification.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Verify claims, references, and assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by roundtable feedback, Forge workflow, and after deep-research verification.
 
 ## Workflow Diagram
-
-# Diagram: dehallucination
 
 Workflow for verifying claims, detecting hallucinations, and enforcing recovery protocols. Used as a quality gate by the Forge pipeline and roundtable feedback.
 

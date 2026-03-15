@@ -1,10 +1,10 @@
 # merging-worktrees
 
-Use when merging parallel worktrees back together after parallel implementation, combining parallel development tracks, or unifying branches from dispatched parallel agents. Triggers: 'merge worktrees', 'combine parallel branches', 'integrate parallel work', 'all tracks complete', 'bring everything together'.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when merging parallel worktrees back together after parallel implementation, combining parallel development tracks, or unifying branches from dispatched parallel agents. Triggers: 'merge worktrees', 'combine parallel branches', 'integrate parallel work', 'all tracks complete', 'bring everything together'.
 
 ## Workflow Diagram
-
-# Diagram: merging-worktrees
 
 Merge parallel worktrees into a unified branch using dependency-ordered rounds with mandatory 3-way conflict analysis and per-round testing.
 

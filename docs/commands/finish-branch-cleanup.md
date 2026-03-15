@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: finish-branch-cleanup
-
 Worktree cleanup after branch integration. Applies to merge, PR, and discard options. Keeps worktree intact for keep-as-is option.
 
 ```mermaid

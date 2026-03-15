@@ -1,6 +1,8 @@
 # reviewing-prs
 
-Load before dispatching any subagent to review a PR. Enforces DIFF_ONLY vs LOCAL_FILES mode selection based on branch state and worktree presence. Prevents the silent wrong-verdict failure where local files on a different branch produce confidently incorrect REFUTED findings.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Load before dispatching any subagent to review a PR. Enforces DIFF_ONLY vs LOCAL_FILES mode selection based on branch state and worktree presence. Prevents the silent wrong-verdict failure where local files on a different branch produce confidently incorrect REFUTED findings.
 ## Skill Content
 
 ``````````markdown

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: deep-research-interview
-
 Transform a raw research request into a Research Brief through assumption extraction, disambiguation, structured interview across five categories, and quality-gated brief generation.
 
 ```mermaid

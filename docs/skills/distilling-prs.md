@@ -1,10 +1,10 @@
 # distilling-prs
 
-Use when reviewing PRs to triage, categorize, or summarize changes requiring human attention. Triggers: 'summarize this PR', 'what changed in PR #X', 'triage PR', 'which files need review', 'PR overview', 'categorize changes', or pasting a PR URL. Uses heuristic pattern matching to classify changes by review priority. For deep code analysis, use advanced-code-review instead.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when reviewing PRs to triage, categorize, or summarize changes requiring human attention. Triggers: 'summarize this PR', 'what changed in PR #X', 'triage PR', 'which files need review', 'PR overview', 'categorize changes', or pasting a PR URL. Uses heuristic pattern matching to classify changes by review priority. For deep code analysis, use advanced-code-review instead.
 
 ## Workflow Diagram
-
-# Diagram: distilling-prs
 
 Workflow for the distilling-prs skill. A two-phase execution model: Phase 1 fetches PR data, parses diffs, and runs heuristic pattern matching; Phase 2 applies AI analysis to unmatched files; Phase 3 generates a categorized report. Heuristics always run first before AI analysis.
 

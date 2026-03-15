@@ -5,8 +5,6 @@
 
 ## Workflow Diagram
 
-# Diagram: execute-plan
-
 Execute implementation plans with structured review checkpoints via the executing-plans skill.
 
 ```mermaid

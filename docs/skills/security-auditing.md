@@ -1,10 +1,10 @@
 # security-auditing
 
-Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools'. Integrates with code-review --audit, develop Phase 4, and distilling-prs for PR security review.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools'. Integrates with code-review --audit, develop Phase 4, and distilling-prs for PR security review.
 
 ## Workflow Diagram
-
-# Diagram: security-auditing
 
 Six-phase security audit workflow: discovers audit scope, runs static analysis scanner, classifies and deduplicates findings, traces attack chains for high/critical issues, generates a structured report, and enforces a pass/warn/fail quality gate.
 

@@ -1,10 +1,10 @@
 # writing-commands
 
-Use when creating new commands, editing existing commands, or reviewing command quality. Triggers on "write command", "new command", "review command", "fix command"
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when creating new commands, editing existing commands, or reviewing command quality. Triggers on "write command", "new command", "review command", "fix command"
 
 ## Workflow Diagram
-
-# Diagram: writing-commands
 
 Three-phase workflow for creating, reviewing, and pairing commands. Commands are direct agent prompts that must be self-contained, unambiguous, and structured for scanning under pressure.
 

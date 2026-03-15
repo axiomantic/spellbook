@@ -1,10 +1,10 @@
 # instruction-engineering
 
-Use when crafting, improving, or reviewing prompts, system prompts, skill instructions, or any text that instructs an LLM. Triggers: 'write a prompt', 'prompt engineering', 'improve this prompt', 'design a system prompt', 'write skill instructions', 'craft agent instructions'. Provides CSO (Claude Search Optimization) guidance for skill descriptions. Also invoked by writing-skills.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when crafting, improving, or reviewing prompts, system prompts, skill instructions, or any text that instructs an LLM. Triggers: 'write a prompt', 'prompt engineering', 'improve this prompt', 'design a system prompt', 'write skill instructions', 'craft agent instructions'. Provides CSO (Claude Search Optimization) guidance for skill descriptions. Also invoked by writing-skills.
 
 ## Workflow Diagram
-
-# Diagram: instruction-engineering
 
 Orchestrator workflow for engineering LLM prompts and instructions. Analyzes the task, selects techniques, drafts using templates, optionally documents tools, sharpens for ambiguity, and validates against a comprehensive self-check.
 

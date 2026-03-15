@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: code-review-tarot
-
 Roundtable dialogue with tarot archetype personas for all code review modes.
 
 ```mermaid

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: lovers-integrator
-
 Integration harmony agent that reviews connections between modules. Ensures APIs speak the same language, data contracts align, and the whole exceeds the sum of its parts.
 
 ```mermaid

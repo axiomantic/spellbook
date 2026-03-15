@@ -1,10 +1,10 @@
 # emotional-stakes
 
-Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when writing subagent prompts, skill instructions, or any high-stakes task requiring accuracy and truthfulness
 
 ## Workflow Diagram
-
-# Diagram: emotional-stakes
 
 Workflow for applying emotional stakes framing to substantive tasks. Selects a professional persona based on task type, calibrates stakes to risk level, and optionally integrates a soul persona from fun-mode.
 

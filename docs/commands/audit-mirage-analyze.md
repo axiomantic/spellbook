@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: audit-mirage-analyze
-
 Systematic line-by-line audit of test functions against 8 Green Mirage Patterns.
 
 ```mermaid

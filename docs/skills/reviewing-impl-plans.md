@@ -1,10 +1,10 @@
 # reviewing-impl-plans
 
-Use when reviewing implementation plans before execution, especially plans derived from design documents
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when reviewing implementation plans before execution, especially plans derived from design documents
 
 ## Workflow Diagram
-
-# Diagram: reviewing-impl-plans
 
 Reviews implementation plans before execution, auditing interface contracts between parallel work streams, verifying behavior references against source code, and checking completeness. Dispatches subagents for each phase and assembles a prioritized remediation report.
 

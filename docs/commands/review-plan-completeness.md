@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: review-plan-completeness
-
 Phases 4-5 of reviewing-impl-plans: verifies definitions of done, risk assessments, QA checkpoints, agent responsibility matrices, and dependency graphs for completeness, then escalates unverifiable claims to the fact-checking skill.
 
 ```mermaid

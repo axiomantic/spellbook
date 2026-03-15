@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: pr-distill-bless
-
 Save a discovered pattern for future PR distillation. Validates pattern ID, checks for duplicates, and persists to project config.
 
 ```mermaid

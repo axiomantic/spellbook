@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: merge-worktree-execute
-
 Phase 2 of merging-worktrees: merges worktrees sequentially in dependency order, running the full test suite after each round, escalating conflicts to the resolution phase and test failures to the systematic-debugging skill.
 
 ```mermaid

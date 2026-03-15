@@ -1,10 +1,10 @@
 # tarot-mode
 
-Use when session returns mode.type='tarot', user says '/tarot', or requests roundtable dialogue with archetypes. Ten tarot archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) collaborate via visible roundtable with instruction-engineering embedded.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when session returns mode.type='tarot', user says '/tarot', or requests roundtable dialogue with archetypes. Ten tarot archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) collaborate via visible roundtable with instruction-engineering embedded.
 
 ## Workflow Diagram
-
-# Diagram: tarot-mode
 
 Roundtable dialogue mode where ten tarot archetypes collaborate on tasks with embedded instruction-engineering, emotional stakes, and NegativePrompt patterns.
 

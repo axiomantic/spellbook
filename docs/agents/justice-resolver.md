@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: justice-resolver
-
 Conflict synthesis agent that resolves tension between code (thesis) and critique (antithesis) into refined solutions (synthesis). Weighs both positions with equal honor.
 
 ```mermaid

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: request-review-artifacts
-
 Artifact contract for code review workflow. Defines directory structure, phase outputs, manifest schema, and SHA persistence for traceability.
 
 ```mermaid

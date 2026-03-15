@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: distill-session
-
 Extract context from an oversized session through chunked parallel summarization, artifact verification, planning document discovery, and synthesis into a resumable boot prompt.
 
 ```mermaid

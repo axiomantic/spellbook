@@ -1,6 +1,8 @@
 # fractal-thinking
 
-Adaptive recursive thought engine for deep exploration. Invoked by other skills
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Adaptive recursive thought engine for deep exploration. Invoked by other skills
 (brainstorming, fact-checking, debugging, deep-research) when they need to
 deeply explore uncertainty, systematically decompose complex questions, or gain
 certainty about multi-faceted problems. Triggers: "think deeply about",

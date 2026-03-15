@@ -1,10 +1,10 @@
 # devils-advocate
 
-Use when challenging assumptions, surfacing risks, or stress-testing designs and decisions. Triggers: 'challenge this', 'play devil's advocate', 'what could go wrong', 'poke holes', 'find the flaws', 'what am I missing', 'is this solid', 'red team this', 'what are the weaknesses', 'risk assessment', 'sanity check'. Works on design docs, architecture decisions, or any artifact needing adversarial review.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when challenging assumptions, surfacing risks, or stress-testing designs and decisions. Triggers: 'challenge this', 'play devil's advocate', 'what could go wrong', 'poke holes', 'find the flaws', 'what am I missing', 'is this solid', 'red team this', 'what are the weaknesses', 'risk assessment', 'sanity check'. Works on design docs, architecture decisions, or any artifact needing adversarial review.
 
 ## Workflow Diagram
-
-# Diagram: devils-advocate
 
 Workflow for adversarial review of design documents, architecture decisions, and technical artifacts. Challenges assumptions, surfaces risks, and stress-tests decisions.
 

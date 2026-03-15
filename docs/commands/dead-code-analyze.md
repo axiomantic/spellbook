@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: dead-code-analyze
-
 Extract, triage, and verify code items for dead code with iterative re-scanning to fixed-point.
 
 ```mermaid

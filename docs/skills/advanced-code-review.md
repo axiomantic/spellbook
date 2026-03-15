@@ -1,10 +1,10 @@
 # advanced-code-review
 
-Use when performing thorough multi-phase code review with historical context tracking and verification. Triggers: 'thorough review', 'deep review', 'review this branch in detail', 'full code review with report'. 5-phase process: strategic planning, context analysis, deep review, verification, report generation. More heavyweight than code-review; produces detailed artifacts. For quick review, use code-review instead.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when performing thorough multi-phase code review with historical context tracking and verification. Triggers: 'thorough review', 'deep review', 'review this branch in detail', 'full code review with report'. 5-phase process: strategic planning, context analysis, deep review, verification, report generation. More heavyweight than code-review; produces detailed artifacts. For quick review, use code-review instead.
 
 ## Workflow Diagram
-
-# Diagram: advanced-code-review
 
 Multi-phase code review with strategic planning, historical context analysis, deep multi-pass review, verification of findings, and final report generation. Each phase produces artifacts and must pass a self-check before proceeding.
 

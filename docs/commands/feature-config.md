@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: feature-config
-
 Phase 0 of develop: Configuration wizard that collects preferences, detects escape hatches, clarifies motivation, classifies complexity, and routes to the appropriate next phase.
 
 ```mermaid

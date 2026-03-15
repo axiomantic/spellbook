@@ -1,13 +1,13 @@
 # writing-skills
 
-Use when creating new skills, editing existing skills, or verifying skills work before deployment
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when creating new skills, editing existing skills, or verifying skills work before deployment
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: writing-skills
 
 TDD-driven skill creation workflow using RED-GREEN-REFACTOR cycle. Enforces baseline failure documentation before writing, verification after writing, and loophole closure through rationalization tables.
 

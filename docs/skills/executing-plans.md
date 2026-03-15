@@ -1,13 +1,13 @@
 # executing-plans
 
-Use when you have a written implementation plan to execute
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when you have a written implementation plan to execute
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: executing-plans
 
 Plan execution with two modes (batch and subagent), review loops, evidence requirements, and finishing workflow. Batch mode uses human-in-loop checkpoints; subagent mode uses automated two-stage review.
 

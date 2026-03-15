@@ -1,10 +1,10 @@
 # deep-research
 
-Use when researching complex topics, evaluating technologies, investigating domains, or answering multi-faceted questions requiring web research. Triggers: "research X", "investigate Y", "evaluate options for Z", "what are the best approaches to", "help me understand", "deep dive into", "compare alternatives".
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when researching complex topics, evaluating technologies, investigating domains, or answering multi-faceted questions requiring web research. Triggers: "research X", "investigate Y", "evaluate options for Z", "what are the best approaches to", "help me understand", "deep dive into", "compare alternatives".
 
 ## Workflow Diagram
-
-# Diagram: deep-research
 
 Multi-threaded research workflow with parallel investigation, fact-checking, and verified synthesis. Phases: Interview, Plan, Investigate (parallel), Verify, Synthesize.
 

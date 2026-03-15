@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Hook installer upgrade path** - Installing spellbook now removes old individual shell hook entries from `settings.json` and registers the unified hook. User-defined hooks are preserved.
+- **Renamed `implementing-features` skill to `develop`** - Shorter, more descriptive name. Applied via `scripts/rename_skills.py` across 100 files (skills, commands, docs, diagrams, tests, Python backend). Old name no longer exists; all references updated.
+- **Removed `receiving-code-review` skill** - Deprecated skill removed along with all references. Functionality consolidated into code-review `--feedback` mode.
 
 ### Added
 - **Web admin interface** - Browser-based admin UI served from the MCP daemon at `/admin`. Provides real-time observability and management across all spellbook subsystems.
@@ -44,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Spellbook branding** throughout admin: book-with-sparkle favicon, sidebar icon, sparkle loading spinner, login page icon
   - **Admin documentation** with screenshots of all 11 pages, added to mkdocs site and README
   - **`[docs]` optional extra** with mkdocs-material, mike for building documentation locally
+- **"Signature Spells" in README and docs** - Five highlighted skills (develop, fractal-thinking, auditing-green-mirage, fact-checking, advanced-code-review) featured as signature capabilities
+- **Shared diagram config** (`scripts/diagram_config.py`) - Centralized exclusion lists, aliases, and tiering config for diagram generation, freshness checking, and docs completeness
+- **Bulk skill rename script** (`scripts/rename_skills.py`) - Automates full-codebase skill renames with regex word-boundary protection, specificity ordering, dry-run mode, and `git mv` integration
+- **Diagram stamp mode** - `check_diagram_freshness.py --stamp` updates source hashes in diagram metadata without regenerating content
 
 ### Fixed
 - **Compaction detector missed all compaction events** - `check_for_compaction()` checked `msg.get('type') == 'summary'` but Claude Code marks compaction with `isCompactSummary: true` on `type: "user"` messages. 47 compacted sessions across projects were going undetected, leaving the souls table empty.

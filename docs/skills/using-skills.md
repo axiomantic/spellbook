@@ -1,13 +1,13 @@
 # using-skills
 
-Use when starting any conversation to initialize skill matching, or when unsure which skill applies to a request. Handles skill routing, rationalization prevention, and session initialization. Primarily loaded via session init, not by direct user request.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when starting any conversation to initialize skill matching, or when unsure which skill applies to a request. Handles skill routing, rationalization prevention, and session initialization. Primarily loaded via session init, not by direct user request.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: using-skills
 
 Meta-skill for routing user requests to the correct skill. Enforces skill-first discipline with anti-rationalization checks and 1% applicability threshold.
 

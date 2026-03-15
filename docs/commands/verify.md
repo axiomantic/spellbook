@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: verify
-
 Run verification commands and confirm output before making success claims. Enforces evidence-before-assertions discipline: identify the proving command, run it fresh, read full output, then and only then state the claim with cited evidence.
 
 ```mermaid

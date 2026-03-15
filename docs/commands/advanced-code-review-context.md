@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: advanced-code-review-context
-
 Phase 2 of advanced-code-review: Context analysis that discovers previous reviews, loads item states, fetches PR history, detects re-check requests, and builds the context object for the deep review phase.
 
 ```mermaid

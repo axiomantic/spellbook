@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: move-project
-
 Safely relocates a project directory and updates all Claude Code session references (history.jsonl, projects directory) with mandatory safety checks, backups, and user confirmation.
 
 ```mermaid

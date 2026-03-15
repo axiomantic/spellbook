@@ -1,10 +1,10 @@
 # designing-workflows
 
-Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when develop Phase 2.1 detects workflow patterns.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when designing systems with explicit states, transitions, or multi-step flows. Triggers: "design a workflow", "state machine", "approval flow", "pipeline stages", "what states does X have", "how does X transition", or when develop Phase 2.1 detects workflow patterns.
 
 ## Workflow Diagram
-
-# Diagram: designing-workflows
 
 Designs systems with explicit states, transitions, and multi-step flows. Follows a structured process from state identification through validation, producing Mermaid state diagrams and transition tables. Enforces invariants like named triggers, mutually exclusive guards, and first-class error states.
 

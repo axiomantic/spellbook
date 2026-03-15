@@ -100,6 +100,12 @@ def get_diagram_section(item_type: str, item_name: str) -> str:
     else:
         body = content
 
+    # Strip the "# Diagram:" header (redundant when embedded under "## Workflow Diagram")
+    body_stripped = body.lstrip("\n")
+    if body_stripped.startswith("# Diagram:"):
+        _, _, body_stripped = body_stripped.partition("\n")
+        body = body_stripped
+
     if not body.strip():
         return ""
 
@@ -130,7 +136,10 @@ def generate_skill_doc(skill_dir: Path) -> str | None:
     # Wrap body in markdown code block to prevent XML-style tags from rendering as HTML
     parts = [f"# {name}\n"]
     if description:
-        parts.append(f"\n{description.rstrip()}\n")
+        # Frame the description as an auto-invocation trigger (descriptions are
+        # written for the AI assistant, not for human readers)
+        parts.append(f"\n**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.\n")
+        parts.append(f"\n> {description.rstrip()}\n")
     if attribution:
         parts.append(f"\n{attribution}")
 

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: feature-design
-
 Phase 2 of develop: Create design document via brainstorming skill in synthesis mode, review via reviewing-design-docs, handle approval gate by execution mode, and fix findings.
 
 ```mermaid

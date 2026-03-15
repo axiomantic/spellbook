@@ -1,13 +1,13 @@
 # test-driven-development
 
-Use when user explicitly requests test-driven development, says 'TDD', 'write tests first', 'red green refactor', 'test-first', or 'start with the test'. Also invoked as a sub-skill by develop and executing-plans for each implementation task. NOT a replacement for develop for full feature work.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when user explicitly requests test-driven development, says 'TDD', 'write tests first', 'red green refactor', 'test-first', or 'start with the test'. Also invoked as a sub-skill by develop and executing-plans for each implementation task. NOT a replacement for develop for full feature work.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: test-driven-development
 
 Red-Green-Refactor cycle enforcing strict test-first discipline. Tests must fail before implementation, implementation must be minimal, and refactoring must preserve green state. All assertions must be Level 4+ on the Assertion Strength Ladder with named mutations.
 

@@ -1,10 +1,10 @@
 # verifying-hunches
 
-Use when about to claim discovery during debugging. Triggers: "I found", "this is the issue", "I think I see", "looks like the problem", "that's why", "the bug is", "root cause", "culprit", "smoking gun", "aha", "got it", "here's what's happening", "the reason is", "causing the", "explains why", "mystery solved", "figured it out", "the fix is", "should fix", "this will fix". Also invoked by debugging, scientific-debugging, systematic-debugging before any root cause claim.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when about to claim discovery during debugging. Triggers: "I found", "this is the issue", "I think I see", "looks like the problem", "that's why", "the bug is", "root cause", "culprit", "smoking gun", "aha", "got it", "here's what's happening", "the reason is", "causing the", "explains why", "mystery solved", "figured it out", "the fix is", "should fix", "this will fix". Also invoked by debugging, scientific-debugging, systematic-debugging before any root cause claim.
 
 ## Workflow Diagram
-
-# Diagram: verifying-hunches
 
 Prevents premature root cause claims during debugging by enforcing hypothesis registration, specificity requirements, falsification criteria, and test-before-claim discipline.
 

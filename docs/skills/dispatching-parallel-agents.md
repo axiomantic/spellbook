@@ -1,13 +1,13 @@
 # dispatching-parallel-agents
 
-Use when deciding whether to dispatch subagents, when to stay in main context, when facing 2+ independent parallel tasks, or when needing subagent dispatch templates and context minimization guidance. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'subagent vs main context', 'dispatch template', 'context minimization'.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when deciding whether to dispatch subagents, when to stay in main context, when facing 2+ independent parallel tasks, or when needing subagent dispatch templates and context minimization guidance. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'subagent vs main context', 'dispatch template', 'context minimization'.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: dispatching-parallel-agents
 
 Decision and execution workflow for parallel subagent dispatch. Covers the independence gate, dispatch pattern, and merge verification protocol.
 

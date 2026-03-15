@@ -1,10 +1,10 @@
 # reflexion
 
-Use when roundtable returns ITERATE verdict in the Forged workflow. Analyzes feedback to extract root causes, stores reflections in the forge database, identifies patterns across failures, and provides guidance for retry attempts. Prevents repeated mistakes across iterations.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when roundtable returns ITERATE verdict in the Forged workflow. Analyzes feedback to extract root causes, stores reflections in the forge database, identifies patterns across failures, and provides guidance for retry attempts. Prevents repeated mistakes across iterations.
 
 ## Workflow Diagram
-
-# Diagram: reflexion
 
 Analyze roundtable ITERATE feedback to extract root causes, store reflections, detect failure patterns, and generate retry guidance for the Forge workflow.
 

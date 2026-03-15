@@ -1,10 +1,10 @@
 # async-await-patterns
 
-Use when writing JavaScript or TypeScript code with asynchronous operations, fixing promise-related bugs, or converting callback/promise patterns to async/await. Triggers: 'promise chain', 'unhandled rejection', 'race condition in JS', 'callback hell', 'Promise.all', 'sequential vs parallel async', 'missing await'. Enforces async/await discipline over raw promises.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when writing JavaScript or TypeScript code with asynchronous operations, fixing promise-related bugs, or converting callback/promise patterns to async/await. Triggers: 'promise chain', 'unhandled rejection', 'race condition in JS', 'callback hell', 'Promise.all', 'sequential vs parallel async', 'missing await'. Enforces async/await discipline over raw promises.
 
 ## Workflow Diagram
-
-# Diagram: async-await-patterns
 
 Decision and verification workflow for writing production-grade async/await code in JavaScript and TypeScript. Enforces disciplined async patterns over raw promises.
 

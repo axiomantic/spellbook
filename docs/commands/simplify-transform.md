@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: simplify-transform
-
 Present and apply verified simplifications with multi-mode workflow and git integration. Handles automated, wizard, and report-only presentation modes.
 
 ```mermaid

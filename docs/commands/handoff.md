@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: handoff
-
 Session state transfer command that produces a structured handoff document enabling a successor instance to resume mid-stride with zero context loss. Supports manual, auto, and checkpoint invocation modes.
 
 ```mermaid

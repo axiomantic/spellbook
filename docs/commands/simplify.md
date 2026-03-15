@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: simplify
-
 Orchestrates systematic code simplification targeting cognitive complexity reduction. Delegates to three sequential sub-commands (simplify-analyze, simplify-verify, simplify-transform) with multi-gate verification and user approval gates.
 
 ```mermaid

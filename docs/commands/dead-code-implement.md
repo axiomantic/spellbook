@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: dead-code-implement
-
 Apply dead code deletions with user approval, dependency ordering, and incremental verification.
 
 ```mermaid

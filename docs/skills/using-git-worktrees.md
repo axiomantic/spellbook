@@ -1,13 +1,13 @@
 # using-git-worktrees
 
-Use when starting feature work that needs isolation from current workspace, setting up parallel development tracks, or before executing implementation plans. Triggers: 'worktree', 'separate branch', 'isolate this work', 'don't mess up current work', 'work on two things at once', 'parallel workstreams', 'sandboxed workspace'.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when starting feature work that needs isolation from current workspace, setting up parallel development tracks, or before executing implementation plans. Triggers: 'worktree', 'separate branch', 'isolate this work', 'don't mess up current work', 'work on two things at once', 'parallel workstreams', 'sandboxed workspace'.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: using-git-worktrees
 
 Workspace isolation via git worktrees with safety verification, dependency setup, and clean test baseline enforcement.
 

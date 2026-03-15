@@ -1,6 +1,8 @@
 # polish-repo
 
-Use when improving project discoverability, attracting users/contributors, or presenting open source work. Triggers: 'write a README', 'improve README', 'get more users', 'get more contributors', 'add badges', 'create a logo', 'set up issue templates', 'audit this project', 'project presence', 'make this discoverable', 'why isn't anyone using this', 'prepare for launch', 'repo presentation', 'open source marketing', 'attract contributors', 'project storefront'. Also triggers on: naming a project, writing taglines, GitHub metadata, community infrastructure, signs of life.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when improving project discoverability, attracting users/contributors, or presenting open source work. Triggers: 'write a README', 'improve README', 'get more users', 'get more contributors', 'add badges', 'create a logo', 'set up issue templates', 'audit this project', 'project presence', 'make this discoverable', 'why isn't anyone using this', 'prepare for launch', 'repo presentation', 'open source marketing', 'attract contributors', 'project storefront'. Also triggers on: naming a project, writing taglines, GitHub metadata, community infrastructure, signs of life.
 ## Skill Content
 
 ``````````markdown

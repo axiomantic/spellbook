@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: encyclopedia-build
-
 Build encyclopedia content: glossary, architecture skeleton, decision log, and entry points (Phases 2-5).
 
 ```mermaid

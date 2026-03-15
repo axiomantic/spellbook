@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: ie-techniques
-
 Reference command providing 16 research-backed instruction engineering techniques for effective prompt crafting. Covers emotional stimuli, XML tags, repetition, personas, chain-of-thought, and subagent design.
 
 ```mermaid

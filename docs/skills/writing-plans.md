@@ -1,13 +1,13 @@
 # writing-plans
 
-Use when you have a spec, design doc, or requirements and need a detailed step-by-step implementation plan before coding. Triggers: 'write a plan', 'create implementation plan', 'plan this out', 'break this down into steps', 'convert design to tasks', 'implementation order'. Produces TDD-structured task sequences with file paths, code, and verification steps. Usually invoked by develop Phase 3.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when you have a spec, design doc, or requirements and need a detailed step-by-step implementation plan before coding. Triggers: 'write a plan', 'create implementation plan', 'plan this out', 'break this down into steps', 'convert design to tasks', 'implementation order'. Produces TDD-structured task sequences with file paths, code, and verification steps. Usually invoked by develop Phase 3.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: writing-plans
 
 Implementation plan creation from design docs or requirements. Produces TDD-structured task sequences with exact file paths, complete code, and verification steps. Hands off to executing-plans.
 

@@ -1,12 +1,12 @@
 # enforcing-code-quality
 
-Use when writing or modifying code. Enforces production-quality standards,
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when writing or modifying code. Enforces production-quality standards,
 prohibits common shortcuts, and ensures pre-existing issues are addressed.
 Invoked automatically by develop and test-driven-development.
 
 ## Workflow Diagram
-
-# Diagram: enforcing-code-quality
 
 Continuous quality enforcement workflow applied during code writing. Reads existing patterns first, applies prohibitions during implementation, flags pre-existing issues, and validates against a quality checklist before completion.
 

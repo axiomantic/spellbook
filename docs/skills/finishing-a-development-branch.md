@@ -1,13 +1,13 @@
 # finishing-a-development-branch
 
-Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: finishing-a-development-branch
 
 Workflow for completing a development branch: verifies tests pass, determines base branch, presents 4 structured integration options (merge, PR, keep, discard), executes the chosen option, and performs worktree cleanup where applicable.
 

@@ -1,10 +1,10 @@
 # isolated-testing
 
-Use when testing theories during debugging, or when chaos is detected. Triggers: "let me try", "maybe if I", "what about", "quick test", "see if", rapid context switching, multiple changes without isolation. Enforces one-theory-one-test discipline. Invoked automatically by debugging, scientific-debugging, systematic-debugging before any experiment execution.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when testing theories during debugging, or when chaos is detected. Triggers: "let me try", "maybe if I", "what about", "quick test", "see if", rapid context switching, multiple changes without isolation. Enforces one-theory-one-test discipline. Invoked automatically by debugging, scientific-debugging, systematic-debugging before any experiment execution.
 
 ## Workflow Diagram
-
-# Diagram: isolated-testing
 
 Disciplined one-theory-one-test protocol for debugging. Enforces strict queue ordering, requires full test design before execution, and halts investigation immediately upon reproduction. Detects and prevents chaos patterns.
 

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: address-pr-feedback
-
 Systematically address PR review comments by fetching threads, categorizing by status, and guiding fixes with explicit user approval.
 
 ```mermaid

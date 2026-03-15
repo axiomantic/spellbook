@@ -1,10 +1,10 @@
 # using-lsp-tools
 
-Use when mcp-language-server tools are available and you need semantic code intelligence. Triggers: 'find definition', 'find references', 'who calls this', 'rename symbol', 'type hierarchy', 'go to definition', 'where is this used', 'where is this defined', 'what type is this'. Provides navigation, refactoring, and type analysis via LSP.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when mcp-language-server tools are available and you need semantic code intelligence. Triggers: 'find definition', 'find references', 'who calls this', 'rename symbol', 'type hierarchy', 'go to definition', 'where is this used', 'where is this defined', 'what type is this'. Provides navigation, refactoring, and type analysis via LSP.
 
 ## Workflow Diagram
-
-# Diagram: using-lsp-tools
 
 Decision protocol for choosing LSP semantic tools versus text-based search, with fallback handling and workflow patterns for exploration, refactoring, and type debugging.
 
