@@ -395,6 +395,8 @@ def generate_diagram(
     # an active Claude Code session (e.g., when run via pre-commit hooks).
     env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
 
+    print(f"  Generating diagram for {item.source_path.name}...", end="", flush=True)
+
     try:
         result = subprocess.run(
             cmd,
@@ -406,12 +408,14 @@ def generate_diagram(
             env=env,
         )
     except subprocess.TimeoutExpired:
+        print(" failed")
         return GenerationResult(
             item=item,
             status="failed",
             message=f"Claude timed out after {CLAUDE_TIMEOUT_SECONDS}s",
         ), None
     except FileNotFoundError:
+        print(" failed")
         return GenerationResult(
             item=item,
             status="failed",
@@ -419,6 +423,7 @@ def generate_diagram(
         ), None
 
     if result.returncode != 0:
+        print(" failed")
         stderr_snippet = result.stderr.strip()[:500] if result.stderr else "(no stderr)"
         return GenerationResult(
             item=item,
@@ -448,6 +453,7 @@ def generate_diagram(
                 candidate.unlink()
 
     if not diagram_content:
+        print(" failed")
         return GenerationResult(
             item=item,
             status="failed",
@@ -468,6 +474,7 @@ def generate_diagram(
     has_raw = any(diagram_content.lstrip().startswith(kw) for kw in mermaid_keywords)
 
     if not has_fenced and not has_raw:
+        print(" failed")
         return GenerationResult(
             item=item,
             status="failed",
@@ -495,6 +502,7 @@ def generate_diagram(
         item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
         item.diagram_path.write_text(output, encoding="utf-8")
 
+    print(" done")
     return GenerationResult(
         item=item,
         status="generated",
@@ -528,6 +536,185 @@ def stamp_as_fresh(item: SourceItem, current_hash: str) -> None:
         new_meta_line = f"{prefix}{json.dumps(meta)}{suffix}"
         rest = lines[1] if len(lines) > 1 else ""
         item.diagram_path.write_text(f"{new_meta_line}\n{rest}", encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Smart update: diff retrieval, classification, and patching
+# ---------------------------------------------------------------------------
+
+# Timeout for classification/patch Claude calls (60 seconds -- much shorter than full gen)
+CLASSIFY_TIMEOUT_SECONDS = 30
+PATCH_TIMEOUT_SECONDS = 120
+
+CLASSIFICATION_PROMPT = """\
+You are classifying whether a source file change affects its workflow diagram.
+
+Given this diff of a skill/command/agent instruction file, classify the change:
+
+STAMP - The change does NOT affect the workflow diagram. Examples:
+  - Adding/modifying XML tags that aren't workflow steps (e.g., <BEHAVIORAL_MODE>, <ROLE>, <CRITICAL>)
+  - Changing prose, descriptions, or explanations within existing steps
+  - Fixing typos, rewording instructions
+  - Adding/removing FORBIDDEN or REQUIRED items
+  - Changing code examples within steps
+  - Adding/modifying metadata or comments
+
+PATCH - The change makes SMALL structural modifications to the workflow. Examples:
+  - Adding or removing a single step within an existing phase
+  - Renaming a phase or step
+  - Adding a new quality gate
+  - Reordering 1-2 steps
+
+REGENERATE - The change fundamentally restructures the workflow. Examples:
+  - Adding or removing entire phases
+  - Major reorganization of step ordering
+  - Changing the flow/branching logic
+  - Adding new parallel tracks or decision points
+
+Respond with ONLY one word: STAMP, PATCH, or REGENERATE
+
+DIFF:
+{diff}"""
+
+PATCH_PROMPT = """\
+You are surgically patching an existing Mermaid workflow diagram to reflect a small structural change.
+
+RULES:
+- Make ONLY the minimum edits needed to reflect the diff
+- Preserve all existing node IDs, styles, and formatting where possible
+- Do NOT reorganize or restructure unchanged parts of the diagram
+- Output ONLY the updated diagram content (Mermaid code blocks with descriptions)
+- If you cannot make a surgical patch, output exactly: CANNOT_PATCH
+
+EXISTING DIAGRAM:
+{existing_diagram}
+
+SOURCE DIFF:
+{diff}
+
+Output the patched diagram content:"""
+
+
+def get_source_diff(source_path: Path) -> str:
+    """Get the git diff for a source file.
+
+    Tries git diff HEAD first (uncommitted changes). If empty, falls back to
+    git diff HEAD~1 (most recent commit's changes).
+
+    Returns the diff text, or empty string if no diff is available.
+    """
+    source_rel = str(source_path.relative_to(REPO_ROOT))
+
+    # Try uncommitted changes first
+    try:
+        result = subprocess.run(
+            ["git", "diff", "HEAD", "--", source_rel],
+            capture_output=True, text=True, cwd=REPO_ROOT,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except OSError:
+        return ""
+
+    # Fall back to last commit's changes
+    try:
+        result = subprocess.run(
+            ["git", "diff", "HEAD~1", "--", source_rel],
+            capture_output=True, text=True, cwd=REPO_ROOT,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except OSError:
+        pass
+
+    return ""
+
+
+def classify_change(source_path: Path, diagram_path: Path) -> str:
+    """Classify a source file change as STAMP, PATCH, or REGENERATE.
+
+    Uses git diff to get the change, then sends it to Claude for classification.
+    Falls back to REGENERATE on any error.
+    """
+    diff = get_source_diff(source_path)
+    if not diff:
+        return "REGENERATE"
+
+    prompt = CLASSIFICATION_PROMPT.format(diff=diff)
+
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+
+    print(f"  Classifying change for {source_path.name}...", end="", flush=True)
+
+    try:
+        result = subprocess.run(
+            ["claude", "--print", "--model", "haiku", "--dangerously-skip-permissions", prompt],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=CLASSIFY_TIMEOUT_SECONDS,
+            cwd=REPO_ROOT,
+            env=env,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        print(" REGENERATE")
+        return "REGENERATE"
+
+    if result.returncode != 0:
+        print(" REGENERATE")
+        return "REGENERATE"
+
+    classification = result.stdout.strip().upper()
+
+    if classification in ("STAMP", "PATCH", "REGENERATE"):
+        print(f" {classification}")
+        return classification
+
+    print(" REGENERATE")
+    return "REGENERATE"
+
+
+def patch_diagram(source_path: Path, diagram_path: Path, diff: str) -> str | None:
+    """Surgically patch an existing diagram based on a source diff.
+
+    Sends the existing diagram content and diff to Claude for a minimal patch.
+    Returns the patched diagram content (mermaid code blocks), or None on failure.
+    """
+    if not diagram_path.exists():
+        return None
+
+    existing_diagram = diagram_path.read_text(encoding="utf-8")
+    prompt = PATCH_PROMPT.format(existing_diagram=existing_diagram, diff=diff)
+
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+
+    print(f"  Patching diagram for {source_path.name}...", end="", flush=True)
+
+    try:
+        result = subprocess.run(
+            ["claude", "--print", "--model", "haiku", "--dangerously-skip-permissions", prompt],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=PATCH_TIMEOUT_SECONDS,
+            cwd=REPO_ROOT,
+            env=env,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        print(" failed, falling back to regeneration")
+        return None
+
+    if result.returncode != 0:
+        print(" failed, falling back to regeneration")
+        return None
+
+    output = result.stdout.strip()
+    if not output or output == "CANNOT_PATCH":
+        print(" failed, falling back to regeneration")
+        return None
+
+    print(" done")
+    return output
 
 
 # ---------------------------------------------------------------------------
@@ -719,6 +906,11 @@ def main() -> int:
         help="Show diff for each generated diagram and prompt to accept or skip",
     )
     parser.add_argument(
+        "--force-regen",
+        action="store_true",
+        help="Force full regeneration, bypassing smart classification",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Show Claude invocation details",
@@ -792,52 +984,145 @@ def main() -> int:
         print(f"Dry run complete. {len(work_items)} diagrams would be generated.")
         return 0
 
+    # Determine whether to use smart classification
+    use_smart = not args.force and not args.force_regen
+
     # ----- Interactive triage: collect decisions upfront, then batch -----
     if args.interactive:
-        approved: list[tuple[SourceItem, str]] = []
+        to_generate: list[tuple[SourceItem, str]] = []
+        to_patch: list[tuple[SourceItem, str, str]] = []  # (item, hash, diff)
+        stamped: list[tuple[SourceItem, str]] = []
         skipped: list[tuple[SourceItem, str]] = []
 
         for i, (item, current_hash) in enumerate(work_items, 1):
             reason = is_stale(item)[2]
             print(f"\n[{i}/{len(work_items)}] {item.name} ({item.kind}, {reason})")
             show_source_changes(item)
-            while True:
-                answer = input("  Generate this diagram? [y]es / [s]kip / [q]uit: ").strip().lower()
-                if answer in ("y", "yes"):
-                    approved.append((item, current_hash))
-                    break
-                if answer in ("s", "skip"):
-                    skipped.append((item, current_hash))
-                    print(f"  -> Will skip (stamp on completion)")
-                    break
-                if answer in ("q", "quit"):
-                    print(f"\nAborted. No changes made.")
-                    return 0
-                print("  Please enter 'y', 's', or 'q'.")
 
-        if not approved:
-            # Stamp skips only after successful triage (no abort)
+            # Smart classification for interactive mode
+            if use_smart and item.diagram_path.exists():
+                classification = classify_change(item.source_path, item.diagram_path)
+                print(f"  Smart classification: {classification}")
+
+                if classification == "STAMP":
+                    while True:
+                        answer = input("  [S]tamp (enter) / [g]enerate / [q]uit: ").strip().lower()
+                        if answer in ("s", "stamp", ""):
+                            stamped.append((item, current_hash))
+                            print(f"  -> Stamped as fresh (non-structural change)")
+                            break
+                        if answer in ("g", "generate"):
+                            to_generate.append((item, current_hash))
+                            break
+                        if answer in ("q", "quit"):
+                            print(f"\nAborted. No changes made.")
+                            return 0
+                        print("  Please enter 's', 'g', or 'q'.")
+                elif classification == "PATCH":
+                    while True:
+                        answer = input("  [P]atch (enter) / [g]enerate / [q]uit: ").strip().lower()
+                        if answer in ("p", "patch", ""):
+                            diff = get_source_diff(item.source_path)
+                            to_patch.append((item, current_hash, diff))
+                            break
+                        if answer in ("g", "generate"):
+                            to_generate.append((item, current_hash))
+                            break
+                        if answer in ("q", "quit"):
+                            print(f"\nAborted. No changes made.")
+                            return 0
+                        print("  Please enter 'p', 'g', or 'q'.")
+                else:  # REGENERATE
+                    while True:
+                        answer = input("  [G]enerate (enter) / [s]kip / [q]uit: ").strip().lower()
+                        if answer in ("g", "generate", ""):
+                            to_generate.append((item, current_hash))
+                            break
+                        if answer in ("s", "skip"):
+                            skipped.append((item, current_hash))
+                            print(f"  -> Will skip (stamp on completion)")
+                            break
+                        if answer in ("q", "quit"):
+                            print(f"\nAborted. No changes made.")
+                            return 0
+                        print("  Please enter 'g', 's', or 'q'.")
+            else:
+                # No smart classification (force, force-regen, or missing diagram)
+                while True:
+                    answer = input("  Generate this diagram? [y]es / [s]kip / [q]uit: ").strip().lower()
+                    if answer in ("y", "yes"):
+                        to_generate.append((item, current_hash))
+                        break
+                    if answer in ("s", "skip"):
+                        skipped.append((item, current_hash))
+                        print(f"  -> Will skip (stamp on completion)")
+                        break
+                    if answer in ("q", "quit"):
+                        print(f"\nAborted. No changes made.")
+                        return 0
+                    print("  Please enter 'y', 's', or 'q'.")
+
+        if not to_generate and not to_patch:
+            # Apply stamps and skips
+            for item, current_hash in stamped:
+                stamp_as_fresh(item, current_hash)
             for item, current_hash in skipped:
                 stamp_as_fresh(item, current_hash)
-            print(f"\nNothing to generate. {len(skipped)} skipped and stamped.")
+            total = len(stamped) + len(skipped)
+            print(f"\nNothing to generate. {total} stamped/skipped.")
             return 0
 
+        total_work = len(to_generate) + len(to_patch)
         print(f"\n{'=' * 60}")
-        print(f"  Generating {len(approved)} diagrams (batch mode, no further input needed)")
+        print(f"  Processing {total_work} diagrams (batch mode, no further input needed)")
         print(f"{'=' * 60}\n")
 
         generated_count = 0
+        patched_count = 0
         failed_count = 0
 
-        for i, (item, current_hash) in enumerate(approved, 1):
-            print(f"[{i}/{len(approved)}] Generating: {item.name}...", end="", flush=True)
+        # Process patches first
+        for item, current_hash, diff in to_patch:
+            print(f"Patching: {item.name}...", end="", flush=True)
+            patched_content = patch_diagram(item.source_path, item.diagram_path, diff)
+            if patched_content is not None:
+                # Build output with metadata header
+                source_rel = str(item.source_path.relative_to(REPO_ROOT))
+                now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                meta = {
+                    "source": source_rel,
+                    "source_hash": f"sha256:{current_hash}",
+                    "generated_at": now,
+                    "generator": "generate_diagrams.py",
+                    "method": "patch",
+                }
+                meta_line = f"<!-- diagram-meta: {json.dumps(meta)} -->"
+                output = f"{meta_line}\n# Diagram: {item.name}\n\n{patched_content}\n"
+                item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
+                item.diagram_path.write_text(output, encoding="utf-8")
+                patched_count += 1
+                print(f" done (patched)")
+            else:
+                # Fall back to full generation
+                print(f" patch failed, regenerating...", end="", flush=True)
+                result, output_content = generate_diagram(
+                    item, current_hash, verbose=args.verbose, write=False,
+                )
+                if result.status == "generated" and output_content is not None:
+                    item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
+                    item.diagram_path.write_text(output_content, encoding="utf-8")
+                    generated_count += 1
+                    print(f" done (regenerated)")
+                else:
+                    failed_count += 1
+                    print(f" FAILED: {result.message}")
 
+        # Process full generations
+        for i, (item, current_hash) in enumerate(to_generate, 1):
+            print(f"[{i}/{len(to_generate)}] Generating: {item.name}...", end="", flush=True)
             result, output_content = generate_diagram(
-                item, current_hash,
-                verbose=args.verbose,
-                write=False,
+                item, current_hash, verbose=args.verbose, write=False,
             )
-
             if result.status == "generated" and output_content is not None:
                 item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                 item.diagram_path.write_text(output_content, encoding="utf-8")
@@ -850,25 +1135,74 @@ def main() -> int:
             else:
                 print(f" {result.status}: {result.message}")
 
-        # Stamp skipped items now that batch completed successfully
+        # Apply stamps and skips
+        for item, current_hash in stamped:
+            stamp_as_fresh(item, current_hash)
         for item, current_hash in skipped:
             stamp_as_fresh(item, current_hash)
 
         print()
-        parts = [f"{generated_count} generated", f"{failed_count} failed"]
+        parts = []
+        if generated_count:
+            parts.append(f"{generated_count} generated")
+        if patched_count:
+            parts.append(f"{patched_count} patched")
+        if stamped:
+            parts.append(f"{len(stamped)} stamped")
         if skipped:
-            parts.insert(1, f"{len(skipped)} skipped")
+            parts.append(f"{len(skipped)} skipped")
+        if failed_count:
+            parts.append(f"{failed_count} failed")
         print(f"Done: {', '.join(parts)}")
 
         if failed_count > 0:
             return 1
         return 0
 
-    # ----- Non-interactive: generate immediately -----
+    # ----- Non-interactive: smart classification or direct generation -----
     generated_count = 0
+    patched_count = 0
+    stamped_count = 0
     failed_count = 0
 
     for i, (item, current_hash) in enumerate(work_items, 1):
+        # Smart classification (if enabled and diagram exists)
+        if use_smart and item.diagram_path.exists():
+            classification = classify_change(item.source_path, item.diagram_path)
+
+            if classification == "STAMP":
+                stamp_as_fresh(item, current_hash)
+                stamped_count += 1
+                print(f"[{i}/{len(work_items)}] Stamped as fresh: {item.name} (non-structural change)")
+                continue
+
+            if classification == "PATCH":
+                print(f"[{i}/{len(work_items)}] Patching: {item.name}...", end="", flush=True)
+                diff = get_source_diff(item.source_path)
+                patched_content = patch_diagram(item.source_path, item.diagram_path, diff)
+                if patched_content is not None:
+                    source_rel = str(item.source_path.relative_to(REPO_ROOT))
+                    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    meta = {
+                        "source": source_rel,
+                        "source_hash": f"sha256:{current_hash}",
+                        "generated_at": now,
+                        "generator": "generate_diagrams.py",
+                        "method": "patch",
+                    }
+                    meta_line = f"<!-- diagram-meta: {json.dumps(meta)} -->"
+                    output = f"{meta_line}\n# Diagram: {item.name}\n\n{patched_content}\n"
+                    item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
+                    item.diagram_path.write_text(output, encoding="utf-8")
+                    patched_count += 1
+                    print(f" done (surgical update)")
+                    continue
+                else:
+                    print(f" patch failed, falling back to full generation")
+                    # Fall through to full generation below
+
+            # classification == "REGENERATE" or patch failed: fall through
+
         print(f"[{i}/{len(work_items)}] Generating: {item.name}...", end="", flush=True)
 
         result, output_content = generate_diagram(
@@ -888,7 +1222,18 @@ def main() -> int:
             print(f" {result.status}: {result.message}")
 
     print()
-    print(f"Done: {generated_count} generated, {failed_count} failed")
+    parts = []
+    if generated_count:
+        parts.append(f"{generated_count} generated")
+    if patched_count:
+        parts.append(f"{patched_count} patched")
+    if stamped_count:
+        parts.append(f"{stamped_count} stamped")
+    if failed_count:
+        parts.append(f"{failed_count} failed")
+    if not parts:
+        parts.append("0 generated")
+    print(f"Done: {', '.join(parts)}")
 
     if failed_count > 0:
         return 1

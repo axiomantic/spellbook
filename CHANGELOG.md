@@ -5,7 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.31.0] - 2026-03-15
+
+### Added
+- **Zeigarnik focus-tracking system** - Stint stack tracks nested units of work with entry context, reminds the LLM to stay on task via depth-triggered heuristics (configurable threshold, default 5), and lets the LLM correct tracked state. Four MCP tools: `stint_push`, `stint_pop`, `stint_check`, `stint_replace`. Correction events logged for analytics (MCP-wrong vs LLM-wrong classification).
+- **Unified Python hook** - Single `spellbook_hook.py` replaces all 12 individual shell hooks, reducing per-tool-call process spawns from up to 7 to 1. Security gates (bash-gate, spawn-guard, canary-check, state-sanitize) remain fail-closed; all other handlers (memory, TTS, notifications, audit) are fail-open. Windows parity via `spellbook_hook.ps1` wrapper.
+- **Stint auto-push for skills** - PreToolUse hook automatically pushes a stint when a Skill tool is invoked, tracking skill invocations without requiring explicit LLM cooperation.
+- **Stint compaction survival** - Pre-compact hook saves stint stack to workflow state; post-compact hook restores it via `stint_replace`, preserving focus context across context resets.
+- **Behavioral mode preservation** - Stint entries carry a `behavioral_mode` field (e.g., "ORCHESTRATOR: delegate via subagents") that survives compaction and gets re-injected via depth check reminders and post-compact recovery. Auto-populated from `<BEHAVIORAL_MODE>` tags in SKILL.md files.
+- **Smart diagram updates** - `generate_diagrams.py` now classifies source changes before deciding how to update diagrams: non-structural changes are stamped fresh without regeneration, small structural changes trigger surgical patching, and only major restructures trigger full regeneration. Uses haiku model for fast classification. Interactive mode shows classification with Enter-to-accept defaults.
+
+### Fixed
+- **Recovery directive skill constraint fetch** - `_build_recovery_directive` used wrong dict keys (`found`/`constraints` instead of `success`/`content`) when fetching skill constraints, so FORBIDDEN/REQUIRED sections were never included in post-compaction recovery.
+
+### Changed
+- **Hook installer upgrade path** - Installing spellbook now removes old individual shell hook entries from `settings.json` and registers the unified hook. User-defined hooks are preserved.
 
 ### Added
 - **Web admin interface** - Browser-based admin UI served from the MCP daemon at `/admin`. Provides real-time observability and management across all spellbook subsystems.

@@ -1,29 +1,18 @@
 """
-Claude Code hook registration for security, TTS, and compaction hooks.
+Claude Code hook registration for the unified spellbook hook.
 
 Manages hook entries in Claude Code settings files that point to
-spellbook security scripts, TTS notification hooks, and compaction
-recovery hooks.
+the unified Python hook entrypoint (spellbook_hook.py), which handles
+all security, TTS, notification, memory, and compaction hooks internally.
 
-PreToolUse hooks:
-  - Bash -> bash-gate.sh
-  - spawn_claude_session -> spawn-guard.sh
-  - mcp__spellbook__workflow_state_save -> state-sanitize.sh (timeout: 15)
-  - (catch-all, no matcher) -> tts-timer-start.sh (async, timeout: 5)
+All four phases use a single hook command:
+  $SPELLBOOK_DIR/hooks/spellbook_hook.py
 
-PostToolUse hooks:
-  - Bash|Read|WebFetch|Grep|mcp__.* -> audit-log.sh (async, timeout: 10)
-  - Bash|Read|WebFetch|Grep|mcp__.* -> canary-check.sh (timeout: 10)
-  - Read|Edit|Grep|Glob -> memory-inject.sh (timeout: 5)
-  - (catch-all, no matcher) -> notify-on-complete.sh (async, timeout: 10)
-  - (catch-all, no matcher) -> tts-notify.sh (async, timeout: 15)
-  - (catch-all, no matcher) -> memory-capture.sh (async, timeout: 5)
-
-PreCompact hooks:
-  - (catch-all, no matcher) -> pre-compact-save.sh (timeout: 5)
-
-SessionStart hooks:
-  - (catch-all, no matcher) -> post-compact-recover.sh (timeout: 10)
+The unified hook dispatches internally based on event type and tool name:
+  PreToolUse: bash-gate, spawn-guard, state-sanitize, tts-timer-start
+  PostToolUse: audit-log, canary-check, memory-inject, notify, tts, capture
+  PreCompact: workflow state save
+  SessionStart: post-compaction recovery
 
 Note: Catch-all hooks omit the ``matcher`` field entirely rather than
 using ``".*"`` or ``"*"``.  Claude Code documentation states: "Use ``*``,
@@ -41,113 +30,48 @@ from typing import Any, Dict, List, Optional, Union
 # are no longer accepted by Claude Code (as of ~v2.1).
 # Paths use $SPELLBOOK_DIR which the hooks resolve at runtime.
 #
-# Entries WITHOUT a "matcher" key are catch-all hooks that fire on every tool
-# invocation.  Claude Code docs: "omit matcher entirely to match all occurrences."
-# Using ".*" does NOT reliably match; omitting the key is the correct approach.
-#
-# Claude Code deduplicates hooks by command string across all matching groups,
-# so a hook appearing in both a specific matcher and the catch-all runs only once.
+# The unified hook (spellbook_hook.py) handles ALL hook logic internally,
+# dispatching to handler functions based on event type and tool name.
+# NO async: security gates in PreToolUse must block to reject dangerous commands.
+# PostToolUse handlers that don't need to block (audit, notify, tts, capture)
+# use internal daemon threads via _fire_and_forget().
 HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
     "PreToolUse": [
         {
-            "matcher": "Bash",
+            # Unified hook handles: bash-gate, spawn-guard, state-sanitize,
+            # tts-timer-start, and stint auto-push.
+            # NO async: security gates must block to reject dangerous commands.
             "hooks": [
                 {
                     "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/bash-gate.sh",
-                },
-            ],
-        },
-        {
-            "matcher": "spawn_claude_session",
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/spawn-guard.sh",
-                },
-            ],
-        },
-        {
-            "matcher": "mcp__spellbook__workflow_state_save",
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/state-sanitize.sh",
+                    "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
                     "timeout": 15,
-                },
-            ],
-        },
-        {
-            # Catch-all: no "matcher" key means fire on every tool invocation
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/tts-timer-start.sh",
-                    "async": True,
-                    "timeout": 5,
                 },
             ],
         },
     ],
     "PostToolUse": [
         {
-            "matcher": "Bash|Read|WebFetch|Grep|mcp__.*",
+            # Unified hook handles: audit-log, canary-check, memory-inject,
+            # notify-on-complete, tts-notify, memory-capture, and depth reminder.
+            # NO async: canary-check and memory-inject are synchronous (inject
+            # content into LLM context via stdout). Fire-and-forget handlers
+            # (audit, notify, tts, capture) use internal daemon threads.
             "hooks": [
                 {
                     "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/audit-log.sh",
-                    "async": True,
-                    "timeout": 10,
-                },
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/canary-check.sh",
-                    "timeout": 10,
-                },
-            ],
-        },
-        {
-            "matcher": "Read|Edit|Grep|Glob",
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/memory-inject.sh",
-                    "timeout": 5,
-                },
-            ],
-        },
-        {
-            # Catch-all: no "matcher" key means fire on every tool invocation
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/notify-on-complete.sh",
-                    "async": True,
-                    "timeout": 10,
-                },
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
-                    "async": True,
+                    "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
                     "timeout": 15,
-                },
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/memory-capture.sh",
-                    "async": True,
-                    "timeout": 5,
                 },
             ],
         },
     ],
     "PreCompact": [
         {
-            # Catch-all: saves workflow state before compaction.
-            # Fail-open (exit 0 always) - must never block compaction.
             "hooks": [
                 {
                     "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/pre-compact-save.sh",
+                    "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
                     "timeout": 5,
                 },
             ],
@@ -155,13 +79,10 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
     ],
     "SessionStart": [
         {
-            # Catch-all: injects recovery context after compaction.
-            # Fail-open (exit 0 always) - must never prevent session start.
-            # The script itself filters on source=="compact" internally.
             "hooks": [
                 {
                     "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/post-compact-recover.sh",
+                    "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
                     "timeout": 10,
                 },
             ],
@@ -178,15 +99,21 @@ _SPELLBOOK_HOOK_PREFIX = "$SPELLBOOK_DIR/hooks/"
 def _get_hook_path_for_platform(hook_path: str) -> str:
     """Resolve hook path based on platform.
 
-    On Windows, replaces .sh extension with .ps1 and wraps in a
-    PowerShell invocation command string.
-    On Unix, returns the original .sh path unchanged.
+    On Windows:
+    - .sh hooks become .ps1 hooks wrapped in PowerShell invocation
+    - .py hooks use their .ps1 wrapper (which delegates to the .py script)
+    On Unix, returns the original path unchanged.
     """
     import sys
 
     if sys.platform == "win32":
-        ps1_path = hook_path.replace(".sh", ".ps1")
-        return f"powershell -ExecutionPolicy Bypass -File {ps1_path}"
+        if hook_path.endswith(".sh"):
+            ps1_path = hook_path.replace(".sh", ".ps1")
+            return f"powershell -ExecutionPolicy Bypass -File {ps1_path}"
+        elif hook_path.endswith(".py"):
+            # Use the .ps1 wrapper which delegates to the .py script
+            ps1_path = hook_path.replace(".py", ".ps1")
+            return f"powershell -ExecutionPolicy Bypass -File {ps1_path}"
     return hook_path
 
 
@@ -260,22 +187,27 @@ def _is_legacy_hook(hook: Union[str, Dict[str, Any]], spellbook_dir: Optional[Pa
 
     Detects:
     - Nim binary paths (contain /hooks/nim/bin/)
-    - Python wrapper hooks (.py files in the spellbook hooks directory)
+    - Old Python wrapper hooks (.py files in the spellbook hooks directory,
+      EXCLUDING the unified spellbook_hook.py which is the current entrypoint)
 
-    Does NOT match current .sh or .ps1 hooks.
+    Does NOT match current .sh, .ps1, or the unified spellbook_hook.py hook.
     """
     path = _get_hook_path(hook)
     normalized = path.replace("\\", "/")
+
+    # Never treat the unified hook as legacy
+    if "spellbook_hook.py" in normalized or "spellbook_hook.ps1" in normalized:
+        return False
 
     # Nim binary paths (either $SPELLBOOK_DIR or expanded)
     if "/hooks/nim/bin/" in normalized:
         return True
 
-    # Python wrapper hooks with $SPELLBOOK_DIR prefix
+    # Old Python wrapper hooks with $SPELLBOOK_DIR prefix
     if normalized.startswith(_SPELLBOOK_HOOK_PREFIX) and normalized.endswith(".py"):
         return True
 
-    # Python wrapper hooks with expanded absolute path
+    # Old Python wrapper hooks with expanded absolute path
     if spellbook_dir is not None:
         expanded_prefix = str(spellbook_dir).replace("\\", "/") + "/hooks/"
         if normalized.startswith(expanded_prefix) and normalized.endswith(".py"):
@@ -508,6 +440,15 @@ def install_hooks(
 
     # Clean up legacy Nim and .py hook entries before registering new ones
     _cleanup_legacy_hooks(settings, spellbook_dir)
+
+    # Clean up old per-tool spellbook hooks (e.g. bash-gate.sh with "Bash" matcher)
+    # that are now superseded by the unified catch-all hook.
+    # _cleanup_legacy_hooks only handles Nim/.py; this handles old .sh hooks too.
+    for phase in HOOK_DEFINITIONS:
+        if phase in settings["hooks"]:
+            settings["hooks"][phase] = _clean_hooks_for_phase(
+                settings["hooks"][phase], spellbook_dir
+            )
 
     # Merge hooks for each phase
     for phase, hook_defs in HOOK_DEFINITIONS.items():

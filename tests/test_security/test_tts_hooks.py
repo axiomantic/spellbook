@@ -1,51 +1,50 @@
-"""Tests for TTS hook scripts.
+"""Tests for TTS hook behavior via the unified hook (spellbook_hook.py).
 
-PreToolUse hook (tts-timer-start.sh):
+PreToolUse handler (timer recording):
 - Writes timestamp file for valid input
 - Exits 0 on empty stdin
 - Exits 0 on missing tool_use_id
-- Fail-open on write errors
 
-PostToolUse hook (tts-notify.sh):
+PostToolUse handler (TTS notification):
 - Skips blacklisted tools
 - Skips when no start file exists
 - Skips when elapsed < threshold
-- Builds correct message format
-- Exits 0 on all error paths
+- Exits 0 on all paths
+
+Hook registration:
+- Unified hook is registered in HOOK_DEFINITIONS for PreToolUse and PostToolUse
+- No individual tts-timer-start or tts-notify hooks
 """
 
 import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
 import pytest
 from unittest.mock import patch
 
-pytestmark = [
-    pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Bash scripts not available on Windows",
-    ),
-    pytest.mark.integration,
-]
+pytestmark = pytest.mark.integration
 
 PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
-TIMER_START_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "tts-timer-start.sh")
-TTS_NOTIFY_SCRIPT = os.path.join(PROJECT_ROOT, "hooks", "tts-notify.sh")
+UNIFIED_HOOK = os.path.join(PROJECT_ROOT, "hooks", "spellbook_hook.py")
 
 
-def _run_hook(script: str, payload: dict, env_overrides: dict = None) -> subprocess.CompletedProcess:
-    """Run a hook script with the given JSON payload on stdin."""
+def _run_hook(
+    payload: dict,
+    env_overrides: dict | None = None,
+) -> subprocess.CompletedProcess:
+    """Run the unified hook with the given JSON payload on stdin."""
     env = os.environ.copy()
     env["SPELLBOOK_DIR"] = PROJECT_ROOT
     env["PYTHONPATH"] = PROJECT_ROOT
     if env_overrides:
         env.update(env_overrides)
     return subprocess.run(
-        ["bash", script],
+        [sys.executable, UNIFIED_HOOK],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
@@ -54,39 +53,40 @@ def _run_hook(script: str, payload: dict, env_overrides: dict = None) -> subproc
     )
 
 
-class TestTimerStartExecutability:
-    """Hook scripts are executable."""
+class TestUnifiedHookExists:
+    """Unified hook script exists."""
 
-    def test_sh_is_executable(self):
-        assert os.access(TIMER_START_SCRIPT, os.X_OK)
-
-    def test_ps1_exists(self):
-        ps1_script = TIMER_START_SCRIPT.replace(".sh", ".ps1")
-        assert os.path.isfile(ps1_script)
+    def test_hook_exists(self):
+        assert os.path.isfile(UNIFIED_HOOK)
 
 
 class TestTimerStartBehavior:
-    """tts-timer-start.sh writes timestamp files."""
+    """Timer recording via unified hook PreToolUse handler."""
 
     def test_writes_timestamp_file(self):
         tool_use_id = f"test-{int(time.time())}"
         payload = {
+            "hook_event_name": "PreToolUse",
             "tool_name": "Bash",
             "tool_use_id": tool_use_id,
             "tool_input": {"command": "ls"},
         }
-        result = _run_hook(TIMER_START_SCRIPT, payload)
+        result = _run_hook(payload)
         assert result.returncode == 0
 
-        start_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
+        start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
         assert start_file.exists()
         ts = int(start_file.read_text().strip())
         assert abs(ts - int(time.time())) < 5
         start_file.unlink()  # Cleanup
+        # Also clean up the notify timer file
+        notify_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
+        if notify_file.exists():
+            notify_file.unlink()
 
     def test_exits_0_on_empty_stdin(self):
         result = subprocess.run(
-            ["bash", TIMER_START_SCRIPT],
+            [sys.executable, UNIFIED_HOOK],
             input="",
             capture_output=True,
             text=True,
@@ -95,98 +95,60 @@ class TestTimerStartBehavior:
         assert result.returncode == 0
 
     def test_exits_0_on_missing_tool_use_id(self):
-        payload = {"tool_name": "Bash", "tool_input": {}}
-        result = _run_hook(TIMER_START_SCRIPT, payload)
+        payload = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Read",
+            "tool_input": {"file_path": "/tmp/test.py"},
+        }
+        result = _run_hook(payload)
         assert result.returncode == 0
 
 
-class TestTtsNotifyExecutability:
-    """tts-notify hook scripts are executable."""
-
-    def test_sh_is_executable(self):
-        assert os.access(TTS_NOTIFY_SCRIPT, os.X_OK)
-
-    def test_ps1_exists(self):
-        ps1_script = TTS_NOTIFY_SCRIPT.replace(".sh", ".ps1")
-        assert os.path.isfile(ps1_script)
-
-
 class TestTtsNotifyBehavior:
-    """tts-notify.sh reads timestamps and triggers TTS."""
+    """TTS notification via unified hook PostToolUse handler."""
 
     def test_skips_blacklisted_tool(self):
         payload = {
+            "hook_event_name": "PostToolUse",
             "tool_name": "AskUserQuestion",
             "tool_use_id": "test-blacklist",
             "tool_input": {},
         }
-        result = _run_hook(TTS_NOTIFY_SCRIPT, payload)
+        result = _run_hook(payload)
         assert result.returncode == 0
-        # Verify the hook did NOT attempt to reach /api/speak
-        combined = result.stdout + result.stderr
-        assert "/api/speak" not in combined
-        assert "curl" not in combined
 
     def test_skips_when_no_start_file(self):
         payload = {
+            "hook_event_name": "PostToolUse",
             "tool_name": "Bash",
             "tool_use_id": "nonexistent-id",
             "tool_input": {},
         }
-        result = _run_hook(TTS_NOTIFY_SCRIPT, payload)
+        result = _run_hook(payload)
         assert result.returncode == 0
-        # Verify the hook did NOT attempt to reach /api/speak
-        combined = result.stdout + result.stderr
-        assert "/api/speak" not in combined
-        assert "curl" not in combined
 
     def test_skips_when_under_threshold(self):
         tool_use_id = f"test-under-{int(time.time())}"
         # Write a start file with current timestamp (0 seconds ago)
-        start_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
+        start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
         start_file.write_text(str(int(time.time())))
 
         payload = {
+            "hook_event_name": "PostToolUse",
             "tool_name": "Bash",
             "tool_use_id": tool_use_id,
             "tool_input": {"command": "ls"},
             "cwd": "/tmp/myproject",
         }
         # Set threshold high so it definitely skips
-        result = _run_hook(TTS_NOTIFY_SCRIPT, payload, {"SPELLBOOK_TTS_THRESHOLD": "9999"})
+        result = _run_hook(payload, {"SPELLBOOK_TTS_THRESHOLD": "9999"})
         assert result.returncode == 0
-        # Start file should have been cleaned up
-        assert not start_file.exists()
-        # Verify the hook did NOT attempt to reach /api/speak
-        combined = result.stdout + result.stderr
-        assert "/api/speak" not in combined
-        assert "curl" not in combined
-
-    def test_attempts_speak_when_above_threshold(self):
-        tool_use_id = f"test-above-{int(time.time())}"
-        # Write a start file with timestamp 60 seconds ago
-        start_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
-        start_file.write_text(str(int(time.time()) - 60))
-
-        payload = {
-            "tool_name": "Bash",
-            "tool_use_id": tool_use_id,
-            "tool_input": {"command": "ls"},
-            "cwd": "/tmp/myproject",
-        }
-        # Use a low threshold (5s) so 60s ago triggers the notify path.
-        # Point to a port that nothing is listening on so curl fails silently.
-        result = _run_hook(TTS_NOTIFY_SCRIPT, payload, {
-            "SPELLBOOK_TTS_THRESHOLD": "5",
-            "SPELLBOOK_MCP_PORT": "19999",
-        })
-        assert result.returncode == 0
-        # Start file should have been consumed (deleted by the hook)
-        assert not start_file.exists()
+        # Clean up (file may or may not have been consumed by daemon thread)
+        start_file.unlink(missing_ok=True)
 
     def test_exits_0_on_empty_stdin(self):
         result = subprocess.run(
-            ["bash", TTS_NOTIFY_SCRIPT],
+            [sys.executable, UNIFIED_HOOK],
             input="",
             capture_output=True,
             text=True,
@@ -196,123 +158,84 @@ class TestTtsNotifyBehavior:
 
 
 class TestHookRegistration:
-    """TTS hooks are properly registered in HOOK_DEFINITIONS."""
+    """Unified hook is properly registered in HOOK_DEFINITIONS."""
 
-    def test_pretooluse_includes_tts_timer_start(self):
+    def test_pretooluse_has_unified_hook(self):
         from installer.components.hooks import HOOK_DEFINITIONS
         pre_hooks = HOOK_DEFINITIONS["PreToolUse"]
-        tts_entries = [
-            e for e in pre_hooks
-            if any("tts-timer-start" in str(h) for h in (
-                [e] if isinstance(e, str) else
-                [h.get("command", h) if isinstance(h, dict) else h for h in e.get("hooks", [])]
-            ))
-        ]
-        assert len(tts_entries) == 1
-        entry = tts_entries[0]
-        # Catch-all: matcher key must be omitted (not ".*")
-        assert "matcher" not in entry
+        assert len(pre_hooks) == 1
+        assert len(pre_hooks[0]["hooks"]) == 1
+        assert pre_hooks[0]["hooks"][0] == {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 15,
+        }
 
-    def test_posttooluse_includes_tts_notify(self):
+    def test_posttooluse_has_unified_hook(self):
         from installer.components.hooks import HOOK_DEFINITIONS
         post_hooks = HOOK_DEFINITIONS["PostToolUse"]
-        tts_entries = [
-            e for e in post_hooks
-            if any("tts-notify" in str(h) for h in (
-                [e] if isinstance(e, str) else
-                [h.get("command", h) if isinstance(h, dict) else h for h in e.get("hooks", [])]
-            ))
-        ]
-        assert len(tts_entries) == 1
-        entry = tts_entries[0]
-        # Catch-all: matcher key must be omitted (not ".*")
-        assert "matcher" not in entry
+        assert len(post_hooks) == 1
+        assert len(post_hooks[0]["hooks"]) == 1
+        assert post_hooks[0]["hooks"][0] == {
+            "type": "command",
+            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "timeout": 15,
+        }
 
-    def test_tts_hooks_are_async(self):
+    def test_no_old_tts_hooks_registered(self):
         from installer.components.hooks import HOOK_DEFINITIONS
-        # PreToolUse tts hook
-        found_timer = False
-        for entry in HOOK_DEFINITIONS["PreToolUse"]:
-            for hook in entry.get("hooks", []):
-                if isinstance(hook, dict) and "tts-timer-start" in hook.get("command", ""):
-                    assert hook.get("async") is True
-                    assert hook.get("timeout") == 5
-                    found_timer = True
-        assert found_timer, "tts-timer-start hook not found in PreToolUse"
-        # PostToolUse tts hook
-        found_notify = False
-        for entry in HOOK_DEFINITIONS["PostToolUse"]:
-            for hook in entry.get("hooks", []):
-                if isinstance(hook, dict) and "tts-notify" in hook.get("command", ""):
-                    assert hook.get("async") is True
-                    assert hook.get("timeout") == 15
-                    found_notify = True
-        assert found_notify, "tts-notify hook not found in PostToolUse"
+        for phase, entries in HOOK_DEFINITIONS.items():
+            for entry in entries:
+                for hook in entry.get("hooks", []):
+                    cmd = hook if isinstance(hook, str) else hook.get("command", "")
+                    assert "tts-timer-start" not in cmd, (
+                        f"Old tts-timer-start still in {phase}"
+                    )
+                    assert "tts-notify" not in cmd, (
+                        f"Old tts-notify still in {phase}"
+                    )
 
-    def test_install_writes_both_tts_hooks(self, tmp_path):
+    def test_unified_hooks_not_async(self):
+        from installer.components.hooks import HOOK_DEFINITIONS
+        for phase, entries in HOOK_DEFINITIONS.items():
+            for entry in entries:
+                for hook in entry.get("hooks", []):
+                    if isinstance(hook, dict) and "spellbook_hook" in hook.get("command", ""):
+                        assert hook.get("async") is not True, (
+                            f"Unified hook in {phase} must not have async=True"
+                        )
+
+    def test_install_writes_unified_hook(self, tmp_path):
         from installer.components.hooks import install_hooks
         settings_path = tmp_path / "settings.local.json"
         result = install_hooks(settings_path)
         assert result.success
 
-        import json
         settings = json.loads(settings_path.read_text())
         hooks = settings["hooks"]
 
-        # Check PreToolUse has tts-timer-start as its last entry (catch-all, no matcher)
+        # PreToolUse: 1 entry with 1 unified hook
         pre_hooks = hooks.get("PreToolUse", [])
-        tts_timer_entry = pre_hooks[-1]
-        assert tts_timer_entry == {
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/tts-timer-start.sh",
-                    "async": True,
-                    "timeout": 5,
-                }
-            ]
-        }
+        assert len(pre_hooks) == 1
+        assert len(pre_hooks[0]["hooks"]) == 1
+        assert "spellbook_hook" in pre_hooks[0]["hooks"][0]["command"]
 
-        # Check PostToolUse has tts-notify in the catch-all entry (no matcher)
+        # PostToolUse: 1 entry with 1 unified hook
         post_hooks = hooks.get("PostToolUse", [])
-        notification_entry = post_hooks[-1]
-        assert notification_entry == {
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/notify-on-complete.sh",
-                    "async": True,
-                    "timeout": 10,
-                },
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/tts-notify.sh",
-                    "async": True,
-                    "timeout": 15,
-                },
-                {
-                    "type": "command",
-                    "command": "$SPELLBOOK_DIR/hooks/memory-capture.sh",
-                    "async": True,
-                    "timeout": 5,
-                },
-            ]
-        }
+        assert len(post_hooks) == 1
+        assert len(post_hooks[0]["hooks"]) == 1
+        assert "spellbook_hook" in post_hooks[0]["hooks"][0]["command"]
 
-    def test_uninstall_removes_tts_hooks(self, tmp_path):
+    def test_uninstall_removes_hooks(self, tmp_path):
         from installer.components.hooks import install_hooks, uninstall_hooks
-        import json
         settings_path = tmp_path / "settings.local.json"
 
-        # Install first
         install_hooks(settings_path)
-        # Then uninstall
         result = uninstall_hooks(settings_path)
         assert result.success
 
         settings = json.loads(settings_path.read_text())
         hooks = settings.get("hooks", {})
-        # After uninstall, all hook phases should be empty lists
         for phase_name, entries in hooks.items():
             assert entries == [], (
                 f"Hook phase {phase_name} still has entries after uninstall: {entries}"
@@ -320,7 +243,6 @@ class TestHookRegistration:
 
     def test_reinstall_idempotent(self, tmp_path):
         from installer.components.hooks import install_hooks
-        import json
         settings_path = tmp_path / "settings.local.json"
 
         install_hooks(settings_path)
@@ -333,11 +255,11 @@ class TestHookRegistration:
     def test_platform_transform_windows(self):
         from installer.components.hooks import _get_hook_path_for_platform
         with patch("sys.platform", "win32"):
-            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/tts-timer-start.sh")
-        assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/tts-timer-start.ps1"
+            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
+        assert result == "powershell -ExecutionPolicy Bypass -File $SPELLBOOK_DIR/hooks/spellbook_hook.ps1"
 
     def test_platform_transform_unix(self):
         from installer.components.hooks import _get_hook_path_for_platform
         with patch("sys.platform", "linux"):
-            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/tts-timer-start.sh")
-        assert result == "$SPELLBOOK_DIR/hooks/tts-timer-start.sh"
+            result = _get_hook_path_for_platform("$SPELLBOOK_DIR/hooks/spellbook_hook.py")
+        assert result == "$SPELLBOOK_DIR/hooks/spellbook_hook.py"

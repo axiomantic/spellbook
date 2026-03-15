@@ -592,6 +592,47 @@ def init_db(db_path: str = None) -> None:
             )
         """)
 
+    # --- Stint Stack Tables (Zeigarnik focus tracking) ---
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stint_stack (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_path TEXT NOT NULL,
+            session_id TEXT,
+            stack_json TEXT NOT NULL DEFAULT '[]',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(project_path)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_stint_stack_project
+        ON stint_stack(project_path)
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stint_correction_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_path TEXT NOT NULL,
+            session_id TEXT,
+            correction_type TEXT NOT NULL,
+            old_stack_json TEXT NOT NULL,
+            new_stack_json TEXT NOT NULL,
+            diff_summary TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_stint_corrections_project
+        ON stint_correction_events(project_path)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_stint_corrections_type
+        ON stint_correction_events(correction_type)
+    """)
+
     conn.commit()
 
 
