@@ -2104,7 +2104,7 @@ def stint_push(
         {"success": True, "depth": int, "stack": list}
     """
     from spellbook_mcp.stint_tools import push_stint
-    return push_stint(
+    result = push_stint(
         project_path=project_path,
         name=name,
         stint_type=type,
@@ -2113,6 +2113,24 @@ def stint_push(
         success_criteria=success_criteria,
         metadata=metadata,
     )
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FOCUS,
+                event_type="focus.stint_pushed",
+                data={
+                    "project_path": project_path,
+                    "name": name,
+                    "type": type,
+                    "depth": result.get("depth"),
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -2135,7 +2153,26 @@ def stint_pop(
         {"success": True, "popped": dict, "depth": int, "mismatch": bool}
     """
     from spellbook_mcp.stint_tools import pop_stint
-    return pop_stint(project_path=project_path, name=name)
+    result = pop_stint(project_path=project_path, name=name)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        popped = result.get("popped", {})
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FOCUS,
+                event_type="focus.stint_popped",
+                data={
+                    "project_path": project_path,
+                    "name": popped.get("name") if isinstance(popped, dict) else name,
+                    "depth": result.get("depth"),
+                    "mismatch": result.get("mismatch", False),
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -2180,11 +2217,28 @@ def stint_replace(
         {"success": True, "depth": int, "correction_logged": True}
     """
     from spellbook_mcp.stint_tools import replace_stint
-    return replace_stint(
+    result = replace_stint(
         project_path=project_path,
         stack=stack,
         reason=reason,
     )
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FOCUS,
+                event_type="focus.stint_replaced",
+                data={
+                    "project_path": project_path,
+                    "reason": reason[:200] if reason else "",
+                    "depth": result.get("depth"),
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 # ============================================================================
@@ -2596,7 +2650,7 @@ def security_log_event(
         {"success": True, "event_id": int} on success, or
         {"success": True, "degraded": True, "warning": "..."} if DB unavailable.
     """
-    return do_log_event(
+    result = do_log_event(
         event_type=event_type,
         severity=severity,
         source=source,
@@ -2605,6 +2659,24 @@ def security_log_event(
         tool_name=tool_name,
         action_taken=action_taken,
     )
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.SECURITY,
+                event_type="security.event_logged",
+                data={
+                    "event_type": event_type,
+                    "severity": severity,
+                    "source": source,
+                    "event_id": result.get("event_id"),
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3243,7 +3315,24 @@ async def api_speak(request: Request) -> JSONResponse:
 @inject_recovery_context
 def fractal_create_graph(seed: str, intensity: str, checkpoint_mode: str, metadata: str = None):
     """Create a new fractal thinking graph with a seed question."""
-    return do_fractal_create_graph(seed=seed, intensity=intensity, checkpoint_mode=checkpoint_mode, metadata_json=metadata)
+    result = do_fractal_create_graph(seed=seed, intensity=intensity, checkpoint_mode=checkpoint_mode, metadata_json=metadata)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.graph_created",
+                data={
+                    "graph_id": result.get("graph_id"),
+                    "seed": seed[:200],
+                    "intensity": intensity,
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3257,7 +3346,20 @@ def fractal_resume_graph(graph_id: str):
 @inject_recovery_context
 def fractal_delete_graph(graph_id: str):
     """Delete a fractal thinking graph and all its nodes/edges."""
-    return do_fractal_delete_graph(graph_id=graph_id)
+    result = do_fractal_delete_graph(graph_id=graph_id)
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.graph_deleted",
+                data={"graph_id": graph_id},
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3272,9 +3374,27 @@ def fractal_update_graph_status(graph_id: str, status: str, reason: str = None):
 def fractal_add_node(graph_id: str, parent_id: str, node_type: str, text: str, owner: str = None, metadata: str = None):
     """Add a new node to a fractal thinking graph."""
     try:
-        return do_fractal_add_node(graph_id=graph_id, parent_id=parent_id, node_type=node_type, text=text, owner=owner, metadata_json=metadata)
+        result = do_fractal_add_node(graph_id=graph_id, parent_id=parent_id, node_type=node_type, text=text, owner=owner, metadata_json=metadata)
     except ValueError as e:
         return {"error": str(e)}
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.node_added",
+                data={
+                    "graph_id": graph_id,
+                    "node_id": result.get("node_id"),
+                    "node_type": node_type,
+                    "parent_id": parent_id,
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3292,9 +3412,26 @@ def fractal_update_node(graph_id: str, node_id: str, metadata: str):
 def fractal_mark_saturated(graph_id: str, node_id: str, reason: str):
     """Mark a node as saturated in a fractal thinking graph."""
     try:
-        return do_fractal_mark_saturated(graph_id=graph_id, node_id=node_id, reason=reason)
+        result = do_fractal_mark_saturated(graph_id=graph_id, node_id=node_id, reason=reason)
     except ValueError as e:
         return {"error": str(e)}
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.node_saturated",
+                data={
+                    "graph_id": graph_id,
+                    "node_id": node_id,
+                    "reason": reason[:200],
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()
@@ -3357,9 +3494,25 @@ def fractal_claim_work(graph_id: str, worker_id: str, session_id: str = ""):
 def fractal_synthesize_node(graph_id: str, node_id: str, synthesis_text: str):
     """Mark a node as synthesized with synthesis text. Validates all child questions are complete."""
     try:
-        return do_fractal_synthesize_node(graph_id=graph_id, node_id=node_id, synthesis_text=synthesis_text)
+        result = do_fractal_synthesize_node(graph_id=graph_id, node_id=node_id, synthesis_text=synthesis_text)
     except ValueError as e:
         return {"error": str(e)}
+    try:
+        from spellbook_mcp.admin.events import Event, Subsystem, publish_sync
+
+        publish_sync(
+            Event(
+                subsystem=Subsystem.FRACTAL,
+                event_type="fractal.node_synthesized",
+                data={
+                    "graph_id": graph_id,
+                    "node_id": node_id,
+                },
+            )
+        )
+    except Exception:
+        pass  # Never break MCP tool execution
+    return result
 
 
 @mcp.tool()

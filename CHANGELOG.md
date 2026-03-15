@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Spellbook branding** throughout admin: book-with-sparkle favicon, sidebar icon, sparkle loading spinner, login page icon
   - **Admin documentation** with screenshots of all 11 pages, added to mkdocs site and README
   - **`[docs]` optional extra** with mkdocs-material, mike for building documentation locally
+  - **Version display** in sidebar footer showing running spellbook version
+  - **Event monitor with history** - REST endpoint for recent events plus live WebSocket stream; event publishing from security, memory, stint, and fractal MCP handlers
+  - **Platform compatibility docs** noting Claude Code JSONL session dependency, welcoming contributions for other platforms
 - **"Signature Spells" in README and docs** - Five highlighted skills (develop, fractal-thinking, auditing-green-mirage, fact-checking, advanced-code-review) featured as signature capabilities
 - **Shared diagram config** (`scripts/diagram_config.py`) - Centralized exclusion lists, aliases, and tiering config for diagram generation, freshness checking, and docs completeness
 - **Bulk skill rename script** (`scripts/rename_skills.py`) - Automates full-codebase skill renames with regex word-boundary protection, specificity ordering, dry-run mode, and `git mv` integration

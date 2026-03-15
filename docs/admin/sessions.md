@@ -4,6 +4,9 @@ The sessions page shows Claude Code and OpenCode sessions tracked by Spellbook.
 
 ![Sessions](screenshots/sessions.png)
 
+!!! note "Claude Code Data Format"
+    Session data is parsed from Claude Code JSONL session files stored under `~/.claude/projects/`. Sessions from other coding assistants (OpenCode, Codex, Gemini CLI, Crush) are not currently displayed. Contributions to add session file parsing for additional platforms are welcome.
+
 ## Filters
 
 - **Project filter**: Multi-select checkbox dropdown. Multiple projects can be selected simultaneously.

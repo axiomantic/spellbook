@@ -35,6 +35,7 @@ def create_admin_app() -> FastAPI:
     from spellbook_mcp.admin.routes import sessions as sessions_routes
     from spellbook_mcp.admin.routes import fractal as fractal_routes
     from spellbook_mcp.admin.routes import analytics as analytics_routes
+    from spellbook_mcp.admin.routes import events as events_routes
     from spellbook_mcp.admin.routes import focus as focus_routes
     from spellbook_mcp.admin.routes import health as health_routes
 
@@ -46,6 +47,7 @@ def create_admin_app() -> FastAPI:
     app.include_router(sessions_routes.router, prefix="/api")
     app.include_router(fractal_routes.router, prefix="/api")
     app.include_router(analytics_routes.router, prefix="/api")
+    app.include_router(events_routes.router, prefix="/api")
     app.include_router(focus_routes.router, prefix="/api")
     app.include_router(health_routes.router, prefix="/api")
 

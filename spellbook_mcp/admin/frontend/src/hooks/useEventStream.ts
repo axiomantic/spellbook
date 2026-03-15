@@ -1,8 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useWebSocketContext } from '../contexts/WebSocketContext'
+import { fetchApi } from '../api/client'
 import type { WSEvent } from '../api/types'
 
 const MAX_EVENTS = 200
+
+interface RecentEventsResponse {
+  events: WSEvent[]
+  total: number
+}
 
 interface UseEventStreamOptions {
   /** Subsystems to include (empty = all). */
@@ -20,6 +26,8 @@ interface UseEventStreamResult {
   clear: () => void
   /** Set of all subsystems seen so far. */
   knownSubsystems: Set<string>
+  /** Whether historical events are still loading. */
+  isLoadingHistory: boolean
 }
 
 export function useEventStream({
@@ -29,12 +37,42 @@ export function useEventStream({
   const { events: wsEvents, isConnected } = useWebSocketContext()
   const [captured, setCaptured] = useState<WSEvent[]>([])
   const [knownSubsystems, setKnownSubsystems] = useState<Set<string>>(new Set())
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const prevLengthRef = useRef(0)
   const pausedRef = useRef(paused)
+  const historyLoadedRef = useRef(false)
 
   useEffect(() => {
     pausedRef.current = paused
   }, [paused])
+
+  // Load historical events on mount
+  useEffect(() => {
+    if (historyLoadedRef.current) return
+    historyLoadedRef.current = true
+
+    fetchApi<RecentEventsResponse>('/api/events/recent', {
+      params: { limit: 100, since_hours: 24 },
+    })
+      .then((resp) => {
+        if (resp.events.length > 0) {
+          setCaptured((prev) => [...prev, ...resp.events].slice(0, MAX_EVENTS))
+          setKnownSubsystems((prev) => {
+            const next = new Set(prev)
+            for (const ev of resp.events) {
+              next.add(ev.subsystem)
+            }
+            return next
+          })
+        }
+      })
+      .catch(() => {
+        // Silently ignore -- historical events are best-effort
+      })
+      .finally(() => {
+        setIsLoadingHistory(false)
+      })
+  }, [])
 
   // Watch for new events from the WebSocket context
   useEffect(() => {
@@ -86,5 +124,5 @@ export function useEventStream({
     setCaptured([])
   }, [])
 
-  return { events: captured, isConnected, clear, knownSubsystems }
+  return { events: captured, isConnected, clear, knownSubsystems, isLoadingHistory }
 }

@@ -50,6 +50,10 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
           queryClient.invalidateQueries({ queryKey: ['fractal'] })
           queryClient.invalidateQueries({ queryKey: ['dashboard'] })
           break
+        case 'focus':
+          queryClient.invalidateQueries({ queryKey: ['focus'] })
+          queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+          break
         default:
           queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       }

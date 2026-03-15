@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useDashboard } from '../../hooks/useDashboard'
 
 function SpellbookIcon({ className = '' }: { className?: string }) {
   return (
@@ -43,6 +44,9 @@ const navItems = [
 ]
 
 export function Sidebar() {
+  const { data } = useDashboard()
+  const version = data?.health?.version
+
   return (
     <aside className="w-56 border-r border-bg-border bg-bg-surface flex flex-col">
       <div className="p-4 border-b border-bg-border">
@@ -72,6 +76,11 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      {version && (
+        <div className="p-4 border-t border-bg-border">
+          <p className="font-mono text-xs text-text-dim">v{version}</p>
+        </div>
+      )}
     </aside>
   )
 }

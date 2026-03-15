@@ -23,6 +23,7 @@ class Subsystem(str, Enum):
     SWARM = "swarm"
     EXPERIMENT = "experiment"
     FORGE = "forge"
+    FOCUS = "focus"
 
 
 @dataclass
