@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/deep-research/SKILL.md", "source_hash": "sha256:25f638e6b22b0d51bc06120f049058d0ad1f0b6e75acc9d48c4f7edf2e3a9d24", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/deep-research/SKILL.md","source_hash": "sha256:b749221e3a66b9d0c7c679e0f9e29ef12496804e093ed7b666959b74d69d94c3","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: deep-research
 
 Multi-threaded research workflow with parallel investigation, fact-checking, and verified synthesis. Phases: Interview, Plan, Investigate (parallel), Verify, Synthesize.

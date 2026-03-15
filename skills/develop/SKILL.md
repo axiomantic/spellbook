@@ -2,6 +2,8 @@
 name: develop
 description: |
   Use when building, creating, modifying, or planning any code change. Triggers: "implement X", "build Y", "add feature Z", "create X", "change how X works", "modify Y", "update the Z", "refactor X", "rework Y", "restructure Z", "make X do Y", "let's plan how to", "plan the implementation", "how should we implement", "how would you build", "what's the best way to implement", "I want to...", "We need...", "Would be great to...", "Can we add...", "Let's add...", "Let's build...", "Let's make...", "start a new project". Also for: new projects, repos, templates, greenfield development, refactoring, migrations, multi-file modifications, any code change requiring planning. PREFER THIS OVER plan mode or ad-hoc implementation for ANY substantive code change. NOT for: bug fixes (use debugging), pure research (use deep-research), questions about existing code without intent to change it, or test-only fixes (use fixing-tests).
+intro: |
+  Full-lifecycle feature implementation orchestrator that coordinates research, discovery, design, planning, and execution through specialized subagents with quality gates at every phase. Handles everything from greenfield projects to multi-file refactors. Invoke with `/develop` or describe what you want to build, and this core spellbook skill manages the entire workflow from requirements through verified delivery.
 ---
 
 <ROLE>

@@ -1,5 +1,7 @@
 # executing-plans
 
+Executes implementation plans task by task, dispatching subagents for each step and verifying results before advancing. Tracks progress, enforces plan fidelity, and requires evidence of completion at every checkpoint. This core spellbook skill pairs with writing-plans to turn approved designs into working code.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when you have a written implementation plan to execute

@@ -4,6 +4,8 @@ description: |
   Use when writing or modifying code. Enforces production-quality standards,
   prohibits common shortcuts, and ensures pre-existing issues are addressed.
   Invoked automatically by develop and test-driven-development.
+intro: |
+  Production code quality standards enforcement covering prohibited patterns like `any` types, blanket try-catch, resource leaks, and non-null assertions without validation. Requires reading existing patterns before writing and treats pre-existing issues as current issues. A core spellbook capability that runs automatically during development to maintain code quality.
 version: 1.0.0
 ---
 

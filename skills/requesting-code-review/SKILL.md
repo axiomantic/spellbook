@@ -1,6 +1,8 @@
 ---
 name: requesting-code-review
 description: "Use when implementation is done and you need a structured pre-PR review workflow. Triggers: 'ready for review', 'review my changes before PR', 'pre-merge check', 'is this ready', 'submit for review'. Orchestrates multi-phase review (planning, context assembly, dispatch, triage, fix, gate). Dispatches code-review internally. NOT the same as finishing-a-development-branch (which handles merge/PR decisions after review passes)."
+intro: |
+  Pre-PR structured review that assembles context, dispatches review agents, triages findings by severity, and produces a remediation plan. Ensures every critical finding is addressed before merge by orchestrating the full review lifecycle from planning through quality gate. A core spellbook capability for when implementation is complete and you want a thorough check before creating a PR.
 ---
 
 # Requesting Code Review

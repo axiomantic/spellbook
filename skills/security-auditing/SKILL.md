@@ -1,6 +1,8 @@
 ---
 name: security-auditing
 description: "Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools'. Integrates with code-review --audit, develop Phase 4, and distilling-prs for PR security review."
+intro: |
+  Audits skills, commands, hooks, and MCP tools for injection risks, privilege escalation, and prompt manipulation vulnerabilities. Combines static analysis scanning with human-guided triage across six ordered phases. A core spellbook capability for systematic security review of the spellbook ecosystem and project code.
 ---
 
 # Security Auditing

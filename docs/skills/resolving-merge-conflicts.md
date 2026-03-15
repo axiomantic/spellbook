@@ -1,5 +1,7 @@
 # resolving-merge-conflicts
 
+Structured merge conflict resolution that preserves intent from both sides through synthesis rather than side-picking. Performs line-by-line analysis of conflicting changes, understanding why each branch diverged before creating unified code. A core spellbook capability for resolving conflicts during merges and rebases.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when git merge or rebase fails with conflicts, you see 'unmerged paths' or conflict markers (<<<<<<< =======), or need help resolving conflicted files

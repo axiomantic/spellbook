@@ -1,5 +1,7 @@
 # reviewing-prs
 
+Safety layer for PR review that determines whether to analyze diffs only or read local files, based on branch state and worktree presence. Prevents the subtle failure mode where reading local files on the wrong branch produces confidently incorrect review verdicts. This core spellbook skill should be loaded before dispatching any subagent to review a pull request.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Load before dispatching any subagent to review a PR. Enforces DIFF_ONLY vs LOCAL_FILES mode selection based on branch state and worktree presence. Prevents the silent wrong-verdict failure where local files on a different branch produce confidently incorrect REFUTED findings.

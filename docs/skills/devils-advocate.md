@@ -1,5 +1,7 @@
 # devils-advocate
 
+Adversarial challenge of assumptions, designs, and plans to surface hidden risks and overlooked failure modes. Assumes every decision is wrong until proven otherwise and applies 10x/failure/deprecation analysis to each design choice. A core spellbook capability for stress-testing ideas before committing to them.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when challenging assumptions, surfacing risks, or stress-testing designs and decisions. Triggers: 'challenge this', 'play devil's advocate', 'what could go wrong', 'poke holes', 'find the flaws', 'what am I missing', 'is this solid', 'red team this', 'what are the weaknesses', 'risk assessment', 'sanity check'. Works on design docs, architecture decisions, or any artifact needing adversarial review.

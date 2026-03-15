@@ -1,5 +1,7 @@
 # deep-research
 
+Multi-source research combining web search, codebase exploration, and structured synthesis for complex technical questions. Dispatches parallel research threads with verification, tags every claim with its source, and surfaces conflicts and gaps honestly. A core spellbook capability for when you need thorough, evidence-based answers to hard questions.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when researching complex topics, evaluating technologies, investigating domains, or answering multi-faceted questions requiring web research. Triggers: "research X", "investigate Y", "evaluate options for Z", "what are the best approaches to", "help me understand", "deep dive into", "compare alternatives".

@@ -1,5 +1,7 @@
 # fractal-thinking
 
+Recursive question decomposition that builds a persistent graph of questions and answers, exploring topics at configurable depth with parallel workers. Breaks complex questions into sub-questions, answers them bottom-up, and synthesizes findings into coherent conclusions. This core spellbook skill is invoked by other skills when they need deep certainty about multi-faceted problems.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Adaptive recursive thought engine for deep exploration. Invoked by other skills

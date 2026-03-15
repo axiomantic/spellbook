@@ -1,5 +1,7 @@
 # polish-repo
 
+Repository polish workflow covering README quality, naming, community infrastructure, and visual identity. Treats every repo as a storefront that must sell itself to visitors in five seconds, with evidence-based recommendations drawn from analysis of successful open source projects. A core spellbook capability for preparing projects for public launch or improving discoverability.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when improving project discoverability, attracting users/contributors, or presenting open source work. Triggers: 'write a README', 'improve README', 'get more users', 'get more contributors', 'add badges', 'create a logo', 'set up issue templates', 'audit this project', 'project presence', 'make this discoverable', 'why isn't anyone using this', 'prepare for launch', 'repo presentation', 'open source marketing', 'attract contributors', 'project storefront'. Also triggers on: naming a project, writing taglines, GitHub metadata, community infrastructure, signs of life.

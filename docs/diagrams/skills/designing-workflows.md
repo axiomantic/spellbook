@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/designing-workflows/SKILL.md","source_hash": "sha256:e38dddb75479cc47e3564b083f379f642e15f647a89cf51125e74d14530cf722","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/designing-workflows/SKILL.md","source_hash": "sha256:625a95b34dc95c9797f0665470bee276d604a6a6e4b89095529b00e0b9574f52","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: designing-workflows
 
 Designs systems with explicit states, transitions, and multi-step flows. Follows a structured process from state identification through validation, producing Mermaid state diagrams and transition tables. Enforces invariants like named triggers, mutually exclusive guards, and first-class error states.

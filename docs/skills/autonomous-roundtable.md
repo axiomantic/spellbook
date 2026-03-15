@@ -1,5 +1,7 @@
 # autonomous-roundtable
 
+Multi-perspective project decomposition using archetypal roles to surface blind spots and generate balanced designs. Decomposes projects into features and drives each through discovery, design, planning, and implementation with roundtable consensus at decision points. This core spellbook skill powers the Forge autonomous development workflow.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Meta-orchestrator for Forged autonomous development: decompose projects into features, execute through DISCOVER→DESIGN→PLAN→IMPLEMENT→COMPLETE, convene roundtables, coordinate skills.

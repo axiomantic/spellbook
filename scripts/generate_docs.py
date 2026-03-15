@@ -135,6 +135,9 @@ def generate_skill_doc(skill_dir: Path) -> str | None:
     # Build doc with proper spacing
     # Wrap body in markdown code block to prevent XML-style tags from rendering as HTML
     parts = [f"# {name}\n"]
+    intro = frontmatter.get("intro", "")
+    if intro:
+        parts.append(f"\n{intro.rstrip()}\n")
     if description:
         # Frame the description as an auto-invocation trigger (descriptions are
         # written for the AI assistant, not for human readers)

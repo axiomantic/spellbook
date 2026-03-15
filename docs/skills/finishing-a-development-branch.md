@@ -1,5 +1,7 @@
 # finishing-a-development-branch
 
+End-of-branch workflow covering final verification, PR creation, merge strategy selection, and cleanup. Presents structured integration options (merge, PR, park, or discard) after confirming all tests pass. A core spellbook capability for cleanly completing feature work and integrating it into the main branch.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when implementation is complete, all tests pass, and you need to decide how to integrate the work

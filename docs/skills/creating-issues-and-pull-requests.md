@@ -1,5 +1,7 @@
 # creating-issues-and-pull-requests
 
+Creates GitHub issues and pull requests with proper template discovery and population. Finds project-specific templates, fills them from branch context, and handles naming conventions and target repository confirmation. A core spellbook capability that ensures PRs and issues respect the project's workflow constraints.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when creating GitHub pull requests or issues with template compliance. Triggers: 'create a PR', 'open a pull request', 'file an issue', 'create issue', or invoked as delegate from finishing-a-development-branch Option 2. Discovers project templates, populates them from branch context, and creates via reliable gh CLI patterns.

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/generating-diagrams/SKILL.md", "source_hash": "sha256:e3cf44545a9fdc3e0700c72f16467977192e574c117a566a06b62f1745b17de0", "generated_at": "2026-03-15T08:56:29Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/generating-diagrams/SKILL.md","source_hash": "sha256:3daa551984375dcf4ae53c97e8692c92b58b97d768a87230aed0959b7a2ff821","generated_at": "2026-03-15T08:56:29Z","generator": "generate_diagrams.py"} -->
 # Diagram: generating-diagrams
 
 # Generating Diagrams - Skill Workflow Diagrams

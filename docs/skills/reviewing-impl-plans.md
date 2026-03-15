@@ -1,5 +1,7 @@
 # reviewing-impl-plans
 
+Audits implementation plans for missing tasks, incorrect ordering, interface mismatches, and scope gaps before execution begins. Compares plans against their parent design documents and verifies that parallel work streams have explicitly specified contracts. This core spellbook skill prevents costly integration failures from underspecified plans.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when reviewing implementation plans before execution, especially plans derived from design documents

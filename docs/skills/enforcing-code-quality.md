@@ -1,5 +1,7 @@
 # enforcing-code-quality
 
+Production code quality standards enforcement covering prohibited patterns like `any` types, blanket try-catch, resource leaks, and non-null assertions without validation. Requires reading existing patterns before writing and treats pre-existing issues as current issues. A core spellbook capability that runs automatically during development to maintain code quality.
+
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when writing or modifying code. Enforces production-quality standards,

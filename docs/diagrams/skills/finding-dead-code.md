@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/finding-dead-code/SKILL.md", "source_hash": "sha256:900164999dacaece21b33863b7ca59f5a063d65e1970cf0505c588be28affe33", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/finding-dead-code/SKILL.md","source_hash": "sha256:bcd1452c9d9ee3bf679ed148395b272782f69cfcc35ab33f394983745c5cb1f8","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: finding-dead-code
 
 Workflow for the finding-dead-code skill. Orchestrates dead code analysis through 4 sequential commands: setup (git safety and scope), analyze (extract, triage, verify, rescan), report (document findings), and implement (apply deletions). Iterative re-scanning continues until no new dead code is found.
