@@ -254,7 +254,7 @@ class TestInstallHooks:
         hook = entry["hooks"][0]
         assert hook == {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "command": _expected_unified_command("$SPELLBOOK_DIR"),
             "timeout": 15,
         }
 
@@ -275,7 +275,7 @@ class TestInstallHooks:
         hook = entry["hooks"][0]
         assert hook == {
             "type": "command",
-            "command": "$SPELLBOOK_DIR/hooks/spellbook_hook.py",
+            "command": _expected_unified_command("$SPELLBOOK_DIR"),
             "timeout": 15,
         }
 
