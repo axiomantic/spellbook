@@ -104,24 +104,32 @@ def _log_correction_event(
     diff_summary: str = "",
     db_path: str = None,
 ) -> None:
-    """Log a correction event to the stint_correction_events table."""
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        INSERT INTO stint_correction_events
-            (project_path, correction_type, old_stack_json, new_stack_json, diff_summary)
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (
-            project_path,
-            correction_type,
-            json.dumps(old_stack),
-            json.dumps(new_stack),
-            diff_summary,
-        ),
-    )
-    conn.commit()
+    """Log a correction event to the stint_correction_events table.
+
+    Uses the shared connection from get_connection(). Errors are caught
+    and silently ignored because correction logging is observational and
+    must never block or crash the caller.
+    """
+    try:
+        conn = get_connection(db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO stint_correction_events
+                (project_path, correction_type, old_stack_json, new_stack_json, diff_summary)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                project_path,
+                correction_type,
+                json.dumps(old_stack),
+                json.dumps(new_stack),
+                diff_summary,
+            ),
+        )
+        conn.commit()
+    except Exception:
+        pass  # Correction logging is best-effort; never block the caller
 
 
 def _update_stack(project_path: str, mutate_fn, db_path: str = None) -> dict:
@@ -274,11 +282,14 @@ def pop_stint(
 
     result = _update_stack(project_path, mutate, db_path)
 
-    # Log correction event for mismatches (outside the transaction)
+    # Log correction event for mismatches (outside the transaction).
+    # Classification is "llm_wrong": the LLM asked to pop a name that
+    # doesn't match the top of stack, meaning its mental model of the
+    # stack was incorrect (it forgot to pop an intervening stint).
     if result.get("success") and result.get("mismatch"):
         _log_correction_event(
             project_path=project_path,
-            correction_type="mcp_wrong",
+            correction_type="llm_wrong",
             old_stack=[result["popped"]],
             new_stack=[],
             diff_summary=f"Pop name mismatch: expected '{name}', found '{result['popped']['name']}'",

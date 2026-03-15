@@ -352,7 +352,7 @@ class TestPopStint:
         row = cursor.fetchone()
         assert row is not None
         assert row[1] == "/test/project"
-        assert row[2] == "mcp_wrong"
+        assert row[2] == "llm_wrong"
         old_stack = json.loads(row[3])
         assert len(old_stack) == 1
         assert old_stack[0]["name"] == "debugging"

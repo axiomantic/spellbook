@@ -148,14 +148,12 @@ def _resolve_git_context(cwd: str) -> tuple[str, str]:
     if not cwd:
         return resolved_cwd, branch
     try:
-        wt = subprocess.run(
-            ["git", "worktree", "list", "--porcelain"],
-            cwd=cwd, capture_output=True, text=True, timeout=3,
+        toplevel = subprocess.run(
+            ["git", "-C", cwd, "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=3,
         )
-        if wt.returncode == 0 and wt.stdout.strip():
-            first_line = wt.stdout.strip().split("\n")[0]
-            if first_line.startswith("worktree "):
-                resolved_cwd = first_line[len("worktree "):]
+        if toplevel.returncode == 0 and toplevel.stdout.strip():
+            resolved_cwd = toplevel.stdout.strip()
     except Exception:
         pass
     try:
@@ -173,9 +171,12 @@ def _send_os_notification(title: str, body: str) -> None:
     """Send a platform-specific OS notification."""
     try:
         if sys.platform == "darwin":
+            # Escape backslashes and double quotes to prevent AppleScript injection
+            safe_body = body.replace("\\", "\\\\").replace('"', '\\"')
+            safe_title = title.replace("\\", "\\\\").replace('"', '\\"')
             subprocess.run(
                 ["osascript", "-e",
-                 f'display notification "{body}" with title "{title}"'],
+                 f'display notification "{safe_body}" with title "{safe_title}"'],
                 capture_output=True, timeout=5,
             )
         else:
