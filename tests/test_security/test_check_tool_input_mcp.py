@@ -9,7 +9,16 @@ which are not directly callable. Tests use get_tool_fn() from conftest to retrie
 the underlying callable, compatible with both fastmcp 2.x (.fn) and future versions.
 """
 
+import sys
+from pathlib import Path
+
 import pytest
+
+# Add tests/ to path so we can import from root conftest
+_tests_dir = str(Path(__file__).resolve().parent.parent)
+if _tests_dir not in sys.path:
+    sys.path.insert(0, _tests_dir)
+
 from conftest import get_tool_fn
 
 

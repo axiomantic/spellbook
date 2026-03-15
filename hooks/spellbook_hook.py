@@ -69,10 +69,16 @@ def _parse_mcp_response(raw: str) -> dict | None:
         parsed = json.loads(raw)
         if "result" in parsed:
             result = parsed["result"]
-            if isinstance(result, dict) and "content" in result:
-                for item in result["content"]:
-                    if item.get("type") == "text":
-                        return json.loads(item["text"])
+            if isinstance(result, dict):
+                if "structuredContent" in result and result["structuredContent"] is not None:
+                    return result["structuredContent"]
+                if "content" in result:
+                    for item in result["content"]:
+                        if item.get("type") == "text":
+                            try:
+                                return json.loads(item["text"])
+                            except (json.JSONDecodeError, ValueError):
+                                pass
             return result
         return None
     except (json.JSONDecodeError, ValueError):
