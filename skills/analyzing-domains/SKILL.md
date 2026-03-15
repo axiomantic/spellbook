@@ -1,7 +1,7 @@
 ---
 name: analyzing-domains
 description: |
-  Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when implementing-features Phase 1.2 detects unfamiliar domain.
+  Use when entering unfamiliar domains, modeling complex business logic, or when terms/concepts are unclear. Triggers: "what are the domain concepts", "define the entities", "model this domain", "DDD", "ubiquitous language", "bounded context", or when develop Phase 1.2 detects unfamiliar domain.
 ---
 
 # Domain Analysis
@@ -105,7 +105,7 @@ Problem: "E-commerce order management"
 5. **Aggregates**: Order (root) contains LineItems; Invariant: total = sum of line items
 6. **Events**: OrderPlaced, OrderShipped, PaymentReceived
 7. **Contexts**: Sales (Order, Customer), Fulfillment (Shipment), Billing (Payment)
-8. **Recommendation**: Medium complexity (matches multiple Phase 7 rows) → design doc first, implementing-features Phase 1-4
+8. **Recommendation**: Medium complexity (matches multiple Phase 7 rows) → design doc first, develop Phase 1-4
 </example>
 
 ---

@@ -20,7 +20,7 @@ STAGE_DEFAULT_SKILLS = {
     "DISCOVER": "gathering-requirements",
     "DESIGN": "brainstorming",
     "PLAN": "writing-plans",
-    "IMPLEMENT": "implementing-features",
+    "IMPLEMENT": "develop",
     "COMPLETE": None,  # No skill needed for complete
     "ESCALATED": None,  # Manual intervention required
 }
@@ -131,4 +131,4 @@ def select_skill(context: IterationState) -> str:
         return default_skill
 
     # Fallback for unknown stages
-    return "implementing-features"
+    return "develop"

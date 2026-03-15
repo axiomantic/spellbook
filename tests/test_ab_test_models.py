@@ -94,13 +94,13 @@ class TestExperiment:
         exp = Experiment(
             id="exp-123",
             name="test-experiment",
-            skill_name="implementing-features",
+            skill_name="develop",
             description="Test description",
         )
 
         assert exp.id == "exp-123"
         assert exp.name == "test-experiment"
-        assert exp.skill_name == "implementing-features"
+        assert exp.skill_name == "develop"
         assert exp.status == ExperimentStatus.CREATED
         assert exp.description == "Test description"
         assert exp.variants == []

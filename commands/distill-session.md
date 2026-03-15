@@ -515,7 +515,7 @@ If no docs: Write "NO DOCUMENTS TO RE-READ"
 
 ```markdown
 \`\`\`
-Skill("implementing-features", "--resume-from Phase3.Task7 --impl-plan /Users/.../impl.md --skip-phases 0,1,2")
+Skill("develop", "--resume-from Phase3.Task7 --impl-plan /Users/.../impl.md --skip-phases 0,1,2")
 Context: Design approved. Tasks 1-6 complete.
 DO NOT re-ask answered questions.
 \`\`\`

@@ -1,6 +1,6 @@
 # security-auditing
 
-Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools'. Integrates with code-review --audit, implementing-features Phase 4, and distilling-prs for PR security review.
+Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools'. Integrates with code-review --audit, develop Phase 4, and distilling-prs for PR security review.
 
 ## Workflow Diagram
 
@@ -472,9 +472,9 @@ Enforce the audit verdict as a quality gate.
 2. This skill handles the security pass specifically
 3. Findings from both are combined in the final audit report
 
-### With `implementing-features` Phase 4
+### With `develop` Phase 4
 
-1. `implementing-features` Phase 4 dispatches a subagent that invokes this skill
+1. `develop` Phase 4 dispatches a subagent that invokes this skill
 2. Scope is set to the changeset (branch diff against base)
 3. FAIL verdict blocks the feature from proceeding to merge
 4. WARN verdict requires the implementer to acknowledge findings

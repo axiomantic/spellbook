@@ -89,7 +89,7 @@ When `resume_available: true`:
 | `resume_session_id`       | string | Session soul identifier                               |
 | `resume_age_hours`        | float  | Hours since session was bound                         |
 | `resume_bound_at`         | string | ISO timestamp when session was bound                  |
-| `resume_active_skill`     | string | Skill that was active (e.g., "implementing-features") |
+| `resume_active_skill`     | string | Skill that was active (e.g., "develop") |
 | `resume_skill_phase`      | string | Phase within skill (e.g., "DESIGN")                   |
 | `resume_pending_todos`    | int    | Number of incomplete todo items                       |
 | `resume_todos_corrupted`  | bool   | True if todo JSON was malformed                       |
@@ -226,7 +226,7 @@ When the user expresses a wish about functionality ("Would be great to...", "I w
 ### Implementation Routing
 
 <CRITICAL>
-For ANY substantive code change -- new features, modifications, refactoring, multi-file changes, or anything requiring planning -- invoke the `implementing-features` skill. Do NOT use EnterPlanMode or plan independently.
+For ANY substantive code change -- new features, modifications, refactoring, multi-file changes, or anything requiring planning -- invoke the `develop` skill. Do NOT use EnterPlanMode or plan independently.
 
 NEVER enter plan mode when:
 - The user asks to implement, build, create, modify, change, refactor, or rework code
@@ -234,7 +234,7 @@ NEVER enter plan mode when:
 - The user expresses a wish about functionality ("I want...", "Would be great to...", "We need...")
 - The task involves writing or modifying more than a handful of lines
 
-The implementing-features skill handles planning through its own phases: Configuration, Research, Discovery, Design, and Planning. The skill also handles complexity classification and will exit itself for trivial changes, so there is no cost to invoking it on small tasks.
+The develop skill handles planning through its own phases: Configuration, Research, Discovery, Design, and Planning. The skill also handles complexity classification and will exit itself for trivial changes, so there is no cost to invoking it on small tasks.
 </CRITICAL>
 
 ### No Assumptions, No Jumping Ahead
@@ -245,7 +245,7 @@ You do NOT know what the user wants until they tell you. Do NOT guess. Do NOT in
 
 When the user describes something they want:
 
-1. **Invoke the implementing-features skill.** Its discovery phases (Configuration + Research + Discovery) are purpose-built for exploring the space, resolving ambiguity, and getting user confirmation before design begins.
+1. **Invoke the develop skill.** Its discovery phases (Configuration + Research + Discovery) are purpose-built for exploring the space, resolving ambiguity, and getting user confirmation before design begins.
 2. **Do NOT independently explore or plan** before invoking the skill.
 3. **Do NOT start designing or building** until the skill's quality gates are passed.
 

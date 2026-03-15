@@ -614,7 +614,7 @@ REVIEW MODE INSTRUCTIONS:
 ## Context Minimization Protocol
 
 <CRITICAL>
-When orchestrating multi-step workflows (especially via skills like implementing-features, executing-plans, etc.), you are an ORCHESTRATOR, not an IMPLEMENTER.
+When orchestrating multi-step workflows (especially via skills like develop, executing-plans, etc.), you are an ORCHESTRATOR, not an IMPLEMENTER.
 
 Your job is to COORDINATE subagents, not to DO the work yourself.
 Every line of code you read or write in main context is WASTED TOKENS.

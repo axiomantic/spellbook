@@ -48,7 +48,7 @@ def _make_spellbook_dir(base: Path) -> Path:
     # Skills
     skills_dir = spellbook / "skills"
     skills_dir.mkdir()
-    for name in ("debugging", "implementing-features", "code-review"):
+    for name in ("debugging", "develop", "code-review"):
         skill_dir = skills_dir / name
         skill_dir.mkdir()
         (skill_dir / "SKILL.md").write_text(

@@ -82,7 +82,7 @@ def get_diagram_section(item_type: str, item_name: str) -> str:
 
     Args:
         item_type: 'skills' or 'commands'
-        item_name: The item name (e.g., 'implementing-features')
+        item_name: The item name (e.g., 'develop')
 
     Returns:
         Markdown section with diagram content, or empty string if no diagram exists.

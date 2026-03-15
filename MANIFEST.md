@@ -51,7 +51,7 @@ All items conform to their respective schemas:
 | fun-mode | 1,145 | 131 | PASS | |
 | auditing-green-mirage | 1,357 | 164 | PASS | |
 | reviewing-impl-plans | 1,214 | 150 | PASS | |
-| implementing-features | 2,089 | 214 | PASS | Over budget (orchestrator) |
+| develop | 2,089 | 214 | PASS | Over budget (orchestrator) |
 | instruction-engineering | 1,507 | 170 | PASS | Over budget |
 | optimizing-instructions | 921 | 138 | PASS | |
 | resolving-merge-conflicts | 1,298 | 155 | PASS | |
@@ -94,7 +94,7 @@ All items conform to their respective schemas:
 ## Dependency Graph
 
 ```
-implementing-features (orchestrator)
+develop (orchestrator)
 ├── devils-advocate
 ├── brainstorming
 ├── reviewing-design-docs
@@ -128,7 +128,7 @@ merging-worktrees
 | Agents: 600 | Focused and compact | 0 agents |
 
 Items exceeding budget are justified:
-- **implementing-features**: Orchestrator skill with multi-phase workflow
+- **develop**: Orchestrator skill with multi-phase workflow
 - **instruction-engineering**: Complex prompt construction logic
 - **fact-checking**: Multi-category verification system
 - **finding-dead-code**: Comprehensive detection patterns

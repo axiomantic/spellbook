@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/gathering-requirements/SKILL.md", "source_hash": "sha256:c34269288a201a69b62d45c2e2b540f246ab769f72f25f0807e94928419ab562", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/gathering-requirements/SKILL.md","source_hash": "sha256:e5c0fdb1836b116c9d7bbc6c725f6baf1a02f5e49c3e67d329a2da5e66991bda","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: gathering-requirements
 
 Elicits comprehensive requirements through four archetype perspectives: Queen (user needs), Emperor (constraints), Hermit (security surface), and Priestess (scope boundaries). Produces a structured requirements document with functional requirements, open questions, and blocking/non-blocking classification.

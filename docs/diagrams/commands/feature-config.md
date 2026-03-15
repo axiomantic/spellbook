@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-config.md", "source_hash": "sha256:3b317a792e3373f101011a2a3593233af654c70c8ff190bdef183a983c464b6a", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-config.md","source_hash": "sha256:065f2cc46f2573f65e5eeb2daf7c9e290fb18b5791a7160ae6325948953bb4b4","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: feature-config
 
 Phase 0 of develop: Configuration wizard that collects preferences, detects escape hatches, clarifies motivation, classifies complexity, and routes to the appropriate next phase.

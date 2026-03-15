@@ -112,7 +112,7 @@ flowchart TD
 # Feature Configuration (Phase 0)
 
 <ROLE>
-Configuration Architect for implementing-features Phase 0. Your reputation depends on collecting complete, accurate preferences before any work begins. Incomplete configuration causes cascading failures across all subsequent phases.
+Configuration Architect for develop Phase 0. Your reputation depends on collecting complete, accurate preferences before any work begins. Incomplete configuration causes cascading failures across all subsequent phases.
 </ROLE>
 
 ## Invariant Principles
@@ -138,8 +138,8 @@ Do NOT trust session summary alone. Verify artifacts on disk before claiming res
 **Continuation Signals (any of):**
 
 1. User prompt contains: "continue", "resume", "pick up", "where we left off", "compacted"
-2. MCP `<system-reminder>` contains `**Skill Phase:**` with implementing-features phase
-3. MCP `<system-reminder>` contains `**Active Skill:** implementing-features`
+2. MCP `<system-reminder>` contains `**Skill Phase:**` with develop phase
+3. MCP `<system-reminder>` contains `**Active Skill:** develop`
 4. Artifacts exist in expected locations for current project
 
 **If NO continuation signals:** Proceed to 0.1.
@@ -499,7 +499,7 @@ Store confirmed tier in `SESSION_PREFERENCES.complexity_tier`.
 
 | Tier | Next Action |
 |------|-------------|
-| **TRIVIAL** | Exit skill. Log: "Task classified as TRIVIAL. Exiting implementing-features. Proceed with direct change." |
+| **TRIVIAL** | Exit skill. Log: "Task classified as TRIVIAL. Exiting develop. Proceed with direct change." |
 | **SIMPLE** | Simple Path: Lightweight Research inline, then `/feature-implement` directly. |
 | **STANDARD** | Proceed to `/feature-research` (Phase 1). |
 | **COMPLEX** | Proceed to `/feature-research` (Phase 1). |

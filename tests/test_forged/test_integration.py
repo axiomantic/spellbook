@@ -576,7 +576,7 @@ class TestCrossModuleIntegration:
                     project_path=project_path,
                     feature_id="auth",
                     status="in_progress",
-                    assigned_skill="implementing-features",
+                    assigned_skill="develop",
                 )
 
                 # Start iteration

@@ -191,7 +191,7 @@ flowchart TD
 ``````````markdown
 # /feature-implement
 
-Phases 3-4 of the implementing-features workflow. Run after `/feature-design` completes (Phase 2 approved).
+Phases 3-4 of the develop workflow. Run after `/feature-design` completes (Phase 2 approved).
 
 <CRITICAL>
 ## Prerequisite Verification

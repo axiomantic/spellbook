@@ -139,8 +139,8 @@ class TestVersionExtraction:
     """Test version marker extraction."""
 
     def test_extracts_version_from_skill_name(self):
-        base, version = _extract_version("implementing-features:v2", None)
-        assert base == "implementing-features"
+        base, version = _extract_version("develop:v2", None)
+        assert base == "develop"
         assert version == "v2"
 
     def test_extracts_version_from_args_bracket(self):
@@ -208,7 +208,7 @@ class TestSkillInvocationExtraction:
                 "type": "assistant",
                 "message": {
                     "content": [
-                        {"type": "tool_use", "name": "Skill", "input": {"skill": "implementing-features"}}
+                        {"type": "tool_use", "name": "Skill", "input": {"skill": "develop"}}
                     ],
                     "usage": {"output_tokens": 100},
                 },
@@ -220,7 +220,7 @@ class TestSkillInvocationExtraction:
         assert invocations[0].skill == "debugging"
         assert invocations[0].superseded is True
         assert invocations[0].completed is False
-        assert invocations[1].skill == "implementing-features"
+        assert invocations[1].skill == "develop"
         assert invocations[1].completed is True
 
     def test_counts_user_corrections(self):
@@ -292,7 +292,7 @@ class TestMetricsAggregation:
         invocations = [
             SkillInvocation(skill="debugging", tokens_used=100, completed=True, corrections=0),
             SkillInvocation(skill="debugging", tokens_used=200, completed=True, corrections=1),
-            SkillInvocation(skill="implementing-features", tokens_used=500, completed=False, superseded=True),
+            SkillInvocation(skill="develop", tokens_used=500, completed=False, superseded=True),
         ]
 
         metrics = aggregate_metrics(invocations)
@@ -304,7 +304,7 @@ class TestMetricsAggregation:
         assert debug_metrics.corrections == 1
         assert debug_metrics.avg_tokens == 150
 
-        impl_metrics = metrics["implementing-features"]
+        impl_metrics = metrics["develop"]
         assert impl_metrics.invocations == 1
         assert impl_metrics.completions == 0
 

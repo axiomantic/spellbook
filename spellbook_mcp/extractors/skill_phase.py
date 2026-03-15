@@ -1,6 +1,6 @@
 """Extract skill phase from session transcript.
 
-Scans messages for implementing-features skill invocations and tracks
+Scans messages for develop skill invocations and tracks
 the highest phase reached based on assistant output patterns.
 """
 
@@ -11,7 +11,7 @@ from spellbook_mcp.extractors.types import SkillPhase
 
 # Phase patterns to detect in assistant messages
 # Order matters - later phases should have higher indices
-# Patterns match the implementing-features skill phases
+# Patterns match the develop skill phases
 PHASE_PATTERNS = [
     # Phase 0: Configuration Wizard
     (r"Phase\s+0[:\s]+Configuration(?:\s+Wizard)?", "Phase 0: Configuration Wizard"),
@@ -47,12 +47,12 @@ def _get_phase_order(phase: str) -> int:
 
 
 def _find_skill_invocation_index(messages: List[Dict[str, Any]]) -> Optional[int]:
-    """Find the index of the most recent implementing-features skill invocation."""
+    """Find the index of the most recent develop skill invocation."""
     for i in range(len(messages) - 1, -1, -1):
         msg = messages[i]
         tool_calls = msg.get("tool_calls", [])
         for tc in tool_calls:
-            if tc.get("tool") == "Skill" and tc.get("args", {}).get("skill") == "implementing-features":
+            if tc.get("tool") == "Skill" and tc.get("args", {}).get("skill") == "develop":
                 return i
     return None
 
@@ -82,7 +82,7 @@ def _get_text_from_content(content: Any) -> str:
 def extract_skill_phase(messages: List[Dict[str, Any]]) -> SkillPhase:
     """Extract skill phase from session messages.
 
-    Finds the most recent implementing-features skill invocation and
+    Finds the most recent develop skill invocation and
     scans subsequent messages for phase markers to determine how far
     the skill progressed.
 
@@ -92,7 +92,7 @@ def extract_skill_phase(messages: List[Dict[str, Any]]) -> SkillPhase:
     Returns:
         Phase string (e.g., "Phase 2: Design") or None if no skill active
     """
-    # Find the most recent implementing-features invocation
+    # Find the most recent develop invocation
     invocation_idx = _find_skill_invocation_index(messages)
     if invocation_idx is None:
         return None

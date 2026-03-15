@@ -3,7 +3,7 @@ name: enforcing-code-quality
 description: |
   Use when writing or modifying code. Enforces production-quality standards,
   prohibits common shortcuts, and ensures pre-existing issues are addressed.
-  Invoked automatically by implementing-features and test-driven-development.
+  Invoked automatically by develop and test-driven-development.
 version: 1.0.0
 ---
 

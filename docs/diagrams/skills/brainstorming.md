@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/brainstorming/SKILL.md", "source_hash": "sha256:66f596ca60dfa0b9e2d8ab38ab320d5e406fc9dda7e5dcd190166e6bc2c99a9e", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/brainstorming/SKILL.md","source_hash": "sha256:af5106c1b9c7f6f2780b261d9582efaf6aafc9c3481fbbe5b60c589ee69c8ae8","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: brainstorming
 
 Workflow for the brainstorming skill. Supports two modes: Synthesis (autonomous, context pre-collected) and Interactive (discovery-driven collaboration). Both converge on approach selection, design presentation, quality assessment, and documentation. Includes circuit breakers for security-critical or contradictory situations.

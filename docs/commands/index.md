@@ -41,11 +41,11 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/fact-check-extract](fact-check-extract.md) | Phases 2-3 of fact-checking: Claim Extraction and Triage | spellbook |
 | [/fact-check-report](fact-check-report.md) | Phases 6-7 of fact-checking: Report Generation and Learning | spellbook |
 | [/fact-check-verify](fact-check-verify.md) | Phases 4-5 of fact-checking: Parallel Verification and Verdicts | spellbook |
-| [/feature-config](feature-config.md) | Phase 0 of implementing-features: Configuration wizard, escape hatches, preferen... | spellbook |
-| [/feature-design](feature-design.md) | Phase 2 of implementing-features: Create and review design document | spellbook |
-| [/feature-discover](feature-discover.md) | Phase 1.5 of implementing-features: Informed discovery, disambiguation, 7-catego... | spellbook |
-| [/feature-implement](feature-implement.md) | Phase 3-4 of implementing-features: Plan and execute implementation | spellbook |
-| [/feature-research](feature-research.md) | Phase 1 of implementing-features: Research strategy, codebase exploration, ambig... | spellbook |
+| [/feature-config](feature-config.md) | Phase 0 of develop: Configuration wizard, escape hatches, preferences, continuat... | spellbook |
+| [/feature-design](feature-design.md) | Phase 2 of develop: Create and review design document | spellbook |
+| [/feature-discover](feature-discover.md) | Phase 1.5 of develop: Informed discovery, disambiguation, 7-category questions, ... | spellbook |
+| [/feature-implement](feature-implement.md) | Phase 3-4 of develop: Plan and execute implementation | spellbook |
+| [/feature-research](feature-research.md) | Phase 1 of develop: Research strategy, codebase exploration, ambiguity detection... | spellbook |
 | [/finish-branch-cleanup](finish-branch-cleanup.md) | Step 5 of finishing-a-development-branch: Worktree cleanup for Options 1, 2, and... | spellbook |
 | [/finish-branch-execute](finish-branch-execute.md) | Step 4 of finishing-a-development-branch: Execute chosen integration option (mer... | spellbook |
 | [/fix-tests-execute](fix-tests-execute.md) | Phase 2 of fixing-tests: Fix Execution - investigate, classify, fix, verify, and... | spellbook |

@@ -1,5 +1,5 @@
 """
-Tests for implementing-features skill execution mode support (Track 1).
+Tests for develop skill execution mode support (Track 1).
 
 These tests verify the logic documented in SKILL.md phases 3.4.5, 3.5, and 3.6
 for execution mode analysis, work packet generation, and session handoff.

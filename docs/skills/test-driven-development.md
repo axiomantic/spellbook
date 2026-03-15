@@ -1,6 +1,6 @@
 # test-driven-development
 
-Use when user explicitly requests test-driven development, says 'TDD', 'write tests first', 'red green refactor', 'test-first', or 'start with the test'. Also invoked as a sub-skill by implementing-features and executing-plans for each implementation task. NOT a replacement for implementing-features for full feature work.
+Use when user explicitly requests test-driven development, says 'TDD', 'write tests first', 'red green refactor', 'test-first', or 'start with the test'. Also invoked as a sub-skill by develop and executing-plans for each implementation task. NOT a replacement for develop for full feature work.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

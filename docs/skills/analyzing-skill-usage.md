@@ -175,7 +175,7 @@ CORRECTION_PATTERNS = [
 Per skill, produce:
 ```python
 {
-    "skill": "implementing-features",
+    "skill": "develop",
     "version": "v1" | None,      # If version marker detected
     "invocations": 15,
     "completions": 12,           # Ran to end without supersede
@@ -212,7 +212,7 @@ Output format:
 
 When version markers detected (e.g., `skill:v2` or tagged in args):
 ```markdown
-## A/B Comparison: implementing-features
+## A/B Comparison: develop
 | Metric | v1 (n=10) | v2 (n=8) | Delta | Significant |
 |--------|-----------|----------|-------|-------------|
 | Completion Rate | 0.70 | 0.88 | +0.18 | Yes (p<0.05) |
@@ -237,7 +237,7 @@ When version markers detected (e.g., `skill:v2` or tagged in args):
 
 ## Version Detection
 
-Look for version markers: skill name suffix (`implementing-features:v2`), args containing version (`"--version v2"`, `"[v2]"`), or session date ranges.
+Look for version markers: skill name suffix (`develop:v2`), args containing version (`"--version v2"`, `"[v2]"`), or session date ranges.
 
 <CRITICAL>
 When comparing versions, require:

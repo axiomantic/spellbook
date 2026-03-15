@@ -64,7 +64,7 @@ Per feature: forge_iteration_start → forge_select_skill → Skill → roundtab
 | DISCOVER  | gathering-requirements | Requirements |
 | DESIGN    | brainstorming          | Design doc   |
 | PLAN      | writing-plans          | Impl plan    |
-| IMPLEMENT | implementing-features  | Code+tests   |
+| IMPLEMENT | develop  | Code+tests   |
 | COMPLETE  | (final roundtable)     | Report       |
 
 ## MCP Tools

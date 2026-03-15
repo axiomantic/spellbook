@@ -135,7 +135,7 @@ class TestWorkflowStateUpdateValidation:
             mock_conn.return_value = conn
             result = workflow_state_update.fn(
                 project_path="/test/project",
-                updates={"active_skill": "implementing-features"},
+                updates={"active_skill": "develop"},
             )
 
         assert result == {
@@ -249,7 +249,7 @@ class TestWorkflowStateLoadRejection:
 
         # Insert a valid state
         valid_state = {
-            "active_skill": "implementing-features",
+            "active_skill": "develop",
             "skill_phase": "DESIGN",
         }
         conn.execute(

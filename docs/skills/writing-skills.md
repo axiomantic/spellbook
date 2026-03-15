@@ -194,7 +194,7 @@ What goes wrong + fixes
 
 | Asset | Pattern | Examples |
 |-------|---------|----------|
-| Skill | Gerund (-ing) or noun-phrase | debugging, test-driven-development, implementing-features |
+| Skill | Gerund (-ing) or noun-phrase | debugging, test-driven-development, develop |
 | Command | Imperative verb(-noun) | execute-plan, verify, handoff, audit-green-mirage |
 | Agent | Noun-role | code-reviewer, fact-checker |
 
@@ -261,7 +261,7 @@ Also invoked by debugging before any root cause claim."
 ```
 Covers excited discovery ("aha!", "got it") and confident claims ("root cause", "the fix is"). Notes auto-invocation path. Narrow enough to avoid false positives.
 
-**`implementing-features`** -- Scope with anti-triggers:
+**`develop`** -- Scope with anti-triggers:
 ```
 "Use when building, creating, or adding functionality. Triggers: 'implement X', 'build Y',
 'add feature Z', 'Would be great to...', 'I want to...', 'We need...'.
@@ -447,7 +447,7 @@ Optimize for this flow - searchable terms early and often.
 - Config/setup phases requiring direct user interaction MAY run in orchestrator context
 - Error recovery MAY load phase context temporarily to diagnose failures
 
-**Canonical example:** implementing-features uses 5 commands across 6+ phases. The orchestrator defines phase sequence, dispatch templates, and shared data structures. Each phase command (discover, design, execute-plan, etc.) contains its own implementation logic.
+**Canonical example:** develop uses 5 commands across 6+ phases. The orchestrator defines phase sequence, dispatch templates, and shared data structures. Each phase command (discover, design, execute-plan, etc.) contains its own implementation logic.
 
 **Anti-Patterns:**
 

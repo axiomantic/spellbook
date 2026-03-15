@@ -425,7 +425,7 @@ B) Persist to project CLAUDE.md (all team members benefit)
 
 Build complete `DesignContext` object from all prior phases.
 
-**Structure reference:** DesignContext fields are defined in the `implementing-features` skill. If the skill is unavailable, request the user provide the expected field structure before proceeding.
+**Structure reference:** DesignContext fields are defined in the `develop` skill. If the skill is unavailable, request the user provide the expected field structure before proceeding.
 
 **Validation:**
 
@@ -706,7 +706,7 @@ Your choice: ___
 - Proceeding to design with completeness_score < 100% without explicit user bypass
 - Blocking on glossary persistence when user chose session-only (A)
 - Running devil's advocate review in main context instead of dispatching subagent
-- Treating DesignContext structure as defined here — always reference implementing-features skill for field definitions
+- Treating DesignContext structure as defined here — always reference develop skill for field definitions
 - Continuing Phase 1.5 if prerequisite check fails
 </FORBIDDEN>
 

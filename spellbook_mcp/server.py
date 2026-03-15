@@ -1689,7 +1689,7 @@ def skill_instructions_get(
     If sections specified, returns only those sections.
 
     Args:
-        skill_name: Name of the skill (e.g., "implementing-features")
+        skill_name: Name of the skill (e.g., "develop")
         sections: Optional list of section names to extract (e.g., ["FORBIDDEN", "REQUIRED", "ROLE"])
                   If None, returns full content.
 
@@ -2339,7 +2339,7 @@ def experiment_create(
 
     Args:
         name: Human-readable unique identifier (1-100 chars)
-        skill_name: Target skill to test (e.g., "implementing-features")
+        skill_name: Target skill to test (e.g., "develop")
         variants: List of variant dicts with:
             - name: Variant name (e.g., "control", "treatment")
             - skill_version: Optional version string (None for control)

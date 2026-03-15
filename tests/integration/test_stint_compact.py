@@ -28,10 +28,10 @@ class TestStintCompactionSurvival:
         saved_calls = []
         call_responses = {
             "stint_check": {"success": True, "stack": [
-                {"name": "implementing-features", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
+                {"name": "develop", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
                 {"name": "debugging", "purpose": "fix test", "behavioral_mode": ""},
             ]},
-            "workflow_state_load": {"found": True, "state": {"active_skill": "implementing-features"}},
+            "workflow_state_load": {"found": True, "state": {"active_skill": "develop"}},
             "workflow_state_save": {"success": True},
         }
 
@@ -60,9 +60,9 @@ class TestStintCompactionSurvival:
             assert save_args == {
                 "project_path": "/test/project",
                 "state": {
-                    "active_skill": "implementing-features",
+                    "active_skill": "develop",
                     "stint_stack": [
-                        {"name": "implementing-features", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
+                        {"name": "develop", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
                         {"name": "debugging", "purpose": "fix test", "behavioral_mode": ""},
                     ],
                     "compaction_flag": True,
@@ -160,9 +160,9 @@ class TestStintCompactionSurvival:
             "workflow_state_load": {
                 "found": True,
                 "state": {
-                    "active_skill": "implementing-features",
+                    "active_skill": "develop",
                     "stint_stack": [
-                        {"name": "implementing-features", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
+                        {"name": "develop", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
                         {"name": "debugging", "purpose": "fix test", "behavioral_mode": ""},
                     ],
                 },
@@ -193,7 +193,7 @@ class TestStintCompactionSurvival:
             assert replaces[0] == ("stint_replace", {
                 "project_path": "/test/project",
                 "stack": [
-                    {"name": "implementing-features", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
+                    {"name": "develop", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
                     {"name": "debugging", "purpose": "fix test", "behavioral_mode": ""},
                 ],
                 "reason": "post-compaction restoration",
@@ -202,10 +202,10 @@ class TestStintCompactionSurvival:
             # Verify recovery directive exact content including [MODE: ...] suffix
             context = result["hookSpecificOutput"]["additionalContext"]
             expected_context = (
-                "### Active Skill: implementing-features\n"
-                "Resume with: `Skill(skill='implementing-features')`\n"
+                "### Active Skill: develop\n"
+                "Resume with: `Skill(skill='develop')`\n"
                 "\n### Focus Stack (restored)\n"
-                "  1. implementing-features - build auth [MODE: ORCHESTRATOR: Dispatch subagents]\n"
+                "  1. develop - build auth [MODE: ORCHESTRATOR: Dispatch subagents]\n"
                 "  2. debugging - fix test\n"
             )
             assert context == expected_context, (
@@ -271,9 +271,9 @@ class TestBehavioralModeSurvivesCompaction:
         saved_stack = [
             {
                 "type": "skill",
-                "name": "implementing-features",
+                "name": "develop",
                 "parent": None,
-                "purpose": "Skill invocation: implementing-features",
+                "purpose": "Skill invocation: develop",
                 "behavioral_mode": "ORCHESTRATOR: Dispatch subagents via Task tool for ALL substantive work.",
                 "success_criteria": "Skill workflow complete",
                 "metadata": {},
@@ -283,7 +283,7 @@ class TestBehavioralModeSurvivesCompaction:
         ]
 
         saved_state = {
-            "active_skill": "implementing-features",
+            "active_skill": "develop",
             "skill_phase": "DESIGN",
             "stint_stack": saved_stack,
             "compaction_flag": True,
@@ -311,13 +311,13 @@ class TestBehavioralModeSurvivesCompaction:
         # The behavioral_mode is 64 chars, well under 80-char truncation limit
         # Full expected output constructed from _build_recovery_directive + Focus Stack append
         expected_context = (
-            "### Active Skill: implementing-features\n"
+            "### Active Skill: develop\n"
             "Phase: DESIGN\n"
-            "Resume with: `Skill(skill='implementing-features', --resume DESIGN)`\n"
+            "Resume with: `Skill(skill='develop', --resume DESIGN)`\n"
             "\n### Skill Constraints\n"
             "## FORBIDDEN\n- Never skip phases\n## REQUIRED\n- Follow all steps\n"
             "\n### Focus Stack (restored)\n"
-            "  1. implementing-features - Skill invocation: implementing-features"
+            "  1. develop - Skill invocation: develop"
             " [MODE: ORCHESTRATOR: Dispatch subagents via Task tool for ALL substantive work.]\n"
         )
         assert context == expected_context, (
@@ -369,7 +369,7 @@ class TestBehavioralModeSurvivesCompaction:
             "success": True,
             "stack": [
                 {
-                    "name": "implementing-features",
+                    "name": "develop",
                     "purpose": "Skill invocation",
                     "behavioral_mode": "ORCHESTRATOR: Dispatch subagents",
                 },

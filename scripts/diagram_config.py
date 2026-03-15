@@ -31,7 +31,8 @@ EXCLUDED_SKILLS: set[str] = {
 # hasn't been renamed yet (transitional state), or when the doc name
 # intentionally differs from the source directory name.
 SKILL_ALIASES: dict[str, str] = {
-    "implementing-features": "develop",
+    # Populated during transitional renames. Remove entries once
+    # both source dir and docs use the same name.
 }
 
 # Commands excluded from diagram generation and freshness checks.
@@ -62,7 +63,7 @@ MANDATORY_SKILLS: set[str] = {
     "fixing-tests",
     "gathering-requirements",
     "generating-diagrams",
-    "implementing-features",
+    "develop",
     "requesting-code-review",
     "reviewing-design-docs",
     "reviewing-impl-plans",

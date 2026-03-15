@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/writing-plans/SKILL.md", "source_hash": "sha256:1952ea7c097fcd3b23f421822c538142f1e9702fdf2e653eadee6ebbc65682e5", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/writing-plans/SKILL.md","source_hash": "sha256:ba990b350604df976ffe96259f2a225a7cde18f23c0ba8f511e46f35acf97ad3","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: writing-plans
 
 Implementation plan creation from design docs or requirements. Produces TDD-structured task sequences with exact file paths, complete code, and verification steps. Hands off to executing-plans.

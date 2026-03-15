@@ -162,12 +162,12 @@ def test_extract_soul_includes_skill_phase(tmp_path):
     """Test that extract_soul includes skill_phase from transcript."""
     from spellbook_mcp.soul_extractor import extract_soul
 
-    # Create test transcript with implementing-features invocation and phase
+    # Create test transcript with develop invocation and phase
     transcript_path = tmp_path / "session.jsonl"
     messages = [
         {
             "role": "assistant",
-            "tool_calls": [{"tool": "Skill", "args": {"skill": "implementing-features"}}],
+            "tool_calls": [{"tool": "Skill", "args": {"skill": "develop"}}],
         },
         {
             "role": "assistant",

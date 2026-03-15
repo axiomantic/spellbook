@@ -67,6 +67,7 @@ _ENTROPY_THRESHOLD = 4.5
 # absolute paths and diff-relative paths are handled.
 _DOCUMENTATION_EXCLUDE_SUFFIXES: list[str] = [
     "AGENTS.spellbook.md",
+    "commands/feature-config.md",
     "commands/polish-repo-community.md",
     "SECURITY.md",
     "docs/security.md",

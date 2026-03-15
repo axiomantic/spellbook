@@ -27,7 +27,7 @@ class TestFeatureNode:
             depends_on=["feat-000"],
             status="pending",
             estimated_complexity="medium",
-            assigned_skill="implementing-features",
+            assigned_skill="develop",
             artifacts=["/path/to/artifact.md"],
         )
 
@@ -37,7 +37,7 @@ class TestFeatureNode:
         assert node.depends_on == ["feat-000"]
         assert node.status == "pending"
         assert node.estimated_complexity == "medium"
-        assert node.assigned_skill == "implementing-features"
+        assert node.assigned_skill == "develop"
         assert node.artifacts == ["/path/to/artifact.md"]
 
     def test_feature_node_with_no_dependencies(self):
@@ -177,7 +177,7 @@ class TestFeatureNode:
             depends_on=["dep-1", "dep-2", "dep-3"],
             status="blocked",
             estimated_complexity="medium",
-            assigned_skill="implementing-features",
+            assigned_skill="develop",
             artifacts=["/path/one.md", "/path/two.md"],
         )
 
@@ -261,7 +261,7 @@ class TestProjectGraph:
             depends_on=[],
             status="in_progress",
             estimated_complexity="trivial",
-            assigned_skill="implementing-features",
+            assigned_skill="develop",
             artifacts=[],
         )
 
@@ -383,7 +383,7 @@ class TestProjectGraph:
                     "depends_on": ["f1"],
                     "status": "in_progress",
                     "estimated_complexity": "medium",
-                    "assigned_skill": "implementing-features",
+                    "assigned_skill": "develop",
                     "artifacts": ["/path.md"],
                 },
             },
@@ -397,7 +397,7 @@ class TestProjectGraph:
         assert graph.project_name == "From Dict Project"
         assert len(graph.features) == 2
         assert graph.features["f1"].status == "complete"
-        assert graph.features["f2"].assigned_skill == "implementing-features"
+        assert graph.features["f2"].assigned_skill == "develop"
         assert graph.dependency_order == ["f1", "f2"]
         assert graph.current_feature == "f2"
         assert graph.completed_features == ["f1"]
@@ -669,7 +669,7 @@ class TestSkillSelection:
         assert skill == "writing-plans"
 
     def test_select_skill_for_implement_stage(self):
-        """IMPLEMENT stage should default to implementing-features skill."""
+        """IMPLEMENT stage should default to develop skill."""
         from spellbook_mcp.forged.skill_selection import select_skill
         from spellbook_mcp.forged.models import IterationState
 
@@ -680,7 +680,7 @@ class TestSkillSelection:
         )
 
         skill = select_skill(context)
-        assert skill == "implementing-features"
+        assert skill == "develop"
 
     def test_select_skill_with_test_error_feedback(self):
         """Test errors should trigger fixing-tests skill."""
@@ -941,7 +941,7 @@ class TestSkillInvocation:
         invocation = SkillInvocation(
             id="inv-001",
             feature_id="feat-001",
-            skill_name="implementing-features",
+            skill_name="develop",
             stage="IMPLEMENT",
             iteration=1,
             started_at="2025-01-22T10:00:00",
@@ -953,7 +953,7 @@ class TestSkillInvocation:
 
         assert invocation.id == "inv-001"
         assert invocation.feature_id == "feat-001"
-        assert invocation.skill_name == "implementing-features"
+        assert invocation.skill_name == "develop"
         assert invocation.stage == "IMPLEMENT"
         assert invocation.iteration == 1
         assert invocation.completed_at is None
@@ -1423,7 +1423,7 @@ class TestForgeSelectSkill:
 
         assert result["success"] is True
         assert "skill" in result
-        assert result["skill"] == "implementing-features"
+        assert result["skill"] == "develop"
 
 
 class TestForgeSkillComplete:
@@ -1456,7 +1456,7 @@ class TestForgeSkillComplete:
         result = forge_skill_complete(
             project_path=project_path,
             feature_id="f1",
-            skill_name="implementing-features",
+            skill_name="develop",
             result="success",
             context_returned={"files_created": ["/path/to/file.py"]},
         )

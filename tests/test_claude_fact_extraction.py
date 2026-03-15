@@ -330,7 +330,7 @@ class TestAllSkillsMinimumCompliance:
         "fixing-tests",
         "auditing-green-mirage",
         "reviewing-impl-plans",
-        "implementing-features",
+        "develop",
         "instruction-engineering",
         "project-encyclopedia",
         "smart-reading",
