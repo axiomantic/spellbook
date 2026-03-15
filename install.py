@@ -918,6 +918,59 @@ def setup_tts(
 
 
 # =============================================================================
+# Upgrade Awareness
+# =============================================================================
+
+def show_whats_new(spellbook_dir: Path, previous_version: str | None, current_version: str) -> None:
+    """Show changelog entries between the previous and current version on upgrade."""
+    if not previous_version or previous_version == current_version:
+        return
+
+    try:
+        from installer.version import get_changelog_between_versions
+
+        changelog_path = spellbook_dir / "CHANGELOG.md"
+        entries = get_changelog_between_versions(changelog_path, previous_version, current_version)
+        if not entries:
+            return
+
+        print()
+        print(color("  WHAT'S NEW", Colors.BOLD))
+        print(f"  {previous_version} → {current_version}")
+        print()
+        for line in entries.splitlines():
+            # Indent changelog content for visual nesting
+            if line.startswith("### "):
+                # Section headers (Added, Fixed, Changed)
+                print(f"  {color(line[4:], Colors.CYAN)}")
+            elif line.startswith("- "):
+                print(f"    {line}")
+            elif line.startswith("  "):
+                print(f"    {line}")
+            elif line.strip():
+                print(f"    {line}")
+        print()
+    except Exception:
+        pass  # Non-critical; don't break install on changelog parse errors
+
+
+def show_admin_info(admin_enabled: bool) -> None:
+    """Show information about the admin web interface."""
+    print()
+    if admin_enabled:
+        print(f"  {color('Admin Web Interface', Colors.BOLD)}")
+        print(f"    Status: {color('enabled', Colors.GREEN)}")
+        print(f"    URL:    http://localhost:8765/admin")
+        print(f"    Open:   spellbook admin open")
+        print(f"    Disable: set admin_enabled=false in spellbook.json or reinstall with --no-admin")
+    else:
+        print(f"  {color('Admin Web Interface', Colors.BOLD)}")
+        print(f"    Status: {color('disabled', Colors.YELLOW)}")
+        print(f"    Enable: set admin_enabled=true in spellbook.json or reinstall without --no-admin")
+    print()
+
+
+# =============================================================================
 # Main Installation Logic
 # =============================================================================
 
@@ -1037,20 +1090,33 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     print_report(session, show_details=False, timer=_install_timer)
 
     # Admin interface config
+    admin_enabled = True
     if not args.dry_run:
         try:
             from spellbook_mcp.config_tools import config_get as _cfg_get, config_set as _cfg_set
 
             if args.no_admin:
+                # Explicit opt-out always wins
                 _cfg_set("admin_enabled", False)
-                print_info("Admin web interface disabled (use --no-admin to re-enable... just kidding, "
-                           "set admin_enabled=true in spellbook.json)")
-            elif _cfg_get("admin_enabled") is None:
-                # First install: enable by default
-                _cfg_set("admin_enabled", True)
-                print_success("Admin web interface enabled at /admin")
+                admin_enabled = False
+            else:
+                existing = _cfg_get("admin_enabled")
+                is_upgrade = session.previous_version is not None
+                if is_upgrade and existing is False:
+                    # User previously disabled admin; respect that on upgrade
+                    admin_enabled = False
+                else:
+                    # Fresh install or upgrade with admin enabled/unset: enable
+                    _cfg_set("admin_enabled", True)
+                    admin_enabled = True
         except (ImportError, Exception):
             pass
+
+    show_admin_info(admin_enabled)
+
+    # Show what's new on upgrade
+    if not args.dry_run:
+        show_whats_new(spellbook_dir, session.previous_version, session.version)
 
     # TTS setup (optional)
     setup_tts(
@@ -1137,7 +1203,7 @@ Examples:
     parser.add_argument(
         "--no-admin",
         action="store_true",
-        help="Disable the web admin interface (enabled by default)",
+        help="Disable the web admin interface (enabled by default, persists across upgrades)",
     )
     parser.add_argument(
         "--update-only",
