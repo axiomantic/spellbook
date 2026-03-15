@@ -30,6 +30,7 @@ Options:
     --force             Reinstall even if version matches
     --dry-run           Show what would be done without making changes
     --no-interactive    Skip platform selection UI
+    --no-admin          Disable the web admin interface (enabled by default)
 """
 
 from __future__ import annotations
@@ -1035,6 +1036,22 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
 
     print_report(session, show_details=False, timer=_install_timer)
 
+    # Admin interface config
+    if not args.dry_run:
+        try:
+            from spellbook_mcp.config_tools import config_get as _cfg_get, config_set as _cfg_set
+
+            if args.no_admin:
+                _cfg_set("admin_enabled", False)
+                print_info("Admin web interface disabled (use --no-admin to re-enable... just kidding, "
+                           "set admin_enabled=true in spellbook.json)")
+            elif _cfg_get("admin_enabled") is None:
+                # First install: enable by default
+                _cfg_set("admin_enabled", True)
+                print_success("Admin web interface enabled at /admin")
+        except (ImportError, Exception):
+            pass
+
     # TTS setup (optional)
     setup_tts(
         dry_run=args.dry_run,
@@ -1116,6 +1133,11 @@ Examples:
         "--no-interactive",
         action="store_true",
         help="Skip interactive platform selection",
+    )
+    parser.add_argument(
+        "--no-admin",
+        action="store_true",
+        help="Disable the web admin interface (enabled by default)",
     )
     parser.add_argument(
         "--update-only",
