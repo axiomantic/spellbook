@@ -257,6 +257,18 @@ nav:
       - agents/justice-resolver.md
       - agents/lovers-integrator.md
       - agents/queen-affective.md
+  - Admin Interface:
+    - Overview: admin/index.md
+    - Dashboard: admin/dashboard.md
+    - Memory: admin/memory.md
+    - Security: admin/security.md
+    - Sessions: admin/sessions.md
+    - Analytics: admin/analytics.md
+    - Health: admin/health.md
+    - Events: admin/events.md
+    - Focus: admin/focus.md
+    - Config: admin/config.md
+    - Fractal: admin/fractal.md
   - Reference:
     - Architecture: reference/architecture.md
     - Patterns: reference/patterns.md
