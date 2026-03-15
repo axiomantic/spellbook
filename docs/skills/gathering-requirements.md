@@ -1,6 +1,6 @@
 # gathering-requirements
 
-Structured elicitation of feature requirements through discovery questions and constraint identification, examining needs from four archetype perspectives: user needs, system constraints, security surface, and scope boundaries. Produces a requirements document that prevents downstream rework. This core spellbook skill is invocable with `/requirements` or by asking to define what a feature should do.
+Structured elicitation of feature requirements through discovery questions and constraint identification, examining needs from four archetype perspectives: user needs, system constraints, security surface, and scope boundaries. Produces a requirements document that prevents downstream rework. Invocable with `/gathering-requirements` or triggered automatically when you ask to define what a feature should do.
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 

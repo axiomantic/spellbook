@@ -1,6 +1,6 @@
 # test-driven-development
 
-Red-green-refactor TDD workflow that writes failing tests first, implements the minimum code to pass, then refactors. Enforces strict test-first discipline where every test must be observed failing before implementation begins. A core spellbook capability invocable with `/tdd` or by asking to write tests first.
+Red-green-refactor TDD workflow that writes failing tests first, implements the minimum code to pass, then refactors. Enforces strict test-first discipline where every test must be observed failing before implementation begins. Invocable with `/test-driven-development` or triggered automatically when you say "TDD" or "write tests first".
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 

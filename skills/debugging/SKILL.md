@@ -2,7 +2,7 @@
 name: debugging
 description: "Use when debugging bugs, test failures, or unexpected behavior. Triggers: 'why isn't this working', 'this doesn't work', 'X is broken', 'something's wrong', 'getting an error', 'exception in', 'stopped working', 'regression', 'crash', 'hang', 'flaky test', 'intermittent failure', or when user pastes a stack trace/error output. NOT for: test quality issues (use fixing-tests), adding new behavior (use develop)."
 intro: |
-  Systematic bug investigation with structured methodology selection, hypothesis tracking, and a circuit breaker that prevents endless fix attempts. Covers scientific debugging, systematic elimination, and CI-specific investigation branches. Invoke with `/debug` or describe a bug to trigger it automatically. A core spellbook capability for root cause analysis.
+  Systematic bug investigation with structured methodology selection, hypothesis tracking, and a circuit breaker that prevents endless fix attempts. Covers scientific debugging, systematic elimination, and CI-specific investigation branches. Invoke with `/debugging` or describe a bug to trigger it automatically. A core spellbook capability for root cause analysis.
 ---
 
 # Debugging

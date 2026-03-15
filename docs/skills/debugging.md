@@ -1,6 +1,6 @@
 # debugging
 
-Systematic bug investigation with structured methodology selection, hypothesis tracking, and a circuit breaker that prevents endless fix attempts. Covers scientific debugging, systematic elimination, and CI-specific investigation branches. Invoke with `/debug` or describe a bug to trigger it automatically. A core spellbook capability for root cause analysis.
+Systematic bug investigation with structured methodology selection, hypothesis tracking, and a circuit breaker that prevents endless fix attempts. Covers scientific debugging, systematic elimination, and CI-specific investigation branches. Invoke with `/debugging` or describe a bug to trigger it automatically. A core spellbook capability for root cause analysis.
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
