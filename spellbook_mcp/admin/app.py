@@ -34,6 +34,8 @@ def create_admin_app() -> FastAPI:
     from spellbook_mcp.admin.routes import security as security_routes
     from spellbook_mcp.admin.routes import sessions as sessions_routes
     from spellbook_mcp.admin.routes import fractal as fractal_routes
+    from spellbook_mcp.admin.routes import analytics as analytics_routes
+    from spellbook_mcp.admin.routes import health as health_routes
 
     app.include_router(auth_routes.router, prefix="/api")
     app.include_router(config_routes.router, prefix="/api")
@@ -42,6 +44,8 @@ def create_admin_app() -> FastAPI:
     app.include_router(security_routes.router, prefix="/api")
     app.include_router(sessions_routes.router, prefix="/api")
     app.include_router(fractal_routes.router, prefix="/api")
+    app.include_router(analytics_routes.router, prefix="/api")
+    app.include_router(health_routes.router, prefix="/api")
 
     # WebSocket endpoint (no /api prefix -- connects at /ws)
     from spellbook_mcp.admin.routes.ws import websocket_handler

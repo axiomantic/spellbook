@@ -10,6 +10,9 @@ import { MemoryBrowser } from './pages/MemoryBrowser'
 import { SecurityLog } from './pages/SecurityLog'
 import { Sessions } from './pages/Sessions'
 import { FractalExplorer } from './pages/FractalExplorer'
+import { AnalyticsPage } from './pages/AnalyticsPage'
+import { HealthPage } from './pages/HealthPage'
+import { EventMonitorPage } from './pages/EventMonitorPage'
 
 function AuthGate() {
   const { authenticated, checking } = useAuth()
@@ -37,6 +40,9 @@ function AuthGate() {
             <Route path="/memory" element={<MemoryBrowser />} />
             <Route path="/security" element={<SecurityLog />} />
             <Route path="/sessions" element={<Sessions />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/health" element={<HealthPage />} />
+            <Route path="/events" element={<EventMonitorPage />} />
             <Route path="/config" element={<ConfigEditor />} />
             <Route path="/fractal" element={<FractalExplorer />} />
             <Route path="/fractal/:graphId" element={<FractalExplorer />} />

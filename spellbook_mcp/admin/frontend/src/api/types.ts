@@ -178,6 +178,65 @@ export interface WSControl {
   subsystems?: string[]
 }
 
+// Analytics
+export interface ToolFrequencyItem {
+  tool_name: string
+  count: number
+  errors: number
+}
+
+export interface ToolFrequencyResponse {
+  tools: ToolFrequencyItem[]
+}
+
+export interface ErrorRateItem {
+  tool_name: string
+  total: number
+  errors: number
+  error_rate: number
+}
+
+export interface ErrorRateResponse {
+  tools: ErrorRateItem[]
+}
+
+export interface TimelineItem {
+  bucket: string
+  count: number
+  errors: number
+}
+
+export interface TimelineResponse {
+  timeline: TimelineItem[]
+}
+
+export interface AnalyticsSummary {
+  total_events: number
+  unique_tools: number
+  error_rate: number
+  events_today: number
+}
+
+// Health Matrix
+export interface TableHealth {
+  name: string
+  row_count: number
+  last_activity: string | null
+  error_count: number | null
+}
+
+export interface SubsystemHealth {
+  name: string
+  status: 'healthy' | 'idle' | 'error' | 'missing'
+  size_bytes: number
+  tables: TableHealth[]
+}
+
+export interface HealthMatrixResponse {
+  databases: SubsystemHealth[]
+  generated_at: string
+}
+
 // Errors
 export interface ErrorDetail {
   code: string

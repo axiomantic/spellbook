@@ -5,6 +5,9 @@ const navItems = [
   { to: '/memory', label: '// MEMORY' },
   { to: '/security', label: '// SECURITY' },
   { to: '/sessions', label: '// SESSIONS' },
+  { to: '/analytics', label: '// ANALYTICS' },
+  { to: '/health', label: '// HEALTH' },
+  { to: '/events', label: '// EVENTS' },
   { to: '/config', label: '// CONFIG' },
   { to: '/fractal', label: '// FRACTAL' },
 ]

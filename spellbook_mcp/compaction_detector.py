@@ -134,7 +134,7 @@ def check_for_compaction(project_path: str = None) -> Optional[CompactionEvent]:
 
         try:
             msg = json.loads(line)
-            if msg.get('type') == 'summary':
+            if msg.get('isCompactSummary') is True:
                 compaction_event = CompactionEvent(
                     session_id=session_id,
                     summary=msg.get('summary', ''),
