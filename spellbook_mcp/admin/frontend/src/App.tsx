@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ErrorBoundary } from './components/shared/ErrorBoundary'
 import { AppShell } from './components/layout/AppShell'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { WebSocketProvider } from './contexts/WebSocketContext'
 import { Login } from './pages/Login'
 import { ConfigEditor } from './pages/ConfigEditor'
 import Dashboard from './pages/Dashboard'
@@ -15,8 +16,8 @@ function AuthGate() {
 
   if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
-        <span className="font-mono text-xs uppercase tracking-widest text-[#5a5650]">
+      <div className="flex min-h-screen items-center justify-center bg-[#060606]">
+        <span className="font-mono text-xs uppercase tracking-widest text-[#8a8480]">
           // CHECKING SESSION...
         </span>
       </div>
@@ -28,18 +29,20 @@ function AuthGate() {
   }
 
   return (
-    <BrowserRouter basename="/admin">
-      <AppShell>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/memory" element={<MemoryBrowser />} />
-          <Route path="/security" element={<SecurityLog />} />
-          <Route path="/sessions" element={<Sessions />} />
-          <Route path="/config" element={<ConfigEditor />} />
-          <Route path="/fractal" element={<FractalExplorer />} />
-        </Routes>
-      </AppShell>
-    </BrowserRouter>
+    <WebSocketProvider>
+      <BrowserRouter basename="/admin">
+        <AppShell>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/memory" element={<MemoryBrowser />} />
+            <Route path="/security" element={<SecurityLog />} />
+            <Route path="/sessions" element={<Sessions />} />
+            <Route path="/config" element={<ConfigEditor />} />
+            <Route path="/fractal" element={<FractalExplorer />} />
+          </Routes>
+        </AppShell>
+      </BrowserRouter>
+    </WebSocketProvider>
   )
 }
 

@@ -24,6 +24,7 @@ async def query_spellbook_db(
 
     def _run():
         conn = get_connection()
+        conn.row_factory = sqlite3.Row
         cursor = conn.execute(sql, params)
         return _rows_to_dicts(cursor.fetchall())
 
@@ -51,6 +52,7 @@ async def query_fractal_db(
 
     def _run():
         conn = get_fractal_connection()
+        conn.row_factory = sqlite3.Row
         cursor = conn.execute(sql, params)
         return _rows_to_dicts(cursor.fetchall())
 
@@ -65,6 +67,7 @@ async def query_forged_db(
 
     def _run():
         conn = get_forged_connection()
+        conn.row_factory = sqlite3.Row
         cursor = conn.execute(sql, params)
         return _rows_to_dicts(cursor.fetchall())
 

@@ -1,12 +1,14 @@
 """FastAPI sub-application factory for Spellbook Admin."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 def create_admin_app() -> FastAPI:
@@ -46,9 +48,21 @@ def create_admin_app() -> FastAPI:
 
     app.websocket("/ws")(websocket_handler)
 
-    # Serve static frontend (must be last -- catch-all)
-    static_dir = Path(__file__).parent / "static"
-    if static_dir.exists():
-        app.mount("/", StaticFiles(directory=str(static_dir), html=True))
+    # Serve static frontend with SPA fallback
+    if STATIC_DIR.exists():
+        # Mount static assets (JS, CSS, etc.) at /assets
+        assets_dir = STATIC_DIR / "assets"
+        if assets_dir.exists():
+            app.mount("/assets", StaticFiles(directory=str(assets_dir)))
+
+        # SPA catch-all: serve index.html for any non-API path
+        @app.get("/{full_path:path}")
+        async def spa_fallback(request: Request, full_path: str):
+            # Serve actual static files if they exist (favicon, etc.)
+            file_path = STATIC_DIR / full_path
+            if full_path and file_path.is_file():
+                return FileResponse(file_path)
+            # Otherwise serve index.html for client-side routing
+            return FileResponse(STATIC_DIR / "index.html")
 
     return app
