@@ -1,8 +1,10 @@
 """Integration tests for stint stack compaction survival."""
 
+import json
 import os
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -26,8 +28,8 @@ class TestStintCompactionSurvival:
         saved_calls = []
         call_responses = {
             "stint_check": {"success": True, "stack": [
-                {"name": "implementing-features", "purpose": "build auth"},
-                {"name": "debugging", "purpose": "fix test"},
+                {"name": "implementing-features", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
+                {"name": "debugging", "purpose": "fix test", "behavioral_mode": ""},
             ]},
             "workflow_state_load": {"found": True, "state": {"active_skill": "implementing-features"}},
             "workflow_state_save": {"success": True},
@@ -60,8 +62,8 @@ class TestStintCompactionSurvival:
                 "state": {
                     "active_skill": "implementing-features",
                     "stint_stack": [
-                        {"name": "implementing-features", "purpose": "build auth"},
-                        {"name": "debugging", "purpose": "fix test"},
+                        {"name": "implementing-features", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
+                        {"name": "debugging", "purpose": "fix test", "behavioral_mode": ""},
                     ],
                     "compaction_flag": True,
                 },
@@ -120,7 +122,7 @@ class TestStintCompactionSurvival:
         saved_calls = []
         call_responses = {
             "stint_check": {"success": True, "stack": [
-                {"name": "exploring", "purpose": "find files"},
+                {"name": "exploring", "purpose": "find files", "behavioral_mode": ""},
             ]},
             "workflow_state_load": {"found": False},
             "workflow_state_save": {"success": True},
@@ -142,7 +144,7 @@ class TestStintCompactionSurvival:
                 "project_path": "/test/project",
                 "state": {
                     "stint_stack": [
-                        {"name": "exploring", "purpose": "find files"},
+                        {"name": "exploring", "purpose": "find files", "behavioral_mode": ""},
                     ],
                     "compaction_flag": True,
                 },
@@ -160,8 +162,8 @@ class TestStintCompactionSurvival:
                 "state": {
                     "active_skill": "implementing-features",
                     "stint_stack": [
-                        {"name": "implementing-features", "purpose": "build auth"},
-                        {"name": "debugging", "purpose": "fix test"},
+                        {"name": "implementing-features", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
+                        {"name": "debugging", "purpose": "fix test", "behavioral_mode": ""},
                     ],
                 },
             },
@@ -191,19 +193,19 @@ class TestStintCompactionSurvival:
             assert replaces[0] == ("stint_replace", {
                 "project_path": "/test/project",
                 "stack": [
-                    {"name": "implementing-features", "purpose": "build auth"},
-                    {"name": "debugging", "purpose": "fix test"},
+                    {"name": "implementing-features", "purpose": "build auth", "behavioral_mode": "ORCHESTRATOR: Dispatch subagents"},
+                    {"name": "debugging", "purpose": "fix test", "behavioral_mode": ""},
                 ],
                 "reason": "post-compaction restoration",
             })
 
-            # Verify recovery directive exact content
+            # Verify recovery directive exact content including [MODE: ...] suffix
             context = result["hookSpecificOutput"]["additionalContext"]
             expected_context = (
                 "### Active Skill: implementing-features\n"
                 "Resume with: `Skill(skill='implementing-features')`\n"
                 "\n### Focus Stack (restored)\n"
-                "  1. implementing-features - build auth\n"
+                "  1. implementing-features - build auth [MODE: ORCHESTRATOR: Dispatch subagents]\n"
                 "  2. debugging - fix test\n"
             )
             assert context == expected_context, (
@@ -243,7 +245,11 @@ class TestStintCompactionSurvival:
             assert replaces == []
             # No focus stack section
             context = result["hookSpecificOutput"]["additionalContext"]
-            assert "### Focus Stack (restored)" not in context
+            expected_context = (
+                "### Active Skill: debugging\n"
+                "Resume with: `Skill(skill='debugging')`"
+            )
+            assert context == expected_context
         finally:
             spellbook_hook._mcp_call = original
 
@@ -254,3 +260,124 @@ class TestStintCompactionSurvival:
             "cwd": "/test/project",
         })
         assert result is None
+
+
+class TestBehavioralModeSurvivesCompaction:
+    """End-to-end: behavioral_mode persists through compaction cycle."""
+
+    @patch.object(spellbook_hook, "_mcp_call")
+    def test_full_compaction_round_trip(self, mock_mcp_call):
+        """Push with behavioral_mode, compact, recover, verify mode in output."""
+        saved_stack = [
+            {
+                "type": "skill",
+                "name": "implementing-features",
+                "parent": None,
+                "purpose": "Skill invocation: implementing-features",
+                "behavioral_mode": "ORCHESTRATOR: Dispatch subagents via Task tool for ALL substantive work.",
+                "success_criteria": "Skill workflow complete",
+                "metadata": {},
+                "entered_at": "2026-03-15T10:00:00+00:00",
+                "exited_at": None,
+            },
+        ]
+
+        saved_state = {
+            "active_skill": "implementing-features",
+            "skill_phase": "DESIGN",
+            "stint_stack": saved_stack,
+            "compaction_flag": True,
+        }
+
+        # Mock the MCP calls for SessionStart recovery
+        mock_mcp_call.side_effect = [
+            # 1. workflow_state_load
+            {"found": True, "state": saved_state},
+            # 2. stint_replace (restore stack)
+            {"success": True, "depth": 1, "correction_logged": True},
+            # 3. skill_instructions_get (from _build_recovery_directive)
+            {
+                "success": True,
+                "content": "## FORBIDDEN\n- Never skip phases\n## REQUIRED\n- Follow all steps",
+            },
+        ]
+
+        data = {"source": "compact", "cwd": "/tmp/test-project"}
+        result = spellbook_hook._handle_session_start(data)
+
+        assert result is not None
+        context = result["hookSpecificOutput"]["additionalContext"]
+
+        # The behavioral_mode is 64 chars, well under 80-char truncation limit
+        # Full expected output constructed from _build_recovery_directive + Focus Stack append
+        expected_context = (
+            "### Active Skill: implementing-features\n"
+            "Phase: DESIGN\n"
+            "Resume with: `Skill(skill='implementing-features', --resume DESIGN)`\n"
+            "\n### Skill Constraints\n"
+            "## FORBIDDEN\n- Never skip phases\n## REQUIRED\n- Follow all steps\n"
+            "\n### Focus Stack (restored)\n"
+            "  1. implementing-features - Skill invocation: implementing-features"
+            " [MODE: ORCHESTRATOR: Dispatch subagents via Task tool for ALL substantive work.]\n"
+        )
+        assert context == expected_context, (
+            f"Expected context:\n{expected_context!r}\n\nGot:\n{context!r}"
+        )
+
+    @patch.object(spellbook_hook, "_mcp_call")
+    def test_compaction_with_no_behavioral_mode_backward_compat(self, mock_mcp_call):
+        """Old stack entries without behavioral_mode survive compaction."""
+        saved_stack = [
+            {
+                "type": "skill",
+                "name": "old-skill",
+                "parent": None,
+                "purpose": "legacy purpose",
+                "success_criteria": "",
+                "metadata": {},
+                "entered_at": "2026-03-15T10:00:00+00:00",
+                "exited_at": None,
+                # No behavioral_mode key
+            },
+        ]
+
+        mock_mcp_call.side_effect = [
+            {"found": True, "state": {"stint_stack": saved_stack}},
+            {"success": True},  # stint_replace
+        ]
+
+        data = {"source": "compact", "cwd": "/tmp/test-project"}
+        result = spellbook_hook._handle_session_start(data)
+
+        assert result is not None
+        context = result["hookSpecificOutput"]["additionalContext"]
+        # No active_skill in state, so _build_recovery_directive returns fallback message
+        # Focus Stack section is appended after
+        expected_context = (
+            "No active workflow state found."
+            "\n\n### Focus Stack (restored)\n"
+            "  1. old-skill - legacy purpose\n"
+        )
+        assert context == expected_context, (
+            f"Expected context:\n{expected_context!r}\n\nGot:\n{context!r}"
+        )
+
+    @patch.object(spellbook_hook, "_mcp_call")
+    def test_first_post_tool_use_after_compaction_shows_behavioral_mode(self, mock_mcp_call):
+        """After compaction recovery, the first PostToolUse should show behavioral_mode."""
+        mock_mcp_call.return_value = {
+            "success": True,
+            "stack": [
+                {
+                    "name": "implementing-features",
+                    "purpose": "Skill invocation",
+                    "behavioral_mode": "ORCHESTRATOR: Dispatch subagents",
+                },
+            ],
+        }
+
+        data = {"tool_name": "Bash", "cwd": "/tmp/test-project"}
+        result = spellbook_hook._stint_depth_check(data)
+
+        # depth=1 < threshold(5), so no tree output, just behavioral_mode
+        assert result == "<behavioral-mode>ORCHESTRATOR: Dispatch subagents</behavioral-mode>"

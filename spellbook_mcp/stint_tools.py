@@ -32,7 +32,8 @@ def _is_ordered_subsequence(shorter: list[str], longer: list[str]) -> bool:
     duplicate names.
 
     PROTECTION: The `item in it` expression uses Python's iterator
-    __contains__ protocol, which advances the iterator past the matched
+    protocol (falling back to `__next__` since iterators lack
+    `__contains__`), which advances the iterator past the matched
     element. This is NOT the same as `item in list` (which scans from
     the start). The iterator trick ensures each match consumes elements
     up to and including the match point, so subsequent matches must occur
@@ -79,20 +80,24 @@ def classify_correction(old_stack: list, new_stack: list) -> str:
 def _validate_stint_entry(entry: dict) -> tuple[bool, str]:
     """Validate a stint entry for injection patterns.
 
-    Checks name, purpose, and success_criteria fields against
-    injection detection rules from spellbook_mcp.injection.
+    Checks name, purpose, success_criteria, and behavioral_mode fields
+    against injection detection rules from spellbook_mcp.injection.
+
+    Side effect: truncated values from _sanitize_field are persisted
+    back into the entry dict, so the stored entry respects length limits.
 
     Returns:
         (True, "") if valid, (False, error_message) if invalid.
     """
     from spellbook_mcp.injection import _sanitize_field
 
-    for field in ("name", "purpose", "success_criteria"):
+    for field in ("name", "purpose", "success_criteria", "behavioral_mode"):
         value = entry.get(field, "")
         if value:
             sanitized = _sanitize_field(field, value, max_length=500)
             if sanitized is None:
                 return False, f"Injection pattern detected in '{field}'"
+            entry[field] = sanitized
     return True, ""
 
 
@@ -214,6 +219,7 @@ def push_stint(
     name: str,
     stint_type: str = "custom",
     purpose: str = "",
+    behavioral_mode: str = "",
     success_criteria: str = "",
     metadata: Optional[dict] = None,
     db_path: str = None,
@@ -229,6 +235,7 @@ def push_stint(
         "name": name,
         "parent": None,  # Set below
         "purpose": purpose,
+        "behavioral_mode": behavioral_mode,
         "success_criteria": success_criteria,
         "metadata": metadata or {},
         "entered_at": datetime.now(timezone.utc).isoformat(),
@@ -303,7 +310,7 @@ def check_stint(
     project_path: str,
     db_path: str = None,
 ) -> dict:
-    """Return the current stint stack. Read-only, no side effects.
+    """Return the current stint stack. Read-only (no data mutation). Briefly acquires a write lock via BEGIN IMMEDIATE.
 
     Returns:
         {"success": True, "depth": int, "stack": list}

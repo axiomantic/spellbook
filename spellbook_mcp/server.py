@@ -2068,6 +2068,7 @@ def stint_push(
     name: str,
     type: str = "custom",
     purpose: str = "",
+    behavioral_mode: str = "",
     success_criteria: str = "",
     metadata: dict | None = None,
 ) -> dict:
@@ -2082,6 +2083,7 @@ def stint_push(
         name: Identifier for this stint (e.g., skill name, task description)
         type: "skill" | "subagent" | "custom"
         purpose: Why this stint is being entered
+        behavioral_mode: HOW the session should operate (e.g., "ORCHESTRATOR: ...")
         success_criteria: What "done" looks like for this stint
         metadata: Optional key-value pairs for additional context
 
@@ -2094,6 +2096,7 @@ def stint_push(
         name=name,
         stint_type=type,
         purpose=purpose,
+        behavioral_mode=behavioral_mode,
         success_criteria=success_criteria,
         metadata=metadata,
     )

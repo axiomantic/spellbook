@@ -549,6 +549,10 @@ def _memory_capture(tool_name: str, data: dict) -> None:
 def _stint_auto_push(data: dict) -> None:
     """Auto-push a stint when a Skill tool is invoked.
 
+    Fetches behavioral mode from the skill's SKILL.md <BEHAVIORAL_MODE>
+    tag via skill_instructions_get. If the fetch fails, pushes with an
+    empty behavioral_mode (fail-open).
+
     Best-effort (fail-open). If MCP is unreachable, silently skips.
     """
     tool_input = data.get("tool_input", {})
@@ -560,22 +564,43 @@ def _stint_auto_push(data: dict) -> None:
     if not project_path:
         return
 
+    # Fetch behavioral mode from SKILL.md (fail-open)
+    behavioral_mode = ""
+    skill_info = _mcp_call("skill_instructions_get", {
+        "skill_name": skill_name,
+        "sections": ["BEHAVIORAL_MODE"],
+    })
+    if skill_info and skill_info.get("success"):
+        sections = skill_info.get("sections", {})
+        behavioral_mode = (sections.get("BEHAVIORAL_MODE", "") or "").strip()
+        # Fallback: if sections key missing (MCP serialization edge case),
+        # try extracting from raw content via _mcp_call response
+        if not behavioral_mode:
+            content = skill_info.get("content") or ""
+            if "<BEHAVIORAL_MODE>" in content and "</BEHAVIORAL_MODE>" in content:
+                start = content.index("<BEHAVIORAL_MODE>") + len("<BEHAVIORAL_MODE>")
+                end = content.index("</BEHAVIORAL_MODE>")
+                behavioral_mode = content[start:end].strip()
+
     _mcp_call("stint_push", {
         "project_path": project_path,
         "name": skill_name,
         "type": "skill",
         "purpose": f"Skill invocation: {skill_name}",
+        "behavioral_mode": behavioral_mode,
         "success_criteria": "Skill workflow complete",
     })
 
 
 def _stint_depth_check(data: dict) -> str | None:
-    """Check stint stack depth and emit reminder if threshold exceeded.
+    """Check stint stack depth and emit behavioral mode + optional tree.
 
-    Queries the stint stack via MCP and, if the depth meets or exceeds
-    the configurable threshold (default 5), returns a compact numbered
-    tree with a 'you are here' pointer in XML tags. FAIL-OPEN: returns
-    None on any error.
+    Two independent outputs:
+    1. Behavioral mode one-liner: ALWAYS returned if the top-of-stack
+       stint has a non-empty behavioral_mode, regardless of depth.
+    2. Full stack tree: only returned when depth >= threshold (default 5).
+
+    FAIL-OPEN: returns None on any error.
     """
     tool_name = data.get("tool_name", "")
     if tool_name in _EXCLUDED_TOOLS:
@@ -591,23 +616,36 @@ def _stint_depth_check(data: dict) -> str | None:
 
     entries = stack.get("stack", [])
     depth = len(entries)
-
-    threshold = _get_config_value("stint_depth_threshold", default=5)
-    if depth < threshold:
+    if depth == 0:
         return None
 
-    lines = [f'<stint-check depth="{depth}">']
-    for i, entry in enumerate(entries):
-        indent = "  " * (i + 1)
-        marker = "        <-- you are here" if i == len(entries) - 1 else ""
-        lines.append(f"  {i+1}. {indent}{entry['name']}{marker}")
-        lines.append(f"     {indent}purpose: {entry.get('purpose', '') or 'unspecified'}")
-    lines.append("")
-    lines.append("  Verify this matches your current work.")
-    lines.append("  Close completed stints with stint_pop.")
-    lines.append("</stint-check>")
+    parts = []
 
-    return "\n".join(lines)
+    # behavioral-mode appears BEFORE stint-check tree intentionally:
+    # it's the higher-priority signal and must survive even when depth < threshold
+
+    # Always show behavioral_mode for top-of-stack (not depth-gated)
+    top = entries[-1]
+    bm = top.get("behavioral_mode", "")
+    if bm:
+        parts.append(f"<behavioral-mode>{bm}</behavioral-mode>")
+
+    # Full stack tree is depth-gated
+    threshold = _get_config_value("stint_depth_threshold", default=5)
+    if depth >= threshold:
+        lines = [f'<stint-check depth="{depth}">']
+        for i, entry in enumerate(entries):
+            indent = "  " * (i + 1)
+            marker = "        <-- you are here" if i == len(entries) - 1 else ""
+            lines.append(f"  {i+1}. {indent}{entry['name']}{marker}")
+            lines.append(f"     {indent}purpose: {entry.get('purpose', '') or 'unspecified'}")
+        lines.append("")
+        lines.append("  Verify this matches your current work.")
+        lines.append("  Close completed stints with stint_pop.")
+        lines.append("</stint-check>")
+        parts.append("\n".join(lines))
+
+    return "\n".join(parts) if parts else None
 
 
 def _build_recovery_directive(state: dict) -> str:
@@ -620,15 +658,14 @@ def _build_recovery_directive(state: dict) -> str:
         parts.append(f"### Active Skill: {active_skill}")
         if skill_phase:
             parts.append(f"Phase: {skill_phase}")
-        if skill_phase:
             parts.append(f"Resume with: `Skill(skill='{active_skill}', --resume {skill_phase})`")
         else:
             parts.append(f"Resume with: `Skill(skill='{active_skill}')`")
 
-        # Fetch skill constraints (FORBIDDEN/REQUIRED sections)
-        skill_info = _mcp_call("skill_instructions_get", {"skill_name": active_skill})
-        if skill_info and skill_info.get("found"):
-            constraints = skill_info.get("constraints", "")
+        # Fetch skill constraints (FORBIDDEN/REQUIRED sections only -- NOT full SKILL.md)
+        skill_info = _mcp_call("skill_instructions_get", {"skill_name": active_skill, "sections": ["FORBIDDEN", "REQUIRED"]})
+        if skill_info and skill_info.get("success"):
+            constraints = skill_info.get("content", "")
             if constraints:
                 parts.append(f"\n### Skill Constraints\n{constraints}")
 
@@ -683,7 +720,10 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
 
     # Stint auto-push (catch-all, non-blocking)
     if tool_name == "Skill":
-        _stint_auto_push(data)
+        try:
+            _stint_auto_push(data)
+        except Exception:
+            pass  # fail-open: auto-push errors never block tool execution
 
     # Temporal tracking (catch-all, non-blocking)
     _record_tool_start(tool_name, data)
@@ -790,7 +830,9 @@ def _handle_session_start(data: dict) -> dict | None:
     if saved_stack:
         directive += "\n\n### Focus Stack (restored)\n"
         for i, entry in enumerate(saved_stack):
-            directive += f"  {i+1}. {entry['name']} - {entry.get('purpose', '')}\n"
+            bm = entry.get('behavioral_mode', '')
+            bm_suffix = f" [MODE: {bm[:80]}]" if bm else ""
+            directive += f"  {i+1}. {entry['name']} - {entry.get('purpose', '')}{bm_suffix}\n"
 
     return {
         "hookSpecificOutput": {
