@@ -65,198 +65,51 @@ nav:
     - Installation: getting-started/installation.md
     - Platform Support: getting-started/platforms.md
     - Quick Start: getting-started/quickstart.md
-  - Skills:
-    - Overview: skills/index.md
-    - Core Workflow Skills:
+  - Guide:
+    - Building Features:
+      - skills/implementing-features.md
       - skills/brainstorming.md
       - skills/writing-plans.md
       - skills/executing-plans.md
-      - skills/test-driven-development.md
-      - skills/debugging.md
-      - skills/verifying-hunches.md
-      - skills/isolated-testing.md
-      - skills/using-git-worktrees.md
-      - skills/finishing-a-development-branch.md
-    - Code Quality Skills:
-      - skills/enforcing-code-quality.md
+      - skills/gathering-requirements.md
+      - skills/analyzing-domains.md
+      - skills/autonomous-roundtable.md
+    - Code Review:
       - skills/code-review.md
       - skills/advanced-code-review.md
-      - skills/auditing-green-mirage.md
-      - skills/fixing-tests.md
-      - skills/fact-checking.md
-      - skills/finding-dead-code.md
-      - skills/distilling-prs.md
-      - skills/receiving-code-review.md
       - skills/requesting-code-review.md
-    - Feature Development:
-      - skills/implementing-features.md
-      - skills/reviewing-design-docs.md
-      - skills/reviewing-impl-plans.md
+      - skills/receiving-code-review.md
+      - skills/distilling-prs.md
       - skills/reviewing-prs.md
-      - skills/devils-advocate.md
-      - skills/merging-worktrees.md
-      - skills/resolving-merge-conflicts.md
-      - skills/creating-issues-and-pull-requests.md
-    - Autonomous Development:
-      - skills/autonomous-roundtable.md
-      - skills/gathering-requirements.md
-      - skills/dehallucination.md
-      - skills/reflexion.md
-      - skills/analyzing-domains.md
-      - skills/assembling-context.md
-      - skills/designing-workflows.md
+    - Testing:
+      - skills/test-driven-development.md
+      - skills/fixing-tests.md
+      - skills/auditing-green-mirage.md
+      - skills/isolated-testing.md
+    - Debugging:
+      - skills/debugging.md
+      - skills/verifying-hunches.md
+    - Research & Design:
       - skills/deep-research.md
       - skills/fractal-thinking.md
-    - Specialized Skills:
-      - skills/async-await-patterns.md
-      - skills/using-lsp-tools.md
-      - skills/managing-artifacts.md
-      - skills/polish-repo.md
+      - skills/reviewing-design-docs.md
+      - skills/reviewing-impl-plans.md
+      - skills/devils-advocate.md
+      - skills/dehallucination.md
+      - skills/designing-workflows.md
+    - Git & Branches:
+      - skills/using-git-worktrees.md
+      - skills/merging-worktrees.md
+      - skills/finishing-a-development-branch.md
+      - skills/resolving-merge-conflicts.md
+      - skills/creating-issues-and-pull-requests.md
+    - Project Quality:
+      - skills/fact-checking.md
+      - skills/finding-dead-code.md
       - skills/security-auditing.md
+      - skills/polish-repo.md
+      - skills/enforcing-code-quality.md
       - skills/generating-diagrams.md
-    - Meta Skills:
-      - skills/using-skills.md
-      - skills/writing-skills.md
-      - skills/writing-commands.md
-      - skills/instruction-engineering.md
-      - skills/sharpening-prompts.md
-      - skills/optimizing-instructions.md
-      - skills/emotional-stakes.md
-      - skills/dispatching-parallel-agents.md
-      - skills/smart-reading.md
-      - skills/project-encyclopedia.md
-      - skills/analyzing-skill-usage.md
-      - skills/documenting-tools.md
-    - Session Skills:
-      - skills/fun-mode.md
-      - skills/tarot-mode.md
-  - Commands:
-    - Overview: commands/index.md
-    - Debugging Commands:
-      - commands/scientific-debugging.md
-      - commands/systematic-debugging.md
-      - commands/verify.md
-    - Workflow Commands:
-      - commands/handoff.md
-      - commands/distill-session.md
-      - commands/create-issue.md
-      - commands/create-pr.md
-      - commands/crystallize.md
-      - commands/crystallize-verify.md
-      - commands/design-assessment.md
-      - commands/simplify.md
-      - commands/simplify-analyze.md
-      - commands/simplify-transform.md
-      - commands/simplify-verify.md
-      - commands/address-pr-feedback.md
-      - commands/move-project.md
-      - commands/audit-green-mirage.md
-      - commands/pr-distill.md
-      - commands/pr-distill-bless.md
-      - commands/brainstorm.md
-      - commands/write-plan.md
-      - commands/execute-plan.md
-    - Deep Research Commands:
-      - commands/deep-research-interview.md
-      - commands/deep-research-investigate.md
-      - commands/deep-research-plan.md
-    - Dead Code Commands:
-      - commands/dead-code-setup.md
-      - commands/dead-code-analyze.md
-      - commands/dead-code-report.md
-      - commands/dead-code-implement.md
-    - Feature Commands:
-      - commands/feature-config.md
-      - commands/feature-discover.md
-      - commands/feature-research.md
-      - commands/feature-design.md
-      - commands/feature-implement.md
-    - Fractal Thinking Commands:
-      - commands/fractal-think-seed.md
-      - commands/fractal-think-work.md
-      - commands/fractal-think-harvest.md
-    - Code Review Commands:
-      - commands/advanced-code-review-plan.md
-      - commands/advanced-code-review-context.md
-      - commands/advanced-code-review-review.md
-      - commands/advanced-code-review-verify.md
-      - commands/advanced-code-review-report.md
-    - Execution Mode Commands:
-      - commands/execute-work-packet.md
-      - commands/execute-work-packets-seq.md
-      - commands/merge-work-packets.md
-    - Audit Mirage Commands:
-      - commands/audit-mirage-analyze.md
-      - commands/audit-mirage-cross.md
-      - commands/audit-mirage-report.md
-    - Encyclopedia Commands:
-      - commands/encyclopedia-build.md
-      - commands/encyclopedia-validate.md
-    - Fact Check Commands:
-      - commands/fact-check-extract.md
-      - commands/fact-check-report.md
-      - commands/fact-check-verify.md
-    - Finish Branch Commands:
-      - commands/finish-branch-cleanup.md
-      - commands/finish-branch-execute.md
-    - Fix Tests Commands:
-      - commands/fix-tests-execute.md
-      - commands/fix-tests-parse.md
-    - Merge Worktree Commands:
-      - commands/merge-worktree-execute.md
-      - commands/merge-worktree-resolve.md
-      - commands/merge-worktree-verify.md
-    - Project Presence Commands:
-      - commands/polish-repo-audit.md
-      - commands/polish-repo-community.md
-      - commands/polish-repo-identity.md
-      - commands/polish-repo-naming.md
-      - commands/polish-repo-readme.md
-    - Reflexion Commands:
-      - commands/reflexion-analyze.md
-    - Request Review Commands:
-      - commands/request-review-artifacts.md
-      - commands/request-review-execute.md
-      - commands/request-review-plan.md
-    - Review Design Commands:
-      - commands/review-design-checklist.md
-      - commands/review-design-report.md
-      - commands/review-design-verify.md
-    - Review Plan Commands:
-      - commands/review-plan-behavior.md
-      - commands/review-plan-completeness.md
-      - commands/review-plan-contracts.md
-      - commands/review-plan-inventory.md
-    - Code Review Subcommands:
-      - commands/code-review-feedback.md
-      - commands/code-review-give.md
-      - commands/code-review-tarot.md
-    - Skill Commands:
-      - commands/write-skill-test.md
-      - commands/writing-commands-create.md
-      - commands/writing-commands-review.md
-      - commands/writing-commands-paired.md
-    - Instruction Engineering Commands:
-      - commands/ie-techniques.md
-      - commands/ie-template.md
-      - commands/ie-tool-docs.md
-      - commands/sharpen-audit.md
-      - commands/sharpen-improve.md
-    - Test Bar Commands:
-      - commands/test-bar.md
-      - commands/test-bar-remove.md
-    - Session Commands:
-      - commands/mode.md
-  - Agents:
-    - Overview: agents/index.md
-    - agents/code-reviewer.md
-    - Tarot Agents:
-      - agents/chariot-implementer.md
-      - agents/emperor-governor.md
-      - agents/hierophant-distiller.md
-      - agents/justice-resolver.md
-      - agents/lovers-integrator.md
-      - agents/queen-affective.md
   - Admin Interface:
     - Overview: admin/index.md
     - Dashboard: admin/dashboard.md
@@ -270,10 +123,171 @@ nav:
     - Config: admin/config.md
     - Fractal: admin/fractal.md
   - Reference:
+    - Skills A-Z:
+      - Overview: skills/index.md
+      - skills/advanced-code-review.md
+      - skills/analyzing-domains.md
+      - skills/analyzing-skill-usage.md
+      - skills/assembling-context.md
+      - skills/async-await-patterns.md
+      - skills/auditing-green-mirage.md
+      - skills/autonomous-roundtable.md
+      - skills/brainstorming.md
+      - skills/code-review.md
+      - skills/creating-issues-and-pull-requests.md
+      - skills/debugging.md
+      - skills/deep-research.md
+      - skills/dehallucination.md
+      - skills/designing-workflows.md
+      - skills/devils-advocate.md
+      - skills/dispatching-parallel-agents.md
+      - skills/distilling-prs.md
+      - skills/documenting-tools.md
+      - skills/emotional-stakes.md
+      - skills/enforcing-code-quality.md
+      - skills/executing-plans.md
+      - skills/fact-checking.md
+      - skills/finding-dead-code.md
+      - skills/finishing-a-development-branch.md
+      - skills/fixing-tests.md
+      - skills/fractal-thinking.md
+      - skills/fun-mode.md
+      - skills/gathering-requirements.md
+      - skills/generating-diagrams.md
+      - skills/implementing-features.md
+      - skills/instruction-engineering.md
+      - skills/isolated-testing.md
+      - skills/managing-artifacts.md
+      - skills/merging-worktrees.md
+      - skills/optimizing-instructions.md
+      - skills/polish-repo.md
+      - skills/project-encyclopedia.md
+      - skills/receiving-code-review.md
+      - skills/reflexion.md
+      - skills/requesting-code-review.md
+      - skills/resolving-merge-conflicts.md
+      - skills/reviewing-design-docs.md
+      - skills/reviewing-impl-plans.md
+      - skills/reviewing-prs.md
+      - skills/security-auditing.md
+      - skills/sharpening-prompts.md
+      - skills/smart-reading.md
+      - skills/tarot-mode.md
+      - skills/test-driven-development.md
+      - skills/using-git-worktrees.md
+      - skills/using-lsp-tools.md
+      - skills/using-skills.md
+      - skills/verifying-hunches.md
+      - skills/writing-commands.md
+      - skills/writing-plans.md
+      - skills/writing-skills.md
+    - Commands A-Z:
+      - Overview: commands/index.md
+      - commands/address-pr-feedback.md
+      - commands/advanced-code-review-context.md
+      - commands/advanced-code-review-plan.md
+      - commands/advanced-code-review-report.md
+      - commands/advanced-code-review-review.md
+      - commands/advanced-code-review-verify.md
+      - commands/audit-green-mirage.md
+      - commands/audit-mirage-analyze.md
+      - commands/audit-mirage-cross.md
+      - commands/audit-mirage-report.md
+      - commands/brainstorm.md
+      - commands/code-review-feedback.md
+      - commands/code-review-give.md
+      - commands/code-review-tarot.md
+      - commands/create-issue.md
+      - commands/create-pr.md
+      - commands/crystallize.md
+      - commands/crystallize-verify.md
+      - commands/dead-code-analyze.md
+      - commands/dead-code-implement.md
+      - commands/dead-code-report.md
+      - commands/dead-code-setup.md
+      - commands/deep-research-interview.md
+      - commands/deep-research-investigate.md
+      - commands/deep-research-plan.md
+      - commands/design-assessment.md
+      - commands/distill-session.md
+      - commands/encyclopedia-build.md
+      - commands/encyclopedia-validate.md
+      - commands/execute-plan.md
+      - commands/execute-work-packet.md
+      - commands/execute-work-packets-seq.md
+      - commands/fact-check-extract.md
+      - commands/fact-check-report.md
+      - commands/fact-check-verify.md
+      - commands/feature-config.md
+      - commands/feature-design.md
+      - commands/feature-discover.md
+      - commands/feature-implement.md
+      - commands/feature-research.md
+      - commands/finish-branch-cleanup.md
+      - commands/finish-branch-execute.md
+      - commands/fix-tests-execute.md
+      - commands/fix-tests-parse.md
+      - commands/fractal-think-harvest.md
+      - commands/fractal-think-seed.md
+      - commands/fractal-think-work.md
+      - commands/handoff.md
+      - commands/ie-techniques.md
+      - commands/ie-template.md
+      - commands/ie-tool-docs.md
+      - commands/merge-work-packets.md
+      - commands/merge-worktree-execute.md
+      - commands/merge-worktree-resolve.md
+      - commands/merge-worktree-verify.md
+      - commands/mode.md
+      - commands/move-project.md
+      - commands/polish-repo-audit.md
+      - commands/polish-repo-community.md
+      - commands/polish-repo-identity.md
+      - commands/polish-repo-naming.md
+      - commands/polish-repo-readme.md
+      - commands/pr-distill.md
+      - commands/pr-distill-bless.md
+      - commands/reflexion-analyze.md
+      - commands/request-review-artifacts.md
+      - commands/request-review-execute.md
+      - commands/request-review-plan.md
+      - commands/review-design-checklist.md
+      - commands/review-design-report.md
+      - commands/review-design-verify.md
+      - commands/review-plan-behavior.md
+      - commands/review-plan-completeness.md
+      - commands/review-plan-contracts.md
+      - commands/review-plan-inventory.md
+      - commands/scientific-debugging.md
+      - commands/sharpen-audit.md
+      - commands/sharpen-improve.md
+      - commands/simplify.md
+      - commands/simplify-analyze.md
+      - commands/simplify-transform.md
+      - commands/simplify-verify.md
+      - commands/systematic-debugging.md
+      - commands/test-bar.md
+      - commands/test-bar-remove.md
+      - commands/verify.md
+      - commands/write-plan.md
+      - commands/write-skill-test.md
+      - commands/writing-commands-create.md
+      - commands/writing-commands-paired.md
+      - commands/writing-commands-review.md
+    - Agents:
+      - Overview: agents/index.md
+      - agents/code-reviewer.md
+      - Tarot Agents:
+        - agents/chariot-implementer.md
+        - agents/emperor-governor.md
+        - agents/hierophant-distiller.md
+        - agents/justice-resolver.md
+        - agents/lovers-integrator.md
+        - agents/queen-affective.md
     - Architecture: reference/architecture.md
     - Patterns: reference/patterns.md
     - Citations: reference/citations.md
-    - Contributing: reference/contributing.md
   - Contributing:
+    - Contributing: reference/contributing.md
     - Porting to Your Assistant: contributing/porting-to-your-assistant.md
   - Acknowledgments: acknowledgments.md
