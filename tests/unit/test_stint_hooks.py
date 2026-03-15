@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -60,8 +61,8 @@ class TestEventDetection:
         })
         assert proc.returncode == 0
         # Timer file creation proves PreToolUse handler was dispatched
-        tts_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
-        notify_file = Path(f"/tmp/claude-notify-start-{tool_use_id}")
+        tts_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
+        notify_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
         assert tts_file.exists(), "PreToolUse handler not dispatched: TTS timer file missing"
         assert notify_file.exists(), "PreToolUse handler not dispatched: notify timer file missing"
         tts_file.unlink(missing_ok=True)
@@ -71,8 +72,8 @@ class TestEventDetection:
         """PostToolUse: has tool_result. Timer files should NOT be created (PostToolUse
         does not call _record_tool_start, only PreToolUse does)."""
         tool_use_id = "detect-post-tool-use-test"
-        tts_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
-        notify_file = Path(f"/tmp/claude-notify-start-{tool_use_id}")
+        tts_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
+        notify_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
         # Clean up any leftover files
         tts_file.unlink(missing_ok=True)
         notify_file.unlink(missing_ok=True)
@@ -242,8 +243,8 @@ class TestRecordToolStart:
         })
         assert proc.returncode == 0
         # Check that timer files were created in /tmp
-        tts_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
-        notify_file = Path(f"/tmp/claude-notify-start-{tool_use_id}")
+        tts_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
+        notify_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
         assert tts_file.exists(), "TTS timer file not created"
         assert notify_file.exists(), "Notify timer file not created"
         # Verify contents are timestamps (integers)
@@ -272,7 +273,7 @@ class TestRecordToolStart:
             "tool_use_id": "../../../etc/passwd",
         })
         assert proc.returncode == 0
-        assert not Path("/tmp/claude-tool-start-../../../etc/passwd").exists()
+        assert not Path(os.path.join(tempfile.gettempdir(), "claude-tool-start-../../../etc/passwd")).exists()
 
     def test_no_timer_files_for_whitespace(self):
         """Whitespace in tool_use_id should be rejected."""
@@ -364,13 +365,13 @@ class TestNotifyOnComplete:
                          "TaskCreate", "TaskUpdate", "TaskGet", "TaskList"):
                 # Create a timer file so threshold logic would fire
                 tool_use_id = f"blacklist-test-{tool}"
-                Path(f"/tmp/claude-notify-start-{tool_use_id}").write_text("0")
+                Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}")).write_text("0")
                 spellbook_hook._notify_on_complete(tool, {
                     "tool_input": {},
                     "tool_result": "result",
                     "tool_use_id": tool_use_id,
                 })
-                Path(f"/tmp/claude-notify-start-{tool_use_id}").unlink(missing_ok=True)
+                Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}")).unlink(missing_ok=True)
             assert notifications == [], (
                 f"Blacklisted tools should not trigger notifications, got: {notifications}"
             )
@@ -390,7 +391,7 @@ class TestNotifyOnComplete:
 
         try:
             tool_use_id = "disabled-test"
-            Path(f"/tmp/claude-notify-start-{tool_use_id}").write_text("0")
+            Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}")).write_text("0")
             spellbook_hook._notify_on_complete("Bash", {
                 "tool_input": {"command": "sleep 60"},
                 "tool_result": "done",
@@ -400,7 +401,7 @@ class TestNotifyOnComplete:
                 f"Notifications should be skipped when disabled, got: {notifications}"
             )
             # Timer file should NOT be consumed when disabled (early return)
-            Path(f"/tmp/claude-notify-start-{tool_use_id}").unlink(missing_ok=True)
+            Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}")).unlink(missing_ok=True)
         finally:
             spellbook_hook._send_os_notification = original_notify
             if original_env is None:
@@ -429,7 +430,7 @@ class TestTtsNotify:
 
         tool_use_id = "tts-test-threshold"
         # Create timer file with timestamp 0 (ancient) to exceed threshold
-        Path(f"/tmp/claude-tool-start-{tool_use_id}").write_text("0")
+        Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}")).write_text("0")
 
         try:
             spellbook_hook._tts_notify("Bash", {
@@ -446,7 +447,7 @@ class TestTtsNotify:
             assert "make" in speak_calls[0][2]["text"]
         finally:
             spellbook_hook._http_post = original_http
-            Path(f"/tmp/claude-tool-start-{tool_use_id}").unlink(missing_ok=True)
+            Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}")).unlink(missing_ok=True)
 
 
 class TestMemoryCapture:

@@ -20,6 +20,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -73,13 +74,13 @@ class TestTimerStartBehavior:
         result = _run_hook(payload)
         assert result.returncode == 0
 
-        start_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
+        start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
         assert start_file.exists()
         ts = int(start_file.read_text().strip())
         assert abs(ts - int(time.time())) < 5
         start_file.unlink()  # Cleanup
         # Also clean up the notify timer file
-        notify_file = Path(f"/tmp/claude-notify-start-{tool_use_id}")
+        notify_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
         if notify_file.exists():
             notify_file.unlink()
 
@@ -129,7 +130,7 @@ class TestTtsNotifyBehavior:
     def test_skips_when_under_threshold(self):
         tool_use_id = f"test-under-{int(time.time())}"
         # Write a start file with current timestamp (0 seconds ago)
-        start_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
+        start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
         start_file.write_text(str(int(time.time())))
 
         payload = {
@@ -217,13 +218,13 @@ class TestHookRegistration:
         pre_hooks = hooks.get("PreToolUse", [])
         assert len(pre_hooks) == 1
         assert len(pre_hooks[0]["hooks"]) == 1
-        assert "spellbook_hook.py" in pre_hooks[0]["hooks"][0]["command"]
+        assert "spellbook_hook" in pre_hooks[0]["hooks"][0]["command"]
 
         # PostToolUse: 1 entry with 1 unified hook
         post_hooks = hooks.get("PostToolUse", [])
         assert len(post_hooks) == 1
         assert len(post_hooks[0]["hooks"]) == 1
-        assert "spellbook_hook.py" in post_hooks[0]["hooks"][0]["command"]
+        assert "spellbook_hook" in post_hooks[0]["hooks"][0]["command"]
 
     def test_uninstall_removes_hooks(self, tmp_path):
         from installer.components.hooks import install_hooks, uninstall_hooks

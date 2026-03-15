@@ -171,7 +171,7 @@ class TestUpgradeFromShellHooks:
         ]
         catchall = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall) == 1
-        assert _get_hook_path(catchall[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(catchall[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
         # PostToolUse: user's hook preserved, unified hook in catch-all
         post_tool_use = updated["hooks"]["PostToolUse"]
@@ -180,7 +180,7 @@ class TestUpgradeFromShellHooks:
         assert user_entries[0]["hooks"] == ["/usr/local/bin/my-post-hook.sh"]
         post_catchall = [e for e in post_tool_use if "matcher" not in e]
         assert len(post_catchall) == 1
-        assert _get_hook_path(post_catchall[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(post_catchall[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
     def test_idempotent_install(self, tmp_path):
         """Running install twice should not duplicate hooks."""

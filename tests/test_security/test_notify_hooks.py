@@ -17,6 +17,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -75,7 +76,7 @@ class TestNotifyHookBehavior:
     def test_skips_when_under_threshold(self):
         tool_use_id = f"test-notify-under-{int(time.time())}"
         # Write a notify start file with current timestamp
-        start_file = Path(f"/tmp/claude-notify-start-{tool_use_id}")
+        start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
         start_file.write_text(str(int(time.time())))
 
         payload = {
@@ -178,7 +179,7 @@ class TestNotifyHookRegistration:
         post_hooks = hooks.get("PostToolUse", [])
         assert len(post_hooks) == 1
         assert len(post_hooks[0]["hooks"]) == 1
-        assert "spellbook_hook.py" in post_hooks[0]["hooks"][0]["command"]
+        assert "spellbook_hook" in post_hooks[0]["hooks"][0]["command"]
 
     def test_uninstall_removes_hooks(self, tmp_path):
         from installer.components.hooks import install_hooks, uninstall_hooks

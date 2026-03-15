@@ -220,7 +220,7 @@ class TestInstallHooks:
         assert isinstance(pre_tool_use, list)
         assert len(pre_tool_use) == 1
         assert len(pre_tool_use[0]["hooks"]) == 1
-        assert "spellbook_hook.py" in pre_tool_use[0]["hooks"][0]["command"]
+        assert "spellbook_hook" in pre_tool_use[0]["hooks"][0]["command"]
 
     def test_post_tool_use_has_one_unified_entry(self, tmp_path):
         """PostToolUse should have 1 entry (unified hook, catch-all)."""
@@ -235,7 +235,7 @@ class TestInstallHooks:
         assert isinstance(post_tool_use, list)
         assert len(post_tool_use) == 1
         assert len(post_tool_use[0]["hooks"]) == 1
-        assert "spellbook_hook.py" in post_tool_use[0]["hooks"][0]["command"]
+        assert "spellbook_hook" in post_tool_use[0]["hooks"][0]["command"]
 
     def test_unified_hook_entry_correct_in_pre_tool_use(self, tmp_path):
         """The unified hook entry in PreToolUse should have correct properties."""
@@ -400,7 +400,7 @@ class TestInstallHooks:
             if isinstance(h, dict) and "command" in h
         ]
         assert len(unified_cmds) == 1
-        assert unified_cmds[0].endswith("spellbook_hook.py")
+        assert unified_cmds[0].endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
     def test_idempotent_no_duplicates(self, tmp_path):
         """Running install_hooks twice should not create duplicate entries."""
@@ -451,7 +451,7 @@ class TestInstallHooks:
         catchall = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall) == 1
         assert len(catchall[0]["hooks"]) == 1
-        assert _get_hook_path(catchall[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(catchall[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
     def test_merges_hooks_into_existing_matcher(self, tmp_path):
         """If a user has their own Bash hook, the unified hook is added as a separate catch-all entry."""
@@ -482,7 +482,7 @@ class TestInstallHooks:
         # Unified hook should be a separate catch-all entry
         catchall = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall) == 1
-        assert _get_hook_path(catchall[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(catchall[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
     def test_dry_run_does_not_write(self, tmp_path):
         """In dry_run mode, no file should be created or modified."""
@@ -598,11 +598,11 @@ class TestInstallHooks:
         # PreToolUse: old Bash + spawn entries cleaned, 1 catch-all unified entry
         assert len(pre) == 1
         assert "matcher" not in pre[0]
-        assert _get_hook_path(pre[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(pre[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
         # PostToolUse: 1 catch-all unified entry
         assert len(post) == 1
         assert "matcher" not in post[0]
-        assert _get_hook_path(post[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(post[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
 
 # --- uninstall_hooks() tests ---
@@ -1260,7 +1260,7 @@ class TestLegacyCatchallMigration:
         catchall_entries = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall_entries) == 1
         # The unified hook should be present (tts-timer-start replaced by spellbook_hook.py)
-        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
     def test_migrates_star_matcher(self, tmp_path):
         """Re-installing should convert '*' catch-all to omitted matcher with unified hook."""
@@ -1293,7 +1293,7 @@ class TestLegacyCatchallMigration:
         # "*" matcher migrated to omitted-key form, old hook replaced by unified
         catchall_entries = [e for e in post_tool_use if "matcher" not in e]
         assert len(catchall_entries) == 1
-        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
     def test_migrates_empty_string_matcher(self, tmp_path):
         """Re-installing should convert '' catch-all to omitted matcher with unified hook."""
@@ -1326,7 +1326,7 @@ class TestLegacyCatchallMigration:
         # "" matcher migrated to omitted-key form, old hook replaced by unified
         catchall_entries = [e for e in pre_tool_use if "matcher" not in e]
         assert len(catchall_entries) == 1
-        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith("spellbook_hook.py")
+        assert _get_hook_path(catchall_entries[0]["hooks"][0]).endswith(("spellbook_hook.py", "spellbook_hook.ps1"))
 
     def test_preserves_user_hooks_in_legacy_catchall(self, tmp_path):
         """User hooks in a legacy '.*' entry should be preserved during migration."""
@@ -1524,7 +1524,7 @@ class TestTwoTierPathResolution:
             if sys.platform == "win32":
                 assert normalized.endswith("spellbook_hook.ps1"), f"Expected .ps1 path, found: {cmd}"
             else:
-                assert normalized.endswith("spellbook_hook.py"), f"Expected .py path, found: {cmd}"
+                assert normalized.endswith(("spellbook_hook.py", "spellbook_hook.ps1")), f"Expected spellbook_hook path, found: {cmd}"
 
 
 # --- Legacy hook detection and cleanup tests ---

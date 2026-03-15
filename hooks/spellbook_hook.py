@@ -15,6 +15,7 @@ import os
 import shlex
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import urllib.error
@@ -296,16 +297,17 @@ def _record_tool_start(tool_name: str, data: dict) -> None:
     """Record tool start time for TTS/notification thresholds.
 
     Writes current Unix timestamp to two files:
-    - /tmp/claude-tool-start-{tool_use_id} (for TTS)
-    - /tmp/claude-notify-start-{tool_use_id} (for OS notifications)
+    - {tempdir}/claude-tool-start-{tool_use_id} (for TTS)
+    - {tempdir}/claude-notify-start-{tool_use_id} (for OS notifications)
     """
     tool_use_id = data.get("tool_use_id", "")
     if not _validate_tool_use_id(tool_use_id):
         return
     now = str(int(time.time()))
+    tmpdir = tempfile.gettempdir()
     for prefix in ("claude-tool-start-", "claude-notify-start-"):
         try:
-            Path(f"/tmp/{prefix}{tool_use_id}").write_text(now)
+            Path(os.path.join(tmpdir, f"{prefix}{tool_use_id}")).write_text(now)
         except OSError:
             pass
 
@@ -420,7 +422,7 @@ def _notify_on_complete(tool_name: str, data: dict) -> None:
     tool_use_id = data.get("tool_use_id", "")
     if not _validate_tool_use_id(tool_use_id):
         return
-    start_file = Path(f"/tmp/claude-notify-start-{tool_use_id}")
+    start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-notify-start-{tool_use_id}"))
     if not start_file.exists():
         return
     try:
@@ -448,7 +450,7 @@ def _tts_notify(tool_name: str, data: dict) -> None:
     tool_use_id = data.get("tool_use_id", "")
     if not _validate_tool_use_id(tool_use_id):
         return
-    start_file = Path(f"/tmp/claude-tool-start-{tool_use_id}")
+    start_file = Path(os.path.join(tempfile.gettempdir(), f"claude-tool-start-{tool_use_id}"))
     if not start_file.exists():
         return
     try:
