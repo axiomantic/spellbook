@@ -107,6 +107,42 @@ class TestWSTicket:
         assert validate_ws_ticket(ticket) is False
 
 
+class TestLogin:
+    def test_login_with_correct_token_sets_cookie(self, unauthenticated_client, mock_mcp_token):
+        response = unauthenticated_client.post(
+            "/api/auth/login",
+            json={"password": mock_mcp_token},
+        )
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+        assert "spellbook_admin_session" in response.cookies
+
+    def test_login_with_wrong_token_returns_401(self, unauthenticated_client):
+        response = unauthenticated_client.post(
+            "/api/auth/login",
+            json={"password": "wrong-password"},
+        )
+        assert response.status_code == 401
+
+    def test_login_with_empty_password_returns_401(self, unauthenticated_client):
+        response = unauthenticated_client.post(
+            "/api/auth/login",
+            json={"password": ""},
+        )
+        assert response.status_code == 401
+
+
+class TestCheckAuth:
+    def test_check_with_valid_session_returns_200(self, client):
+        response = client.get("/api/auth/check")
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+
+    def test_check_without_session_returns_401(self, unauthenticated_client):
+        response = unauthenticated_client.get("/api/auth/check")
+        assert response.status_code == 401
+
+
 class TestRequireAdminAuth:
     def test_unauthenticated_returns_401(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/auth/callback?auth=invalid")

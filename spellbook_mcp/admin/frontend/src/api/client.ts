@@ -30,6 +30,11 @@ export async function fetchApi<T>(path: string, options: FetchOptions = {}): Pro
   })
 
   if (!response.ok) {
+    if (response.status === 401) {
+      // Session expired or invalid; reload to show login page
+      window.location.reload()
+      throw new Error('Session expired')
+    }
     const respBody = await response.json().catch(() => ({ error: { code: 'UNKNOWN', message: response.statusText } }))
     const err = new Error(respBody.error?.message || `HTTP ${response.status}`) as Error & { code: string; details: unknown }
     err.code = respBody.error?.code || 'UNKNOWN'

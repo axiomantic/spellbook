@@ -9,7 +9,8 @@ def mock_mcp_token(tmp_path):
     token = secrets.token_urlsafe(32)
     token_path = tmp_path / ".mcp-token"
     token_path.write_text(token)
-    with patch("spellbook_mcp.admin.auth.load_token", return_value=token):
+    with patch("spellbook_mcp.admin.auth.load_token", return_value=token), \
+         patch("spellbook_mcp.admin.routes.auth.load_token", return_value=token):
         yield token
 
 

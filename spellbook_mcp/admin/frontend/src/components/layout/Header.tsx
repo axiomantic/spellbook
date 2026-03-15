@@ -1,7 +1,9 @@
 import { useWebSocketContext } from '../../contexts/WebSocketContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 export function Header() {
   const { connectionState } = useWebSocketContext()
+  const { logout } = useAuth()
 
   const statusColor = connectionState === 'connected' ? 'bg-accent-green' : 'bg-accent-red'
   const statusText =
@@ -19,6 +21,12 @@ export function Header() {
           {statusText}
         </span>
       </div>
+      <button
+        onClick={logout}
+        className="font-mono text-xs text-text-dim uppercase tracking-widest hover:text-text-secondary"
+      >
+        // LOGOUT
+      </button>
     </header>
   )
 }

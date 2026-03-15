@@ -21,6 +21,33 @@ from spellbook_mcp.admin.auth import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+@router.post("/login")
+async def login(request: Request):
+    """Authenticate with the MCP token as password and set session cookie."""
+    body = await request.json()
+    password = body.get("password", "")
+    stored_token = load_token()
+    if not stored_token or not secrets.compare_digest(password, stored_token):
+        raise HTTPException(status_code=401, detail="Invalid password")
+    session_id = secrets.token_urlsafe(16)
+    cookie_value = create_session_cookie(session_id)
+    response = JSONResponse({"status": "ok"})
+    response.set_cookie(
+        "spellbook_admin_session",
+        cookie_value,
+        httponly=True,
+        samesite="strict",
+        max_age=86400,
+    )
+    return response
+
+
+@router.get("/check")
+async def check_auth(session_id: str = Depends(require_admin_auth)):
+    """Check if the current session is valid. Returns 200 or 401."""
+    return {"status": "ok"}
+
+
 @router.post("/exchange")
 async def exchange_token(request: Request):
     """Exchange MCP bearer token for a one-time browser auth token."""
