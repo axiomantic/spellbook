@@ -4,7 +4,10 @@ Provides graph listing, detail, node/edge queries, and pre-formatted
 Cytoscape.js data for the interactive graph visualization.
 """
 
+import asyncio
+import json
 import math
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -113,7 +116,8 @@ async def get_graph_nodes(
     nodes = await query_fractal_db(
         f"""
         SELECT n.id, n.node_type, n.text, n.owner, n.depth, n.status,
-               n.parent_id, n.metadata_json, n.created_at
+               n.parent_id, n.metadata_json, n.created_at,
+               n.session_id, n.claimed_at, n.answered_at, n.synthesized_at
         FROM nodes n
         WHERE n.graph_id = ?{depth_clause}
         ORDER BY n.depth, n.created_at
@@ -150,6 +154,18 @@ async def get_graph_edges(
     return {"edges": edges, "count": len(edges)}
 
 
+def _make_node_label(text: str | None) -> str:
+    """Extract first line of text for node label, stripping trailing colon."""
+    if not text:
+        return ""
+    first_line = text.split("\n", 1)[0].strip()
+    if first_line.endswith(":"):
+        first_line = first_line[:-1].strip()
+    if len(first_line) > 80:
+        first_line = first_line[:77] + "..."
+    return first_line
+
+
 @router.get("/graphs/{graph_id}/cytoscape")
 async def get_cytoscape_data(
     graph_id: str,
@@ -178,7 +194,8 @@ async def get_cytoscape_data(
     raw_nodes = await query_fractal_db(
         f"""
         SELECT n.id, n.node_type, n.text, n.depth, n.status,
-               n.parent_id, n.owner
+               n.parent_id, n.owner,
+               n.session_id, n.claimed_at, n.answered_at, n.synthesized_at
         FROM nodes n
         WHERE n.graph_id = ?{depth_clause}
         ORDER BY n.depth, n.created_at
@@ -215,12 +232,17 @@ async def get_cytoscape_data(
         cyto_nodes.append({
             "data": {
                 "id": n["id"],
-                "label": n["text"][:80] if n["text"] else "",
+                "label": _make_node_label(n["text"]),
+                "text": n["text"] or "",
                 "type": node_type,
                 "status": status,
                 "depth": n["depth"],
                 "parent_id": n["parent_id"],
                 "owner": n["owner"],
+                "session_id": n["session_id"],
+                "claimed_at": n["claimed_at"],
+                "answered_at": n["answered_at"],
+                "synthesized_at": n["synthesized_at"],
             },
             "classes": classes,
         })
@@ -344,3 +366,178 @@ async def get_contradictions(
         })
 
     return {"pairs": pairs, "count": len(pairs)}
+
+
+def _find_jsonl_file(session_id: str) -> Path | None:
+    """Search for a session JSONL file across all project directories.
+
+    Session files can be at the top level (regular sessions) or nested
+    in subagents/ directories (worker sessions from Task tool dispatch).
+    """
+    projects_dir = Path.home() / ".claude" / "projects"
+    if not projects_dir.exists():
+        return None
+    filename = f"{session_id}.jsonl"
+    for match in projects_dir.glob(f"**/{filename}"):
+        return match
+    return None
+
+
+def _parse_jsonl_messages(
+    jsonl_path: Path,
+    start_time: str | None,
+    end_time: str | None,
+) -> list[dict]:
+    """Parse JSONL file and extract user/assistant messages within a time window."""
+    messages = []
+    with open(jsonl_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            entry_type = entry.get("type")
+            if entry_type not in ("user", "assistant"):
+                continue
+
+            timestamp = entry.get("timestamp")
+            if not timestamp:
+                continue
+
+            # Filter by time window
+            if start_time and timestamp < start_time:
+                continue
+            if end_time and timestamp > end_time:
+                continue
+
+            message = entry.get("message", {})
+            content = message.get("content")
+            if content is None:
+                continue
+
+            if entry_type == "user":
+                # User messages: content is a string or list of tool_result blocks
+                if isinstance(content, str):
+                    messages.append({
+                        "role": "user",
+                        "content": content,
+                        "timestamp": timestamp,
+                    })
+                elif isinstance(content, list):
+                    # User messages can contain tool_result blocks
+                    for block in content:
+                        if isinstance(block, dict) and block.get("type") == "tool_result":
+                            tool_content = block.get("content", "")
+                            if isinstance(tool_content, list):
+                                tool_content = "\n".join(
+                                    b.get("text", "") for b in tool_content
+                                    if isinstance(b, dict) and b.get("type") == "text"
+                                )
+                            if tool_content:
+                                messages.append({
+                                    "role": "tool_result",
+                                    "content": tool_content[:2000],
+                                    "tool_use_id": block.get("tool_use_id", ""),
+                                    "timestamp": timestamp,
+                                })
+            else:
+                # Assistant messages: content is a list of blocks
+                if not isinstance(content, list):
+                    continue
+                for block in content:
+                    if not isinstance(block, dict):
+                        continue
+                    block_type = block.get("type")
+                    if block_type == "thinking":
+                        thinking = block.get("thinking", "")
+                        if thinking:
+                            messages.append({
+                                "role": "thinking",
+                                "content": thinking,
+                                "timestamp": timestamp,
+                            })
+                    elif block_type == "text":
+                        text = block.get("text", "")
+                        if text:
+                            messages.append({
+                                "role": "assistant",
+                                "content": text,
+                                "timestamp": timestamp,
+                            })
+                    elif block_type == "tool_use":
+                        messages.append({
+                            "role": "tool_use",
+                            "content": block.get("name", "unknown_tool"),
+                            "tool_use_id": block.get("id", ""),
+                            "timestamp": timestamp,
+                        })
+
+    return messages
+
+
+@router.get("/graphs/{graph_id}/nodes/{node_id}/chat-log")
+async def get_node_chat_log(
+    graph_id: str,
+    node_id: str,
+    _session: str = Depends(require_admin_auth),
+):
+    """Get the chat log for a fractal node's work session."""
+    rows = await query_fractal_db(
+        "SELECT session_id, claimed_at, answered_at, synthesized_at FROM nodes WHERE id = ? AND graph_id = ?",
+        (node_id, graph_id),
+    )
+    if not rows:
+        # Fallback: try without graph_id constraint (handles stale frontend state)
+        rows = await query_fractal_db(
+            "SELECT session_id, claimed_at, answered_at, synthesized_at FROM nodes WHERE id = ?",
+            (node_id,),
+        )
+    if not rows:
+        return _error_response("NODE_NOT_FOUND", f"Node '{node_id}' not found", 404)
+
+    node = rows[0]
+    session_id = node["session_id"]
+    claimed_at = node["claimed_at"]
+    answered_at = node["answered_at"]
+    synthesized_at = node["synthesized_at"]
+
+    if not session_id:
+        return {
+            "messages": [],
+            "node_id": node_id,
+            "session_id": None,
+            "note": "No session ID recorded for this node",
+        }
+
+    # Find the JSONL file
+    jsonl_path = await asyncio.to_thread(_find_jsonl_file, session_id)
+    if jsonl_path is None:
+        return {
+            "messages": [],
+            "node_id": node_id,
+            "session_id": session_id,
+            "note": f"Session file not found for session '{session_id}'",
+        }
+
+    # Determine the end of the time window: use the later of synthesized_at and answered_at
+    end_time = None
+    if synthesized_at and answered_at:
+        end_time = max(synthesized_at, answered_at)
+    elif synthesized_at:
+        end_time = synthesized_at
+    elif answered_at:
+        end_time = answered_at
+
+    messages = await asyncio.to_thread(_parse_jsonl_messages, jsonl_path, claimed_at, end_time)
+
+    return {
+        "messages": messages,
+        "node_id": node_id,
+        "session_id": session_id,
+        "claimed_at": claimed_at,
+        "synthesized_at": synthesized_at,
+    }

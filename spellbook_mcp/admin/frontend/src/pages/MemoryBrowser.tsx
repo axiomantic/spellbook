@@ -153,11 +153,12 @@ function MemoryDetailPanel({
   const [editContent, setEditContent] = useState('')
   const [editImportance, setEditImportance] = useState(1.0)
 
-  useEffect(() => {
+  const startEditing = useCallback(() => {
     if (memory) {
       setEditContent(memory.content)
       setEditImportance(memory.importance)
     }
+    setEditing(true)
   }, [memory])
 
   const handleSave = useCallback(() => {
@@ -214,7 +215,7 @@ function MemoryDetailPanel({
         </div>
         <div className="flex gap-2 shrink-0">
           {!editing && (
-            <button onClick={() => setEditing(true)} className="btn text-xs">
+            <button onClick={startEditing} className="btn text-xs">
               Edit
             </button>
           )}

@@ -3223,10 +3223,13 @@ def fractal_get_saturation_status(graph_id: str):
 
 @mcp.tool()
 @inject_recovery_context
-def fractal_claim_work(graph_id: str, worker_id: str):
-    """Atomically claim the next available question node for a worker. Returns node data with branch affinity preference, or graph_done status."""
+def fractal_claim_work(graph_id: str, worker_id: str, session_id: str = ""):
+    """Atomically claim the next available question node for a worker. Returns node data with branch affinity preference, or graph_done status. Pass session_id (Claude Code session UUID) for chat log linking in the admin UI."""
     try:
-        return do_fractal_claim_work(graph_id=graph_id, worker_id=worker_id)
+        return do_fractal_claim_work(
+            graph_id=graph_id, worker_id=worker_id,
+            session_id=session_id or None,
+        )
     except ValueError as e:
         return {"error": str(e)}
 

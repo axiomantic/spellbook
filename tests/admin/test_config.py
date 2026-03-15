@@ -25,18 +25,27 @@ class TestConfigGet:
             assert response.status_code == 200
             data = response.json()
             assert "config" in data
+            # Explicit values override defaults
             assert data["config"]["tts_enabled"] is True
             assert data["config"]["tts_voice"] == "bf_emma"
             assert data["config"]["tts_volume"] == 0.8
+            # Defaults are present for non-explicit keys
+            assert data["config"]["notify_title"] == "Spellbook"
 
-    def test_get_config_returns_empty_when_no_file(self, client):
+    def test_get_config_returns_defaults_when_no_file(self, client):
         with patch(
             "spellbook_mcp.admin.routes.config.get_all_config",
             return_value={},
         ):
             response = client.get("/api/config")
             assert response.status_code == 200
-            assert response.json()["config"] == {}
+            config = response.json()["config"]
+            # Should include defaults even when no explicit config exists
+            assert config["tts_enabled"] is True
+            assert config["tts_voice"] == "af_heart"
+            assert config["tts_volume"] == 0.3
+            assert config["notify_enabled"] is True
+            assert config["notify_title"] == "Spellbook"
 
     def test_get_config_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get("/api/config")

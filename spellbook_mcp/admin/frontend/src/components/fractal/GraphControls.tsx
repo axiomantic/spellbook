@@ -9,10 +9,11 @@ interface GraphControlsProps {
     convergences: number
     contradictions: number
   }
+  graphMaxDepth?: number
 }
 
-export function GraphControls({ maxDepth, onMaxDepthChange, stats }: GraphControlsProps) {
-  const graphMaxDepth = stats?.max_depth ?? 10
+export function GraphControls({ maxDepth, onMaxDepthChange, stats, graphMaxDepth: graphMaxDepthProp }: GraphControlsProps) {
+  const graphMaxDepth = graphMaxDepthProp ?? stats?.max_depth ?? 10
 
   return (
     <div className="bg-bg-surface border border-bg-border p-3 space-y-3">

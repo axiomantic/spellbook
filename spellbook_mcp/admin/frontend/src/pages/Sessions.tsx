@@ -1,105 +1,80 @@
 import { useState } from 'react'
-import { useSessions, useSessionDetail } from '../hooks/useSessions'
+import { useSessions } from '../hooks/useSessions'
 import { usePagination } from '../hooks/usePagination'
-import { Badge } from '../components/shared/Badge'
 import { Pagination } from '../components/shared/Pagination'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { EmptyState } from '../components/shared/EmptyState'
 import type { SessionItem } from '../api/types'
 
-function SessionRow({
-  session,
-  isExpanded,
-  onToggle,
-}: {
-  session: SessionItem
-  isExpanded: boolean
-  onToggle: () => void
-}) {
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function formatTime(ts: string | null): string {
+  if (!ts) return ''
+  try {
+    return new Date(ts).toLocaleString()
+  } catch {
+    return ts
+  }
+}
+
+function decodeProjectPath(encoded: string): string {
+  // Project dir names are path-encoded: -Users-alice-proj -> /Users/alice/proj
+  return '/' + encoded.replace(/-/g, '/')
+}
+
+function SessionRow({ session }: { session: SessionItem }) {
+  const [expanded, setExpanded] = useState(false)
+  const displayName = session.custom_title || session.slug || session.id.slice(0, 12)
+
   return (
     <div
       className="card mb-2 cursor-pointer hover:bg-bg-elevated transition-colors"
-      onClick={onToggle}
+      onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-text-primary">
-            {session.project_path.split('/').slice(-2).join('/')}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="font-mono text-sm text-text-primary truncate">
+            {displayName}
           </span>
-          {session.active_skill && <Badge label={session.active_skill} variant="active" />}
-          {session.skill_phase && (
-            <span className="font-mono text-xs text-text-dim">{session.skill_phase}</span>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {session.workflow_pattern && (
-            <Badge label={session.workflow_pattern} variant="info" />
-          )}
-          <span className="font-mono text-xs text-text-dim">
-            {session.bound_at ? new Date(session.bound_at).toLocaleString() : 'unbound'}
+          <span className="font-mono text-xs text-text-dim shrink-0">
+            {session.message_count} msgs
+          </span>
+          <span className="font-mono text-xs text-text-dim shrink-0">
+            {formatSize(session.size_bytes)}
           </span>
         </div>
+        <span className="font-mono text-xs text-text-dim shrink-0 ml-3">
+          {formatTime(session.last_activity)}
+        </span>
       </div>
-      {session.persona && (
+
+      {session.first_user_message && !expanded && (
         <p className="mt-1 font-mono text-xs text-text-secondary truncate">
-          {session.persona}
+          {session.first_user_message}
         </p>
       )}
-      {isExpanded && <SessionDetail sessionId={session.id} />}
-    </div>
-  )
-}
 
-function SessionDetail({ sessionId }: { sessionId: string }) {
-  const { data, isLoading } = useSessionDetail(sessionId)
-
-  if (isLoading) return <LoadingSpinner className="py-4" />
-  if (!data) return null
-
-  return (
-    <div className="mt-3 pt-3 border-t border-bg-border space-y-3">
-      {/* Metadata grid */}
-      <div className="grid grid-cols-2 gap-2">
-        <DetailField label="Soul ID" value={data.id} />
-        <DetailField label="Session ID" value={data.session_id} />
-        <DetailField label="Project" value={data.project_path} />
-        <DetailField label="Active Skill" value={data.active_skill} />
-        <DetailField label="Phase" value={data.skill_phase} />
-        <DetailField label="Workflow" value={data.workflow_pattern} />
-        <DetailField label="Persona" value={data.persona} />
-        <DetailField label="Summoned" value={data.summoned_at} />
-        <DetailField label="Bound" value={data.bound_at} />
-        {data.exact_position && (
-          <DetailField label="Position" value={data.exact_position} />
-        )}
-      </div>
-
-      {/* Todos */}
-      {data.todos && Array.isArray(data.todos) && data.todos.length > 0 && (
-        <div>
-          <span className="section-header">Todos</span>
-          <div className="mt-1 space-y-1">
-            {(data.todos as Array<Record<string, unknown>>).map((todo, i) => (
-              <div key={i} className="font-mono text-xs text-text-secondary flex items-center gap-2">
-                <span className={todo.done ? 'text-accent-green' : 'text-text-dim'}>
-                  {todo.done ? '[x]' : '[ ]'}
-                </span>
-                <span>{String(todo.text || todo)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recent files */}
-      {data.recent_files && Array.isArray(data.recent_files) && data.recent_files.length > 0 && (
-        <div>
-          <span className="section-header">Recent Files</span>
-          <div className="mt-1 space-y-0.5">
-            {data.recent_files.map((file: string, i: number) => (
-              <div key={i} className="font-mono text-xs text-text-secondary">{file}</div>
-            ))}
-          </div>
+      {expanded && (
+        <div className="mt-3 pt-3 border-t border-bg-border space-y-2">
+          <DetailField label="Session ID" value={session.id} />
+          <DetailField label="Project" value={decodeProjectPath(session.project)} />
+          {session.slug && <DetailField label="Slug" value={session.slug} />}
+          <DetailField label="Created" value={formatTime(session.created_at)} />
+          <DetailField label="Last Activity" value={formatTime(session.last_activity)} />
+          <DetailField label="Messages" value={String(session.message_count)} />
+          <DetailField label="Size" value={formatSize(session.size_bytes)} />
+          {session.first_user_message && (
+            <div>
+              <span className="font-mono text-xs text-text-dim uppercase">First Message: </span>
+              <p className="font-mono text-xs text-text-secondary mt-0.5 whitespace-pre-wrap">
+                {session.first_user_message}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -118,7 +93,6 @@ function DetailField({ label, value }: { label: string; value: string | null }) 
 
 export function Sessions() {
   const [project, setProject] = useState<string>('')
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const pagination = usePagination(50)
 
   const { data, isLoading, isError } = useSessions({
@@ -137,7 +111,7 @@ export function Sessions() {
       <div className="flex items-center gap-3 mb-4">
         <input
           type="text"
-          placeholder="Filter by project path..."
+          placeholder="Filter by project..."
           value={project}
           onChange={(e) => { setProject(e.target.value); pagination.resetPage() }}
           className="bg-bg-surface border border-bg-border px-3 py-2 font-mono text-xs text-text-primary placeholder:text-text-dim focus:border-accent-green outline-none w-96"
@@ -161,12 +135,7 @@ export function Sessions() {
         <EmptyState title="No sessions" message="No sessions match the current filter." />
       )}
       {data && data.sessions.map((session) => (
-        <SessionRow
-          key={session.id}
-          session={session}
-          isExpanded={expandedId === session.id}
-          onToggle={() => setExpandedId(expandedId === session.id ? null : session.id)}
-        />
+        <SessionRow key={session.id} session={session} />
       ))}
 
       {/* Pagination */}

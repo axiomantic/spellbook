@@ -105,6 +105,10 @@ class TestFractalNodes:
                         "parent_id": None,
                         "metadata_json": "{}",
                         "created_at": "2026-03-14T10:00:00Z",
+                        "session_id": None,
+                        "claimed_at": None,
+                        "answered_at": None,
+                        "synthesized_at": None,
                     }
                 ],
             ]
@@ -132,6 +136,10 @@ class TestFractalNodes:
                         "parent_id": None,
                         "metadata_json": "{}",
                         "created_at": "2026-03-14T10:00:00Z",
+                        "session_id": None,
+                        "claimed_at": None,
+                        "answered_at": None,
+                        "synthesized_at": None,
                     }
                 ],
             ]
@@ -191,6 +199,10 @@ class TestFractalCytoscape:
                         "status": "saturated",
                         "parent_id": None,
                         "owner": None,
+                        "session_id": None,
+                        "claimed_at": None,
+                        "answered_at": None,
+                        "synthesized_at": None,
                     },
                     {
                         "id": "n-2",
@@ -200,6 +212,10 @@ class TestFractalCytoscape:
                         "status": "open",
                         "parent_id": "n-1",
                         "owner": "agent-1",
+                        "session_id": None,
+                        "claimed_at": None,
+                        "answered_at": None,
+                        "synthesized_at": None,
                     },
                 ],
                 [
@@ -265,6 +281,10 @@ class TestFractalCytoscape:
                         "status": "open",
                         "parent_id": None,
                         "owner": None,
+                        "session_id": None,
+                        "claimed_at": None,
+                        "answered_at": None,
+                        "synthesized_at": None,
                     }
                 ],
                 # Edge to n-2 which is NOT in node set

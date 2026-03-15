@@ -18,7 +18,11 @@ export function useWebSocket({ onEvent, enabled = true }: UseWebSocketOptions = 
   const backoffRef = useRef(INITIAL_BACKOFF)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const enabledRef = useRef(enabled)
-  enabledRef.current = enabled
+  const scheduleReconnectRef = useRef<() => void>()
+
+  useEffect(() => {
+    enabledRef.current = enabled
+  }, [enabled])
 
   const connect = useCallback(async () => {
     if (!enabledRef.current) return
@@ -58,7 +62,7 @@ export function useWebSocket({ onEvent, enabled = true }: UseWebSocketOptions = 
       ws.onclose = () => {
         setState('disconnected')
         wsRef.current = null
-        scheduleReconnect()
+        scheduleReconnectRef.current?.()
       }
 
       ws.onerror = () => {
@@ -69,7 +73,7 @@ export function useWebSocket({ onEvent, enabled = true }: UseWebSocketOptions = 
       wsRef.current = ws
     } catch {
       setState('error')
-      scheduleReconnect()
+      scheduleReconnectRef.current?.()
     }
   }, [onEvent])
 
@@ -81,6 +85,11 @@ export function useWebSocket({ onEvent, enabled = true }: UseWebSocketOptions = 
       connect()
     }, delay)
   }, [connect])
+
+  // Keep ref in sync with latest scheduleReconnect
+  useEffect(() => {
+    scheduleReconnectRef.current = scheduleReconnect
+  }, [scheduleReconnect])
 
   const disconnect = useCallback(() => {
     if (reconnectTimerRef.current) {

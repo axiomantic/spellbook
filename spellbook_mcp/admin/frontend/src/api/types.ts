@@ -90,14 +90,14 @@ export interface SecurityDashboardResponse {
 // Sessions
 export interface SessionItem {
   id: string
-  project_path: string
-  session_id: string | null
-  bound_at: string | null
-  persona: string | null
-  active_skill: string | null
-  skill_phase: string | null
-  workflow_pattern: string | null
-  summoned_at: string | null
+  project: string
+  slug: string | null
+  custom_title: string | null
+  first_user_message: string | null
+  created_at: string | null
+  last_activity: string | null
+  message_count: number
+  size_bytes: number
 }
 
 export interface SessionListResponse extends PaginatedResponse {
@@ -146,6 +146,22 @@ export interface CytoscapeResponse {
     convergences: number
     contradictions: number
   }
+}
+
+export interface ChatLogMessage {
+  role: 'user' | 'assistant' | 'thinking' | 'tool_use' | 'tool_result'
+  content: string
+  timestamp: string
+  tool_use_id?: string
+}
+
+export interface ChatLogResponse {
+  messages: ChatLogMessage[]
+  node_id: string
+  session_id: string | null
+  claimed_at?: string | null
+  synthesized_at?: string | null
+  note?: string
 }
 
 // WebSocket

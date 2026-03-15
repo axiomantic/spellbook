@@ -26,54 +26,65 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/config", tags=["config"])
 
-# Known config keys with type and description
+# Known config keys with type, description, and defaults
 CONFIG_SCHEMA = [
     {
         "key": "tts_enabled",
         "type": "boolean",
         "description": "Enable text-to-speech announcements for long-running tool completions",
+        "default": True,
     },
     {
         "key": "tts_voice",
         "type": "string",
         "description": "Kokoro voice ID for TTS (e.g. bf_emma, af_heart)",
+        "default": "af_heart",
     },
     {
         "key": "tts_volume",
         "type": "number",
         "description": "TTS playback volume (0.0 to 1.0)",
+        "default": 0.3,
     },
     {
         "key": "notify_enabled",
         "type": "boolean",
         "description": "Enable native OS notifications for long-running tool completions",
+        "default": True,
     },
     {
         "key": "notify_title",
         "type": "string",
         "description": "Title for OS notifications",
+        "default": "Spellbook",
     },
     {
         "key": "telemetry_enabled",
         "type": "boolean",
         "description": "Enable anonymous usage telemetry",
+        "default": False,
     },
     {
         "key": "auto_update",
         "type": "boolean",
         "description": "Automatically check for and apply spellbook updates",
+        "default": True,
     },
     {
         "key": "session_mode",
         "type": "string",
         "description": "Default session mode (fun, tarot, none)",
+        "default": "none",
     },
     {
         "key": "admin_enabled",
         "type": "boolean",
         "description": "Whether the admin web interface is mounted on server startup",
+        "default": True,
     },
 ]
+
+CONFIG_DEFAULTS = {entry["key"]: entry["default"] for entry in CONFIG_SCHEMA}
 
 KNOWN_KEYS = {entry["key"] for entry in CONFIG_SCHEMA}
 
@@ -107,8 +118,9 @@ def batch_set_config(updates: dict[str, Any]) -> dict:
 
 @router.get("", response_model=ConfigResponse)
 async def get_config(_session_id: str = Depends(require_admin_auth)):
-    """Read all config from spellbook.json."""
-    config = await asyncio.to_thread(get_all_config)
+    """Read all config from spellbook.json, with defaults filled in."""
+    explicit = await asyncio.to_thread(get_all_config)
+    config = {**CONFIG_DEFAULTS, **explicit}
     return ConfigResponse(config=config)
 
 

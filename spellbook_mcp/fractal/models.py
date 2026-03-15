@@ -9,7 +9,7 @@ from typing import Optional
 
 
 # Constants
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 VALID_INTENSITIES = ["pulse", "explore", "deep"]
 

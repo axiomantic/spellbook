@@ -39,6 +39,9 @@ function AuthGate() {
             <Route path="/sessions" element={<Sessions />} />
             <Route path="/config" element={<ConfigEditor />} />
             <Route path="/fractal" element={<FractalExplorer />} />
+            <Route path="/fractal/:graphId" element={<FractalExplorer />} />
+            <Route path="/fractal/:graphId/:nodeId" element={<FractalExplorer />} />
+            <Route path="/fractal/:graphId/:nodeId/chat" element={<FractalExplorer />} />
           </Routes>
         </AppShell>
       </BrowserRouter>
