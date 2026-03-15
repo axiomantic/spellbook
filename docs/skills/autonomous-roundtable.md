@@ -29,7 +29,7 @@ flowchart TD
         Discover["gathering-requirements"]
         Design["brainstorming"]
         Plan["writing-plans"]
-        Implement["implementing-features"]
+        Implement["develop"]
         Complete["Final roundtable"]
     end
 
@@ -122,7 +122,7 @@ flowchart TD
 | gathering-requirements | SKILL.md: Stages table - DISCOVER stage |
 | brainstorming | SKILL.md: Stages table - DESIGN stage |
 | writing-plans | SKILL.md: Stages table - PLAN stage |
-| implementing-features | SKILL.md: Stages table - IMPLEMENT stage |
+| develop | SKILL.md: Stages table - IMPLEMENT stage |
 | Final roundtable | SKILL.md: Stages table - COMPLETE stage |
 | roundtable_convene | SKILL.md: MCP Tools - Roundtable convene |
 | Verdict (APPROVE/ITERATE) | SKILL.md: Forge Loop - roundtable outcomes |

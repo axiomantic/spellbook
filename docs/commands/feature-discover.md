@@ -4,7 +4,7 @@
 
 # Diagram: feature-discover
 
-Phase 1.5 of implementing-features: Informed discovery using research findings, disambiguation, 7-category question wizard with ARH pattern, understanding document creation, and devil's advocate review.
+Phase 1.5 of develop: Informed discovery using research findings, disambiguation, 7-category question wizard with ARH pattern, understanding document creation, and devil's advocate review.
 
 ```mermaid
 flowchart TD

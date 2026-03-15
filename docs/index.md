@@ -29,6 +29,18 @@ curl -fsSL https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap
 
 See [Installation Guide](getting-started/installation.md) for options and manual installation.
 
+## Signature Spells
+
+These five spells represent the most powerful capabilities in Spellbook:
+
+| Skill | What it does |
+|-------|-------------|
+| [develop](skills/develop.md) | Full-lifecycle feature orchestrator. Takes an idea through research, requirements discovery, design, planning, TDD implementation, code review, and branch finishing. Classifies complexity and enforces quality gates at every phase. |
+| [fractal-thinking](skills/fractal-thinking.md) | Recursive question decomposition. Builds a persistent graph of sub-questions, dispatches parallel workers, detects convergence and contradiction across branches, and synthesizes answers bottom-up. Survives context boundaries. |
+| [auditing-green-mirage](skills/auditing-green-mirage.md) | Test integrity auditor. Finds tests that pass but prove nothing: empty assertions, tautological checks, over-mocked reality, tests that cannot fail. |
+| [fact-checking](skills/fact-checking.md) | Claim verification engine. Extracts claims from documents or code, dispatches parallel agents to trace each claim to codebase evidence, and produces a graded trust report. |
+| [advanced-code-review](skills/advanced-code-review.md) | Multi-phase deep review. Builds a semantic model of the codebase, generates a review plan, analyzes across architectural, security, performance, and correctness dimensions, then verifies its own findings. |
+
 ## Attribution
 
 Spellbook includes skills, commands, agents, and hooks from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. See [Acknowledgments](acknowledgments.md) for full details.

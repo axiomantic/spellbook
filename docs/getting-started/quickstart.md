@@ -46,7 +46,7 @@ Review my changes using the requesting-code-review skill
 
 **Receiving feedback:**
 ```
-Address this PR feedback using the receiving-code-review skill
+Address this PR feedback using the code-review --feedback skill
 ```
 
 ## Autonomous Mode

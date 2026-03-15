@@ -1,7 +1,7 @@
 <!-- diagram-meta: {"source": "skills/implementing-features/SKILL.md", "source_hash": "sha256:4d890a7732386cd89cb57a9423a78cb3f6526537120480fd5767084e23dd0f41", "generated_at": "2026-02-20T00:13:23Z", "generator": "generate_diagrams.py", "stamped_at": "2026-03-15T08:56:55Z"} -->
-# Diagram: implementing-features
+# Diagram: develop
 
-Overview of the implementing-features skill workflow, which orchestrates complete feature implementation through 5 phases: Configuration (Phase 0), Research (Phase 1), Informed Discovery (Phase 1.5), Design (Phase 2), Implementation Planning (Phase 3), and Execution (Phase 4). Includes a Simple Path shortcut and escape hatch routing for pre-existing artifacts.
+Overview of the develop skill workflow, which orchestrates complete feature implementation through 5 phases: Configuration (Phase 0), Research (Phase 1), Informed Discovery (Phase 1.5), Design (Phase 2), Implementation Planning (Phase 3), and Execution (Phase 4). Includes a Simple Path shortcut and escape hatch routing for pre-existing artifacts.
 
 ```mermaid
 flowchart TD

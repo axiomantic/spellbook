@@ -11,6 +11,12 @@ from pathlib import Path
 
 import yaml
 
+from diagram_config import (
+    EXCLUDED_AGENTS,
+    EXCLUDED_COMMANDS,
+    EXCLUDED_SKILLS,
+)
+
 REPO_ROOT = Path(__file__).parent.parent
 SKILLS_DIR = REPO_ROOT / "skills"
 COMMANDS_DIR = REPO_ROOT / "commands"
@@ -24,7 +30,6 @@ SUPERPOWERS_SKILLS = {
     "dispatching-parallel-agents",
     "executing-plans",
     "finishing-a-development-branch",
-    "receiving-code-review",
     "requesting-code-review",
     "subagent-driven-development",
     "systematic-debugging",
@@ -222,7 +227,7 @@ def main():
     skill_count = 0
     files_changed = 0
     for skill_dir in sorted(SKILLS_DIR.iterdir()):
-        if skill_dir.is_dir() and (skill_dir / "SKILL.md").exists():
+        if skill_dir.is_dir() and skill_dir.name not in EXCLUDED_SKILLS and (skill_dir / "SKILL.md").exists():
             doc = generate_skill_doc(skill_dir)
             if doc:
                 output_file = DOCS_DIR / "skills" / f"{skill_dir.name}.md"
@@ -236,6 +241,8 @@ def main():
     for cmd_file in sorted(COMMANDS_DIR.glob("*.md")):
         if "crystallized2" in cmd_file.name:
             continue
+        if cmd_file.stem in EXCLUDED_COMMANDS:
+            continue
         doc = generate_command_doc(cmd_file)
         if doc:
             output_file = DOCS_DIR / "commands" / cmd_file.name
@@ -246,7 +253,7 @@ def main():
 
     # Generate command docs (nested directories like commands/systematic-debugging/)
     for cmd_dir in sorted(COMMANDS_DIR.iterdir()):
-        if cmd_dir.is_dir():
+        if cmd_dir.is_dir() and cmd_dir.name not in EXCLUDED_COMMANDS:
             # Look for main command file (same name as directory)
             main_cmd = cmd_dir / f"{cmd_dir.name}.md"
             if main_cmd.exists():
@@ -262,6 +269,8 @@ def main():
     agent_count = 0
     for agent_file in sorted(AGENTS_DIR.glob("*.md")):
         if "crystallized2" in agent_file.name:
+            continue
+        if agent_file.stem in EXCLUDED_AGENTS:
             continue
         doc = generate_agent_doc(agent_file)
         if doc:

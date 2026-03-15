@@ -733,7 +733,7 @@ class TestSkillSelection:
         assert skill == "resolving-merge-conflicts"
 
     def test_select_skill_with_code_quality_feedback(self):
-        """Code quality feedback should trigger receiving-code-review skill."""
+        """Code quality feedback should trigger code-review --feedback skill."""
         from spellbook_mcp.forged.skill_selection import select_skill
         from spellbook_mcp.forged.models import IterationState, Feedback
 
@@ -755,7 +755,7 @@ class TestSkillSelection:
         )
 
         skill = select_skill(context)
-        assert skill == "receiving-code-review"
+        assert skill == "code-review --feedback"
 
     def test_select_skill_with_factual_accuracy_feedback(self):
         """Factual accuracy feedback should trigger fact-checking skill."""

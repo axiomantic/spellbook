@@ -1,4 +1,11 @@
 docs_dir: docs
+exclude_docs: |
+  Users-*/
+  diagrams/
+  /security.md
+  /windows-support-report.md
+  commands/toggle-fun.md
+  skills/code-review-diagram.md
 site_name: Spellbook
 site_description: Multi-platform AI assistant skills, commands, and configuration
 site_url: https://axiomantic.github.io/spellbook/
@@ -67,7 +74,7 @@ nav:
     - Quick Start: getting-started/quickstart.md
   - Guide:
     - Building Features:
-      - skills/implementing-features.md
+      - skills/develop.md
       - skills/brainstorming.md
       - skills/writing-plans.md
       - skills/executing-plans.md
@@ -78,7 +85,6 @@ nav:
       - skills/code-review.md
       - skills/advanced-code-review.md
       - skills/requesting-code-review.md
-      - skills/receiving-code-review.md
       - skills/distilling-prs.md
       - skills/reviewing-prs.md
     - Testing:
@@ -154,7 +160,7 @@ nav:
       - skills/fun-mode.md
       - skills/gathering-requirements.md
       - skills/generating-diagrams.md
-      - skills/implementing-features.md
+      - skills/develop.md
       - skills/instruction-engineering.md
       - skills/isolated-testing.md
       - skills/managing-artifacts.md
@@ -162,7 +168,6 @@ nav:
       - skills/optimizing-instructions.md
       - skills/polish-repo.md
       - skills/project-encyclopedia.md
-      - skills/receiving-code-review.md
       - skills/reflexion.md
       - skills/requesting-code-review.md
       - skills/resolving-merge-conflicts.md

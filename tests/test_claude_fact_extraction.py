@@ -333,7 +333,6 @@ class TestAllSkillsMinimumCompliance:
         "implementing-features",
         "instruction-engineering",
         "project-encyclopedia",
-        "receiving-code-review",
         "smart-reading",
         "test-driven-development",
         "using-git-worktrees",

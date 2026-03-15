@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/encyclopedia-build.md", "source_hash": "sha256:694277bb02b1ca68a687f04c7082eff03aaee066c35d60e34f60cf10aafb3659", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/encyclopedia-build.md","source_hash": "sha256:4d64af531f4176d86cc0584b3d0e2e80e883cdb50602a6b32f5d2237d95cb2e7","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: encyclopedia-build
 
 Build encyclopedia content: glossary, architecture skeleton, decision log, and entry points (Phases 2-5).

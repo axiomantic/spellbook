@@ -59,7 +59,6 @@ _GITHUB_PR_URL = re.compile(
 # Deprecated skills and their replacement commands
 DEPRECATED_SKILLS: dict[str, str] = {
     "requesting-code-review": "code-review --self",
-    "receiving-code-review": "code-review --feedback",
 }
 
 

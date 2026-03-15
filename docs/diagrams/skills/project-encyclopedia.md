@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/project-encyclopedia/SKILL.md", "source_hash": "sha256:7c83fc65e12ddaff8ae1c5ed8531669aba096a6d26486ce7eb6871cf6ab39523", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/project-encyclopedia/SKILL.md","source_hash": "sha256:96ca9ba1dd21995530e945b1f622241eec4e949e04466d70d26148b207795f1a","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: project-encyclopedia
 
 Create or refresh persistent project encyclopedias with glossary, architecture maps, and decision records to solve agent amnesia across sessions.

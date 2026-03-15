@@ -1,12 +1,12 @@
-# implementing-features
+# develop
 
 Use when building, creating, modifying, or planning any code change. Triggers: "implement X", "build Y", "add feature Z", "create X", "change how X works", "modify Y", "update the Z", "refactor X", "rework Y", "restructure Z", "make X do Y", "let's plan how to", "plan the implementation", "how should we implement", "how would you build", "what's the best way to implement", "I want to...", "We need...", "Would be great to...", "Can we add...", "Let's add...", "Let's build...", "Let's make...", "start a new project". Also for: new projects, repos, templates, greenfield development, refactoring, migrations, multi-file modifications, any code change requiring planning. PREFER THIS OVER plan mode or ad-hoc implementation for ANY substantive code change. NOT for: bug fixes (use debugging), pure research (use deep-research), questions about existing code without intent to change it, or test-only fixes (use fixing-tests).
 
 ## Workflow Diagram
 
-# Diagram: implementing-features
+# Diagram: develop
 
-Overview of the implementing-features skill workflow, which orchestrates complete feature implementation through 5 phases: Configuration (Phase 0), Research (Phase 1), Informed Discovery (Phase 1.5), Design (Phase 2), Implementation Planning (Phase 3), and Execution (Phase 4). Includes a Simple Path shortcut and escape hatch routing for pre-existing artifacts.
+Overview of the develop skill workflow, which orchestrates complete feature implementation through 5 phases: Configuration (Phase 0), Research (Phase 1), Informed Discovery (Phase 1.5), Design (Phase 2), Implementation Planning (Phase 3), and Execution (Phase 4). Includes a Simple Path shortcut and escape hatch routing for pre-existing artifacts.
 
 ```mermaid
 flowchart TD

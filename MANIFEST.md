@@ -55,7 +55,6 @@ All items conform to their respective schemas:
 | instruction-engineering | 1,507 | 170 | PASS | Over budget |
 | optimizing-instructions | 921 | 138 | PASS | |
 | resolving-merge-conflicts | 1,298 | 155 | PASS | |
-| receiving-code-review | 1,065 | 141 | PASS | |
 | requesting-code-review | 738 | 107 | PASS | |
 | smart-reading | 1,048 | 138 | PASS | |
 | test-driven-development | 1,160 | 165 | PASS | |
