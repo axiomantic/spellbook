@@ -1045,8 +1045,8 @@ Authentication uses the MCP bearer token from `~/.local/spellbook/.mcp-token`. F
 ### Serve Documentation Locally
 
 ```bash
-cd ~/.local/share/spellbook
-uvx mkdocs serve
+uv pip install -e ".[docs]"
+mkdocs serve
 ```
 
 Then open http://127.0.0.1:8000
