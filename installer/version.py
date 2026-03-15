@@ -181,7 +181,9 @@ def get_changelog_between_versions(
                 if ver_parts <= from_parts:
                     continue
             except ValueError:
-                if ver <= from_version:
+                # String comparison is unreliable for version ordering;
+                # only skip exact matches (the numeric path handles ordering)
+                if ver == from_version:
                     continue
 
         # Include [Unreleased] only if to_version is None

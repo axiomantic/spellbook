@@ -67,9 +67,11 @@ def create_admin_app() -> FastAPI:
         @app.get("/{full_path:path}")
         async def spa_fallback(request: Request, full_path: str):
             # Serve actual static files if they exist (favicon, etc.)
-            file_path = STATIC_DIR / full_path
-            if full_path and file_path.is_file():
-                return FileResponse(file_path)
+            if full_path:
+                file_path = (STATIC_DIR / full_path).resolve()
+                # Prevent path traversal outside STATIC_DIR
+                if file_path.is_relative_to(STATIC_DIR) and file_path.is_file():
+                    return FileResponse(file_path)
             # Otherwise serve index.html for client-side routing
             return FileResponse(STATIC_DIR / "index.html")
 

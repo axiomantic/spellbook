@@ -61,7 +61,7 @@ repos:
         entry: python3 scripts/check_admin_build.py
         language: system
         pass_filenames: false
-        files: ^spellbook_mcp/admin/frontend/(src/|index\.html|package\.json|vite\.config|tsconfig|tailwind\.config|postcss\.config)
+        files: ^spellbook_mcp/admin/frontend/(src/|index\.html|package\.json|package-lock\.json|vite\.config\.ts|tsconfig\.json|tailwind\.config\.js|postcss\.config\.js)
 
       - id: check-dependabot-coverage
         name: Check Dependabot covers all package manifests

@@ -950,8 +950,8 @@ def show_whats_new(spellbook_dir: Path, previous_version: str | None, current_ve
             elif line.strip():
                 print(f"    {line}")
         print()
-    except Exception:
-        pass  # Non-critical; don't break install on changelog parse errors
+    except Exception as e:
+        print(f"\nWarning: Could not display changelog updates: {e}")
 
 
 def show_admin_info(admin_enabled: bool) -> None:
@@ -1109,8 +1109,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                     # Fresh install or upgrade with admin enabled/unset: enable
                     _cfg_set("admin_enabled", True)
                     admin_enabled = True
-        except (ImportError, Exception):
-            pass
+        except (ImportError, Exception) as e:
+            print(f"\nWarning: Could not configure admin interface: {e}")
 
     show_admin_info(admin_enabled)
 
