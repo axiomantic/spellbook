@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Web admin interface** - Browser-based admin UI served from the MCP daemon at `/admin`. Provides real-time observability and management across all spellbook subsystems.
+  - **Dashboard** with health status, subsystem metrics, and live activity feed
+  - **Memory browser** with full-text search, CRUD operations, and consolidation trigger
+  - **Security event log** with severity/type/date filtering and summary aggregation
+  - **Session viewer** with soul list and project filtering
+  - **Config editor** with toggle switches for boolean settings and inline editing
+  - **Fractal graph explorer** with interactive Cytoscape.js visualization, depth filtering, and node detail panels
+  - **WebSocket event streaming** with ticket-based auth, auto-reconnect, and shared connection via React Context
+  - **Asyncio event bus** with bounded per-subscriber queues and thread-safe `publish_sync()` for MCP handlers
+  - **Pull-based MCP notification queue** with broadcast/namespace/session scoping
+  - **CLI command** `spellbook admin open` for authenticated browser launch
+  - Auth: SHA-256 signed HTTP-only cookies, WebSocket ticket exchange, token-based session management
+  - Tech: FastAPI sub-app mounted via `_additional_http_routes`, React 18 + TypeScript + Vite 5 + Tailwind 3
+  - Optional install via `spellbook[admin]` extra
+
+### Fixed
+- **Broken test import in test_check_tool_input_mcp.py** - `from conftest import get_tool_fn` failed with `ModuleNotFoundError` because pytest conftest modules aren't directly importable from subdirectories. Added `tests/` to `sys.path` so the import resolves correctly.
+
 ## [0.30.5] - 2026-03-12
 
 ### Fixed
