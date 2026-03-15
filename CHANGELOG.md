@@ -26,9 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Dashboard** with health status, subsystem metrics, and live activity feed
   - **Memory browser** with full-text search, CRUD operations, and consolidation trigger
   - **Security event log** with severity/type/date filtering and summary aggregation
-  - **Session viewer** with soul list and project filtering
-  - **Config editor** with toggle switches for boolean settings and inline editing
-  - **Fractal graph explorer** with interactive Cytoscape.js visualization, depth filtering, and node detail panels
+  - **Session viewer** scanning Claude Code JSONL session files with project filtering and expandable detail
+  - **Config editor** with toggle switches for boolean settings, inline editing, and default value rendering
+  - **Fractal graph explorer** with interactive Cytoscape.js visualization, depth filtering, node detail panels, chat log viewer, and viewport persistence in URL params
+  - **Tool call analytics** dashboard mining security_events for tool frequency, error rates, and usage timeline with period filtering
+  - **Subsystem health matrix** showing vital signs across all 4 SQLite databases with status badges, row counts, and last activity
+  - **Event bus live monitor** with real-time WebSocket event stream, subsystem filtering, auto-scroll, and event detail expansion
   - **WebSocket event streaming** with ticket-based auth, auto-reconnect, and shared connection via React Context
   - **Asyncio event bus** with bounded per-subscriber queues and thread-safe `publish_sync()` for MCP handlers
   - **Pull-based MCP notification queue** with broadcast/namespace/session scoping
@@ -38,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optional install via `spellbook[admin]` extra
 
 ### Fixed
+- **Compaction detector missed all compaction events** - `check_for_compaction()` checked `msg.get('type') == 'summary'` but Claude Code marks compaction with `isCompactSummary: true` on `type: "user"` messages. 47 compacted sessions across projects were going undetected, leaving the souls table empty.
 - **Broken test import in test_check_tool_input_mcp.py** - `from conftest import get_tool_fn` failed with `ModuleNotFoundError` because pytest conftest modules aren't directly importable from subdirectories. Added `tests/` to `sys.path` so the import resolves correctly.
 
 ## [0.30.5] - 2026-03-12
