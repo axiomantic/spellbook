@@ -178,12 +178,10 @@ def _send_os_notification(title: str, body: str) -> None:
     """Send a platform-specific OS notification."""
     try:
         if sys.platform == "darwin":
-            # Escape backslashes and double quotes to prevent AppleScript injection
-            safe_body = body.replace("\\", "\\\\").replace('"', '\\"')
-            safe_title = title.replace("\\", "\\\\").replace('"', '\\"')
+            # Pass title and body as arguments to prevent AppleScript injection
+            script = 'on run {title, body}\n  display notification body with title title\nend run'
             subprocess.run(
-                ["osascript", "-e",
-                 f'display notification "{safe_body}" with title "{safe_title}"'],
+                ["osascript", "-e", script, title, body],
                 capture_output=True, timeout=5,
             )
         else:

@@ -1526,7 +1526,7 @@ class TestWindowsParityScript:
             '    exit 2\n'
             '}\n'
             '\n'
-            '$result = $input | & $python.Source $hookScript 2>$null\n'
+            '$result = $input | & $python.Source $hookScript\n'
             '$exitCode = $LASTEXITCODE\n'
             '\n'
             'if ($result) {\n'

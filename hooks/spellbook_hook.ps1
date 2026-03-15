@@ -25,7 +25,7 @@ if (-not (Test-Path $hookScript)) {
     exit 2
 }
 
-$result = $input | & $python.Source $hookScript 2>$null
+$result = $input | & $python.Source $hookScript
 $exitCode = $LASTEXITCODE
 
 if ($result) {
