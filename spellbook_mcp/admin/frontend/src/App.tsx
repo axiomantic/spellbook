@@ -13,6 +13,7 @@ import { FractalExplorer } from './pages/FractalExplorer'
 import { AnalyticsPage } from './pages/AnalyticsPage'
 import { HealthPage } from './pages/HealthPage'
 import { EventMonitorPage } from './pages/EventMonitorPage'
+import { FocusPage } from './pages/FocusPage'
 
 function AuthGate() {
   const { authenticated, checking } = useAuth()
@@ -43,6 +44,7 @@ function AuthGate() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/health" element={<HealthPage />} />
             <Route path="/events" element={<EventMonitorPage />} />
+            <Route path="/focus" element={<FocusPage />} />
             <Route path="/config" element={<ConfigEditor />} />
             <Route path="/fractal" element={<FractalExplorer />} />
             <Route path="/fractal/:graphId" element={<FractalExplorer />} />

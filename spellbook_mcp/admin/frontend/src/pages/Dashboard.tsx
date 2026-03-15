@@ -1,4 +1,5 @@
 import { useDashboard } from '../hooks/useDashboard'
+import { useFocusSummary } from '../hooks/useFocus'
 import { useWebSocketContext } from '../contexts/WebSocketContext'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { ActivityFeed } from '../components/dashboard/ActivityFeed'
@@ -39,6 +40,7 @@ function StatCard({ label, value, accent }: StatCardProps) {
 
 export default function Dashboard() {
   const { data, isLoading, error } = useDashboard()
+  const { data: focusSummary } = useFocusSummary()
   const { connectionState } = useWebSocketContext()
 
   if (isLoading) {
@@ -106,6 +108,22 @@ export default function Dashboard() {
           <StatCard label="SWARMS" value={counts.running_swarms} accent={counts.running_swarms > 0} />
           <StatCard label="EXPERIMENTS" value={counts.open_experiments} accent={counts.open_experiments > 0} />
           <StatCard label="FRACTAL GRAPHS" value={counts.fractal_graphs} />
+        </div>
+      </div>
+
+      {/* Focus */}
+      <div>
+        <h2 className="font-mono text-xs uppercase tracking-widest text-text-dim mb-3">
+          // FOCUS
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard label="ACTIVE STACKS" value={focusSummary?.active_projects ?? '-'} accent={!!focusSummary && focusSummary.active_projects > 0} />
+          <StatCard label="MAX DEPTH" value={focusSummary?.max_depth ?? '-'} />
+          <StatCard label="CORRECTIONS 24H" value={focusSummary?.total_corrections_24h ?? '-'} accent={!!focusSummary && focusSummary.total_corrections_24h > 0} />
+          <StatCard
+            label="LLM / MCP WRONG"
+            value={focusSummary ? `${focusSummary.llm_wrong_24h} / ${focusSummary.mcp_wrong_24h}` : '-'}
+          />
         </div>
       </div>
 

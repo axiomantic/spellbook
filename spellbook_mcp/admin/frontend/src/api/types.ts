@@ -237,6 +237,46 @@ export interface HealthMatrixResponse {
   generated_at: string
 }
 
+// Zeigarnik Focus Tracking
+export interface StintEntry {
+  type: string
+  name: string
+  parent: string | null
+  purpose: string
+  behavioral_mode: string
+  success_criteria: string
+  metadata: Record<string, unknown>
+  entered_at: string
+  exited_at: string | null
+}
+
+export interface StintStack {
+  project_path: string
+  session_id: string | null
+  stack: StintEntry[]
+  depth: number
+  updated_at: string
+}
+
+export interface CorrectionEvent {
+  id: number
+  project_path: string
+  session_id: string | null
+  correction_type: 'llm_wrong' | 'mcp_wrong'
+  old_stack: StintEntry[]
+  new_stack: StintEntry[]
+  diff_summary: string | null
+  created_at: string
+}
+
+export interface FocusSummary {
+  active_projects: number
+  total_corrections_24h: number
+  llm_wrong_24h: number
+  mcp_wrong_24h: number
+  max_depth: number
+}
+
 // Errors
 export interface ErrorDetail {
   code: string
