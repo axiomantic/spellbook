@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useSessions } from '../hooks/useSessions'
 import { usePagination } from '../hooks/usePagination'
 import { Pagination } from '../components/shared/Pagination'
@@ -91,15 +91,124 @@ function DetailField({ label, value }: { label: string; value: string | null }) 
   )
 }
 
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay)
+    return () => clearTimeout(timer)
+  }, [value, delay])
+  return debouncedValue
+}
+
+function ProjectMultiSelect({
+  options,
+  selected,
+  onChange,
+}: {
+  options: string[]
+  selected: string[]
+  onChange: (selected: string[]) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const toggle = useCallback((project: string) => {
+    onChange(
+      selected.includes(project)
+        ? selected.filter((p) => p !== project)
+        : [...selected, project]
+    )
+  }, [selected, onChange])
+
+  const label = selected.length === 0
+    ? 'All projects'
+    : `${selected.length} project${selected.length === 1 ? '' : 's'} selected`
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="bg-bg-surface border border-bg-border px-3 py-2 font-mono text-xs text-text-primary focus:border-accent-green outline-none w-72 text-left flex items-center justify-between"
+      >
+        <span className="truncate">{label}</span>
+        <span className="text-text-dim ml-2">{open ? '\u25B2' : '\u25BC'}</span>
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-72 bg-bg-surface border border-bg-border max-h-64 overflow-y-auto shadow-lg">
+          {selected.length > 0 && (
+            <button
+              onClick={() => onChange([])}
+              className="w-full px-3 py-1.5 font-mono text-xs text-accent-green hover:bg-bg-elevated text-left border-b border-bg-border"
+            >
+              Clear selection
+            </button>
+          )}
+          {options.map((project) => (
+            <label
+              key={project}
+              className="flex items-center gap-2 px-3 py-1.5 font-mono text-xs text-text-primary hover:bg-bg-elevated cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(project)}
+                onChange={() => toggle(project)}
+                className="accent-accent-green"
+              />
+              <span className="truncate" title={decodeProjectPath(project)}>
+                {decodeProjectPath(project)}
+              </span>
+            </label>
+          ))}
+          {options.length === 0 && (
+            <div className="px-3 py-2 font-mono text-xs text-text-dim">No projects found</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function Sessions() {
-  const [project, setProject] = useState<string>('')
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([])
+  const [searchInput, setSearchInput] = useState('')
+  const debouncedSearch = useDebounce(searchInput, 300)
   const pagination = usePagination(50)
 
+  // Fetch all sessions (unfiltered) to extract unique project names
+  const allSessionsQuery = useSessions({
+    page: 1,
+    per_page: 200,
+  })
+
+  const projectOptions = useMemo(() => {
+    if (!allSessionsQuery.data) return []
+    const projects = new Set(allSessionsQuery.data.sessions.map((s) => s.project))
+    return Array.from(projects).sort()
+  }, [allSessionsQuery.data])
+
+  const projectParam = selectedProjects.length > 0 ? selectedProjects.join(',') : undefined
+
   const { data, isLoading, isError } = useSessions({
-    project: project || undefined,
+    project: projectParam,
+    search: debouncedSearch || undefined,
     page: pagination.page,
     per_page: pagination.per_page,
   })
+
+  const handleProjectChange = useCallback((projects: string[]) => {
+    setSelectedProjects(projects)
+    pagination.resetPage()
+  }, [pagination])
 
   return (
     <div className="p-6">
@@ -107,21 +216,30 @@ export function Sessions() {
         // Sessions
       </h1>
 
-      {/* Project filter */}
+      {/* Filter bar */}
       <div className="flex items-center gap-3 mb-4">
         <input
           type="text"
-          placeholder="Filter by project..."
-          value={project}
-          onChange={(e) => { setProject(e.target.value); pagination.resetPage() }}
-          className="bg-bg-surface border border-bg-border px-3 py-2 font-mono text-xs text-text-primary placeholder:text-text-dim focus:border-accent-green outline-none w-96"
+          placeholder="Search sessions..."
+          value={searchInput}
+          onChange={(e) => { setSearchInput(e.target.value); pagination.resetPage() }}
+          className="bg-bg-surface border border-bg-border px-3 py-2 font-mono text-xs text-text-primary placeholder:text-text-dim focus:border-accent-green outline-none w-72"
         />
-        {project && (
+        <ProjectMultiSelect
+          options={projectOptions}
+          selected={selectedProjects}
+          onChange={handleProjectChange}
+        />
+        {(selectedProjects.length > 0 || searchInput) && (
           <button
-            onClick={() => { setProject(''); pagination.resetPage() }}
+            onClick={() => {
+              setSelectedProjects([])
+              setSearchInput('')
+              pagination.resetPage()
+            }}
             className="btn"
           >
-            Clear
+            Clear all
           </button>
         )}
       </div>
@@ -132,7 +250,7 @@ export function Sessions() {
         <EmptyState title="Error loading sessions" message="Failed to fetch sessions." />
       )}
       {data && data.sessions.length === 0 && (
-        <EmptyState title="No sessions" message="No sessions match the current filter." />
+        <EmptyState title="No sessions" message="No sessions match the current filters." />
       )}
       {data && data.sessions.map((session) => (
         <SessionRow key={session.id} session={session} />

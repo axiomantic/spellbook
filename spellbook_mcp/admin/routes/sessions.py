@@ -20,7 +20,10 @@ from spellbook_mcp.admin.auth import require_admin_auth
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
-def _scan_sessions(project_filter: Optional[str] = None) -> list[dict]:
+def _scan_sessions(
+    project_filter: Optional[str] = None,
+    search: Optional[str] = None,
+) -> list[dict]:
     """Scan ~/.claude/projects/ for session JSONL files.
 
     Returns lightweight metadata by reading only the first and last few
@@ -32,6 +35,11 @@ def _scan_sessions(project_filter: Optional[str] = None) -> list[dict]:
 
     sessions: list[dict] = []
 
+    # Parse comma-separated project filters (OR logic)
+    project_filters: list[str] = []
+    if project_filter:
+        project_filters = [p.strip() for p in project_filter.split(",") if p.strip()]
+
     # Iterate project directories
     for project_dir in sorted(projects_dir.iterdir()):
         if not project_dir.is_dir():
@@ -39,7 +47,7 @@ def _scan_sessions(project_filter: Optional[str] = None) -> list[dict]:
 
         project_path = str(project_dir.name)
 
-        if project_filter and project_filter not in project_path:
+        if project_filters and not any(pf in project_path for pf in project_filters):
             continue
 
         # Find JSONL files (top-level only, skip subagents/)
@@ -109,6 +117,16 @@ def _scan_sessions(project_filter: Optional[str] = None) -> list[dict]:
             except (OSError, PermissionError):
                 continue
 
+    # Apply free-text search filter (case-insensitive substring match)
+    if search:
+        search_lower = search.lower()
+        sessions = [
+            s for s in sessions
+            if search_lower in (s.get("first_user_message") or "").lower()
+            or search_lower in (s.get("slug") or "").lower()
+            or search_lower in (s.get("custom_title") or "").lower()
+        ]
+
     # Sort by last activity descending
     sessions.sort(key=lambda s: s.get("last_activity") or "", reverse=True)
     return sessions
@@ -116,13 +134,14 @@ def _scan_sessions(project_filter: Optional[str] = None) -> list[dict]:
 
 @router.get("")
 async def list_sessions(
-    project: Optional[str] = Query(None, description="Filter by project path substring"),
+    project: Optional[str] = Query(None, description="Filter by project path substring (comma-separated for multiple)"),
+    search: Optional[str] = Query(None, description="Free-text search across title, slug, and first message"),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
     _session: str = Depends(require_admin_auth),
 ):
     """List sessions by scanning JSONL session files."""
-    all_sessions = await asyncio.to_thread(_scan_sessions, project)
+    all_sessions = await asyncio.to_thread(_scan_sessions, project, search)
 
     total = len(all_sessions)
     pages = max(1, math.ceil(total / per_page))

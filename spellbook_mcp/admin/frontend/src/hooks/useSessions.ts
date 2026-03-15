@@ -4,6 +4,7 @@ import type { SessionListResponse } from '../api/types'
 
 interface SessionsParams {
   project?: string
+  search?: string
   page?: number
   per_page?: number
 }

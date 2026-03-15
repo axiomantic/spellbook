@@ -23,6 +23,28 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center bg-[#060606]">
       <div className="w-full max-w-sm border border-[#2a2a2a] bg-[#101010] p-8">
         <div className="mb-6">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-8 h-8 text-[#b4f461] mb-3"
+          >
+            <path
+              d="M4 5h6c1.5 0 3 1.2 3 2.8V20c0-1.2-1.2-2.4-2.8-2.4H4V5z"
+              fill="currentColor"
+              opacity="0.85"
+            />
+            <path
+              d="M20 5h-6c-1.5 0-3 1.2-3 2.8V20c0-1.2 1.2-2.4 2.8-2.4H20V5z"
+              fill="currentColor"
+              opacity="0.6"
+            />
+            <path
+              d="M12 1.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"
+              fill="currentColor"
+              opacity="0.7"
+            />
+          </svg>
           <span className="font-mono text-xs uppercase tracking-widest text-[#8a8480]">
             // SPELLBOOK
           </span>

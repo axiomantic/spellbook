@@ -1,5 +1,34 @@
 import { NavLink } from 'react-router-dom'
 
+function SpellbookIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      {/* Open book */}
+      <path
+        d="M4 5h6c1.5 0 3 1.2 3 2.8V20c0-1.2-1.2-2.4-2.8-2.4H4V5z"
+        fill="currentColor"
+        opacity="0.85"
+      />
+      <path
+        d="M20 5h-6c-1.5 0-3 1.2-3 2.8V20c0-1.2 1.2-2.4 2.8-2.4H20V5z"
+        fill="currentColor"
+        opacity="0.6"
+      />
+      {/* Small sparkle above book */}
+      <path
+        d="M12 1.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"
+        fill="currentColor"
+        opacity="0.7"
+      />
+    </svg>
+  )
+}
+
 const navItems = [
   { to: '/', label: '// DASHBOARD' },
   { to: '/memory', label: '// MEMORY' },
@@ -16,9 +45,12 @@ export function Sidebar() {
   return (
     <aside className="w-56 border-r border-bg-border bg-bg-surface flex flex-col">
       <div className="p-4 border-b border-bg-border">
-        <h1 className="font-mono text-sm uppercase tracking-widest text-accent-green">
-          Spellbook
-        </h1>
+        <div className="flex items-center gap-2">
+          <SpellbookIcon className="w-6 h-6 text-accent-green" />
+          <h1 className="font-mono text-sm uppercase tracking-widest text-accent-green">
+            Spellbook
+          </h1>
+        </div>
         <p className="font-mono text-xs text-text-dim mt-1">Admin Interface</p>
       </div>
       <nav className="flex-1 p-2">
