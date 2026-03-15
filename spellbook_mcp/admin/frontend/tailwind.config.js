@@ -4,13 +4,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        'bg-primary': '#0a0a0a',
-        'bg-surface': '#141414',
-        'bg-elevated': '#1a1a1a',
+        'bg-primary': '#050505',
+        'bg-surface': '#0e0e0e',
+        'bg-elevated': '#161616',
         'bg-border': '#2a2a2a',
-        'text-primary': '#e8e0d0',
-        'text-secondary': '#8a8478',
-        'text-dim': '#5a5650',
+        'text-primary': '#f0ebe4',
+        'text-secondary': '#a09a90',
+        'text-dim': '#787068',
         'accent-green': '#b4f461',
         'accent-cyan': '#61f4e8',
         'accent-amber': '#f4c761',
