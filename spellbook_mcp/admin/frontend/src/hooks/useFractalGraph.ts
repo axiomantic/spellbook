@@ -1,6 +1,14 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { fetchApi } from '../api/client'
-import type { FractalGraphListResponse, CytoscapeResponse, FractalGraphSummary, ChatLogResponse } from '../api/types'
+import type {
+  FractalGraphListResponse,
+  CytoscapeResponse,
+  FractalGraphSummary,
+  ChatLogResponse,
+  GraphDeleteResponse,
+  GraphStatusUpdateRequest,
+  GraphStatusUpdateResponse,
+} from '../api/types'
 
 export function useFractalGraphList(page: number = 1, status?: string) {
   return useQuery({
@@ -40,5 +48,46 @@ export function useChatLog(graphId: string | null, nodeId: string | null) {
       fetchApi<ChatLogResponse>(`/api/fractal/graphs/${graphId}/nodes/${nodeId}/chat-log`),
     enabled: !!graphId && !!nodeId,
     staleTime: 30_000,
+  })
+}
+
+export function useDeleteGraph() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (graphId: string) =>
+      fetchApi<GraphDeleteResponse>(`/api/fractal/graphs/${graphId}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: (_data, graphId) => {
+      queryClient.invalidateQueries({ queryKey: ['fractal', 'graphs'] })
+      queryClient.invalidateQueries({ queryKey: ['fractal', 'graph', graphId] })
+      queryClient.invalidateQueries({ queryKey: ['fractal', 'cytoscape', graphId] })
+    },
+  })
+}
+
+export function useUpdateGraphStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      graphId,
+      ...body
+    }: GraphStatusUpdateRequest & { graphId: string }) =>
+      fetchApi<GraphStatusUpdateResponse>(
+        `/api/fractal/graphs/${graphId}/status`,
+        {
+          method: 'PATCH',
+          body,
+        }
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['fractal', 'graphs'] })
+      queryClient.invalidateQueries({
+        queryKey: ['fractal', 'graph', variables.graphId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['fractal', 'cytoscape', variables.graphId],
+      })
+    },
   })
 }

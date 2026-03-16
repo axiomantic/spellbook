@@ -15,6 +15,9 @@ from fastapi.responses import JSONResponse
 
 from spellbook_mcp.admin.auth import require_admin_auth
 from spellbook_mcp.admin.db import query_fractal_db
+from spellbook_mcp.admin.events import Event, Subsystem, event_bus
+from spellbook_mcp.admin.routes.schemas import GraphStatusUpdateRequest
+from spellbook_mcp.fractal.graph_ops import delete_graph, update_graph_status
 
 router = APIRouter(prefix="/fractal", tags=["fractal"])
 
@@ -91,6 +94,54 @@ async def get_graph(
         return _error_response("GRAPH_NOT_FOUND", f"Graph '{graph_id}' not found", 404)
 
     return rows[0]
+
+
+@router.delete("/graphs/{graph_id}")
+async def delete_graph_endpoint(
+    graph_id: str,
+    _session: str = Depends(require_admin_auth),
+):
+    """Delete a fractal graph and all its nodes/edges."""
+    result = await asyncio.to_thread(delete_graph, graph_id)
+
+    if "error" in result:
+        return _error_response("GRAPH_NOT_FOUND", "Graph not found", 404)
+
+    await event_bus.publish(
+        Event(
+            subsystem=Subsystem.FRACTAL,
+            event_type="fractal.graph_deleted",
+            data={"graph_id": graph_id},
+        )
+    )
+
+    return result
+
+
+@router.patch("/graphs/{graph_id}/status")
+async def update_graph_status_endpoint(
+    graph_id: str,
+    body: GraphStatusUpdateRequest,
+    _session: str = Depends(require_admin_auth),
+):
+    """Update the status of a fractal graph."""
+    result = await asyncio.to_thread(update_graph_status, graph_id, body.status, body.reason)
+
+    if "error" in result:
+        error_msg = result["error"]
+        if "not found" in error_msg.lower():
+            return _error_response("GRAPH_NOT_FOUND", "Graph not found", 404)
+        return _error_response("INVALID_TRANSITION", error_msg, 400)
+
+    await event_bus.publish(
+        Event(
+            subsystem=Subsystem.FRACTAL,
+            event_type="fractal.graph_updated",
+            data={"graph_id": graph_id, "status": body.status},
+        )
+    )
+
+    return result
 
 
 @router.get("/graphs/{graph_id}/nodes")

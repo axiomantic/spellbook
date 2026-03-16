@@ -104,6 +104,38 @@ export interface SessionListResponse extends PaginatedResponse {
   sessions: SessionItem[]
 }
 
+// Session Detail
+export interface SessionDetail {
+  id: string
+  project: string
+  project_decoded: string
+  slug: string | null
+  custom_title: string | null
+  created_at: string | null
+  last_activity: string | null
+  message_count: number
+  size_bytes: number
+  first_user_message: string | null
+}
+
+// Session Messages
+export interface SessionMessage {
+  line_number: number
+  type: string
+  timestamp: string | null
+  content: string
+  is_compact_summary: boolean
+  raw: Record<string, unknown> | null
+}
+
+export interface SessionMessagesResponse {
+  messages: SessionMessage[]
+  total_lines: number
+  page: number
+  per_page: number
+  pages: number
+}
+
 // Config
 export interface ConfigResponse {
   config: Record<string, unknown>
@@ -162,6 +194,23 @@ export interface ChatLogResponse {
   claimed_at?: string | null
   synthesized_at?: string | null
   note?: string
+}
+
+// Fractal Graph Management
+export interface GraphStatusUpdateRequest {
+  status: string
+  reason?: string
+}
+
+export interface GraphDeleteResponse {
+  deleted: boolean
+  graph_id: string
+}
+
+export interface GraphStatusUpdateResponse {
+  graph_id: string
+  status: string
+  previous_status: string
 }
 
 // WebSocket

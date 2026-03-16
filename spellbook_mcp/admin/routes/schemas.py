@@ -134,6 +134,11 @@ class ConfigBatchRequest(BaseModel):
 
 
 # --- Fractal ---
+class GraphStatusUpdateRequest(BaseModel):
+    status: str = Field(..., pattern=r"^[a-z_]+$", max_length=30)
+    reason: Optional[str] = None
+
+
 class FractalGraphSummary(BaseModel):
     id: str
     seed: str

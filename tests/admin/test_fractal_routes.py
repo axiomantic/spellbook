@@ -354,3 +354,197 @@ class TestFractalContradictions:
             data = response.json()
             assert data["count"] == 1
             assert len(data["pairs"]) == 1
+
+
+class TestFractalGraphDelete:
+    def test_delete_graph_success(self, client):
+        """DELETE /fractal/graphs/{graph_id} returns 200 with deleted confirmation."""
+        with (
+            patch(
+                "spellbook_mcp.admin.routes.fractal.delete_graph",
+                return_value={"deleted": True, "graph_id": "g-1"},
+            ) as mock_delete,
+            patch(
+                "spellbook_mcp.admin.routes.fractal.event_bus",
+            ) as mock_bus,
+        ):
+            mock_bus.publish = AsyncMock()
+            response = client.delete("/api/fractal/graphs/g-1")
+            assert response.status_code == 200
+            assert response.json() == {"deleted": True, "graph_id": "g-1"}
+
+            # Verify delete_graph was called with the correct graph_id
+            mock_delete.assert_called_once_with("g-1")
+
+            # Verify event was published
+            assert mock_bus.publish.call_count == 1
+            published_event = mock_bus.publish.call_args[0][0]
+            assert published_event.subsystem.value == "fractal"
+            assert published_event.event_type == "fractal.graph_deleted"
+            assert published_event.data == {"graph_id": "g-1"}
+
+    def test_delete_graph_not_found(self, client):
+        """DELETE /fractal/graphs/{graph_id} returns 404 when graph doesn't exist."""
+        with (
+            patch(
+                "spellbook_mcp.admin.routes.fractal.delete_graph",
+                return_value={"error": "Graph 'g-missing' not found."},
+            ) as mock_delete,
+            patch(
+                "spellbook_mcp.admin.routes.fractal.event_bus",
+            ) as mock_bus,
+        ):
+            mock_bus.publish = AsyncMock()
+            response = client.delete("/api/fractal/graphs/g-missing")
+            assert response.status_code == 404
+            assert response.json() == {
+                "error": {"code": "GRAPH_NOT_FOUND", "message": "Graph not found"}
+            }
+
+            mock_delete.assert_called_once_with("g-missing")
+
+            # No event published on failure
+            mock_bus.publish.assert_not_called()
+
+    def test_delete_graph_requires_auth(self, unauthenticated_client):
+        """DELETE /fractal/graphs/{graph_id} returns 401 without auth."""
+        response = unauthenticated_client.delete("/api/fractal/graphs/g-1")
+        assert response.status_code == 401
+
+
+class TestFractalGraphStatusUpdate:
+    def test_update_status_success(self, client):
+        """PATCH /fractal/graphs/{graph_id}/status returns 200 with updated status."""
+        with (
+            patch(
+                "spellbook_mcp.admin.routes.fractal.update_graph_status",
+                return_value={
+                    "graph_id": "g-1",
+                    "status": "completed",
+                    "previous_status": "active",
+                },
+            ) as mock_update,
+            patch(
+                "spellbook_mcp.admin.routes.fractal.event_bus",
+            ) as mock_bus,
+        ):
+            mock_bus.publish = AsyncMock()
+            response = client.patch(
+                "/api/fractal/graphs/g-1/status",
+                json={"status": "completed"},
+            )
+            assert response.status_code == 200
+            assert response.json() == {
+                "graph_id": "g-1",
+                "status": "completed",
+                "previous_status": "active",
+            }
+
+            mock_update.assert_called_once_with("g-1", "completed", None)
+
+            # Verify event was published
+            assert mock_bus.publish.call_count == 1
+            published_event = mock_bus.publish.call_args[0][0]
+            assert published_event.subsystem.value == "fractal"
+            assert published_event.event_type == "fractal.graph_updated"
+            assert published_event.data == {
+                "graph_id": "g-1",
+                "status": "completed",
+            }
+
+    def test_update_status_with_reason(self, client):
+        """PATCH /fractal/graphs/{graph_id}/status passes reason to graph_ops."""
+        with (
+            patch(
+                "spellbook_mcp.admin.routes.fractal.update_graph_status",
+                return_value={
+                    "graph_id": "g-1",
+                    "status": "paused",
+                    "previous_status": "active",
+                },
+            ) as mock_update,
+            patch(
+                "spellbook_mcp.admin.routes.fractal.event_bus",
+            ) as mock_bus,
+        ):
+            mock_bus.publish = AsyncMock()
+            response = client.patch(
+                "/api/fractal/graphs/g-1/status",
+                json={"status": "paused", "reason": "taking a break"},
+            )
+            assert response.status_code == 200
+            assert response.json() == {
+                "graph_id": "g-1",
+                "status": "paused",
+                "previous_status": "active",
+            }
+
+            mock_update.assert_called_once_with("g-1", "paused", "taking a break")
+
+    def test_update_status_invalid_transition(self, client):
+        """PATCH /fractal/graphs/{graph_id}/status returns 400 for invalid transition."""
+        with (
+            patch(
+                "spellbook_mcp.admin.routes.fractal.update_graph_status",
+                return_value={
+                    "error": "Invalid transition from 'completed' to 'active'. "
+                    "Allowed transitions from 'completed': []"
+                },
+            ) as mock_update,
+            patch(
+                "spellbook_mcp.admin.routes.fractal.event_bus",
+            ) as mock_bus,
+        ):
+            mock_bus.publish = AsyncMock()
+            response = client.patch(
+                "/api/fractal/graphs/g-1/status",
+                json={"status": "active"},
+            )
+            assert response.status_code == 400
+            assert response.json() == {
+                "error": {
+                    "code": "INVALID_TRANSITION",
+                    "message": (
+                        "Invalid transition from 'completed' to 'active'. "
+                        "Allowed transitions from 'completed': []"
+                    ),
+                }
+            }
+
+            mock_update.assert_called_once_with("g-1", "active", None)
+            mock_bus.publish.assert_not_called()
+
+    def test_update_status_not_found(self, client):
+        """PATCH /fractal/graphs/{graph_id}/status returns 404 when graph missing."""
+        with (
+            patch(
+                "spellbook_mcp.admin.routes.fractal.update_graph_status",
+                return_value={"error": "Graph 'g-missing' not found."},
+            ) as mock_update,
+            patch(
+                "spellbook_mcp.admin.routes.fractal.event_bus",
+            ) as mock_bus,
+        ):
+            mock_bus.publish = AsyncMock()
+            response = client.patch(
+                "/api/fractal/graphs/g-missing/status",
+                json={"status": "completed"},
+            )
+            assert response.status_code == 404
+            assert response.json() == {
+                "error": {
+                    "code": "GRAPH_NOT_FOUND",
+                    "message": "Graph not found",
+                }
+            }
+
+            mock_update.assert_called_once_with("g-missing", "completed", None)
+            mock_bus.publish.assert_not_called()
+
+    def test_update_status_requires_auth(self, unauthenticated_client):
+        """PATCH /fractal/graphs/{graph_id}/status returns 401 without auth."""
+        response = unauthenticated_client.patch(
+            "/api/fractal/graphs/g-1/status",
+            json={"status": "completed"},
+        )
+        assert response.status_code == 401

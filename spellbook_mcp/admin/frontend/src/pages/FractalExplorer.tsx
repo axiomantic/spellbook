@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { useFractalGraphList, useFractalCytoscape } from '../hooks/useFractalGraph'
+import { useFractalGraphList, useFractalCytoscape, useFractalGraphDetail } from '../hooks/useFractalGraph'
 import { GraphList } from '../components/fractal/GraphList'
+import { GraphDetailsSidebar } from '../components/fractal/GraphDetailsSidebar'
 import { GraphCanvas } from '../components/fractal/GraphCanvas'
 import { GraphControls } from '../components/fractal/GraphControls'
 import { NodeDetail } from '../components/fractal/NodeDetail'
@@ -28,6 +29,7 @@ export function FractalExplorer() {
   const chatLogNodeId = showChatLog && urlNodeId ? urlNodeId : null
 
   const { data: graphListData, isLoading: listLoading } = useFractalGraphList()
+  const { data: graphDetailData } = useFractalGraphDetail(selectedGraphId)
   const { data: cytoscapeData, isLoading: graphLoading } = useFractalCytoscape(
     selectedGraphId,
     maxDepth
@@ -147,6 +149,16 @@ export function FractalExplorer() {
               selectedId={selectedGraphId}
               onSelect={setSelectedGraphId}
             />
+          )}
+
+          {/* Graph details sidebar */}
+          {selectedGraphId && graphDetailData && (
+            <div className="pt-3 mt-3 border-t border-bg-border">
+              <GraphDetailsSidebar
+                graph={graphDetailData}
+                stats={cytoscapeData?.stats ?? null}
+              />
+            </div>
           )}
         </div>
 
