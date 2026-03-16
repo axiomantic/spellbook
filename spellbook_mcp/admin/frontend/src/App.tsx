@@ -9,6 +9,8 @@ import Dashboard from './pages/Dashboard'
 import { MemoryBrowser } from './pages/MemoryBrowser'
 import { SecurityLog } from './pages/SecurityLog'
 import { Sessions } from './pages/Sessions'
+import { SessionDetailPage } from './pages/SessionDetailPage'
+import { ChatHistoryPage } from './pages/ChatHistoryPage'
 import { FractalExplorer } from './pages/FractalExplorer'
 import { AnalyticsPage } from './pages/AnalyticsPage'
 import { HealthPage } from './pages/HealthPage'
@@ -41,6 +43,8 @@ function AuthGate() {
             <Route path="/memory" element={<MemoryBrowser />} />
             <Route path="/security" element={<SecurityLog />} />
             <Route path="/sessions" element={<Sessions />} />
+            <Route path="/sessions/:project/:id" element={<SessionDetailPage />} />
+            <Route path="/sessions/:project/:id/chat" element={<ChatHistoryPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/health" element={<HealthPage />} />
             <Route path="/events" element={<EventMonitorPage />} />

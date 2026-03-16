@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useSessions } from '../hooks/useSessions'
 import { usePagination } from '../hooks/usePagination'
 import { Pagination } from '../components/shared/Pagination'
@@ -37,15 +38,27 @@ function SessionRow({ session }: { session: SessionItem }) {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <span className="font-mono text-sm text-text-primary truncate">
+          <Link
+            to={`/sessions/${session.project}/${session.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="font-mono text-sm text-text-primary truncate hover:text-accent-green transition-colors"
+          >
             {displayName}
-          </span>
+          </Link>
           <span className="font-mono text-xs text-text-dim shrink-0">
             {session.message_count} msgs
           </span>
           <span className="font-mono text-xs text-text-dim shrink-0">
             {formatSize(session.size_bytes)}
           </span>
+          <Link
+            to={`/sessions/${session.project}/${session.id}/chat`}
+            onClick={(e) => e.stopPropagation()}
+            className="font-mono text-xs text-text-dim hover:text-accent-green transition-colors shrink-0"
+            title="View chat history"
+          >
+            chat
+          </Link>
         </div>
         <span className="font-mono text-xs text-text-dim shrink-0 ml-3">
           {formatTime(session.last_activity)}
