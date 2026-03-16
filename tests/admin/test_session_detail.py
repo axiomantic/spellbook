@@ -145,6 +145,30 @@ class TestNormalizeMessage:
             "raw": entry,
         }
 
+    def test_assistant_message_list_content(self):
+        from spellbook_mcp.admin.routes.sessions import _normalize_message
+
+        entry = {
+            "type": "assistant",
+            "timestamp": "2026-03-14T10:01:00Z",
+            "message": {
+                "content": [
+                    {"type": "text", "text": "Part 1"},
+                    {"type": "text", "text": "Part 2"},
+                    {"type": "text", "text": "Part 3"},
+                ]
+            },
+        }
+        result = _normalize_message(entry, 3)
+        assert result == {
+            "line_number": 3,
+            "type": "assistant",
+            "timestamp": "2026-03-14T10:01:00Z",
+            "content": "Part 1\nPart 2\nPart 3",
+            "is_compact_summary": False,
+            "raw": entry,
+        }
+
     def test_custom_title_message(self):
         from spellbook_mcp.admin.routes.sessions import _normalize_message
 
@@ -423,10 +447,26 @@ class TestReadMessagesPage:
             assert result["per_page"] == 2
             assert result["pages"] == 3
             assert len(result["messages"]) == 2
-            assert result["messages"][0]["line_number"] == 1
-            assert result["messages"][0]["content"] == "Message 0"
-            assert result["messages"][1]["line_number"] == 2
-            assert result["messages"][1]["content"] == "Message 1"
+            msg0 = result["messages"][0]
+            assert msg0["line_number"] == 1
+            assert msg0["type"] == "user"
+            assert msg0["timestamp"] == "2026-03-14T10:00:00Z"
+            assert msg0["content"] == "Message 0"
+            assert msg0["is_compact_summary"] is False
+            assert msg0["raw"] == {
+                "type": "user", "timestamp": "2026-03-14T10:00:00Z",
+                "message": {"content": "Message 0"},
+            }
+            msg1 = result["messages"][1]
+            assert msg1["line_number"] == 2
+            assert msg1["type"] == "user"
+            assert msg1["timestamp"] == "2026-03-14T10:01:00Z"
+            assert msg1["content"] == "Message 1"
+            assert msg1["is_compact_summary"] is False
+            assert msg1["raw"] == {
+                "type": "user", "timestamp": "2026-03-14T10:01:00Z",
+                "message": {"content": "Message 1"},
+            }
 
     def test_middle_page(self):
         from spellbook_mcp.admin.routes.sessions import _read_messages_page
@@ -438,10 +478,26 @@ class TestReadMessagesPage:
             assert result["page"] == 2
             assert result["pages"] == 3
             assert len(result["messages"]) == 2
-            assert result["messages"][0]["line_number"] == 3
-            assert result["messages"][0]["content"] == "Message 2"
-            assert result["messages"][1]["line_number"] == 4
-            assert result["messages"][1]["content"] == "Message 3"
+            msg0 = result["messages"][0]
+            assert msg0["line_number"] == 3
+            assert msg0["type"] == "user"
+            assert msg0["timestamp"] == "2026-03-14T10:02:00Z"
+            assert msg0["content"] == "Message 2"
+            assert msg0["is_compact_summary"] is False
+            assert msg0["raw"] == {
+                "type": "user", "timestamp": "2026-03-14T10:02:00Z",
+                "message": {"content": "Message 2"},
+            }
+            msg1 = result["messages"][1]
+            assert msg1["line_number"] == 4
+            assert msg1["type"] == "user"
+            assert msg1["timestamp"] == "2026-03-14T10:03:00Z"
+            assert msg1["content"] == "Message 3"
+            assert msg1["is_compact_summary"] is False
+            assert msg1["raw"] == {
+                "type": "user", "timestamp": "2026-03-14T10:03:00Z",
+                "message": {"content": "Message 3"},
+            }
 
     def test_last_page_partial(self):
         from spellbook_mcp.admin.routes.sessions import _read_messages_page
@@ -453,8 +509,16 @@ class TestReadMessagesPage:
             assert result["page"] == 3
             assert result["pages"] == 3
             assert len(result["messages"]) == 1
-            assert result["messages"][0]["line_number"] == 5
-            assert result["messages"][0]["content"] == "Message 4"
+            msg0 = result["messages"][0]
+            assert msg0["line_number"] == 5
+            assert msg0["type"] == "user"
+            assert msg0["timestamp"] == "2026-03-14T10:04:00Z"
+            assert msg0["content"] == "Message 4"
+            assert msg0["is_compact_summary"] is False
+            assert msg0["raw"] == {
+                "type": "user", "timestamp": "2026-03-14T10:04:00Z",
+                "message": {"content": "Message 4"},
+            }
 
     def test_single_page_all_messages(self):
         from spellbook_mcp.admin.routes.sessions import _read_messages_page
@@ -666,11 +730,26 @@ class TestGetSessionMessages:
                 assert data["per_page"] == 2
                 assert data["pages"] == 3
                 assert len(data["messages"]) == 2
-                assert data["messages"][0]["line_number"] == 1
-                assert data["messages"][0]["content"] == "Message 0"
-                assert data["messages"][0]["type"] == "user"
-                assert data["messages"][1]["line_number"] == 2
-                assert data["messages"][1]["content"] == "Message 1"
+                msg0 = data["messages"][0]
+                assert msg0["line_number"] == 1
+                assert msg0["type"] == "user"
+                assert msg0["timestamp"] == "2026-03-14T10:00:00Z"
+                assert msg0["content"] == "Message 0"
+                assert msg0["is_compact_summary"] is False
+                assert msg0["raw"] == {
+                    "type": "user", "timestamp": "2026-03-14T10:00:00Z",
+                    "message": {"content": "Message 0"},
+                }
+                msg1 = data["messages"][1]
+                assert msg1["line_number"] == 2
+                assert msg1["type"] == "user"
+                assert msg1["timestamp"] == "2026-03-14T10:01:00Z"
+                assert msg1["content"] == "Message 1"
+                assert msg1["is_compact_summary"] is False
+                assert msg1["raw"] == {
+                    "type": "user", "timestamp": "2026-03-14T10:01:00Z",
+                    "message": {"content": "Message 1"},
+                }
 
     def test_returns_second_page(self, client):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -687,8 +766,26 @@ class TestGetSessionMessages:
                 data = response.json()
                 assert data["page"] == 2
                 assert len(data["messages"]) == 2
-                assert data["messages"][0]["line_number"] == 3
-                assert data["messages"][0]["content"] == "Message 2"
+                msg0 = data["messages"][0]
+                assert msg0["line_number"] == 3
+                assert msg0["type"] == "user"
+                assert msg0["timestamp"] == "2026-03-14T10:02:00Z"
+                assert msg0["content"] == "Message 2"
+                assert msg0["is_compact_summary"] is False
+                assert msg0["raw"] == {
+                    "type": "user", "timestamp": "2026-03-14T10:02:00Z",
+                    "message": {"content": "Message 2"},
+                }
+                msg1 = data["messages"][1]
+                assert msg1["line_number"] == 4
+                assert msg1["type"] == "user"
+                assert msg1["timestamp"] == "2026-03-14T10:03:00Z"
+                assert msg1["content"] == "Message 3"
+                assert msg1["is_compact_summary"] is False
+                assert msg1["raw"] == {
+                    "type": "user", "timestamp": "2026-03-14T10:03:00Z",
+                    "message": {"content": "Message 3"},
+                }
 
     def test_default_pagination(self, client):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -756,6 +853,25 @@ class TestGetSessionMessages:
                 assert response.status_code == 400
                 data = response.json()
                 assert data == {"error": {"code": "BAD_REQUEST", "message": "Invalid path segment"}}
+
+    def test_session_messages_beyond_last_page(self, client):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self._setup_session(tmpdir, msg_count=5)
+
+            with patch(
+                "spellbook_mcp.admin.routes.sessions.Path.home",
+                return_value=Path(tmpdir) / "fakehome",
+            ):
+                response = client.get(
+                    "/api/sessions/Users-test-myproject/sess-abc/messages?page=10&per_page=2"
+                )
+                assert response.status_code == 200
+                data = response.json()
+                assert data["messages"] == []
+                assert data["total_lines"] == 5
+                assert data["page"] == 10
+                assert data["per_page"] == 2
+                assert data["pages"] == 3
 
     def test_requires_auth(self, unauthenticated_client):
         response = unauthenticated_client.get(

@@ -163,13 +163,15 @@ describe('ChatHistoryPage', () => {
       renderWithRoute('Users-bob-code', 'sess-123')
 
       // Header shows: displayName | N messages
-      expect(screen.getByText(/My Chat Session/)).toBeInTheDocument()
+      expect(screen.getByText('My Chat Session | 50 messages')).toBeInTheDocument()
     })
 
     it('displays total message count in header', () => {
       renderWithRoute('Users-bob-code', 'sess-123')
 
-      expect(screen.getByText(/50 messages/)).toBeInTheDocument()
+      const headerSpan = screen.getByText('My Chat Session | 50 messages')
+      expect(headerSpan).toBeInTheDocument()
+      expect(headerSpan).toHaveTextContent('My Chat Session | 50 messages')
     })
 
     it('renders all messages via MessageBubble', () => {
@@ -278,7 +280,7 @@ describe('ChatHistoryPage', () => {
 
       renderWithRoute('proj', 'sess-123')
 
-      expect(screen.getByText(/fallback-slug/)).toBeInTheDocument()
+      expect(screen.getByText('fallback-slug | 0 messages')).toBeInTheDocument()
     })
 
     it('falls back to truncated id when both custom_title and slug are null', () => {
@@ -315,7 +317,7 @@ describe('ChatHistoryPage', () => {
       renderWithRoute('proj', 'abcdef123456-long-session-id')
 
       // Falls back to first 12 chars of id
-      expect(screen.getByText(/abcdef123456/)).toBeInTheDocument()
+      expect(screen.getByText('abcdef123456 | 0 messages')).toBeInTheDocument()
     })
   })
 
@@ -382,6 +384,34 @@ describe('ChatHistoryPage', () => {
       // Back link goes to session detail
       const backLink = screen.getByRole('link', { name: /Back to Session Detail/i })
       expect(backLink).toHaveAttribute('href', '/sessions/proj/missing-id')
+    })
+
+    it('renders gracefully when detailQuery errors but messages load', () => {
+      mockUseSessionDetail.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        error: new Error('Detail fetch failed'),
+      })
+      mockUseSessionMessages.mockReturnValue({
+        data: {
+          messages: [makeMessage({ content: 'A message' })],
+          total_lines: 1,
+          page: 1,
+          per_page: 100,
+          pages: 1,
+        },
+        isLoading: false,
+        isError: false,
+        error: null,
+      })
+
+      renderWithRoute('proj', 'sess-fallback')
+
+      // Page still renders messages despite detail error
+      expect(screen.getByText('A message')).toBeInTheDocument()
+      // Display name falls back to id slice (no detail data available)
+      expect(screen.getByText('sess-fallbac | 1 messages')).toBeInTheDocument()
     })
 
     it('renders generic error message for other errors', () => {

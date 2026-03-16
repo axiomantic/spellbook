@@ -192,11 +192,13 @@ describe('SessionDetailPage', () => {
 
       renderWithRoute('proj', 'abc-123')
 
-      // Slug row should show dash for null value
-      expect(screen.getByText('Slug')).toBeInTheDocument()
-      // The DetailRow shows '-' for null values
-      const dashes = screen.getAllByText('-')
-      expect(dashes.length).toBeGreaterThanOrEqual(1)
+      // Find the Slug label, then verify its sibling value span shows '-'
+      const slugLabel = screen.getByText('Slug')
+      expect(slugLabel).toBeInTheDocument()
+      // DetailRow renders: <div><span>{label}</span><span>{value || '-'}</span></div>
+      const slugRow = slugLabel.closest('div.flex')!
+      const valueSpan = slugRow.children[1] as HTMLElement
+      expect(valueSpan.textContent).toBe('-')
     })
 
     it('does not render first user message section when null', () => {

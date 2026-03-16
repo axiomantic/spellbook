@@ -248,12 +248,17 @@ describe('MessageBubble', () => {
   describe('timestamp handling', () => {
     it('displays formatted timestamp when present', () => {
       const msg = makeMessage({ timestamp: '2026-03-15T10:30:00Z' })
-      render(<MessageBubble message={msg} />)
+      const { container } = render(<MessageBubble message={msg} />)
 
-      // The timestamp is formatted via toLocaleTimeString -- we check it exists
-      // Since locale-dependent, just verify the timestamp element is present
-      const timeElements = screen.getAllByText(/\d/)
-      expect(timeElements.length).toBeGreaterThan(0)
+      // The timestamp is rendered via toLocaleTimeString() in a specific span
+      // within the header row (flex items-center justify-between)
+      const headerRow = container.querySelector('.flex.items-center.justify-between')
+      expect(headerRow).toBeInTheDocument()
+      // Header has 2 children: type label span + timestamp span
+      expect(headerRow!.children.length).toBe(2)
+      const timestampSpan = headerRow!.children[1] as HTMLElement
+      const formatted = new Date('2026-03-15T10:30:00Z').toLocaleTimeString()
+      expect(timestampSpan.textContent).toBe(formatted)
     })
 
     it('does not render timestamp element when timestamp is null', () => {
