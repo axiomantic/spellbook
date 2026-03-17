@@ -169,13 +169,8 @@ def _get_owner_repo(spellbook_dir: Path) -> Optional[str]:
     except (subprocess.SubprocessError, OSError):
         return None
 
-    # SSH: git@github.com:owner/repo.git
-    match = re.match(r"git@github\.com:(.+/.+?)(?:\.git)?$", url)
-    if match:
-        return match.group(1)
-
-    # HTTPS: https://github.com/owner/repo.git
-    match = re.match(r"https://github\.com/(.+/.+?)(?:\.git)?$", url)
+    # SSH (git@github.com:owner/repo.git) or HTTPS (https://github.com/owner/repo.git)
+    match = re.match(r"(?:git@github\.com:|https://github\.com/)(.+/.+?)(?:\.git)?$", url)
     if match:
         return match.group(1)
 
