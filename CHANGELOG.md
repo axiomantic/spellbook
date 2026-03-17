@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tech: FastAPI sub-app mounted via `_additional_http_routes`, React 18 + TypeScript + Vite 5 + Tailwind 3
   - Optional install via `spellbook[admin]` extra
   - **Focus tracking admin page** showing per-project stint stacks with depth gauge, correction event log with filtering, and dashboard summary card
+  - **Session detail view** with full metadata display (ID, project, slug, title, timestamps, message count, size, first user message) and paginated **chat history viewer** rendering 10+ JSONL message types with type-based visual styling. Both pages separately linkable via `/sessions/:project/:id` and `/sessions/:project/:id/chat`
   - **Session multi-select filter** with checkbox dropdown for filtering by multiple projects simultaneously, plus free-text search across session content
   - **Spellbook branding** throughout admin: book-with-sparkle favicon, sidebar icon, sparkle loading spinner, login page icon
   - **Admin documentation** with screenshots of all 11 pages, added to mkdocs site and README
