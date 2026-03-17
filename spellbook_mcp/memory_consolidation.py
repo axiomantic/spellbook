@@ -117,6 +117,25 @@ def _merge_event_metadata(
     all_citations: List[Dict[str, Any]] = []
     all_branches: set = set()
 
+    for e in group_events:
+        if e.get("tags"):
+            all_tags.update(t.strip() for t in e["tags"].split(",") if t.strip())
+        all_event_ids.append(e["id"])
+        all_citations.extend(_extract_citations(e["subject"]))
+        branch = e.get("branch", "")
+        if branch:
+            all_branches.add(branch)
+
+    # Deduplicate citations by file_path
+    seen_paths: set = set()
+    unique_citations: List[Dict[str, Any]] = []
+    for c in all_citations:
+        if c["file_path"] not in seen_paths:
+            seen_paths.add(c["file_path"])
+            unique_citations.append(c)
+
+    return all_tags, all_event_ids, unique_citations, all_branches
+
 
 def _strategy_content_hash_dedup(
     events: List[Dict[str, Any]],
@@ -138,20 +157,13 @@ def _strategy_content_hash_dedup(
         if len(group) > 1:
             # Duplicate group: produce one memory from first event
             first = group[0]
-            all_tags = set()
-            all_branches = set()
-            for e in group:
-                if e.get("tags"):
-                    all_tags.update(t.strip() for t in e["tags"].split(",") if t.strip())
-                branch = e.get("branch", "")
-                if branch:
-                    all_branches.add(branch)
+            all_tags, all_event_ids, all_citations, all_branches = _merge_event_metadata(group)
             memories.append({
                 "content": f"[{first['tool_name']}] {_event_text(first)}",
                 "memory_type": "fact",
                 "tags": sorted(all_tags),
-                "citations": _extract_citations(first["subject"]),
-                "event_ids": [e["id"] for e in group],
+                "citations": all_citations,
+                "event_ids": all_event_ids,
                 "strategy": "content_hash",
                 "branches": sorted(all_branches),
             })
