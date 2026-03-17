@@ -49,8 +49,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **`[docs]` optional extra** with mkdocs-material, mike for building documentation locally
   - **Version display** in sidebar footer showing running spellbook version
   - **Event monitor with history** - REST endpoint for recent events plus live WebSocket stream; event publishing from security, memory, stint, and fractal MCP handlers
+  - **Login page** with MCP token authentication and SHA-256 signed HTTP-only session cookies
   - **Platform compatibility docs** noting Claude Code JSONL session dependency, welcoming contributions for other platforms
+  - **`--no-admin` installer flag** to skip admin frontend dependencies; frontend build staleness check via pre-commit hook
 - **"Signature Spells" in README and docs** - Five highlighted skills (develop, fractal-thinking, auditing-green-mirage, fact-checking, advanced-code-review) featured as signature capabilities
+- **Docs restructuring** - New task-oriented Guide section with curated skill selections, flattened reference navigation, intro paragraphs on guide-listed skill docs pages
+- **Quickstart rewrite** - Leads with `develop` skill workflow, links skill names to docs pages, removes outdated brainstorm/plan/execute sequence
+- **Installer WHAT'S NEW display** - Shows changelog entries for new versions during upgrade
+- **Fractal session backfill script** (`scripts/backfill_fractal_sessions.py`) - Populates `session_id` and `timestamp` on existing fractal graph nodes by scanning JSONL session transcripts
 - **Shared diagram config** (`scripts/diagram_config.py`) - Centralized exclusion lists, aliases, and tiering config for diagram generation, freshness checking, and docs completeness
 - **Bulk skill rename script** (`scripts/rename_skills.py`) - Automates full-codebase skill renames with regex word-boundary protection, specificity ordering, dry-run mode, and `git mv` integration
 - **Diagram stamp mode** - `check_diagram_freshness.py --stamp` updates source hashes in diagram metadata without regenerating content
