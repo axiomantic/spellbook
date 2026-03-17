@@ -162,7 +162,7 @@ def scan_jsonl_file(filepath, target_graph_ids, target_node_ids):
     synthesize_matches = []  # (node_id, timestamp, session_id)
 
     try:
-        with open(filepath, "r") as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         # We need tool_use_ids from claim_work/add_node calls to find their
