@@ -14,15 +14,12 @@ Author: Jesse Vincent
 Skills:
   - brainstorming
   - dispatching-parallel-agents
-  - executing-plans
+  - executing-plans (incorporates content from subagent-driven-development)
   - finishing-a-development-branch
   - requesting-code-review
-  - subagent-driven-development
-  - systematic-debugging
   - test-driven-development
   - using-git-worktrees
-  - using-skills (originally named "using-superpowers")
-  - verification-before-completion
+  - using-skills (originally "using-superpowers")
   - writing-plans
   - writing-skills
 
@@ -30,6 +27,8 @@ Commands:
   - brainstorm.md
   - execute-plan.md
   - write-plan.md
+  - verify.md (originally the "verification-before-completion" skill)
+  - systematic-debugging/ (originally the "systematic-debugging" skill)
 
 Agents:
   - code-reviewer.md

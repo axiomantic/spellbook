@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.1] - 2026-03-18
+
+### Fixed
+- **README rewrite**: Fact-checked all claims, fixed skill count (55->56), command count (90->91), tarot archetype count (four->ten). Removed nonexistent `[admin]` pip extra and `spellbook admin open` CLI command. Rewrote tone from marketing-speak to relaxed and explanatory.
+- **Citation corrections**: Fixed ICML 2025 paper attribution from "Raghunathan" to "Nagarajan et al." with correct title "Roll the dice & look before you leap" across README, AGENTS.spellbook.md, citations.md, fun-mode skill, and generated docs. Fixed Zheng caveat from "objective/STEM tasks" to "factual question-answering".
+- **CVE descriptions**: All 4 CVEs in SECURITY.md and docs/security.md were mischaracterized. Corrected: CVE-2025-53967 (command injection in Figma MCP), CVE-2025-66414 (DNS rebinding in TS SDK), CVE-2025-66416 (DNS rebinding in Python SDK), CVE-2025-59536 (code injection in Claude Code startup).
+- **Dead links**: Removed Trail of Bits and Embrace The Red blog URLs (404s) from docs/security.md source citations.
+- **CHANGELOG corrections**: Fixed references to nonexistent `spellbook admin open` and `[admin]` extra in 0.32.0 entry. Fixed tarot "four core personas" to "ten archetypes".
+- **THIRD-PARTY-NOTICES**: Reconciled with README acknowledgments table. Added derived commands (verify, systematic-debugging), noted executing-plans incorporates subagent-driven-development content.
+- **Platform docs**: Replaced vague Gemini CLI limitations with specific details (no Task tool, native skills pending upstream). Added Crush to installation platform detection table and --platforms option.
+- **Porting guide**: Removed emotional manipulation language ("important to my career", "take a deep breath", "believe in your abilities") while preserving all technical content.
+- **AGENTS.spellbook.md**: Selective trim of most performative language ("viscerally uncomfortable", "debate fiercely", "zen master") while keeping behavioral rules.
+- **Architecture docs**: Updated MCP server tool listing from outdated 5-tool list to accurate 15-category overview of 100+ tools. Fixed swarm tool names.
+- **Contributing docs**: Aligned test commands with actual convention (`uv run pytest tests/` not split unit/integration).
+
 ## [0.32.0] - 2026-03-18
 
 ### Added
@@ -37,10 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **WebSocket event streaming** with ticket-based auth, auto-reconnect, and shared connection via React Context
   - **Asyncio event bus** with bounded per-subscriber queues and thread-safe `publish_sync()` for MCP handlers
   - **Pull-based MCP notification queue** with broadcast/namespace/session scoping
-  - **CLI command** `spellbook admin open` for authenticated browser launch
+  - Admin dashboard accessible at `http://localhost:8765/admin/` when MCP server is running
   - Auth: SHA-256 signed HTTP-only cookies, WebSocket ticket exchange, token-based session management
   - Tech: FastAPI sub-app mounted via `_additional_http_routes`, React 18 + TypeScript + Vite 5 + Tailwind 3
-  - Optional install via `spellbook[admin]` extra
+  - Admin frontend bundled with MCP server
   - **Focus tracking admin page** showing per-project stint stacks with depth gauge, correction event log with filtering, and dashboard summary card
   - **Session detail view** with full metadata display (ID, project, slug, title, timestamps, message count, size, first user message) and paginated **chat history viewer** rendering 10+ JSONL message types with type-based visual styling. Both pages separately linkable via `/sessions/:project/:id` and `/sessions/:project/:id/chat`
   - **Session multi-select filter** with checkbox dropdown for filtering by multiple projects simultaneously, plus free-text search across session content
@@ -1038,7 +1053,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Tarot mode** - collaborative roundtable with 10 tarot archetypes for software engineering
-  - `tarot-mode` skill: Four core personas (Magician, Priestess, Hermit, Fool) plus six specialized agents
+  - `tarot-mode` skill: Ten archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen), six with specialized agents
   - Embeds EmotionPrompt (+8% accuracy) and NegativePrompt (+12.89% induction) in persona dialogue
   - Stakes-driven quality: "Do NOT skip X", "Users depend on Y" in all exchanges
   - Visible collaboration: personas talk TO each other, challenge, synthesize

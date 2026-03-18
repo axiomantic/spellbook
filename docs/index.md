@@ -5,7 +5,7 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  Multi-platform AI assistant skills, commands, and configuration for Claude Code, OpenCode, Codex, and Gemini CLI.
+  Multi-platform AI assistant skills, commands, and configuration for Claude Code, OpenCode, Codex, Gemini CLI, and Crush.
 </p>
 
 ## What is Spellbook?
@@ -29,9 +29,9 @@ curl -fsSL https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap
 
 See [Installation Guide](getting-started/installation.md) for options and manual installation.
 
-## Signature Spells
+## Key Skills
 
-These five spells represent the most powerful capabilities in Spellbook:
+Five skills worth highlighting:
 
 | Skill | What it does |
 |-------|-------------|

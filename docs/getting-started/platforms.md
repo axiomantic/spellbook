@@ -102,8 +102,8 @@ Gemini CLI integration via native extension system.
 
 ### Limitations
 
-- Limited tool availability compared to Claude Code
-- Some workflow skills may not function fully
+- No `Task` tool for subagent orchestration (same as Codex). Skills requiring subagents will inform the user to use Claude Code.
+- Native skill discovery is pending upstream support ([gemini-cli#15327](https://github.com/google-gemini/gemini-cli/issues/15327)). Until then, skills are loaded via the MCP server.
 
 ## Crush
 

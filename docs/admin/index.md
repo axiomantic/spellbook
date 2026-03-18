@@ -1,6 +1,6 @@
 # Spellbook Admin Interface
 
-The admin interface is a web-based dashboard served from the Spellbook MCP daemon at `http://localhost:8765/admin/`. It provides operational visibility and management across all Spellbook subsystems. Built with React 18, TypeScript, Tailwind CSS. Requires `spellbook[admin]` optional extra.
+The admin interface is a web-based dashboard served from the Spellbook MCP daemon at `http://localhost:8765/admin/`. It provides operational visibility and management across all Spellbook subsystems. Built with React 18, TypeScript, Tailwind CSS.
 
 !!! note "Platform Compatibility"
     The admin interface works with all supported coding assistants (Claude Code, OpenCode, Codex, Gemini CLI, Crush). Most pages (Memory, Security, Analytics, Health, Events, Focus, Config, Fractal) pull data from the MCP server's own databases and work identically regardless of which assistant is connected. However, the **Sessions** page scans Claude Code JSONL session files and may not display session data from other assistants. Contributions to add session parsing for additional platforms are welcome.
@@ -8,7 +8,6 @@ The admin interface is a web-based dashboard served from the Spellbook MCP daemo
 ## Prerequisites
 
 - MCP daemon running: `python3 scripts/spellbook-server.py install`
-- Admin extra installed: `uv pip install -e ".[admin]"`
 
 ## Authentication
 
@@ -48,10 +47,6 @@ WebSocket connection status is shown in the header.
 | [Config](config.md) | Configuration editor for TTS, notifications, and general settings |
 | [Fractal](fractal.md) | Interactive graph explorer for fractal-thinking exploration graphs |
 
-## CLI Access
+## Access
 
-Open the admin interface in your default browser:
-
-```bash
-spellbook admin open
-```
+Visit [http://localhost:8765/admin/](http://localhost:8765/admin/) when the MCP server is running.

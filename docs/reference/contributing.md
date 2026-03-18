@@ -28,11 +28,11 @@ uvx pre-commit install
 ## Running Tests
 
 ```bash
-# Run unit tests
-uv run pytest tests/unit/
+# Run fast tests (heavy markers auto-skipped)
+uv run pytest tests/
 
-# Run integration tests
-uv run pytest tests/integration/
+# Run specific test file
+uv run pytest tests/unit/test_installer.py
 ```
 
 ## Documentation

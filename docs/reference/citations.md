@@ -4,10 +4,10 @@ This page documents the research that informs spellbook's design, particularly t
 
 ## Creativity and Seed-Conditioning
 
-**Raghunathan, A., et al.** (2025). Rethinking LLM Pre-training. *International Conference on Machine Learning (ICML 2025)*.
+**Nagarajan, V., Wu, C. H., Ding, C., & Raghunathan, A.** (2025). Roll the dice & look before you leap: Going beyond the creative limits of next-token prediction. *International Conference on Machine Learning (ICML 2025)*, Outstanding Paper Award.
 
-- **Link**: [https://www.cs.cmu.edu/~aditirag/icml2025.html](https://www.cs.cmu.edu/~aditirag/icml2025.html)
-- **Key finding**: Training with random prefix strings ("seeds") improves algorithmic creativity. These meaningless prefixes condition the model on a single latent "leap of thought," sometimes outperforming temperature sampling for creative tasks.
+- **Link**: [https://arxiv.org/abs/2504.15266](https://arxiv.org/abs/2504.15266) (group page: [https://www.cs.cmu.edu/~aditirag/icml2025.html](https://www.cs.cmu.edu/~aditirag/icml2025.html))
+- **Key finding**: Injecting noise at the input layer ("seed-conditioning") works as well as, and sometimes better than, temperature sampling at the output layer for eliciting creative and diverse outputs from language models. The paper argues that standard next-token prediction has inherent limits for tasks requiring planning and novel pattern discovery.
 - **Relevance**: Fun mode's random personas act as semantic seeds that steer generation toward diverse solution pathways.
 
 ## Persona Effects on Reasoning
@@ -51,8 +51,8 @@ This page documents the research that informs spellbook's design, particularly t
 **Zheng, M., et al.** (2023). When "A Helpful Assistant" Is Not Really Helpful: Personas in System Prompts Do Not Improve Performances of Large Language Models. *arXiv preprint arXiv:2311.10054*.
 
 - **Link**: [https://arxiv.org/abs/2311.10054](https://arxiv.org/abs/2311.10054)
-- **Key finding**: Across 162 personas and 2410 factual questions (MMLU), personas do not improve performance on objective tasks compared to neutral prompts. Effects are inconsistent and sometimes negative.
-- **Relevance**: **Critical caveat** - fun mode explicitly restricts personas to dialogue, never affecting code, commits, or documentation. Personas help creative/social tasks, not factual/STEM tasks.
+- **Key finding**: Across 162 personas and 2,410 factual questions (MMLU), personas do not improve performance on factual tasks compared to neutral prompts. Effects are inconsistent and sometimes negative.
+- **Relevance**: **Critical caveat** - fun mode explicitly restricts personas to dialogue, never affecting code, commits, or documentation. Personas may help creative and social reasoning tasks but do not help factual question-answering.
 
 **Gupta, S., et al.** (2024). Bias Runs Deep: Implicit Reasoning Biases in Persona-Assigned LLMs. *International Conference on Learning Representations (ICLR 2024)*.
 
@@ -76,7 +76,7 @@ This page documents the research that informs spellbook's design, particularly t
 
 | Technique | Research Support | Domain | Used In |
 |-----------|-----------------|--------|---------|
-| Random personas | Raghunathan (ICML 2025), Tan (PHAnToM) | Creative, social reasoning | fun-mode |
+| Random personas | Nagarajan et al. (ICML 2025), Tan (PHAnToM) | Creative, social reasoning | fun-mode |
 | Emotional framing | Li (EmotionPrompt), Wang (NegativePrompt) | All reasoning tasks | emotional-stakes |
 | Persona consistency | Park (Generative Agents) | Long-form interaction | fun-mode session persistence |
 

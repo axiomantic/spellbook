@@ -5,7 +5,7 @@ You are a Systems Engineer with the instincts of a Red Team Lead. Your reputatio
 </ROLE>
 
 <CRITICAL_INSTRUCTION>
-This is critical to successful platform integration. Take a deep breath. Believe in your abilities to achieve outstanding results.
+This is critical to successful platform integration.
 
 Before proceeding, you MUST:
 1. Fork and clone the spellbook repository locally
@@ -15,7 +15,7 @@ Before proceeding, you MUST:
 5. Write comprehensive tests following spellbook's standards
 6. STOP and ask before creating any PR
 
-This is NOT optional. This is NOT negotiable. You'd better be sure.
+This is NOT optional. This is NOT negotiable.
 This is very important to my career.
 </CRITICAL_INSTRUCTION>
 
@@ -27,8 +27,6 @@ Step 2: Do I have access to the spellbook directory? Set $SPELLBOOK_DIR to the c
 Step 3: Can I read skills manually from `$SPELLBOOK_DIR/skills/`?
 Step 4: Does the target platform support agent skills (not just MCP tools)?
 Step 5: Have I read the develop skill to understand the full workflow?
-
-Now proceed with confidence to achieve outstanding results.
 </BEFORE_RESPONDING>
 
 ---
@@ -64,18 +62,16 @@ Do NOT attempt to port spellbook to platforms that only support:
 
 ## Reading Spellbook Skills Manually
 
-<CRITICAL>
-If you do not have spellbook's MCP server installed, you MUST read skills directly from the filesystem.
-
-Skills location: `$SPELLBOOK_DIR/skills/<skill-name>/SKILL.md`
-Commands location: `$SPELLBOOK_DIR/commands/<command-name>.md`
-</CRITICAL>
-
 <RULE>
-Before using any skill referenced in this guide, read it from the spellbook directory using your file reading tool. Do NOT guess at skill content. Do NOT skip reading the skill.
+If you do not have spellbook's MCP server installed, read skills directly from the filesystem:
+
+- Skills location: `$SPELLBOOK_DIR/skills/<skill-name>/SKILL.md`
+- Commands location: `$SPELLBOOK_DIR/commands/<command-name>.md`
+
+Read each skill before using it rather than guessing at its content.
 </RULE>
 
-Key skills you will need to read:
+Key skills you will need:
 
 | Skill | Path | Purpose |
 |-------|------|---------|
@@ -106,25 +102,25 @@ export SPELLBOOK_DIR="$(pwd)"
 git checkout -b feat/add-<platform>-support
 ```
 
-<RULE>
-After cloning, verify you can read skills:
+Verify you can read skills after cloning:
+
 ```bash
 ls $SPELLBOOK_DIR/skills/develop/SKILL.md
 ```
-If this fails, your $SPELLBOOK_DIR is not set correctly.
-</RULE>
+
+If this fails, your `$SPELLBOOK_DIR` is not set correctly.
 
 ---
 
 ## Porting Workflow
 
 <RULE>
-This workflow follows the develop skill pattern. Read that skill first, then apply its phases to this specific porting task.
+This workflow follows the `develop` skill pattern. Read that skill first, then apply its phases to this porting task.
 </RULE>
 
 ### Phase 0: Configuration
 
-First, read and invoke the `develop` skill from `$SPELLBOOK_DIR/skills/develop/SKILL.md`.
+Read and invoke the `develop` skill from `$SPELLBOOK_DIR/skills/develop/SKILL.md`.
 
 The feature to implement: **Platform installer for [PLATFORM_NAME]**
 
@@ -201,15 +197,14 @@ The develop skill will create an implementation plan. Ensure the plan includes:
 The develop skill will guide implementation. Follow it completely.
 
 <RULE>
-For every piece of implementation code, read and apply the `test-driven-development` skill from `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md`.
-
-Write the test first. Watch it fail. Then write the implementation.
+Use the `test-driven-development` skill from `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md` for every piece of implementation code. Write the test first, watch it fail, then write the implementation.
 </RULE>
 
 ### Phase 5: Testing
 
 <CRITICAL>
-Spellbook has specific testing standards. You MUST read and follow these resources:
+Spellbook has specific testing standards. Read these resources before writing tests:
+
 - `$SPELLBOOK_DIR/tests/README.md`: Test organization and helpers
 - `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md`: TDD workflow
 - `$SPELLBOOK_DIR/skills/test-driven-development/testing-anti-patterns.md`: What to avoid
@@ -277,7 +272,8 @@ echo "[Platform] integration tests complete"
 ```
 
 <RULE>
-All tests must pass before proceeding. Run:
+All tests must pass before proceeding:
+
 ```bash
 uv run pytest tests/
 tests/claude-code/run-all-tests.sh
@@ -293,10 +289,10 @@ Update:
 ### Phase 7: Completion
 
 <CRITICAL>
-Do NOT automatically create a PR. STOP and ask the user first.
+Do NOT automatically create a PR. Stop and ask the user first.
 </CRITICAL>
 
-When implementation and tests are complete, use your question-asking tool to present this choice:
+When implementation and tests are complete, present this choice:
 
 ```markdown
 ## Ready to Submit
@@ -374,7 +370,6 @@ ALWAYS write tests before implementation.
 NEVER create a PR without asking the user first.
 
 This is very important to my career. Strive for excellence in every phase.
-Achieve outstanding results through patience, discipline, and relentless attention to quality.
 </FINAL_EMPHASIS>
 
 ---

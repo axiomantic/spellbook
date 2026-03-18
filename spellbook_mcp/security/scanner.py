@@ -60,18 +60,54 @@ _ALL_RULE_SETS: list[tuple[list, Category]] = [
 # Entropy threshold for code blocks
 _ENTROPY_THRESHOLD = 4.5
 
-# Files excluded from security scanning. These are documentation/template files
-# that legitimately reference security-sensitive patterns (e.g., spawn_claude_session)
-# in order to instruct agents on safe usage. Scanning them produces false positives.
-# Paths are matched against the file path suffix (using str.endswith) so that both
-# absolute paths and diff-relative paths are handled.
+# Files excluded from security scanning entirely (path suffix match).
+# Prefer using _KNOWN_INSTRUCTION_TAGS over adding files here.
+# Only add files that reference platform-injected tags (e.g., <system-reminder>)
+# in documentation context where the scanner cannot distinguish mention from use.
 _DOCUMENTATION_EXCLUDE_SUFFIXES: list[str] = [
-    "AGENTS.spellbook.md",
     "commands/feature-config.md",
-    "commands/polish-repo-community.md",
-    "SECURITY.md",
-    "docs/security.md",
 ]
+
+# Known spellbook instruction tags that are legitimate content, not injection.
+# The security scanner should not flag these in added lines.
+_KNOWN_INSTRUCTION_TAGS: set[str] = {
+    # Primary instruction tags (used across all skills/commands/docs)
+    "CRITICAL",
+    "FORBIDDEN",
+    "RULE",
+    "ROLE",
+    "FINAL_EMPHASIS",
+    "PERSONALITY",
+    # Secondary instruction tags (used in specific skills/commands)
+    "SELF_CHECK",
+    "CRITICAL_INSTRUCTION",
+    "BEFORE_RESPONDING",
+    "ARH_INTEGRATION",
+    "BEHAVIORAL_MODE",
+    "CRITICAL_REMINDER",
+    "CRITICAL_STAKES",
+    "EMOTIONAL_STAKES",
+    "ENGAGEMENT_PROTOCOL",
+    "HUNCH_CHECK",
+    "CHAOS_CHECK",
+    "PREFLIGHT",
+    "ONBOARD",
+    "MANDATORY_TEMPLATE",
+    "THREE_FIX_RULE_WARNING",
+    "TONE",
+    "SYNTHESIS_AGENT_PROMPT",
+    "CHUNK_SUMMARIZER_PROMPT",
+}
+
+# Regex to match a line that is purely a known instruction tag
+_INSTRUCTION_TAG_RE = re.compile(
+    r"^\s*</?(" + "|".join(_KNOWN_INSTRUCTION_TAGS) + r")>\s*$"
+)
+
+
+def _is_instruction_tag_line(line: str) -> bool:
+    """Return True if line is purely a known spellbook instruction tag."""
+    return bool(_INSTRUCTION_TAG_RE.match(line))
 
 
 def _severity_from_name(name: str) -> Severity:
@@ -386,6 +422,8 @@ def scan_skill(
 
     # Line-by-line scanning
     for i, line in enumerate(lines, start=1):
+        if _is_instruction_tag_line(line):
+            continue
         findings.extend(_scan_line(line, i, file_path, security_mode))
 
     # Code block entropy checking
@@ -565,6 +603,8 @@ def scan_changeset(
 
         findings: list[Finding] = []
         for line_num, line_content in added_lines:
+            if _is_instruction_tag_line(line_content):
+                continue
             findings.extend(
                 _scan_line(line_content, line_num, file_path, security_mode)
             )
