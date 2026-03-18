@@ -27,12 +27,18 @@ def clean_state(tmp_path):
 
 @pytest.fixture
 def session_dir(tmp_path):
-    """Create a mock Claude session directory structure."""
+    """Create a mock Claude session directory structure.
+
+    Uses a fixed safe project name instead of encoding the real tmp_path,
+    because on Windows the temp path contains colons (e.g. C:\\Users\\...)
+    which are illegal in directory names and cause OSError.
+    """
     project_path = str(tmp_path / "project")
     os.makedirs(project_path, exist_ok=True)
-    # Create encoded session dir matching _encode_path logic
-    encoded = "-" + project_path.replace("/", "-")
-    session_base = tmp_path / ".claude" / "projects" / encoded
+    # Use a safe, fixed encoded name rather than encoding the real path.
+    # The compaction detector logic is tested via the mocked session dir,
+    # so the encoded name only needs to be a valid directory name.
+    session_base = tmp_path / ".claude" / "projects" / "test-project"
     session_base.mkdir(parents=True)
     return project_path, session_base
 
