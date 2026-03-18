@@ -44,12 +44,14 @@ Do NOT attempt to port spellbook to platforms that only support:
 
 ## Reading Spellbook Skills Manually
 
+<RULE>
 If you do not have spellbook's MCP server installed, read skills directly from the filesystem:
 
 - Skills location: `$SPELLBOOK_DIR/skills/<skill-name>/SKILL.md`
 - Commands location: `$SPELLBOOK_DIR/commands/<command-name>.md`
 
 Read each skill before using it rather than guessing at its content.
+</RULE>
 
 Key skills you will need:
 
@@ -170,15 +172,19 @@ The develop skill will create an implementation plan. Ensure the plan includes:
 
 The develop skill will guide implementation. Follow it completely.
 
+<RULE>
 Use the `test-driven-development` skill from `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md` for every piece of implementation code. Write the test first, watch it fail, then write the implementation.
+</RULE>
 
 ### Phase 5: Testing
 
+<CRITICAL>
 Spellbook has specific testing standards. Read these resources before writing tests:
 
 - `$SPELLBOOK_DIR/tests/README.md`: Test organization and helpers
 - `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md`: TDD workflow
 - `$SPELLBOOK_DIR/skills/test-driven-development/testing-anti-patterns.md`: What to avoid
+</CRITICAL>
 
 #### Unit Tests
 
@@ -241,12 +247,14 @@ echo ""
 echo "[Platform] integration tests complete"
 ```
 
+<RULE>
 All tests must pass before proceeding:
 
 ```bash
 uv run pytest tests/
 tests/claude-code/run-all-tests.sh
 ```
+</RULE>
 
 ### Phase 6: Documentation
 

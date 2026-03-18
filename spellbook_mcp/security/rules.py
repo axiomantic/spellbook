@@ -96,7 +96,7 @@ INJECTION_RULES: list[tuple[str, Severity, str, str]] = [
         "Role reassignment attempt",
     ),
     (
-        r"(?i)(system\s*:\s*|</?system>)",
+        r"(?i)(\bsystem\s*:\s*|</?system>)",
         Severity.HIGH,
         "INJ-003",
         "System prompt injection marker",
