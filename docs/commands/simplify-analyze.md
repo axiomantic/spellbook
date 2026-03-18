@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: simplify-analyze
-
 Analyze code for cognitive complexity and identify simplification opportunities. Covers mode selection, discovery, and analysis phases.
 
 ```mermaid

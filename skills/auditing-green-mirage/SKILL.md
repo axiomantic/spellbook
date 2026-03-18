@@ -2,6 +2,8 @@
 name: auditing-green-mirage
 description: "Use when auditing whether tests genuinely catch failures, or when user expresses doubt about test quality. Triggers: 'are these tests real', 'do tests catch bugs', 'tests pass but I don't trust them', 'test quality audit', 'green mirage', 'shallow tests', 'tests always pass suspiciously', 'would this test fail if code was broken'. Forensic analysis of assertions, mock usage, and code path coverage."
 version: 2.0.0
+intro: |
+  Detects tests that pass but do not actually verify behavior: tautological assertions, mocked-away logic, missing edge cases, and assertions that would pass even if the code were broken. Traces every code path from test through production code to verify that failures would be caught. A core spellbook capability for auditing test suite integrity.
 ---
 
 <ROLE>

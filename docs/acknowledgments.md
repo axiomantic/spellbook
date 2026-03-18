@@ -14,9 +14,7 @@ The following components originated from the superpowers project:
 | [dispatching-parallel-agents](skills/dispatching-parallel-agents.md) | Orchestrating multiple subagents for parallel work |
 | [executing-plans](skills/executing-plans.md) | Systematic plan execution with checkpoints |
 | [finishing-a-development-branch](skills/finishing-a-development-branch.md) | Completing and integrating feature work |
-| [receiving-code-review](skills/receiving-code-review.md) | Processing and responding to code review feedback |
 | [requesting-code-review](skills/requesting-code-review.md) | Structured code review requests |
-| [subagent-driven-development](skills/subagent-driven-development.md) | Delegating work to specialized subagents |
 | [test-driven-development](skills/test-driven-development.md) | Red-green-refactor TDD workflow |
 | [using-git-worktrees](skills/using-git-worktrees.md) | Isolated workspaces for feature development |
 | [using-skills](skills/using-skills.md) | Meta-skill for invoking other skills (originally "using-superpowers") |
@@ -60,12 +58,10 @@ The following skills were developed specifically for Spellbook:
 | [finding-dead-code](skills/finding-dead-code.md) | Unused code detection |
 | [fixing-tests](skills/fixing-tests.md) | Test remediation and quality improvement |
 | [auditing-green-mirage](skills/auditing-green-mirage.md) | Test suite quality audit |
-| [implementing-features](skills/implementing-features.md) | End-to-end feature implementation |
+| [develop](skills/develop.md) | End-to-end feature implementation |
 | [reviewing-impl-plans](skills/reviewing-impl-plans.md) | Implementation plan review |
 | [instruction-engineering](skills/instruction-engineering.md) | LLM prompt optimization |
-| [nim-pr-guide](skills/nim-pr-guide.md) | Nim language PR contribution guide |
 | [merging-worktrees](skills/merging-worktrees.md) | Intelligent worktree merging |
-| [subagent-prompting](skills/subagent-prompting.md) | Effective subagent instruction patterns |
 
 ### Original Commands (Spellbook)
 

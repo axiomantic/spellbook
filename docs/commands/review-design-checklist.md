@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: review-design-checklist
-
 Phases 2-3 of reviewing-design-docs: runs a completeness checklist across eight architecture categories, applies REST API design checks, then detects hand-waving language and unjustified magic numbers.
 
 ```mermaid

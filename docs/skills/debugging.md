@@ -1,10 +1,12 @@
 # debugging
 
-Use when debugging bugs, test failures, or unexpected behavior. Triggers: 'why isn't this working', 'this doesn't work', 'X is broken', 'something's wrong', 'getting an error', 'exception in', 'stopped working', 'regression', 'crash', 'hang', 'flaky test', 'intermittent failure', or when user pastes a stack trace/error output. NOT for: test quality issues (use fixing-tests), adding new behavior (use implementing-features).
+Systematic bug investigation with structured methodology selection, hypothesis tracking, and a circuit breaker that prevents endless fix attempts. Covers scientific debugging, systematic elimination, and CI-specific investigation branches. Invoke with `/debugging` or describe a bug to trigger it automatically. A core spellbook capability for root cause analysis.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when debugging bugs, test failures, or unexpected behavior. Triggers: 'why isn't this working', 'this doesn't work', 'X is broken', 'something's wrong', 'getting an error', 'exception in', 'stopped working', 'regression', 'crash', 'hang', 'flaky test', 'intermittent failure', or when user pastes a stack trace/error output. NOT for: test quality issues (use fixing-tests), adding new behavior (use develop).
 
 ## Workflow Diagram
-
-# Diagram: debugging
 
 Multi-phase debugging workflow with mandatory prerequisites, triage-based methodology selection, and a 3-fix rule circuit breaker. Supports scientific debugging, systematic debugging, and CI-specific investigation branches.
 

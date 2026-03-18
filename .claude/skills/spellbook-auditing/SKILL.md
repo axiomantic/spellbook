@@ -355,7 +355,7 @@ RATIONALE:
 
 For each skill:
 - Flag if name is imperative verb pattern (should be gerund/noun)
-- Examples: skills should use gerunds like "debugging", "fixing-tests", "implementing-features"
+- Examples: skills should use gerunds like "debugging", "fixing-tests", "developing", or short descriptives like "develop"
 
 For each command:
 - Flag if name is noun-phrase without action verb (should be imperative)

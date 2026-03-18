@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: ie-template
-
 Template and example for engineered instructions. Provides a standard structure (ROLE, CRITICAL_INSTRUCTION, BEFORE_RESPONDING, RULES, EXAMPLE, FORBIDDEN, SELF_CHECK, FINAL_EMPHASIS) with a complete security code review example.
 
 ```mermaid

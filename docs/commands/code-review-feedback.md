@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: code-review-feedback
-
 Process received code review feedback with categorization, decision rationale, and response templates.
 
 ```mermaid

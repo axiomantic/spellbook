@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: simplify-verify
-
 Multi-gate verification pipeline for simplification candidates. Each candidate passes through parse, type, test, and complexity gates.
 
 ```mermaid

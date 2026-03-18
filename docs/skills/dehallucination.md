@@ -1,10 +1,12 @@
 # dehallucination
 
-Verify claims, references, and assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by roundtable feedback, Forge workflow, and after deep-research verification.
+Verifies that claims, file references, and assertions in documents are grounded in reality rather than fabricated. Assigns confidence levels to each claim based on evidence tiers and flags hallucinations with recovery actions. This core spellbook skill serves as a quality gate for AI-generated content, catching false claims before they propagate into code or designs.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Verify claims, references, and assertions are grounded in reality. Triggers: 'does this actually exist', 'is this real', 'did you hallucinate', 'verify these references', 'check if this is fabricated', 'reality check', 'ground truth'. Invoked as quality gate by roundtable feedback, Forge workflow, and after deep-research verification.
 
 ## Workflow Diagram
-
-# Diagram: dehallucination
 
 Workflow for verifying claims, detecting hallucinations, and enforcing recovery protocols. Used as a quality gate by the Forge pipeline and roundtable feedback.
 

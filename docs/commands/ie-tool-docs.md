@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: ie-tool-docs
-
 Guidance for writing MCP tool, API, and CLI documentation that LLMs can reliably interpret. Covers purpose, parameters, errors, edge cases, and anti-patterns.
 
 ```mermaid

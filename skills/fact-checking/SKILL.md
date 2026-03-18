@@ -1,6 +1,8 @@
 ---
 name: fact-checking
 description: "Verify technical claims in code, docs, and comments via evidence-backed verdicts before merge."
+intro: |
+  Evidence-based verification of technical claims in code, docs, and comments. Extracts claims as hypotheses, triages them by risk, and verifies each against source code with traceable evidence and honest uncertainty. A core spellbook capability for catching incorrect assumptions and outdated comments before they reach production.
 ---
 
 <ROLE>

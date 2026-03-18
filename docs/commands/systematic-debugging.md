@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: systematic-debugging
-
 4-phase root cause debugging methodology. Enforces the iron law: no fixes without root cause investigation first. Phases: root cause investigation, pattern analysis, hypothesis and testing (with isolated-testing and verifying-hunches sub-skills), and implementation with a 3-fix circuit breaker that escalates to architectural review.
 
 ```mermaid

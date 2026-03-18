@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: writing-commands-review
-
 Review and test a command against the full quality checklist. Evaluates structure, content quality, behavioral clarity, and anti-patterns. Produces a scored review report and runs the command testing protocol (dry run, happy path, error path, edge case).
 
 ```mermaid

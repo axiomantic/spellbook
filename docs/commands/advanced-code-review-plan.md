@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: advanced-code-review-plan
-
 Phase 1 of advanced-code-review: Strategic planning that resolves the review target, acquires the diff, categorizes files by risk, estimates complexity, and produces a prioritized review manifest and plan.
 
 ```mermaid

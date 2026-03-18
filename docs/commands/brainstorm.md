@@ -5,8 +5,6 @@
 
 ## Workflow Diagram
 
-# Diagram: brainstorm
-
 Enforce structured exploration before creative work by delegating to the brainstorming skill.
 
 ```mermaid

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: write-skill-test
-
 RED-GREEN-REFACTOR implementation for skill testing. Establishes baseline agent behavior without the skill (RED), writes a minimal skill addressing observed failures (GREEN), then closes loopholes by adding counters for new rationalizations (REFACTOR).
 
 ```mermaid

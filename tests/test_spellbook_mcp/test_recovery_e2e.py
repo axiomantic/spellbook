@@ -301,7 +301,7 @@ def test_recovery_e2e_full_before_after_flow(tmp_path):
             "role": "assistant",
             "timestamp": "2026-01-16T10:00:00Z",
             "tool_calls": [
-                {"tool": "Skill", "args": {"skill": "implementing-features"}}
+                {"tool": "Skill", "args": {"skill": "develop"}}
             ]
         },
         # Phase marker
@@ -358,7 +358,7 @@ def test_recovery_e2e_full_before_after_flow(tmp_path):
     soul = extract_soul(str(transcript))
 
     # Verify all 7 components extracted
-    assert soul["active_skill"] == "implementing-features", f"Expected implementing-features, got {soul['active_skill']}"
+    assert soul["active_skill"] == "develop", f"Expected develop, got {soul['active_skill']}"
     assert soul["skill_phase"] == "Phase 2: Design", f"Expected Phase 2: Design, got {soul['skill_phase']}"
     assert soul["persona"] == "fun:Detective Mode", f"Expected 'fun:Detective Mode', got {soul['persona']}"
     # Note: extract_todos only returns non-completed todos (in_progress + pending)
@@ -396,7 +396,7 @@ def test_recovery_e2e_full_before_after_flow(tmp_path):
         FROM souls WHERE project_path = ?
     """, (project_path,))
     row = cursor.fetchone()
-    assert row[0] == "implementing-features"
+    assert row[0] == "develop"
     assert row[1] == "Phase 2: Design"
     assert row[2] == "fun:Detective Mode"
     stored_todos = json.loads(row[3])
@@ -414,7 +414,7 @@ def test_recovery_e2e_full_before_after_flow(tmp_path):
     assert context is not None, "Recovery context should not be None"
 
     # Verify context contains all expected fields
-    assert "implementing-features" in context, "Context should contain active skill"
+    assert "develop" in context, "Context should contain active skill"
     assert "Phase 2: Design" in context, "Context should contain skill phase"
     assert "Detective Mode" in context, "Context should contain persona"
     assert "Review design" in context, "Context should contain in-progress todo"
@@ -451,10 +451,10 @@ def test_recovery_e2e_full_before_after_flow(tmp_path):
         assert "</system-reminder>" in reminder, "Reminder should have closing tag"
 
         # Verify key recovery fields are present and parseable
-        assert "implementing-features" in reminder, "Reminder should contain active skill"
+        assert "develop" in reminder, "Reminder should contain active skill"
         assert "**Skill Phase:**" in reminder, "Reminder should have Skill Phase field"
 
-        # Verify skill phase is parseable by implementing-features skill
+        # Verify skill phase is parseable by develop skill
         skill_phase_pattern = r'\*\*Skill Phase:\*\*\s*(.+?)(?:\n|$)'
         match = re.search(skill_phase_pattern, reminder)
         assert match is not None, "Skill Phase should be parseable"

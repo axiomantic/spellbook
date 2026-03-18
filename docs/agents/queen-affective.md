@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: queen-affective
-
 Emotional state monitor that senses when a project is stuck, frustrated, or needs intervention. Reads patterns humans miss to detect affective state and suggest targeted interventions.
 
 ```mermaid

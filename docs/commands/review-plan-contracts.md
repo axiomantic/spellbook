@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: review-plan-contracts
-
 Phase 2 of reviewing-impl-plans: audits every interface contract between parallel work tracks, verifying request/response/error formats, shared type schemas, event/message contracts, and file/resource access patterns for completeness.
 
 ```mermaid

@@ -42,7 +42,6 @@ Skills for maintaining and improving code quality:
 | [fixing-tests](fixing-tests.md) | Fixing failing or weak tests |
 | [fact-checking](fact-checking.md) | Verifying claims and assumptions |
 | [finding-dead-code](finding-dead-code.md) | Identifying unused code |
-| [receiving-code-review](receiving-code-review.md) | Processing code review feedback |
 | [requesting-code-review](requesting-code-review.md) | Requesting structured code review |
 
 ### Feature Development Skills
@@ -51,7 +50,7 @@ Skills for building and reviewing features:
 
 | Skill | When to Use |
 |-------|-------------|
-| [implementing-features](implementing-features.md) | End-to-end feature implementation |
+| [develop](develop.md) | End-to-end feature implementation |
 | [reviewing-design-docs](reviewing-design-docs.md) | Reviewing design documents |
 | [reviewing-impl-plans](reviewing-impl-plans.md) | Reviewing implementation plans |
 | [devils-advocate](devils-advocate.md) | Challenging assumptions and decisions |

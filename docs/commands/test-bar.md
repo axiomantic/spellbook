@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: test-bar
-
 Generate a floating QA test overlay for the current branch's UI changes. Analyzes branch diffs, builds a scenario matrix, creates a self-contained React overlay component with one-click scenario buttons, writes a manifest, and verifies compilation.
 
 ```mermaid

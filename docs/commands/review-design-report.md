@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: review-design-report
-
 Phases 6-7 of reviewing-design-docs: compiles a scored findings report with reproducible category counts, then generates a prioritized remediation plan with P1/P2/P3 items and factcheck verification tasks.
 
 ```mermaid

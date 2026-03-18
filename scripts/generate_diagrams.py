@@ -33,62 +33,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import NamedTuple
 
-REPO_ROOT = Path(__file__).parent.parent
-SKILLS_DIR = REPO_ROOT / "skills"
-COMMANDS_DIR = REPO_ROOT / "commands"
-AGENTS_DIR = REPO_ROOT / "agents"
-DIAGRAMS_DIR = REPO_ROOT / "docs" / "diagrams"
-
-# ---------------------------------------------------------------------------
-# Tiering configuration (mirrors check_diagram_freshness.py)
-# ---------------------------------------------------------------------------
-
-# Skills that require diagrams (multi-phase, complex workflow skills)
-MANDATORY_SKILLS: set[str] = {
-    "advanced-code-review",
-    "analyzing-domains",
-    "auditing-green-mirage",
-    "autonomous-roundtable",
-    "brainstorming",
-    "code-review",
-    "debugging",
-    "deep-research",
-    "designing-workflows",
-    "distilling-prs",
-    "executing-plans",
-    "finding-dead-code",
-    "finishing-a-development-branch",
-    "fixing-tests",
-    "gathering-requirements",
-    "generating-diagrams",
-    "implementing-features",
-    "requesting-code-review",
-    "reviewing-design-docs",
-    "reviewing-impl-plans",
-    "security-auditing",
-    "test-driven-development",
-    "writing-plans",
-    "writing-skills",
-}
-
-# Command name prefixes that indicate phase commands (mandatory diagrams)
-MANDATORY_COMMAND_PREFIXES: tuple[str, ...] = (
-    "advanced-code-review-",
-    "audit-mirage-",
-    "code-review-",
-    "dead-code-",
-    "deep-research-",
-    "distill-",
-    "fact-check-",
-    "feature-",
-    "finish-branch-",
-    "fix-tests-",
-    "merge-worktree-",
-    "pr-distill",
-    "request-review-",
-    "review-design-",
-    "review-plan-",
-    "simplify-",
+from diagram_config import (
+    AGENTS_DIR,
+    COMMANDS_DIR,
+    DIAGRAMS_DIR,
+    EXCLUDED_AGENTS,
+    EXCLUDED_COMMANDS,
+    EXCLUDED_SKILLS,
+    MANDATORY_AGENTS,
+    MANDATORY_COMMAND_PREFIXES,
+    MANDATORY_SKILLS,
+    REPO_ROOT,
+    SKILLS_DIR,
 )
 
 # Timeout for each Claude headless invocation (5 minutes)
@@ -97,10 +53,6 @@ CLAUDE_TIMEOUT_SECONDS = 300
 # ---------------------------------------------------------------------------
 # Data types
 # ---------------------------------------------------------------------------
-
-
-# All agents are mandatory
-MANDATORY_AGENTS: bool = True
 
 
 class SourceItem(NamedTuple):
@@ -138,6 +90,8 @@ def discover_skills() -> list[SourceItem]:
             continue
 
         name = skill_dir.name
+        if name in EXCLUDED_SKILLS:
+            continue
         diagram_path = DIAGRAMS_DIR / "skills" / f"{name}.md"
         mandatory = name in MANDATORY_SKILLS
         items.append(SourceItem(
@@ -164,6 +118,8 @@ def discover_commands() -> list[SourceItem]:
         if cmd_file.name.startswith("_"):
             continue
         name = cmd_file.stem
+        if name in EXCLUDED_COMMANDS:
+            continue
         if name in seen:
             continue
         seen.add(name)
@@ -186,6 +142,8 @@ def discover_commands() -> list[SourceItem]:
         if not main_cmd.exists():
             continue
         name = cmd_dir.name
+        if name in EXCLUDED_COMMANDS:
+            continue
         if name in seen:
             continue
         seen.add(name)
@@ -213,6 +171,8 @@ def discover_agents() -> list[SourceItem]:
         if agent_file.name.startswith("_"):
             continue
         name = agent_file.stem
+        if name in EXCLUDED_AGENTS:
+            continue
         diagram_path = DIAGRAMS_DIR / "agents" / f"{name}.md"
         items.append(SourceItem(
             name=name,

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: finish-branch-execute
-
 Execute the user's chosen integration option: local merge, PR creation, keep as-is, or discard with explicit confirmation.
 
 ```mermaid

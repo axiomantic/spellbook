@@ -1,5 +1,5 @@
 ---
-description: "Phase 1 of implementing-features: Research strategy, codebase exploration, ambiguity detection, quality scoring"
+description: "Phase 1 of develop: Research strategy, codebase exploration, ambiguity detection, quality scoring"
 ---
 
 # Feature Research (Phase 1)

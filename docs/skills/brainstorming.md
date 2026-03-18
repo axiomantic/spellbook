@@ -1,13 +1,15 @@
 # brainstorming
 
-Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also used in SYNTHESIS mode when implementing-features provides discovery context for autonomous design.
+Structured design exploration that evaluates multiple approaches against trade-offs before committing to an architecture. Generates 2-3 candidate designs with explicit pros, cons, and risk profiles so you can make informed decisions. A core spellbook capability, invocable with `/brainstorm` or by asking to explore options for a technical problem.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when exploring design approaches, generating ideas, or making architectural decisions. Triggers: 'explore options', 'what are the tradeoffs', 'how should I approach', 'let's think through', 'sketch out an approach', 'I need ideas for', 'how would you structure', 'what are my options'. Also used in SYNTHESIS mode when develop provides discovery context for autonomous design.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Workflow Diagram
-
-# Diagram: brainstorming
 
 Workflow for the brainstorming skill. Supports two modes: Synthesis (autonomous, context pre-collected) and Interactive (discovery-driven collaboration). Both converge on approach selection, design presentation, quality assessment, and documentation. Includes circuit breakers for security-critical or contradictory situations.
 

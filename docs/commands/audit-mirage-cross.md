@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: audit-mirage-cross
-
 Cross-test suite-level analysis after individual test audits.
 
 ```mermaid

@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/reviewing-design-docs/SKILL.md", "source_hash": "sha256:7e9b20eba0805053de27a371cc18d44e701b85b5c14a7c0fa95a699cdb1d0147", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/reviewing-design-docs/SKILL.md","source_hash": "sha256:c0eab1b584349075f7e6bb5c61c96abe92bd8dfc46677ef2a9e4c46177e10f8c","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: reviewing-design-docs
 
 Seven-phase design document review workflow: inventories document structure, evaluates completeness checklist, detects hand-waving and vague language, verifies interface claims against source code, simulates implementation per component, compiles scored findings, and produces a prioritized remediation plan.

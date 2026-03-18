@@ -2,9 +2,7 @@
 
 ## Workflow Diagram
 
-# Diagram: feature-implement
-
-Phases 3-4 of implementing-features: Create and review implementation plan, analyze execution mode, then execute via TDD with per-task quality gates, comprehensive audit, and finishing workflow.
+Phases 3-4 of develop: Create and review implementation plan, analyze execution mode, then execute via TDD with per-task quality gates, comprehensive audit, and finishing workflow.
 
 ```mermaid
 flowchart TD
@@ -191,7 +189,7 @@ flowchart TD
 ``````````markdown
 # /feature-implement
 
-Phases 3-4 of the implementing-features workflow. Run after `/feature-design` completes (Phase 2 approved).
+Phases 3-4 of the develop workflow. Run after `/feature-design` completes (Phase 2 approved).
 
 <CRITICAL>
 ## Prerequisite Verification

@@ -6,7 +6,7 @@ invoked at each step of the autonomous development process.
 
 Selection Priority Order:
 1. Handle errors/failures (test errors -> fixing-tests, merge errors -> resolving-merge-conflicts)
-2. Handle feedback type (code_quality -> receiving-code-review, factual_accuracy -> fact-checking)
+2. Handle feedback type (code_quality -> code-review --feedback, factual_accuracy -> fact-checking)
 3. Stage-based default (DISCOVER -> gathering-requirements, DESIGN -> brainstorming, etc.)
 """
 
@@ -20,7 +20,7 @@ STAGE_DEFAULT_SKILLS = {
     "DISCOVER": "gathering-requirements",
     "DESIGN": "brainstorming",
     "PLAN": "writing-plans",
-    "IMPLEMENT": "implementing-features",
+    "IMPLEMENT": "develop",
     "COMPLETE": None,  # No skill needed for complete
     "ESCALATED": None,  # Manual intervention required
 }
@@ -29,7 +29,7 @@ STAGE_DEFAULT_SKILLS = {
 FEEDBACK_SKILL_MAPPING = {
     "test_failure": "fixing-tests",
     "merge_conflict": "resolving-merge-conflicts",
-    "code_quality": "receiving-code-review",
+    "code_quality": "code-review --feedback",
     "factual_accuracy": "fact-checking",
 }
 
@@ -131,4 +131,4 @@ def select_skill(context: IterationState) -> str:
         return default_skill
 
     # Fallback for unknown stages
-    return "implementing-features"
+    return "develop"

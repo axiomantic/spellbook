@@ -1,10 +1,12 @@
 # fact-checking
 
-Verify technical claims in code, docs, and comments via evidence-backed verdicts before merge.
+Evidence-based verification of technical claims in code, docs, and comments. Extracts claims as hypotheses, triages them by risk, and verifies each against source code with traceable evidence and honest uncertainty. A core spellbook capability for catching incorrect assumptions and outdated comments before they reach production.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Verify technical claims in code, docs, and comments via evidence-backed verdicts before merge.
 
 ## Workflow Diagram
-
-# Diagram: fact-checking
 
 Multi-phase fact-checking workflow that extracts claims from code/docs, triages them by severity, verifies each claim with evidence, generates a report, and applies approved fixes. Uses subagent dispatch for extraction, verification, and reporting phases.
 

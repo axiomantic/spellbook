@@ -102,7 +102,7 @@ def add_node(graph_id, parent_id, node_type, text, owner=None, metadata_json=Non
             parent_status = parent_row[2]
             if parent_node_type == "question" and parent_status in ("open", "claimed"):
                 cursor.execute(
-                    "UPDATE nodes SET status = 'answered' WHERE id = ?",
+                    "UPDATE nodes SET status = 'answered', answered_at = datetime('now') WHERE id = ?",
                     (parent_id,),
                 )
 
@@ -276,7 +276,7 @@ def mark_saturated(graph_id, node_id, reason, db_path=None):
     }
 
 
-def claim_work(graph_id, worker_id, db_path=None):
+def claim_work(graph_id, worker_id, db_path=None, session_id=None):
     """Atomically claim the next available open question node for a worker.
 
     Uses branch affinity to prefer sibling nodes of those already owned by
@@ -286,6 +286,7 @@ def claim_work(graph_id, worker_id, db_path=None):
         graph_id: ID of the graph to claim work from
         worker_id: ID of the worker claiming work
         db_path: Path to database file (defaults to standard location)
+        session_id: Optional Claude Code session ID for chat log linking
 
     Returns:
         dict with node data and graph_done flag:
@@ -351,8 +352,9 @@ def claim_work(graph_id, worker_id, db_path=None):
 
     # Atomically claim the node
     cursor.execute(
-        "UPDATE nodes SET owner = :worker_id, status = 'claimed' WHERE id = :node_id",
-        {"worker_id": worker_id, "node_id": candidate_id},
+        "UPDATE nodes SET owner = :worker_id, status = 'claimed', "
+        "claimed_at = datetime('now'), session_id = :session_id WHERE id = :node_id",
+        {"worker_id": worker_id, "node_id": candidate_id, "session_id": session_id},
     )
     conn.commit()
 
@@ -453,7 +455,7 @@ def synthesize_node(graph_id, node_id, synthesis_text, db_path=None):
 
     # Update node status and metadata
     cursor.execute(
-        "UPDATE nodes SET status = 'synthesized', metadata_json = ? WHERE id = ?",
+        "UPDATE nodes SET status = 'synthesized', synthesized_at = datetime('now'), metadata_json = ? WHERE id = ?",
         (json.dumps(existing_meta), node_id),
     )
 

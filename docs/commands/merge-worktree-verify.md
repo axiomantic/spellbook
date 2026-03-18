@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: merge-worktree-verify
-
 Phases 4-5 of merging-worktrees: runs the full test suite, audits test quality with green-mirage detection, verifies all interface contracts survive merging, performs code review against the implementation plan, then cleans up worktrees and branches.
 
 ```mermaid

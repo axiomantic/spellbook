@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: dead-code-setup
-
 Git safety checks and scope selection for dead code analysis.
 
 ```mermaid

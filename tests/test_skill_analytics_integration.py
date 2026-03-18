@@ -49,13 +49,13 @@ class TestEndToEndSkillAnalytics:
                     "usage": {"output_tokens": 100},
                 },
             },
-            # Second skill: implementing-features (supersedes debugging)
+            # Second skill: develop (supersedes debugging)
             {
                 "type": "assistant",
                 "timestamp": "2026-01-26T10:05:00",
                 "message": {
                     "content": [
-                        {"type": "tool_use", "name": "Skill", "input": {"skill": "implementing-features:v2"}}
+                        {"type": "tool_use", "name": "Skill", "input": {"skill": "develop:v2"}}
                     ],
                     "usage": {"output_tokens": 500},
                 },
@@ -82,7 +82,7 @@ class TestEndToEndSkillAnalytics:
 
         # Verify results
         assert summary["total_outcomes"] >= 1
-        assert "debugging" in summary["by_skill"] or "implementing-features" in summary["by_skill"]
+        assert "debugging" in summary["by_skill"] or "develop" in summary["by_skill"]
 
         # Cleanup
         close_all_connections()
@@ -307,7 +307,7 @@ class TestAnalyticsSummaryFiltering:
         init_db(db_path)
 
         # Insert outcomes for two different skills
-        for skill in ["debugging", "implementing-features"]:
+        for skill in ["debugging", "develop"]:
             for i in range(3):
                 outcome = SkillOutcome(
                     skill_name=skill,
@@ -328,7 +328,7 @@ class TestAnalyticsSummaryFiltering:
 
         assert summary["total_outcomes"] == 3
         assert "debugging" in summary["by_skill"]
-        assert "implementing-features" not in summary["by_skill"]
+        assert "develop" not in summary["by_skill"]
 
         # Cleanup
         close_all_connections()

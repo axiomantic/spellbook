@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: fact-check-extract
-
 Extract all claims from code, comments, docstrings, commits, and naming conventions (including mandatory naming convention scan and LLM-content escalation), then triage by category and verification depth before proceeding to verification.
 
 ```mermaid

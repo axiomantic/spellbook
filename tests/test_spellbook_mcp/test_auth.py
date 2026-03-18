@@ -228,6 +228,29 @@ class TestBearerAuthMiddleware:
         assert response.status_code == 200
         assert response.json() == {"healthy": True}
 
+    def test_admin_paths_bypass_bearer_auth(self):
+        """Admin paths must bypass bearer auth (admin has its own cookie auth)."""
+        from starlette.applications import Starlette
+        from starlette.responses import JSONResponse
+        from starlette.routing import Route, Mount
+        from starlette.testclient import TestClient
+        from spellbook_mcp.auth import BearerAuthMiddleware
+
+        async def admin_index(request):
+            return JSONResponse({"admin": True})
+
+        inner_app = Starlette(
+            routes=[
+                Mount("/admin", routes=[Route("/", admin_index)]),
+            ]
+        )
+        app = BearerAuthMiddleware(inner_app, token="correct-token")
+        client = TestClient(app, raise_server_exceptions=False)
+
+        response = client.get("/admin/")
+        assert response.status_code == 200
+        assert response.json() == {"admin": True}
+
     def test_uses_constant_time_comparison(self, auth_app):
         """Token comparison must use secrets.compare_digest for timing safety."""
         from starlette.testclient import TestClient

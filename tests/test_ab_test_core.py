@@ -15,7 +15,7 @@ class TestExperimentCreate:
 
         result = experiment_create(
             name="test-experiment",
-            skill_name="implementing-features",
+            skill_name="develop",
             variants=[
                 {"name": "control", "weight": 50},
                 {"name": "treatment", "skill_version": "v2", "weight": 50},
@@ -26,7 +26,7 @@ class TestExperimentCreate:
 
         assert result["success"] is True
         assert result["name"] == "test-experiment"
-        assert result["skill_name"] == "implementing-features"
+        assert result["skill_name"] == "develop"
         assert result["status"] == "created"
         assert len(result["variants"]) == 2
         assert result["variants"][0]["name"] == "control"
@@ -403,7 +403,7 @@ class TestExperimentList:
         )
         result2 = experiment_create(
             name="exp-2",
-            skill_name="implementing-features",
+            skill_name="develop",
             variants=[
                 {"name": "control", "weight": 50},
                 {"name": "treatment", "skill_version": "v2", "weight": 50},
@@ -435,7 +435,7 @@ class TestExperimentList:
         )
         result2 = experiment_create(
             name="exp-2",
-            skill_name="implementing-features",
+            skill_name="develop",
             variants=[
                 {"name": "control", "weight": 50},
                 {"name": "treatment", "skill_version": "v2", "weight": 50},
@@ -466,7 +466,7 @@ class TestExperimentList:
         )
         experiment_create(
             name="exp-2",
-            skill_name="implementing-features",
+            skill_name="develop",
             variants=[
                 {"name": "control", "weight": 50},
                 {"name": "treatment", "skill_version": "v2", "weight": 50},

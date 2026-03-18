@@ -5,8 +5,6 @@
 
 ## Workflow Diagram
 
-# Diagram: write-plan
-
 Transform requirements into an executable implementation plan with atomic, verifiable tasks. Invokes the writing-plans skill, stores output in the project artifacts directory.
 
 ```mermaid

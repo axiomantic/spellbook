@@ -26,71 +26,23 @@ import sys
 from pathlib import Path
 from typing import NamedTuple
 
-REPO_ROOT = Path(__file__).parent.parent
-SKILLS_DIR = REPO_ROOT / "skills"
-COMMANDS_DIR = REPO_ROOT / "commands"
-AGENTS_DIR = REPO_ROOT / "agents"
-DIAGRAMS_DIR = REPO_ROOT / "docs" / "diagrams"
-
-# ---------------------------------------------------------------------------
-# Tiering configuration
-# ---------------------------------------------------------------------------
-
-# Skills that require diagrams (multi-phase, complex workflow skills)
-MANDATORY_SKILLS: set[str] = {
-    "advanced-code-review",
-    "analyzing-domains",
-    "auditing-green-mirage",
-    "autonomous-roundtable",
-    "brainstorming",
-    "code-review",
-    "debugging",
-    "deep-research",
-    "designing-workflows",
-    "distilling-prs",
-    "executing-plans",
-    "finding-dead-code",
-    "finishing-a-development-branch",
-    "fixing-tests",
-    "gathering-requirements",
-    "generating-diagrams",
-    "implementing-features",
-    "requesting-code-review",
-    "reviewing-design-docs",
-    "reviewing-impl-plans",
-    "security-auditing",
-    "test-driven-development",
-    "writing-plans",
-    "writing-skills",
-}
-
-# Command name prefixes that indicate phase commands (mandatory diagrams)
-MANDATORY_COMMAND_PREFIXES: tuple[str, ...] = (
-    "advanced-code-review-",
-    "audit-mirage-",
-    "code-review-",
-    "dead-code-",
-    "deep-research-",
-    "distill-",
-    "fact-check-",
-    "feature-",
-    "finish-branch-",
-    "fix-tests-",
-    "merge-worktree-",
-    "pr-distill",
-    "request-review-",
-    "review-design-",
-    "review-plan-",
-    "simplify-",
+from diagram_config import (
+    AGENTS_DIR,
+    COMMANDS_DIR,
+    DIAGRAMS_DIR,
+    EXCLUDED_AGENTS,
+    EXCLUDED_COMMANDS,
+    EXCLUDED_SKILLS,
+    MANDATORY_AGENTS,
+    MANDATORY_COMMAND_PREFIXES,
+    MANDATORY_SKILLS,
+    REPO_ROOT,
+    SKILLS_DIR,
 )
 
 # ---------------------------------------------------------------------------
 # Data types
 # ---------------------------------------------------------------------------
-
-
-# All agents are mandatory (small set, always worth diagramming)
-MANDATORY_AGENTS: bool = True
 
 
 class SourceItem(NamedTuple):
@@ -129,6 +81,8 @@ def discover_skills() -> list[SourceItem]:
             continue
 
         name = skill_dir.name
+        if name in EXCLUDED_SKILLS:
+            continue
         diagram_path = DIAGRAMS_DIR / "skills" / f"{name}.md"
         mandatory = name in MANDATORY_SKILLS
         items.append(SourceItem(
@@ -157,6 +111,8 @@ def discover_commands() -> list[SourceItem]:
         if "crystallized2" in cmd_file.name:
             continue
         name = cmd_file.stem
+        if name in EXCLUDED_COMMANDS:
+            continue
         if name in seen:
             continue
         seen.add(name)
@@ -179,6 +135,8 @@ def discover_commands() -> list[SourceItem]:
         if not main_cmd.exists():
             continue
         name = cmd_dir.name
+        if name in EXCLUDED_COMMANDS:
+            continue
         if name in seen:
             continue
         seen.add(name)
@@ -208,6 +166,8 @@ def discover_agents() -> list[SourceItem]:
         if "crystallized2" in agent_file.name:
             continue
         name = agent_file.stem
+        if name in EXCLUDED_AGENTS:
+            continue
         diagram_path = DIAGRAMS_DIR / "agents" / f"{name}.md"
         items.append(SourceItem(
             name=name,
@@ -417,6 +377,49 @@ def format_json(results: list[CheckResult], include_optional: bool) -> str:
 # ---------------------------------------------------------------------------
 
 
+def stamp_stale(results: list[CheckResult], include_optional: bool) -> int:
+    """Update source_hash metadata in stale diagram files without regenerating content.
+
+    Returns count of files stamped.
+    """
+    stamped = 0
+    for result in results:
+        if result.status != "stale":
+            continue
+        if not result.item.mandatory and not include_optional:
+            continue
+        if not result.item.diagram_path.exists():
+            continue
+
+        content = result.item.diagram_path.read_text(encoding="utf-8")
+        lines = content.split("\n", 1)
+        first_line = lines[0].strip()
+
+        prefix = "<!-- diagram-meta: "
+        suffix = " -->"
+        if not first_line.startswith(prefix) or not first_line.endswith(suffix):
+            print(f"  SKIP {result.item.name}: no parseable metadata line")
+            continue
+
+        json_str = first_line[len(prefix):-len(suffix)]
+        try:
+            meta = json.loads(json_str)
+        except (json.JSONDecodeError, ValueError):
+            print(f"  SKIP {result.item.name}: malformed metadata JSON")
+            continue
+
+        meta["source_hash"] = f"sha256:{result.current_hash}"
+        new_first_line = f"{prefix}{json.dumps(meta, separators=(',', ': '))}{suffix}"
+        rest = lines[1] if len(lines) > 1 else ""
+        result.item.diagram_path.write_text(
+            new_first_line + "\n" + rest, encoding="utf-8"
+        )
+        stamped += 1
+        print(f"  \u2713 {result.item.name} stamped")
+
+    return stamped
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Check diagram freshness via content hash comparison",
@@ -430,6 +433,11 @@ def main() -> int:
         "--include-optional",
         action="store_true",
         help="Also fail on stale optional diagrams",
+    )
+    parser.add_argument(
+        "--stamp",
+        action="store_true",
+        help="Update source_hash in stale diagram files without regenerating content",
     )
     args = parser.parse_args()
 
@@ -445,6 +453,11 @@ def main() -> int:
 
     # Check freshness
     results = check_all(items)
+
+    if args.stamp:
+        count = stamp_stale(results, args.include_optional)
+        print(f"\nStamped {count} diagram(s).")
+        return 0
 
     # Output
     if args.json:

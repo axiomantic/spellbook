@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/requesting-code-review/SKILL.md", "source_hash": "sha256:04bea5af2609362101072fb296a725363e96459f12c586a8811e914903bc5887", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/requesting-code-review/SKILL.md","source_hash": "sha256:bd850887271931f32e50eca462088c394adac3c1413edfefc385ce2f18594ce7","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: requesting-code-review
 
 Pre-PR review orchestrator with six phases: planning, context assembly, reviewer dispatch, triage, fix execution, and quality gate. Dispatches code-review internally and enforces blocking rules on Critical/High findings.

@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: fix-tests-execute
-
 Execute test fixes by priority: investigate each work item, classify the fix type, apply the fix, verify it catches the original blind spot, and commit independently.
 
 ```mermaid

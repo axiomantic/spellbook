@@ -17,6 +17,13 @@ Exits with code 0 if all are documented, code 1 if any are missing.
 import sys
 from pathlib import Path
 
+from diagram_config import (
+    EXCLUDED_SKILLS,
+    EXCLUDED_COMMANDS,
+    EXCLUDED_AGENTS,
+    SKILL_ALIASES,
+)
+
 
 def main():
     # Get repo root
@@ -38,7 +45,9 @@ def main():
     commands = []
     for cmd_file in commands_dir.glob("*.md"):
         if not cmd_file.name.startswith("_") and "crystallized2" not in cmd_file.name:
-            commands.append(cmd_file.stem)
+            name = cmd_file.stem
+            if name not in EXCLUDED_COMMANDS:
+                commands.append(name)
 
     # Find all skills (directories with SKILL.md, exclude underscore prefix)
     skills = []
@@ -46,36 +55,45 @@ def main():
         if skill_dir.is_dir() and not skill_dir.name.startswith("_"):
             skill_file = skill_dir / "SKILL.md"
             if skill_file.exists():
-                skills.append(skill_dir.name)
+                name = skill_dir.name
+                if name not in EXCLUDED_SKILLS:
+                    skills.append(name)
 
     # Find all agents (exclude files starting with underscore or crystallized2)
     agents = []
     if agents_dir.exists():
         for agent_file in agents_dir.glob("*.md"):
             if not agent_file.name.startswith("_") and "crystallized2" not in agent_file.name:
-                agents.append(agent_file.stem)
+                name = agent_file.stem
+                if name not in EXCLUDED_AGENTS:
+                    agents.append(name)
 
     # Check for issues
     issues = []
 
-    # Check README mentions all items
+    # Check README mentions all items (use alias name for renamed skills)
     for cmd in commands:
         if f"/{cmd}" not in readme_content:
             issues.append(f"README missing command: /{cmd}")
 
     for skill in skills:
-        if skill not in readme_content:
+        doc_name = SKILL_ALIASES.get(skill, skill)
+        if doc_name not in readme_content and skill not in readme_content:
             issues.append(f"README missing skill: {skill}")
 
     for agent in agents:
         if agent not in readme_content:
             issues.append(f"README missing agent: {agent}")
 
-    # Check docs pages exist
+    # Check docs pages exist (use alias name for renamed skills)
     for skill in skills:
-        doc_file = docs_skills_dir / f"{skill}.md"
+        doc_name = SKILL_ALIASES.get(skill, skill)
+        doc_file = docs_skills_dir / f"{doc_name}.md"
         if not doc_file.exists():
-            issues.append(f"Missing docs page: docs/skills/{skill}.md")
+            # Also check original name as fallback
+            orig_file = docs_skills_dir / f"{skill}.md"
+            if not orig_file.exists():
+                issues.append(f"Missing docs page: docs/skills/{doc_name}.md")
 
     for cmd in commands:
         doc_file = docs_commands_dir / f"{cmd}.md"
@@ -87,9 +105,10 @@ def main():
         if not doc_file.exists():
             issues.append(f"Missing docs page: docs/agents/{agent}.md")
 
-    # Check mkdocs.yml nav includes items
+    # Check mkdocs.yml nav includes items (use alias name for renamed skills)
     for skill in skills:
-        if f"skills/{skill}.md" not in mkdocs_content:
+        doc_name = SKILL_ALIASES.get(skill, skill)
+        if f"skills/{doc_name}.md" not in mkdocs_content and f"skills/{skill}.md" not in mkdocs_content:
             issues.append(f"mkdocs.yml nav missing: skills/{skill}.md")
 
     for cmd in commands:

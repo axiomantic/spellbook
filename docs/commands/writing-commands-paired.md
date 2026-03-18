@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: writing-commands-paired
-
 Create paired commands (create + remove) with proper artifact contracts. Ensures every command that produces artifacts has a matching removal command with manifest tracking, heuristic fallback discovery, safety checks, and verification.
 
 ```mermaid

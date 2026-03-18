@@ -1,10 +1,12 @@
 # finding-dead-code
 
-Use when reviewing code changes, auditing new features, cleaning up PRs, or user says "find dead code", "find unused code", "check for unnecessary additions", "what can I remove".
+Identifies unused code through static analysis, import tracing, and usage verification across the codebase. Treats all code as dead until proven alive, requiring concrete evidence of usage before issuing a verdict. A core spellbook capability for cleaning up unnecessary additions and keeping the codebase lean.
+
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when reviewing code changes, auditing new features, cleaning up PRs, or user says "find dead code", "find unused code", "check for unnecessary additions", "what can I remove".
 
 ## Workflow Diagram
-
-# Diagram: finding-dead-code
 
 Workflow for the finding-dead-code skill. Orchestrates dead code analysis through 4 sequential commands: setup (git safety and scope), analyze (extract, triage, verify, rescan), report (document findings), and implement (apply deletions). Iterative re-scanning continues until no new dead code is found.
 

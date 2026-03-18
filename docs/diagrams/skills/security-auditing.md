@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/security-auditing/SKILL.md", "source_hash": "sha256:0c8f64dbbe8686d6d57a67e13e860bd40c66251eed095d30dd25657ae1a734cb", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/security-auditing/SKILL.md","source_hash": "sha256:2d7d279b58d6caeec09c122a648b3f56da0f2ff736e96dc32c8625d61d2625f1","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: security-auditing
 
 Six-phase security audit workflow: discovers audit scope, runs static analysis scanner, classifies and deduplicates findings, traces attack chains for high/critical issues, generates a structured report, and enforces a pass/warn/fail quality gate.

@@ -5,8 +5,6 @@
 
 ## Workflow Diagram
 
-# Diagram: code-reviewer
-
 Senior code review agent that validates implementations against plans and coding standards. Uses ordered review gates, evidence-based findings, and a decision matrix for verdicts.
 
 ```mermaid

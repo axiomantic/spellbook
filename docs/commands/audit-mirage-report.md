@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: audit-mirage-report
-
 Generate findings report with machine-parseable YAML and human-readable summary.
 
 ```mermaid

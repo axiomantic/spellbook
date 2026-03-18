@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: code-review-give
-
 Now I have the full source content. Let me generate the diagrams.
 
 ## Overview

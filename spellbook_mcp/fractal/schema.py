@@ -115,7 +115,11 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
             status TEXT NOT NULL DEFAULT 'open'
                 CHECK(status IN ('open', 'claimed', 'answered', 'synthesized', 'saturated', 'error', 'budget_exhausted')),
             metadata_json TEXT DEFAULT '{}',
-            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            claimed_at TEXT,
+            answered_at TEXT,
+            synthesized_at TEXT,
+            session_id TEXT
         )
     """)
 
@@ -186,10 +190,27 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
 
         # Record schema version 2
         cursor.execute(
-            "INSERT INTO schema_version (version, applied_at) VALUES (?, datetime('now'))",
-            (SCHEMA_VERSION,),
+            "INSERT INTO schema_version (version, applied_at) VALUES (2, datetime('now'))"
         )
-    elif current_version == SCHEMA_VERSION:
+    if current_version < 3:
+        # v2 -> v3 migration: add timestamp columns and session_id for chat log linking
+        existing_cols = {
+            row[1] for row in cursor.execute("PRAGMA table_info(nodes)").fetchall()
+        }
+        for col, default in [
+            ("claimed_at", "NULL"),
+            ("answered_at", "NULL"),
+            ("synthesized_at", "NULL"),
+            ("session_id", "NULL"),
+        ]:
+            if col not in existing_cols:
+                cursor.execute(f"ALTER TABLE nodes ADD COLUMN {col} TEXT DEFAULT {default}")
+
+        cursor.execute(
+            "INSERT INTO schema_version (version, applied_at) VALUES (3, datetime('now'))"
+        )
+
+    if current_version >= SCHEMA_VERSION:
         # Already at current version, nothing to do
         pass
 

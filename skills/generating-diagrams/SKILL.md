@@ -1,6 +1,8 @@
 ---
 name: generating-diagrams
 description: "Use when generating flowcharts, diagrams, dependency graphs, or visual representations of processes, relationships, architecture, or state machines. Triggers: 'diagram this', 'flowchart', 'visualize', 'dependency graph', 'ER diagram', 'state machine diagram', 'class diagram', 'sequence diagram', 'map the relationships', 'draw the architecture', 'how does X connect to Y'. NOT for: simple bullet point explanations, runtime monitoring, or text-only documentation."
+intro: |
+  Generates Mermaid flowcharts, dependency diagrams, state machines, and other visual representations from code, processes, or architecture. Every node is justified by source material, never invented, using Mermaid for inline markdown and Graphviz DOT for complex output. A core spellbook capability for visualizing relationships and workflows.
 ---
 
 # Generating Diagrams

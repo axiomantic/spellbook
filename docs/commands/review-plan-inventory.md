@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: review-plan-inventory
-
 Phase 1 of reviewing-impl-plans: establishes context by checking for a parent design document, inventories all work items with parallel/sequential classification, audits setup/skeleton requirements, and flags cross-track interface dependencies.
 
 ```mermaid

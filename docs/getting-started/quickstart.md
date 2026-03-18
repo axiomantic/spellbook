@@ -1,81 +1,49 @@
 # Quick Start
 
-After installation, here's how to start using Spellbook skills.
-
-## Your First Skill
-
-### 1. Check Available Skills
-
-In Claude Code:
-```
-What skills do I have available?
-```
-
-Or use the Skill tool directly to list them.
-
-### 2. Invoke a Skill
-
-When you need a structured workflow, invoke the relevant skill:
-
-```
-I need to debug this issue. Use the systematic-debugging skill.
-```
-
-Or let the AI assistant detect when a skill applies automatically.
+After installation, Spellbook skills are available immediately. Skills are invoked automatically when your coding assistant detects a matching trigger, or manually with `/<skill-name>`.
 
 ## Common Workflows
 
-### Starting a New Feature
+### Starting a New Feature or Project
 
-1. **Brainstorm first:** Use `/brainstorm` or invoke `brainstorming` skill
-2. **Create a plan:** Use `/write-plan` or invoke `writing-plans` skill
-3. **Execute the plan:** Use `/execute-plan` or invoke `executing-plans` skill
+Invoke the [develop](../skills/develop.md) skill. It handles the entire lifecycle: research, discovery, design, planning, and implementation with quality gates at every phase.
+
+```
+I want to add dark mode to the settings page.
+```
+
+That's it. The `develop` skill activates automatically when you describe what you want to build, or invoke it explicitly with `/develop`. It coordinates subagents for research, design review, TDD, code review, and fact-checking.
 
 ### Debugging an Issue
 
-1. Invoke `systematic-debugging` skill
-2. Follow the hypothesis-driven debugging process
-3. Document findings and fixes
+Describe the bug or paste a stack trace. The [debugging](../skills/debugging.md) skill activates automatically.
+
+```
+This test is failing with a timeout on CI but passes locally.
+```
+
+Or invoke explicitly with `/debugging`. It selects between scientific debugging, systematic elimination, and CI-specific investigation based on the problem type.
 
 ### Code Review
 
-**Requesting review:**
-```
-Review my changes using the requesting-code-review skill
-```
-
-**Receiving feedback:**
-```
-Address this PR feedback using the receiving-code-review skill
-```
-
-## Autonomous Mode
-
-For uninterrupted workflows, enable autonomous mode:
+**Requesting review before a PR:**
 
 ```
-/allowed-tools Bash(*)
+Review my changes using /requesting-code-review
 ```
 
-This allows skills to execute multi-step workflows (git operations, file changes, test runs) without constant approval prompts.
+The [requesting-code-review](../skills/requesting-code-review.md) skill assembles context, dispatches review agents, triages findings, and produces a remediation plan.
 
-!!! warning "Use with Caution"
-    Review changes before pushing. Autonomous mode executes without confirmation.
+**Deep multi-phase review:**
 
-## Key Skills to Learn
+Use [advanced-code-review](../skills/advanced-code-review.md) for historical context analysis, fact-checked findings, and tiered severity reporting.
 
-| Task | Skill |
-|------|-------|
-| Design exploration | `brainstorming` |
-| Implementation planning | `writing-plans` |
-| Bug investigation | `systematic-debugging` |
-| Test-first development | `test-driven-development` |
-| Feature isolation | `using-git-worktrees` |
-| Quality verification | `/verify` command |
+## Key Skills
 
-## Tips
-
-1. **Let skills chain:** Many skills invoke other skills as needed
-2. **Trust the process:** Skills encode best practices - follow them
-3. **Use TodoWrite:** Skills create task lists - check them off as you go
-4. **Read skill output:** Skills provide specific instructions - follow them exactly
+| Skill | What it does |
+|-------|-------------|
+| [develop](../skills/develop.md) | Full-lifecycle feature implementation with research, design, planning, and execution |
+| [debugging](../skills/debugging.md) | Structured bug investigation with methodology selection and hypothesis tracking |
+| [fractal-thinking](../skills/fractal-thinking.md) | Recursive question decomposition for deep exploration of complex topics |
+| [dehallucination](../skills/dehallucination.md) | Verifies claims and references are grounded in reality, not fabricated |
+| [auditing-green-mirage](../skills/auditing-green-mirage.md) | Detects tests that pass but don't actually verify behavior |

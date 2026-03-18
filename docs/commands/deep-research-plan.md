@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: deep-research-plan
-
 Decompose a Research Brief into independent parallel threads with source strategies, round budgets, convergence criteria, and risk assessment. Planning only, no searching.
 
 ```mermaid

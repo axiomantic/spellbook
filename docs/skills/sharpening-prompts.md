@@ -1,10 +1,10 @@
 # sharpening-prompts
 
-Use when reviewing LLM prompts, skill instructions, subagent prompts, or any text that will instruct an AI. Triggers: "review this prompt", "audit instructions", "sharpen prompt", "is this clear enough", "would an LLM understand this", "ambiguity check". Also invoked by instruction-engineering, reviewing-design-docs, and reviewing-impl-plans for instruction quality gates.
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when reviewing LLM prompts, skill instructions, subagent prompts, or any text that will instruct an AI. Triggers: "review this prompt", "audit instructions", "sharpen prompt", "is this clear enough", "would an LLM understand this", "ambiguity check". Also invoked by instruction-engineering, reviewing-design-docs, and reviewing-impl-plans for instruction quality gates.
 
 ## Workflow Diagram
-
-# Diagram: sharpening-prompts
 
 Audit or improve LLM prompts by systematically finding ambiguities that executors would fill with hallucinated assumptions.
 

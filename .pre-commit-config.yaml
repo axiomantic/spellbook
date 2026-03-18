@@ -56,6 +56,13 @@ repos:
         stages: [manual]
         files: ^skills/.*SKILL\.md$
 
+      - id: check-admin-build
+        name: Check admin frontend build is up to date
+        entry: python3 scripts/check_admin_build.py
+        language: system
+        pass_filenames: false
+        files: ^spellbook_mcp/admin/frontend/(src/|index\.html|package\.json|package-lock\.json|vite\.config\.ts|tsconfig\.json|tailwind\.config\.js|postcss\.config\.js)
+
       - id: check-dependabot-coverage
         name: Check Dependabot covers all package manifests
         entry: uv run python scripts/check_dependabot_coverage.py

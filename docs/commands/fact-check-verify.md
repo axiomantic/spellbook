@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: fact-check-verify
-
 Now I have the full picture. Here are the diagrams:
 
 ---

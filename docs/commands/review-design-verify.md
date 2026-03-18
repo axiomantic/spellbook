@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-# Diagram: review-design-verify
-
 Phases 4-5 of reviewing-design-docs: verifies all interface claims against actual source code, escalates unverifiable claims to fact-checking, then simulates implementation per component to surface specification gaps.
 
 ```mermaid

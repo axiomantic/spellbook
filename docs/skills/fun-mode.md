@@ -1,10 +1,10 @@
 # fun-mode
 
-Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
+**Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
+
+> Use when starting a session and wanting creative engagement, or when user says '/fun' or asks for a persona
 
 ## Workflow Diagram
-
-# Diagram: fun-mode
 
 Persona synthesis workflow for creative session engagement. Receives persona/context/undertow from session init, synthesizes a coherent character, enforces dialogue-only boundaries, and handles opt-out flow.
 

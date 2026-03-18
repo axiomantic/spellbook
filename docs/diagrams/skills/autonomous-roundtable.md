@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "skills/autonomous-roundtable/SKILL.md", "source_hash": "sha256:1d32922245b4c3d7a87e78eb49c94b183459f65fa49bbcddf6f78424c0400506", "generated_at": "2026-02-19T00:00:00Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "skills/autonomous-roundtable/SKILL.md","source_hash": "sha256:749d7e675877e287dfc06580062081ebc730f678a574d16b4aba53084928da97","generated_at": "2026-02-19T00:00:00Z","generator": "generate_diagrams.py"} -->
 # Diagram: autonomous-roundtable
 
 Workflow for the autonomous-roundtable skill (Forged system). A meta-orchestrator that decomposes projects into features, processes each through DISCOVER, DESIGN, PLAN, IMPLEMENT, COMPLETE stages with roundtable consensus gating. Runs exclusively as a subagent, with handoff protocol for context overflow.
@@ -24,7 +24,7 @@ flowchart TD
         Discover["gathering-requirements"]
         Design["brainstorming"]
         Plan["writing-plans"]
-        Implement["implementing-features"]
+        Implement["develop"]
         Complete["Final roundtable"]
     end
 
@@ -117,7 +117,7 @@ flowchart TD
 | gathering-requirements | SKILL.md: Stages table - DISCOVER stage |
 | brainstorming | SKILL.md: Stages table - DESIGN stage |
 | writing-plans | SKILL.md: Stages table - PLAN stage |
-| implementing-features | SKILL.md: Stages table - IMPLEMENT stage |
+| develop | SKILL.md: Stages table - IMPLEMENT stage |
 | Final roundtable | SKILL.md: Stages table - COMPLETE stage |
 | roundtable_convene | SKILL.md: MCP Tools - Roundtable convene |
 | Verdict (APPROVE/ITERATE) | SKILL.md: Forge Loop - roundtable outcomes |
