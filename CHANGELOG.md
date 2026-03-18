@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.31.0] - 2026-03-15
+## [0.32.0] - 2026-03-18
 
 ### Added
 - **Zeigarnik focus-tracking system** - Stint stack tracks nested units of work with entry context, reminds the LLM to stay on task via depth-triggered heuristics (configurable threshold, default 5), and lets the LLM correct tracked state. Four MCP tools: `stint_push`, `stint_pop`, `stint_check`, `stint_replace`. Correction events logged for analytics (MCP-wrong vs LLM-wrong classification).
