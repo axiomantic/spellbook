@@ -19,11 +19,11 @@
     "@opencode-ai/plugin": ">=1.0.0"
   },
   "dependencies": {
-    "@opencode-ai/sdk": "^1.2.16"
+    "@opencode-ai/sdk": "^1.2.27"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "^1.2.16",
-    "@types/node": "^25.3.3",
+    "@opencode-ai/plugin": "^1.2.27",
+    "@types/node": "^25.5.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
