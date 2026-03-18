@@ -762,6 +762,8 @@ class TestGetRecentlyConsolidatedEvents:
         assert len(events) == 2
 
 
+
+
 class TestInsertMemoryExtraMeta:
     def test_extra_meta_merged_into_meta_json(self, db):
         """extra_meta dict is shallow-merged into stored meta JSON alongside tags."""

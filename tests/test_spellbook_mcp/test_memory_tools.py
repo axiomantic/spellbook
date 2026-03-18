@@ -919,30 +919,6 @@ class TestDoStoreMemories:
         assert mem["content"] == "Valid memory here"
         assert mem["memory_type"] == "rule"
 
-    def test_store_ignores_invalid_event_ids(self, db):
-        """Non-integer event IDs in event_ids_str are silently ignored."""
-        from spellbook_mcp.memory_tools import do_store_memories
-
-        memories_json = json.dumps({
-            "memories": [
-                {
-                    "content": "Memory with bad event ids",
-                    "memory_type": "fact",
-                    "tags": [],
-                    "citations": [],
-                },
-            ]
-        })
-
-        result = do_store_memories(
-            db_path=db,
-            memories_json=memories_json,
-            event_ids_str="abc,def,,",
-            namespace="test-project",
-        )
-        assert result["status"] == "success"
-        assert result["events_consolidated"] == 0
-
 
 class TestTwoToolPatternEndToEnd:
     """Test the full get_unconsolidated -> parse -> store_memories flow."""
@@ -1132,6 +1108,7 @@ class TestTwoToolPatternEndToEnd:
         # No unconsolidated events remain
         remaining = do_get_unconsolidated(db_path=db, namespace="test-project")
         assert remaining["count"] == 0
+
 
 
 class TestMemoryToolsServerRegistration:

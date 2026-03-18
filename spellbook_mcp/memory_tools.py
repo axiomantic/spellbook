@@ -4,8 +4,11 @@ Separated from server.py for testability. server.py thin wrappers call these.
 """
 
 import json
+import logging
 import uuid
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from spellbook_mcp.memory_store import (
     recall_by_query,
@@ -294,7 +297,7 @@ def do_store_memories(
                 try:
                     event_ids.append(int(eid_str))
                 except ValueError:
-                    pass  # Silently ignore non-integer IDs
+                    logger.warning("Ignoring unparseable event ID: %r", eid_str)
 
     # Insert memories
     created_ids: List[str] = []
