@@ -540,7 +540,7 @@ class TestIdempotency:
         cursor.execute("SELECT COUNT(*) FROM schema_version")
         count = cursor.fetchone()[0]
 
-        assert count == 1
+        assert count == 2  # version 2 + version 3 rows
         close_all_fractal_connections()
 
 
@@ -842,9 +842,9 @@ class TestV1ToV2Migration:
         cursor.execute("SELECT status FROM nodes WHERE id = 'n-synth-mig'")
         assert cursor.fetchone()[0] == "synthesized"
 
-        # Verify schema version 2 was recorded
+        # Verify schema version 3 was recorded (v2 + v3 migrations both apply)
         cursor.execute("SELECT MAX(version) FROM schema_version")
-        assert cursor.fetchone()[0] == 2
+        assert cursor.fetchone()[0] == 3
 
         # Verify new index exists
         cursor.execute(

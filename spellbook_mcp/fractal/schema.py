@@ -190,8 +190,7 @@ def init_fractal_schema(db_path: Optional[str] = None) -> None:
 
         # Record schema version 2
         cursor.execute(
-            "INSERT INTO schema_version (version, applied_at) VALUES (?, datetime('now'))",
-            (SCHEMA_VERSION,),
+            "INSERT INTO schema_version (version, applied_at) VALUES (2, datetime('now'))"
         )
     if current_version < 3:
         # v2 -> v3 migration: add timestamp columns and session_id for chat log linking

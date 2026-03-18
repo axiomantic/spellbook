@@ -103,6 +103,10 @@ class TestFractalCytoscapePerformance:
                 "status": ["open", "claimed", "answered", "synthesized", "saturated"][i % 5],
                 "parent_id": f"n-{i // 2}" if i > 0 else None,
                 "owner": f"agent-{i % 3}",
+                "session_id": None,
+                "claimed_at": None,
+                "answered_at": None,
+                "synthesized_at": None,
             }
             for i in range(500)
         ]
