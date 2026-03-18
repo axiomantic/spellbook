@@ -7425,10 +7425,10 @@
 <h1 id="research-citations">Research Citations<a class="headerlink" href="#research-citations" title="Permanent link">&para;</a></h1>
 <p>This page documents the research that informs spellbook's design, particularly the <a href="../../skills/fun-mode/">fun-mode</a> and <a href="../../skills/emotional-stakes/">emotional-stakes</a> skills.</p>
 <h2 id="creativity-and-seed-conditioning">Creativity and Seed-Conditioning<a class="headerlink" href="#creativity-and-seed-conditioning" title="Permanent link">&para;</a></h2>
-<p><strong>Raghunathan, A., et al.</strong> (2025). Rethinking LLM Pre-training. <em>International Conference on Machine Learning (ICML 2025)</em>.</p>
+<p><strong>Nagarajan, V., Wu, C. H., Ding, C., &amp; Raghunathan, A.</strong> (2025). Roll the dice &amp; look before you leap: Going beyond the creative limits of next-token prediction. <em>International Conference on Machine Learning (ICML 2025)</em>, Outstanding Paper Award.</p>
 <ul>
-<li><strong>Link</strong>: <a href="https://www.cs.cmu.edu/~aditirag/icml2025.html">https://www.cs.cmu.edu/~aditirag/icml2025.html</a></li>
-<li><strong>Key finding</strong>: Training with random prefix strings ("seeds") improves algorithmic creativity. These meaningless prefixes condition the model on a single latent "leap of thought," sometimes outperforming temperature sampling for creative tasks.</li>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2504.15266">https://arxiv.org/abs/2504.15266</a> (group page: <a href="https://www.cs.cmu.edu/~aditirag/icml2025.html">https://www.cs.cmu.edu/~aditirag/icml2025.html</a>)</li>
+<li><strong>Key finding</strong>: Injecting noise at the input layer ("seed-conditioning") works as well as, and sometimes better than, temperature sampling at the output layer for eliciting creative and diverse outputs from language models. The paper argues that standard next-token prediction has inherent limits for tasks requiring planning and novel pattern discovery.</li>
 <li><strong>Relevance</strong>: Fun mode's random personas act as semantic seeds that steer generation toward diverse solution pathways.</li>
 </ul>
 <h2 id="persona-effects-on-reasoning">Persona Effects on Reasoning<a class="headerlink" href="#persona-effects-on-reasoning" title="Permanent link">&para;</a></h2>
@@ -7468,8 +7468,8 @@
 <p><strong>Zheng, M., et al.</strong> (2023). When "A Helpful Assistant" Is Not Really Helpful: Personas in System Prompts Do Not Improve Performances of Large Language Models. <em>arXiv preprint arXiv:2311.10054</em>.</p>
 <ul>
 <li><strong>Link</strong>: <a href="https://arxiv.org/abs/2311.10054">https://arxiv.org/abs/2311.10054</a></li>
-<li><strong>Key finding</strong>: Across 162 personas and 2410 factual questions (MMLU), personas do not improve performance on objective tasks compared to neutral prompts. Effects are inconsistent and sometimes negative.</li>
-<li><strong>Relevance</strong>: <strong>Critical caveat</strong> - fun mode explicitly restricts personas to dialogue, never affecting code, commits, or documentation. Personas help creative/social tasks, not factual/STEM tasks.</li>
+<li><strong>Key finding</strong>: Across 162 personas and 2,410 factual questions (MMLU), personas do not improve performance on factual tasks compared to neutral prompts. Effects are inconsistent and sometimes negative.</li>
+<li><strong>Relevance</strong>: <strong>Critical caveat</strong> - fun mode explicitly restricts personas to dialogue, never affecting code, commits, or documentation. Personas may help creative and social reasoning tasks but do not help factual question-answering.</li>
 </ul>
 <p><strong>Gupta, S., et al.</strong> (2024). Bias Runs Deep: Implicit Reasoning Biases in Persona-Assigned LLMs. <em>International Conference on Learning Representations (ICLR 2024)</em>.</p>
 <ul>
@@ -7500,7 +7500,7 @@
 <tbody>
 <tr>
 <td>Random personas</td>
-<td>Raghunathan (ICML 2025), Tan (PHAnToM)</td>
+<td>Nagarajan et al. (ICML 2025), Tan (PHAnToM)</td>
 <td>Creative, social reasoning</td>
 <td>fun-mode</td>
 </tr>

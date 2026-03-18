@@ -7683,7 +7683,7 @@
 You are a Systems Engineer with the instincts of a Red Team Lead. Your reputation depends on rigorous platform integration that exposes no edge cases and leaves no behavior undefined. Strive for excellence in every step.
 </ROLE></p>
 <p><CRITICAL_INSTRUCTION>
-This is critical to successful platform integration. Take a deep breath. Believe in your abilities to achieve outstanding results.</p>
+This is critical to successful platform integration.</p>
 <p>Before proceeding, you MUST:
 1. Fork and clone the spellbook repository locally
 2. Verify target platform supports agent skills (not just MCP tools)
@@ -7691,7 +7691,7 @@ This is critical to successful platform integration. Take a deep breath. Believe
 4. Follow the develop workflow through research, design, planning, and implementation
 5. Write comprehensive tests following spellbook's standards
 6. STOP and ask before creating any PR</p>
-<p>This is NOT optional. This is NOT negotiable. You'd better be sure.
+<p>This is NOT optional. This is NOT negotiable.
 This is very important to my career.
 </CRITICAL_INSTRUCTION></p>
 <p><BEFORE_RESPONDING>
@@ -7700,8 +7700,7 @@ Before starting the porting process, think step-by-step:</p>
 Step 2: Do I have access to the spellbook directory? Set $SPELLBOOK_DIR to the clone location.
 Step 3: Can I read skills manually from <code>$SPELLBOOK_DIR/skills/</code>?
 Step 4: Does the target platform support agent skills (not just MCP tools)?
-Step 5: Have I read the develop skill to understand the full workflow?</p>
-<p>Now proceed with confidence to achieve outstanding results.
+Step 5: Have I read the develop skill to understand the full workflow?
 </BEFORE_RESPONDING></p>
 <hr />
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
@@ -7757,15 +7756,15 @@ Do NOT attempt to port spellbook to platforms that only support:
 </FORBIDDEN></p>
 <hr />
 <h2 id="reading-spellbook-skills-manually">Reading Spellbook Skills Manually<a class="headerlink" href="#reading-spellbook-skills-manually" title="Permanent link">&para;</a></h2>
-<p><CRITICAL>
-If you do not have spellbook's MCP server installed, you MUST read skills directly from the filesystem.</p>
-<p>Skills location: <code>$SPELLBOOK_DIR/skills/&lt;skill-name&gt;/SKILL.md</code>
-Commands location: <code>$SPELLBOOK_DIR/commands/&lt;command-name&gt;.md</code>
-</CRITICAL></p>
 <p><RULE>
-Before using any skill referenced in this guide, read it from the spellbook directory using your file reading tool. Do NOT guess at skill content. Do NOT skip reading the skill.
+If you do not have spellbook's MCP server installed, read skills directly from the filesystem:</p>
+<ul>
+<li>Skills location: <code>$SPELLBOOK_DIR/skills/&lt;skill-name&gt;/SKILL.md</code></li>
+<li>Commands location: <code>$SPELLBOOK_DIR/commands/&lt;command-name&gt;.md</code></li>
+</ul>
+<p>Read each skill before using it rather than guessing at its content.
 </RULE></p>
-<p>Key skills you will need to read:</p>
+<p>Key skills you will need:</p>
 <table>
 <thead>
 <tr>
@@ -7810,19 +7809,17 @@ You cannot read spellbook skills without first having the repository locally. Th
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># 4. Create a feature branch for your platform</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>feat/add-&lt;platform&gt;-support
 </code></pre></div>
-<p><RULE>
-After cloning, verify you can read skills:
+<p>Verify you can read skills after cloning:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ls<span class="w"> </span><span class="nv">$SPELLBOOK_DIR</span>/skills/develop/SKILL.md
 </code></pre></div>
-If this fails, your $SPELLBOOK_DIR is not set correctly.
-</RULE></p>
+<p>If this fails, your <code>$SPELLBOOK_DIR</code> is not set correctly.</p>
 <hr />
 <h2 id="porting-workflow">Porting Workflow<a class="headerlink" href="#porting-workflow" title="Permanent link">&para;</a></h2>
 <p><RULE>
-This workflow follows the develop skill pattern. Read that skill first, then apply its phases to this specific porting task.
+This workflow follows the <code>develop</code> skill pattern. Read that skill first, then apply its phases to this porting task.
 </RULE></p>
 <h3 id="phase-0-configuration">Phase 0: Configuration<a class="headerlink" href="#phase-0-configuration" title="Permanent link">&para;</a></h3>
-<p>First, read and invoke the <code>develop</code> skill from <code>$SPELLBOOK_DIR/skills/develop/SKILL.md</code>.</p>
+<p>Read and invoke the <code>develop</code> skill from <code>$SPELLBOOK_DIR/skills/develop/SKILL.md</code>.</p>
 <p>The feature to implement: <strong>Platform installer for [PLATFORM_NAME]</strong></p>
 <p>Provide this context to the skill:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gu">## Feature Context</span>
@@ -7893,16 +7890,17 @@ This workflow follows the develop skill pattern. Read that skill first, then app
 <h3 id="phase-4-implementation">Phase 4: Implementation<a class="headerlink" href="#phase-4-implementation" title="Permanent link">&para;</a></h3>
 <p>The develop skill will guide implementation. Follow it completely.</p>
 <p><RULE>
-For every piece of implementation code, read and apply the <code>test-driven-development</code> skill from <code>$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md</code>.</p>
-<p>Write the test first. Watch it fail. Then write the implementation.
+Use the <code>test-driven-development</code> skill from <code>$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md</code> for every piece of implementation code. Write the test first, watch it fail, then write the implementation.
 </RULE></p>
 <h3 id="phase-5-testing">Phase 5: Testing<a class="headerlink" href="#phase-5-testing" title="Permanent link">&para;</a></h3>
 <p><CRITICAL>
-Spellbook has specific testing standards. You MUST read and follow these resources:
-- <code>$SPELLBOOK_DIR/tests/README.md</code>: Test organization and helpers
-- <code>$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md</code>: TDD workflow
-- <code>$SPELLBOOK_DIR/skills/test-driven-development/testing-anti-patterns.md</code>: What to avoid
-</CRITICAL></p>
+Spellbook has specific testing standards. Read these resources before writing tests:</p>
+<ul>
+<li><code>$SPELLBOOK_DIR/tests/README.md</code>: Test organization and helpers</li>
+<li><code>$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md</code>: TDD workflow</li>
+<li><code>$SPELLBOOK_DIR/skills/test-driven-development/testing-anti-patterns.md</code>: What to avoid
+</CRITICAL></li>
+</ul>
 <h4 id="unit-tests">Unit Tests<a class="headerlink" href="#unit-tests" title="Permanent link">&para;</a></h4>
 <p>Create tests in <code>tests/unit/</code> or alongside the platform installer:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># tests/unit/test_platform_&lt;name&gt;.py</span>
@@ -7957,8 +7955,8 @@ Spellbook has specific testing standards. You MUST read and follow these resourc
 <a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;[Platform] integration tests complete&quot;</span>
 </code></pre></div>
 <p><RULE>
-All tests must pass before proceeding. Run:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/
+All tests must pass before proceeding:</p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>tests/claude-code/run-all-tests.sh
 </code></pre></div>
 </RULE></p>
@@ -7968,9 +7966,9 @@ All tests must pass before proceeding. Run:
 - <code>docs/getting-started/platforms.md</code>: Add platform section with installation instructions</p>
 <h3 id="phase-7-completion">Phase 7: Completion<a class="headerlink" href="#phase-7-completion" title="Permanent link">&para;</a></h3>
 <p><CRITICAL>
-Do NOT automatically create a PR. STOP and ask the user first.
+Do NOT automatically create a PR. Stop and ask the user first.
 </CRITICAL></p>
-<p>When implementation and tests are complete, use your question-asking tool to present this choice:</p>
+<p>When implementation and tests are complete, present this choice:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="gu">## Ready to Submit</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Implementation is complete with passing tests.
@@ -8033,7 +8031,6 @@ ALWAYS follow the develop workflow completely.
 ALWAYS write tests before implementation.
 NEVER create a PR without asking the user first.</p>
 <p>This is very important to my career. Strive for excellence in every phase.
-Achieve outstanding results through patience, discipline, and relentless attention to quality.
 </FINAL_EMPHASIS></p>
 <hr />
 <h2 id="questions">Questions?<a class="headerlink" href="#questions" title="Permanent link">&para;</a></h2>

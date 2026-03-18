@@ -7639,14 +7639,24 @@
 - Skills symlinked in <code>extensions/gemini/skills/</code> for native discovery</p>
 <p><strong>Note:</strong> Native skills support is pending <a href="https://github.com/google-gemini/gemini-cli/issues/15327">GitHub Issue #15327</a>. As of January 7, 2026, this feature is unreleased. Skills will be auto-discovered once the epic lands in an official Gemini CLI release.</p>
 <h2 id="mcp-server">MCP Server<a class="headerlink" href="#mcp-server" title="Permanent link">&para;</a></h2>
-<p>The <code>spellbook_mcp/</code> directory contains a FastMCP server providing:</p>
-<p><strong>Session Tools:</strong>
-- <code>find_session</code> - Search sessions by name
-- <code>split_session</code> - Calculate chunk boundaries
-- <code>list_sessions</code> - List recent sessions</p>
-<p><strong>Swarm Tools:</strong>
-- <code>swarm_init</code> - Initialize swarm coordination
-- <code>swarm_status</code> - Get current swarm status</p>
+<p>The <code>spellbook_mcp/</code> directory contains a FastMCP server providing 100+ tools across these categories:</p>
+<ul>
+<li><strong>Session management</strong> - initialization, mode switching, context ping, compaction checks</li>
+<li><strong>Security</strong> - injection detection, trust levels, canary tokens, output sanitization</li>
+<li><strong>Memory</strong> - store, recall, consolidate, forget</li>
+<li><strong>Fractal thinking</strong> - graph creation, node management, worker dispatch, synthesis</li>
+<li><strong>Forge (autonomous development)</strong> - project initialization, iteration management, roundtable convening</li>
+<li><strong>Experiments / A-B testing</strong> - create, start, pause, complete, view results</li>
+<li><strong>PR distillation</strong> - fetch PRs, diff analysis, pattern matching and blessing</li>
+<li><strong>Swarm coordination</strong> - <code>mcp_swarm_create</code>, <code>mcp_swarm_register</code>, <code>mcp_swarm_progress</code>, <code>mcp_swarm_monitor</code>, <code>mcp_swarm_complete</code>, <code>mcp_swarm_error</code></li>
+<li><strong>Notifications and TTS</strong> - native OS notifications, Kokoro text-to-speech</li>
+<li><strong>Workflow state persistence</strong> - save, load, update workflow state across sessions</li>
+<li><strong>Focus tracking</strong> - stint push, pop, check, replace</li>
+<li><strong>Configuration management</strong> - get/set config values, skill instructions</li>
+<li><strong>Health checks and analytics</strong> - health check, analytics summary, telemetry controls</li>
+<li><strong>Credential management</strong> - credential export</li>
+<li><strong>Session spawning</strong> - launch new Claude sessions with custom prompts</li>
+</ul>
 <h2 id="file-formats">File Formats<a class="headerlink" href="#file-formats" title="Permanent link">&para;</a></h2>
 <h3 id="skillmd">SKILL.md<a class="headerlink" href="#skillmd" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>---
