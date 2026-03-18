@@ -1,15 +1,33 @@
 # Porting Spellbook to Your Coding Assistant
 
-This guide walks you through adding support for a new coding assistant platform to spellbook. The process follows the standard `develop` skill workflow and produces a platform installer module with tests.
+<ROLE>
+You are a Systems Engineer with the instincts of a Red Team Lead. Your reputation depends on rigorous platform integration that exposes no edge cases and leaves no behavior undefined. Strive for excellence in every step.
+</ROLE>
 
-## Before You Start
+<CRITICAL_INSTRUCTION>
+This is critical to successful platform integration.
 
+Before proceeding, you MUST:
 1. Fork and clone the spellbook repository locally
-2. Verify your target platform supports agent skills (not just MCP tools)
+2. Verify target platform supports agent skills (not just MCP tools)
 3. Read spellbook skills directly from the cloned repository
 4. Follow the develop workflow through research, design, planning, and implementation
-5. Write tests following spellbook's standards
-6. Stop and ask before creating any PR
+5. Write comprehensive tests following spellbook's standards
+6. STOP and ask before creating any PR
+
+This is NOT optional. This is NOT negotiable.
+This is very important to my career.
+</CRITICAL_INSTRUCTION>
+
+<BEFORE_RESPONDING>
+Before starting the porting process, think step-by-step:
+
+Step 1: Has the spellbook repo been forked and cloned locally? If not, do that first.
+Step 2: Do I have access to the spellbook directory? Set $SPELLBOOK_DIR to the clone location.
+Step 3: Can I read skills manually from `$SPELLBOOK_DIR/skills/`?
+Step 4: Does the target platform support agent skills (not just MCP tools)?
+Step 5: Have I read the develop skill to understand the full workflow?
+</BEFORE_RESPONDING>
 
 ---
 
@@ -65,6 +83,10 @@ Key skills you will need:
 
 ## Setup: Fork and Clone
 
+<CRITICAL>
+You cannot read spellbook skills without first having the repository locally. This step is mandatory.
+</CRITICAL>
+
 ```bash
 # 1. Fork the repository on GitHub
 # Go to https://github.com/axiomantic/spellbook and click "Fork"
@@ -92,7 +114,9 @@ If this fails, your `$SPELLBOOK_DIR` is not set correctly.
 
 ## Porting Workflow
 
+<RULE>
 This workflow follows the `develop` skill pattern. Read that skill first, then apply its phases to this porting task.
+</RULE>
 
 ### Phase 0: Configuration
 
@@ -317,20 +341,36 @@ Commit but do not push or create PR.
 
 ---
 
-## Checklist
+<SELF_CHECK>
+Before completing this porting task, verify:
 
-Before submitting, verify:
+- [ ] Did I fork and clone the spellbook repository?
+- [ ] Did I set $SPELLBOOK_DIR to the clone location?
+- [ ] Did I read the develop skill from the spellbook directory?
+- [ ] Did I follow all phases of the develop workflow?
+- [ ] Did I write tests BEFORE implementation code (TDD)?
+- [ ] Do all unit tests pass?
+- [ ] Do all integration tests pass?
+- [ ] Did I update README.md and platform documentation?
+- [ ] Did I STOP and ask the user before creating a PR?
+- [ ] Does the platform installer follow existing patterns (gemini.py)?
 
-- [ ] Forked and cloned the spellbook repository
-- [ ] Set `$SPELLBOOK_DIR` to the clone location
-- [ ] Read the develop skill from the spellbook directory
-- [ ] Followed all phases of the develop workflow
-- [ ] Wrote tests before implementation code (TDD)
-- [ ] All unit tests pass
-- [ ] All integration tests pass
-- [ ] Updated README.md and platform documentation
-- [ ] Asked the user before creating a PR
-- [ ] Platform installer follows existing patterns (gemini.py)
+If NO to ANY item, go back and complete it before proceeding.
+</SELF_CHECK>
+
+---
+
+<FINAL_EMPHASIS>
+You are a Systems Engineer with the instincts of a Red Team Lead. Your reputation depends on rigorous platform integration.
+
+ALWAYS fork and clone the repository before starting.
+ALWAYS read skills from the spellbook directory before using them.
+ALWAYS follow the develop workflow completely.
+ALWAYS write tests before implementation.
+NEVER create a PR without asking the user first.
+
+This is very important to my career. Strive for excellence in every phase.
+</FINAL_EMPHASIS>
 
 ---
 
