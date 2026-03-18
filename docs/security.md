@@ -161,22 +161,20 @@ The security audit and hardening drew from 45 sources. The top references:
 | # | Source | URL |
 |---|---|---|
 | 1 | Anthropic MCP Specification | https://modelcontextprotocol.io/specification |
-| 2 | Invariant Labs: MCP Security Audit | https://invariantlabs.ai/blog/mcp-security-audit |
-| 3 | Trail of Bits: MCP Security Analysis | https://blog.trailofbits.com/2025/04/15/mcp-security-analysis/ |
-| 4 | CVE-2025-53967: DNS Rebinding in MCP | https://nvd.nist.gov/vuln/detail/CVE-2025-53967 |
-| 5 | CVE-2025-66414: SSRF in MCP Servers | https://nvd.nist.gov/vuln/detail/CVE-2025-66414 |
-| 6 | CVE-2025-66416: Prompt Injection via Tool Descriptions | https://nvd.nist.gov/vuln/detail/CVE-2025-66416 |
-| 7 | CVE-2025-59536: Unauthenticated RCE via MCP | https://nvd.nist.gov/vuln/detail/CVE-2025-59536 |
-| 8 | OWASP: Prompt Injection | https://owasp.org/www-project-top-10-for-large-language-model-applications/ |
-| 9 | Python secrets module documentation | https://docs.python.org/3/library/secrets.html |
-| 10 | Python shlex module documentation | https://docs.python.org/3/library/shlex.html |
-| 11 | Starlette ASGI Middleware | https://www.starlette.io/middleware/ |
-| 12 | FastMCP Documentation | https://gofastmcp.com/ |
-| 13 | SQLite WAL Mode | https://www.sqlite.org/wal.html |
-| 14 | TOCTOU Race Conditions | https://cwe.mitre.org/data/definitions/367.html |
-| 15 | CWE-78: OS Command Injection | https://cwe.mitre.org/data/definitions/78.html |
-| 16 | CWE-22: Path Traversal | https://cwe.mitre.org/data/definitions/22.html |
-| 17 | CWE-798: Hard-coded Credentials | https://cwe.mitre.org/data/definitions/798.html |
-| 18 | Simon Willison: Prompt Injection Attacks | https://simonwillison.net/2025/Apr/9/mcp-prompt-injection/ |
-| 19 | Embrace The Red: MCP Security | https://embracethered.com/blog/posts/2025/mcp-server-tool-poisoning/ |
-| 20 | NIST SP 800-63B: Digital Identity Guidelines | https://pages.nist.gov/800-63-3/sp800-63b.html |
+| 2 | Invariant Labs: MCP Security | https://invariantlabs.ai/ |
+| 3 | CVE-2025-53967: Command Injection in Framelink Figma MCP Server | https://nvd.nist.gov/vuln/detail/CVE-2025-53967 |
+| 4 | CVE-2025-66414: DNS Rebinding in MCP TypeScript SDK | https://nvd.nist.gov/vuln/detail/CVE-2025-66414 |
+| 5 | CVE-2025-66416: DNS Rebinding in MCP Python SDK | https://nvd.nist.gov/vuln/detail/CVE-2025-66416 |
+| 6 | CVE-2025-59536: Code Injection in Claude Code Startup Trust Dialog | https://nvd.nist.gov/vuln/detail/CVE-2025-59536 |
+| 7 | OWASP: Prompt Injection | https://owasp.org/www-project-top-10-for-large-language-model-applications/ |
+| 8 | Python secrets module documentation | https://docs.python.org/3/library/secrets.html |
+| 9 | Python shlex module documentation | https://docs.python.org/3/library/shlex.html |
+| 10 | Starlette ASGI Middleware | https://www.starlette.io/middleware/ |
+| 11 | FastMCP Documentation | https://gofastmcp.com/ |
+| 12 | SQLite WAL Mode | https://www.sqlite.org/wal.html |
+| 13 | TOCTOU Race Conditions | https://cwe.mitre.org/data/definitions/367.html |
+| 14 | CWE-78: OS Command Injection | https://cwe.mitre.org/data/definitions/78.html |
+| 15 | CWE-22: Path Traversal | https://cwe.mitre.org/data/definitions/22.html |
+| 16 | CWE-798: Hard-coded Credentials | https://cwe.mitre.org/data/definitions/798.html |
+| 17 | Simon Willison: Prompt Injection Attacks | https://simonwillison.net/2025/Apr/9/mcp-prompt-injection/ |
+| 18 | NIST SP 800-63B: Digital Identity Guidelines | https://pages.nist.gov/800-63-3/sp800-63b.html |

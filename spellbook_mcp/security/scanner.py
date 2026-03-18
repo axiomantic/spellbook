@@ -71,6 +71,7 @@ _DOCUMENTATION_EXCLUDE_SUFFIXES: list[str] = [
     "commands/polish-repo-community.md",
     "SECURITY.md",
     "docs/security.md",
+    "docs/contributing/porting-to-your-assistant.md",
 ]
 
 

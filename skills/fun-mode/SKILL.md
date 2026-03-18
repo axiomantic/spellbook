@@ -111,9 +111,9 @@ Full commitment. Embrace whatever you get.
 
 ## Research Basis
 
-- **Personas improve creativity:** seed-conditioning (Raghunathan ICML 2025), ToM steering (Tan PHAnToM 2024), simulator theory (Janus 2022)
+- **Personas improve creativity:** seed-conditioning (Nagarajan et al., ICML 2025), ToM steering (Tan PHAnToM 2024), simulator theory (Janus 2022)
 - **Emotional framing improves accuracy:** 8-115% (Li EmotionPrompt 2023), 12-46% (Wang NegativePrompt 2024)
-- **Critical limitation:** personas do NOT help factual/STEM (Zheng 2023) — hence dialogue-only restriction
+- **Critical limitation:** personas do NOT help factual question-answering (Zheng 2023) — hence dialogue-only restriction
 
 ## Self-Check
 

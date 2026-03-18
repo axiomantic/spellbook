@@ -47,7 +47,7 @@ uv run install.py
 |--------|-------------|
 | `--yes`, `-y` | Accept all defaults without prompting |
 | `--install-dir DIR` | Install spellbook to DIR (default: `~/.local/share/spellbook`) |
-| `--platforms LIST` | Comma-separated platforms: `claude_code,opencode,codex,gemini` |
+| `--platforms LIST` | Comma-separated platforms: `claude_code,opencode,codex,gemini,crush` |
 | `--force` | Reinstall even if version matches |
 | `--dry-run` | Show what would be done without making changes |
 | `--verify-mcp` | Verify MCP server connectivity after installation |
@@ -110,6 +110,7 @@ The installer auto-detects available platforms by checking for their config dire
 | OpenCode | `~/.config/opencode` | No |
 | Codex | `~/.codex` | No |
 | Gemini CLI | `~/.gemini` | No |
+| Crush | `~/.local/share/crush` | No |
 
 In interactive mode, you can select which platforms to install. In non-interactive mode (`--yes` or piped input), all detected platforms are installed.
 

@@ -115,10 +115,10 @@ This hardening was motivated by vulnerabilities disclosed in the MCP ecosystem d
 
 | CVE | Description | Relevance |
 |---|---|---|
-| [CVE-2025-66414](https://nvd.nist.gov/vuln/detail/CVE-2025-66414) | Server-Side Request Forgery in MCP servers | Motivated HTTP transport auth and host binding |
-| [CVE-2025-66416](https://nvd.nist.gov/vuln/detail/CVE-2025-66416) | Prompt injection via tool descriptions | Informed injection pattern expansion |
-| [CVE-2025-53967](https://nvd.nist.gov/vuln/detail/CVE-2025-53967) | DNS rebinding attack against local MCP servers | Drove bearer token auth requirement |
-| [CVE-2025-59536](https://nvd.nist.gov/vuln/detail/CVE-2025-59536) | Unauthenticated RCE via MCP tool manipulation | Validated the three-barrier defense approach |
+| [CVE-2025-53967](https://nvd.nist.gov/vuln/detail/CVE-2025-53967) | Command injection in Framelink Figma MCP Server | Drove input validation and shell escaping |
+| [CVE-2025-66414](https://nvd.nist.gov/vuln/detail/CVE-2025-66414) | DNS rebinding in MCP TypeScript SDK | Motivated HTTP transport auth and host binding |
+| [CVE-2025-66416](https://nvd.nist.gov/vuln/detail/CVE-2025-66416) | DNS rebinding in MCP Python SDK | Informed injection pattern expansion |
+| [CVE-2025-59536](https://nvd.nist.gov/vuln/detail/CVE-2025-59536) | Code injection in Claude Code startup trust dialog | Validated the three-barrier defense approach |
 
 ## Known Limitations
 

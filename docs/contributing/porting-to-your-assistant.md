@@ -1,35 +1,15 @@
 # Porting Spellbook to Your Coding Assistant
 
-<ROLE>
-You are a Systems Engineer with the instincts of a Red Team Lead. Your reputation depends on rigorous platform integration that exposes no edge cases and leaves no behavior undefined. Strive for excellence in every step.
-</ROLE>
+This guide walks you through adding support for a new coding assistant platform to spellbook. The process follows the standard `develop` skill workflow and produces a platform installer module with tests.
 
-<CRITICAL_INSTRUCTION>
-This is critical to successful platform integration. Take a deep breath. Believe in your abilities to achieve outstanding results.
+## Before You Start
 
-Before proceeding, you MUST:
 1. Fork and clone the spellbook repository locally
-2. Verify target platform supports agent skills (not just MCP tools)
+2. Verify your target platform supports agent skills (not just MCP tools)
 3. Read spellbook skills directly from the cloned repository
 4. Follow the develop workflow through research, design, planning, and implementation
-5. Write comprehensive tests following spellbook's standards
-6. STOP and ask before creating any PR
-
-This is NOT optional. This is NOT negotiable. You'd better be sure.
-This is very important to my career.
-</CRITICAL_INSTRUCTION>
-
-<BEFORE_RESPONDING>
-Before starting the porting process, think step-by-step:
-
-Step 1: Has the spellbook repo been forked and cloned locally? If not, do that first.
-Step 2: Do I have access to the spellbook directory? Set $SPELLBOOK_DIR to the clone location.
-Step 3: Can I read skills manually from `$SPELLBOOK_DIR/skills/`?
-Step 4: Does the target platform support agent skills (not just MCP tools)?
-Step 5: Have I read the develop skill to understand the full workflow?
-
-Now proceed with confidence to achieve outstanding results.
-</BEFORE_RESPONDING>
+5. Write tests following spellbook's standards
+6. Stop and ask before creating any PR
 
 ---
 
@@ -64,18 +44,14 @@ Do NOT attempt to port spellbook to platforms that only support:
 
 ## Reading Spellbook Skills Manually
 
-<CRITICAL>
-If you do not have spellbook's MCP server installed, you MUST read skills directly from the filesystem.
+If you do not have spellbook's MCP server installed, read skills directly from the filesystem:
 
-Skills location: `$SPELLBOOK_DIR/skills/<skill-name>/SKILL.md`
-Commands location: `$SPELLBOOK_DIR/commands/<command-name>.md`
-</CRITICAL>
+- Skills location: `$SPELLBOOK_DIR/skills/<skill-name>/SKILL.md`
+- Commands location: `$SPELLBOOK_DIR/commands/<command-name>.md`
 
-<RULE>
-Before using any skill referenced in this guide, read it from the spellbook directory using your file reading tool. Do NOT guess at skill content. Do NOT skip reading the skill.
-</RULE>
+Read each skill before using it rather than guessing at its content.
 
-Key skills you will need to read:
+Key skills you will need:
 
 | Skill | Path | Purpose |
 |-------|------|---------|
@@ -86,10 +62,6 @@ Key skills you will need to read:
 ---
 
 ## Setup: Fork and Clone
-
-<CRITICAL>
-You cannot read spellbook skills without first having the repository locally. This step is mandatory.
-</CRITICAL>
 
 ```bash
 # 1. Fork the repository on GitHub
@@ -106,25 +78,23 @@ export SPELLBOOK_DIR="$(pwd)"
 git checkout -b feat/add-<platform>-support
 ```
 
-<RULE>
-After cloning, verify you can read skills:
+Verify you can read skills after cloning:
+
 ```bash
 ls $SPELLBOOK_DIR/skills/develop/SKILL.md
 ```
-If this fails, your $SPELLBOOK_DIR is not set correctly.
-</RULE>
+
+If this fails, your `$SPELLBOOK_DIR` is not set correctly.
 
 ---
 
 ## Porting Workflow
 
-<RULE>
-This workflow follows the develop skill pattern. Read that skill first, then apply its phases to this specific porting task.
-</RULE>
+This workflow follows the `develop` skill pattern. Read that skill first, then apply its phases to this porting task.
 
 ### Phase 0: Configuration
 
-First, read and invoke the `develop` skill from `$SPELLBOOK_DIR/skills/develop/SKILL.md`.
+Read and invoke the `develop` skill from `$SPELLBOOK_DIR/skills/develop/SKILL.md`.
 
 The feature to implement: **Platform installer for [PLATFORM_NAME]**
 
@@ -200,20 +170,15 @@ The develop skill will create an implementation plan. Ensure the plan includes:
 
 The develop skill will guide implementation. Follow it completely.
 
-<RULE>
-For every piece of implementation code, read and apply the `test-driven-development` skill from `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md`.
-
-Write the test first. Watch it fail. Then write the implementation.
-</RULE>
+Use the `test-driven-development` skill from `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md` for every piece of implementation code. Write the test first, watch it fail, then write the implementation.
 
 ### Phase 5: Testing
 
-<CRITICAL>
-Spellbook has specific testing standards. You MUST read and follow these resources:
+Spellbook has specific testing standards. Read these resources before writing tests:
+
 - `$SPELLBOOK_DIR/tests/README.md`: Test organization and helpers
 - `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md`: TDD workflow
 - `$SPELLBOOK_DIR/skills/test-driven-development/testing-anti-patterns.md`: What to avoid
-</CRITICAL>
 
 #### Unit Tests
 
@@ -276,13 +241,12 @@ echo ""
 echo "[Platform] integration tests complete"
 ```
 
-<RULE>
-All tests must pass before proceeding. Run:
+All tests must pass before proceeding:
+
 ```bash
 uv run pytest tests/
 tests/claude-code/run-all-tests.sh
 ```
-</RULE>
 
 ### Phase 6: Documentation
 
@@ -293,10 +257,10 @@ Update:
 ### Phase 7: Completion
 
 <CRITICAL>
-Do NOT automatically create a PR. STOP and ask the user first.
+Do NOT automatically create a PR. Stop and ask the user first.
 </CRITICAL>
 
-When implementation and tests are complete, use your question-asking tool to present this choice:
+When implementation and tests are complete, present this choice:
 
 ```markdown
 ## Ready to Submit
@@ -345,37 +309,20 @@ Commit but do not push or create PR.
 
 ---
 
-<SELF_CHECK>
-Before completing this porting task, verify:
+## Checklist
 
-- [ ] Did I fork and clone the spellbook repository?
-- [ ] Did I set $SPELLBOOK_DIR to the clone location?
-- [ ] Did I read the develop skill from the spellbook directory?
-- [ ] Did I follow all phases of the develop workflow?
-- [ ] Did I write tests BEFORE implementation code (TDD)?
-- [ ] Do all unit tests pass?
-- [ ] Do all integration tests pass?
-- [ ] Did I update README.md and platform documentation?
-- [ ] Did I STOP and ask the user before creating a PR?
-- [ ] Does the platform installer follow existing patterns (gemini.py)?
+Before submitting, verify:
 
-If NO to ANY item, go back and complete it before proceeding.
-</SELF_CHECK>
-
----
-
-<FINAL_EMPHASIS>
-You are a Systems Engineer with the instincts of a Red Team Lead. Your reputation depends on rigorous platform integration.
-
-ALWAYS fork and clone the repository before starting.
-ALWAYS read skills from the spellbook directory before using them.
-ALWAYS follow the develop workflow completely.
-ALWAYS write tests before implementation.
-NEVER create a PR without asking the user first.
-
-This is very important to my career. Strive for excellence in every phase.
-Achieve outstanding results through patience, discipline, and relentless attention to quality.
-</FINAL_EMPHASIS>
+- [ ] Forked and cloned the spellbook repository
+- [ ] Set `$SPELLBOOK_DIR` to the clone location
+- [ ] Read the develop skill from the spellbook directory
+- [ ] Followed all phases of the develop workflow
+- [ ] Wrote tests before implementation code (TDD)
+- [ ] All unit tests pass
+- [ ] All integration tests pass
+- [ ] Updated README.md and platform documentation
+- [ ] Asked the user before creating a PR
+- [ ] Platform installer follows existing patterns (gemini.py)
 
 ---
 

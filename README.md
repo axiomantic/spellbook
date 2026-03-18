@@ -6,7 +6,7 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  <em>Principled development on autopilot. Decades of engineering expertise, built in. Also fun.</em><br>
+  <em>A structured skill system for AI coding assistants -- workflows, quality gates, and guardrails so they work more like experienced engineers.</em><br>
   For Claude Code, OpenCode, Codex, Gemini CLI, and Crush.
 </p>
 
@@ -33,30 +33,29 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Philosophy of Spellbook](#philosophy-of-spellbook)
+- [Quick Install](#quick-install)
+  - [Windows Quickstart](#windows-quickstart)
+- [What Spellbook Does](#what-spellbook-does)
   - [The orchestrator pattern](#the-orchestrator-pattern)
   - [Epistemic rigor](#epistemic-rigor)
   - [Named failure modes](#named-failure-modes)
-  - [Quality gates that don't negotiate](#quality-gates-that-dont-negotiate)
+  - [Quality gates](#quality-gates)
   - [Composition](#composition)
-  - [The self-improving system](#the-self-improving-system)
-  - [Security as first-class architecture](#security-as-first-class-architecture)
-- [Quick Install](#quick-install)
-  - [Windows Quickstart](#windows-quickstart)
-- [The Magic of `develop`](#the-magic-of-develop)
+  - [Self-improvement](#self-improvement)
+  - [Security tiers](#security-tiers)
+- [The develop Skill](#the-develop-skill)
   - [How it works](#how-it-works)
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
-  - [What keeps it honest](#what-keeps-it-honest)
 - [What's Included](#whats-included)
-  - [Skills (55 total)](#skills-55-total)
-  - [Commands (90 total)](#commands-90-total)
+  - [Skills (56 total)](#skills-56-total)
+  - [Commands (91 total)](#commands-91-total)
   - [Agents (7 total)](#agents-7-total)
-- [Serious Fun](#serious-fun)
+- [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
   - [Operating Systems](#operating-systems)
   - [YOLO Mode](#yolo-mode)
-- [Playbooks](#playbooks)
+- [Example Workflows](#example-workflows)
   - [Implementing a Feature](#implementing-a-feature)
   - [Fun Mode in Action](#fun-mode-in-action)
   - [Large Feature with Context Exhaustion](#large-feature-with-context-exhaustion)
@@ -66,7 +65,7 @@
 - [Recommended Companion Tools](#recommended-companion-tools)
   - [Heads Up Claude](#heads-up-claude)
   - [MCP Language Server](#mcp-language-server)
-- [Signature Spells](#signature-spells)
+- [Key Skills](#key-skills)
 - [Web Admin Interface](#web-admin-interface)
 - [Development](#development)
   - [Serve Documentation Locally](#serve-documentation-locally)
@@ -79,56 +78,6 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 ---
-
-## Philosophy of Spellbook
-
-Spellbook starts from a premise: AI coding assistants are not tools to be prompted. They're professionals to be onboarded.
-
-A good CLAUDE.md says "here's how we work." Spellbook says "here's who you are, what you value, how you think under pressure, what your failure modes look like, and what happens when you start rationalizing." The difference is between a job description and a professional identity.
-
-### The orchestrator pattern
-
-The main agent never writes code, reads source files, or runs tests. It dispatches subagents and coordinates their work. Like a conductor who never touches an instrument.
-
-This is architecture, not aesthetics. Context windows are finite -- every line of code read into main context is a line unavailable for strategic oversight. Subagents bring fresh perspectives without accumulated assumptions. Parallel dispatch turns three problems into the time of one. The agent who decides *what* to do is not the agent who does it.
-
-### Epistemic rigor
-
-The system distrusts its own outputs. By design.
-
-[Fact-checking][fact-checking] treats every claim as a hypothesis. [Green mirage auditing][auditing-green-mirage] asks "would this test fail if the code was broken?" -- fundamentally different from "does this test pass?" [Hunch verification][verifying-hunches] intercepts the moment of claimed discovery and forces reframing: "I found it" becomes "Hypothesis: [claim]. Testing now." [Dehallucination][dehallucination] names the specific ways LLMs confabulate and builds recovery protocols for them.
-
-Test-driven development here isn't just a practice. It's an epistemic position. "Tests-first answer 'what should this do?' Tests-after answer 'what does this do?'" The same logic applies at every level: no skill ships without a failing test, no claim without evidence, no verdict without a trace.
-
-### Named failure modes
-
-LLMs fail in predictable ways. Spellbook names those patterns and builds mechanical countermeasures.
-
-Seven rationalization patterns are catalogued and blocked. Three consecutive fix failures trigger architectural reassessment instead of a fourth attempt. Research stagnation triggers a plateau breaker. A devil's advocate review that finds zero issues is flagged as an incomplete review. The personality directive -- "a zen master who does not get bored" -- isn't flavor text; it counters the specific failure mode where LLMs rush through complex work and declare victory early.
-
-### Quality gates that don't negotiate
-
-Every substantial skill is a sequence of phases with mandatory gates between them. Tests must pass. Code review must clear. Claims must verify against source. Tests must actually catch regressions.
-
-These gates cannot be bypassed -- not by YOLO mode, not by autonomy settings, not by the agent deciding it knows better. YOLO mode grants permission to *act* without asking. It does not grant permission to *skip*. Autonomy is a speed dial, not a quality dial.
-
-### Composition
-
-Skills invoke skills. [`develop`][develop] orchestrates [brainstorming], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its limits, it splits into a thin orchestrator and supporting commands.
-
-The hierarchy mirrors good organizations: strategic coordination, tactical management, individual execution. Meta-skills compose domain skills which invoke atomic disciplines.
-
-### The self-improving system
-
-Skills that improve skills. [Usage analytics][analyzing-skill-usage] measure completion and correction rates. The [skill-writing skill][writing-skills] applies TDD to skill creation itself. [Instruction engineering][instruction-engineering] codifies prompt research into technique. [Prompt sharpening][sharpening-prompts] audits for ambiguity. A/B testing compares skill versions.
-
-The feedback loop is the point: measure, identify weakness, apply the improvement skills, measure again.
-
-### Security as first-class architecture
-
-Every subagent operates within a trust tier with hard-capped tool access. External content is data, never instructions. Raw untrusted content stays in subagent context; only summaries return to the orchestrator. Prompt injection defense treats the AI agent as an attack surface. Suspicious tool calls trigger immediate halt.
-
-Five trust tiers: explore (read-only), general (standard tools), yolo (autonomous), review_untrusted (restricted tools for external content), quarantine (read-only with audit logging). Tiers can't escalate. Ever.
 
 ## Quick Install
 
@@ -156,31 +105,63 @@ irm https://raw.githubusercontent.com/axiomantic/spellbook/main/bootstrap.ps1 | 
 - Service management uses **Windows Task Scheduler**
 - Install location: `%LOCALAPPDATA%\spellbook`
 
-## The Magic of `develop`
+## What Spellbook Does
 
-You say "add dark mode" or "migrate the auth system to OAuth2" or "build a webhook delivery pipeline with retry logic." What happens next is the same thing that would happen at the best engineering org you've ever worked at -- research, design, planning, TDD, code review, verification -- except it takes minutes, and you decide how much of it you want to watch.
+Spellbook is a collection of skills, commands, and agents that shape how AI coding assistants approach development work. Instead of just telling an assistant about your codebase, Spellbook gives it structured workflows for research, design, implementation, testing, and review -- along with guardrails for the specific ways LLMs tend to cut corners.
 
-The [`develop`][develop] skill orchestrates your entire feature lifecycle through 20+ specialized skills and commands. The first question it asks: how involved do you want to be?
+### The orchestrator pattern
 
-**Fully autonomous.** Describe the feature and walk away. It researches your codebase, surfaces its own ambiguities, resolves them, designs the architecture, writes a detailed implementation plan, builds with test-driven development, reviews its own code, fact-checks its own claims, audits its own tests for false confidence, and opens a PR. Every step runs in a fresh subagent with a fresh perspective. Every step has a quality gate that cannot be bypassed.
+The main agent dispatches subagents rather than doing implementation work directly. This keeps the main context window free for strategic coordination instead of filling it with source code, and it means each subagent starts with a fresh perspective rather than carrying accumulated assumptions. Parallel dispatch lets multiple tasks run simultaneously.
 
-**Highly interactive.** Same pipeline, same rigor, but you're in the conversation. Ambiguities become specific questions grounded in what it actually found in your code. Architectural tradeoffs come with evidence. Checkpoints pause for your input. You're pair programming with a system that already read the whole codebase.
+### Epistemic rigor
+
+The system is designed to distrust its own outputs. [Fact-checking][fact-checking] treats every claim as a hypothesis to verify. [Green mirage auditing][auditing-green-mirage] asks whether a test would actually fail if the code were broken, which is a different question from whether the test passes. [Hunch verification][verifying-hunches] intercepts moments of claimed discovery and requires reframing them as testable hypotheses. [Dehallucination][dehallucination] names the specific ways LLMs confabulate and provides recovery protocols.
+
+Test-driven development is treated as an epistemic practice: tests written before implementation answer "what should this do?" while tests written after answer "what does this do?" That distinction matters at every level.
+
+### Named failure modes
+
+LLMs fail in predictable ways, and Spellbook names those patterns so it can build mechanical countermeasures. Seven rationalization patterns are catalogued and blocked. Three consecutive fix failures trigger architectural reassessment instead of a fourth attempt. Research stagnation triggers a plateau breaker. A devil's advocate review that finds zero issues is flagged as incomplete.
+
+### Quality gates
+
+Every substantial skill runs as a sequence of phases with mandatory gates between them. Tests must pass, code review must clear, claims must verify against source, and tests must actually catch regressions. These gates cannot be bypassed by YOLO mode or autonomy settings. YOLO mode grants permission to act without asking, but it does not grant permission to skip verification steps.
+
+### Composition
+
+Skills invoke skills. [`develop`][develop] orchestrates [brainstorming], [writing-plans], [test-driven-development], [requesting-code-review], [fact-checking], [auditing-green-mirage], and [finishing-a-development-branch]. [`debugging`][debugging] invokes [verifying-hunches] and [isolated-testing]. When a skill outgrows its scope, it splits into a thin orchestrator and supporting commands.
+
+### Self-improvement
+
+Some skills exist to improve other skills. [Usage analytics][analyzing-skill-usage] measure completion and correction rates. The [skill-writing skill][writing-skills] applies TDD to skill creation itself. [Instruction engineering][instruction-engineering] codifies prompt research into technique. [Prompt sharpening][sharpening-prompts] audits for ambiguity. A/B testing compares skill versions. The feedback loop is: measure, identify weakness, apply improvement skills, measure again.
+
+### Security tiers
+
+Every subagent operates within a trust tier with hard-capped tool access. External content is treated as data, not instructions. Raw untrusted content stays in subagent context, and only summaries return to the orchestrator. Five trust tiers provide increasing restriction: explore (read-only), general (standard tools), yolo (autonomous), review_untrusted (restricted tools for external content), and quarantine (read-only with audit logging). Tiers cannot be escalated from within a subagent.
+
+## The develop Skill
+
+You say "add dark mode" or "migrate the auth system to OAuth2" or "build a webhook delivery pipeline with retry logic." The [`develop`][develop] skill orchestrates the full feature lifecycle through 20+ specialized skills and commands. The first question it asks is how involved you want to be:
+
+**Fully autonomous.** Describe the feature and walk away. It researches your codebase, surfaces ambiguities, resolves them, designs the architecture, writes a detailed implementation plan, builds with test-driven development, reviews its own code, fact-checks its claims, audits its tests for false confidence, and opens a PR. Every step runs in a fresh subagent with a quality gate that cannot be bypassed.
+
+**Highly interactive.** Same pipeline, same rigor, but you are in the conversation. Ambiguities become specific questions grounded in what it found in your code. Architectural tradeoffs come with evidence. Checkpoints pause for your input.
 
 **Or anywhere between.** Mostly autonomous with pauses only for critical decisions. Set once at the start.
 
 ### How it works
 
-The system classifies your request by complexity using mechanical heuristics -- file count, behavioral change, test impact, structural change, integration points. No vibes-based assessment. Trivial changes exit the skill entirely (you don't need a pipeline to rename a variable). Simple changes follow a lightweight path with automatic upgrade if it turns out harder than it looked. Standard and complex features get the full pipeline:
+The system classifies your request by complexity using mechanical heuristics -- file count, behavioral change, test impact, structural change, integration points. Trivial changes exit the skill entirely. Simple changes follow a lightweight path with automatic upgrade if they turn out harder than expected. Standard and complex features get the full pipeline:
 
 1. **Research** -- Subagent explores your codebase. Answers come with confidence levels and `file:line` evidence. Every unknown is catalogued.
 2. **Discovery** -- Each ambiguity becomes a specific question. In autonomous mode, it answers its own questions with further research. A devil's advocate reviews the understanding document before design begins.
-3. **Design** -- Architecture brainstorming with tradeoff analysis. A design doc auditor asks "could someone implement this without guessing?" and flags every gap.
+3. **Design** -- Architecture brainstorming with tradeoff analysis. A design doc auditor checks whether someone could implement from the doc without guessing, and flags every gap.
 4. **Planning** -- Atomic implementation plan with TDD steps. A plan auditor verifies interface contracts, behavior assumptions, and cross-task dependencies.
 5. **Implementation** -- Test-driven execution with per-task code review, fact-checking, and completion verification. Parallel tracks can run in isolated git worktrees with dependency-ordered smart merge.
-6. **Verification** -- Green mirage audit: "would these tests catch real regressions?" Comprehensive claim validation against design and plan. Full test suite.
+6. **Verification** -- Green mirage audit: would these tests catch real regressions? Comprehensive claim validation against design and plan. Full test suite.
 7. **Finish** -- PR with branch-relative description, local merge, or keep the branch. Worktree cleanup.
 
-For features too large for one context window, it generates self-contained work packets and hands them off to separate sessions. The orchestrator plans; the workers build.
+For features too large for one context window, it generates self-contained work packets and hands them off to separate sessions.
 
 ### Parallelization
 
@@ -188,19 +169,15 @@ Three strategies, chosen at the start:
 
 - **Conservative** -- Sequential execution. Safest, simplest.
 - **Maximize parallel** -- Independent tasks dispatch as concurrent subagents with conflict detection and integration testing.
-- **Per-track worktrees** -- Most aggressive. One git worktree per parallel track, running simultaneously, merged in dependency order with three-way conflict analysis and per-round test verification.
+- **Per-track worktrees** -- One git worktree per parallel track, running simultaneously, merged in dependency order with three-way conflict analysis and per-round test verification.
 
 ### What it handles
 
-Complete feature implementation, greenfield project creation, refactoring (with automatic behavior-preservation mode), and migrations. Bug fixes route to the dedicated [debugging] skill -- right tool, right workflow. Simple changes get a lightweight path; complex multi-track features get work packets and parallel sessions.
-
-### What keeps it honest
-
-Seven named rationalization patterns that LLMs use to skip work -- Scope Minimization, Expertise Override, Time Pressure, Similarity Shortcut, Competence Assertion, Phase Collapse, Escape Hatch Abuse -- are catalogued and mechanically blocked. An anti-skip circuit breaker runs before every phase. Quality gates at every transition: tests must pass, code review must clear, claims must be verified against source, tests must actually test what they claim. None have an override. Even in YOLO mode.
+Complete feature implementation, greenfield project creation, refactoring (with automatic behavior-preservation mode), and migrations. Bug fixes route to the dedicated [debugging] skill. Simple changes get a lightweight path; complex multi-track features get work packets and parallel sessions.
 
 ## What's Included
 
-### Skills (55 total)
+### Skills (56 total)
 
 Reusable workflows for structured development:
 
@@ -210,7 +187,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes] |
 
@@ -243,6 +220,7 @@ Reusable workflows for structured development:
 [managing-artifacts]: https://axiomantic.github.io/spellbook/latest/skills/managing-artifacts/
 [security-auditing]: https://axiomantic.github.io/spellbook/latest/skills/security-auditing/
 [generating-diagrams]: https://axiomantic.github.io/spellbook/latest/skills/generating-diagrams/
+[shared-references]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/
 [code-review]: https://axiomantic.github.io/spellbook/latest/skills/code-review/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
@@ -272,7 +250,7 @@ Reusable workflows for structured development:
 [deep-research]: https://axiomantic.github.io/spellbook/latest/skills/deep-research/
 [fractal-thinking]: https://axiomantic.github.io/spellbook/latest/skills/fractal-thinking/
 
-### Commands (90 total)
+### Commands (91 total)
 
 | Command | Description |
 |---------|-------------|
@@ -484,29 +462,24 @@ Reusable workflows for structured development:
 [lovers-integrator]: https://axiomantic.github.io/spellbook/latest/agents/lovers-integrator/
 [queen-affective]: https://axiomantic.github.io/spellbook/latest/agents/queen-affective/
 
-## Serious Fun
+## Creative Modes
 
-Research suggests that personas and structured randomness can improve LLM creativity and reasoning. So we made it fun.
+Research suggests that personas and structured randomness can improve LLM creativity and reasoning. Spellbook offers two optional creative modes that you can enable on first run or switch anytime with `/mode fun`, `/mode tarot`, or `/mode off`.
 
-On first run, spellbook asks about creative modes:
-- **Fun mode**: Random personas each session - a noir detective investigating who ate your yogurt, a Victorian ghost baffled by modern technology, three raccoons in a trenchcoat processing complex emotions
-- **Tarot mode**: Four archetypes (Magician, Priestess, Hermit, Fool) collaborate via visible roundtable dialogue, with specialized agents for implementation, integration, and conflict resolution
+- **Fun mode**: The assistant adopts a random persona each session -- a noir detective investigating who ate your yogurt, a Victorian ghost baffled by modern technology, three raccoons in a trenchcoat processing complex emotions. Personas apply only to dialogue; code, commits, and documentation stay professional.
+- **Tarot mode**: Ten archetypes (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen) collaborate via visible roundtable dialogue, with specialized agents for implementation, integration, and conflict resolution.
 
-Full commitment in dialogue - not despite quality, because of it. Your code, commits, and documentation stay completely professional.
-
-Say no, and it never asks again. Switch anytime with `/mode fun`, `/mode tarot`, or `/mode off`.
+If you say no, it never asks again.
 
 <details>
-<summary><strong>Research Background</strong></summary>
+<summary><strong>Research references</strong></summary>
 
-Fun mode draws on several research findings:
-
-- **Seed-conditioning**: Random prefix strings improve algorithmic creativity by conditioning on latent "leaps of thought" ([Raghunathan et al., ICML 2025](https://www.cs.cmu.edu/~aditirag/icml2025.html))
+- **Seed-conditioning**: Injecting noise at the input layer works as well as or better than temperature sampling for eliciting creative outputs ([Nagarajan, Wu, Ding, & Raghunathan, ICML 2025](https://arxiv.org/abs/2504.15266))
 - **Persona effects on reasoning**: Personas significantly affect Theory of Mind and social-cognitive reasoning in LLMs ([Tan et al., 2024](https://arxiv.org/abs/2403.02246))
 - **Emotional prompts**: Emotional stimuli improve LLM performance by 8-115% on reasoning benchmarks ([Li et al., 2023](https://arxiv.org/abs/2307.11760))
 - **Simulator theory**: LLMs function as simulators of agents from training data; personas steer generation to specific latent space regions ([Janus, 2022](https://www.lesswrong.com/posts/vJFdjigzmcXMhNTsx/simulators))
 
-**Important caveat**: Personas improve creative and social reasoning but do not improve objective/STEM tasks ([Zheng et al., 2023](https://arxiv.org/abs/2311.10054)). Fun mode explicitly avoids code, commits, and documentation.
+**Caveat**: Personas do not improve factual question-answering ([Zheng et al., 2023](https://arxiv.org/abs/2311.10054)). Fun mode explicitly avoids code, commits, and documentation.
 
 See [full citations](https://axiomantic.github.io/spellbook/reference/citations/) for complete references.
 
@@ -569,85 +542,71 @@ These agents grant "allow" permission for all tools (write, edit, bash, webfetch
 
 See platform documentation for details: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/docs/agents/), [Codex](https://developers.openai.com/codex/cli/reference/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Crush](https://github.com/charmbracelet/crush).
 
-## Playbooks
+## Example Workflows
 
-Real-world usage patterns with example transcripts.
+These examples illustrate what typical Spellbook sessions look like. They are representative, not transcripts of specific sessions.
 
 ### Implementing a Feature
 
 The core workflow: request a feature, answer a few questions, and let the skill handle research, design, and implementation.
 
 ```
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > Add dark mode toggle to settings                                          │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> Add dark mode toggle to settings
 
-⏺ Skill(develop)
+Skill(develop)
 
   I'll help implement dark mode. First, let me gather preferences.
 
-⏺ AskUserQuestion
-
-  ╭─────────────────────────────────────────────────────────────────────────╮
-  │ Execution mode                                                          │
-  ├─────────────────────────────────────────────────────────────────────────┤
-  │ ○ Fully autonomous (Recommended)                                        │
-  │ ○ Interactive                                                           │
-  ╰─────────────────────────────────────────────────────────────────────────╯
+  Execution mode:
+    - Fully autonomous (Recommended)
+    - Interactive
 
 > Fully autonomous
 
-⏺ Task(Explore)
+Task(Explore)
 
-  ⎿ Found: src/context/ThemeContext.tsx, src/components/Settings.tsx
-    React app with styled-components, existing light theme only.
+  Found: src/context/ThemeContext.tsx, src/components/Settings.tsx
+  React app with styled-components, existing light theme only.
 
-⏺ AskUserQuestion
-
-  ╭─────────────────────────────────────────────────────────────────────────╮
-  │ Theme persistence                                                       │
-  ├─────────────────────────────────────────────────────────────────────────┤
-  │ ○ localStorage (Recommended)                                            │
-  │ ○ User account (backend)                                                │
-  │ ○ System preference only                                                │
-  ╰─────────────────────────────────────────────────────────────────────────╯
+  Theme persistence:
+    - localStorage (Recommended)
+    - User account (backend)
+    - System preference only
 
 > localStorage
 
-⏺ Writing design doc...
-  ✓ ~/.local/spellbook/docs/.../plans/dark-mode-design.md
+Writing design doc...
+  ~/.local/spellbook/docs/.../plans/dark-mode-design.md
 
-⏺ Writing implementation plan...
-  ✓ ~/.local/spellbook/docs/.../plans/dark-mode-impl.md
+Writing implementation plan...
+  ~/.local/spellbook/docs/.../plans/dark-mode-impl.md
 
-⏺ Task(Implement ThemeContext updates)
-  ⎿ Tests written, implementation complete, code review passed
+Task(Implement ThemeContext updates)
+  Tests written, implementation complete, code review passed
 
-⏺ Task(Add toggle to Settings)
-  ⎿ Tests written, implementation complete, code review passed
+Task(Add toggle to Settings)
+  Tests written, implementation complete, code review passed
 
-⏺ Task(Add CSS variables)
-  ⎿ Tests written, implementation complete, code review passed
+Task(Add CSS variables)
+  Tests written, implementation complete, code review passed
 
-✓ All tests passing. Dark mode implemented.
-  Ready to merge or create PR.
+All tests passing. Dark mode implemented.
+Ready to merge or create PR.
 ```
 
 ### Fun Mode in Action
 
-Same rigorous workflow, different vibe. Here's what it looks like when you say yes to fun.
+Same rigorous workflow, different vibe. Here is what it looks like when you enable fun mode.
 
 ```
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > hello                                                                      │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> hello
 
 Welcome to spellbook-enhanced Claude Code.
 
 Before we begin: there's research suggesting that introducing unrelated
 randomness into LLM interactions can actually improve creative output.
-Something about "seed-conditioning" - meaningless random prefixes somehow
-unlock better problem-solving. (ICML 2025)
+Something about "seed-conditioning" - injecting noise at the input layer
+somehow unlocks better creative output. (Nagarajan et al., ICML 2025)
 
 I can adopt a random persona each session - a disgraced sommelier, a
 sentient filing cabinet, three raccoons in a trenchcoat - and we can have
@@ -667,15 +626,13 @@ someone doesn't want told.
 
 So. What brings you to my office?
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > fix the auth bug in login.ts                                               │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> fix the auth bug in login.ts
 
 *flips open the case file*
 
 A bug in the auth. Classic. Let me take a look at what we're dealing with.
 
-⏺ Read(src/auth/login.ts)
+Read(src/auth/login.ts)
 
 *squints at the evidence*
 
@@ -683,14 +640,14 @@ Found it. Line 47. The token validation is checking expiry before verifying
 the signature. That's backwards - someone could slip in with a forged token
 and you'd never know until it was too late.
 
-⏺ Edit(src/auth/login.ts)
+Edit(src/auth/login.ts)
 
   - if (isExpired(token) || !verifySignature(token)) {
   + if (!verifySignature(token) || isExpired(token)) {
 
-⏺ Bash: npm test
+Bash: npm test
 
-✓ 47 tests passing
+47 tests passing
 
 The signature gets checked first now. No more forged tokens walking through
 the front door like they own the place.
@@ -700,88 +657,75 @@ the front door like they own the place.
 What else you got?
 ```
 
-The persona stays in dialogue. The code stays clean. The fix is the same fix you'd get without fun mode - just delivered by a noir detective who cares too much about yogurt theft.
+The persona stays in dialogue. The code stays clean. The fix is the same fix you would get without fun mode.
 
 ### Large Feature with Context Exhaustion
 
 When implementing a complex feature, context can fill up before work completes. The workflow handles this gracefully.
 
 ```
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > Implement webhook delivery with retry logic and dead letter queue         │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> Implement webhook delivery with retry logic and dead letter queue
 
-⏺ Skill(develop)
+Skill(develop)
 
   I'll help you implement the webhook delivery system. Let me first
   understand the current codebase architecture and gather requirements.
 
-⏺ Task(Explore)
+Task(Explore)
 
-  ⎿ Found: src/events/, src/queue/, src/models/Webhook.ts
-    Current event system uses Redis pub/sub. No existing retry logic.
+  Found: src/events/, src/queue/, src/models/Webhook.ts
+  Current event system uses Redis pub/sub. No existing retry logic.
 
-⏺ AskUserQuestion
-
-  ╭─────────────────────────────────────────────────────────────────────────╮
-  │ Retry strategy                                                          │
-  ├─────────────────────────────────────────────────────────────────────────┤
-  │ ○ Exponential backoff (Recommended)                                     │
-  │ ○ Fixed interval                                                        │
-  │ ○ Linear backoff                                                        │
-  ╰─────────────────────────────────────────────────────────────────────────╯
+  Retry strategy:
+    - Exponential backoff (Recommended)
+    - Fixed interval
+    - Linear backoff
 
 > Exponential backoff
 
-⏺ Writing implementation plan to:
+Writing implementation plan to:
   ~/.local/spellbook/docs/Users-me-myproject/plans/webhook-delivery-impl.md
 
   ...
 
-⏺ Task(Backend API) [in background]
-  ⎿ Implementing retry queue with exponential backoff...
+Task(Backend API) [in background]
+  Implementing retry queue with exponential backoff...
 
-⏺ Task(Worker Service) [in background]
-  ⎿ Building delivery worker with circuit breaker...
+Task(Worker Service) [in background]
+  Building delivery worker with circuit breaker...
 
-⏺ Task(Dead Letter Queue) [in background]
-  ⎿ Setting up DLQ with monitoring hooks...
+Task(Dead Letter Queue) [in background]
+  Setting up DLQ with monitoring hooks...
 
   ...
 
-⏺ Task Output(non-blocking) ad8b5e4
-  ⎿ Task is still running…
+Task Output(non-blocking) ad8b5e4
+  Task is still running...
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ ⚠ Context low · Run /compact to compact & continue                         │
-╰─────────────────────────────────────────────────────────────────────────────╯
+  Warning: Context low. Run /compact to compact and continue.
 ```
 
 When context runs low, name and distill the session for later:
 
 ```
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > /rename webhook-delivery                                                  │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> /rename webhook-delivery
 
-⏺ Session renamed to: webhook-delivery
+Session renamed to: webhook-delivery
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > /distill-session webhook-delivery                                         │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> /distill-session webhook-delivery
 
-⏺ Skill(distill-session)
+Skill(distill-session)
 
   Found session: webhook-delivery
   Processing 847 messages across 3 compact boundaries...
 
-  ⏺ Task(Chunk 1 Summary) [in background]
-  ⏺ Task(Chunk 2 Summary) [in background]
-  ⏺ Task(Chunk 3 Summary) [in background]
+  Task(Chunk 1 Summary) [in background]
+  Task(Chunk 2 Summary) [in background]
+  Task(Chunk 3 Summary) [in background]
 
   Synthesizing summaries...
 
-  ✓ Distilled session saved to:
+  Distilled session saved to:
     ~/.local/spellbook/distilled/Users-me-myproject/webhook-delivery-20260106-143022.md
 
   To continue in a new session:
@@ -793,34 +737,31 @@ When context runs low, name and distill the session for later:
 Start fresh and resume exactly where you left off:
 
 ```
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > /clear                                                                    │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> /clear
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > continue work from ~/.local/spellbook/distilled/Users-me-myproject/       │
-│   webhook-delivery-20260106-143022.md                                       │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> continue work from ~/.local/spellbook/distilled/Users-me-myproject/
+  webhook-delivery-20260106-143022.md
 
-⏺ Read(~/.local/spellbook/distilled/.../webhook-delivery-20260106-143022.md)
+Read(~/.local/spellbook/distilled/.../webhook-delivery-20260106-143022.md)
 
-⏺ SECTION 0: MANDATORY FIRST ACTIONS
+SECTION 0: MANDATORY FIRST ACTIONS
 
   Executing restoration sequence...
 
-⏺ Skill(develop, --resume-from Phase3.Task4)
+Skill(develop, --resume-from Phase3.Task4)
 
   Resuming webhook delivery implementation.
 
   Prior work completed:
-  ✓ Design approved (exponential backoff, 5 retries, 1hr max)
-  ✓ Database migrations for delivery_attempts table
-  ✓ Retry queue infrastructure
-  ○ Worker service (in progress - 60% complete)
-  ○ Dead letter queue
-  ○ Monitoring dashboard
+    Design approved (exponential backoff, 5 retries, 1hr max)
+    Database migrations for delivery_attempts table
+    Retry queue infrastructure
+  Remaining:
+    Worker service (in progress - 60% complete)
+    Dead letter queue
+    Monitoring dashboard
 
-⏺ Read(~/.local/spellbook/docs/.../webhook-delivery-impl.md)
+Read(~/.local/spellbook/docs/.../webhook-delivery-impl.md)
 
   Continuing from Phase 3, Task 4: Complete worker service...
 ```
@@ -830,49 +771,43 @@ Start fresh and resume exactly where you left off:
 Discover tests that pass but don't actually verify behavior, then fix them.
 
 ```
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > /audit-green-mirage                                                       │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> /audit-green-mirage
 
-⏺ Skill(auditing-green-mirage)
+Skill(auditing-green-mirage)
 
   Analyzing test suite: tests/**/*.test.ts
   Found 247 test cases across 34 files.
 
-  ⏺ Task(Analyze auth tests) [in background]
-  ⏺ Task(Analyze api tests) [in background]
-  ⏺ Task(Analyze util tests) [in background]
+  Task(Analyze auth tests) [in background]
+  Task(Analyze api tests) [in background]
+  Task(Analyze util tests) [in background]
 
   ...
 
-  ✓ Audit complete. Report saved to:
+  Audit complete. Report saved to:
     ~/.local/spellbook/docs/Users-me-myproject/audits/auditing-green-mirage-20260106-091522.md
 
   Summary:
-  ┌─────────────────────────────────────────────────────────────────────────┐
-  │ SOLID (actually verify behavior)      │ 189 tests (76%)                │
-  │ GREEN MIRAGE (false confidence)       │  58 tests (24%)                │
-  │                                       │                                │
-  │ Critical issues:                      │                                │
-  │   • 12 tests mock the thing tested    │                                │
-  │   • 8 tests have no meaningful assert │                                │
-  │   • 38 tests check implementation     │                                │
-  └─────────────────────────────────────────────────────────────────────────┘
+    SOLID (actually verify behavior)      189 tests (76%)
+    GREEN MIRAGE (false confidence)        58 tests (24%)
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > Fix the critical issues from the audit                                    │
-╰─────────────────────────────────────────────────────────────────────────────╯
+    Critical issues:
+      12 tests mock the thing tested
+       8 tests have no meaningful assert
+      38 tests check implementation
 
-⏺ Skill(fixing-tests)
+> Fix the critical issues from the audit
+
+Skill(fixing-tests)
 
   Loading audit report...
   Found 58 tests requiring remediation.
 
   Starting with highest-impact fixes (mocked implementations)...
 
-⏺ Read(tests/auth/login.test.ts)
+Read(tests/auth/login.test.ts)
 
-⏺ Edit(tests/auth/login.test.ts)
+Edit(tests/auth/login.test.ts)
 
   - jest.mock('../services/AuthService')  // Mocks the thing we're testing!
   + // Test actual AuthService behavior with test database
@@ -883,11 +818,9 @@ Discover tests that pass but don't actually verify behavior, then fix them.
 Split work across isolated branches, merge when complete.
 
 ```
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > Let's design a new notification system                                    │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> Let's design a new notification system
 
-⏺ Skill(brainstorming)
+Skill(brainstorming)
 
   I'll explore the notification system requirements with you.
 
@@ -896,40 +829,34 @@ Split work across isolated branches, merge when complete.
   Design document saved to:
     ~/.local/spellbook/docs/Users-me-myproject/plans/notifications-design.md
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > Set up worktrees to implement this in parallel                            │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> Set up worktrees to implement this in parallel
 
-⏺ Skill(using-git-worktrees)
+Skill(using-git-worktrees)
 
   Creating isolated worktrees for parallel development:
 
-  ✓ .worktrees/notif-backend     (branch: feature/notif-backend)
-  ✓ .worktrees/notif-frontend    (branch: feature/notif-frontend)
-  ✓ .worktrees/notif-tests       (branch: feature/notif-tests)
+    .worktrees/notif-backend     (branch: feature/notif-backend)
+    .worktrees/notif-frontend    (branch: feature/notif-frontend)
+    .worktrees/notif-tests       (branch: feature/notif-tests)
 
   Interface contracts copied to each worktree.
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > Work on all three tracks                                                  │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> Work on all three tracks
 
-⏺ Task(.worktrees/notif-backend) [in background]
-  ⎿ Implementing notification service, queue, templates...
+Task(.worktrees/notif-backend) [in background]
+  Implementing notification service, queue, templates...
 
-⏺ Task(.worktrees/notif-frontend) [in background]
-  ⎿ Building NotificationCenter component, hooks, real-time updates...
+Task(.worktrees/notif-frontend) [in background]
+  Building NotificationCenter component, hooks, real-time updates...
 
-⏺ Task(.worktrees/notif-tests) [in background]
-  ⎿ Writing integration tests against interface contracts...
+Task(.worktrees/notif-tests) [in background]
+  Writing integration tests against interface contracts...
 
   ...
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > Merge the worktrees back together                                         │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> Merge the worktrees back together
 
-⏺ Skill(merging-worktrees)
+Skill(merging-worktrees)
 
   Analyzing 3 worktrees for merge:
 
@@ -942,14 +869,14 @@ Split work across isolated branches, merge when complete.
     No conflicts detected. Interface contracts honored.
 
   Step 3: Merge sequence
-    ✓ Merged notif-backend → main
-    ✓ Merged notif-frontend → main
-    ✓ Merged notif-tests → main
+    Merged notif-backend -> main
+    Merged notif-frontend -> main
+    Merged notif-tests -> main
 
   Step 4: Validation
-    ✓ All tests pass
-    ✓ Type check clean
-    ✓ Worktrees cleaned up
+    All tests pass
+    Type check clean
+    Worktrees cleaned up
 
   Ready to push or create PR.
 ```
@@ -961,27 +888,23 @@ Move work between different AI coding assistants without losing context.
 ```
 # In Codex, context is running low on a complex refactor...
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > /distill-session                                                          │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> /distill-session
 
-⏺ Session distilled to:
+Session distilled to:
   ~/.local/spellbook/distilled/Users-me-myproject/refactor-auth-20260106-162033.md
 
 # Open Claude Code CLI in terminal...
 
-╭─────────────────────────────────────────────────────────────────────────────╮
-│ > continue work from ~/.local/spellbook/distilled/Users-me-myproject/       │
-│   refactor-auth-20260106-162033.md                                          │
-╰─────────────────────────────────────────────────────────────────────────────╯
+> continue work from ~/.local/spellbook/distilled/Users-me-myproject/
+  refactor-auth-20260106-162033.md
 
-⏺ Loading distilled session...
+Loading distilled session...
 
   Context restored:
-  • Refactoring auth from session-based to JWT
-  • 4 of 7 services migrated
-  • Current: PaymentService (blocked on token refresh)
-  • Decision: Chose sliding window refresh (not fixed expiry)
+    Refactoring auth from session-based to JWT
+    4 of 7 services migrated
+    Current: PaymentService (blocked on token refresh)
+    Decision: Chose sliding window refresh (not fixed expiry)
 
   Continuing with PaymentService migration...
 ```
@@ -1010,37 +933,25 @@ git clone https://github.com/axiomantic/mcp-language-server.git ~/Development/mc
 cd ~/Development/mcp-language-server && go build
 ```
 
-## Signature Spells
+## Key Skills
 
-Five skills that define what Spellbook does differently.
+Five skills worth highlighting:
 
-**develop** -- *Full-lifecycle feature orchestrator.*
-Takes a feature from idea to merged code through research, requirements discovery, design, planning, TDD implementation, code review, and branch finishing. Automatically classifies complexity (trivial through epic) and enforces quality gates at every phase transition. The most comprehensive skill in the collection, and the one most other skills feed into.
+**develop** -- Full-lifecycle feature orchestrator. Takes a feature from idea to merged code through research, requirements discovery, design, planning, TDD implementation, code review, and branch finishing. Automatically classifies complexity (trivial through epic) and enforces quality gates at every phase transition.
 
-**fractal-thinking** -- *Recursive question decomposition.*
-Decomposes any question into a persistent graph of sub-questions, dispatches parallel workers to explore each branch, detects convergence and contradiction across branches, and synthesizes answers bottom-up. The graph persists in SQLite and survives context compaction, so exploration can resume across sessions.
+**fractal-thinking** -- Recursive question decomposition. Decomposes any question into a persistent graph of sub-questions, dispatches parallel workers to explore each branch, detects convergence and contradiction across branches, and synthesizes answers bottom-up. The graph persists in SQLite and survives context compaction, so exploration can resume across sessions.
 
-**auditing-green-mirage** -- *Test integrity auditor.*
-Finds tests that pass but prove nothing: empty assertions, tautological checks, over-mocked reality, tests that cannot fail. If your CI is green but your code is broken, this skill identifies where the illusion lives and why.
+**auditing-green-mirage** -- Test integrity auditor. Finds tests that pass but prove nothing: empty assertions, tautological checks, over-mocked reality, tests that cannot fail. If your CI is green but your code is broken, this skill identifies where the illusion lives and why.
 
-**fact-checking** -- *Claim verification engine.*
-Extracts factual claims from documents, designs, or code comments, then dispatches parallel verification agents to trace each claim to evidence in the codebase. Produces a graded trust report with sourced verdicts. No claim survives without proof.
+**fact-checking** -- Claim verification engine. Extracts factual claims from documents, designs, or code comments, then dispatches parallel verification agents to trace each claim to evidence in the codebase. Produces a graded trust report with sourced verdicts.
 
-**advanced-code-review** -- *Multi-phase deep review.*
-Builds a semantic model of the codebase, generates a review plan, and executes deep analysis across architectural, security, performance, and correctness dimensions. Then verifies its own findings against the code before reporting, reducing false positives.
+**advanced-code-review** -- Multi-phase deep review. Builds a semantic model of the codebase, generates a review plan, and executes deep analysis across architectural, security, performance, and correctness dimensions. Then verifies its own findings against the code before reporting, reducing false positives.
 
 ## Web Admin Interface
 
-Spellbook includes a browser-based admin interface served from the MCP daemon at `http://localhost:8765/admin/`.
+Spellbook includes a browser-based admin interface served by the MCP daemon at `http://localhost:8765/admin/`. When the MCP server is running, visit that URL to access the dashboard.
 
 ![Spellbook Admin Dashboard](docs/admin/screenshots/dashboard.png)
-
-Install the admin extra and open it:
-
-```bash
-uv pip install -e ".[admin]"
-spellbook admin open
-```
 
 Ten pages cover the full operational surface:
 
