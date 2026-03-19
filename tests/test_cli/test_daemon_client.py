@@ -2,6 +2,7 @@
 
 import pytest
 
+from spellbook.cli import daemon_client
 from spellbook.cli.daemon_client import get_token, daemon_request
 
 
@@ -10,28 +11,27 @@ class TestGetToken:
 
     def test_returns_none_when_no_file(self, tmp_path, monkeypatch):
         """When .mcp-token file doesn't exist, return None."""
-        monkeypatch.setenv("HOME", str(tmp_path))
-        # Ensure the token path doesn't exist
         token_path = tmp_path / ".local" / "spellbook" / ".mcp-token"
         assert not token_path.exists()
+        monkeypatch.setattr(daemon_client, "_token_path", lambda: token_path)
         result = get_token()
         assert result is None
 
     def test_reads_token_from_file(self, tmp_path, monkeypatch):
         """When .mcp-token exists, read and return stripped content."""
-        monkeypatch.setenv("HOME", str(tmp_path))
         token_path = tmp_path / ".local" / "spellbook" / ".mcp-token"
         token_path.parent.mkdir(parents=True)
         token_path.write_text("  test-token-123  \n")
+        monkeypatch.setattr(daemon_client, "_token_path", lambda: token_path)
         result = get_token()
         assert result == "test-token-123"
 
     def test_returns_none_for_empty_file(self, tmp_path, monkeypatch):
         """When .mcp-token exists but is empty, return None."""
-        monkeypatch.setenv("HOME", str(tmp_path))
         token_path = tmp_path / ".local" / "spellbook" / ".mcp-token"
         token_path.parent.mkdir(parents=True)
         token_path.write_text("   \n")
+        monkeypatch.setattr(daemon_client, "_token_path", lambda: token_path)
         result = get_token()
         assert result is None
 

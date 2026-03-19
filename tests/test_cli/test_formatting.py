@@ -34,9 +34,10 @@ class TestJsonMode:
         from pathlib import Path
 
         buf = io.StringIO()
-        output({"path": Path("/tmp/test")}, json_mode=True, file=buf)
+        test_path = Path("/tmp/test")
+        output({"path": test_path}, json_mode=True, file=buf)
         result = json.loads(buf.getvalue())
-        assert result["path"] == "/tmp/test"
+        assert result["path"] == str(test_path)
 
     def test_json_mode_indented(self):
         buf = io.StringIO()

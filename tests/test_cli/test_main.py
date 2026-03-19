@@ -2,6 +2,7 @@
 
 import subprocess
 import sys
+import tempfile
 
 import pytest
 
@@ -130,7 +131,7 @@ class TestEntryPoint:
             [sys.executable, "-m", "spellbook.cli.main", "--help"],
             capture_output=True,
             text=True,
-            cwd="/tmp",
+            cwd=tempfile.gettempdir(),
         )
         assert result.returncode == 0
         assert "spellbook" in result.stdout.lower() or "usage" in result.stdout.lower()
