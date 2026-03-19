@@ -1511,15 +1511,15 @@ class TestForgeRecordGateCompletion:
 
     def test_records_gate_completion(self, tmp_path):
         """forge_record_gate_completion records a gate result in DB."""
-        from spellbook_mcp.forged.project_tools import forge_record_gate_completion
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.project_tools import forge_record_gate_completion
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
 
-        with patch("spellbook_mcp.forged.project_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook_mcp.forged.project_tools._get_project_path_for_gates") as mock_pp:
+            with patch("spellbook.forged.project_tools._get_project_path_for_gates") as mock_pp:
                 mock_pp.return_value = "/test/project"
 
                 result = forge_record_gate_completion(
@@ -1546,13 +1546,13 @@ class TestForgeRecordGateCompletion:
 
     def test_rejects_invalid_gate(self, tmp_path):
         """forge_record_gate_completion rejects invalid gate names."""
-        from spellbook_mcp.forged.project_tools import forge_record_gate_completion
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.project_tools import forge_record_gate_completion
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
 
-        with patch("spellbook_mcp.forged.project_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = get_forged_connection(str(db_path))
 
             result = forge_record_gate_completion(
@@ -1567,15 +1567,15 @@ class TestForgeRecordGateCompletion:
 
     def test_records_without_verdict_summary(self, tmp_path):
         """forge_record_gate_completion works without verdict_summary."""
-        from spellbook_mcp.forged.project_tools import forge_record_gate_completion
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.project_tools import forge_record_gate_completion
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
 
-        with patch("spellbook_mcp.forged.project_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook_mcp.forged.project_tools._get_project_path_for_gates") as mock_pp:
+            with patch("spellbook.forged.project_tools._get_project_path_for_gates") as mock_pp:
                 mock_pp.return_value = "/test/project"
 
                 result = forge_record_gate_completion(

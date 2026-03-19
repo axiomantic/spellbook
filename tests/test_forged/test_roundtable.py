@@ -1105,7 +1105,7 @@ class TestValidGates:
 
     def test_valid_gates_contains_expected_gates(self):
         """VALID_GATES must contain exactly the 5 quality gates."""
-        from spellbook_mcp.forged.models import VALID_GATES
+        from spellbook.forged.models import VALID_GATES
 
         expected = [
             "implementation_completion",
@@ -1119,7 +1119,7 @@ class TestValidGates:
 
     def test_valid_gates_is_list(self):
         """VALID_GATES must be a list (not a set or tuple)."""
-        from spellbook_mcp.forged.models import VALID_GATES
+        from spellbook.forged.models import VALID_GATES
 
         assert isinstance(VALID_GATES, list)
 
@@ -1129,8 +1129,8 @@ class TestRoundtableGateParameter:
 
     def test_roundtable_convene_includes_gate_in_result(self, tmp_path):
         """roundtable_convene must include gate in its result dict."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
-        from spellbook_mcp.forged.artifacts import write_artifact
+        from spellbook.forged.roundtable import roundtable_convene
+        from spellbook.forged.artifacts import write_artifact
 
         artifact_path = tmp_path / "design.md"
         write_artifact(str(artifact_path), "# Design Document")
@@ -1147,7 +1147,7 @@ class TestRoundtableGateParameter:
 
     def test_process_roundtable_response_includes_gate_in_result(self):
         """process_roundtable_response must include gate in its result dict."""
-        from spellbook_mcp.forged.roundtable import process_roundtable_response
+        from spellbook.forged.roundtable import process_roundtable_response
 
         response = """
         **Justice**: All looks good.
@@ -1168,8 +1168,8 @@ class TestRoundtableGateParameter:
 
     def test_process_roundtable_response_records_gate_on_consensus(self, tmp_path):
         """process_roundtable_response auto-records gate completion on consensus."""
-        from spellbook_mcp.forged.roundtable import process_roundtable_response
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.roundtable import process_roundtable_response
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -1180,9 +1180,9 @@ class TestRoundtableGateParameter:
         Verdict: APPROVE
         """
 
-        with patch("spellbook_mcp.forged.project_tools.get_forged_connection") as mock_conn:
+        with patch("spellbook.forged.project_tools.get_forged_connection") as mock_conn:
             mock_conn.return_value = get_forged_connection(str(db_path))
-            with patch("spellbook_mcp.forged.project_tools._get_project_path_for_gates") as mock_pp:
+            with patch("spellbook.forged.project_tools._get_project_path_for_gates") as mock_pp:
                 mock_pp.return_value = "/test/project"
 
                 result = process_roundtable_response(
@@ -1217,7 +1217,7 @@ class TestArchetypeSubsetMode:
 
     def test_convene_with_explicit_3_archetypes(self, tmp_path):
         """roundtable_convene accepts explicit 3-archetype list."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
+        from spellbook.forged.roundtable import roundtable_convene
 
         artifact = tmp_path / "artifact.md"
         artifact.write_text("# Test artifact\nSome content")
@@ -1240,7 +1240,7 @@ class TestArchetypeSubsetMode:
 
     def test_convene_with_invalid_archetype_name(self, tmp_path):
         """roundtable_convene silently ignores invalid archetype names."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
+        from spellbook.forged.roundtable import roundtable_convene
 
         artifact = tmp_path / "artifact.md"
         artifact.write_text("# Test artifact\nSome content")
@@ -1260,7 +1260,7 @@ class TestArchetypeSubsetMode:
 
     def test_convene_defaults_to_stage_archetypes_when_none(self, tmp_path):
         """roundtable_convene uses stage defaults when archetypes=None."""
-        from spellbook_mcp.forged.roundtable import roundtable_convene
+        from spellbook.forged.roundtable import roundtable_convene
 
         artifact = tmp_path / "artifact.md"
         artifact.write_text("# Test artifact\nSome content")
@@ -1278,7 +1278,7 @@ class TestArchetypeSubsetMode:
 
     def test_gate_subset_constant_exists(self):
         """GATE_ARCHETYPES constant defines 3-archetype subsets for gates."""
-        from spellbook_mcp.forged.roundtable import GATE_ARCHETYPES
+        from spellbook.forged.roundtable import GATE_ARCHETYPES
 
         assert isinstance(GATE_ARCHETYPES, dict)
         # Each gate should have exactly 3 archetypes
@@ -1287,7 +1287,7 @@ class TestArchetypeSubsetMode:
                 f"Gate '{gate_name}' has {len(archetype_list)} archetypes, expected 3"
             )
             # All archetypes must be valid
-            from spellbook_mcp.forged.roundtable import ROUNDTABLE_ARCHETYPES
+            from spellbook.forged.roundtable import ROUNDTABLE_ARCHETYPES
             for arch in archetype_list:
                 assert arch in ROUNDTABLE_ARCHETYPES, (
                     f"Gate '{gate_name}' references unknown archetype '{arch}'"
@@ -1295,7 +1295,7 @@ class TestArchetypeSubsetMode:
 
     def test_get_gate_archetypes_returns_subset(self):
         """get_gate_archetypes returns 3-archetype subset for known gates."""
-        from spellbook_mcp.forged.roundtable import get_gate_archetypes
+        from spellbook.forged.roundtable import get_gate_archetypes
 
         result = get_gate_archetypes("code_review")
         assert len(result) == 3
@@ -1303,7 +1303,7 @@ class TestArchetypeSubsetMode:
 
     def test_get_gate_archetypes_unknown_gate_returns_default(self):
         """get_gate_archetypes returns default subset for unknown gates."""
-        from spellbook_mcp.forged.roundtable import get_gate_archetypes
+        from spellbook.forged.roundtable import get_gate_archetypes
 
         result = get_gate_archetypes("unknown_gate")
         assert len(result) == 3
@@ -1312,7 +1312,7 @@ class TestArchetypeSubsetMode:
 
     def test_gate_archetypes_all_include_justice(self):
         """Every gate archetype subset must include Justice as arbiter."""
-        from spellbook_mcp.forged.roundtable import GATE_ARCHETYPES
+        from spellbook.forged.roundtable import GATE_ARCHETYPES
 
         for gate_name, archetype_list in GATE_ARCHETYPES.items():
             assert "Justice" in archetype_list, (
@@ -1321,8 +1321,8 @@ class TestArchetypeSubsetMode:
 
     def test_gate_archetypes_covers_all_valid_gates(self):
         """GATE_ARCHETYPES must have an entry for every VALID_GATE."""
-        from spellbook_mcp.forged.roundtable import GATE_ARCHETYPES
-        from spellbook_mcp.forged.models import VALID_GATES
+        from spellbook.forged.roundtable import GATE_ARCHETYPES
+        from spellbook.forged.models import VALID_GATES
 
         for gate in VALID_GATES:
             assert gate in GATE_ARCHETYPES, (

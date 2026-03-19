@@ -826,7 +826,7 @@ class TestGateCompletionsSchema:
 
     def test_gate_completions_table_created(self, tmp_path):
         """init_forged_schema creates gate_completions table."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -840,7 +840,7 @@ class TestGateCompletionsSchema:
 
     def test_gate_completions_has_required_columns(self, tmp_path):
         """gate_completions table must have all required columns."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -858,7 +858,7 @@ class TestGateCompletionsSchema:
 
     def test_gate_completions_feature_index_exists(self, tmp_path):
         """gate_completions must have index on (project_path, feature_name)."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -872,7 +872,7 @@ class TestGateCompletionsSchema:
 
     def test_gate_completions_gate_index_exists(self, tmp_path):
         """gate_completions must have index on (project_path, feature_name, gate)."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
@@ -886,7 +886,7 @@ class TestGateCompletionsSchema:
 
     def test_schema_version_is_2(self, tmp_path):
         """Schema version must be 2 after init."""
-        from spellbook_mcp.forged.schema import init_forged_schema, get_forged_connection
+        from spellbook.forged.schema import init_forged_schema, get_forged_connection
 
         db_path = tmp_path / "forged.db"
         init_forged_schema(str(db_path))
