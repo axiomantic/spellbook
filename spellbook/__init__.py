@@ -1,5 +1,8 @@
 """Spellbook: AI assistant enhancement toolkit."""
 
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 
-__version__ = version("spellbook")
+try:
+    __version__ = version("spellbook")
+except PackageNotFoundError:
+    __version__ = "dev"
