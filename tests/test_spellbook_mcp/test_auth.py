@@ -18,7 +18,7 @@ class TestTokenGeneration:
 
     def test_generates_token_with_correct_permissions(self, tmp_path):
         """Token file must have 0600 permissions and contain the returned token."""
-        from spellbook import auth
+        from spellbook.core import auth
 
         token_path = tmp_path / ".mcp-token"
         original = auth.TOKEN_PATH
@@ -45,7 +45,7 @@ class TestTokenGeneration:
 
     def test_reuses_existing_token(self, tmp_path):
         """Repeated calls must return the same stable token."""
-        from spellbook import auth
+        from spellbook.core import auth
 
         token_path = tmp_path / ".mcp-token"
         original = auth.TOKEN_PATH
@@ -59,7 +59,7 @@ class TestTokenGeneration:
 
     def test_creates_parent_directories(self, tmp_path):
         """Token file creation must create parent dirs if missing."""
-        from spellbook import auth
+        from spellbook.core import auth
 
         token_path = tmp_path / "nested" / "dirs" / ".mcp-token"
         original = auth.TOKEN_PATH
@@ -72,7 +72,7 @@ class TestTokenGeneration:
 
     def test_reuses_existing_token_from_file(self, tmp_path):
         """Must reuse a valid token already on disk."""
-        from spellbook import auth
+        from spellbook.core import auth
 
         token_path = tmp_path / ".mcp-token"
         token_path.write_text("pre-existing-token-value")
@@ -87,7 +87,7 @@ class TestTokenGeneration:
 
     def test_generates_new_token_when_file_empty(self, tmp_path):
         """Must generate a new token when file exists but is empty."""
-        from spellbook import auth
+        from spellbook.core import auth
 
         token_path = tmp_path / ".mcp-token"
         token_path.write_text("")
@@ -102,7 +102,7 @@ class TestTokenGeneration:
 
     def test_load_token_returns_stored_value(self, tmp_path):
         """load_token must return the stored token."""
-        from spellbook import auth
+        from spellbook.core import auth
 
         token_path = tmp_path / ".mcp-token"
         token_path.write_text("test-token-value")
@@ -115,7 +115,7 @@ class TestTokenGeneration:
 
     def test_load_token_strips_whitespace(self, tmp_path):
         """load_token must strip trailing whitespace/newlines."""
-        from spellbook import auth
+        from spellbook.core import auth
 
         token_path = tmp_path / ".mcp-token"
         token_path.write_text("test-token-value\n")
@@ -128,7 +128,7 @@ class TestTokenGeneration:
 
     def test_load_token_returns_none_if_missing(self, tmp_path):
         """load_token returns None when token file does not exist."""
-        from spellbook import auth
+        from spellbook.core import auth
 
         token_path = tmp_path / "nonexistent"
         original = auth.TOKEN_PATH
@@ -324,8 +324,8 @@ class TestServerStartupAuthIntegration:
 
     def test_http_kwargs_include_middleware_when_auth_enabled(self, tmp_path):
         """When auth is not disabled, build_http_run_kwargs must return middleware list."""
-        from spellbook import auth
-        from spellbook.mcp.server import build_http_run_kwargs
+        from spellbook.core import auth
+        from spellbook.server import build_http_run_kwargs
 
         token_path = tmp_path / ".mcp-token"
         original = auth.TOKEN_PATH
@@ -355,8 +355,8 @@ class TestServerStartupAuthIntegration:
 
     def test_http_kwargs_no_middleware_when_auth_disabled(self, tmp_path):
         """When SPELLBOOK_MCP_AUTH=disabled, build_http_run_kwargs must return empty middleware."""
-        from spellbook import auth
-        from spellbook.mcp.server import build_http_run_kwargs
+        from spellbook.core import auth
+        from spellbook.server import build_http_run_kwargs
 
         token_path = tmp_path / ".mcp-token"
         original = auth.TOKEN_PATH
@@ -383,8 +383,8 @@ class TestServerStartupAuthIntegration:
 
     def test_http_kwargs_use_default_host_and_port(self, tmp_path):
         """build_http_run_kwargs must use default host/port when env vars are unset."""
-        from spellbook import auth
-        from spellbook.mcp.server import build_http_run_kwargs
+        from spellbook.core import auth
+        from spellbook.server import build_http_run_kwargs
 
         token_path = tmp_path / ".mcp-token"
         original = auth.TOKEN_PATH

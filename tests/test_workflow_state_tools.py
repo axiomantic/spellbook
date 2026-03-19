@@ -33,7 +33,7 @@ class TestWorkflowStateSave:
 
     def test_save_creates_new_record(self, tmp_path):
         """Test saving state creates new record."""
-        from spellbook.mcp.server import workflow_state_save
+        from spellbook.server import workflow_state_save
 
         project_path = "/test/project"
         state = {
@@ -68,7 +68,7 @@ class TestWorkflowStateSave:
 
     def test_save_updates_existing_record(self, tmp_path):
         """Test saving state updates existing record for same project."""
-        from spellbook.mcp.server import workflow_state_save
+        from spellbook.server import workflow_state_save
 
         project_path = "/test/project"
 
@@ -102,7 +102,7 @@ class TestWorkflowStateSave:
 
     def test_save_with_different_triggers(self, tmp_path):
         """Test saving with manual, auto, checkpoint triggers."""
-        from spellbook.mcp.server import workflow_state_save
+        from spellbook.server import workflow_state_save
 
         triggers = ["manual", "auto", "checkpoint"]
 
@@ -130,7 +130,7 @@ class TestWorkflowStateSave:
 
     def test_save_preserves_created_at_on_update(self, tmp_path):
         """Test that created_at is preserved when updating."""
-        from spellbook.mcp.server import workflow_state_save
+        from spellbook.server import workflow_state_save
         import time
 
         project_path = "/test/project"
@@ -179,7 +179,7 @@ class TestWorkflowStateSave:
 
     def test_save_handles_complex_state(self, tmp_path):
         """Test saving complex nested state structures."""
-        from spellbook.mcp.server import workflow_state_save
+        from spellbook.server import workflow_state_save
 
         project_path = "/test/project"
         state = {
@@ -228,7 +228,7 @@ class TestWorkflowStateLoad:
 
     def test_load_returns_not_found_for_missing_project(self, tmp_path):
         """Test loading returns found=False for missing project."""
-        from spellbook.mcp.server import workflow_state_load
+        from spellbook.server import workflow_state_load
 
         with patch("spellbook.core.db.get_connection") as mock_conn:
             mock_conn.return_value = get_connection(self.db_path)
@@ -242,7 +242,7 @@ class TestWorkflowStateLoad:
 
     def test_load_returns_state_for_existing_project(self, tmp_path):
         """Test loading returns state for existing project."""
-        from spellbook.mcp.server import workflow_state_save, workflow_state_load
+        from spellbook.server import workflow_state_save, workflow_state_load
 
         project_path = "/test/project"
         state = {"active_skill": "debugging", "todos": []}
@@ -265,7 +265,7 @@ class TestWorkflowStateLoad:
 
     def test_load_respects_max_age_hours(self, tmp_path):
         """Test loading returns found=False for stale state."""
-        from spellbook.mcp.server import workflow_state_load
+        from spellbook.server import workflow_state_load
 
         project_path = "/test/project"
 
@@ -297,7 +297,7 @@ class TestWorkflowStateLoad:
 
     def test_load_accepts_fresh_state_within_max_age(self, tmp_path):
         """Test loading accepts state within max_age_hours."""
-        from spellbook.mcp.server import workflow_state_load
+        from spellbook.server import workflow_state_load
 
         project_path = "/test/project"
 
@@ -327,7 +327,7 @@ class TestWorkflowStateLoad:
 
     def test_load_returns_age_hours(self, tmp_path):
         """Test loading returns correct age_hours."""
-        from spellbook.mcp.server import workflow_state_load
+        from spellbook.server import workflow_state_load
 
         project_path = "/test/project"
 
@@ -355,7 +355,7 @@ class TestWorkflowStateLoad:
 
     def test_load_with_custom_max_age(self, tmp_path):
         """Test loading with custom max_age_hours parameter."""
-        from spellbook.mcp.server import workflow_state_load
+        from spellbook.server import workflow_state_load
 
         project_path = "/test/project"
 
@@ -397,7 +397,7 @@ class TestWorkflowStateUpdate:
 
     def test_update_creates_state_if_not_exists(self, tmp_path):
         """Test update creates new state if none exists."""
-        from spellbook.mcp.server import workflow_state_update, workflow_state_load
+        from spellbook.server import workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
         updates = {"active_skill": "debugging", "skill_phase": "discovery"}
@@ -417,7 +417,7 @@ class TestWorkflowStateUpdate:
 
     def test_update_merges_nested_dicts(self, tmp_path):
         """Test update deep-merges nested dictionaries."""
-        from spellbook.mcp.server import workflow_state_save, workflow_state_update, workflow_state_load
+        from spellbook.server import workflow_state_save, workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
 
@@ -456,7 +456,7 @@ class TestWorkflowStateUpdate:
 
     def test_update_appends_to_lists(self, tmp_path):
         """Test update appends to lists."""
-        from spellbook.mcp.server import workflow_state_save, workflow_state_update, workflow_state_load
+        from spellbook.server import workflow_state_save, workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
 
@@ -487,7 +487,7 @@ class TestWorkflowStateUpdate:
 
     def test_update_overwrites_scalars(self, tmp_path):
         """Test update overwrites scalar values."""
-        from spellbook.mcp.server import workflow_state_save, workflow_state_update, workflow_state_load
+        from spellbook.server import workflow_state_save, workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
 
@@ -519,7 +519,7 @@ class TestWorkflowStateUpdate:
 
     def test_update_sets_auto_trigger(self, tmp_path):
         """Test that update always sets trigger to 'auto'."""
-        from spellbook.mcp.server import workflow_state_update, workflow_state_load
+        from spellbook.server import workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
 
@@ -533,7 +533,7 @@ class TestWorkflowStateUpdate:
 
     def test_update_multiple_times(self, tmp_path):
         """Test multiple sequential updates accumulate correctly."""
-        from spellbook.mcp.server import workflow_state_update, workflow_state_load
+        from spellbook.server import workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
 
@@ -631,9 +631,9 @@ Follow these requirements.
 
     def test_get_full_content_no_sections(self, mock_spellbook_dir):
         """Test getting full skill content without section filter."""
-        from spellbook.mcp.server import skill_instructions_get
+        from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(skill_name="test-skill")
 
@@ -646,9 +646,9 @@ Follow these requirements.
 
     def test_get_specific_sections(self, mock_spellbook_dir):
         """Test extracting specific sections (FORBIDDEN, ROLE)."""
-        from spellbook.mcp.server import skill_instructions_get
+        from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -664,9 +664,9 @@ Follow these requirements.
 
     def test_returns_error_for_missing_skill(self, mock_spellbook_dir):
         """Test returns error for non-existent skill."""
-        from spellbook.mcp.server import skill_instructions_get
+        from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(skill_name="nonexistent-skill")
 
@@ -676,9 +676,9 @@ Follow these requirements.
 
     def test_extracts_xml_style_sections(self, mock_spellbook_dir):
         """Test extracting <FORBIDDEN>...</FORBIDDEN> style sections."""
-        from spellbook.mcp.server import skill_instructions_get
+        from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -691,9 +691,9 @@ Follow these requirements.
 
     def test_extracts_markdown_style_sections(self, mock_spellbook_dir):
         """Test extracting ## Section Name style sections."""
-        from spellbook.mcp.server import skill_instructions_get
+        from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -706,9 +706,9 @@ Follow these requirements.
 
     def test_handles_missing_sections_gracefully(self, mock_spellbook_dir):
         """Test that missing sections are simply not included."""
-        from spellbook.mcp.server import skill_instructions_get
+        from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -721,9 +721,9 @@ Follow these requirements.
 
     def test_combined_content_from_sections(self, mock_spellbook_dir):
         """Test that content field contains combined sections."""
-        from spellbook.mcp.server import skill_instructions_get
+        from spellbook.server import skill_instructions_get
 
-        with patch("spellbook.mcp.server.get_spellbook_dir") as mock_dir:
+        with patch("spellbook.server.get_spellbook_dir") as mock_dir:
             mock_dir.return_value = mock_spellbook_dir
             result = skill_instructions_get.fn(
                 skill_name="test-skill",
@@ -740,7 +740,7 @@ class TestDeepMerge:
 
     def test_merge_flat_dicts(self):
         """Test merging flat dictionaries."""
-        from spellbook.mcp.server import _deep_merge
+        from spellbook.server import _deep_merge
 
         base = {"a": 1, "b": 2}
         updates = {"b": 3, "c": 4}
@@ -752,7 +752,7 @@ class TestDeepMerge:
 
     def test_merge_nested_dicts(self):
         """Test merging nested dictionaries."""
-        from spellbook.mcp.server import _deep_merge
+        from spellbook.server import _deep_merge
 
         base = {
             "outer": {
@@ -774,7 +774,7 @@ class TestDeepMerge:
 
     def test_merge_appends_lists(self):
         """Test merging appends lists."""
-        from spellbook.mcp.server import _deep_merge
+        from spellbook.server import _deep_merge
 
         base = {"items": [1, 2, 3]}
         updates = {"items": [4, 5]}
@@ -784,7 +784,7 @@ class TestDeepMerge:
 
     def test_merge_overwrites_non_dict_non_list(self):
         """Test merging overwrites scalar values."""
-        from spellbook.mcp.server import _deep_merge
+        from spellbook.server import _deep_merge
 
         base = {"count": 1, "name": "old", "active": False}
         updates = {"count": 2, "name": "new", "active": True}
@@ -796,7 +796,7 @@ class TestDeepMerge:
 
     def test_merge_handles_type_mismatch(self):
         """Test merging handles type mismatches (update wins)."""
-        from spellbook.mcp.server import _deep_merge
+        from spellbook.server import _deep_merge
 
         # Dict replaced by scalar
         base = {"config": {"nested": "value"}}
@@ -812,7 +812,7 @@ class TestDeepMerge:
 
     def test_merge_deeply_nested(self):
         """Test merging deeply nested structures."""
-        from spellbook.mcp.server import _deep_merge
+        from spellbook.server import _deep_merge
 
         base = {
             "level1": {
@@ -842,7 +842,7 @@ class TestDeepMerge:
 
     def test_merge_empty_dicts(self):
         """Test merging with empty dictionaries."""
-        from spellbook.mcp.server import _deep_merge
+        from spellbook.server import _deep_merge
 
         # Empty base
         result1 = _deep_merge({}, {"a": 1})
@@ -858,7 +858,7 @@ class TestDeepMerge:
 
     def test_merge_empty_lists(self):
         """Test merging with empty lists."""
-        from spellbook.mcp.server import _deep_merge
+        from spellbook.server import _deep_merge
 
         # Empty base list
         result1 = _deep_merge({"items": []}, {"items": [1, 2]})
@@ -874,7 +874,7 @@ class TestExtractSection:
 
     def test_extract_xml_section(self):
         """Test extracting XML-style sections."""
-        from spellbook.mcp.server import _extract_section
+        from spellbook.server import _extract_section
 
         content = """
 Some text before.
@@ -893,7 +893,7 @@ Some text after.
 
     def test_extract_xml_section_case_insensitive(self):
         """Test XML section extraction is case-insensitive."""
-        from spellbook.mcp.server import _extract_section
+        from spellbook.server import _extract_section
 
         content = "<FORBIDDEN>content</FORBIDDEN>"
         result = _extract_section(content, "forbidden")
@@ -901,7 +901,7 @@ Some text after.
 
     def test_extract_markdown_section(self):
         """Test extracting markdown-style sections."""
-        from spellbook.mcp.server import _extract_section
+        from spellbook.server import _extract_section
 
         content = """
 ## Overview
@@ -924,7 +924,7 @@ This is the testing section.
 
     def test_extract_returns_none_for_missing(self):
         """Test that missing sections return None."""
-        from spellbook.mcp.server import _extract_section
+        from spellbook.server import _extract_section
 
         content = "<ROLE>content</ROLE>"
         result = _extract_section(content, "MISSING")
@@ -932,7 +932,7 @@ This is the testing section.
 
     def test_extract_prefers_xml_over_markdown(self):
         """Test that XML-style is tried before markdown."""
-        from spellbook.mcp.server import _extract_section
+        from spellbook.server import _extract_section
 
         content = """
 <ROLE>
@@ -960,7 +960,7 @@ class TestWorkflowStateIntegration:
 
     def test_full_lifecycle_save_update_load(self, tmp_path):
         """Test complete workflow state lifecycle."""
-        from spellbook.mcp.server import (
+        from spellbook.server import (
             workflow_state_save,
             workflow_state_update,
             workflow_state_load,
@@ -1026,7 +1026,7 @@ class TestWorkflowStateIntegration:
 
     def test_multiple_projects_isolated(self, tmp_path):
         """Test that different projects have isolated state."""
-        from spellbook.mcp.server import (
+        from spellbook.server import (
             workflow_state_save,
             workflow_state_load,
         )

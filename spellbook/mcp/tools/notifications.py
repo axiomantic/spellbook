@@ -3,8 +3,8 @@
 import json
 
 from spellbook.mcp.server import mcp
-from spellbook import notify as notify_module
-from spellbook import tts as tts_module
+from spellbook.notifications import notify as notify_module
+from spellbook.notifications import tts as tts_module
 from spellbook.core.config import (
     config_get,
     config_set_many,

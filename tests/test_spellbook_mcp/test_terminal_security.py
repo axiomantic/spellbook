@@ -407,14 +407,14 @@ class TestWorkingDirectoryValidation:
 
     def test_rejects_nonexistent_directory(self):
         """working_directory pointing to a nonexistent path must be rejected."""
-        from spellbook.mcp.server import _validate_working_directory
+        from spellbook.server import _validate_working_directory
 
         with pytest.raises(ValueError, match="does not exist"):
             _validate_working_directory("/nonexistent/path/xyz", project_path=None)
 
     def test_rejects_system_directory(self):
         """System directories must be rejected (outside $HOME and project)."""
-        from spellbook.mcp.server import _validate_working_directory
+        from spellbook.server import _validate_working_directory
 
         system_dir = r"C:\Windows" if sys.platform == "win32" else "/etc"
         with pytest.raises(ValueError, match="outside allowed scope|does not exist"):
@@ -422,7 +422,7 @@ class TestWorkingDirectoryValidation:
 
     def test_accepts_home_directory(self):
         """$HOME itself must be accepted."""
-        from spellbook.mcp.server import _validate_working_directory
+        from spellbook.server import _validate_working_directory
 
         home = str(Path.home())
         result = _validate_working_directory(home, project_path=None)
@@ -430,7 +430,7 @@ class TestWorkingDirectoryValidation:
 
     def test_accepts_home_subdirectory(self):
         """A real directory under $HOME must be accepted."""
-        from spellbook.mcp.server import _validate_working_directory
+        from spellbook.server import _validate_working_directory
 
         # Use a known subdirectory under home
         home = Path.home()
@@ -441,7 +441,7 @@ class TestWorkingDirectoryValidation:
 
     def test_accepts_project_subdirectory(self):
         """A directory under the project path must be accepted."""
-        from spellbook.mcp.server import _validate_working_directory
+        from spellbook.server import _validate_working_directory
 
         with tempfile.TemporaryDirectory() as tmpdir:
             subdir = os.path.join(tmpdir, "src")
@@ -452,7 +452,7 @@ class TestWorkingDirectoryValidation:
     @pytest.mark.skipif(sys.platform == "win32", reason="symlinks require elevated privileges on Windows")
     def test_rejects_symlink_escape(self):
         """A symlink pointing outside allowed scope must be rejected after resolution."""
-        from spellbook.mcp.server import _validate_working_directory
+        from spellbook.server import _validate_working_directory
 
         with tempfile.TemporaryDirectory() as tmpdir:
             link = os.path.join(tmpdir, "escape")
@@ -462,7 +462,7 @@ class TestWorkingDirectoryValidation:
 
     def test_rejects_file_not_directory(self):
         """A path that exists but is a file (not a directory) must be rejected."""
-        from spellbook.mcp.server import _validate_working_directory
+        from spellbook.server import _validate_working_directory
 
         with tempfile.NamedTemporaryFile() as tmpfile:
             with pytest.raises(ValueError, match="does not exist"):

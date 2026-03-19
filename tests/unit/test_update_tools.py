@@ -862,7 +862,7 @@ class TestCheckForUpdatesMCPTool:
 
     def test_tool_function_importable(self):
         """Verify spellbook_check_for_updates can be imported from server module."""
-        from spellbook.mcp.server import spellbook_check_for_updates, _FASTMCP_MAJOR
+        from spellbook.server import spellbook_check_for_updates, _FASTMCP_MAJOR
         if _FASTMCP_MAJOR >= 3:
             # In v3, @mcp.tool() returns the original function (with .fn compat shim)
             assert callable(spellbook_check_for_updates)
@@ -873,7 +873,7 @@ class TestCheckForUpdatesMCPTool:
 
     def test_status_tool_function_importable(self):
         """Verify spellbook_get_update_status can be imported from server module."""
-        from spellbook.mcp.server import spellbook_get_update_status, _FASTMCP_MAJOR
+        from spellbook.server import spellbook_get_update_status, _FASTMCP_MAJOR
         if _FASTMCP_MAJOR >= 3:
             assert callable(spellbook_get_update_status)
         else:

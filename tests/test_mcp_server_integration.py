@@ -98,14 +98,14 @@ class TestMCPServerSwarmToolsIntegration:
     def test_server_module_loads_without_errors(self):
         """Test that the server module loads without errors."""
         try:
-            import spellbook.mcp.server
+            import spellbook.server
             assert True
         except Exception as e:
             pytest.fail(f"Server module failed to load: {e}")
 
     def test_mcp_instance_exists(self):
         """Test that mcp FastMCP instance exists."""
-        from spellbook.mcp.server import mcp
+        from spellbook.server import mcp
 
         assert mcp is not None
         assert hasattr(mcp, 'tool')

@@ -69,7 +69,7 @@ class TestHealthCheckMCPTool:
 
         # Point to nonexistent database
         monkeypatch.setattr(
-            "spellbook.mcp.server.get_db_path",
+            "spellbook.server.get_db_path",
             lambda: str(tmp_path / "nonexistent.db")
         )
         # Setup valid directories to isolate database failure
@@ -162,7 +162,7 @@ class TestHealthCheckFullMode:
 
         # Patch get_db_path and directory paths
         monkeypatch.setattr(
-            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -206,7 +206,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -264,7 +264,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -316,7 +316,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -359,7 +359,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))
@@ -421,7 +421,7 @@ class TestHealthCheckFullMode:
 
         # Patch paths
         monkeypatch.setattr(
-            "spellbook.mcp.server.get_db_path", lambda: str(db_path)
+            "spellbook.server.get_db_path", lambda: str(db_path)
         )
         monkeypatch.setenv("SPELLBOOK_CONFIG_DIR", str(config_dir))
         monkeypatch.setenv("SPELLBOOK_DATA_DIR", str(data_dir))

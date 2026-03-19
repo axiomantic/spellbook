@@ -13,7 +13,7 @@ function getCheckCommand(): string {
   if (!spellbookDir) {
     throw new Error('SPELLBOOK_DIR environment variable is not set');
   }
-  return 'python3 -m spellbook_mcp.security.check';
+  return 'python3 -m spellbook.security.check';
 }
 
 function runSecurityCheck(payload: string, extraArgs: string[] = []): { safe: boolean; error?: string } {

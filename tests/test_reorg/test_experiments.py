@@ -49,7 +49,7 @@ class TestExperimentsABTest:
         assert hasattr(ab_test, name), f"spellbook.experiments.ab_test missing {name}"
 
     def test_ab_test_no_spellbook_mcp_imports(self):
-        """Verify ab_test.py does not import from spellbook."""
+        """Verify ab_test.py does not import from spellbook_mcp."""
         import ast
         import inspect
 
@@ -60,7 +60,7 @@ class TestExperimentsABTest:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.startswith("spellbook"), (
+                assert not node.module.startswith("spellbook_mcp"), (
                     f"spellbook.experiments.ab_test imports from "
-                    f"spellbook: {node.module}"
+                    f"spellbook_mcp: {node.module}"
                 )

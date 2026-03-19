@@ -63,7 +63,11 @@ def classify_layer(file_path: Path, spellbook_root: Path) -> str | None:
 
 
 def get_spellbook_imports(source: str) -> list[str]:
-    """Parse a Python source file and extract all spellbook.* import targets.
+    """Parse a Python source file and extract module-level spellbook.* import targets.
+
+    Only checks top-level imports (not imports inside functions, methods, or
+    conditional blocks). Function-level imports are a common pattern for
+    avoiding circular dependencies and should not trigger layer violations.
 
     Returns a list of fully-qualified module paths that start with "spellbook.".
     """
@@ -73,7 +77,8 @@ def get_spellbook_imports(source: str) -> list[str]:
         return []
 
     imports = []
-    for node in ast.walk(tree):
+    # Only check top-level statements (direct children of Module)
+    for node in tree.body:
         if isinstance(node, ast.ImportFrom) and node.module:
             if node.module.startswith("spellbook."):
                 imports.append(node.module)

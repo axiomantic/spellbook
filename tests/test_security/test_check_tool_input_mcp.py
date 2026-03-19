@@ -27,13 +27,13 @@ class TestSecurityCheckToolInput:
 
     def test_tool_exists_in_server(self):
         """security_check_tool_input should expose a callable underlying function."""
-        from spellbook.mcp.server import security_check_tool_input
+        from spellbook.server import security_check_tool_input
 
         assert callable(get_tool_fn(security_check_tool_input))
 
     def test_safe_bash_command(self):
         """Safe bash command should return safe=True with no findings."""
-        from spellbook.mcp.server import security_check_tool_input
+        from spellbook.server import security_check_tool_input
 
         fn = get_tool_fn(security_check_tool_input)
         result = fn(tool_name="Bash", tool_input={"command": "ls -la"})
@@ -43,7 +43,7 @@ class TestSecurityCheckToolInput:
 
     def test_dangerous_bash_command(self):
         """Dangerous bash command should return safe=False with findings."""
-        from spellbook.mcp.server import security_check_tool_input
+        from spellbook.server import security_check_tool_input
 
         fn = get_tool_fn(security_check_tool_input)
         result = fn(tool_name="Bash", tool_input={"command": "sudo rm -rf /"})
@@ -53,7 +53,7 @@ class TestSecurityCheckToolInput:
 
     def test_injection_in_spawn(self):
         """Injection in spawn prompt should return safe=False."""
-        from spellbook.mcp.server import security_check_tool_input
+        from spellbook.server import security_check_tool_input
 
         fn = get_tool_fn(security_check_tool_input)
         result = fn(
@@ -67,7 +67,7 @@ class TestSecurityCheckToolInput:
 
     def test_safe_spawn_prompt(self):
         """Safe spawn prompt should return safe=True."""
-        from spellbook.mcp.server import security_check_tool_input
+        from spellbook.server import security_check_tool_input
 
         fn = get_tool_fn(security_check_tool_input)
         result = fn(
@@ -80,7 +80,7 @@ class TestSecurityCheckToolInput:
     def test_matches_check_tool_input_directly(self):
         """MCP wrapper should produce identical results to calling check_tool_input directly."""
         from spellbook.security.check import check_tool_input
-        from spellbook.mcp.server import security_check_tool_input
+        from spellbook.server import security_check_tool_input
 
         tool_name = "Bash"
         tool_input = {"command": "echo hello"}
@@ -94,7 +94,7 @@ class TestSecurityCheckToolInput:
 
     def test_workflow_state_save_injection(self):
         """Injection in workflow_state_save should be detected."""
-        from spellbook.mcp.server import security_check_tool_input
+        from spellbook.server import security_check_tool_input
 
         fn = get_tool_fn(security_check_tool_input)
         result = fn(
@@ -110,7 +110,7 @@ class TestSecurityCheckToolInput:
 
     def test_safe_generic_tool(self):
         """Generic tool with safe input should return safe=True."""
-        from spellbook.mcp.server import security_check_tool_input
+        from spellbook.server import security_check_tool_input
 
         fn = get_tool_fn(security_check_tool_input)
         result = fn(

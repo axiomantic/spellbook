@@ -11,7 +11,7 @@ from starlette.responses import JSONResponse
 
 from spellbook.mcp import state as _state
 from spellbook.mcp.server import mcp
-from spellbook import tts as tts_module
+from spellbook.notifications import tts as tts_module
 from spellbook.core.db import get_db_path
 from spellbook.memory.tools import (
     do_log_event,

@@ -44,9 +44,9 @@ class TestUpdatesTools:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.startswith("spellbook"), (
+                assert not node.module.startswith("spellbook_mcp"), (
                     f"spellbook.updates.tools still imports from "
-                    f"spellbook: {node.module}"
+                    f"spellbook_mcp: {node.module}"
                 )
 
 
@@ -81,7 +81,7 @@ class TestUpdatesWatcher:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
-                assert not node.module.startswith("spellbook"), (
+                assert not node.module.startswith("spellbook_mcp"), (
                     f"spellbook.updates.watcher still imports from "
-                    f"spellbook: {node.module}"
+                    f"spellbook_mcp: {node.module}"
                 )

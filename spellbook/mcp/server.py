@@ -153,7 +153,7 @@ def startup() -> None:
 
     # Preload TTS model in background (non-blocking)
     try:
-        from spellbook import tts_module
+        from spellbook.notifications import tts as tts_module
 
         tts_preload = threading.Thread(target=tts_module.preload, daemon=True)
         tts_preload.start()

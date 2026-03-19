@@ -47,9 +47,9 @@ class TestNotificationsTTS:
         for node in ast.walk(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 if isinstance(node, ast.ImportFrom) and node.module:
-                    assert not node.module.startswith("spellbook"), (
+                    assert not node.module.startswith("spellbook_mcp"), (
                         f"spellbook.notifications.tts still imports from "
-                        f"spellbook: {node.module}"
+                        f"spellbook_mcp: {node.module}"
                     )
 
 
@@ -90,7 +90,7 @@ class TestNotificationsNotify:
         for node in ast.walk(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 if isinstance(node, ast.ImportFrom) and node.module:
-                    assert not node.module.startswith("spellbook"), (
+                    assert not node.module.startswith("spellbook_mcp"), (
                         f"spellbook.notifications.notify still imports from "
-                        f"spellbook: {node.module}"
+                        f"spellbook_mcp: {node.module}"
                     )

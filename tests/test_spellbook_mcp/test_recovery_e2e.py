@@ -150,7 +150,7 @@ def test_recovery_e2e_injection_decorator(tmp_path):
     os.getcwd = lambda: project_path
 
     try:
-        from spellbook import injection
+        from spellbook.sessions import injection
         original_get_db_path = injection.get_db_path
         injection.get_db_path = lambda: Path(db_path)
 
@@ -217,7 +217,7 @@ def test_recovery_e2e_no_injection_without_heartbeat(tmp_path):
     os.getcwd = lambda: project_path
 
     try:
-        from spellbook import injection
+        from spellbook.sessions import injection
         original_get_db_path = injection.get_db_path
         injection.get_db_path = lambda: Path(db_path)
 
@@ -435,7 +435,7 @@ def test_recovery_e2e_full_before_after_flow(tmp_path):
     os.getcwd = lambda: project_path
 
     try:
-        from spellbook import injection
+        from spellbook.sessions import injection
         original_get_db_path = injection.get_db_path
         injection.get_db_path = lambda: Path(db_path)
 

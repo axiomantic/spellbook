@@ -50,7 +50,7 @@ class TestWorkflowStateUpdateValidation:
                   existing validate_workflow_state tests for boot_prompt checking.
           IMPACT: Attacker persists malicious boot_prompt that executes on next session resume
         """
-        from spellbook.mcp.server import workflow_state_update
+        from spellbook.server import workflow_state_update
 
         db_path, conn = tmp_db
         with patch("spellbook.core.db.get_connection") as mock_conn:
@@ -86,7 +86,7 @@ class TestWorkflowStateUpdateValidation:
           ESCAPE: If _deep_merge sanitizes content. Implausible since it is a plain dict merge.
           IMPACT: Attacker uses merge semantics to construct dangerous payload
         """
-        from spellbook.mcp.server import workflow_state_update
+        from spellbook.server import workflow_state_update
 
         db_path, conn = tmp_db
         with patch("spellbook.core.db.get_connection") as mock_conn:
@@ -128,7 +128,7 @@ class TestWorkflowStateUpdateValidation:
                   test_original_state_unchanged_on_rejection verifying DB reads.
           IMPACT: Legitimate workflow tracking breaks, sessions cannot be resumed
         """
-        from spellbook.mcp.server import workflow_state_update
+        from spellbook.server import workflow_state_update
 
         db_path, conn = tmp_db
         with patch("spellbook.core.db.get_connection") as mock_conn:
@@ -155,7 +155,7 @@ class TestWorkflowStateUpdateValidation:
                   Unlikely since we check by not writing at all rather than rollback.
           IMPACT: Attacker's partial state modifications persist even when validation catches the payload
         """
-        from spellbook.mcp.server import workflow_state_update
+        from spellbook.server import workflow_state_update
 
         db_path, conn = tmp_db
 
@@ -198,7 +198,7 @@ class TestWorkflowStateLoadRejection:
                   validate_workflow_state's own tests for Bash pattern detection.
           IMPACT: Malicious boot_prompt reaches the session resume system and executes arbitrary commands
         """
-        from spellbook.mcp.server import workflow_state_load
+        from spellbook.server import workflow_state_load
 
         db_path, conn = tmp_db
 
@@ -243,7 +243,7 @@ class TestWorkflowStateLoadRejection:
           ESCAPE: If state is returned but with wrong content. Assertion on state dict content covers this.
           IMPACT: Session resume breaks for all users, not just attackers
         """
-        from spellbook.mcp.server import workflow_state_load
+        from spellbook.server import workflow_state_load
 
         db_path, conn = tmp_db
 
@@ -292,7 +292,7 @@ class TestRCEKillChainIntegration:
                   Each has independent test coverage above.
           IMPACT: Full RCE -- attacker executes arbitrary commands on next session resume
         """
-        from spellbook.mcp.server import workflow_state_update, workflow_state_load
+        from spellbook.server import workflow_state_update, workflow_state_load
         from spellbook.sessions.resume import _validate_boot_prompt
 
         db_path, conn = tmp_db

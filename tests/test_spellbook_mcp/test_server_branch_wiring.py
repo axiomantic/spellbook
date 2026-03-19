@@ -180,8 +180,8 @@ class TestMcpMemoryRecallBranch:
                  new_callable=AsyncMock, return_value=fake_project_path,
              ), \
              patch.object(server, "do_memory_recall", side_effect=mock_do_memory_recall), \
-             patch("spellbook.mcp.server.get_current_branch", return_value="feature-branch"), \
-             patch("spellbook.mcp.server.resolve_repo_root", return_value="/Users/test/myproject"):
+             patch("spellbook.server.get_current_branch", return_value="feature-branch"), \
+             patch("spellbook.server.resolve_repo_root", return_value="/Users/test/myproject"):
             await server.memory_recall.fn(
                 ctx=mock_ctx,
                 query="test query",
@@ -220,7 +220,7 @@ class TestMcpMemoryStoreMemoriesBranch:
                  new_callable=AsyncMock, return_value=fake_project_path,
              ), \
              patch.object(server, "do_store_memories", side_effect=mock_do_store_memories), \
-             patch("spellbook.mcp.server.get_current_branch", return_value="dev-branch"):
+             patch("spellbook.server.get_current_branch", return_value="dev-branch"):
             await server.memory_store_memories.fn(
                 ctx=mock_ctx,
                 memories='{"memories": []}',

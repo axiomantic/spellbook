@@ -101,7 +101,7 @@ def test_poll_sessions_detects_compaction_and_saves_soul(tmp_path, monkeypatch):
     from spellbook.sessions.watcher import SessionWatcher
     from spellbook.core.db import init_db, get_connection
     from spellbook.sessions.compaction import CompactionEvent
-    from spellbook import injection
+    from spellbook.sessions import injection
 
     db_path = tmp_path / "test.db"
     project_path = tmp_path / "project"
