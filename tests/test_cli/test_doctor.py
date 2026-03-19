@@ -80,7 +80,9 @@ class TestDoctorRun:
                 doctor.CheckResult("test", "pass", "ok"),
             ]
 
-        monkeypatch.setattr(doctor, "run_checks", fake_checks)
+        monkeypatch.setattr(
+            "spellbook.cli.commands.doctor.run_checks", fake_checks
+        )
         import argparse
 
         args = argparse.Namespace(json=False)
